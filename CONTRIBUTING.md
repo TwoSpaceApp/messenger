@@ -25,7 +25,10 @@
 2. **Установите зависимости:**
    ```bash
    flutter pub get
-   flutter pub get --with-dependencies
+   ```
+   Если Flutter не установлен:
+   ```bash
+   sudo snap install flutter --classic
    ```
 
 3. **Подготовьте `.env` файл:**
@@ -53,9 +56,6 @@ lib/
 ├── services/                 # Бизнес-логика (Aegis, auth, chat)
 ├── utils/                    # Вспомогательные функции
 └── widgets/                  # Переиспользуемые компоненты
-test/
-├── unit/                     # Unit тесты
-└── widget/                   # Widget тесты
 ```
 
 ### Кодовый стиль
@@ -67,7 +67,7 @@ test/
 dart format lib test
 
 # Анализ кода
-flutter analyze lib
+flutter analyze
 
 # Кастомные линты
 flutter pub global activate custom_lint
