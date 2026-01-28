@@ -18,8 +18,8 @@
 
 1. **Клонируйте репозиторий:**
    ```bash
-   git clone https://github.com/Wakcedon/two_space_app.git
-   cd two_space_app
+   git clone https://github.com/TwoSpaceApp/messenger.git
+   cd messenger
    ```
 
 2. **Установите зависимости:**
