@@ -17,7 +17,6 @@ import '../config/environment.dart';
 /// 
 /// // Set user context
 /// SentryService.setUser(userId: '@user:matrix.org', email: 'user@example.com');
-/// ```
 class SentryService {
   static bool _initialized = false;
 
@@ -122,7 +121,8 @@ class SentryService {
   /// [level] - Severity level (info, warning, error, fatal)
   static Future<void> captureMessage(
     String message, {
-    SentryLevel level = SentryLevel.info,
+    SentryLevel? level,
+    Map<String, dynamic>? extra,
   }) async {
     if (!_initialized) return;
 
@@ -130,6 +130,11 @@ class SentryService {
       await Sentry.captureMessage(
         message,
         level: level,
+        withScope: (scope) {
+          if (extra != null) {
+            extra.forEach((key, value) => scope.setExtra(key, value));
+          }
+        },
       );
       
       if (kDebugMode) {

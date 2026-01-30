@@ -19,18 +19,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _nameCtl = TextEditingController();
   final _emailCtl = TextEditingController();
   final _passCtl = TextEditingController();
+  final _nicknameCtl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   
   String? _avatarPath;
   Uint8List? _avatarBytes;
   int _step = 0;
+  bool _loading = false;
 
   @override
   void dispose() {
     _nameCtl.dispose();
     _emailCtl.dispose();
     _passCtl.dispose();
+    _nicknameCtl.dispose();
     super.dispose();
+  }
+
+  Future<void> _register() async {
+    setState(() => _loading = true);
+    try {
+      // Stub
+      setState(() => _step = 1);
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _finishRegistration() async {
+    setState(() => _loading = true);
+    try {
+      // Stub
+      Navigator.pop(context);
+    } finally {
+      setState(() => _loading = false);
+    }
   }
 
   int _getPasswordStrength(String password) {

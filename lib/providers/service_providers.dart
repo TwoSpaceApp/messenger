@@ -5,6 +5,7 @@ import 'package:two_space_app/services/matrix/matrix_profile_service.dart';
 import 'package:two_space_app/services/matrix/matrix_messaging_service.dart';
 import 'package:two_space_app/services/token_manager.dart';
 import 'package:two_space_app/services/initialization_service.dart';
+import 'dart:async';
 
 /// Provider for MatrixAuthService singleton
 final matrixAuthServiceProvider = Provider<MatrixAuthService>((ref) {
@@ -31,16 +32,6 @@ final matrixProfileServiceProvider = Provider<MatrixProfileService>((ref) {
 /// Provider for MatrixMessagingService singleton
 final matrixMessagingServiceProvider = Provider<MatrixMessagingService>((ref) {
   return MatrixMessagingService();
-});
-
-/// Provider for TokenManager singleton
-final tokenManagerProvider = Provider<TokenManager>((ref) {
-  return TokenManager();
-});
-
-/// Provider for InitializationService
-final initializationServiceProvider = Provider<InitializationService>((ref) {
-  return InitializationService();
 });
 
 /// Provider for current user ID
@@ -73,5 +64,3 @@ final userInfoProvider =
   
   return await profileService.getUserInfo(userId);
 });
-
-import 'dart:async';

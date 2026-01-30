@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:two_space_app/services/sentry_service.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// Performance monitoring utility for tracking operation durations
 class PerformanceMonitor {
@@ -166,7 +167,7 @@ class PerformanceMonitor {
     if (kReleaseMode) {
       SentryService.captureMessage(
         'Slow operation: ${metric.operationName}',
-        level: 'warning',
+        level: SentryLevel.warning,
         extra: {
           'duration_ms': metric.duration.inMilliseconds,
           'threshold_ms': threshold.inMilliseconds,

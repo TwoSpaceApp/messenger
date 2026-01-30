@@ -153,7 +153,8 @@ class MatrixService {
       final type = (payload['type'] ?? 'text').toString();
       final media = payload['mediaFileId'] as String? ?? payload['mediaId'] as String?;
       try {
-        return await ChatMatrixService().sendMessage(chatId, await getCurrentUserId() ?? '', text, type: type == 'image' ? 'image' : 'text', mediaFileId: media);
+        final userId = await getCurrentUserId();
+        return await ChatMatrixService().sendMessage(chatId, userId ?? '', text, type: type == 'image' ? 'image' : 'text', mediaFileId: media);
       } catch (e) {
         rethrow;
       }
@@ -166,7 +167,7 @@ class MatrixService {
     if (Environment.useMatrix) {
       final contentType = 'application/octet-stream';
       final mxc = await ChatMatrixService().uploadMedia(bytes, contentType: contentType, fileName: filename);
-      return {'\$id': mxc, 'id': mxc, 'viewUrl': getFileViewUrl(mxc).toString()};
+      return {'\$id': mxc, 'id': mxc, 'viewUrl': getFileViewUrl(mxc ?? '').toString()};
     }
     throw Exception('uploadBytesToStorage: Matrix mode required');
   }

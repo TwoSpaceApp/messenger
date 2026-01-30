@@ -94,6 +94,11 @@ class SettingsService {
     themeNotifier.value = ThemeSettings(fontFamily: themeNotifier.value.fontFamily, primaryColorValue: colorValue, fontWeight: themeNotifier.value.fontWeight);
   }
 
+  static Future<void> updatePrimaryColor(Color color) => setPrimaryColor(color.value);
+  static Future<void> updateFontFamily(String family) => setFont(family);
+  static Future<void> updateFontWeight(int weight) => setFontWeight(weight);
+  static Future<void> togglePaleViolet() => setPaleVioletMode(!paleVioletNotifier.value);
+
   static Future<void> setSessionTimeoutDays(int days) async {
     await SecureStore.write(_sessionTimeoutKey, days.toString());
     sessionTimeoutDaysNotifier.value = days;

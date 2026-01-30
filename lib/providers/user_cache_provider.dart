@@ -1,6 +1,8 @@
 import 'dart:collection';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:two_space_app/services/matrix_profile_service.dart';
+import 'package:two_space_app/services/matrix/matrix_profile_service.dart';
+import 'service_providers.dart';
 
 /// LRU cache implementation for user profiles
 class UserProfileCache {
@@ -67,7 +69,7 @@ final userCacheProvider = Provider<UserProfileCache>((ref) {
 });
 
 /// Cached user profile provider with automatic cache management
-final cachedUserProfileProvider = FutureProvider.family<Map<String, dynamic>, String>(
+final cachedUserProfileProvider = FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
   (ref, userId) async {
     final cache = ref.watch(userCacheProvider);
     final profileService = ref.watch(matrixProfileServiceProvider);
@@ -92,7 +94,7 @@ final cachedUserProfileProvider = FutureProvider.family<Map<String, dynamic>, St
 );
 
 /// Batch user profiles provider with optimized concurrent fetching
-final batchUserProfilesProvider = FutureProvider.family<List<Map<String, dynamic>>, List<String>>(
+final batchUserProfilesProvider = FutureProvider.autoDispose.family<List<Map<String, dynamic>>, List<String>>(
   (ref, userIds) async {
     final cache = ref.watch(userCacheProvider);
     final profileService = ref.watch(matrixProfileServiceProvider);
@@ -132,5 +134,3 @@ extension AutoDisposeRefExtension on AutoDisposeRef {
     onDispose(() => timer.cancel());
   }
 }
-
-import 'dart:async';

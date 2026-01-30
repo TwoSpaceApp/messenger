@@ -23,7 +23,7 @@ dependencies:
   riverpod_annotation: ^2.3.5
 
   # ===== Monitoring & Error Tracking =====
-  # sentry_flutter: ^9.9.0  # Disabled for Windows debug builds (heavy on resources)
+  sentry_flutter: ^9.9.0
   logger: ^2.4.0
 
   # ===== Security =====
