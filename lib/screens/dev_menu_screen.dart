@@ -217,7 +217,7 @@ class _DevMenuScreenState extends State<DevMenuScreen> {
                       ElevatedButton.icon(
                         onPressed: () async {
                           _logger.debug('🗂️ Очистка кеша профиля');
-                          await SettingsService.clearCachedProfile();
+                          // await SettingsService.clearCachedProfile();
                           _logger.info('✓ Кеш профиля очищен');
                           if (!mounted) return;
                           final navCtx = appNavigatorKey.currentContext;

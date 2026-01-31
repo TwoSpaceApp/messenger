@@ -12,7 +12,7 @@ const _kMatrixRefreshKeyPrefix = 'matrix_refresh_';
 const _kMatrixDeviceIdPrefix = 'matrix_device_';
 
 class AuthService {
-  final /*Appwrite Account client if present*/ dynamic accountClient;
+  final dynamic accountClient;
   final DevLogger _logger = DevLogger('AuthService');
 
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
@@ -203,7 +203,7 @@ class AuthService {
     // Save token keyed by current app user id if available, otherwise by matrix user id
     String keyId = userId;
     try {
-      final me = await MatrixService.getCurrentUserId();
+      final me = await MatrixService().getCurrentUserId();
       if (me != null && me.isNotEmpty) keyId = me;
     } catch (_) {}
     await _secure.write(key: '$_kMatrixTokenKeyPrefix$keyId', value: token);
@@ -226,7 +226,7 @@ class AuthService {
     String keyId = appUserId ?? '';
     if (keyId.isEmpty) {
       try {
-        final me = await MatrixService.getCurrentUserId();
+        final me = await MatrixService().getCurrentUserId();
         if (me != null) keyId = me;
       } catch (_) {}
     }
@@ -265,7 +265,7 @@ class AuthService {
     String keyId = appUserId ?? '';
     if (keyId.isEmpty) {
       try {
-        final me = await MatrixService.getCurrentUserId();
+        final me = await MatrixService().getCurrentUserId();
         if (me != null) keyId = me;
       } catch (_) {}
     }
@@ -303,7 +303,7 @@ class AuthService {
     if (tokenResp == null || userId == null) throw Exception('SSO login response missing token/user_id');
     String keyId = userId;
     try {
-      final me = await MatrixService.getCurrentUserId();
+      final me = await MatrixService().getCurrentUserId();
       if (me != null && me.isNotEmpty) keyId = me;
     } catch (_) {}
     await _secure.write(key: '$_kMatrixTokenKeyPrefix$keyId', value: tokenResp);
@@ -316,7 +316,7 @@ class AuthService {
   /// the notion of current user and allows migrating away from Appwrite later.
   Future<String?> getCurrentUserId() async {
     try {
-      return await MatrixService.getCurrentUserId();
+      return await MatrixService().getCurrentUserId();
     } catch (_) {
       return null;
     }
@@ -325,7 +325,7 @@ class AuthService {
   /// Clear stored Matrix token for current app user (sign out)
   Future<void> clearMatrixTokenForCurrentUser() async {
     try {
-      final me = await MatrixService.getCurrentUserId();
+      final me = await MatrixService().getCurrentUserId();
       if (me != null) await _secure.delete(key: '$_kMatrixTokenKeyPrefix$me');
     } catch (_) {}
   }
@@ -360,7 +360,7 @@ class AuthService {
   // Request TOTP setup and return secret/otpauth URI
   Future<Map<String,dynamic>> requestTotpSetup() async {
     if (!Environment.useMatrix) throw Exception('Matrix is not enabled');
-    final endpoint = Environment.matrixTotpSetupEndpoint;
+    final endpoint = Environment.matrixHomeserverUrl;
     if (endpoint.isEmpty) throw Exception('TOTP endpoint not configured');
     final uri = Uri.parse(endpoint);
     final res = await http.post(uri, headers: {'Content-Type': 'application/json'});
@@ -371,7 +371,7 @@ class AuthService {
   // Verify the TOTP token and enable/disable TOTP on server-side
   Future<void> verifyTotpSetup(String code, {bool disable = false}) async {
     if (!Environment.useMatrix) throw Exception('Matrix is not enabled');
-    final endpoint = Environment.matrixTotpVerifyEndpoint;
+    final endpoint = Environment.matrixHomeserverUrl;
     if (endpoint.isEmpty) throw Exception('TOTP verify endpoint not configured');
     final uri = Uri.parse(endpoint);
     final body = jsonEncode({'code': code, 'action': disable ? 'disable' : 'enable'});
@@ -428,7 +428,7 @@ class AuthService {
   Future<bool> restoreSessionFromToken() async {
     try {
       // Try to get stored Matrix user id
-      final userId = await MatrixService.getCurrentUserId();
+      final userId = await MatrixService().getCurrentUserId();
       if (userId == null || userId.isEmpty) return false;
 
       // Try to get stored token for this user

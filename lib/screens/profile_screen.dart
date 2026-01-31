@@ -90,7 +90,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Center(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
-                      child: UserAvatar(key: ValueKey(avatar ?? 'noavatar_${widget.userId}'), avatarUrl: avatar, initials: (name.isNotEmpty ? name[0] : '?'), fullName: name, radius: 56),
+                      child: UserAvatar(key: ValueKey(avatar ?? 'noavatar_${widget.userId}'), avatarUrl: avatar, name: name, radius: 56),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -154,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             final prefs = (_user!['prefs'] is Map) ? Map<String, dynamic>.from(_user!['prefs']) : <String, dynamic>{};
                             final serverShowEmail = prefs['showEmail'] == true;
                             final email = (_user!['email'] as String?) ?? '';
-                            final shouldShowEmail = (_isMe ? SettingsService.showEmailNotifier.value : serverShowEmail);
+                            final shouldShowEmail = (_isMe ? true : serverShowEmail);
                             if (email.isNotEmpty && shouldShowEmail) {
                               return Column(children: [
                               _buildInfoRow('Email', email),
@@ -170,7 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             final prefs = (_user!['prefs'] is Map) ? Map<String, dynamic>.from(_user!['prefs']) : <String, dynamic>{};
                             final serverShowPhone = prefs['showPhone'] == true;
                             final phone = (_user!['phone'] as String?) ?? '';
-                            final shouldShowPhone = (_isMe ? SettingsService.showPhoneNotifier.value : serverShowPhone);
+                            final shouldShowPhone = (_isMe ? true : serverShowPhone);
                             if (phone.isNotEmpty && shouldShowPhone) {
                               return Column(children: [
                               _buildInfoRow('Телефон', phone),

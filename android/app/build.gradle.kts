@@ -30,6 +30,12 @@ android {
         
         // Vector drawable support for older devices
         vectorDrawables.useSupportLibrary = true
+
+        externalNativeBuild {
+            cmake {
+                cppFlags("")
+            }
+        }
     }
 
     buildTypes {
@@ -44,6 +50,13 @@ android {
             isShrinkResources = false
             // Keep proguard rules file available for future use
             proguardFiles("${project.rootDir}/proguard-rules.pro")
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path("src/main/cpp/CMakeLists.txt")
+            version("3.10.2")
         }
     }
 

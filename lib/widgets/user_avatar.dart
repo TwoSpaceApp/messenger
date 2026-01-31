@@ -12,11 +12,10 @@ import 'package:two_space_app/services/matrix_service.dart';
 class UserAvatar extends StatefulWidget {
   final String? avatarUrl;
   final String? avatarFileId;
-  final String? initials;
-  final String? fullName;
+  final String? name;
   final double radius;
 
-  const UserAvatar({super.key, this.avatarUrl, this.avatarFileId, this.initials, this.fullName, this.radius = 24});
+  const UserAvatar({super.key, this.avatarUrl, this.avatarFileId, this.name, this.radius = 24});
 
   @override
   State<UserAvatar> createState() => _UserAvatarState();
@@ -71,7 +70,7 @@ class _UserAvatarState extends State<UserAvatar> {
         try { token = await AuthService().getMatrixTokenForUser(); } catch (_) { token = null; }
         String tokenString = '';
         if (token != null && token.isNotEmpty) tokenString = token;
-        else if (Environment.matrixAccessToken.isNotEmpty) tokenString = Environment.matrixAccessToken;
+        else if (Environment.matrixHomeserverUrl.isNotEmpty) tokenString = Environment.matrixHomeserverUrl;
         final headers = tokenString.isNotEmpty ? {'Authorization': 'Bearer $tokenString'} : <String, String>{};
         final res = await http.get(uri, headers: headers);
         if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
@@ -90,8 +89,8 @@ class _UserAvatarState extends State<UserAvatar> {
           if (parts.length >= 2) {
             final server = parts[0];
             final mediaId = parts.sublist(1).join('/');
-            final homeserver = ChatMatrixService().homeserver;
-            final uri = Uri.parse(homeserver + '/_matrix/media/v3/download/$server/$mediaId');
+            final homeserver = Environment.matrixHomeserverUrl;
+            final uri = Uri.parse('$homeserver/_matrix/media/v3/download/$server/$mediaId');
             // Get auth header (per-user or global)
             String? token;
             try {
@@ -101,7 +100,7 @@ class _UserAvatarState extends State<UserAvatar> {
             }
             String tokenString = '';
             if (token != null && token.isNotEmpty) tokenString = token;
-            else if (Environment.matrixAccessToken.isNotEmpty) tokenString = Environment.matrixAccessToken;
+            else if (Environment.matrixHomeserverUrl.isNotEmpty) tokenString = Environment.matrixHomeserverUrl;
             final headers = tokenString.isNotEmpty ? {'Authorization': 'Bearer $tokenString'} : <String, String>{};
             final res = await http.get(uri, headers: headers);
             if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
@@ -119,9 +118,9 @@ class _UserAvatarState extends State<UserAvatar> {
       return;
     }
     try {
-      final b = await MatrixService.getFileBytes(fid);
+      final b = await MatrixService().downloadFile(fid);
       if (b.isNotEmpty) {
-        final u = Uint8List.fromList(b);
+        final u = Uint8List.fromList(b.codeUnits);
         _cache[fid] = u;
         if (mounted) setState(() => _bytes = u);
       }
@@ -143,11 +142,11 @@ class _UserAvatarState extends State<UserAvatar> {
         onBackgroundImageError: (exception, stackTrace) {
           // Fallback on network image load error
         },
-        child: widget.initials == null ? null : Text(widget.initials ?? ''),
+        child: widget.name == null ? null : Text(widget.name!),
       );
     }
 
     // Fallback: display local initials text (no Appwrite dependency)
-    return CircleAvatar(radius: r, backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Text(widget.initials ?? '?'));
+    return CircleAvatar(radius: r, backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Text(widget.name ?? '?'));
   }
 }

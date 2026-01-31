@@ -15,6 +15,7 @@ import 'package:two_space_app/widgets/group_background_widget.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:math' as math;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:two_space_app/models/matrix.dart';
 
 class ChatScreen extends StatefulWidget {
   final Chat chat;
@@ -131,7 +132,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     setState(() { _searching = true; _searchResults = []; });
     try {
-      final res = await _svc.searchMessages(q, type: type);
+      final res = await _svc.searchMessages(query: q, type: type);
       setState(() { _searchResults = res; });
     } catch (_) {
       setState(() { _searchResults = []; });
@@ -144,7 +145,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _loadMessages() async {
     setState(() => _loading = true);
     try {
-      final msgs = await _svc.loadMessages(widget.chat.id, limit: 100);
+      final msgs = await _svc.loadMessages(roomId: widget.chat.id, limit: 100);
       final auth = AuthService();
       final me = await auth.getCurrentUserId();
       
@@ -156,7 +157,7 @@ class _ChatScreenState extends State<ChatScreen> {
         senderIds.map((id) async {
           if (!_userInfoCache.containsKey(id)) {
             try {
-              final info = await _svc.getUserInfo(id);
+              final info = await _svc.getUserInfo(userId: id);
               _userInfoCache[id] = info;
             } catch (_) {
               _userInfoCache[id] = {};
@@ -225,7 +226,7 @@ class _ChatScreenState extends State<ChatScreen> {
       for (final m in out) {
         () async {
           try {
-            final r = await _svc.getReactions(widget.chat.id, m.id);
+            final r = await _svc.getReactions(roomId: widget.chat.id, eventId: m.id);
             if (mounted) setState(() => _reactions[m.id] = r);
           } catch (_) {}
         }();
@@ -282,7 +283,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text == null || text.isEmpty) return;
     try {
       final formatted = '<mx-reply><blockquote>${text.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</blockquote></mx-reply>';
-      await _svc.sendReply(widget.chat.id, eventId, text, formatted);
+      await _svc.sendReply(roomId: widget.chat.id, eventId: eventId, body: text, formattedBody: formatted);
       await _loadMessages();
     } catch (e) {
       if (mounted) _showErrorMessage('Ошибка ответа: $e');
@@ -299,7 +300,7 @@ class _ChatScreenState extends State<ChatScreen> {
       } else {
         pinned.insert(0, eventId);
       }
-      await _svc.setPinnedEvents(widget.chat.id, pinned);
+      await _svc.setPinnedEvents(roomId: widget.chat.id, pinnedEventIds: pinned);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Закрепления обновлены'), duration: Duration(seconds: 2)));
     } catch (e) {
       if (mounted) _showErrorMessage('Ошибка закрепа: $e');
@@ -310,7 +311,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: const Text('Удалить сообщение?'), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Отмена')), ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Удалить'))]));
     if (ok != true) return;
     try {
-      await _svc.redactEvent(widget.chat.id, eventId);
+      await _svc.redactEvent(roomId: widget.chat.id, eventId: eventId);
       await _loadMessages();
     } catch (e) {
       if (mounted) _showErrorMessage('Ошибка удаления: $e');
@@ -335,7 +336,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     if (newText == null || newText.isEmpty) return;
     try {
-      await _svc.editMessage(widget.chat.id, eventId, newText, eventId);
+      await _svc.editMessage(roomId: widget.chat.id, eventId: eventId, newBody: newText);
       await _loadMessages();
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Сообщение отредактировано'), duration: Duration(seconds: 2)));
     } catch (e) {
@@ -376,7 +377,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             onTap: () async {
                               entry?.remove();
                               try {
-                                await _svc.sendReaction(widget.chat.id, m.id, e);
+                                await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: e);
                                 await _loadMessages();
                               } catch (_) {}
                             },
@@ -395,7 +396,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       TextButton.icon(onPressed: () { entry?.remove(); _pinUnpinEvent(m.id); }, icon: const Icon(Icons.push_pin), label: const Text('Закрепить')), 
                       if (m.isOwn) TextButton.icon(onPressed: () { entry?.remove(); _redactEvent(m.id); }, icon: const Icon(Icons.delete), label: const Text('Удалить')),
                       TextButton.icon(onPressed: () { entry?.remove(); _shareMessage(m); }, icon: const Icon(Icons.share), label: const Text('Поделиться')),
-                      TextButton.icon(onPressed: () async { entry?.remove(); final picked = await _showEmojiPickerDialog(); if (picked != null) { try { await _svc.sendReaction(widget.chat.id, m.id, picked); await _loadMessages(); } catch (_) {} } }, icon: const Icon(Icons.emoji_emotions), label: const Text('Ещё')),
+                      TextButton.icon(onPressed: () async { entry?.remove(); final picked = await _showEmojiPickerDialog(); if (picked != null) { try { await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: picked); await _loadMessages(); } catch (_) {} } }, icon: const Icon(Icons.emoji_emotions), label: const Text('Ещё')),
                     ])
                   ]),
                 ),
@@ -416,11 +417,11 @@ class _ChatScreenState extends State<ChatScreen> {
           chosen = emoji.emoji; 
           Navigator.of(c).pop(); 
         }, 
-        config: Config(
+        config: const Config(
           emojiSizeMax: 32,
-          bgColor: const Color(0xFF0B0320),
-          indicatorColor: const Color(0xFF1F5FFF),
-          iconColorSelected: const Color(0xFF1F5FFF),
+          bgColor: Color(0xFF0B0320),
+          indicatorColor: Color(0xFF1F5FFF),
+          iconColorSelected: Color(0xFF1F5FFF),
         )
       )));
     });
@@ -443,9 +444,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty) return;
     setState(() => _sending = true);
     try {
-      final auth = AuthService();
-      final sender = await auth.getCurrentUserId();
-      await _svc.sendMessage(widget.chat.id, sender ?? '', text);
+      await _svc.sendMessage(roomId: widget.chat.id, body: text);
       setState(() {
         _messages.insert(0, _Msg(id: DateTime.now().millisecondsSinceEpoch.toString(), text: text, isOwn: true, time: DateTime.now(), senderId: '', senderName: 'You', senderAvatar: null, type: 'm.text'));
         _controller.text = '';
@@ -496,9 +495,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     setState(() => _sending = true);
     try {
-      final auth = AuthService();
-      final sender = await auth.getCurrentUserId();
-      await _svc.sendMessage(widget.chat.id, sender ?? '', path, type: 'm.audio', mediaFileId: path);
+      await _svc.sendMessage(roomId: widget.chat.id, body: path, type: 'm.audio', mediaFileId: path);
       
       if (mounted) {
         setState(() {
@@ -531,9 +528,7 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final bytes = await File(path).readAsBytes();
       final mxc = await _svc.uploadMedia(bytes, contentType: 'application/octet-stream', fileName: res.files.single.name);
-      final auth = AuthService();
-      final sender = await auth.getCurrentUserId();
-      await _svc.sendMessage(widget.chat.id, sender ?? '', '', type: 'm.image', mediaFileId: mxc);
+      await _svc.sendMessage(roomId: widget.chat.id, body: '', type: 'm.image', mediaFileId: mxc);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Файл отправлен'), duration: Duration(seconds: 2)));
     } catch (e) {
@@ -646,11 +641,11 @@ class _ChatScreenState extends State<ChatScreen> {
                         final myEvent = data['myEventId'] as String?;
                         try {
                           if (myEvent != null && myEvent.isNotEmpty) {
-                            await _svc.redactEvent(widget.chat.id, myEvent);
+                            await _svc.redactEvent(roomId: widget.chat.id, eventId: myEvent);
                           } else {
-                            await _svc.sendReaction(widget.chat.id, m.id, entry.key);
+                            await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: entry.key);
                           }
-                          final r = await _svc.getReactions(widget.chat.id, m.id);
+                          final r = await _svc.getReactions(roomId: widget.chat.id, eventId: m.id);
                           if (mounted) setState(() => _reactions[m.id] = r);
                         } catch (_) {}
                       },
@@ -678,7 +673,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 if (!m.isOwn)
                   GestureDetector(
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: m.senderId ?? ''))),
-                    child: UserAvatar(avatarUrl: m.senderAvatar, initials: (m.senderName ?? '?').isNotEmpty ? (m.senderName ?? '?')[0] : '?', radius: 16),
+                    child: UserAvatar(avatarUrl: m.senderAvatar, name: (m.senderName ?? '?'), radius: 16),
                   ),
                 const SizedBox(width: 8),
                 Flexible(
@@ -700,7 +695,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 if (m.isOwn) const SizedBox(width: 8),
-                if (m.isOwn) CircleAvatar(radius: 16, child: Text('Y')),
+                if (m.isOwn) const CircleAvatar(radius: 16, child: Text('Y')),
               ],
             ),
           );

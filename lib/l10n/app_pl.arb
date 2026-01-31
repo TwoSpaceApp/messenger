@@ -1,0 +1,20 @@
+{
+  "appTitle": "TwoSpace",
+  "loading": "Ładowanie...",
+  "initializing": "Inicjalizacja...",
+  "errorGeneric": "Wystąpił błąd",
+  "errorInitialization": "Błąd inicjalizacji",
+  "errorInitializationFull": "Błąd inicjalizacji",
+  "errorNetwork": "Błąd sieci",
+  "errorAuth": "Błąd uwierzytelniania",
+  "errorInvalidArguments": "Nieprawidłowe argumenty",
+  "errorInvalidArgumentsProfile": "Nieprawidłowe argumenty dla profilu",
+  "errorInvalidArgumentsChat": "Nieprawidłowe argumenty dla czatu",
+  "retry": "Spróbuj ponownie",
+  "cancel": "Anuluj",
+  "save": "Zapisz",
+  "delete": "Usuń",
+  "edit": "Edytuj",
+  "send": "Wyślij",
+  "close": "Zamknij"
+}

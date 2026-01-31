@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 
 import 'constants/app_colors.dart';
-import 'constants/app_strings.dart';
 import 'config/theme_builder.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -24,6 +23,7 @@ import 'config/environment.dart';
 import 'widgets/dev_fab.dart';
 import 'providers/auth_notifier.dart';
 import 'widgets/auth_listener.dart';
+// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,7 +44,6 @@ Future<void> main() async {
   );
 }
 
-/// Setup global error handlers
 void _setupErrorHandlers() {
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
@@ -66,7 +65,7 @@ void _setupErrorHandlers() {
   };
 }
 
-/// Build custom error widget
+/// Build custom error widget (with hardcoded English text for reliability)
 Widget _buildErrorWidget(FlutterErrorDetails details) {
   final msg = details.exceptionAsString();
   return MaterialApp(
@@ -86,7 +85,7 @@ Widget _buildErrorWidget(FlutterErrorDetails details) {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  AppStrings.errorInitialization,
+                  "Application Error", // Hardcoded English text
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 18,
@@ -140,11 +139,14 @@ class TwoSpaceApp extends StatelessWidget {
 
             final app = MaterialApp(
               navigatorKey: appNavigatorKey,
-              title: AppStrings.appTitle,
+              title: 'TwoSpace',
+              // onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
               debugShowCheckedModeBanner: false,
               theme: theme,
+              // localizationsDelegates: AppLocalizations.localizationsDelegates,
+              // supportedLocales: AppLocalizations.supportedLocales,
               home: const AuthListener(child: AuthGate()),
-              routes: _buildRoutes(),
+              routes: _buildRoutes(context),
             );
 
             // Add dev tools in debug mode
@@ -162,28 +164,28 @@ class TwoSpaceApp extends StatelessWidget {
   }
 
   /// Build app routes
-  Map<String, WidgetBuilder> _buildRoutes() {
+  Map<String, WidgetBuilder> _buildRoutes(BuildContext context) {
     return {
-      AppStrings.routeLogin: (context) => const LoginScreen(),
-      AppStrings.routeHome: (context) => const HomeScreen(),
-      AppStrings.routeRegister: (context) => const RegisterScreen(),
-      AppStrings.routeForgot: (context) => const ForgotPasswordScreen(),
-      AppStrings.routeCustomization: (context) => const CustomizationScreen(),
-      AppStrings.routePrivacy: (context) => const PrivacyScreen(),
-      AppStrings.routeProfile: (context) {
+      '/login': (context) => const LoginScreen(),
+      '/home': (context) => const HomeScreen(),
+      '/register': (context) => const RegisterScreen(),
+      '/forgot': (context) => const ForgotPasswordScreen(),
+      '/customization': (context) => const CustomizationScreen(),
+      '/privacy': (context) => const PrivacyScreen(),
+      '/profile': (context) {
         final args = ModalRoute.of(context)!.settings.arguments;
         if (args is String) {
           return ProfileScreen(userId: args);
         }
-        return _buildInvalidArgsScreen(AppStrings.errorInvalidArgumentsProfile);
+        return _buildInvalidArgsScreen('Invalid arguments for profile');
       },
-      AppStrings.routeChangeEmail: (context) => const ChangeEmailScreen(),
-      AppStrings.routeChat: (context) {
+      '/change_email': (context) => const ChangeEmailScreen(),
+      '/chat': (context) {
         final args = ModalRoute.of(context)!.settings.arguments;
         if (args is Chat) {
           return ChatScreen(chat: args);
         }
-        return _buildInvalidArgsScreen(AppStrings.errorInvalidArgumentsChat);
+        return _buildInvalidArgsScreen('Invalid arguments for chat');
       },
     };
   }
@@ -201,7 +203,7 @@ class TwoSpaceApp extends StatelessWidget {
     );
   }
 
-  /// Build app for critical initialization errors
+  /// Build app for critical initialization errors (with hardcoded English text)
   Widget _buildInitializationErrorApp(List<InitStepResult> failures) {
     return MaterialApp(
       home: Scaffold(
@@ -219,7 +221,7 @@ class TwoSpaceApp extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  AppStrings.errorInitializationFull,
+                  "Critical Initialization Failure", // Hardcoded English text
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 18,
@@ -256,16 +258,16 @@ class AuthGate extends ConsumerWidget {
       data: (state) {
         return state.isAuthenticated ? const HomeScreen() : const LoginScreen();
       },
-      loading: () => Scaffold(
+      loading: () => const Scaffold(
         backgroundColor: AppColors.backgroundError,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
               Text(
-                AppStrings.loading,
+                "Loading...", // Hardcoded English text
                 style: TextStyle(color: AppColors.textSecondary),
               ),
             ],
@@ -295,7 +297,7 @@ class AuthGate extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    AppStrings.errorInitializationFull,
+                    "Initialization Error", // Hardcoded English text
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 18,
@@ -313,7 +315,7 @@ class AuthGate extends ConsumerWidget {
                     onPressed: () {
                       ref.invalidate(authNotifierProvider);
                     },
-                    child: const Text(AppStrings.retry),
+                    child: const Text("Retry"), // Hardcoded English text
                   ),
                 ],
               ),

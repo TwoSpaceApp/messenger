@@ -1,0 +1,20 @@
+{
+  "appTitle": "TwoSpace",
+  "loading": "Loading...",
+  "initializing": "Initializing...",
+  "errorGeneric": "An error occurred",
+  "errorInitialization": "Initialization error",
+  "errorInitializationFull": "Initialization Error",
+  "errorNetwork": "Network error",
+  "errorAuth": "Authentication error",
+  "errorInvalidArguments": "Invalid arguments",
+  "errorInvalidArgumentsProfile": "Invalid arguments for profile",
+  "errorInvalidArgumentsChat": "Invalid arguments for chat",
+  "retry": "Retry",
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "edit": "Edit",
+  "send": "Send",
+  "close": "Close"
+}

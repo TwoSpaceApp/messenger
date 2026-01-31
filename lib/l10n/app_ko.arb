@@ -1,0 +1,20 @@
+{
+  "appTitle": "TwoSpace",
+  "loading": "로드 중...",
+  "initializing": "초기화 중...",
+  "errorGeneric": "오류가 발생했습니다",
+  "errorInitialization": "초기화 오류",
+  "errorInitializationFull": "초기화 오류",
+  "errorNetwork": "네트워크 오류",
+  "errorAuth": "인증 오류",
+  "errorInvalidArguments": "잘못된 인수",
+  "errorInvalidArgumentsProfile": "프로필에 대한 잘못된 인수",
+  "errorInvalidArgumentsChat": "채팅에 대한 잘못된 인수",
+  "retry": "다시 시도",
+  "cancel": "취소",
+  "save": "저장",
+  "delete": "삭제",
+  "edit": "편집",
+  "send": "보내기",
+  "close": "닫기"
+}

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/auth_service.dart';
+import '../providers/auth_notifier.dart';
+import '../utils/responsive.dart';
 import 'otp_screen.dart';
 import 'sso_webview_screen.dart';
 
-/// Simplified LoginScreen using Riverpod for state management
-/// All auth logic delegated to AuthNotifier
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -16,6 +17,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtl = TextEditingController();
   final _passCtl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -24,39 +26,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _login() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      await _handleLogin();
+    }
+  }
+
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
 
     final identifier = _emailCtl.text.trim();
     final password = _passCtl.text.trim();
     final notifier = ref.read(authNotifierProvider.notifier);
 
     try {
-      // Phone number flow (starts with +)
-      if (identifier.startsWith('+')) {
-        await _handlePhoneLogin(identifier);
-        return;
-      }
-
-      // Email with magic link (no password)
-      if (password.isEmpty) {
-        await _handleMagicLinkLogin(identifier);
-        return;
-      }
-
       // Standard email + password login
       await notifier.login(identifier, password);
       
       // Navigation happens automatically via auth listener
     } catch (e) {
-      if (!mounted) return;
-      _showError('Ошибка входа: $e');
+      if (mounted) {
+        _showError('Ошибка входа: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _handlePhoneLogin(String phone) async {
-    // For phone login, we need OTP flow
-    // This could be moved to a separate provider in the future
     if (!mounted) return;
     
     final code = await Navigator.push<String?>(
@@ -66,7 +63,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     
     if (code == null || code.isEmpty) return;
     
-    // TODO: Implement phone verification in AuthNotifier
     _showError('Вход по телефону временно недоступен');
   }
 
@@ -80,81 +76,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     
     if (code == null || code.isEmpty) return;
     
-    // TODO: Implement magic link verification in AuthNotifier
     _showError('Вход по коду временно недоступен');
   }
 
   void _showError(String message) {
-    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
-  }
-
-  String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Введите email или телефон';
-    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 500;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login'),
-        centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextFormField(
-              controller: _emailCtl,
-              decoration: InputDecoration(
-                hintText: 'Email',
-                prefixIcon: const Icon(Icons.email),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildAppIcon(),
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: _emailCtl,
+                decoration: InputDecoration(
+                  hintText: 'Email',
+                  prefixIcon: const Icon(Icons.email),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                validator: (v) => (v == null || v.isEmpty) ? 'Введите email' : null,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _passCtl,
-              obscureText: true,
-              decoration: InputDecoration(
-                hintText: 'Password',
-                prefixIcon: const Icon(Icons.lock),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _passCtl,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Password',
+                  prefixIcon: const Icon(Icons.lock),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loading ? null : _login,
-              child: _loading
-                  ? const CircularProgressIndicator()
-                  : const Text('Login'),
-            ),
-            const SizedBox(height: 12),
-            if (isSmallScreen) _ssoButtons(),
-          ],
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loading ? null : _login,
+                child: _loading
+                    ? const CircularProgressIndicator()
+                    : const Text('Login'),
+              ),
+              const SizedBox(height: 12),
+              _ssoButtons(),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _ssoButtons() {
+    // You can add SSO buttons here later
+    return const SizedBox.shrink();
   }
 
   Widget _buildAppIcon() {
     return Container(
       padding: EdgeInsets.all(20 * Responsive.scaleWidth(context)),
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
         color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        shape: BoxShape.circle,
       ),
       child: Icon(
-        Icons.chat,
-        size: 48 * Responsive.scaleWidth(context),
+        Icons.lock_open_outlined,
+        size: 64 * Responsive.scaleFor(context),
         color: Theme.of(context).colorScheme.primary,
       ),
     );

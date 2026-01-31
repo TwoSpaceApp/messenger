@@ -1,0 +1,20 @@
+{
+  "appTitle": "TwoSpace",
+  "loading": "Загрузка...",
+  "initializing": "Инициализация...",
+  "errorGeneric": "Произошла ошибка",
+  "errorInitialization": "Ошибка при инициализации",
+  "errorInitializationFull": "Ошибка инициализации",
+  "errorNetwork": "Ошибка сети",
+  "errorAuth": "Ошибка аутентификации",
+  "errorInvalidArguments": "Неверные аргументы",
+  "errorInvalidArgumentsProfile": "Неверные аргументы для профиля",
+  "errorInvalidArgumentsChat": "Неверные аргументы для чата",
+  "retry": "Повторить",
+  "cancel": "Отмена",
+  "save": "Сохранить",
+  "delete": "Удалить",
+  "edit": "Редактировать",
+  "send": "Отправить",
+  "close": "Закрыть"
+}

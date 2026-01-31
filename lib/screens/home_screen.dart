@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/screens/chat_screen.dart';
 import 'package:two_space_app/screens/group_settings_screen.dart';
 import 'package:two_space_app/widgets/user_avatar.dart';
+import 'package:two_space_app/services/auth_service.dart';
+import 'package:two_space_app/services/sentry_service.dart';
 import '../utils/responsive.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
@@ -19,7 +22,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String? _selectedRoomId;
   String _selectedRoomName = '';
   bool _loading = true;
-  bool _rightOpen = true;
 
   String _searchQuery = '';
   String _searchType = 'all';
@@ -28,8 +30,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _loadRooms();
-    
-    // Set user context in Sentry
     _setUserContext();
   }
 
@@ -37,23 +37,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       final auth = AuthService();
       final token = await auth.getMatrixTokenForUser();
+      if (!mounted) return;
       if (token == null || token.isEmpty) {
-        if (!mounted) return;
         Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
         return;
       }
     } catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      // Handle error, maybe show a snackbar
     }
   }
 
   Future<void> _loadRooms() async {
+    if (!mounted) return;
     setState(() => _loading = true);
     
     try {
-      SentryService.addBreadcrumb('Загрузка списка комнат', category: 'chat');
-      
       final ids = await _chat.getJoinedRooms();
       final out = <Map<String, dynamic>>[];
       
@@ -66,38 +65,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         });
       }
       
-      setState(() {
-        _rooms = out;
-        if (_rooms.isNotEmpty) {
-          _selectedRoomId = _rooms.first['roomId'] as String?;
-          _selectedRoomName = _rooms.first['name'] as String? ?? '';
-        }
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _rooms = out;
+          if (_rooms.isNotEmpty) {
+            _selectedRoomId = _rooms.first['roomId'] as String?;
+            _selectedRoomName = _rooms.first['name'] as String? ?? '';
+          }
+          _loading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _rooms = [
-          {'roomId': '!example1:matrix.org', 'name': 'Общий чат'},
-          {'roomId': '!example2:matrix.org', 'name': 'Разработка'},
-          {'roomId': '!example3:matrix.org', 'name': 'Тестовый'},
-        ];
-        if (_rooms.isNotEmpty) {
-          _selectedRoomId = _rooms.first['roomId'] as String?;
-          _selectedRoomName = _rooms.first['name'] as String? ?? '';
-        }
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          // Mock data for development in case of error
+          _rooms = [
+            {'roomId': '!example1:matrix.org', 'name': 'Общий чат'},
+            {'roomId': '!example2:matrix.org', 'name': 'Разработка'},
+            {'roomId': '!example3:matrix.org', 'name': 'Тестовый'},
+          ];
+          if (_rooms.isNotEmpty) {
+            _selectedRoomId = _rooms.first['roomId'] as String?;
+            _selectedRoomName = _rooms.first['name'] as String? ?? '';
+          }
+          _loading = false;
+        });
+      }
     }
   }
 
-  Widget _buildLeftColumn(double width) {
+  PopupMenuItem<String> _buildFilterMenuItem(String title, String value) {
+    return PopupMenuItem(
+      value: value,
+      child: Text(title),
+    );
+  }
+
+  Widget _buildLeftColumn() {
     return Container(
       color: Theme.of(context).colorScheme.surface,
       child: Column(
         children: [
           const SizedBox(height: 12),
-          
-          // Search field
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: TextField(
@@ -116,8 +125,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          
-          // Search type filter
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Row(
@@ -135,77 +142,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ],
             ),
-          ]),
-        ),
-        Expanded(
-          child: _loading
+          ),
+          Expanded(
+            child: _loading
               ? const Center(child: CircularProgressIndicator())
               : _rooms.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline,
-                            size: 64 * Responsive.scaleFor(context),
-                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          ),
-                          SizedBox(height: 16 * Responsive.scaleHeight(context)),
-                          Text(
-                            'Нет чатов',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: 20 * Responsive.scaleFor(context),
-                            ),
-                          ),
-                          SizedBox(height: 8 * Responsive.scaleHeight(context)),
-                          Text(
-                            'Присоединитесь к комнате или создайте новую',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontSize: 14 * Responsive.scaleFor(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: EdgeInsets.all(8 * Responsive.scaleWidth(context)),
+                  ? const Center(child: Text('Нет чатов'))
+                  : ListView.builder(
                       itemCount: _rooms.length,
-                      separatorBuilder: (_, __) => SizedBox(height: 6 * Responsive.scaleHeight(context)),
                       itemBuilder: (context, index) {
                         final r = _rooms[index];
-                        final id = r['roomId'] as String? ?? '';
+                        final id = r['roomId'] as String;
                         final name = r['name'] as String? ?? id;
                         final selected = _selectedRoomId == id;
                         return ListTile(
-                          key: ValueKey(id),
                           selected: selected,
-                          selectedTileColor: Theme.of(context).colorScheme.surface.withOpacity(0.06),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12 * Responsive.scaleWidth(context)),
+                          title: Text(name),
+                          leading: UserAvatar(
+                            avatarUrl: r['avatar'] as String?,
+                            radius: 20 * Responsive.scaleFor(context),
+                            name: name,
                           ),
-                          title: Text(
-                            name,
-                            style: TextStyle(fontSize: 16 * Responsive.scaleFor(context)),
-                          ),
-                          leading: r['avatar'] != null
-                              ? UserAvatar(avatarUrl: r['avatar'] as String?, radius: 20 * Responsive.scaleFor(context))
-                              : CircleAvatar(
-                                radius: 20 * Responsive.scaleFor(context),
-                                child: Text(name.isEmpty ? '?' : name[0].toUpperCase()),
-                              ),
                           onTap: () {
                             setState(() {
                               _selectedRoomId = id;
                               _selectedRoomName = name;
-                              // open center and right when selecting
-                              _rightOpen = true;
                             });
                           },
                         );
                       },
                     ),
-        ),
-      ]),
+          ),
+        ],
+      ),
     );
   }
 
@@ -229,15 +198,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           body: Row(
             children: [
               if (isWide)
-                Expanded(
-                  flex: 2,
+                SizedBox(
+                  width: 300,
                   child: Container(
                     color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    child: _buildLeftColumn(300.0),
+                    child: _buildLeftColumn(),
                   ),
                 ),
               Expanded(
-                flex: 5,
                 child: _buildMainContent(scale),
               ),
             ],
@@ -251,86 +219,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_selectedRoomId == null) {
       return const Center(child: Text('Выберите комнату'));
     }
-    
-    final chat = Chat(
-      id: _selectedRoomId!,
-      name: _selectedRoomName,
-      members: [],
-    );
-    
+    final chat = Chat(id: _selectedRoomId!, name: _selectedRoomName, members: []);
     return Column(
       children: [
-        // Header
         Container(
           color: Theme.of(context).colorScheme.surface,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _rightOpen = !_rightOpen),
-                  child: Row(
-                    children: [
-                      Text(
-                        _selectedRoomName,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.open_in_new, size: 18),
-                    ],
-                  ),
-                ),
-              ),
+              Expanded(child: Text(_selectedRoomName, style: Theme.of(context).textTheme.titleLarge)),
               IconButton(
                 icon: const Icon(Icons.info_outline),
-                tooltip: 'Информация о группе',
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => GroupSettingsScreen(roomId: _selectedRoomId!),
-                    ),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => GroupSettingsScreen(roomId: _selectedRoomId!)));
                 },
               ),
             ],
           ),
-        ]),
-      ),
-      const Divider(height: 1),
-      Expanded(child: ChatScreen(key: ValueKey(chat.id), chat: chat, searchQuery: _searchQuery, searchType: _searchType)),
-      Container(
-        color: Theme.of(context).colorScheme.surface,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() => _rightOpen = !_rightOpen);
-              },
-              child: Row(children: [
-                Text(_selectedRoomName, style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(width: 8),
-                const Icon(Icons.open_in_new, size: 18),
-              ]),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            tooltip: 'Информация о группе',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => GroupSettingsScreen(roomId: _selectedRoomId!),
-                ),
-              );
-            },
-          ),
-        ]),
-      ),
-      const Divider(height: 1),
-      Expanded(child: ChatScreen(key: ValueKey(chat.id), chat: chat, searchQuery: _searchQuery, searchType: _searchType)),
-    ]);
+        ),
+        const Divider(height: 1),
+        Expanded(child: ChatScreen(key: ValueKey(chat.id), chat: chat)),
+      ],
+    );
   }
 }
