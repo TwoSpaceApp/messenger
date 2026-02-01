@@ -42,7 +42,7 @@ class AuthState {
 
 /// Provider for AuthService singleton
 @riverpod
-AuthService authService(ProviderRef ref) {
+AuthService authService(AuthServiceRef ref) {
   return AuthService();
 }
 

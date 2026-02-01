@@ -273,7 +273,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             GlassCard(
               child: Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Material(
@@ -301,7 +301,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 Text(
                                   'Выход с этого устройства',
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Colors.red.withOpacity(0.6),
+                                        color: Colors.red.withValues(alpha: 0.6),
                                       ),
                                 ),
                               ],

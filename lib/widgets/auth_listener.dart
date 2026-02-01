@@ -27,20 +27,6 @@ class AuthListener extends ConsumerStatefulWidget {
 }
 
 class _AuthListenerState extends ConsumerState<AuthListener> {
-  @override
-  void initState() {
-    super.initState();
-    // Listen to auth state changes after first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.listen<AsyncValue<AuthState>>(
-        authNotifierProvider,
-        (previous, next) {
-          _handleAuthStateChange(previous, next);
-        },
-      );
-    });
-  }
-
   void _handleAuthStateChange(
     AsyncValue<AuthState>? previous,
     AsyncValue<AuthState> next,
@@ -113,6 +99,14 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to auth state changes within build method
+    ref.listen<AsyncValue<AuthState>>(
+      authNotifierProvider,
+      (previous, next) {
+        _handleAuthStateChange(previous, next);
+      },
+    );
+    
     return widget.child;
   }
 }

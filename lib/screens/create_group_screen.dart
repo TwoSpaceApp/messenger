@@ -122,11 +122,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         padding: EdgeInsets.all(16 * Responsive.scaleFor(context)),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withOpacity(0.3),
+            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: isSelected ? 2 * Responsive.scaleWidth(context) : 1 * Responsive.scaleWidth(context),
           ),
           borderRadius: BorderRadius.circular(12 * Responsive.scaleWidth(context)),
-          color: isSelected ? theme.colorScheme.primary.withOpacity(0.08) : null,
+          color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.08) : null,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +189,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               icon: _isLoading ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary))) : const Icon(Icons.check),
               label: const Text('Создать'),
               style: TextButton.styleFrom(
-                backgroundColor: _isLoading ? null : theme.colorScheme.primary.withOpacity(0.1),
+                backgroundColor: _isLoading ? null : theme.colorScheme.primary.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -216,7 +216,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                           color: isDark ? Colors.grey[800] : Colors.grey[200],
                           borderRadius: BorderRadius.circular(60),
                           border: Border.all(
-                            color: theme.colorScheme.primary.withOpacity(0.3),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
                             width: 2,
                           ),
                         ),
@@ -231,7 +231,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                             : Icon(
                                 Icons.add_a_photo,
                                 size: 40,
-                                color: theme.colorScheme.primary.withOpacity(0.6),
+                                color: theme.colorScheme.primary.withValues(alpha: 0.6),
                               ),
                       ),
                     ),
@@ -253,13 +253,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: theme.colorScheme.outline.withOpacity(0.3),
+                          color: theme.colorScheme.outline.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: theme.colorScheme.outline.withOpacity(0.2),
+                          color: theme.colorScheme.outline.withValues(alpha: 0.2),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -293,13 +293,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: theme.colorScheme.outline.withOpacity(0.3),
+                          color: theme.colorScheme.outline.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: theme.colorScheme.outline.withOpacity(0.2),
+                          color: theme.colorScheme.outline.withValues(alpha: 0.2),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -341,7 +341,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   Container(
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: theme.colorScheme.outline.withOpacity(0.2),
+                        color: theme.colorScheme.outline.withValues(alpha: 0.2),
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),

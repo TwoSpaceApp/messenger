@@ -6,7 +6,6 @@ import 'package:two_space_app/screens/chat_screen.dart';
 import 'package:two_space_app/screens/group_settings_screen.dart';
 import 'package:two_space_app/widgets/user_avatar.dart';
 import 'package:two_space_app/services/auth_service.dart';
-import 'package:two_space_app/services/sentry_service.dart';
 import '../utils/responsive.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -25,6 +24,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _searchQuery = '';
   String _searchType = 'all';
+
+  List<Map<String, dynamic>> get _filteredRooms {
+    if (_searchQuery.isEmpty) return _rooms;
+    return _rooms.where((r) {
+      final name = (r['name'] as String?)?.toLowerCase() ?? '';
+      return name.contains(_searchQuery.toLowerCase());
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -144,12 +151,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Expanded(
             child: _loading
               ? const Center(child: CircularProgressIndicator())
-              : _rooms.isEmpty
+              : _filteredRooms.isEmpty
                   ? const Center(child: Text('Нет чатов'))
                   : ListView.builder(
-                      itemCount: _rooms.length,
+                      itemCount: _filteredRooms.length,
                       itemBuilder: (context, index) {
-                        final r = _rooms[index];
+                        final r = _filteredRooms[index];
                         final id = r['roomId'] as String;
                         final name = r['name'] as String? ?? id;
                         final selected = _selectedRoomId == id;

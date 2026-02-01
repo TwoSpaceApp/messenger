@@ -24,7 +24,7 @@ class StartChatBottomSheet extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -41,7 +41,7 @@ class StartChatBottomSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: theme.colorScheme.outline.withOpacity(0.3),
+              color: theme.colorScheme.outline.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -113,13 +113,13 @@ class StartChatBottomSheet extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.2),
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
               width: 1.5,
             ),
             borderRadius: BorderRadius.circular(16),
             color: isDark
-                ? theme.colorScheme.surface.withOpacity(0.5)
-                : theme.colorScheme.primary.withOpacity(0.03),
+                ? theme.colorScheme.surface.withValues(alpha: 0.5)
+                : theme.colorScheme.primary.withValues(alpha: 0.03),
           ),
           child: Row(
             children: [
@@ -129,8 +129,8 @@ class StartChatBottomSheet extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      theme.colorScheme.primary.withOpacity(0.2),
-                      theme.colorScheme.primary.withOpacity(0.05),
+                      theme.colorScheme.primary.withValues(alpha: 0.2),
+                      theme.colorScheme.primary.withValues(alpha: 0.05),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -170,7 +170,7 @@ class StartChatBottomSheet extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: theme.colorScheme.outline.withOpacity(0.5),
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
               ),
             ],
           ),

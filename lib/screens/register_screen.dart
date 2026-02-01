@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_notifier.dart';
-import '../utils/responsive.dart';
 import '../services/sentry_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:typed_data';
-import '../services/matrix_service.dart';
 
 /// Simplified RegisterScreen using Riverpod for state management
 class RegisterScreen extends ConsumerStatefulWidget {

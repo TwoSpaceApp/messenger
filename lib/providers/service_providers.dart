@@ -3,8 +3,6 @@ import 'package:two_space_app/services/matrix/matrix_auth_service.dart';
 import 'package:two_space_app/services/matrix/matrix_media_service.dart';
 import 'package:two_space_app/services/matrix/matrix_profile_service.dart';
 import 'package:two_space_app/services/matrix/matrix_messaging_service.dart';
-import 'package:two_space_app/services/token_manager.dart';
-import 'package:two_space_app/services/initialization_service.dart';
 import 'dart:async';
 
 /// Provider for MatrixAuthService singleton

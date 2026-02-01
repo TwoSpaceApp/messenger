@@ -15,7 +15,7 @@ class MessageDateDivider extends StatelessWidget {
         children: [
           Expanded(
             child: Divider(
-              color: theme.colorScheme.outline.withOpacity(0.3),
+              color: theme.colorScheme.outline.withValues(alpha: 0.3),
             ),
           ),
           Padding(
@@ -29,7 +29,7 @@ class MessageDateDivider extends StatelessWidget {
           ),
           Expanded(
             child: Divider(
-              color: theme.colorScheme.outline.withOpacity(0.3),
+              color: theme.colorScheme.outline.withValues(alpha: 0.3),
             ),
           ),
         ],

@@ -195,7 +195,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
         final leftWidth = isMobile ? maxW : maxW * 0.28;
         final leftCol = Container(
           width: isMobile ? null : leftWidth.clamp(200, 360),
-          color: Theme.of(context).colorScheme.surface.withOpacity(0.02),
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.02),
           child: Column(children: [
             const SizedBox(height: 12),
             Padding(

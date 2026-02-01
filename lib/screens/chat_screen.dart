@@ -12,9 +12,33 @@ import 'package:two_space_app/services/draft_service.dart';
 import 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/screens/profile_screen.dart';
 import 'package:two_space_app/widgets/group_background_widget.dart';
-import 'package:audioplayers/audioplayers.dart';
+// import 'package:audioplayers/audioplayers.dart';  // Disabled for Linux
 import 'dart:math' as math;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+
+// Stub for AudioPlayer when audioplayers is disabled
+class AudioPlayer {
+  Future<void> setReleaseMode(dynamic mode) async {}
+  Future<void> play(dynamic source) async {}
+  Future<void> setSource(dynamic source) async {}
+  Future<void> pause() async {}
+  Future<void> resume() async {}
+  Future<void> stop() async {}
+  Future<void> seek(Duration position) async {}
+  Future<void> dispose() async {}
+  Stream<dynamic> get onPlayerStateChanged => const Stream.empty();
+  Stream<Duration> get onPositionChanged => const Stream.empty();
+  Stream<Duration> get onDurationChanged => const Stream.empty();
+  Stream<void> get onPlayerComplete => const Stream.empty();
+}
+
+class ReleaseMode {
+  static const stop = null;
+}
+
+class DeviceFileSource {
+  DeviceFileSource(String path);
+}
 
 class ChatScreen extends StatefulWidget {
   final Chat chat;
@@ -692,7 +716,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       duration: const Duration(milliseconds: 400),
                                       curve: Curves.easeInOut,
                                       decoration: _highlighted.contains(m.id)
-                                          ? BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2), color: Theme.of(context).colorScheme.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(16))
+                                          ? BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2), color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(16))
                                           : null,
                                       child: bubble,
                                     ),
@@ -854,7 +878,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
   @override
   Widget build(BuildContext context) {
     final samples = (_waveform.isNotEmpty) ? _waveform : List<double>.generate(24, (i) => 0.2 + (i.isEven ? 0.12 : 0.0));
-    final bars = Row(mainAxisSize: MainAxisSize.min, children: List.generate(samples.length, (i) { final h = 12.0 + (samples[i] * 48.0); return Container(margin: const EdgeInsets.symmetric(horizontal: 2), width: 4, height: h, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.12), borderRadius: BorderRadius.circular(2))); }));
+    final bars = Row(mainAxisSize: MainAxisSize.min, children: List.generate(samples.length, (i) { final h = 12.0 + (samples[i] * 48.0); return Container(margin: const EdgeInsets.symmetric(horizontal: 2), width: 4, height: h, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(2))); }));
     final progress = (_duration.inMilliseconds > 0) ? (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0) : 0.0;
     return GestureDetector(
       onTapDown: (ev) {
@@ -873,7 +897,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
             child: Container(
               width: math.min(MediaQuery.of(context).size.width * 0.35, 260.0),
               height: 36,
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.08),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.08),
               child: Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8.0), child: bars)),
             ),
           ),
@@ -881,7 +905,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
             child: FractionallySizedBox(
               widthFactor: progress,
               alignment: Alignment.centerLeft,
-              child: Container(decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withOpacity(0.18), borderRadius: BorderRadius.circular(8))),
+              child: Container(decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(8))),
             ),
           ),
         ]),

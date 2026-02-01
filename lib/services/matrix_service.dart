@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -32,7 +33,9 @@ class MatrixService {
       if (saved != null && saved.isNotEmpty) _cachedJwt = saved;
       final uid = await SecureStore.read('matrix_current_user_id');
       if (uid != null && uid.isNotEmpty) _cachedUserId = uid;
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Ошибка восстановления JWT: $e');
+    }
   }
 
   static Future<String?> getJwt() async {
@@ -43,7 +46,9 @@ class MatrixService {
         _cachedJwt = saved;
         return _cachedJwt;
       }
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Ошибка чтения JWT: $e');
+    }
     return null;
   }
 
@@ -52,7 +57,9 @@ class MatrixService {
     try {
       await SecureStore.write('matrix_jwt', jwt);
       await SecureStore.write('matrix_jwt_saved_at', DateTime.now().toIso8601String());
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Ошибка сохранения JWT: $e');
+    }
   }
 
   static Future<void> clearJwt() async {
@@ -60,7 +67,9 @@ class MatrixService {
     try {
       await SecureStore.delete('matrix_jwt');
       await SecureStore.delete('matrix_jwt_saved_at');
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Ошибка очистки JWT: $e');
+    }
   }
 
   static Future<void> saveSessionCookie(String? cookie) async {
@@ -70,7 +79,9 @@ class MatrixService {
         return;
       }
       await SecureStore.write('matrix_session_cookie', cookie);
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Ошибка сохранения cookie: $e');
+    }
   }
 
   static Future<String?> getSessionCookie() async {
@@ -89,7 +100,9 @@ class MatrixService {
         _cachedUserId = stored;
         return _cachedUserId;
       }
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Ошибка чтения userId из хранилища: $e');
+    }
 
     // Try to infer user id from stored JWT (if it's a JWT with a sub claim)
     try {
@@ -105,12 +118,16 @@ class MatrixService {
             _cachedUserId = candidate;
             try {
               await SecureStore.write('matrix_current_user_id', candidate);
-            } catch (_) {}
+            } catch (e) {
+              if (kDebugMode) debugPrint('Ошибка сохранения userId: $e');
+            }
             return _cachedUserId;
           }
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Ошибка извлечения userId из JWT: $e');
+    }
 
     return null;
   }
@@ -119,7 +136,9 @@ class MatrixService {
     _cachedUserId = id;
     try {
       await SecureStore.write('matrix_current_user_id', id);
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Ошибка сохранения userId: $e');
+    }
   }
 
   /// Provide a minimal account-like object. When Matrix mode is enabled we map
@@ -137,10 +156,14 @@ class MatrixService {
               'name': info['displayName'] ?? me,
               'prefs': {'avatarUrl': info['avatarUrl'] ?? ''},
             };
-          } catch (_) {}
+          } catch (e) {
+            if (kDebugMode) debugPrint('Ошибка получения информации о пользователе: $e');
+          }
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Ошибка getAccount: $e');
+    }
     // Fallback: return a minimal object if possible
     final uid = await getCurrentUserId();
     return {'\$id': uid ?? '', 'id': uid ?? '', 'name': uid ?? ''};
@@ -183,7 +206,9 @@ class MatrixService {
     final res = await uploadBytesToStorage(bytes, filename: filename ?? File(filePath).uri.pathSegments.last);
     try {
       onProgress?.call(bytes.length, bytes.length);
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Ошибка onProgress callback: $e');
+    }
     return res;
   }
 

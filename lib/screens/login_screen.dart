@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/auth_service.dart';
 import '../providers/auth_notifier.dart';
 import '../utils/responsive.dart';
 import 'otp_screen.dart';
-import 'sso_webview_screen.dart';
 
 /// Simplified LoginScreen using Riverpod for state management
 /// All auth logic delegated to AuthNotifier
@@ -139,7 +137,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       padding: EdgeInsets.all(20 * Responsive.scaleWidth(context)),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
       ),
       child: Icon(
         Icons.chat,
