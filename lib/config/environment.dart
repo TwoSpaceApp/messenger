@@ -36,8 +36,8 @@ class Environment {
 
   /// Matrix configuration
   static bool get useMatrix => _get('USE_MATRIX', fallback: 'true') == 'true';
-  static String get matrixHomeserver => _get('MATRIX_HOMESERVER');
-  static String get matrixHomeserverUrl => _get('MATRIX_SERVER_URL', fallback: _get('MATRIX_HOMESERVER'));
+  static String get matrixHomeserver => _get('MATRIX_HOMESERVER', fallback: 'https://matrix.org');
+  static String get matrixHomeserverUrl => _get('MATRIX_SERVER_URL', fallback: _get('MATRIX_HOMESERVER', fallback: 'https://matrix.org'));
   static String get matrixEmailTokenEndpoint => _get('MATRIX_EMAIL_TOKEN_ENDPOINT');
   static String get matrixAccessToken => _get('MATRIX_ACCESS_TOKEN');
   static String get matrixTotpSetupEndpoint => _get('MATRIX_TOTP_SETUP_ENDPOINT');

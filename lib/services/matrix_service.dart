@@ -11,7 +11,7 @@ class MatrixService {
   final String _homeserverUrl = Environment.matrixHomeserverUrl;
 
   Future<String?> getCurrentUserId() async {
-    final token = await TokenManager.getToken();
+    final token = await TokenManager.getMatrixToken();
     if (token == null) return null;
     // A simple (and not very reliable) way to get user ID from token
     // In a real app, you'd likely store this separately or use a dedicated endpoint
@@ -31,7 +31,7 @@ class MatrixService {
     final url = Uri.parse('$_homeserverUrl$endpoint');
     final headers = {'Content-Type': 'application/json'};
     if (authenticate) {
-      final token = await TokenManager.getToken();
+      final token = await TokenManager.getMatrixToken();
       if (token == null) throw Exception('Not authenticated');
       headers['Authorization'] = 'Bearer $token';
     }
@@ -78,7 +78,7 @@ class MatrixService {
       final type = (payload['type'] ?? 'text').toString();
       final media = payload['mediaFileId'] as String? ?? payload['mediaId'] as String?;
       try {
-        await ChatMatrixService().sendMessage(chatId, text, type == 'image' ? 'm.image' : 'm.text', mediaFileId: media);
+        await ChatMatrixService().sendMessage(roomId: chatId, body: text, type: type == 'image' ? 'm.image' : 'm.text', mediaFileId: media);
       } catch (e) {
         rethrow;
       }

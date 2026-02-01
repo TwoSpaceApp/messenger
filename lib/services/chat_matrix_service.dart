@@ -51,7 +51,7 @@ class ChatMatrixService {
     return [];
   }
 
-  Future<List<Map<String, dynamic>>> searchMessages(String query, {String? type}) async {
+  Future<List<Map<String, dynamic>>> searchMessages(String query, {String? type, required String query}) async {
     return [];
   }
 

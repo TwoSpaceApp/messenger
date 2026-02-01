@@ -75,8 +75,8 @@ abstract class AppLocalizations {
 
   final String localeName;
 
-  static AppLocalizations of(BuildContext context) {
-    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
   static const LocalizationsDelegate<AppLocalizations> delegate =
@@ -117,110 +117,8 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'TwoSpace'**
+  /// **'TwoSpace Messenger'**
   String get appTitle;
-
-  /// No description provided for @loading.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading...'**
-  String get loading;
-
-  /// No description provided for @initializing.
-  ///
-  /// In en, this message translates to:
-  /// **'Initializing...'**
-  String get initializing;
-
-  /// No description provided for @errorGeneric.
-  ///
-  /// In en, this message translates to:
-  /// **'An error occurred'**
-  String get errorGeneric;
-
-  /// No description provided for @errorInitialization.
-  ///
-  /// In en, this message translates to:
-  /// **'Initialization error'**
-  String get errorInitialization;
-
-  /// No description provided for @errorInitializationFull.
-  ///
-  /// In en, this message translates to:
-  /// **'Initialization Error'**
-  String get errorInitializationFull;
-
-  /// No description provided for @errorNetwork.
-  ///
-  /// In en, this message translates to:
-  /// **'Network error'**
-  String get errorNetwork;
-
-  /// No description provided for @errorAuth.
-  ///
-  /// In en, this message translates to:
-  /// **'Authentication error'**
-  String get errorAuth;
-
-  /// No description provided for @errorInvalidArguments.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid arguments'**
-  String get errorInvalidArguments;
-
-  /// No description provided for @errorInvalidArgumentsProfile.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid arguments for profile'**
-  String get errorInvalidArgumentsProfile;
-
-  /// No description provided for @errorInvalidArgumentsChat.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid arguments for chat'**
-  String get errorInvalidArgumentsChat;
-
-  /// No description provided for @retry.
-  ///
-  /// In en, this message translates to:
-  /// **'Retry'**
-  String get retry;
-
-  /// No description provided for @cancel.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get cancel;
-
-  /// No description provided for @save.
-  ///
-  /// In en, this message translates to:
-  /// **'Save'**
-  String get save;
-
-  /// No description provided for @delete.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get delete;
-
-  /// No description provided for @edit.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit'**
-  String get edit;
-
-  /// No description provided for @send.
-  ///
-  /// In en, this message translates to:
-  /// **'Send'**
-  String get send;
-
-  /// No description provided for @close.
-  ///
-  /// In en, this message translates to:
-  /// **'Close'**
-  String get close;
 }
 
 class _AppLocalizationsDelegate
