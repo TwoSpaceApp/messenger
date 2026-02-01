@@ -48,7 +48,7 @@ class SentryService {
           
           // Performance monitoring for slow and frozen frames
           options.autoAppStart = true;
-          options.autoPerformanceTracking = true;
+          options.enableAutoPerformanceTracing = true;
         },
       );
       

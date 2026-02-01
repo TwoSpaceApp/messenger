@@ -157,7 +157,7 @@ class _ChatScreenState extends State<ChatScreen> {
         senderIds.map((id) async {
           if (!_userInfoCache.containsKey(id)) {
             try {
-              final info = await _svc.getUserInfo(userId: id);
+              final info = await _svc.getUserInfo(id);
               _userInfoCache[id] = info;
             } catch (_) {
               _userInfoCache[id] = {};
@@ -226,7 +226,7 @@ class _ChatScreenState extends State<ChatScreen> {
       for (final m in out) {
         () async {
           try {
-            final r = await _svc.getReactions(roomId: widget.chat.id, eventId: m.id);
+            final r = await _svc.getReactions(widget.chat.id, m.id);
             if (mounted) setState(() => _reactions[m.id] = r);
           } catch (_) {}
         }();
@@ -283,7 +283,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text == null || text.isEmpty) return;
     try {
       final formatted = '<mx-reply><blockquote>${text.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</blockquote></mx-reply>';
-      await _svc.sendReply(roomId: widget.chat.id, eventId: eventId, body: text, formattedBody: formatted);
+      await _svc.sendReply(widget.chat.id, eventId, body: text, formattedBody: formatted);
       await _loadMessages();
     } catch (e) {
       if (mounted) _showErrorMessage('Ошибка ответа: $e');
@@ -300,7 +300,7 @@ class _ChatScreenState extends State<ChatScreen> {
       } else {
         pinned.insert(0, eventId);
       }
-      await _svc.setPinnedEvents(roomId: widget.chat.id, pinnedEventIds: pinned);
+      await _svc.setPinnedEvents(widget.chat.id, pinned);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Закрепления обновлены'), duration: Duration(seconds: 2)));
     } catch (e) {
       if (mounted) _showErrorMessage('Ошибка закрепа: $e');
@@ -311,7 +311,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: const Text('Удалить сообщение?'), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Отмена')), ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Удалить'))]));
     if (ok != true) return;
     try {
-      await _svc.redactEvent(roomId: widget.chat.id, eventId: eventId);
+      await _svc.redactEvent(widget.chat.id, eventId);
       await _loadMessages();
     } catch (e) {
       if (mounted) _showErrorMessage('Ошибка удаления: $e');
@@ -336,7 +336,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     if (newText == null || newText.isEmpty) return;
     try {
-      await _svc.editMessage(roomId: widget.chat.id, eventId: eventId, newBody: newText);
+      await _svc.editMessage(widget.chat.id, eventId, newText);
       await _loadMessages();
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Сообщение отредактировано'), duration: Duration(seconds: 2)));
     } catch (e) {
@@ -377,7 +377,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             onTap: () async {
                               entry?.remove();
                               try {
-                                await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: e);
+                                await _svc.sendReaction(widget.chat.id, m.id, e);
                                 await _loadMessages();
                               } catch (_) {}
                             },
@@ -397,7 +397,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       if (m.isOwn) TextButton.icon(onPressed: () { entry?.remove(); _redactEvent(m.id); }, icon: const Icon(Icons.delete), label: const Text('Удалить')),
                       TextButton.icon(onPressed: () { entry?.remove(); _shareMessage(m); }, icon: const Icon(Icons.share), label: const Text('Поделиться')),
                       TextButton.icon(onPressed: () async { entry?.remove(); final picked = await _showEmojiPickerDialog(); if (picked != null) { try { await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: picked); await _loadMessages(); } catch (_) {} } }, icon: const Icon(Icons.emoji_emotions), label: const Text('Ещё')),
-                    ])
+                    ]),
                   ]),
                 ),
               ]),
@@ -418,7 +418,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Navigator.of(c).pop(); 
         }, 
         config: const Config(
-          emojiSizeMax: 32,
+          emojiSizeMax: 32.0,
           bgColor: Color(0xFF0B0320),
           indicatorColor: Color(0xFF1F5FFF),
           iconColorSelected: Color(0xFF1F5FFF),
@@ -444,7 +444,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty) return;
     setState(() => _sending = true);
     try {
-      await _svc.sendMessage(roomId: widget.chat.id, body: text);
+      await _svc.sendMessage(widget.chat.id, text, 'm.text');
       setState(() {
         _messages.insert(0, _Msg(id: DateTime.now().millisecondsSinceEpoch.toString(), text: text, isOwn: true, time: DateTime.now(), senderId: '', senderName: 'You', senderAvatar: null, type: 'm.text'));
         _controller.text = '';
@@ -495,7 +495,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     setState(() => _sending = true);
     try {
-      await _svc.sendMessage(roomId: widget.chat.id, body: path, type: 'm.audio', mediaFileId: path);
+      await _svc.sendMessage(widget.chat.id, path, 'm.audio', mediaFileId: path);
       
       if (mounted) {
         setState(() {
@@ -527,8 +527,8 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() => _sending = true);
     try {
       final bytes = await File(path).readAsBytes();
-      final mxc = await _svc.uploadMedia(bytes, contentType: 'application/octet-stream', fileName: res.files.single.name);
-      await _svc.sendMessage(roomId: widget.chat.id, body: '', type: 'm.image', mediaFileId: mxc);
+      final mxc = await _svc.uploadMedia(bytes, 'application/octet-stream', res.files.single.name);
+      await _svc.sendMessage(widget.chat.id, '', 'm.image', mediaFileId: mxc);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Файл отправлен'), duration: Duration(seconds: 2)));
     } catch (e) {
@@ -594,9 +594,9 @@ class _ChatScreenState extends State<ChatScreen> {
             constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             margin: const EdgeInsets.symmetric(vertical: 6),
-            decoration: BoxDecoration(color: m.isOwn ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(14)),
+            decoration: BoxDecoration(color: m.isOwn ? const Color(0xFF0077FF) : const Color(0xFF2E3338), borderRadius: BorderRadius.circular(14)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+              if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.white70)),
               const SizedBox(height: 6),
               if (m.type == 'm.image' && (m.mediaId != null && m.mediaId!.isNotEmpty))
                 ClipRRect(
@@ -606,8 +606,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: FutureBuilder<String>(
                       future: _svc.downloadMediaToTempFile(m.mediaId!),
                       builder: (ctx, snap) {
-                        if (snap.connectionState != ConnectionState.done) return Container(width: 280, height: 180, color: Theme.of(context).colorScheme.surfaceContainerHighest);
-                        if (snap.hasError || snap.data == null) return Container(width: 120, height: 80, color: Theme.of(context).colorScheme.surface, child: const Center(child: Icon(Icons.broken_image)));
+                        if (snap.connectionState != ConnectionState.done) return Container(width: 280, height: 180, color: const Color(0xFF21262C));
+                        if (snap.hasError || snap.data == null) return Container(width: 120, height: 80, color: const Color(0xFF21262C), child: const Center(child: Icon(Icons.broken_image, color: Colors.white54)));
                         return Image.file(File(snap.data!), fit: BoxFit.cover, width: 280, height: 180);
                       },
                     ),
@@ -625,7 +625,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     m.text,
                     softWrap: true,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: m.isOwn ? Colors.white : null,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -641,21 +641,21 @@ class _ChatScreenState extends State<ChatScreen> {
                         final myEvent = data['myEventId'] as String?;
                         try {
                           if (myEvent != null && myEvent.isNotEmpty) {
-                            await _svc.redactEvent(roomId: widget.chat.id, eventId: myEvent);
+                            await _svc.redactEvent(widget.chat.id, myEvent);
                           } else {
-                            await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: entry.key);
+                            await _svc.sendReaction(widget.chat.id, m.id, entry.key);
                           }
-                          final r = await _svc.getReactions(roomId: widget.chat.id, eventId: m.id);
+                          final r = await _svc.getReactions(widget.chat.id, m.id);
                           if (mounted) setState(() => _reactions[m.id] = r);
                         } catch (_) {}
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(12)),
+                        decoration: BoxDecoration(color: const Color(0xFF21262C), borderRadius: BorderRadius.circular(12)),
                         child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          Text(entry.key, style: TextStyle(fontSize: 14, color: ((entry.value as Map)['myEventId'] != null) ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface)),
+                          Text(entry.key, style: TextStyle(fontSize: 14, color: ((entry.value as Map)['myEventId'] != null) ? const Color(0xFF0077FF) : Colors.white70)),
                           const SizedBox(width: 6),
-                          Text('${(entry.value as Map)['count']}', style: Theme.of(context).textTheme.bodySmall),
+                          Text('${(entry.value as Map)['count']}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70)),
                         ]),
                       ),
                     ),
@@ -687,7 +687,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       duration: const Duration(milliseconds: 400),
                                       curve: Curves.easeInOut,
                                       decoration: _highlighted.contains(m.id)
-                                          ? BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2), color: Theme.of(context).colorScheme.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(16))
+                                          ? BoxDecoration(border: Border.all(color: const Color(0xFF0077FF), width: 2), color: const Color(0xFF0077FF).withOpacity(0.08), borderRadius: BorderRadius.circular(16))
                                           : null,
                                       child: bubble,
                                     ),
@@ -706,51 +706,49 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     return Scaffold(
-      body: Material(
-        child: GroupBackgroundWidget(
-          backgroundColor: _groupBackgroundColor,
-          backgroundImageUrl: _groupBackgroundImageUrl,
-          child: Column(children: [
-            Expanded(child: bodyWidget),
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8),
-              child: Row(children: [
-                IconButton(icon: const Icon(Icons.attach_file), onPressed: _sending ? null : _sendAttachment),
-                if (!_voiceService.isRecording)
-                  IconButton(
-                    icon: Icon(Icons.mic, color: Theme.of(context).colorScheme.primary),
-                    onPressed: _sending ? null : _recordVoiceMessage,
-                  )
-                else
-                  IconButton(
-                    icon: const Icon(Icons.mic, color: Colors.red),
-                    onPressed: _voiceService.isRecording ? _stopVoiceAndSend : null,
-                  ),
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: 'Написать сообщение...',
-                      hintStyle: TextStyle(color: Theme.of(context).hintColor),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.surface,
-                    ),
-                    enabled: !_voiceService.isRecording,
-                    maxLines: null,
-                  ),
-                ),
+      backgroundColor: const Color(0xFF1D2227),
+      body: Column(children: [
+        Expanded(child: bodyWidget),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF21262C),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(children: [
+              IconButton(icon: const Icon(Icons.attach_file, color: Colors.white54), onPressed: _sending ? null : _sendAttachment),
+              if (!_voiceService.isRecording)
                 IconButton(
-                  icon: _sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Icon(Icons.send, color: Theme.of(context).colorScheme.primary),
-                  onPressed: (_sending || _voiceService.isRecording) ? null : _sendText,
+                  icon: const Icon(Icons.mic, color: Colors.white54),
+                  onPressed: _sending ? null : _recordVoiceMessage,
+                )
+              else
+                IconButton(
+                  icon: const Icon(Icons.mic, color: Colors.red),
+                  onPressed: _voiceService.isRecording ? _stopVoiceAndSend : null,
                 ),
-              ]),
-            )
-          ]),
-        ),
-      ),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    hintText: 'Send a message...',
+                    hintStyle: TextStyle(color: Colors.white54),
+                    border: InputBorder.none,
+                  ),
+                  enabled: !_voiceService.isRecording,
+                  maxLines: null,
+                ),
+              ),
+              IconButton(
+                icon: _sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send, color: Color(0xFF0077FF)),
+                onPressed: (_sending || _voiceService.isRecording) ? null : _sendText,
+              ),
+            ]),
+          ),
+        )
+      ]),
     );
   }
 }
@@ -802,7 +800,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
       setState(() => _localPath = path);
       // request waveform (cached by service)
       try {
-        final wf = await widget.svc.getWaveformForMedia(mediaId: widget.message.mediaId ?? '', localPath: path, samples: 24);
+        final wf = await widget.svc.getWaveformForMedia(widget.message.mediaId ?? '', path, samples: 24);
         if (mounted) setState(() => _waveform = wf);
       } catch (_) {}
       _player = widget.audioPlayers[widget.message.id] ?? AudioPlayer();

@@ -38,6 +38,16 @@ class Responsive {
     final blended = (widthFactor * 0.7) + (heightFactor * 0.3);
     return blended.clamp(0.75, 1.8);
   }
+
+  /// Returns true if the screen is narrow (mobile portrait)
+  static bool isMobile(BuildContext context) {
+    return MediaQuery.of(context).size.width < 600;
+  }
+
+  /// Returns true if the screen is wide (desktop/tablet landscape)
+  static bool isDesktop(BuildContext context) {
+    return MediaQuery.of(context).size.width >= 800;
+  }
 }
 
 /// Small extension to allow writing `12.w(context)` or `16.h(context)` to
