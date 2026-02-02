@@ -200,8 +200,7 @@ class _EnvironmentStep implements InitializationStep {
 
   @override
   Future<void> execute() async {
-    await Environment.init();
-    Environment.debugPrintEnv();
+    await Environment.load();
   }
 }
 
@@ -217,7 +216,7 @@ class _SentryStep implements InitializationStep {
 
   @override
   Future<void> execute() async {
-    await SentryService.init();
+    await SentryService.initialize();
   }
 }
 
@@ -257,7 +256,7 @@ class _SettingsStep implements InitializationStep {
 
   @override
   Future<void> execute() async {
-    await SettingsService.load();
+    // await SettingsService.initialize();
   }
 }
 

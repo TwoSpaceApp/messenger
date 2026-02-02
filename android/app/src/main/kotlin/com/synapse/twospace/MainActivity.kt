@@ -13,6 +13,17 @@ import java.io.File
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "two_space_app/update"
 
+    // Load the native library
+    companion object {
+        init {
+            System.loadLibrary("native-lib")
+        }
+    }
+
+    // Declare native methods
+    external fun stringFromJNI(): String
+    external fun processAudio(audioData: FloatArray)
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
@@ -64,6 +75,19 @@ class MainActivity : FlutterActivity() {
                     }
                     val ok = shareFile(path, text)
                     result.success(ok)
+                }
+                "getNativeString" -> {
+                    result.success(stringFromJNI())
+                }
+                "processAudio" -> {
+                    val audioData = call.argument<ArrayList<Double>>("audioData")
+                    if (audioData == null) {
+                        result.error("INVALID_ARGUMENT", "Audio data is null", null)
+                        return@setMethodCallHandler
+                    }
+                    val floatArray = audioData.map { it.toFloat() }.toFloatArray()
+                    processAudio(floatArray)
+                    result.success(null)
                 }
                 else -> result.notImplemented()
             }

@@ -1,0 +1,20 @@
+{
+  "appTitle": "TwoSpace",
+  "loading": "Chargement...",
+  "initializing": "Initialisation...",
+  "errorGeneric": "Une erreur est survenue",
+  "errorInitialization": "Erreur d'initialisation",
+  "errorInitializationFull": "Erreur d'initialisation",
+  "errorNetwork": "Erreur réseau",
+  "errorAuth": "Erreur d'authentification",
+  "errorInvalidArguments": "Arguments invalides",
+  "errorInvalidArgumentsProfile": "Arguments invalides pour le profil",
+  "errorInvalidArgumentsChat": "Arguments invalides pour le chat",
+  "retry": "Réessayer",
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "delete": "Supprimer",
+  "edit": "Modifier",
+  "send": "Envoyer",
+  "close": "Fermer"
+}

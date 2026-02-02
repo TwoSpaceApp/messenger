@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:qr_flutter/qr_flutter.dart';
 import '../services/auth_service.dart';
 
@@ -11,71 +10,109 @@ class TfaSetupScreen extends StatefulWidget {
 }
 
 class _TfaSetupScreenState extends State<TfaSetupScreen> {
-  final AuthService _auth = AuthService();
-  String? _otpauthUrl;
   String? _secret;
+  String? _otpAuthUri;
   bool _loading = true;
   final _codeController = TextEditingController();
-  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _fetchTfaSetup();
   }
 
-  Future<void> _load() async {
+  Future<void> _fetchTfaSetup() async {
     setState(() => _loading = true);
     try {
-      final js = await _auth.requestTotpSetup();
-      // Expect server to return { 'otpauth': 'otpauth://totp/...', 'secret': 'ABC123' }
+      final authService = AuthService();
+      final result = await authService.requestTotpSetup();
       setState(() {
-        _otpauthUrl = js['otpauth']?.toString();
-        _secret = js['secret']?.toString();
+        _secret = result['secret'];
+        _otpAuthUri = result['otpauth_uri'];
+        _loading = false;
       });
     } catch (e) {
-      setState(() => _error = e.toString());
-    } finally {
       setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to get TFA setup: $e')),
+      );
     }
   }
 
-  Future<void> _verify() async {
+  Future<void> _verifyTfa() async {
+    if (_codeController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter the code from your authenticator app')),
+      );
+      return;
+    }
     setState(() => _loading = true);
     try {
-      await _auth.verifyTotpSetup(_codeController.text.trim());
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('2FA enabled')));
-      Navigator.pop(context, true);
-    } catch (e) {
-      setState(() => _error = e.toString());
-    } finally {
+      final authService = AuthService();
+      await authService.verifyTotpSetup(_codeController.text);
       setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('TFA enabled successfully!')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to verify TFA: $e')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Включить двухфакторную аутентификацию')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _loading ? const Center(child: CircularProgressIndicator()) : Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_error != null) Text('Ошибка: $_error', style: const TextStyle(color: Colors.red)),
-            if (_otpauthUrl != null) Center(child: Column(mainAxisSize: MainAxisSize.min, children: [QrImageView(data: _otpauthUrl!, size: 220.0), const SizedBox(height: 8), SelectableText(_otpauthUrl!), IconButton(icon: const Icon(Icons.copy), onPressed: () { Clipboard.setData(ClipboardData(text: _otpauthUrl!)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Код скопирован'))); })])),
-            const SizedBox(height: 12),
-            if (_secret != null) Row(children: [Expanded(child: SelectableText('Код: $_secret')), IconButton(icon: const Icon(Icons.copy), onPressed: () { /* copy */ })]),
-            const SizedBox(height: 12),
-            Text('Откройте приложение генератора (Google Authenticator, Authy) и отсканируйте QR-код; введите 6-значный код', style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 12),
-            TextField(controller: _codeController, keyboardType: TextInputType.number, decoration: const InputDecoration(hintText: '6-значный код')), 
-            const SizedBox(height: 12),
-            ElevatedButton(onPressed: _verify, child: const Text('Подтвердить и включить'))
-          ],
-        ),
-      ),
+      appBar: AppBar(title: const Text('Set up Two-Factor Auth')),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_otpAuthUri != null)
+                    Center(
+                      child: QrImageView(
+                        data: _otpAuthUri!,
+                        version: QrVersions.auto,
+                        size: 200.0,
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  if (_secret != null)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            const Text('Or enter this secret key into your authenticator app:'),
+                            const SizedBox(height: 8),
+                            SelectableText(_secret!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _codeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Verification Code',
+                      hintText: 'Enter code from authenticator app',
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: _verifyTfa,
+                    child: const Text('Verify & Enable'),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }

@@ -1,6 +1,10 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../providers/auth_notifier.dart';
+import '../utils/responsive.dart';
+import '../widgets/password_strength_indicator.dart';
 import '../services/sentry_service.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/app_logo.dart';
@@ -203,18 +207,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
     );
   }
 
-  String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Введите email';
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
-      return 'Неверный формат email';
+  Future<void> _pickAvatar() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: ImageSource.gallery);
+    if (file != null) {
+      final bytes = await file.readAsBytes();
+      setState(() {
+        _avatarPath = file.path;
+        _avatarBytes = bytes;
+      });
     }
-    return null;
-  }
-
-  String? _validatePassword(String? v) {
-    if (v == null || v.isEmpty) return 'Введите пароль';
-    if (v.length < 6) return 'Минимум 6 символов';
-    return null;
   }
 
   @override
@@ -653,6 +655,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
       width: 24, // Slightly shorter to fit 4 steps
       height: 2,
       color: isActive ? theme.colorScheme.primary : theme.disabledColor.withOpacity(0.2),
+    );
+  }
+
+  Widget _buildProfileStep() {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _pickAvatar,
+          child: CircleAvatar(
+            radius: 50,
+            backgroundImage: _avatarBytes != null ? MemoryImage(_avatarBytes!) : null,
+            child: _avatarBytes == null ? const Icon(Icons.add_a_photo, size: 50) : null,
+          ),
+        ),
+        TextFormField(
+          controller: _nameCtl,
+          decoration: const InputDecoration(labelText: 'Display Name'),
+        ),
+        TextFormField(
+          controller: _nicknameCtl,
+          decoration: const InputDecoration(labelText: 'Nickname (optional)'),
+        ),
+      ],
     );
   }
 }

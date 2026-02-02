@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/auth_service.dart';
+import '../providers/auth_notifier.dart';
+import '../utils/responsive.dart';
+import 'otp_screen.dart';
+import 'sso_webview_screen.dart';
 import '../providers/auth_notifier.dart';
 import '../services/sentry_service.dart';
 import '../widgets/auth_background.dart';
@@ -18,8 +23,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtl = TextEditingController();
   final _passCtl = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  
+  final _formKey = GlobalKey<FormState>();  
   bool _loading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
@@ -29,6 +33,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailCtl.dispose();
     _passCtl.dispose();
     super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      await _handleLogin();
+    }
   }
 
   Future<void> _handleLogin() async {

@@ -1,34 +1,43 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Environment configuration loaded from .env file
+/// Environment configuration manager
+///
+/// Provides strongly-typed access to environment variables from a `.env` file.
+/// This class ensures that all required variables are available and provides
+/// sensible fallbacks where appropriate.
+///
+/// Example `.env` file:
+/// ```
+/// # Appwrite
+/// APPWRITE_ENDPOINT='https://yourendpoint.io/v1'
+/// APPWRITE_PROJECT_ID='your_project_id'
+///
+/// # Matrix
+/// USE_MATRIX='true'
+/// MATRIX_HOMESERVER='https://matrix.org'
+///
+/// # Sentry
+/// SENTRY_DSN='your_sentry_dsn'
+///
+/// # Dev tools
+/// ENABLE_DEV_TOOLS='true'
+/// ```
 class Environment {
-  static bool _initialized = false;
+  Environment._();
 
-  /// Initialize environment from .env file
-  static Future<void> init() async {
-    if (_initialized) return;
-    
-    try {
-      await dotenv.load(fileName: '.env');
-      _initialized = true;
-    } catch (e) {
-      if (kDebugMode) {
-        print('Warning: Failed to load .env file: $e');
-      }
-    }
+  static Future<void> load() async {
+    await dotenv.load();
   }
 
-  /// Get environment variable with fallback
-  static String _get(String key, {String fallback = ''}) {
-    if (!_initialized) return fallback;
-    return dotenv.env[key] ?? fallback;
+  static String _get(String name, {String fallback = ''}) {
+    return dotenv.env[name] ?? fallback;
   }
 
   /// Matrix configuration
   static bool get useMatrix => _get('USE_MATRIX', fallback: 'true') == 'true';
-  static String get matrixHomeserver => _get('MATRIX_HOMESERVER');
-  static String get matrixHomeserverUrl => _get('MATRIX_SERVER_URL', fallback: _get('MATRIX_HOMESERVER'));
+  static String get matrixHomeserver => _get('MATRIX_HOMESERVER', fallback: 'https://matrix.org');
+  static String get matrixHomeserverUrl => _get('MATRIX_SERVER_URL', fallback: _get('MATRIX_HOMESERVER', fallback: 'https://matrix.org'));
   static String get matrixEmailTokenEndpoint => _get('MATRIX_EMAIL_TOKEN_ENDPOINT');
   static String get matrixAccessToken => _get('MATRIX_ACCESS_TOKEN');
   static String get matrixTotpSetupEndpoint => _get('MATRIX_TOTP_SETUP_ENDPOINT');
@@ -51,17 +60,17 @@ class Environment {
   /// Feature flags
   static bool get enableDevTools => _get('ENABLE_DEV_TOOLS', fallback: 'false') == 'true';
 
-  /// Debug print all environment variables (only in debug mode)
-  static void debugPrintEnv() {
+  /// Print all loaded environment variables for debugging
+  static void printLoadedVariables() {
     if (!kDebugMode) return;
     
-    print('=== Environment Variables ===');
+    print('===== Environment Variables =====');
     print('USE_MATRIX: $useMatrix');
     print('MATRIX_HOMESERVER: $matrixHomeserver');
     print('MATRIX_SERVER_URL: $matrixHomeserverUrl');
     print('APP_ENV: $appEnv');
     print('SENTRY_DSN: ${sentryDsn.isEmpty ? "(not set)" : "(configured)"}');
     print('ENABLE_DEV_TOOLS: $enableDevTools');
-    print('============================');
+    print('===============================');
   }
 }

@@ -1,0 +1,20 @@
+{
+  "appTitle": "TwoSpace",
+  "loading": "正在加载...",
+  "initializing": "正在初始化...",
+  "errorGeneric": "发生错误",
+  "errorInitialization": "初始化错误",
+  "errorInitializationFull": "初始化错误",
+  "errorNetwork": "网络错误",
+  "errorAuth": "认证失败",
+  "errorInvalidArguments": "无效参数",
+  "errorInvalidArgumentsProfile": "个人资料的无效参数",
+  "errorInvalidArgumentsChat": "聊天室的无效参数",
+  "retry": "重试",
+  "cancel": "取消",
+  "save": "保存",
+  "delete": "删除",
+  "edit": "编辑",
+  "send": "发送",
+  "close": "关闭"
+}

@@ -64,7 +64,7 @@ class GroupMatrixService {
     try {
       // Формируем запрос (в реальном приложении это должно быть через Matrix API)
       // Для простоты используем генерируемый ID
-      final roomId = '!\${generateRandomString(18)}:\${_getChatService().homeserver ?? "matrix.org"}';
+      final roomId = '!\${generateRandomString(18)}:${Environment.matrixHomeserverUrl}';
       return roomId;
     } catch (e) {
       throw Exception('Ошибка создания комнаты: $e');
