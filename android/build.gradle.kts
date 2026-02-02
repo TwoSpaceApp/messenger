@@ -1,13 +1,3 @@
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-// Add annotation libraries as buildscript dependencies so R8 sees them during
-// minification. Some transitive dependencies (e.g. Tink) reference annotation
-// classes that may not be present in the final apk without explicit inclusion.
 buildscript {
     repositories {
         google()
@@ -16,6 +6,18 @@ buildscript {
     dependencies {
         classpath("com.google.errorprone:error_prone_annotations:2.17.0")
         classpath("com.google.code.findbugs:jsr305:3.0.2")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
+        classpath("com.android.tools.build:gradle:8.9.1")
+    }
+}
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import com.android.build.gradle.BaseExtension
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
     }
 }
 
@@ -31,6 +33,37 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+
+    val setupJava17 = {
+        tasks.withType(JavaCompile::class.java).configureEach {
+            sourceCompatibility = "17"
+            targetCompatibility = "17"
+        }
+        tasks.withType<KotlinCompile>().configureEach {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+    }
+    
+    val setupExtension17 = {
+        val android = project.extensions.findByName("android")
+        if (android is BaseExtension) {
+            android.compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
+        }
+    }
+
+    if (project.state.executed) {
+        setupJava17()
+    } else {
+        afterEvaluate {
+            setupExtension17()
+            setupJava17()
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

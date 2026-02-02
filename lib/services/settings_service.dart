@@ -49,6 +49,22 @@ class SettingsService {
   static const _showEmailKey = 'ui_show_email';
   static const _showPhoneKey = 'ui_show_phone';
 
+  // Additional settings
+  static final ValueNotifier<String> languageNotifier = ValueNotifier<String>('ru');
+  static const _languageKey = 'app_language';
+  
+  static final ValueNotifier<double> textScaleNotifier = ValueNotifier<double>(1.0);
+  static const _textScaleKey = 'ui_text_scale';
+  
+  static final ValueNotifier<bool> autoDownloadMediaNotifier = ValueNotifier<bool>(false);
+  static const _autoDownloadMediaKey = 'auto_download_media';
+  
+  static final ValueNotifier<bool> sendByEnterNotifier = ValueNotifier<bool>(true);
+  static const _sendByEnterKey = 'send_by_enter';
+  
+  static final ValueNotifier<bool> compactModeNotifier = ValueNotifier<bool>(false);
+  static const _compactModeKey = 'ui_compact_mode';
+
   static Future<void> load() async {
     final font = await SecureStore.read(_fontKey) ?? 'Inter';
     final weightStr = await SecureStore.read(_fontWeightKey);
@@ -77,6 +93,25 @@ class SettingsService {
     showEmailNotifier.value = showEmail != null && showEmail == '1';
     final showPhone = await SecureStore.read(_showPhoneKey);
     showPhoneNotifier.value = showPhone != null && showPhone == '1';
+    
+    // additional settings
+    final lang = await SecureStore.read(_languageKey) ?? 'ru';
+    languageNotifier.value = lang;
+    
+    final textScaleStr = await SecureStore.read(_textScaleKey);
+    if (textScaleStr != null) {
+      final ts = double.tryParse(textScaleStr) ?? 1.0;
+      textScaleNotifier.value = ts;
+    }
+    
+    final autoDownload = await SecureStore.read(_autoDownloadMediaKey);
+    autoDownloadMediaNotifier.value = autoDownload != null && autoDownload == '1';
+    
+    final sendByEnter = await SecureStore.read(_sendByEnterKey);
+    sendByEnterNotifier.value = sendByEnter == null || sendByEnter == '1'; // default true
+    
+    final compactMode = await SecureStore.read(_compactModeKey);
+    compactModeNotifier.value = compactMode != null && compactMode == '1';
   }
 
   static Future<void> setFont(String font) async {
@@ -156,9 +191,49 @@ class SettingsService {
     return null;
   }
 
+  static Future<void> updateTheme({int? primaryColorValue, String? fontFamily}) async {
+    int color = primaryColorValue ?? themeNotifier.value.primaryColorValue;
+    String font = fontFamily ?? themeNotifier.value.fontFamily;
+    
+    await SecureStore.write(_colorKey, color.toString());
+    await SecureStore.write(_fontKey, font);
+    
+    themeNotifier.value = ThemeSettings(
+      fontFamily: font,
+      primaryColorValue: color,
+      fontWeight: themeNotifier.value.fontWeight
+    );
+  }
+
   static Future<void> clearCachedProfile() async {
     try {
       await SecureStore.delete(_cachedProfileKey);
     } catch (_) {}
+  }
+
+  // New settings methods
+  static Future<void> setLanguage(String lang) async {
+    await SecureStore.write(_languageKey, lang);
+    languageNotifier.value = lang;
+  }
+
+  static Future<void> setTextScale(double scale) async {
+    await SecureStore.write(_textScaleKey, scale.toString());
+    textScaleNotifier.value = scale;
+  }
+
+  static Future<void> setAutoDownloadMedia(bool enabled) async {
+    await SecureStore.write(_autoDownloadMediaKey, enabled ? '1' : '0');
+    autoDownloadMediaNotifier.value = enabled;
+  }
+
+  static Future<void> setSendByEnter(bool enabled) async {
+    await SecureStore.write(_sendByEnterKey, enabled ? '1' : '0');
+    sendByEnterNotifier.value = enabled;
+  }
+
+  static Future<void> setCompactMode(bool enabled) async {
+    await SecureStore.write(_compactModeKey, enabled ? '1' : '0');
+    compactModeNotifier.value = enabled;
   }
 }

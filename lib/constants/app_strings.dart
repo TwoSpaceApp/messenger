@@ -39,4 +39,5 @@ class AppStrings {
   static const routeProfile = '/profile';
   static const routeChangeEmail = '/change_email';
   static const routeChat = '/chat';
+  static const routeAccountSettings = '/account-settings';
 }

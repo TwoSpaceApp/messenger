@@ -15,6 +15,7 @@ import 'screens/profile_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/change_email_screen.dart';
 import 'screens/forgot_password_screen.dart';
+import 'screens/account_settings_screen.dart';
 import 'services/chat_service.dart';
 import 'services/initialization_service.dart';
 import 'services/sentry_service.dart';
@@ -170,6 +171,7 @@ class TwoSpaceApp extends StatelessWidget {
       AppStrings.routeForgot: (context) => const ForgotPasswordScreen(),
       AppStrings.routeCustomization: (context) => const CustomizationScreen(),
       AppStrings.routePrivacy: (context) => const PrivacyScreen(),
+      AppStrings.routeAccountSettings: (context) => const AccountSettingsScreen(),
       AppStrings.routeProfile: (context) {
         final args = ModalRoute.of(context)!.settings.arguments;
         if (args is String) {
