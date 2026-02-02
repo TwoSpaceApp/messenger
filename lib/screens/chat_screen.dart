@@ -731,7 +731,17 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF1D2227),
+      appBar: AppBar(
+        title: Text(widget.chat.name),
+        backgroundColor: const Color(0xFF21262C),
+      ),
       body: Column(children: [
+        Container(
+          width: double.infinity,
+          color: Colors.redAccent,
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: const Text('Offline Mode', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
         Expanded(child: bodyWidget),
         Padding(
           padding: const EdgeInsets.all(8.0),

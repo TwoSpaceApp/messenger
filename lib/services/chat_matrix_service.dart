@@ -5,10 +5,19 @@ class ChatMatrixService {
   String get homeserver => 'matrix.org';
 
   Future<List<String>> getJoinedRooms() async {
-    return [];
+    return [
+      '!stub1:matrix.org',
+      '!stub2:matrix.org',
+    ];
   }
 
   Future<Map<String, String?>> getRoomNameAndAvatar(String roomId) async {
+    if (roomId == '!stub1:matrix.org') {
+      return {'name': 'General (Offline)', 'avatar': null};
+    }
+    if (roomId == '!stub2:matrix.org') {
+      return {'name': 'Random (Offline)', 'avatar': null};
+    }
     return {
       'name': 'Room $roomId',
       'avatar': null,
@@ -48,7 +57,10 @@ class ChatMatrixService {
   }
 
   Future<List<dynamic>> loadMessages(String roomId, {int limit = 50}) async {
-    return [];
+    return [
+       MockMessage(id: '1', content: 'This is a stub message', time: DateTime.now().subtract(const Duration(minutes: 5)), senderId: '@stub:matrix.org'),
+       MockMessage(id: '2', content: 'Offline mode is active', time: DateTime.now(), senderId: '@system:matrix.org'),
+    ];
   }
 
   Future<List<Map<String, dynamic>>> searchMessages(String query, {String? type, required String query}) async {
@@ -118,4 +130,15 @@ class ChatMatrixService {
   Future<String> createRoom({String? name, List<String>? invite}) async {
     return 'new_room_id';
   }
+}
+
+class MockMessage {
+  final String id;
+  final String content;
+  final DateTime time;
+  final String senderId;
+  final String type;
+  final String? mediaId;
+
+  MockMessage({required this.id, required this.content, required this.time, required this.senderId, this.type = 'm.text', this.mediaId});
 }

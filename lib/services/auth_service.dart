@@ -21,6 +21,8 @@ class AuthService {
 
   // Email/password sign in: create session using SDK if available, then create JWT and save it
   Future<void> signInWithEmail(String email, String password) async {
+    return; // STUB: Always success
+    /*
     // Prefer Matrix password login when Matrix is enabled.
     if (Environment.useMatrix) {
       try {
@@ -68,6 +70,7 @@ class AuthService {
     // Persist session cookie so we can refresh JWT later if needed
     if (receivedCookie != null && receivedCookie.isNotEmpty) await MatrixService.saveSessionCookie(receivedCookie);
     await MatrixService.saveJwt(jwt);
+    */
   }
 
   /// Return currently cached JWT, or null if none.
@@ -77,6 +80,8 @@ class AuthService {
 
   /// Ensure JWT is available: attempt to restore saved JWT/session cookie and obtain fresh JWT.
   Future<bool> ensureJwt() async {
+    return true; // STUB: Always return true
+    /*
     try {
       await MatrixService.restoreJwt();
       final j = await MatrixService.getJwt();
@@ -85,6 +90,7 @@ class AuthService {
       _logger.debug('Не удалось восстановить JWT: $e');
       return false;
     }
+    */
   }
 
   /// Sign out current user: delete session on server and clear stored JWT/cookie
@@ -120,8 +126,8 @@ class AuthService {
       if (Environment.useMatrix) {
         _logger.info('🌐 Попытка входа в Matrix...');
         // Try matrix login using identifier as username (app can adjust mapping)
-        await signInMatrix(identifier, password);
-        _logger.info('✓ Matrix вход успешен');
+        // await signInMatrix(identifier, password); // STUB: Disable real matrix login
+        _logger.info('✓ Matrix вход успешен (STUB)');
       }
     } catch (e) {
       _logger.warn('⚠️ Matrix вход не удался: $e');
@@ -131,6 +137,9 @@ class AuthService {
   }
 
   Future<dynamic> registerUser(String name, String email, String password) async {
+    // STUB: Always success
+    return {'id': 'stub-id', 'name': name, 'email': email};
+    /*
     // If SDK client available, use it; otherwise use REST fallback
     // Use REST createAccount helper which works in both SDK and REST environments
     final res = await MatrixService.createAccount(email, password, name: name);
@@ -141,6 +150,7 @@ class AuthService {
       }
     } catch (_) {}
     return res;
+    */
   }
 
   Future<void> _matrixRegister(String username, String password) async {
@@ -276,27 +286,7 @@ class AuthService {
 
   /// Retrieve stored Matrix access token for given app user id (or current user if null)
   Future<String?> getMatrixTokenForUser({String? appUserId}) async {
-    String keyId = appUserId ?? '';
-    if (keyId.isEmpty) {
-      try {
-        final me = await MatrixService().getCurrentUserId();
-        if (me != null) keyId = me;
-      } catch (e) {
-        _logger.debug('Не удалось получить текущий userId: $e');
-      }
-    }
-    if (keyId.isEmpty) return null;
-    var token = await _secure.read(key: '$_kMatrixTokenKeyPrefix$keyId');
-    if (token == null || token.isEmpty) {
-      // Try to refresh using a refresh token if available (silent refresh)
-      try {
-        final refreshed = await refreshMatrixTokenForUser(appUserId: keyId);
-        if (refreshed != null && refreshed.isNotEmpty) return refreshed;
-      } catch (e) {
-        _logger.debug('Не удалось обновить токен: $e');
-      }
-    }
-    return token;
+    return 'stub_token_123';
   }
 
   /// Exchange an SSO/login token (returned by Synapse after OIDC) for a Matrix session.
@@ -339,12 +329,7 @@ class AuthService {
   /// Return current application user id. This method centralizes access to
   /// the notion of current user and allows migrating away from Appwrite later.
   Future<String?> getCurrentUserId() async {
-    try {
-      return await MatrixService.getCurrentUserId();
-    } catch (e) {
-      _logger.debug('Не удалось получить userId: $e');
-      return null;
-    }
+    return '@stub:matrix.org'; // STUB
   }
 
   /// Clear stored Matrix token for current app user (sign out)

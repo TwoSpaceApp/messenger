@@ -90,6 +90,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       color: const Color(0xFF151718), // Element-like dark background
       child: Column(
         children: [
+          Container(
+             width: double.infinity,
+             color: Colors.redAccent,
+             padding: const EdgeInsets.symmetric(vertical: 4),
+             child: const Text('Offline Mode', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.all(12.0),
