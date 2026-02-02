@@ -62,6 +62,8 @@ class SentryService {
         print('Failed to initialize Sentry: $e\n$stackTrace');
       }
     }
+    
+    _initialized = true;
   }
 
   /// Set the user context for Sentry.

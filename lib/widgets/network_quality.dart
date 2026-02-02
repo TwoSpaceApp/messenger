@@ -76,7 +76,7 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
               width: 8,
               height: 8 + i * 6,
               decoration: BoxDecoration(
-                color: active ? color : Theme.of(context).disabledColor.withOpacity(0.2),
+                color: active ? color : Theme.of(context).disabledColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

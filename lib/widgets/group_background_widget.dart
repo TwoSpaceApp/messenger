@@ -40,7 +40,7 @@ class GroupBackgroundWidget extends StatelessWidget {
             image: NetworkImage(backgroundImageUrl!),
             fit: BoxFit.cover,
             colorFilter: bgColor != null
-                ? ColorFilter.mode(bgColor.withOpacity(0.3), BlendMode.overlay)
+                ? ColorFilter.mode(bgColor.withValues(alpha: 0.3), BlendMode.overlay)
                 : null,
           ),
         ),

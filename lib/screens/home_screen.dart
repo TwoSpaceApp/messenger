@@ -23,6 +23,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _searchQuery = '';
 
+  List<Map<String, dynamic>> get _filteredRooms {
+    if (_searchQuery.isEmpty) return _rooms;
+    return _rooms.where((r) {
+      final name = (r['name'] as String?)?.toLowerCase() ?? '';
+      return name.contains(_searchQuery.toLowerCase());
+    }).toList();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -82,6 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       color: const Color(0xFF151718), // Element-like dark background
       child: Column(
         children: [
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: TextField(

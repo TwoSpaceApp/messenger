@@ -18,14 +18,17 @@
 
 1. **Клонируйте репозиторий:**
    ```bash
-   git clone https://github.com/Wakcedon/two_space_app.git
-   cd two_space_app
+   git clone https://github.com/TwoSpaceApp/messenger.git
+   cd messenger
    ```
 
 2. **Установите зависимости:**
    ```bash
    flutter pub get
-   flutter pub get --with-dependencies
+   ```
+   Если Flutter не установлен:
+   ```bash
+   sudo snap install flutter --classic
    ```
 
 3. **Подготовьте `.env` файл:**
@@ -54,9 +57,6 @@ lib/
 ├── sound/                    # Всё связяное с аудио (Пока в бете)
 ├── utils/                    # Вспомогательные функции
 └── widgets/                  # Переиспользуемые компоненты
-test/
-├── unit/                     # Unit тесты
-└── widget/                   # Widget тесты
 ```
 
 ### Кодовый стиль
@@ -68,7 +68,7 @@ test/
 dart format lib test
 
 # Анализ кода
-flutter analyze lib
+flutter analyze
 
 # Кастомные линты
 flutter pub global activate custom_lint

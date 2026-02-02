@@ -89,7 +89,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: theme.colorScheme.outline.withOpacity(0.2),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -124,7 +124,6 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   Widget _buildSettingsContent() {
-    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -253,8 +252,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     _currentGroup?.visibility == GroupVisibility.public ? 'Публичная' : 'Приватная',
                   ),
                   backgroundColor: _currentGroup?.visibility == GroupVisibility.public
-                      ? theme.colorScheme.primary.withOpacity(0.08)
-                      : theme.colorScheme.tertiary.withOpacity(0.2),
+                      ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                      : theme.colorScheme.tertiary.withValues(alpha: 0.2),
                   avatar: Icon(
                     _currentGroup?.visibility == GroupVisibility.public ? Icons.public : Icons.lock,
                     size: 18,
@@ -317,7 +316,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       color: _parseColor(_currentGroup?.backgroundColor),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: theme.colorScheme.outline.withOpacity(0.3),
+                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
                       ),
                     ),
                   ),
@@ -354,7 +353,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.08),
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
               backgroundImage: member.avatarUrl != null
                   ? NetworkImage(member.avatarUrl!)
                   : null,
@@ -371,9 +370,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 member.role.toString().split('.').last.toUpperCase(),
                 style: const TextStyle(fontSize: 10),
               ),
-              backgroundColor: _getRoleColor(member.role, theme).withOpacity(0.2),
+              backgroundColor: _getRoleColor(member.role, theme).withValues(alpha: 0.2),
               side: BorderSide(
-                color: _getRoleColor(member.role, theme).withOpacity(0.5),
+                color: _getRoleColor(member.role, theme).withValues(alpha: 0.5),
               ),
             ),
             trailing: _canManageMembers
@@ -483,7 +482,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: roleColor.withOpacity(0.2),
+                      backgroundColor: roleColor.withValues(alpha: 0.2),
                       backgroundImage: m.avatarUrl != null
                           ? NetworkImage(m.avatarUrl!)
                           : null,
@@ -549,10 +548,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
           final member = banned[index];
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            color: Colors.red.withOpacity(0.05),
+            color: Colors.red.withValues(alpha: 0.05),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: Colors.red.withOpacity(0.2),
+                backgroundColor: Colors.red.withValues(alpha: 0.2),
                 backgroundImage: member.avatarUrl != null
                     ? NetworkImage(member.avatarUrl!)
                     : null,
@@ -601,7 +600,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       child: Column(
         children: [
           Card(
-            color: Colors.red.withOpacity(0.1),
+            color: Colors.red.withValues(alpha: 0.1),
             elevation: 2,
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -611,7 +610,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.2),
+                      color: Colors.red.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.warning_rounded, color: Colors.red, size: 40),

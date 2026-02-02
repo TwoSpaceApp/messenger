@@ -33,14 +33,20 @@ class _DevMenuScreenState extends State<DevMenuScreen> {
   }
 
   Color _getLogColor(String log) {
-    if (!_colorize) return Colors.white;
+    if (!_colorize) {
+      return Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
+    }
     if (log.contains('[ERROR]')) return const Color(0xFFEF5350);
     if (log.contains('[WARN]')) return const Color(0xFFFFA726);
     if (log.contains('[INFO]')) return const Color(0xFF29B6F6);
-    if (log.contains('[DEBUG]')) return Colors.grey[400] ?? Colors.white;
+    if (log.contains('[DEBUG]')) {
+      return Theme.of(context).brightness == Brightness.dark 
+          ? (Colors.grey[400] ?? Colors.white)
+          : Colors.grey[700]!;
+    }
     if (log.contains('[HTTP]')) return const Color(0xFF66BB6A);
     if (log.contains('API Response') || log.contains('Response:')) return const Color(0xFFAB47BC);
-    return Colors.white;
+    return Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
   }
 
   String _truncateLog(String log, {int maxLength = 500}) {

@@ -48,6 +48,14 @@ dependencies:
 
   # ===== Media =====
   audioplayers: ^6.0.0
+  image_picker: ^1.1.2
+  file_picker: ^8.1.4
+  video_player: ^2.9.2
+  # audioplayers: ^6.1.0  # Disabled for Linux due to GStreamer linker issues
+
+  # ===== Connectivity =====
+  connectivity_plus: ^6.1.0
+  url_launcher: ^6.3.1
 
   # ===== Utilities =====
   package_info_plus: ^8.0.0

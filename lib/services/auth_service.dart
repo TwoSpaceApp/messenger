@@ -81,7 +81,8 @@ class AuthService {
       await MatrixService.restoreJwt();
       final j = await MatrixService.getJwt();
       return j != null && j.isNotEmpty;
-    } catch (_) {
+    } catch (e) {
+      _logger.debug('Не удалось восстановить JWT: $e');
       return false;
     }
   }
@@ -97,7 +98,9 @@ class AuthService {
     }
     try {
       await MatrixService.saveSessionCookie(null);
-    } catch (_) {}
+    } catch (e) {
+      _logger.debug('❌ Ошибка очистки cookie: $e');
+    }
     try {
       await MatrixService.clearJwt();
       _logger.info('✓ Токены очищены');
@@ -152,8 +155,11 @@ class AuthService {
     try {
       final res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: body);
       if (res.statusCode >= 200 && res.statusCode < 300) return;
+      _logger.debug('Регистрация Matrix не удалась: ${res.statusCode}');
       // If registration is disabled or fails, it's non-fatal here.
-    } catch (_) {}
+    } catch (e) {
+      _logger.debug('Ошибка регистрации Matrix: $e');
+    }
   }
 
   /// Sign in to a Matrix homeserver using password login and store the
@@ -167,7 +173,7 @@ class AuthService {
     if (homeserver.isEmpty) throw Exception('Matrix homeserver not configured');
     // Normalize homeserver URL: ensure scheme present
     var base = homeserver.trim();
-    if (!base.startsWith('http://') && !base.startsWith('https://')) base = 'https://' + base;
+    if (!base.startsWith('http://') && !base.startsWith('https://')) base = 'https://$base';
     base = base.replaceAll(RegExp(r'/$'), '');
 
     // Normalize username: support full MXID (@local:domain) or email-like input (local@domain) or plain localpart
@@ -182,7 +188,9 @@ class AuthService {
         // email-like: take local part before @
         loginUser = username.split('@').first;
       }
-    } catch (_) {}
+    } catch (e) {
+      _logger.debug('Ошибка нормализации имени пользователя: $e');
+    }
 
     final uri = Uri.parse('$base/_matrix/client/v3/login');
     final body = jsonEncode({
@@ -205,12 +213,16 @@ class AuthService {
     try {
       final me = await MatrixService().getCurrentUserId();
       if (me != null && me.isNotEmpty) keyId = me;
-    } catch (_) {}
+    } catch (e) {
+      _logger.debug('Не удалось получить текущий userId: $e');
+    }
     await _secure.write(key: '$_kMatrixTokenKeyPrefix$keyId', value: token);
     // Remember current matrix user id for other services
     try {
       await MatrixService.setCurrentUserId(userId);
-    } catch (_) {}
+    } catch (e) {
+      _logger.debug('Не удалось сохранить userId: $e');
+    }
     // Save optional refresh token and device id if present
     if (refresh != null && refresh.isNotEmpty) {
       await _secure.write(key: '$_kMatrixRefreshKeyPrefix$keyId', value: refresh);
@@ -256,7 +268,9 @@ class AuthService {
         await _secure.delete(key: '$_kMatrixRefreshKeyPrefix$keyId');
         await _secure.delete(key: '$_kMatrixTokenKeyPrefix$keyId');
       }
-    } catch (_) {}
+    } catch (e) {
+      _logger.debug('Ошибка обновления токена: $e');
+    }
     return null;
   }
 
@@ -267,7 +281,9 @@ class AuthService {
       try {
         final me = await MatrixService().getCurrentUserId();
         if (me != null) keyId = me;
-      } catch (_) {}
+      } catch (e) {
+        _logger.debug('Не удалось получить текущий userId: $e');
+      }
     }
     if (keyId.isEmpty) return null;
     var token = await _secure.read(key: '$_kMatrixTokenKeyPrefix$keyId');
@@ -276,7 +292,9 @@ class AuthService {
       try {
         final refreshed = await refreshMatrixTokenForUser(appUserId: keyId);
         if (refreshed != null && refreshed.isNotEmpty) return refreshed;
-      } catch (_) {}
+      } catch (e) {
+        _logger.debug('Не удалось обновить токен: $e');
+      }
     }
     return token;
   }
@@ -285,29 +303,35 @@ class AuthService {
   /// This calls POST /_matrix/client/v3/login with type 'm.login.token'.
   Future<void> loginWithSsoToken(String token) async {
     final homeserver = Environment.matrixHomeserverUrl;
-    if (homeserver.isEmpty) throw Exception('Matrix homeserver not configured');
+    if (homeserver.isEmpty) throw Exception('Не настроен Matrix homeserver');
     var base = homeserver.trim();
-    if (!base.startsWith('http://') && !base.startsWith('https://')) base = 'https://' + base;
+    if (!base.startsWith('http://') && !base.startsWith('https://')) base = 'https://$base';
     base = base.replaceAll(RegExp(r'/$'), '');
     final uri = Uri.parse('$base/_matrix/client/v3/login');
     final body = jsonEncode({'type': 'm.login.token', 'token': token});
     final res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: body).timeout(const Duration(seconds: 15));
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('SSO token exchange failed ${res.statusCode}: ${res.body}');
+      throw Exception('Ошибка обмена SSO токена ${res.statusCode}: ${res.body}');
     }
     final js = jsonDecode(res.body) as Map<String, dynamic>;
     final tokenResp = js['access_token'] as String?;
     final refresh = js['refresh_token'] as String?;
     final deviceId = js['device_id'] as String?;
     final userId = js['user_id'] as String?;
-    if (tokenResp == null || userId == null) throw Exception('SSO login response missing token/user_id');
+    if (tokenResp == null || userId == null) throw Exception('В ответе SSO отсутствует токен или user_id');
     String keyId = userId;
     try {
       final me = await MatrixService().getCurrentUserId();
       if (me != null && me.isNotEmpty) keyId = me;
-    } catch (_) {}
+    } catch (e) {
+      _logger.debug('Не удалось получить текущий userId: $e');
+    }
     await _secure.write(key: '$_kMatrixTokenKeyPrefix$keyId', value: tokenResp);
-    try { await MatrixService.setCurrentUserId(userId); } catch (_) {}
+    try { 
+      await MatrixService.setCurrentUserId(userId); 
+    } catch (e) {
+      _logger.debug('Не удалось сохранить userId: $e');
+    }
     if (refresh != null && refresh.isNotEmpty) await _secure.write(key: '$_kMatrixRefreshKeyPrefix$keyId', value: refresh);
     if (deviceId != null && deviceId.isNotEmpty) await _secure.write(key: '$_kMatrixDeviceIdPrefix$keyId', value: deviceId);
   }
@@ -316,8 +340,9 @@ class AuthService {
   /// the notion of current user and allows migrating away from Appwrite later.
   Future<String?> getCurrentUserId() async {
     try {
-      return await MatrixService().getCurrentUserId();
-    } catch (_) {
+      return await MatrixService.getCurrentUserId();
+    } catch (e) {
+      _logger.debug('Не удалось получить userId: $e');
       return null;
     }
   }
@@ -327,7 +352,9 @@ class AuthService {
     try {
       final me = await MatrixService().getCurrentUserId();
       if (me != null) await _secure.delete(key: '$_kMatrixTokenKeyPrefix$me');
-    } catch (_) {}
+    } catch (e) {
+      _logger.debug('Не удалось очистить токен: $e');
+    }
   }
 
   Future<dynamic> sendPhoneToken(String phone) async {
@@ -365,7 +392,7 @@ class AuthService {
     final uri = Uri.parse(endpoint);
     final res = await http.post(uri, headers: {'Content-Type': 'application/json'});
     if (res.statusCode >= 200 && res.statusCode < 300) return jsonDecode(res.body) as Map<String, dynamic>;
-    throw Exception('requestTotpSetup failed ${res.statusCode}: ${res.body}');
+    throw Exception('Ошибка requestTotpSetup ${res.statusCode}: ${res.body}');
   }
 
   // Verify the TOTP token and enable/disable TOTP on server-side
@@ -377,7 +404,7 @@ class AuthService {
     final body = jsonEncode({'code': code, 'action': disable ? 'disable' : 'enable'});
     final res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: body);
     if (res.statusCode >= 200 && res.statusCode < 300) return;
-    throw Exception('verifyTotpSetup failed ${res.statusCode}: ${res.body}');
+    throw Exception('Ошибка verifyTotpSetup ${res.statusCode}: ${res.body}');
   }
 
   // For session creation from token (phone flow), ensure JWT saved after session creation
@@ -386,7 +413,7 @@ class AuthService {
     // login token that Synapse recognizes for m.login.token, exchange it here
     // and save the returned access token.
     if (Environment.useMatrix) {
-      if (secret.isEmpty) throw Exception('Empty token');
+      if (secret.isEmpty) throw Exception('Пустой токен');
       await loginWithSsoToken(secret);
       return;
     }
@@ -395,7 +422,7 @@ class AuthService {
       await accountClient.createPhoneSession(userId: userId, secret: secret);
       final jwtResp = await accountClient.createJWT();
       final jwt = jwtResp is Map && jwtResp.containsKey('jwt') ? jwtResp['jwt'] as String : null;
-      if (jwt == null) throw Exception('Failed to obtain JWT after session creation');
+      if (jwt == null) throw Exception('Не удалось получить JWT после создания сессии');
       await MatrixService.saveJwt(jwt);
       return;
     }
@@ -406,18 +433,18 @@ class AuthService {
     final resp = await http.post(uri,
         headers: {'X-Appwrite-Project': Environment.appwriteProjectId, 'Content-Type': 'application/json'},
         body: jsonEncode({'userId': userId, 'secret': secret}));
-    if (resp.statusCode < 200 || resp.statusCode >= 300) throw Exception('Failed to create session: ${resp.statusCode} ${resp.body}');
+    if (resp.statusCode < 200 || resp.statusCode >= 300) throw Exception('Не удалось создать сессию: ${resp.statusCode} ${resp.body}');
     final jwtUri = Uri.parse('$base/account/jwt');
     final receivedCookie = resp.headers['set-cookie'];
     final jwtHeaders = <String, String>{'X-Appwrite-Project': Environment.appwriteProjectId};
     if (receivedCookie != null && receivedCookie.isNotEmpty) jwtHeaders['cookie'] = receivedCookie;
     final jwtResp = await http.post(jwtUri, headers: jwtHeaders);
     if (jwtResp.statusCode < 200 || jwtResp.statusCode >= 300) {
-      throw Exception('Failed to create JWT: ${jwtResp.statusCode} ${jwtResp.body}');
+      throw Exception('Не удалось создать JWT: ${jwtResp.statusCode} ${jwtResp.body}');
     }
     final jwtJson = jsonDecode(jwtResp.body) as Map<String, dynamic>;
     final jwt = jwtJson['jwt'] as String?;
-    if (jwt == null) throw Exception('JWT missing in response');
+    if (jwt == null) throw Exception('JWT отсутствует в ответе');
     if (receivedCookie != null && receivedCookie.isNotEmpty) await MatrixService.saveSessionCookie(receivedCookie);
     await MatrixService.saveJwt(jwt);
   }

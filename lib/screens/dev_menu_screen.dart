@@ -369,9 +369,9 @@ class _DevMenuScreenState extends State<DevMenuScreen> {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         color: isError
-                                            ? Colors.red.withOpacity(0.1)
+                                            ? Colors.red.withValues(alpha: 0.1)
                                             : isWarn
-                                                ? Colors.orange.withOpacity(0.1)
+                                                ? Colors.orange.withValues(alpha: 0.1)
                                                 : null,
                                         border: Border(
                                           left: BorderSide(

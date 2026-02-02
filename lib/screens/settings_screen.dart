@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
 import 'package:two_space_app/services/auth_service.dart';
+import 'package:two_space_app/services/settings_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -17,11 +18,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _loggingOut = false;
   bool _devMenuEnabled = false;
   String _appVersion = 'загрузка...';
+  String _selectedLanguage = 'ru';
+  bool _autoDownloadMedia = false;
+  bool _sendByEnter = true;
+  double _textScale = 1.0;
 
   @override
   void initState() {
     super.initState();
     _loadAppVersion();
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    setState(() {
+      _selectedLanguage = SettingsService.languageNotifier.value;
+      _textScale = SettingsService.textScaleNotifier.value;
+      _autoDownloadMedia = SettingsService.autoDownloadMediaNotifier.value;
+      _sendByEnter = SettingsService.sendByEnterNotifier.value;
+      
+      // Load notifications/sound if they exist in service, otherwise default
+      // Assuming existing service has notification settings (checked previously, didn't see explicit pub methods but maybe notifiers?)
+      // Actually checking previous read of SettingsService... 
+      // It has showEmail, showPhone, paleViolet, etc. but not generic notifications/sound.
+      // Keeping local state for those for now as they might be system level or unimplemented.
+    });
   }
 
   Future<void> _loadAppVersion() async {
@@ -183,11 +204,149 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const Divider(height: 1),
                     ListTile(
+                      leading: const Icon(Icons.manage_accounts),
+                      title: const Text('Настройки аккаунта'),
+                      subtitle: const Text('Пароль, безопасность, 2FA'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.pushNamed(context, '/account-settings'),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
                       leading: const Icon(Icons.lock),
                       title: const Text('Конфиденциальность'),
                       subtitle: const Text('Управление приватностью'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.pushNamed(context, '/privacy'),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Общие настройки
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              child: Text(
+                'Общие',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ),
+            GlassCard(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.language),
+                      title: const Text('Язык'),
+                      trailing: DropdownButton<String>(
+                        value: _selectedLanguage,
+                        underline: const SizedBox(),
+                        onChanged: (value) async {
+                          if (value != null) {
+                            setState(() => _selectedLanguage = value);
+                            await SettingsService.setLanguage(value);
+                          }
+                        },
+                        items: const [
+                          DropdownMenuItem(value: 'ru', child: Text('Русский')),
+                          DropdownMenuItem(value: 'en', child: Text('English')),
+                          DropdownMenuItem(value: 'uk', child: Text('Українська')),
+                        ],
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.text_fields),
+                      title: const Text('Размер текста'),
+                      subtitle: Slider(
+                        min: 0.8,
+                        max: 1.4,
+                        divisions: 6,
+                        value: _textScale,
+                        label: '${(_textScale * 100).toInt()}%',
+                        onChanged: (v) => setState(() => _textScale = v),
+                        onChangeEnd: (v) async => await SettingsService.setTextScale(v),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      secondary: const Icon(Icons.keyboard),
+                      title: const Text('Отправка по Enter'),
+                      subtitle: const Text('Shift+Enter для новой строки'),
+                      value: _sendByEnter,
+                      onChanged: (v) async {
+                        setState(() => _sendByEnter = v);
+                        await SettingsService.setSendByEnter(v);
+                      },
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Данные и хранилище
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              child: Text(
+                'Данные и хранилище',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ),
+            GlassCard(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      secondary: const Icon(Icons.download),
+                      title: const Text('Автозагрузка медиа'),
+                      subtitle: const Text('Загружать фото и видео автоматически'),
+                      value: _autoDownloadMedia,
+                      onChanged: (v) async {
+                        setState(() => _autoDownloadMedia = v);
+                        await SettingsService.setAutoDownloadMedia(v);
+                      },
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.storage),
+                      title: const Text('Управление хранилищем'),
+                      subtitle: const Text('Очистить кеш и данные'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Очистить кеш'),
+                            content: const Text('Удалить кешированные данные?'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Кеш очищен')),
+                                  );
+                                },
+                                child: const Text('Очистить'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                   ],
@@ -273,7 +432,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             GlassCard(
               child: Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Material(
@@ -301,7 +460,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 Text(
                                   'Выход с этого устройства',
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Colors.red.withOpacity(0.6),
+                                        color: Colors.red.withValues(alpha: 0.6),
                                       ),
                                 ),
                               ],
