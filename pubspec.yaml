@@ -12,9 +12,17 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
+  
+  # New libs
+  animations: ^2.0.0
+  sensors_plus: ^5.0.0
+  flutter_contacts: ^1.1.9
+  crypto: ^3.0.3
+
   # ===== State Management =====
   flutter_riverpod: ^2.5.1
   riverpod_annotation: ^2.3.5
+  riverpod: ^2.5.1
 
   # ===== Monitoring & Error Tracking =====
   sentry_flutter: ^8.14.2
@@ -49,7 +57,6 @@ dependencies:
   # ===== Media =====
   audioplayers: ^6.1.0
   video_player: ^2.9.2
-  # audioplayers: ^6.1.0  # Disabled for Linux due to GStreamer linker issues
 
   # ===== Connectivity =====
   url_launcher: ^6.3.1
@@ -65,9 +72,6 @@ dependencies:
   shimmer: ^3.0.0
   record: ^6.0.0
 
-  flutter_contacts: any
-  crypto: any
-  riverpod: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -93,21 +97,3 @@ flutter:
         - asset: assets/fonts/Inter/Inter-Regular.ttf
         - asset: assets/fonts/Inter/Inter-Bold.ttf
           weight: 700
-
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/icon/icon.png"
-  min_sdk_android: 21
-  web:
-    generate: true
-    image_path: "assets/icon/icon.png"
-    background_color: "#000000"
-    theme_color: "#000000"
-  windows:
-    generate: true
-    image_path: "assets/icon/icon.png"
-    icon_size: 48
-  macos:
-    generate: true
-    image_path: "assets/icon/icon.png"

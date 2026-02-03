@@ -12,7 +12,7 @@ class AccountSettingsScreen extends StatefulWidget {
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   bool _twoFactorEnabled = false;
   bool _biometricEnabled = false;
-  bool _sessionManagementEnabled = true;
+  // bool _sessionManagementEnabled = true;
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();

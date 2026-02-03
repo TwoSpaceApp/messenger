@@ -7,7 +7,8 @@ import 'constants/app_colors.dart';
 import 'constants/app_strings.dart';
 import 'config/theme_builder.dart';
 import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
+
+import 'screens/main_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/customization_screen.dart';
 import 'screens/privacy_screen.dart';
@@ -169,7 +170,7 @@ class TwoSpaceApp extends StatelessWidget {
   Map<String, WidgetBuilder> _buildRoutes(BuildContext context) {
     return {
       AppStrings.routeLogin: (context) => const LoginScreen(),
-      AppStrings.routeHome: (context) => const HomeScreen(),
+      AppStrings.routeHome: (context) => const MainScreen(),
       AppStrings.routeRegister: (context) => const RegisterScreen(),
       AppStrings.routeForgot: (context) => const ForgotPasswordScreen(),
       AppStrings.routeCustomization: (context) => const CustomizationScreen(),
@@ -259,7 +260,7 @@ class AuthGate extends ConsumerWidget {
 
     return authState.when(
       data: (state) {
-        return state.isAuthenticated ? const HomeScreen() : const LoginScreen();
+        return state.isAuthenticated ? const MainScreen() : const LoginScreen();
       },
       loading: () => const Scaffold(
         backgroundColor: AppColors.backgroundError,

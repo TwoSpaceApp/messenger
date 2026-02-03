@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'package:two_space_app/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import '../providers/auth_notifier.dart';
 import '../services/sentry_service.dart';
 import '../widgets/auth_background.dart';
@@ -33,7 +32,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
   final _nicknameCtl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   
-  String? _avatarPath;
+  // String? _avatarPath;
   Uint8List? _avatarBytes;
   
   // 0: Credentials, 1: Profile Info, 2: Avatar, 3: Customization
@@ -203,32 +202,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
   void _showError(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: const EdgeInsets.all(16),
-      ),
+      SnackBar(content: Text(message), backgroundColor: Theme.of(context).colorScheme.error),
     );
-  }
-
-  Future<void> _pickAvatar() async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery);
-    if (file != null) {
-      final bytes = await file.readAsBytes();
-      setState(() {
-        _avatarPath = file.path;
-        _avatarBytes = bytes;
-      });
-    }
   }
 
   String? _validateEmail(String? value) {
@@ -459,7 +434,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
               if (res != null && res.files.isNotEmpty) {
                 final file = res.files.single;
                 setState(() {
-                  _avatarPath = file.path;
+                  // _avatarPath = file.path;
                   _avatarBytes = file.bytes;
                 });
               }
@@ -678,30 +653,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
     return Container(
       width: 24, // Slightly shorter to fit 4 steps
       height: 2,
-      color: isActive ? theme.colorScheme.primary : theme.disabledColor.withOpacity(0.2),
-    );
-  }
-
-  Widget _buildProfileStep() {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: _pickAvatar,
-          child: CircleAvatar(
-            radius: 50,
-            backgroundImage: _avatarBytes != null ? MemoryImage(_avatarBytes!) : null,
-            child: _avatarBytes == null ? const Icon(Icons.add_a_photo, size: 50) : null,
-          ),
-        ),
-        TextFormField(
-          controller: _nameCtl,
-          decoration: const InputDecoration(labelText: 'Display Name'),
-        ),
-        TextFormField(
-          controller: _nicknameCtl,
-          decoration: const InputDecoration(labelText: 'Nickname (optional)'),
-        ),
-      ],
+      color: isActive ? theme.colorScheme.primary : theme.disabledColor.withValues(alpha: 0.2),
     );
   }
 }

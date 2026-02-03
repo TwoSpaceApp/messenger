@@ -1,45 +1,66 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-// Optional audio recording/playback service.
-// flutter_sound and permission_handler may not be installed for web/desktop builds.
-// This is a stub implementation that gracefully handles missing plugins.
-
+/// Real VoiceService using the 'record' package for audio recording.
 class VoiceService {
   static final VoiceService _instance = VoiceService._internal();
+  factory VoiceService() => _instance;
+  VoiceService._internal();
 
+  final AudioRecorder _recorder = AudioRecorder();
   bool _isRecording = false;
   bool _isInitialized = false;
   String? _currentRecordingPath;
   final bool _isSupported = Platform.isAndroid || Platform.isIOS;
 
-  VoiceService._internal();
-
-  factory VoiceService() {
-    return _instance;
-  }
-
-  Future<void> init() async {
-    // Stub: flutter_sound not available in this build
-    _isInitialized = false;
-  }
-
-  Future<void> dispose() async {
-    // Stub: nothing to dispose
-  }
-
   bool get isRecording => _isRecording;
   bool get isInitialized => _isInitialized;
+  bool get isPlaying => false; // Playback not implemented here
 
-  Future<bool> requestMicrophonePermission() async {
-    if (!_isSupported) return false;
-    // Stub: permission_handler not available
-    return false;
+  /// Initialize the voice service
+  Future<void> init() async {
+    if (!_isSupported) {
+      _isInitialized = false;
+      return;
+    }
+    try {
+      _isInitialized = await _recorder.hasPermission();
+    } catch (e) {
+      _isInitialized = false;
+    }
   }
 
+  /// Dispose the recorder
+  Future<void> dispose() async {
+    try {
+      if (_isRecording) {
+        await _recorder.stop();
+      }
+      await _recorder.dispose();
+    } catch (_) {}
+  }
+
+  /// Request microphone permission
+  Future<bool> requestMicrophonePermission() async {
+    if (!_isSupported) return false;
+    try {
+      final status = await Permission.microphone.request();
+      if (status.isGranted) {
+        _isInitialized = true;
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Start recording audio
   Future<String?> startRecording() async {
-    if (!_isInitialized) return null;
-    
+    if (!_isSupported) return null;
+
     try {
       final hasPermission = await requestMicrophonePermission();
       if (!hasPermission) return null;
@@ -48,7 +69,15 @@ class VoiceService {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       _currentRecordingPath = '${dir.path}/voice_$timestamp.m4a';
 
-      // Stub: no actual recording without flutter_sound
+      // Configure recording
+      const config = RecordConfig(
+        encoder: AudioEncoder.aacLc,
+        bitRate: 128000,
+        sampleRate: 44100,
+        numChannels: 1,
+      );
+
+      await _recorder.start(config, path: _currentRecordingPath!);
       _isRecording = true;
       return _currentRecordingPath;
     } catch (e) {
@@ -57,13 +86,12 @@ class VoiceService {
     }
   }
 
+  /// Stop recording and return the file path
   Future<String?> stopRecording() async {
-    if (!_isInitialized) return null;
-    
-    try {
-      if (!_isRecording) return null;
+    if (!_isRecording) return null;
 
-      final path = _currentRecordingPath;
+    try {
+      final path = await _recorder.stop();
       _isRecording = false;
 
       // Verify file exists and has content
@@ -80,16 +108,39 @@ class VoiceService {
     }
   }
 
-  Future<void> playAudio(String filePath) async {
-    if (!_isInitialized) return;
-    
+  /// Cancel recording
+  Future<void> cancelRecording() async {
     try {
-      // Stub: no actual playback without flutter_sound
-    } catch (e, st) {
-      // Log error when failing to play audio
-      print('VoiceService.playAudio error: $e\n$st');
+      if (_isRecording) {
+        await _recorder.stop();
+        _isRecording = false;
+        // Delete the file if it exists
+        if (_currentRecordingPath != null) {
+          final file = File(_currentRecordingPath!);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        }
+      }
+    } catch (_) {
+      _isRecording = false;
     }
   }
 
-  bool get isPlaying => false;
+  /// Get recording amplitude (for waveform visualization)
+  Future<double?> getAmplitude() async {
+    if (!_isRecording) return null;
+    try {
+      final amp = await _recorder.getAmplitude();
+      return amp.current;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Play audio (stub - use audioplayers or just_audio for playback)
+  Future<void> playAudio(String filePath) async {
+    // Playback not implemented in this service
+    // Use a separate audio player package like audioplayers
+  }
 }

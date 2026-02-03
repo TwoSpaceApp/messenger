@@ -1,4 +1,5 @@
 import 'package:two_space_app/widgets/screen_background.dart';
+import 'package:two_space_app/services/settings_service.dart';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -71,8 +72,8 @@ class _ChatScreenState extends State<ChatScreen> {
   late final VoiceService _voiceService;
   
   // Group-related state
-  String? _groupBackgroundColor;
-  String? _groupBackgroundImageUrl;
+  // String? _groupBackgroundColor;
+  // String? _groupBackgroundImageUrl;
 
   List<_Msg> get _visibleMessages {
     final q = (widget.searchQuery ?? '').trim().toLowerCase();
@@ -267,8 +268,8 @@ class _ChatScreenState extends State<ChatScreen> {
       final groupRoom = await groupService.getGroupRoom(widget.chat.id);
       if (mounted && groupRoom != null) {
         setState(() {
-          _groupBackgroundColor = groupRoom.backgroundColor;
-          _groupBackgroundImageUrl = groupRoom.backgroundImageUrl;
+          // _groupBackgroundColor = groupRoom.backgroundColor;
+          // _groupBackgroundImageUrl = groupRoom.backgroundImageUrl;
         });
       }
     } catch (_) {
@@ -608,12 +609,7 @@ class _ChatScreenState extends State<ChatScreen> {
         itemBuilder: (c, i) {
           final m = _visibleMessages[i];
           final key = _messageKeys.putIfAbsent(m.id, () => GlobalKey());
-          final bubble = Container(
-            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            decoration: BoxDecoration(color: m.isOwn ? const Color(0xFF0077FF) : const Color(0xFF2E3338), borderRadius: BorderRadius.circular(14)),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          final bubbleContent = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.white70)),
               const SizedBox(height: 6),
               if (m.type == 'm.image' && (m.mediaId != null && m.mediaId!.isNotEmpty))
@@ -679,8 +675,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                 ]),
               ]
-            ]),
-          );
+            ]);
           return KeyedSubtree(
             key: key,
             child: Row(
@@ -701,14 +696,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     builder: (context, val, child) => Transform.translate(offset: Offset(0, val), child: Opacity(opacity: 1.0 - (val / 12.0).clamp(0.0, 1.0), child: child)),
                     child: GestureDetector(
                       onLongPressStart: (details) => _showMessageActions(m, details.globalPosition),
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 400),
-                                      curve: Curves.easeInOut,
-                                      decoration: _highlighted.contains(m.id)
-                                          ? BoxDecoration(border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2), color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(16))
-                                          : null,
-                                      child: bubble,
-                                    ),
+                      child: _SquishyBubble(
+                        isOwn: m.isOwn,
+                        highlighted: _highlighted.contains(m.id),
+                        child: bubbleContent,
+                      ),
                     ),
                   ),
                 ),
@@ -933,4 +925,81 @@ class _TriangleClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+class _SquishyBubble extends StatefulWidget {
+  final Widget child;
+  final bool isOwn;
+  final bool highlighted;
+
+  const _SquishyBubble({
+    required this.child,
+    required this.isOwn,
+    this.highlighted = false,
+  });
+
+  @override
+  State<_SquishyBubble> createState() => _SquishyBubbleState();
+}
+
+class _SquishyBubbleState extends State<_SquishyBubble> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 1.0, 
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder(
+      valueListenable: SettingsService.themeNotifier,
+      builder: (context, themeSettings, _) {
+       final radius = themeSettings.bubbleRounding;
+        return GestureDetector(
+          onTapDown: (_) {
+             if (themeSettings.dynamicBubbles) _controller.forward();
+          },
+          onTapUp: (_) {
+             if (themeSettings.dynamicBubbles) _controller.reverse();
+          },
+          onTapCancel: () {
+             if (themeSettings.dynamicBubbles) _controller.reverse();
+          },
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Container(
+              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              margin: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                color: widget.isOwn ? const Color(0xFF0077FF) : const Color(0xFF2E3338),
+                borderRadius: BorderRadius.circular(radius),
+                 border: widget.highlighted 
+                  ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
+                  : null,
+              ),
+              child: widget.child,
+            ),
+          ),
+        );
+      }
+    );
+  }
 }

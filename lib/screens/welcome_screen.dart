@@ -8,7 +8,7 @@ import 'package:two_space_app/widgets/user_avatar.dart';
 import 'package:two_space_app/widgets/screen_background.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
 
-import 'home_screen.dart';
+import 'main_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   final String name;
@@ -45,15 +45,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     
     _ctrl.forward();
     
-    // Transition to HomeScreen after displaying welcome message
-    _timer = Timer(GreetingConstants.welcomeScreenDuration + const Duration(seconds: 1), _transitionToHome);
+    // Transition to MainScreen after displaying welcome message
+    _timer = Timer(GreetingConstants.welcomeScreenDuration + const Duration(seconds: 1), _transitionToMain);
   }
 
-  void _transitionToHome() {
+  void _transitionToMain() {
     _ctrl.reverse().then((_) {
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const MainScreen()),
         );
       }
     });

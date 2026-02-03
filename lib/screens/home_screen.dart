@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/screens/chat_screen.dart';
+import 'package:two_space_app/screens/search_contacts_screen.dart';
+import 'package:two_space_app/screens/profile_screen.dart';
 import 'package:two_space_app/widgets/user_avatar.dart';
 import 'package:two_space_app/widgets/screen_background.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
@@ -18,6 +20,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ChatMatrixService _chat = ChatMatrixService();
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
+  String? _myUserId;
 
   String _searchQuery = '';
 
@@ -32,14 +35,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadRooms();
+    _loadUserAndRooms();
   }
 
-  Future<void> _loadRooms() async {
+  Future<void> _loadUserAndRooms() async {
     if (!mounted) return;
     setState(() => _loading = true);
     
     try {
+      // Get current user ID for profile
+      _myUserId = await _chat.getCurrentUserId();
+      
       final ids = await _chat.getJoinedRooms();
       final out = <Map<String, dynamic>>[];
       
@@ -60,6 +66,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  void _openSearch() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SearchContactsScreen()),
+    );
+  }
+
+  void _openProfile() {
+    if (_myUserId == null) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ProfileScreen(userId: _myUserId!)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,19 +89,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: const Text('Сообщения'),
         centerTitle: false,
         actions: [
+          // Search button -> opens contacts search
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.pushNamed(context, '/settings'),
+            onPressed: _openSearch,
           ),
           const SizedBox(width: 8),
+          // Profile avatar
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: GestureDetector(
-               onTap: () => Navigator.pushNamed(context, '/profile'),
+               onTap: _openProfile,
                child: const UserAvatar(radius: 18),
             ),
           )

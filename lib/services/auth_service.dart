@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:two_space_app/services/matrix_service.dart';
+import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/services/dev_logger.dart';
 import 'package:two_space_app/config/environment.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -15,61 +16,20 @@ class AuthService {
   final DevLogger _logger = DevLogger('AuthService');
 
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
+  final ChatMatrixService _matrixService = ChatMatrixService();
 
   AuthService({this.accountClient});
 
-  // Email/password sign in: create session using SDK if available, then create JWT and save it
+  // Email/password sign in using real Matrix login
   Future<void> signInWithEmail(String email, String password) async {
-    return; // STUB: Always success
-    /*
-    // Prefer Matrix password login when Matrix is enabled.
-    if (Environment.useMatrix) {
-      try {
-        await signInMatrix(email, password);
-        return;
-      } catch (e) {
-        // Fall back to legacy Appwrite flow if Matrix login fails
-        if (kDebugMode) debugPrint('Matrix login failed, falling back to Appwrite: $e');
-      }
+    _logger.info('🔐 Matrix login attempt: $email');
+    try {
+      await _matrixService.login(email, password);
+      _logger.info('✓ Matrix login successful');
+    } catch (e) {
+      _logger.warn('❌ Matrix login failed: $e');
+      rethrow;
     }
-
-    // SDK flow if accountClient present
-    if (accountClient != null) {
-      // SDK flow
-      await accountClient.createEmailPasswordSession(email: email, password: password);
-      final jwtResp = await accountClient.createJWT();
-      // jwtResp may be Map or Response-like
-      final jwt = jwtResp is Map && jwtResp.containsKey('jwt') ? jwtResp['jwt'] as String : null;
-      if (jwt == null) throw Exception('Failed to obtain JWT after login');
-      await MatrixService.saveJwt(jwt);
-      return;
-    }
-
-    // REST fallback (Appwrite) - keep for backwards compatibility
-    final base = MatrixService.v1Endpoint();
-    final uri = Uri.parse('$base/account/sessions/email');
-    final resp = await http.post(uri,
-      headers: {'X-Appwrite-Project': Environment.appwriteProjectId, 'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}));
-    if (resp.statusCode < 200 || resp.statusCode >= 300) {
-      throw Exception('Failed to create session: ${resp.statusCode} ${resp.body}');
-    }
-    // After session created by REST, create JWT via /account/jwt.
-    final jwtUri = Uri.parse('$base/account/jwt');
-    final receivedCookie = resp.headers['set-cookie'];
-    final jwtHeaders = <String, String>{'X-Appwrite-Project': Environment.appwriteProjectId};
-    if (receivedCookie != null && receivedCookie.isNotEmpty) jwtHeaders['cookie'] = receivedCookie;
-    final jwtResp = await http.post(jwtUri, headers: jwtHeaders);
-    if (jwtResp.statusCode < 200 || jwtResp.statusCode >= 300) {
-      throw Exception('Failed to create JWT: ${jwtResp.statusCode} ${jwtResp.body}');
-    }
-    final jwtJson = jsonDecode(jwtResp.body) as Map<String, dynamic>;
-    final jwt = jwtJson['jwt'] as String?;
-    if (jwt == null) throw Exception('JWT missing in response');
-    // Persist session cookie so we can refresh JWT later if needed
-    if (receivedCookie != null && receivedCookie.isNotEmpty) await MatrixService.saveSessionCookie(receivedCookie);
-    await MatrixService.saveJwt(jwt);
-    */
   }
 
   /// Return currently cached JWT, or null if none.
@@ -77,24 +37,27 @@ class AuthService {
     return await MatrixService.getJwt();
   }
 
-  /// Ensure JWT is available: attempt to restore saved JWT/session cookie and obtain fresh JWT.
+  /// Ensure we have valid credentials: check ChatMatrixService for stored tokens
   Future<bool> ensureJwt() async {
-    return true; // STUB: Always return true
-    /*
     try {
-      await MatrixService.restoreJwt();
-      final j = await MatrixService.getJwt();
-      return j != null && j.isNotEmpty;
+      await _matrixService.init();
+      return _matrixService.isLoggedIn;
     } catch (e) {
-      _logger.debug('Не удалось восстановить JWT: $e');
+      _logger.debug('Не удалось проверить авторизацию: $e');
       return false;
     }
-    */
   }
 
   /// Sign out current user: delete session on server and clear stored JWT/cookie
   Future<void> signOut() async {
     _logger.info('🚪 Выход из аккаунта...');
+    // Clear ChatMatrixService credentials
+    try {
+      await _matrixService.clearCredentials();
+      _logger.info('✓ Matrix credentials cleared');
+    } catch (e) {
+      _logger.debug('❌ Ошибка очистки Matrix credentials: $e');
+    }
     try {
       await MatrixService.deleteCurrentSession();
       _logger.info('✓ Сессия удалена');
@@ -285,7 +248,20 @@ class AuthService {
 
   /// Retrieve stored Matrix access token for given app user id (or current user if null)
   Future<String?> getMatrixTokenForUser({String? appUserId}) async {
-    return 'stub_token_123';
+    // First check if ChatMatrixService has token
+    await _matrixService.init();
+    if (_matrixService.isLoggedIn) {
+      // Get from secure storage
+      String? keyId = appUserId;
+      if (keyId == null || keyId.isEmpty) {
+        keyId = await _matrixService.getCurrentUserId();
+      }
+      if (keyId != null && keyId.isNotEmpty) {
+        final token = await _secure.read(key: '$_kMatrixTokenKeyPrefix$keyId');
+        if (token != null) return token;
+      }
+    }
+    return null;
   }
 
   /// Exchange an SSO/login token (returned by Synapse after OIDC) for a Matrix session.
@@ -325,10 +301,9 @@ class AuthService {
     if (deviceId != null && deviceId.isNotEmpty) await _secure.write(key: '$_kMatrixDeviceIdPrefix$keyId', value: deviceId);
   }
 
-  /// Return current application user id. This method centralizes access to
-  /// the notion of current user and allows migrating away from Appwrite later.
+  /// Return current application user id from Matrix service.
   Future<String?> getCurrentUserId() async {
-    return '@stub:matrix.org'; // STUB
+    return await _matrixService.getCurrentUserId();
   }
 
   /// Clear stored Matrix token for current app user (sign out)

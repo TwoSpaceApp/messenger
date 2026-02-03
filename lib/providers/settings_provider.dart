@@ -35,7 +35,7 @@ class ThemeSettingsNotifier extends StateNotifier<ThemeSettings> {
   }
 
   void updatePrimaryColor(Color color) {
-    SettingsService.updatePrimaryColor(color);
+    SettingsService.updatePrimaryColor(color.value);
   }
 
   void updateFontFamily(String family) {

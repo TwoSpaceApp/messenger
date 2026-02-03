@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_notifier.dart';
+import '../screens/welcome_screen.dart';
+import '../services/chat_matrix_service.dart';
 
 /// Listens to authentication state changes and handles automatic navigation
 /// 
 /// Wrap your app with this widget to enable automatic routing:
-/// - When user logs in → navigate to home
+/// - When user logs in → show welcome screen, then navigate to home
 /// - When user logs out → navigate to login
 /// - On auth errors → show error message
 /// 
@@ -40,8 +42,8 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
         }
 
         if (state.isAuthenticated) {
-          // User just logged in
-          _navigateToHome();
+          // User just logged in - show welcome screen first
+          _navigateToWelcome(state.userId);
         } else if (previousState?.isAuthenticated == true) {
           // User just logged out
           _navigateToLogin();
@@ -54,16 +56,33 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
     );
   }
 
-  void _navigateToHome() {
+  Future<void> _navigateToWelcome(String? userId) async {
     if (!mounted) return;
     
-    // Get current route
-    final currentRoute = ModalRoute.of(context)?.settings.name;
+    // Get user info for welcome screen
+    String userName = 'Пользователь';
+    String? avatarUrl;
     
-    // Only navigate if not already on home
-    if (currentRoute != '/home') {
-      Navigator.of(context).pushReplacementNamed('/home');
+    if (userId != null) {
+      try {
+        final matrixService = ChatMatrixService();
+        final userInfo = await matrixService.getUserInfo(userId);
+        userName = userInfo['displayName'] as String? ?? userId.split(':').first.replaceAll('@', '');
+        avatarUrl = userInfo['avatarUrl'] as String?;
+      } catch (_) {
+        userName = userId.split(':').first.replaceAll('@', '');
+      }
     }
+    
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => WelcomeScreen(
+          name: userName,
+          avatarUrl: avatarUrl,
+        ),
+      ),
+    );
   }
 
   void _navigateToLogin() {
