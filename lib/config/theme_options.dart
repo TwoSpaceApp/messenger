@@ -10,15 +10,17 @@ class ThemeOptions {
     {'name': 'Pale Violet', 'value': 0xFFE8D7FF},
     {'name': 'Coral', 'value': 0xFFFF7043},
     {'name': 'Teal', 'value': 0xFF009688},
+    {'name': 'Light Blue', 'value': 0xFF03A9F4}, // New Light Theme 1
+    {'name': 'Light Green', 'value': 0xFF8BC34A}, // New Light Theme 2
   ];
 
   static const List<String> fonts = [
     'Inter',
     'Roboto',
-    'Noto Sans',
-    'Open Sans',
+    'NotoSans',
+    'OpenSans',
     'Oswald',
-    'Press Start 2P',
-    'Comic Sans MS',
+    'PressStart 2P',
+    'ComicSans MS',
   ];
 }

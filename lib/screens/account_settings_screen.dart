@@ -1,6 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
-import 'package:two_space_app/services/auth_service.dart';
 import 'package:two_space_app/config/ui_tokens.dart';
 
 class AccountSettingsScreen extends StatefulWidget {

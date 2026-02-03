@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../config/environment.dart';
 import 'chat_matrix_service.dart';
 import 'token_manager.dart';
@@ -11,7 +12,7 @@ class MatrixService {
   final String _homeserverUrl = Environment.matrixHomeserverUrl;
 
   Future<String?> getCurrentUserId() async {
-    final token = await TokenManager.getMatrixToken();
+    final token = await TokenManager.getValidToken();
     if (token == null) return null;
     // A simple (and not very reliable) way to get user ID from token
     // In a real app, you'd likely store this separately or use a dedicated endpoint
@@ -31,7 +32,7 @@ class MatrixService {
     final url = Uri.parse('$_homeserverUrl$endpoint');
     final headers = {'Content-Type': 'application/json'};
     if (authenticate) {
-      final token = await TokenManager.getMatrixToken();
+      final token = await TokenManager.getValidToken();
       if (token == null) throw Exception('Not authenticated');
       headers['Authorization'] = 'Bearer $token';
     }
@@ -78,7 +79,7 @@ class MatrixService {
       final type = (payload['type'] ?? 'text').toString();
       final media = payload['mediaFileId'] as String? ?? payload['mediaId'] as String?;
       try {
-        await ChatMatrixService().sendMessage(roomId: chatId, body: text, type: type == 'image' ? 'm.image' : 'm.text', mediaFileId: media);
+        await ChatMatrixService().sendMessage(roomId: chatId, text: text, type: type == 'image' ? 'm.image' : 'm.text', mediaFileId: media);
       } catch (e) {
         rethrow;
       }
@@ -106,28 +107,50 @@ class MatrixService {
     throw Exception('uploadBytesToStorage: Matrix mode required');
   }
 
-  Uri getFileViewUrl(String mxcUrl) {
+  static Uri getFileViewUrl(String mxcUrl) {
     if (mxcUrl.startsWith('mxc://')) {
       final parts = mxcUrl.substring(6).split('/');
       if (parts.length == 2) {
-        return Uri.parse('$_homeserverUrl/_matrix/media/v3/download/${parts[0]}/${parts[1]}');
+        return Uri.parse('${Environment.matrixHomeserverUrl}/_matrix/media/v3/download/${parts[0]}/${parts[1]}');
       }
     }
     return Uri.parse(mxcUrl);
   }
 
-  Future<String> downloadFile(String mxcUrl) async {
-    final url = getFileViewUrl(mxcUrl);
+  static String readableError(dynamic e) {
+    return e.toString().replaceAll('Exception:', '').trim();
+  }
+
+  static Future<String> downloadFileToTemp(String fileId, {String? filename}) async {
+    final url = getFileViewUrl(fileId);
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final tempDir = await getTemporaryDirectory();
-      final filename = mxcUrl.split('/').last;
-      final file = File('${tempDir.path}/$filename');
+      final name = filename ?? fileId.split('/').last;
+      final file = File('${tempDir.path}/$name');
       await file.writeAsBytes(response.bodyBytes);
       return file.path;
     } else {
       throw Exception('Failed to download file: ${response.statusCode}');
     }
+  }
+
+  static Future<bool> saveFileToGallery(String path) async {
+     // Stub: Implement with gal or image_gallery_saver
+     return false;
+  }
+
+  static Future<bool> shareFile(String path, {String? text}) async {
+    try {
+      await Share.shareXFiles([XFile(path)], text: text);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<String> downloadFile(String mxcUrl) async {
+    return downloadFileToTemp(mxcUrl);
   }
 
   static createAccount(String email, String password, {String? name}) {}

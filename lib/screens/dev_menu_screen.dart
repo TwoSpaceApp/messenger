@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:two_space_app/services/dev_logger.dart';
 import 'package:two_space_app/services/update_service.dart';
-import 'package:two_space_app/services/settings_service.dart';
 import 'package:two_space_app/screens/login_screen.dart';
 import 'package:two_space_app/screens/register_screen.dart';
 import 'package:two_space_app/screens/home_screen.dart';

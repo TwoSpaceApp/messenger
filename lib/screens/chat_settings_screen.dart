@@ -1,8 +1,8 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
 import 'package:two_space_app/widgets/user_avatar.dart';
-import 'package:two_space_app/services/matrix_service.dart';
 import 'package:two_space_app/services/chat_matrix_service.dart';
 
 class ChatSettingsScreen extends StatefulWidget {
@@ -36,7 +36,8 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     if (path == null) return;
     setState(() => _saving = true);
     try {
-      await MatrixService.setRoomAvatarFromFile(widget.roomId, path);
+      final bytes = await File(path).readAsBytes();
+      await ChatMatrixService().setRoomAvatar(widget.roomId, bytes, fileName: path.split('/').last);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Аватар комнаты обновлен')));
     } catch (e) {
@@ -51,7 +52,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     setState(() => _saving = true);
     try {
       final name = _nameController.text.trim();
-      if (name.isNotEmpty) await MatrixService.setRoomName(widget.roomId, name);
+      if (name.isNotEmpty) await ChatMatrixService().setRoomName(widget.roomId, name);
       // set join rule
       await ChatMatrixService().setJoinRule(widget.roomId, _isPublic ? 'public' : 'invite');
       if (!mounted) return;

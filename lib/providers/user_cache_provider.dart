@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:two_space_app/services/matrix/matrix_profile_service.dart';
 import 'service_providers.dart';
 
 /// LRU cache implementation for user profiles

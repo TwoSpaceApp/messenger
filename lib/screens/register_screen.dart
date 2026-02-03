@@ -1,18 +1,15 @@
 import 'dart:typed_data';
+import 'package:two_space_app/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/auth_notifier.dart';
-import '../utils/responsive.dart';
-import '../widgets/password_strength_indicator.dart';
 import '../services/sentry_service.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/app_logo.dart';
-import '../config/ui_tokens.dart';
 import '../config/theme_options.dart';
 import '../services/settings_service.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:typed_data';
 
 /// Modern RegisterScreen including Customization Step
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -172,6 +169,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
       );
       
       SentryService.addBreadcrumb('Регистрация успешна', category: 'auth');
+
+      if (!mounted) return;
+      
+      // Navigate to Welcome Screen instead of direct Home
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => WelcomeScreen(
+            name: _nameCtl.text.trim(),
+            description: _nicknameCtl.text.trim(),
+            // Pass avatar logic if available, currently just bytes in _avatarBytes
+            // Ideally we upload it first, but for now passing null to use Initials
+          ),
+        ),
+      );
     } catch (e, stackTrace) {
       SentryService.captureException(
         e,
@@ -217,6 +229,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
         _avatarBytes = bytes;
       });
     }
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) return 'Введите email';
+    if (!value.contains('@')) return 'Некорректный email';
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) return 'Введите пароль';
+    if (value.length < 6) return 'Пароль слишком короткий';
+    return null;
   }
 
   @override

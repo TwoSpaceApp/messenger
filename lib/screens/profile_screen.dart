@@ -178,8 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: UserAvatar(
                               key: ValueKey(avatar ?? 'noavatar_${widget.userId}'),
                               avatarUrl: avatar,
-                              initials: (name.isNotEmpty ? name[0] : '?'),
-                              fullName: name,
+                              name: name,
                               radius: 66,
                             ),
                           ),

@@ -1,3 +1,4 @@
+import 'package:two_space_app/widgets/screen_background.dart';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -11,11 +12,9 @@ import 'package:two_space_app/services/group_matrix_service.dart';
 import 'package:two_space_app/services/draft_service.dart';
 import 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/screens/profile_screen.dart';
-import 'package:two_space_app/widgets/group_background_widget.dart';
 // import 'package:audioplayers/audioplayers.dart';  // Disabled for Linux
 import 'dart:math' as math;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-import 'package:two_space_app/models/matrix.dart';
 
 // Stub for AudioPlayer when audioplayers is disabled
 class AudioPlayer {
@@ -401,7 +400,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             onTap: () async {
                               entry?.remove();
                               try {
-                                await _svc.sendReaction(widget.chat.id, m.id, e);
+                                await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: e);
                                 await _loadMessages();
                               } catch (_) {}
                             },
@@ -441,12 +440,7 @@ class _ChatScreenState extends State<ChatScreen> {
           chosen = emoji.emoji; 
           Navigator.of(c).pop(); 
         }, 
-        config: const Config(
-          emojiSizeMax: 32.0,
-          bgColor: Color(0xFF0B0320),
-          indicatorColor: Color(0xFF1F5FFF),
-          iconColorSelected: Color(0xFF1F5FFF),
-        )
+        config: const Config()
       )));
     });
     return chosen;
@@ -468,7 +462,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty) return;
     setState(() => _sending = true);
     try {
-      await _svc.sendMessage(widget.chat.id, text, 'm.text');
+      await _svc.sendMessage(roomId: widget.chat.id, text: text, type: 'm.text');
       setState(() {
         _messages.insert(0, _Msg(id: DateTime.now().millisecondsSinceEpoch.toString(), text: text, isOwn: true, time: DateTime.now(), senderId: '', senderName: 'You', senderAvatar: null, type: 'm.text'));
         _controller.text = '';
@@ -519,7 +513,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     setState(() => _sending = true);
     try {
-      await _svc.sendMessage(widget.chat.id, path, 'm.audio', mediaFileId: path);
+      await _svc.sendMessage(roomId: widget.chat.id, text: path, type: 'm.audio', mediaFileId: path);
       
       if (mounted) {
         setState(() {
@@ -552,7 +546,7 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final bytes = await File(path).readAsBytes();
       final mxc = await _svc.uploadMedia(bytes, 'application/octet-stream', res.files.single.name);
-      await _svc.sendMessage(widget.chat.id, '', 'm.image', mediaFileId: mxc);
+      await _svc.sendMessage(roomId: widget.chat.id, text: '', type: 'm.image', mediaFileId: mxc);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Файл отправлен'), duration: Duration(seconds: 2)));
     } catch (e) {
@@ -667,7 +661,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           if (myEvent != null && myEvent.isNotEmpty) {
                             await _svc.redactEvent(widget.chat.id, myEvent);
                           } else {
-                            await _svc.sendReaction(widget.chat.id, m.id, entry.key);
+                            await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: entry.key);
                           }
                           final r = await _svc.getReactions(widget.chat.id, m.id);
                           if (mounted) setState(() => _reactions[m.id] = r);
@@ -730,18 +724,17 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1D2227),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: const Color(0xFF21262C).withValues(alpha: 0.7),
         title: Text(widget.chat.name),
-        backgroundColor: const Color(0xFF21262C),
       ),
-      body: Column(children: [
-        Container(
-          width: double.infinity,
-          color: Colors.redAccent,
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: const Text('Offline Mode', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        ),
+      body: ScreenBackground(
+        child: SafeArea(
+          child: Column(children: [
+        
         Expanded(child: bodyWidget),
         Padding(
           padding: const EdgeInsets.all(8.0),
@@ -783,6 +776,8 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         )
       ]),
+        ),
+      ),
     );
   }
 }

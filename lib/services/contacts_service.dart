@@ -1,7 +1,5 @@
 // ignore: uri_does_not_exist
-import 'package:flutter_contacts/flutter_contacts.dart';
 // ignore: uri_does_not_exist
-import 'package:permission_handler/permission_handler.dart';
 
 class ContactEntry {
   final String displayName;

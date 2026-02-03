@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 class ChatMatrixService {
   String get homeserver => 'matrix.org';
@@ -24,11 +23,11 @@ class ChatMatrixService {
     };
   }
 
-  Future<void> sendMessage(String roomId, String userId, String text, {String? type, String? mediaFileId}) async {
+  Future<void> sendMessage({required String roomId, required String text, String? userId, String? type, String? mediaFileId}) async {
     // Stub
   }
 
-  Future<void> sendReply(String roomId, String replyToId, String text, [String? formattedText]) async {
+  Future<void> sendReply(String roomId, String replyToId, {required String body, String? formattedBody}) async {
     // Stub
   }
 
@@ -40,7 +39,7 @@ class ChatMatrixService {
     // Stub
   }
 
-  Future<void> sendReaction(String roomId, String eventId, String reaction) async {
+  Future<void> sendReaction({required String roomId, required String eventId, required String reaction}) async {
     // Stub
   }
 
@@ -56,14 +55,14 @@ class ChatMatrixService {
     return [];
   }
 
-  Future<List<dynamic>> loadMessages(String roomId, {int limit = 50}) async {
+  Future<List<dynamic>> loadMessages({required String roomId, int limit = 50}) async {
     return [
        MockMessage(id: '1', content: 'This is a stub message', time: DateTime.now().subtract(const Duration(minutes: 5)), senderId: '@stub:matrix.org'),
        MockMessage(id: '2', content: 'Offline mode is active', time: DateTime.now(), senderId: '@system:matrix.org'),
     ];
   }
 
-  Future<List<Map<String, dynamic>>> searchMessages(String query, {String? type, required String query}) async {
+  Future<List<Map<String, dynamic>>> searchMessages({required String query, String? type}) async {
     return [];
   }
 
@@ -83,7 +82,7 @@ class ChatMatrixService {
     // Stub
   }
 
-  Future<String?> uploadMedia(dynamic bytes, {String? contentType, String? fileName}) async {
+  Future<String?> uploadMedia(dynamic bytes, String? contentType, String? fileName) async {
     return null;
   }
 
@@ -91,7 +90,7 @@ class ChatMatrixService {
     return '';
   }
 
-  Future<List<double>> getWaveformForMedia({required String mediaId, String? localPath, int samples = 50}) async {
+  Future<List<double>> getWaveformForMedia(String mediaId, String? localPath, {int samples = 50}) async {
     return [];
   }
 

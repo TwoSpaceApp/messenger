@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 
 import 'constants/app_colors.dart';
+import 'constants/app_strings.dart';
 import 'config/theme_builder.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';

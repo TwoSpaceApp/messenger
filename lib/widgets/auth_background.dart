@@ -196,7 +196,7 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
             ),
             boxShadow: [
               BoxShadow(
-                color: c1.withOpacity(0.2), 
+                color: c1.withValues(alpha: 0.2), 
                 blurRadius: 60, 
                 spreadRadius: -10, 
               ),

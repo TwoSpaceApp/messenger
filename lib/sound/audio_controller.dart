@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'audio_recorder_service.dart';
+import 'audio_player_service.dart';
+import 'audio_state.dart';
 
 class AudioController extends ChangeNotifier {
   final AudioRecorderService _recorder = AudioRecorderService();
@@ -13,11 +16,39 @@ class AudioController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> stopAndSave() async {
+  Future<String?> stopAndSave() async {
     final path = await _recorder.stopRecording();
     _state = AudioState.idle;
-    //Mетоды на наш сервер реализовать нужно будет или как пока заготовка для Matrix
+    notifyListeners();
+    return path;
+  }
+
+  Future<void> playAudio(String url) async {
+    if (_state == AudioState.playing) {
+      await stopAudio();
+    }
+    _state = AudioState.playing;
+    notifyListeners();
+    try {
+      await _player.play(url);
+    } catch (e) {
+      _state = AudioState.idle;
+      notifyListeners();
+    }
+  }
+
+  Future<void> pauseAudio() async {
+    await _player.pause();
+    _state = AudioState.paused; // or paused
     notifyListeners();
   }
-//Winamp внутри 
+
+  Future<void> stopAudio() async {
+    if (_state == AudioState.recording) {
+      await stopAndSave();
+    }
+    await _player.pause(); // audioplayers doesn't have stop properly implemented in wrappers sometimes, but let's assume specific logic or use pause
+    _state = AudioState.idle;
+    notifyListeners();
+  }
 }

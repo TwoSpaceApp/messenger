@@ -1,6 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../services/auth_service.dart';
-import '../services/matrix_service.dart';
 
 part 'auth_notifier.g.dart';
 

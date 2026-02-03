@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/auth_service.dart';
-import '../providers/auth_notifier.dart';
-import '../utils/responsive.dart';
-import 'otp_screen.dart';
-import 'sso_webview_screen.dart';
 import '../providers/auth_notifier.dart';
 import '../services/sentry_service.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/app_logo.dart';
-import '../config/ui_tokens.dart';
 
 /// Modern LoginScreen using Riverpod for state management
 /// All auth logic delegated to AuthNotifier

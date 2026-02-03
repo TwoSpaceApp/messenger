@@ -48,7 +48,7 @@ final chatByIdProvider = FutureProvider.family<Chat?, String>((ref, chatId) asyn
 // Messages for a specific chat
 final chatMessagesProvider = FutureProvider.family<List<dynamic>, String>((ref, chatId) async {
   final service = ref.watch(chatService);
-  return service.loadMessages(chatId, limit: 50);
+  return service.loadMessages(roomId: chatId, limit: 50);
 });
 
 // Room members provider

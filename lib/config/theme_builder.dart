@@ -1,95 +1,93 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:two_space_app/services/settings_service.dart';
 
 class AppThemeBuilder {
   AppThemeBuilder._();
 
   static ThemeData build(ThemeSettings settings, bool paleVioletEnabled) {
-    // Force Element-like dark theme
-    const primaryColor = Color(0xFF0DBD8B);
-    const backgroundColor = Color(0xFF1D2227);
-    const surfaceColor = Color(0xFF21262C);
-    const onPrimaryColor = Colors.black;
-    const onSurfaceColor = Colors.white;
+    final selectedColorInt = settings.primaryColorValue;
+    final isLightTheme = _isLightIntention(selectedColorInt);
+    
+    final primaryColor = Color(selectedColorInt);
+    
+    final backgroundColor = isLightTheme ? const Color(0xFFF5F7FA) : const Color(0xFF0F1115);
+    final surfaceColor = isLightTheme ? const Color(0xFFFFFFFF) : const Color(0xFF1D2227);
+    final onBackgroundColor = isLightTheme ? Colors.black87 : Colors.white;
+    final onSurfaceColor = isLightTheme ? Colors.black87 : Colors.white;
 
-    final baseTheme = ThemeData.dark();
+    final baseTheme = isLightTheme ? ThemeData.light() : ThemeData.dark();
+    
+    final mainTextTheme = baseTheme.textTheme.apply(
+      bodyColor: onBackgroundColor,
+      displayColor: onBackgroundColor,
+    );
+
+    TextTheme textTheme;
+    final fontName = settings.fontFamily;
+    
+    if (fontName == 'Roboto') {
+      textTheme = GoogleFonts.robotoTextTheme(mainTextTheme);
+    } else if (fontName == 'NotoSans') {
+      textTheme = GoogleFonts.notoSansTextTheme(mainTextTheme);
+    } else if (fontName == 'OpenSans') {
+      textTheme = GoogleFonts.openSansTextTheme(mainTextTheme);
+    } else if (fontName == 'Oswald') {
+      textTheme = GoogleFonts.oswaldTextTheme(mainTextTheme);
+    } else if (fontName == 'PressStart 2P') {
+      textTheme = GoogleFonts.pressStart2pTextTheme(mainTextTheme);
+    } else if (fontName == 'ComicSans MS') {
+      textTheme = GoogleFonts.comicNeueTextTheme(mainTextTheme);
+    } else {
+      textTheme = GoogleFonts.interTextTheme(mainTextTheme);
+    }
 
     return baseTheme.copyWith(
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: surfaceColor,
-        elevation: 0,
-        titleTextStyle: TextStyle(
-          color: onSurfaceColor,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
-        iconTheme: IconThemeData(color: onSurfaceColor),
-      ),
-      colorScheme: const ColorScheme.dark(
+      colorScheme: baseTheme.colorScheme.copyWith(
         primary: primaryColor,
-        secondary: primaryColor,
-        background: backgroundColor,
         surface: surfaceColor,
-        onPrimary: onPrimaryColor,
-        onSecondary: onPrimaryColor,
-        onBackground: onSurfaceColor,
         onSurface: onSurfaceColor,
-        error: Colors.redAccent,
-        onError: Colors.white,
+        secondary: primaryColor, 
       ),
-      textTheme: _buildTextTheme(baseTheme.textTheme, onSurfaceColor),
-      inputDecorationTheme: _buildInputTheme(surfaceColor),
-      elevatedButtonTheme: _buildButtonTheme(primaryColor, onPrimaryColor),
-      textButtonTheme: _buildTextButtonTheme(primaryColor),
-      listTileTheme: const ListTileThemeData(
-        selectedColor: primaryColor,
-      ),
-      drawerTheme: const DrawerThemeData(
-        backgroundColor: Color(0xFF151718),
-      ),
-    );
-  }
-
-  static TextTheme _buildTextTheme(TextTheme base, Color onSurfaceColor) {
-    return base.apply(
-      fontFamily: 'Inter',
-      bodyColor: onSurfaceColor,
-      displayColor: onSurfaceColor,
-    );
-  }
-
-  static InputDecorationTheme _buildInputTheme(Color surfaceColor) {
-    return InputDecorationTheme(
-      filled: true,
-      fillColor: surfaceColor,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide.none,
-      ),
-      hintStyle: TextStyle(color: Colors.grey[400]),
-    );
-  }
-
-  static ElevatedButtonThemeData _buildButtonTheme(Color primary, Color onPrimary) {
-    return ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primary,
-        foregroundColor: onPrimary,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+      textTheme: textTheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+           fontWeight: FontWeight.w600,
+           color: onBackgroundColor,
         ),
+        iconTheme: IconThemeData(color: onBackgroundColor),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: surfaceColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: primaryColor, width: 2),
+        ),
+        labelStyle: TextStyle(color: onBackgroundColor.withValues(alpha: 0.6)),
+        hintStyle: TextStyle(color: onBackgroundColor.withValues(alpha: 0.4)),
+      ),
+      iconTheme: IconThemeData(
+        color: onBackgroundColor,
       ),
     );
   }
 
-  static TextButtonThemeData _buildTextButtonTheme(Color primary) {
-    return TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: primary,
-      ),
-    );
+  static bool _isLightIntention(int colorValue) {
+    const lightColors = [0xFF03A9F4, 0xFF8BC34A, 0xFFE8D7FF, 0xFFFFFFFF];
+    return lightColors.contains(colorValue);
   }
 }

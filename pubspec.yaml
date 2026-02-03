@@ -47,26 +47,27 @@ dependencies:
   drift: ^2.18.0
 
   # ===== Media =====
-  audioplayers: ^6.0.0
-  image_picker: ^1.1.2
-  file_picker: ^8.1.4
+  audioplayers: ^6.1.0
   video_player: ^2.9.2
   # audioplayers: ^6.1.0  # Disabled for Linux due to GStreamer linker issues
 
   # ===== Connectivity =====
-  connectivity_plus: ^6.1.0
   url_launcher: ^6.3.1
 
   # ===== Utilities =====
   package_info_plus: ^8.0.0
-  url_launcher: ^6.3.0
   share_plus: ^9.0.0
   permission_handler: ^11.3.1
   device_info_plus: ^10.1.0
   app_links: ^6.0.0
   flutter_displaymode: ^0.7.0
   path: ^1.9.0
+  shimmer: ^3.0.0
+  record: ^6.0.0
 
+  flutter_contacts: any
+  crypto: any
+  riverpod: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -89,13 +90,8 @@ flutter:
   fonts:
     - family: Inter
       fonts:
-        - asset: assets/fonts/Inter-Regular.ttf
-        - asset: assets/fonts/Inter-Bold.ttf
-          weight: 700
-    - family: Montserrat
-      fonts:
-        - asset: assets/fonts/Montserrat-Regular.ttf
-        - asset: assets/fonts/Montserrat-Bold.ttf
+        - asset: assets/fonts/Inter/Inter-Regular.ttf
+        - asset: assets/fonts/Inter/Inter-Bold.ttf
           weight: 700
 
 flutter_launcher_icons:

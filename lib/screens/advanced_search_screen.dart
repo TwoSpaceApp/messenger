@@ -24,7 +24,7 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
     try {
       final chatService = ChatMatrixService();
       final searchResults = await chatService.searchMessages(
-        _queryController.text,
+        query: _queryController.text,
         type: _searchType,
       );
       setState(() => _results = searchResults);

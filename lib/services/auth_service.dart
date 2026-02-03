@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:two_space_app/services/matrix_service.dart';
 import 'package:two_space_app/services/dev_logger.dart';

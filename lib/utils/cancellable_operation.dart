@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 
 /// Represents a cancellable asynchronous operation
 class CancellableOperation<T> {
@@ -35,7 +34,7 @@ class CancellableOperation<T> {
         return null;
       }
       
-      return result as T?;
+      return result;
     } catch (e) {
       _isCompleted = true;
       if (_isCancelled) {

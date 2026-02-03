@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import '../utils/secure_store.dart';
 
 /// Data class for theme settings
@@ -37,13 +38,24 @@ class SettingsService {
   static const _fontKey = 'theme_font_family';
   static const _colorKey = 'theme_primary_color';
   static const _weightKey = 'theme_font_weight';
-  static const _paleVioletKey = 'theme_pale_violet';
+  static const _paleVioletModeKey = 'theme_pale_violet';
   static const _sessionTimeoutKey = 'session_timeout_days';
+  
+  static const _chatListOnRightKey = 'ui_chat_list_right';
+  static const _chatListWidthKey = 'ui_chat_list_width';
+  static const _showEmailKey = 'profile_show_email';
+  static const _showPhoneKey = 'profile_show_phone';
+  static const _cachedProfileKey = 'auth_cached_profile';
 
   // Notifiers for reactive UI updates
   static final themeNotifier = ValueNotifier<ThemeSettings>(const ThemeSettings());
   static final paleVioletNotifier = ValueNotifier<bool>(false);
   static final sessionTimeoutDaysNotifier = ValueNotifier<int>(30);
+  
+  static final chatListOnRightNotifier = ValueNotifier<bool>(false);
+  static final chatListWidthNotifier = ValueNotifier<double>(360.0);
+  static final showEmailNotifier = ValueNotifier<bool>(false);
+  static final showPhoneNotifier = ValueNotifier<bool>(false);
 
   // Additional settings
   static final ValueNotifier<String> languageNotifier = ValueNotifier<String>('ru');
@@ -65,6 +77,7 @@ class SettingsService {
     final font = await SecureStore.read(_fontKey) ?? 'Inter';
     final colorStr = await SecureStore.read(_colorKey);
     final color = colorStr != null ? int.tryParse(colorStr) ?? 0xFF7C4DFF : 0xFF7C4DFF;
+    final weightStr = await SecureStore.read(_weightKey);
     final weight = weightStr != null ? int.tryParse(weightStr) ?? 400 : 400;
     themeNotifier.value = ThemeSettings(fontFamily: font, primaryColorValue: color, fontWeight: weight);
   final timeoutStr = await SecureStore.read(_sessionTimeoutKey);
@@ -139,14 +152,9 @@ class SettingsService {
 
   /// Save pale violet mode
   static Future<void> setPaleVioletMode(bool enabled) async {
-    await SecureStore.write(_paleVioletKey, enabled.toString());
+    await SecureStore.write(_paleVioletModeKey, enabled.toString());
     paleVioletNotifier.value = enabled;
   }
-
-  static Future<void> updatePrimaryColor(Color color) => setPrimaryColor(color.value);
-  static Future<void> updateFontFamily(String family) => setFont(family);
-  static Future<void> updateFontWeight(int weight) => setFontWeight(weight);
-  static Future<void> togglePaleViolet() => setPaleVioletMode(!paleVioletNotifier.value);
 
   static Future<void> saveCachedProfile(Map<String, dynamic> profile) async {
     try {

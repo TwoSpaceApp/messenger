@@ -9,7 +9,7 @@ class WaveformPainter extends CustomPainter {
     final paint = Paint()
       ..color = Colors.blue
       ..strokeWidth = 2.0
-      ..cap = StrokeCap.round;
+      ..strokeCap = StrokeCap.round;
 
     for (int i = 0; i < samples.length; i++) {
       double x = (i / samples.length) * size.width;
