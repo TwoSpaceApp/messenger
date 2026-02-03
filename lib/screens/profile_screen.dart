@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:two_space_app/services/chat_service.dart';
 import 'package:two_space_app/services/chat_backend_factory.dart';
+import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/services/settings_service.dart';
 import 'package:two_space_app/services/navigation_service.dart';
 import 'package:two_space_app/config/ui_tokens.dart';
@@ -50,18 +51,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUser() async {
     try {
-      // AppwriteService not available, skip loading user data
+      final matrixService = ChatMatrixService();
+      final currentUserId = await matrixService.getCurrentUserId();
+      
+      // Determine if this is my profile
+      _isMe = widget.userId == currentUserId || currentUserId == null;
+      
+      // Load user info from Matrix
+      final userInfo = await matrixService.getUserInfo(widget.userId);
+      
       if (mounted) {
         setState(() {
-        _user = null;
-        _isMe = false;
-        _loading = false;
-      });
-      _initializeControllers();
+          _user = {
+            'name': userInfo['displayName'] ?? widget.initialName ?? widget.userId,
+            'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
+            'prefs': {
+              'nickname': widget.userId.replaceAll('@', '').split(':').first,
+              'about': '',
+            },
+          };
+          _loading = false;
+        });
+        _initializeControllers();
       }
     } catch (_) {
       if (mounted) {
-        setState(() { _loading = false; _user = null; });
+        setState(() { 
+          _loading = false; 
+          _user = {
+            'name': widget.initialName ?? widget.userId,
+            'prefs': {'nickname': widget.userId.replaceAll('@', '').split(':').first},
+          };
+          _isMe = true;
+        });
         _initializeControllers();
       }
     }

@@ -117,7 +117,7 @@ class _FloatingNavBarState extends State<FloatingNavBar> with SingleTickerProvid
                               _NavItem(icon: Icons.chat_bubble_outline, index: 0, selected: widget.selectedIndex == 0, onTap: () => widget.onItemSelected(0)),
                               _NavItem(icon: Icons.call_outlined, index: 1, selected: widget.selectedIndex == 1, onTap: () => widget.onItemSelected(1)),
                               _NavItem(icon: Icons.contacts_outlined, index: 2, selected: widget.selectedIndex == 2, onTap: () => widget.onItemSelected(2)),
-                              _NavItem(icon: Icons.person_outline, index: 3, selected: widget.selectedIndex == 3, onTap: () => widget.onItemSelected(3)),
+                              _NavItem(icon: Icons.settings_outlined, index: 3, selected: widget.selectedIndex == 3, onTap: () => widget.onItemSelected(3)),
                             ],
                           )
                         : const Center(

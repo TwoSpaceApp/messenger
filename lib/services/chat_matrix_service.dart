@@ -398,7 +398,108 @@ class ChatMatrixService {
   Future<void> leaveRoom(String roomId) async {}
   Future<void> setRoomName(String roomId, String name) async {}
   Future<String> setRoomAvatar(String roomId, dynamic bytes, {String? contentType, String? fileName}) async => '';
-  Future<String> createRoom({String? name, List<String>? invite}) async => '';
+  
+  /// Create a new Matrix room
+  Future<String> createRoom({
+    String? name, 
+    String? topic,
+    List<String>? invite,
+    bool isPublic = false,
+  }) async {
+    if (_accessToken == null) await init();
+    if (_accessToken == null) throw Exception('Не авторизован');
+
+    final uri = Uri.parse('$homeserver/_matrix/client/v3/createRoom');
+    
+    final body = <String, dynamic>{
+      'preset': isPublic ? 'public_chat' : 'private_chat',
+      'visibility': isPublic ? 'public' : 'private',
+    };
+    
+    if (name != null && name.isNotEmpty) {
+      body['name'] = name;
+    }
+    if (topic != null && topic.isNotEmpty) {
+      body['topic'] = topic;
+    }
+    if (invite != null && invite.isNotEmpty) {
+      body['invite'] = invite;
+    }
+
+    final res = await http.post(uri, headers: _headers, body: jsonEncode(body));
+    
+    if (res.statusCode != 200) {
+      final err = jsonDecode(res.body);
+      throw Exception(err['error'] ?? 'Failed to create room: ${res.statusCode}');
+    }
+
+    final js = jsonDecode(res.body) as Map<String, dynamic>;
+    return js['room_id'] as String;
+  }
+  
+  /// Create a direct chat with a user
+  Future<String> createDirectChat(String userId) async {
+    if (_accessToken == null) await init();
+    if (_accessToken == null) throw Exception('Не авторизован');
+
+    final uri = Uri.parse('$homeserver/_matrix/client/v3/createRoom');
+    
+    final body = jsonEncode({
+      'preset': 'trusted_private_chat',
+      'is_direct': true,
+      'invite': [userId],
+      'initial_state': [
+        {
+          'type': 'm.room.guest_access',
+          'state_key': '',
+          'content': {'guest_access': 'can_join'}
+        }
+      ]
+    });
+
+    final res = await http.post(uri, headers: _headers, body: body);
+    
+    if (res.statusCode != 200) {
+      final err = jsonDecode(res.body);
+      throw Exception(err['error'] ?? 'Failed to create chat: ${res.statusCode}');
+    }
+
+    final js = jsonDecode(res.body) as Map<String, dynamic>;
+    final roomId = js['room_id'] as String;
+    
+    // Mark this room as direct in account data
+    try {
+      await _setDirectChat(userId, roomId);
+    } catch (_) {}
+    
+    return roomId;
+  }
+  
+  /// Mark room as direct chat in account data
+  Future<void> _setDirectChat(String userId, String roomId) async {
+    // Get current direct chats
+    final getUri = Uri.parse('$homeserver/_matrix/client/v3/user/${Uri.encodeComponent(_userId!)}/account_data/m.direct');
+    Map<String, dynamic> directs = {};
+    
+    try {
+      final getRes = await http.get(getUri, headers: _headers);
+      if (getRes.statusCode == 200) {
+        directs = jsonDecode(getRes.body) as Map<String, dynamic>;
+      }
+    } catch (_) {}
+    
+    // Add new direct chat
+    final userRooms = (directs[userId] as List?)?.cast<String>() ?? [];
+    if (!userRooms.contains(roomId)) {
+      userRooms.add(roomId);
+      directs[userId] = userRooms;
+      
+      // Save
+      final putUri = Uri.parse('$homeserver/_matrix/client/v3/user/${Uri.encodeComponent(_userId!)}/account_data/m.direct');
+      await http.put(putUri, headers: _headers, body: jsonEncode(directs));
+    }
+  }
+  
   Future<List<Map<String, dynamic>>> searchMessages({required String query, String? type}) async => [];
   Future<List<Map<String, dynamic>>> getRoomMembers(String roomId, {bool forceRefresh = false}) async => [];
   Future<void> setJoinRule(String roomId, String rule) async {}

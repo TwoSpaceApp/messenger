@@ -10,6 +10,9 @@ class ThemeSettings {
   final bool dynamicBubbles;
   final int navBarHideTimeoutSeconds;
   final bool enableParallax;
+  final bool enableFloatingCircles;
+  final double floatingCirclesSpeed;
+  final double floatingCirclesOpacity;
 
   const ThemeSettings({
     this.fontFamily = 'Inter',
@@ -19,6 +22,9 @@ class ThemeSettings {
     this.dynamicBubbles = true,
     this.navBarHideTimeoutSeconds = 3,
     this.enableParallax = true,
+    this.enableFloatingCircles = true,
+    this.floatingCirclesSpeed = 1.0,
+    this.floatingCirclesOpacity = 0.5,
   });
 
   ThemeSettings copyWith({
@@ -29,6 +35,9 @@ class ThemeSettings {
     bool? dynamicBubbles,
     int? navBarHideTimeoutSeconds,
     bool? enableParallax,
+    bool? enableFloatingCircles,
+    double? floatingCirclesSpeed,
+    double? floatingCirclesOpacity,
   }) {
     return ThemeSettings(
       fontFamily: fontFamily ?? this.fontFamily,
@@ -38,6 +47,9 @@ class ThemeSettings {
       dynamicBubbles: dynamicBubbles ?? this.dynamicBubbles,
       navBarHideTimeoutSeconds: navBarHideTimeoutSeconds ?? this.navBarHideTimeoutSeconds,
       enableParallax: enableParallax ?? this.enableParallax,
+      enableFloatingCircles: enableFloatingCircles ?? this.enableFloatingCircles,
+      floatingCirclesSpeed: floatingCirclesSpeed ?? this.floatingCirclesSpeed,
+      floatingCirclesOpacity: floatingCirclesOpacity ?? this.floatingCirclesOpacity,
     );
   }
 }
@@ -52,6 +64,9 @@ class SettingsService {
   static const _dynamicBubblesKey = 'ui_dynamic_bubbles';
   static const _navBarTimeoutKey = 'ui_nav_hide_timeout';
   static const _parallaxKey = 'ui_enable_parallax';
+  static const _floatingCirclesKey = 'ui_floating_circles';
+  static const _floatingCirclesSpeedKey = 'ui_floating_circles_speed';
+  static const _floatingCirclesOpacityKey = 'ui_floating_circles_opacity';
   
   // Legacy/Other settings keys
   static const _paleVioletKey = 'theme_pale_violet';
@@ -86,6 +101,9 @@ class SettingsService {
     final dynBubblesStr = await SecureStore.read(_dynamicBubblesKey);
     final navTimeoutStr = await SecureStore.read(_navBarTimeoutKey);
     final parallaxStr = await SecureStore.read(_parallaxKey);
+    final floatingCirclesStr = await SecureStore.read(_floatingCirclesKey);
+    final floatingSpeedStr = await SecureStore.read(_floatingCirclesSpeedKey);
+    final floatingOpacityStr = await SecureStore.read(_floatingCirclesOpacityKey);
 
     themeNotifier.value = ThemeSettings(
       fontFamily: font,
@@ -95,6 +113,9 @@ class SettingsService {
       dynamicBubbles: dynBubblesStr != 'false',
       navBarHideTimeoutSeconds: int.tryParse(navTimeoutStr ?? '') ?? 3,
       enableParallax: parallaxStr != 'false',
+      enableFloatingCircles: floatingCirclesStr != 'false',
+      floatingCirclesSpeed: double.tryParse(floatingSpeedStr ?? '') ?? 1.0,
+      floatingCirclesOpacity: double.tryParse(floatingOpacityStr ?? '') ?? 0.5,
     );
     
     // Load Others
@@ -116,6 +137,9 @@ class SettingsService {
     int? navBarHideTimeoutSeconds,
     bool? enableParallax,
     int? fontWeight,
+    bool? enableFloatingCircles,
+    double? floatingCirclesSpeed,
+    double? floatingCirclesOpacity,
   }) async {
     final current = themeNotifier.value;
     final next = current.copyWith(
@@ -126,6 +150,9 @@ class SettingsService {
       navBarHideTimeoutSeconds: navBarHideTimeoutSeconds,
       enableParallax: enableParallax,
       fontWeight: fontWeight,
+      enableFloatingCircles: enableFloatingCircles,
+      floatingCirclesSpeed: floatingCirclesSpeed,
+      floatingCirclesOpacity: floatingCirclesOpacity,
     );
     
     themeNotifier.value = next;
@@ -137,6 +164,9 @@ class SettingsService {
     if (dynamicBubbles != null) await SecureStore.write(_dynamicBubblesKey, dynamicBubbles.toString());
     if (navBarHideTimeoutSeconds != null) await SecureStore.write(_navBarTimeoutKey, navBarHideTimeoutSeconds.toString());
     if (enableParallax != null) await SecureStore.write(_parallaxKey, enableParallax.toString());
+    if (enableFloatingCircles != null) await SecureStore.write(_floatingCirclesKey, enableFloatingCircles.toString());
+    if (floatingCirclesSpeed != null) await SecureStore.write(_floatingCirclesSpeedKey, floatingCirclesSpeed.toString());
+    if (floatingCirclesOpacity != null) await SecureStore.write(_floatingCirclesOpacityKey, floatingCirclesOpacity.toString());
   }
 
   // --- Legacy/Compatibility Methods ---

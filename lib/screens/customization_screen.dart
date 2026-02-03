@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:two_space_app/services/settings_service.dart';
 import 'package:two_space_app/config/ui_tokens.dart';
 import 'package:two_space_app/config/theme_options.dart';
+import 'package:two_space_app/widgets/screen_background.dart';
+import 'package:two_space_app/widgets/app_logo.dart';
 
 class CustomizationScreen extends StatefulWidget {
   const CustomizationScreen({super.key});
@@ -15,6 +17,12 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
   late TabController _tabController;
   double _fontSize = 14.0;
   bool _compactMode = false;
+  
+  // Floating circles settings
+  late bool _enableFloatingCircles;
+  late double _floatingCirclesSpeed;
+  late double _floatingCirclesOpacity;
+  late bool _enableParallax;
 
   final List<Map<String, dynamic>> _choices = ThemeOptions.colors;
 
@@ -23,6 +31,13 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
     super.initState();
     _selectedColor = SettingsService.themeNotifier.value.primaryColorValue;
     _tabController = TabController(length: 3, vsync: this);
+    
+    // Load floating circles settings
+    final settings = SettingsService.themeNotifier.value;
+    _enableFloatingCircles = settings.enableFloatingCircles;
+    _floatingCirclesSpeed = settings.floatingCirclesSpeed;
+    _floatingCirclesOpacity = settings.floatingCirclesOpacity;
+    _enableParallax = settings.enableParallax;
   }
 
   @override
@@ -65,25 +80,71 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Кастомизация'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.palette), text: 'Цвета'),
-            Tab(icon: Icon(Icons.font_download), text: 'Шрифты'),
-            Tab(icon: Icon(Icons.tune), text: 'Прочее'),
-          ],
+      backgroundColor: Colors.transparent,
+      body: ScreenBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const AppLogo(large: false),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Кастомизация',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Tab bar
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(20),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white60,
+                  indicatorColor: theme.colorScheme.primary,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  tabs: const [
+                    Tab(icon: Icon(Icons.palette), text: 'Цвета'),
+                    Tab(icon: Icon(Icons.font_download), text: 'Шрифты'),
+                    Tab(icon: Icon(Icons.tune), text: 'Эффекты'),
+                  ],
+                ),
+              ),
+              
+              // Tab content
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildColorTab(),
+                    _buildFontTab(),
+                    _buildEffectsTab(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildColorTab(),
-          _buildFontTab(),
-          _buildOtherTab(),
-        ],
       ),
     );
   }
@@ -96,6 +157,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
         children: [
           Card(
             elevation: 2,
+            color: Colors.white.withAlpha(20),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -106,18 +168,23 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     children: [
                       Icon(Icons.palette, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
-                      Text(
+                      const Text(
                         'Выберите цветовую тему',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Выбранная тема применится ко всему приложению',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).round()),
-                        ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withAlpha(150),
+                    ),
                   ),
                 ],
               ),
@@ -150,9 +217,9 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                           end: Alignment.bottomRight,
                         )
                       : null,
-                  color: selected ? null : Theme.of(context).colorScheme.surface,
+                  color: selected ? null : Colors.white.withAlpha(20),
                   border: Border.all(
-                    color: selected ? Color(v) : Theme.of(context).dividerColor,
+                    color: selected ? Color(v) : Colors.white.withAlpha(50),
                     width: selected ? 2 : 1,
                   ),
                   boxShadow: selected
@@ -182,7 +249,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                             child: Text(
                               name,
                               style: TextStyle(
-                                color: selected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                color: selected ? Colors.white : Colors.white.withAlpha(200),
                                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -212,6 +279,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
         children: [
           Card(
             elevation: 2,
+            color: Colors.white.withAlpha(20),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -222,25 +290,37 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     children: [
                       Icon(Icons.font_download, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
-                      Text(
+                      const Text(
                         'Настройки шрифта',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Выберите семейство шрифта и его параметры',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).round()),
-                        ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withAlpha(150),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Text('Шрифт приложения', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            'Шрифт приложения',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withAlpha(200),
+            ),
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -250,7 +330,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
               final previewSize = f == 'Press Start 2P' ? 12.0 : 16.0;
               return ChoiceChip(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                avatar: sel ? const Icon(Icons.check, size: 18) : null,
+                avatar: sel ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
                 label: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -261,6 +341,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                 ),
                 selected: sel,
                 selectedColor: Theme.of(context).colorScheme.primary.withAlpha(150),
+                backgroundColor: Colors.white.withAlpha(20),
+                labelStyle: TextStyle(color: sel ? Colors.white : Colors.white.withAlpha(180)),
                 onSelected: (_) {
                   _setFont(f);
                   setState(() => _selectedFont = f);
@@ -269,10 +351,18 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
             }).toList(),
           ),
           const SizedBox(height: 24),
-          Text('Толщина шрифта', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            'Толщина шрифта',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withAlpha(200),
+            ),
+          ),
           const SizedBox(height: 12),
           Card(
             elevation: 1,
+            color: Colors.white.withAlpha(15),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -281,7 +371,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.format_size, size: 20),
+                        const Icon(Icons.format_size, size: 20, color: Colors.white70),
                         Expanded(
                           child: Slider(
                             min: 300,
@@ -301,7 +391,13 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                         Container(
                           width: 48,
                           alignment: Alignment.center,
-                          child: Text('$_selectedWeight', style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                          child: Text(
+                            '$_selectedWeight',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -312,6 +408,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                         fontFamily: _selectedFont,
                         fontWeight: _resolveFontWeight(_selectedWeight),
                         fontSize: 18,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -325,14 +422,16 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
     );
   }
 
-  Widget _buildOtherTab() {
+  Widget _buildEffectsTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Floating Circles Section
           Card(
             elevation: 2,
+            color: Colors.white.withAlpha(20),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -341,35 +440,218 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
+                      Icon(Icons.blur_circular, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
-                      Text(
-                        'Дополнительные настройки',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                      const Text(
+                        'Плавающие круги',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Настройте отображение и поведение интерфейса',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).round()),
-                        ),
+                    'Анимированные круги на фоне приложения',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withAlpha(150),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
+          
           Card(
             elevation: 1,
+            color: Colors.white.withAlpha(15),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            child: Column(
+              children: [
+                SwitchListTile(
+                  secondary: const Icon(Icons.blur_on, color: Colors.white70),
+                  title: const Text('Включить круги', style: TextStyle(color: Colors.white)),
+                  subtitle: Text(
+                    _enableFloatingCircles ? 'Круги отображаются' : 'Круги скрыты',
+                    style: TextStyle(color: Colors.white.withAlpha(150)),
+                  ),
+                  value: _enableFloatingCircles,
+                  onChanged: (v) async {
+                    setState(() => _enableFloatingCircles = v);
+                    await SettingsService.updateTheme(enableFloatingCircles: v);
+                  },
+                ),
+                const Divider(height: 1, color: Colors.white24),
+                SwitchListTile(
+                  secondary: const Icon(Icons.sensors, color: Colors.white70),
+                  title: const Text('Параллакс-эффект', style: TextStyle(color: Colors.white)),
+                  subtitle: Text(
+                    _enableParallax ? 'Реагируют на наклон телефона' : 'Статичное движение',
+                    style: TextStyle(color: Colors.white.withAlpha(150)),
+                  ),
+                  value: _enableParallax,
+                  onChanged: _enableFloatingCircles ? (v) async {
+                    setState(() => _enableParallax = v);
+                    await SettingsService.updateTheme(enableParallax: v);
+                  } : null,
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          Card(
+            elevation: 1,
+            color: Colors.white.withAlpha(15),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.speed, color: Colors.white70, size: 20),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Скорость движения',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${(_floatingCirclesSpeed * 100).round()}%',
+                        style: TextStyle(color: Colors.white.withAlpha(180)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Slider(
+                    min: 0.2,
+                    max: 2.0,
+                    divisions: 18,
+                    value: _floatingCirclesSpeed,
+                    label: '${(_floatingCirclesSpeed * 100).round()}%',
+                    onChanged: _enableFloatingCircles ? (v) {
+                      setState(() => _floatingCirclesSpeed = v);
+                    } : null,
+                    onChangeEnd: (v) async {
+                      await SettingsService.updateTheme(floatingCirclesSpeed: v);
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Медленно', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
+                      Text('Быстро', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          Card(
+            elevation: 1,
+            color: Colors.white.withAlpha(15),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.opacity, color: Colors.white70, size: 20),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Яркость',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${(_floatingCirclesOpacity * 100).round()}%',
+                        style: TextStyle(color: Colors.white.withAlpha(180)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Slider(
+                    min: 0.1,
+                    max: 1.0,
+                    divisions: 9,
+                    value: _floatingCirclesOpacity,
+                    label: '${(_floatingCirclesOpacity * 100).round()}%',
+                    onChanged: _enableFloatingCircles ? (v) {
+                      setState(() => _floatingCirclesOpacity = v);
+                    } : null,
+                    onChangeEnd: (v) async {
+                      await SettingsService.updateTheme(floatingCirclesOpacity: v);
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Тусклые', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
+                      Text('Яркие', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Other UI settings
+          Card(
+            elevation: 2,
+            color: Colors.white.withAlpha(20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.tune, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Дополнительные настройки',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          Card(
+            elevation: 1,
+            color: Colors.white.withAlpha(15),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.text_fields),
-                  title: const Text('Размер текста'),
-                  subtitle: Text('${_fontSize.toStringAsFixed(0)} pt'),
+                  leading: const Icon(Icons.text_fields, color: Colors.white70),
+                  title: const Text('Размер текста', style: TextStyle(color: Colors.white)),
+                  subtitle: Text(
+                    '${_fontSize.toStringAsFixed(0)} pt',
+                    style: TextStyle(color: Colors.white.withAlpha(150)),
+                  ),
                   trailing: SizedBox(
                     width: 120,
                     child: Slider(
@@ -381,11 +663,14 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     ),
                   ),
                 ),
-                const Divider(height: 1),
+                const Divider(height: 1, color: Colors.white24),
                 SwitchListTile(
-                  secondary: const Icon(Icons.compress),
-                  title: const Text('Компактный режим'),
-                  subtitle: const Text('Уменьшить отступы и размеры элементов'),
+                  secondary: const Icon(Icons.compress, color: Colors.white70),
+                  title: const Text('Компактный режим', style: TextStyle(color: Colors.white)),
+                  subtitle: Text(
+                    'Уменьшить отступы и размеры',
+                    style: TextStyle(color: Colors.white.withAlpha(150)),
+                  ),
                   value: _compactMode,
                   onChanged: (v) => setState(() => _compactMode = v),
                 ),

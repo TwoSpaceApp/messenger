@@ -60,11 +60,15 @@ AuthService authService(AuthServiceRef ref) {
 /// ```
 @riverpod
 class AuthNotifier extends _$AuthNotifier {
-  late final AuthService _authService;
+  AuthService? _authServiceInstance;
+  
+  AuthService get _authService {
+    _authServiceInstance ??= ref.read(authServiceProvider);
+    return _authServiceInstance!;
+  }
 
   @override
   Future<AuthState> build() async {
-    _authService = ref.read(authServiceProvider);
     return _loadAuthState();
   }
 

@@ -27,11 +27,9 @@ class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerPr
   double _blob2Y = 0.0;
   
   StreamSubscription? _accelSub;
-  final bool _enableParallax = SettingsService.themeNotifier.value.enableParallax;
   
-  static const double _blobSpeed = 0.3; // Speed multiplier
-  static const double _blob1Size = 300.0;
-  static const double _blob2Size = 350.0;
+  static const double _blob1Size = 350.0;
+  static const double _blob2Size = 400.0;
 
   @override
   void initState() {
@@ -43,7 +41,8 @@ class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerPr
       ..repeat();
     
     // Listen to accelerometer for tilt direction
-    if (_enableParallax) {
+    final settings = SettingsService.themeNotifier.value;
+    if (settings.enableParallax && settings.enableFloatingCircles) {
       _accelSub = accelerometerEventStream().listen((AccelerometerEvent event) {
         if (!mounted) return;
         // X: tilt left/right, Y: tilt forward/backward
@@ -57,18 +56,22 @@ class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerPr
   void _updateBlobPositions() {
     if (!mounted) return;
     
+    final settings = SettingsService.themeNotifier.value;
+    if (!settings.enableFloatingCircles) return;
+    
     final size = MediaQuery.of(context).size;
     final screenW = size.width;
     final screenH = size.height;
     
+    // Speed multiplier from settings (default 1.0, now faster with higher base)
+    final speedMultiplier = settings.floatingCirclesSpeed * 0.8;
+    
     // Move blobs in the direction of tilt
-    // Tilt phone right (positive X) → blobs move right
-    // Tilt phone forward (positive Y) → blobs move down
     setState(() {
-      _blob1X += _tiltX * _blobSpeed * 2;
-      _blob1Y += _tiltY * _blobSpeed * 2;
-      _blob2X += _tiltX * _blobSpeed * 1.5;
-      _blob2Y += _tiltY * _blobSpeed * 1.5;
+      _blob1X += _tiltX * speedMultiplier * 2.5;
+      _blob1Y += _tiltY * speedMultiplier * 2.5;
+      _blob2X += _tiltX * speedMultiplier * 2.0;
+      _blob2Y += _tiltY * speedMultiplier * 2.0;
       
       // Wrap around screen edges with some buffer
       final buffer = 100.0;
@@ -102,6 +105,10 @@ class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerPr
     final isDark = theme.brightness == Brightness.dark;
     
     final size = MediaQuery.of(context).size;
+    final settings = SettingsService.themeNotifier.value;
+    
+    // Opacity from settings (now brighter by default - 0.5 -> 0.7)
+    final opacity = settings.floatingCirclesOpacity.clamp(0.1, 1.0);
     
     // Initialize blob positions if they are at origin
     if (_blob1X == 0 && _blob1Y == 0) {
@@ -118,51 +125,58 @@ class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerPr
         // Background Color
         Container(color: bgColor),
         
-        // Blob 1 (Primary color)
-        Positioned(
-          left: _blob1X,
-          top: _blob1Y,
-          width: _blob1Size,
-          height: _blob1Size,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  primary.withValues(alpha: isDark ? 0.3 : 0.2),
-                  Colors.transparent
-                ],
+        // Floating circles (if enabled)
+        if (settings.enableFloatingCircles) ...[
+          // Blob 1 (Primary color) - Brighter
+          Positioned(
+            left: _blob1X,
+            top: _blob1Y,
+            width: _blob1Size,
+            height: _blob1Size,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    primary.withValues(alpha: isDark ? opacity * 0.7 : opacity * 0.5),
+                    primary.withValues(alpha: isDark ? opacity * 0.3 : opacity * 0.2),
+                    Colors.transparent
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                child: Container(color: Colors.transparent),
               ),
             ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-              child: Container(color: Colors.transparent),
-            ),
           ),
-        ),
-        
-        // Blob 2 (Secondary color)
-        Positioned(
-          left: _blob2X,
-          top: _blob2Y,
-          width: _blob2Size,
-          height: _blob2Size,
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  theme.colorScheme.secondary.withValues(alpha: isDark ? 0.25 : 0.15),
-                  Colors.transparent
-                ],
+          
+          // Blob 2 (Secondary color) - Brighter
+          Positioned(
+            left: _blob2X,
+            top: _blob2Y,
+            width: _blob2Size,
+            height: _blob2Size,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    theme.colorScheme.secondary.withValues(alpha: isDark ? opacity * 0.6 : opacity * 0.4),
+                    theme.colorScheme.secondary.withValues(alpha: isDark ? opacity * 0.25 : opacity * 0.15),
+                    Colors.transparent
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                child: Container(color: Colors.transparent),
               ),
             ),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-              child: Container(color: Colors.transparent),
-            ),
           ),
-        ),
+        ],
 
         // Main Content
         widget.child,

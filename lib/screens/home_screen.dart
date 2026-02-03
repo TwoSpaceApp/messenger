@@ -4,10 +4,12 @@ import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/screens/chat_screen.dart';
 import 'package:two_space_app/screens/search_contacts_screen.dart';
-import 'package:two_space_app/screens/profile_screen.dart';
+import 'package:two_space_app/screens/settings_screen.dart';
+import 'package:two_space_app/screens/create_chat_screen.dart';
 import 'package:two_space_app/widgets/user_avatar.dart';
 import 'package:two_space_app/widgets/screen_background.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
+import 'package:two_space_app/widgets/app_logo.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +22,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ChatMatrixService _chat = ChatMatrixService();
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
-  String? _myUserId;
 
   String _searchQuery = '';
 
@@ -43,9 +44,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     setState(() => _loading = true);
     
     try {
-      // Get current user ID for profile
-      _myUserId = await _chat.getCurrentUserId();
-      
       final ids = await _chat.getJoinedRooms();
       final out = <Map<String, dynamic>>[];
       
@@ -73,49 +71,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _openProfile() {
-    if (_myUserId == null) return;
+  void _openSettings() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ProfileScreen(userId: _myUserId!)),
+      MaterialPageRoute(builder: (_) => const SettingsScreen()),
     );
+  }
+
+  void _openCreateChat() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateChatScreen()),
+    ).then((result) {
+      if (result != null) {
+        _loadUserAndRooms();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
       extendBodyBehindAppBar: true, 
-      appBar: AppBar(
-        title: const Text('Сообщения'),
-        centerTitle: false,
-        actions: [
-          // Search button -> opens contacts search
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _openSearch,
-          ),
-          const SizedBox(width: 8),
-          // Profile avatar
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: GestureDetector(
-               onTap: _openProfile,
-               child: const UserAvatar(radius: 18),
-            ),
-          )
-        ],
-      ),
+      backgroundColor: Colors.transparent,
       body: ScreenBackground(
         child: SafeArea(
           child: Column(
             children: [
-               Expanded(
-                 child: _loading 
-                   ? const Center(child: CircularProgressIndicator())
-                   : _buildChatList(),
-               ),
+              // Header with TwoSpace logo
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    const AppLogo(large: false),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Чаты',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Search button
+                    IconButton(
+                      icon: const Icon(Icons.search, color: Colors.white),
+                      onPressed: _openSearch,
+                    ),
+                    // Settings button
+                    IconButton(
+                      icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                      onPressed: _openSettings,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _loading 
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildChatList(),
+              ),
             ],
           ),
+        ),
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton(
+          onPressed: _openCreateChat,
+          child: const Icon(Icons.add),
         ),
       ),
     );

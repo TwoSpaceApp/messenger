@@ -12,13 +12,23 @@ const _kMatrixRefreshKeyPrefix = 'matrix_refresh_';
 const _kMatrixDeviceIdPrefix = 'matrix_device_';
 
 class AuthService {
-  final dynamic accountClient;
+  // Singleton pattern
+  static final AuthService _instance = AuthService._internal();
+  factory AuthService({dynamic accountClient}) {
+    if (accountClient != null) {
+      _instance._accountClient = accountClient;
+    }
+    return _instance;
+  }
+  AuthService._internal();
+
+  dynamic _accountClient;
+  dynamic get accountClient => _accountClient;
+  
   final DevLogger _logger = DevLogger('AuthService');
 
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
   final ChatMatrixService _matrixService = ChatMatrixService();
-
-  AuthService({this.accountClient});
 
   // Email/password sign in using real Matrix login
   Future<void> signInWithEmail(String email, String password) async {
