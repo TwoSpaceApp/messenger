@@ -1,9 +1,6 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-
-// Optional audio recording/playback service.
-// flutter_sound and permission_handler may not be installed for web/desktop builds.
-// This is a stub implementation that gracefully handles missing plugins.
+import 'package:two_space_app/services/native_throat_service.dart';
 
 class VoiceService {
   static final VoiceService _instance = VoiceService._internal();
@@ -11,7 +8,9 @@ class VoiceService {
   bool _isRecording = false;
   bool _isInitialized = false;
   String? _currentRecordingPath;
-  final bool _isSupported = Platform.isAndroid || Platform.isIOS;
+  final bool _isSupported = Platform.isWindows; // For now, only Windows is supported
+
+  late final NativeThroatService _nativeThroatService;
 
   VoiceService._internal();
 
@@ -20,21 +19,25 @@ class VoiceService {
   }
 
   Future<void> init() async {
-    // Stub: flutter_sound not available in this build
-    _isInitialized = false;
+    if (!_isSupported) {
+      _isInitialized = false;
+      return;
+    }
+    _nativeThroatService = NativeThroatService();
+    _isInitialized = true;
   }
 
   Future<void> dispose() async {
-    // Stub: nothing to dispose
+    // Nothing to dispose
   }
 
   bool get isRecording => _isRecording;
   bool get isInitialized => _isInitialized;
 
   Future<bool> requestMicrophonePermission() async {
-    if (!_isSupported) return false;
-    // Stub: permission_handler not available
-    return false;
+    // On Windows, we don't need to request permissions in the same way as mobile.
+    // We can assume we have permission for now.
+    return true;
   }
 
   Future<String?> startRecording() async {
@@ -46,9 +49,13 @@ class VoiceService {
 
       final dir = await getTemporaryDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      _currentRecordingPath = '${dir.path}/voice_$timestamp.m4a';
+      _currentRecordingPath = '${dir.path}/voice_$timestamp.wav';
 
-      // Stub: no actual recording without flutter_sound
+      final result = _nativeThroatService.startRecording(_currentRecordingPath!);
+      if (result != 0) {
+        return null;
+      }
+
       _isRecording = true;
       return _currentRecordingPath;
     } catch (e) {
@@ -58,13 +65,13 @@ class VoiceService {
   }
 
   Future<String?> stopRecording() async {
-    if (!_isInitialized) return null;
+    if (!_isInitialized || !_isRecording) return null;
     
     try {
-      if (!_isRecording) return null;
+      _nativeThroatService.stopRecording();
+      _isRecording = false;
 
       final path = _currentRecordingPath;
-      _isRecording = false;
 
       // Verify file exists and has content
       if (path != null && path.isNotEmpty) {
@@ -81,14 +88,7 @@ class VoiceService {
   }
 
   Future<void> playAudio(String filePath) async {
-    if (!_isInitialized) return;
-    
-    try {
-      // Stub: no actual playback without flutter_sound
-    } catch (e, st) {
-      // Log error when failing to play audio
-      print('VoiceService.playAudio error: $e\n$st');
-    }
+    // Playback is not implemented yet.
   }
 
   bool get isPlaying => false;

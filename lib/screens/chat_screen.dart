@@ -283,7 +283,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text == null || text.isEmpty) return;
     try {
       final formatted = '<mx-reply><blockquote>${text.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</blockquote></mx-reply>';
-      await _svc.sendReply(widget.chat.id, eventId, body: text, formattedBody: formatted);
+      await _svc.sendReply(widget.chat.id, eventId, text, formattedText: formatted);
       await _loadMessages();
     } catch (e) {
       if (mounted) _showErrorMessage('Ошибка ответа: $e');
@@ -377,7 +377,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             onTap: () async {
                               entry?.remove();
                               try {
-                                await _svc.sendReaction(widget.chat.id, m.id, e);
+                                await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: e);
                                 await _loadMessages();
                               } catch (_) {}
                             },
@@ -418,7 +418,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Navigator.of(c).pop(); 
         }, 
         config: const Config(
-          emojiSizeMax: 32.0,
+          
           bgColor: Color(0xFF0B0320),
           indicatorColor: Color(0xFF1F5FFF),
           iconColorSelected: Color(0xFF1F5FFF),
@@ -444,7 +444,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty) return;
     setState(() => _sending = true);
     try {
-      await _svc.sendMessage(widget.chat.id, text, 'm.text');
+      await _svc.sendMessage(widget.chat.id, text, type: 'm.text');
       setState(() {
         _messages.insert(0, _Msg(id: DateTime.now().millisecondsSinceEpoch.toString(), text: text, isOwn: true, time: DateTime.now(), senderId: '', senderName: 'You', senderAvatar: null, type: 'm.text'));
         _controller.text = '';
@@ -495,7 +495,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     setState(() => _sending = true);
     try {
-      await _svc.sendMessage(widget.chat.id, path, 'm.audio', mediaFileId: path);
+      await _svc.sendMessage(widget.chat.id, path, type: 'm.audio', mediaFileId: path);
       
       if (mounted) {
         setState(() {
@@ -528,7 +528,7 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final bytes = await File(path).readAsBytes();
       final mxc = await _svc.uploadMedia(bytes, 'application/octet-stream', res.files.single.name);
-      await _svc.sendMessage(widget.chat.id, '', 'm.image', mediaFileId: mxc);
+      await _svc.sendMessage(widget.chat.id, '', type: 'm.image', mediaFileId: mxc);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Файл отправлен'), duration: Duration(seconds: 2)));
     } catch (e) {
@@ -643,7 +643,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           if (myEvent != null && myEvent.isNotEmpty) {
                             await _svc.redactEvent(widget.chat.id, myEvent);
                           } else {
-                            await _svc.sendReaction(widget.chat.id, m.id, entry.key);
+                            await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: entry.key);
                           }
                           final r = await _svc.getReactions(widget.chat.id, m.id);
                           if (mounted) setState(() => _reactions[m.id] = r);
@@ -800,7 +800,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
       setState(() => _localPath = path);
       // request waveform (cached by service)
       try {
-        final wf = await widget.svc.getWaveformForMedia(widget.message.mediaId ?? '', path, samples: 24);
+        final wf = await widget.svc.getWaveformForMedia(mediaId: widget.message.mediaId ?? '', localPath: path, samples: 24);
         if (mounted) setState(() => _waveform = wf);
       } catch (_) {}
       _player = widget.audioPlayers[widget.message.id] ?? AudioPlayer();

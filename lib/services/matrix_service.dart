@@ -11,7 +11,7 @@ class MatrixService {
   final String _homeserverUrl = Environment.matrixHomeserverUrl;
 
   Future<String?> getCurrentUserId() async {
-    final token = await TokenManager.getMatrixToken();
+    final token = await TokenManager.getValidToken();
     if (token == null) return null;
     // A simple (and not very reliable) way to get user ID from token
     // In a real app, you'd likely store this separately or use a dedicated endpoint
@@ -31,7 +31,7 @@ class MatrixService {
     final url = Uri.parse('$_homeserverUrl$endpoint');
     final headers = {'Content-Type': 'application/json'};
     if (authenticate) {
-      final token = await TokenManager.getMatrixToken();
+      final token = await TokenManager.getValidToken();
       if (token == null) throw Exception('Not authenticated');
       headers['Authorization'] = 'Bearer $token';
     }
@@ -57,7 +57,7 @@ class MatrixService {
       case 'get-room-meta':
         return await ChatMatrixService().getRoomNameAndAvatar(payload['roomId']);
       case 'get-messages':
-        return await ChatMatrixService().loadMessages(roomId: payload['chatId'], limit: payload['limit'] ?? 50);
+        return await ChatMatrixService().loadMessages(payload['chatId'], limit: payload['limit'] ?? 50);
       case 'send-message':
         return await _sendMessage(payload);
       case 'upload-file':
@@ -78,7 +78,7 @@ class MatrixService {
       final type = (payload['type'] ?? 'text').toString();
       final media = payload['mediaFileId'] as String? ?? payload['mediaId'] as String?;
       try {
-        await ChatMatrixService().sendMessage(roomId: chatId, body: text, type: type == 'image' ? 'm.image' : 'm.text', mediaFileId: media);
+        await ChatMatrixService().sendMessage(chatId, text, type: type == 'image' ? 'm.image' : 'm.text', mediaFileId: media);
       } catch (e) {
         rethrow;
       }
@@ -100,7 +100,7 @@ class MatrixService {
   Future<Map<String, dynamic>> uploadBytesToStorage(List<int> bytes, String filename) async {
     if (Environment.useMatrix) {
       const contentType = 'application/octet-stream';
-      final mxc = await ChatMatrixService().uploadMedia(bytes, contentType, filename);
+      final mxc = await ChatMatrixService().uploadMedia(bytes, contentType: contentType, fileName: filename);
       return {'\$id': mxc, 'id': mxc, 'viewUrl': getFileViewUrl(mxc ?? '').toString()};
     }
     throw Exception('uploadBytesToStorage: Matrix mode required');
