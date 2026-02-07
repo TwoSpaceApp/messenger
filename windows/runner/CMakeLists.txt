@@ -5,6 +5,10 @@ project(runner LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Add the new libraries
+add_subdirectory(libs/libogg-1.3.5)
+add_subdirectory(libs/libvorbis-1.3.7)
+
 # Project files
 add_executable(
   runner
@@ -20,8 +24,8 @@ add_executable(
 # Add the NativeThroat library
 add_subdirectory(NativeThroat)
 
-# Link the runner to the NativeThroat library
-target_link_libraries(runner PRIVATE NativeThroat)
+# Link the runner to the NativeThroat library and the new libs
+target_link_libraries(runner PRIVATE NativeThroat ogg vorbis)
 
 # Flutter
 set(FLUTTER_PROJECT_DIR "${CMAKE_SOURCE_DIR}/../..")

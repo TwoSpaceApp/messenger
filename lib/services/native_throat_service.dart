@@ -10,6 +10,9 @@ class NativeThroatService {
   late final int Function(int, int) _add;
   late final int Function(Pointer<Utf8>) _startRecording;
   late final void Function() _stopRecording;
+  late final int Function(Pointer<Utf8>) _startPlaying;
+  late final void Function() _stopPlaying;
+  late final bool Function() _isPlayingQuery;
 
   NativeThroatService() {
     if (Platform.isWindows) {
@@ -34,6 +37,18 @@ class NativeThroatService {
     _stopRecording = _dylib
         .lookup<NativeFunction<Void Function()>>('stop_recording')
         .asFunction();
+
+    _startPlaying = _dylib
+        .lookup<NativeFunction<Int32 Function(Pointer<Utf8>)>>('start_playing')
+        .asFunction();
+
+    _stopPlaying = _dylib
+        .lookup<NativeFunction<Void Function()>>('stop_playing')
+        .asFunction();
+
+    _isPlayingQuery = _dylib
+        .lookup<NativeFunction<Bool Function()>>('is_playing_query')
+        .asFunction();
   }
 
   String helloWorld() {
@@ -53,5 +68,20 @@ class NativeThroatService {
 
   void stopRecording() {
     _stopRecording();
+  }
+
+  int startPlaying(String path) {
+    final cPath = path.toNativeUtf8();
+    final result = _startPlaying(cPath);
+    malloc.free(cPath);
+    return result;
+  }
+
+  void stopPlaying() {
+    _stopPlaying();
+  }
+
+  bool isPlaying() {
+    return _isPlayingQuery();
   }
 }

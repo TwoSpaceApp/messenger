@@ -49,7 +49,7 @@ class VoiceService {
 
       final dir = await getTemporaryDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      _currentRecordingPath = '${dir.path}/voice_$timestamp.wav';
+      _currentRecordingPath = '${dir.path}/voice_$timestamp.ogg';
 
       final result = _nativeThroatService.startRecording(_currentRecordingPath!);
       if (result != 0) {
@@ -88,8 +88,14 @@ class VoiceService {
   }
 
   Future<void> playAudio(String filePath) async {
-    // Playback is not implemented yet.
+    if (!_isInitialized) return;
+    _nativeThroatService.startPlaying(filePath);
   }
 
-  bool get isPlaying => false;
+  Future<void> stopAudio() async {
+    if (!_isInitialized) return;
+    _nativeThroatService.stopPlaying();
+  }
+
+  bool get isPlaying => _isInitialized && _nativeThroatService.isPlaying();
 }
