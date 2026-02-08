@@ -14,11 +14,13 @@ import 'screens/profile_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/change_email_screen.dart';
 import 'screens/forgot_password_screen.dart';
+import 'screens/call_screen.dart';
 import 'services/chat_service.dart';
 import 'services/initialization_service.dart';
 import 'services/sentry_service.dart';
 import 'services/settings_service.dart';
 import 'services/navigation_service.dart';
+import 'services/call_service.dart';
 import 'config/environment.dart';
 import 'widgets/dev_fab.dart';
 import 'providers/auth_notifier.dart';
@@ -107,7 +109,7 @@ Widget _buildErrorWidget(FlutterErrorDetails details) {
   );
 }
 
-class TwoSpaceApp extends StatelessWidget {
+class TwoSpaceApp extends ConsumerWidget {
   final InitializationResult initializationResult;
 
   const TwoSpaceApp({
@@ -116,7 +118,21 @@ class TwoSpaceApp extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Listen to call state changes
+    ref.listen<CallStateData>(callServiceProvider, (previous, next) {
+      final isCallActive = next.callState != CallState.none;
+      final wasCallActive = previous?.callState != CallState.none;
+
+      if (isCallActive && !wasCallActive) {
+        // A call has started, show the call screen
+        appNavigatorKey.currentState?.push(MaterialPageRoute(builder: (_) => const CallScreen()));
+      } else if (!isCallActive && wasCallActive) {
+        // The call has ended, pop the call screen
+        appNavigatorKey.currentState?.pop();
+      }
+    });
+
     // Show critical initialization errors
     if (initializationResult.hasFailures) {
       final criticalFailures = initializationResult.failures

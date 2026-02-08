@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart' as share;
 import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/widgets/user_avatar.dart';
@@ -9,6 +10,7 @@ import 'package:two_space_app/services/auth_service.dart';
 import 'package:two_space_app/services/voice_service.dart';
 import 'package:two_space_app/services/group_matrix_service.dart';
 import 'package:two_space_app/services/draft_service.dart';
+import 'package:two_space_app/services/call_service.dart';
 import 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/screens/profile_screen.dart';
 import 'package:two_space_app/widgets/group_background_widget.dart';
@@ -17,7 +19,7 @@ import 'dart:math' as math;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:two_space_app/models/matrix.dart';
 
-class ChatScreen extends StatefulWidget {
+class ChatScreen extends ConsumerStatefulWidget {
   final Chat chat;
   final String? searchQuery;
   final String? searchType; // 'all' | 'messages' | 'media' | 'users'
@@ -26,10 +28,10 @@ class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key, required this.chat, this.searchQuery, this.searchType, this.scrollToEventId});
 
   @override
-  State<ChatScreen> createState() => _ChatScreenState();
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen> {
   final ChatMatrixService _svc = ChatMatrixService();
   final TextEditingController _controller = TextEditingController();
   final DraftService _draftService = DraftService();
@@ -706,6 +708,25 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.chat.name),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.call),
+            onPressed: () {
+              // For simplicity, we'll assume the other user is the first member of the chat
+              // In a real app, you would have a more robust way to determine the other user
+              final otherUser = widget.chat.members.firstWhere((m) => m != 'me', orElse: () => 'unknown');
+              ref.read(callServiceProvider.notifier).startCall(
+                widget.chat.id,
+                otherUser,
+                widget.chat.name, // Assuming chat name is the other user's name
+                widget.chat.avatarUrl,
+              );
+            },
+          ),
+        ],
+      ),
       backgroundColor: const Color(0xFF1D2227),
       body: Column(children: [
         Expanded(child: bodyWidget),
