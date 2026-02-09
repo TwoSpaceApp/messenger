@@ -21,6 +21,7 @@ import 'services/sentry_service.dart';
 import 'services/settings_service.dart';
 import 'services/navigation_service.dart';
 import 'services/call_service.dart';
+import 'services/notification_service.dart';
 import 'config/environment.dart';
 import 'widgets/dev_fab.dart';
 import 'providers/auth_notifier.dart';
@@ -30,7 +31,8 @@ import 'widgets/auth_listener.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize app with structured error handling
+  // Initialize services
+  await NotificationService().init();
   final initResult = await InitializationService.initialize();
 
   // Set up global error handlers

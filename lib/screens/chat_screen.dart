@@ -117,10 +117,39 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         final events = (timeline?['events'] as List? ?? []);
         for (final ev in events) {
           final e = ev as Map<String, dynamic>;
-          if (e['type'] == 'm.room.message') {
-            // reload messages for simplicity
-            if (mounted) _loadMessages();
-            break;
+          final type = e['type'] as String?;
+          final content = e['content'] as Map<String, dynamic>? ?? {};
+
+          switch (type) {
+            case 'm.room.message':
+              if (mounted) _loadMessages();
+              break;
+            case 'm.call.invite':
+              final callId = content['call_id'] as String?;
+              final senderId = e['sender'] as String?;
+              if (callId != null && senderId != null) {
+                // In a real app, you'd get the sender's name and avatar
+                ref.read(callServiceProvider.notifier).receiveCall(
+                  widget.chat.id,
+                  callId,
+                  senderId,
+                  'Unknown Caller',
+                  null,
+                );
+              }
+              break;
+            case 'm.call.answer':
+              final callId = content['call_id'] as String?;
+              if (callId != null && ref.read(callServiceProvider).callId == callId) {
+                ref.read(callServiceProvider.notifier).answerCall();
+              }
+              break;
+            case 'm.call.hangup':
+              final callId = content['call_id'] as String?;
+              if (callId != null && ref.read(callServiceProvider).callId == callId) {
+                ref.read(callServiceProvider.notifier).hangupCall();
+              }
+              break;
           }
         }
       }

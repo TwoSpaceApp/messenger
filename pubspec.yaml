@@ -41,6 +41,7 @@ dependencies:
   http: ^1.2.1
   dio: ^5.5.0+1
   connectivity_plus: ^6.0.3
+  flutter_webrtc: ^0.9.48
 
   # ===== Database =====
   sqflite: ^2.3.3+1
@@ -58,6 +59,7 @@ dependencies:
   app_links: ^6.0.0
   flutter_displaymode: ^0.7.0
   path: ^1.9.0
+  uuid: ^4.4.0
 
 dev_dependencies:
   flutter_test:

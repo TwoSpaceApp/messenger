@@ -118,4 +118,36 @@ class ChatMatrixService {
   Future<String> createRoom({String? name, List<String>? invite}) async {
     return 'new_room_id';
   }
+
+  // --- Call Methods ---
+
+  Future<void> sendCallInvite(String roomId, String callId) async {
+    print('Sending m.call.invite to $roomId (callId: $callId)');
+    // In a real implementation, this would send a state event to the room.
+  }
+
+  Future<void> sendCallAnswer(String roomId, String callId) async {
+    print('Sending m.call.answer to $roomId (callId: $callId)');
+    // In a real implementation, this would send a state event to the room.
+  }
+
+  Future<void> sendCallHangup(String roomId, String callId) async {
+    print('Sending m.call.hangup to $roomId (callId: $callId)');
+    // In a real implementation, this would send a state event to the room.
+  }
+
+  Future<void> sendSdpOffer(String roomId, String callId, String sdp) async {
+    print('Sending SDP Offer to $roomId (callId: $callId)');
+    // This would send a custom event like 'm.call.sdp_offer'
+  }
+
+  Future<void> sendSdpAnswer(String roomId, String callId, String sdp) async {
+    print('Sending SDP Answer to $roomId (callId: $callId)');
+    // This would send a custom event like 'm.call.sdp_answer'
+  }
+
+  Future<void> sendIceCandidate(String roomId, String callId, Map<String, dynamic> candidate) async {
+    print('Sending ICE Candidate to $roomId (callId: $callId)');
+    // This would send a custom event like 'm.call.ice_candidate'
+  }
 }
