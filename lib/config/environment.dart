@@ -43,6 +43,7 @@ class Environment {
   static String get matrixTotpSetupEndpoint => _get('MATRIX_TOTP_SETUP_ENDPOINT');
   static String get matrixTotpVerifyEndpoint => _get('MATRIX_TOTP_VERIFY_ENDPOINT');
   static String get matrixStorageMediaBucketId => _get('MATRIX_STORAGE_MEDIA_BUCKET_ID');
+  static String get matrixRefreshTokenEndpoint => _get('MATRIX_REFRESH_TOKEN_ENDPOINT');
 
   /// Appwrite configuration (legacy/backup)
   static String get appwriteProjectId => _get('APPWRITE_PROJECT_ID');

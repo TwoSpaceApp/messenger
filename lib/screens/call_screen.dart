@@ -58,18 +58,19 @@ class _CallScreenState extends ConsumerState<CallScreen> {
             ),
 
             // Local video view (picture-in-picture)
-            Positioned(
-              top: 20,
-              right: 20,
-              child: SizedBox(
-                width: 100,
-                height: 150,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: RTCVideoView(_localRenderer, mirror: true, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover),
+            if (!callStateData.isScreenSharing)
+              Positioned(
+                top: 20,
+                right: 20,
+                child: SizedBox(
+                  width: 100,
+                  height: 150,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: RTCVideoView(_localRenderer, mirror: true, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover),
+                  ),
                 ),
               ),
-            ),
 
             // UI Controls overlay
             Column(
@@ -96,7 +97,7 @@ class _CallScreenState extends ConsumerState<CallScreen> {
                 // Call controls
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-                  child: _buildCallControls(context, ref, callStateData.callState),
+                  child: _buildCallControls(context, ref, callStateData),
                 ),
               ],
             ),
@@ -106,8 +107,8 @@ class _CallScreenState extends ConsumerState<CallScreen> {
     );
   }
 
-  Widget _buildCallControls(BuildContext context, WidgetRef ref, CallState callState) {
-    if (callState == CallState.incoming) {
+  Widget _buildCallControls(BuildContext context, WidgetRef ref, CallStateData callStateData) {
+    if (callStateData.callState == CallState.incoming) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -147,9 +148,9 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           },
         ),
         _buildControlButton(
-          icon: Icons.screen_share_outlined,
+          icon: callStateData.isScreenSharing ? Icons.stop_screen_share_outlined : Icons.screen_share_outlined,
           onPressed: () {
-            _showScreenShareOptions(context);
+            ref.read(callServiceProvider.notifier).toggleScreenShare(!callStateData.isScreenSharing);
           },
         ),
         _buildControlButton(
@@ -160,50 +161,6 @@ class _CallScreenState extends ConsumerState<CallScreen> {
           },
         ),
       ],
-    );
-  }
-
-  void _showScreenShareOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF2E3338),
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.desktop_windows, color: Colors.white),
-                title: const Text('Entire Screen', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  // TODO: Implement entire screen sharing
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Starting screen share (Entire Screen)...')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.window, color: Colors.white),
-                title: const Text('Application Window', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  // TODO: Implement application window sharing
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Starting screen share (Application Window)...')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.cancel_outlined, color: Colors.white70),
-                title: const Text('Cancel', style: TextStyle(color: Colors.white70)),
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 

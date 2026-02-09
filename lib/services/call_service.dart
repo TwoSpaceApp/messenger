@@ -19,6 +19,7 @@ class CallStateData {
   final String? remoteUserAvatar;
   final MediaStream? localStream;
   final MediaStream? remoteStream;
+  final bool isScreenSharing;
 
   CallStateData({
     this.callState = CallState.none,
@@ -29,6 +30,7 @@ class CallStateData {
     this.remoteUserAvatar,
     this.localStream,
     this.remoteStream,
+    this.isScreenSharing = false,
   });
 
   CallStateData copyWith({
@@ -40,6 +42,7 @@ class CallStateData {
     String? remoteUserAvatar,
     MediaStream? localStream,
     MediaStream? remoteStream,
+    bool? isScreenSharing,
   }) {
     return CallStateData(
       callState: callState ?? this.callState,
@@ -50,6 +53,7 @@ class CallStateData {
       remoteUserAvatar: remoteUserAvatar ?? this.remoteUserAvatar,
       localStream: localStream ?? this.localStream,
       remoteStream: remoteStream ?? this.remoteStream,
+      isScreenSharing: isScreenSharing ?? this.isScreenSharing,
     );
   }
 }
@@ -58,6 +62,7 @@ class CallService extends StateNotifier<CallStateData> {
   final ChatMatrixService _matrixService = ChatMatrixService();
   final Uuid _uuid = const Uuid();
   RTCPeerConnection? _peerConnection;
+  MediaStream? _audioStream; // To hold the original audio stream
 
   final Map<String, dynamic> _iceServers = {
     'iceServers': [
@@ -78,19 +83,16 @@ class CallService extends StateNotifier<CallStateData> {
       remoteUserAvatar: userAvatar,
     );
 
-    await _createPeerConnection();
+    await _createPeerConnection(withVideo: false);
     final offer = await _peerConnection!.createOffer();
     await _peerConnection!.setLocalDescription(offer);
 
-    // This is a simplified version. In a real app, you'd send this via ChatMatrixService
-    print("--- SENDING OFFER ---");
-    print(offer.sdp);
-    // _matrixService.sendSdpOffer(roomId, callId, offer.sdp!);
+    _matrixService.sendSdpOffer(roomId, callId, offer.sdp!);
   }
 
   Future<void> receiveCall(String roomId, String callId, String userId, String userName, String? userAvatar, String sdpOffer) async {
     if (state.callState != CallState.none) {
-      // _matrixService.sendCallHangup(roomId, callId);
+      _matrixService.sendCallHangup(roomId, callId);
       return;
     }
     state = state.copyWith(
@@ -102,7 +104,7 @@ class CallService extends StateNotifier<CallStateData> {
       remoteUserAvatar: userAvatar,
     );
 
-    await _createPeerConnection();
+    await _createPeerConnection(withVideo: true); // Be ready to receive video
     await _peerConnection!.setRemoteDescription(RTCSessionDescription(sdpOffer, 'offer'));
   }
 
@@ -113,51 +115,81 @@ class CallService extends StateNotifier<CallStateData> {
     await _peerConnection!.setLocalDescription(answer);
 
     state = state.copyWith(callState: CallState.connected);
-
-    // This is a simplified version. In a real app, you'd send this via ChatMatrixService
-    print("--- SENDING ANSWER ---");
-    print(answer.sdp);
-    // _matrixService.sendSdpAnswer(state.roomId!, state.callId!, answer.sdp!);
+    _matrixService.sendSdpAnswer(state.roomId!, state.callId!, answer.sdp!);
   }
 
   Future<void> hangupCall() async {
     if (state.callState == CallState.none) return;
 
-    await _peerConnection?.close();
-    _peerConnection = null;
+    await _audioStream?.dispose();
     await state.localStream?.dispose();
     await state.remoteStream?.dispose();
+    await _peerConnection?.close();
+    
+    _peerConnection = null;
+    _audioStream = null;
 
-    // _matrixService.sendCallHangup(state.roomId!, state.callId!);
+    _matrixService.sendCallHangup(state.roomId!, state.callId!);
     state = CallStateData();
   }
 
-  Future<void> _createPeerConnection() async {
-    _peerConnection = await createPeerConnection(_iceServers, {});
+  Future<void> toggleScreenShare(bool enabled) async {
+    if (_peerConnection == null) return;
 
-    final stream = await navigator.mediaDevices.getUserMedia({'audio': true, 'video': false});
-    state = state.copyWith(localStream: stream);
-    stream.getTracks().forEach((track) {
-      _peerConnection!.addTrack(track, stream);
+    if (enabled) {
+      final screenStream = await navigator.mediaDevices.getDisplayMedia({'video': true});
+      final screenTrack = screenStream.getVideoTracks().first;
+
+      // Listen for when the user stops sharing via the browser/OS UI
+      screenTrack.onEnded = () => toggleScreenShare(false);
+
+      var sender = _peerConnection!.getSenders().firstWhere((s) => s.track?.kind == 'video', orElse: () => null);
+      if (sender != null) {
+        await sender.replaceTrack(screenTrack);
+      } else {
+        await _peerConnection!.addTrack(screenTrack);
+      }
+      state = state.copyWith(isScreenSharing: true, localStream: screenStream);
+    } else {
+      final audioStream = await navigator.mediaDevices.getUserMedia({'audio': true, 'video': false});
+      final audioTrack = audioStream.getAudioTracks().first;
+      
+      var sender = _peerConnection!.getSenders().firstWhere((s) => s.track?.kind == 'video', orElse: () => null);
+      if (sender != null) {
+        await sender.replaceTrack(null); // Stop sending video
+        _peerConnection!.removeTrack(sender); // Clean up the sender
+      }
+      
+      // Restore audio
+      var audioSender = _peerConnection!.getSenders().firstWhere((s) => s.track?.kind == 'audio');
+      await audioSender.replaceTrack(audioTrack);
+
+      state = state.copyWith(isScreenSharing: false, localStream: audioStream);
+    }
+  }
+
+  Future<void> _createPeerConnection({required bool withVideo}) async {
+    _peerConnection = await createPeerConnection(_iceServers, {});
+    
+    _audioStream = await navigator.mediaDevices.getUserMedia({'audio': true, 'video': withVideo});
+    state = state.copyWith(localStream: _audioStream);
+    _audioStream!.getTracks().forEach((track) {
+      _peerConnection!.addTrack(track, _audioStream!);
     });
 
     _peerConnection!.onIceCandidate = (candidate) {
       if (candidate != null) {
-        // This is a simplified version. In a real app, you'd send this via ChatMatrixService
-        print("--- SENDING ICE CANDIDATE ---");
-        print(candidate.candidate);
-        // _matrixService.sendIceCandidate(state.roomId!, state.callId!, candidate.toMap());
+        _matrixService.sendIceCandidate(state.roomId!, state.callId!, candidate.toMap());
       }
     };
 
     _peerConnection!.onTrack = (event) {
-      if (event.track.kind == 'audio') {
+      if (event.streams.isNotEmpty) {
         state = state.copyWith(remoteStream: event.streams[0]);
       }
     };
   }
 
-  // This would be called when an ICE candidate is received from the other user
   void addIceCandidate(Map<String, dynamic> candidateMap) {
     final candidate = RTCIceCandidate(
       candidateMap['candidate'],

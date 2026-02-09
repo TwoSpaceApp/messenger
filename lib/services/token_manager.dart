@@ -1,4 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:two_space_app/config/environment.dart';
 import 'package:two_space_app/utils/jwt_helper.dart';
 import 'package:two_space_app/utils/secure_store.dart';
 
@@ -221,7 +224,7 @@ class TokenManager {
     return timeSinceValidation.inMinutes < 5;
   }
 
-  /// Refresh token (to be implemented based on your auth flow)
+  /// Refresh token using the refresh token from secure storage
   static Future<String?> _refreshToken() async {
     try {
       final refreshToken = await SecureStore.read(_refreshTokenKey);
@@ -232,22 +235,38 @@ class TokenManager {
         return null;
       }
 
-      // TODO: Implement actual token refresh logic with your backend
-      // This is a placeholder that should call your auth service
-      // Example:
-      // final newToken = await AuthService.refreshToken(refreshToken);
-      // await saveToken(newToken);
-      // return newToken;
+      final url = Uri.parse(Environment.matrixRefreshTokenEndpoint);
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refresh_token': refreshToken}),
+      );
 
-      if (kDebugMode) {
-        print('Token refresh not implemented yet');
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final newAccessToken = body['access_token'] as String?;
+        final newRefreshToken = body['refresh_token'] as String?;
+
+        if (newAccessToken != null) {
+          await saveToken(newAccessToken);
+          if (newRefreshToken != null) {
+            await saveRefreshToken(newRefreshToken);
+          }
+          if (kDebugMode) {
+            print('Token refreshed successfully.');
+          }
+          return newAccessToken;
+        }
+      } else {
+        if (kDebugMode) {
+          print('Token refresh failed with status ${response.statusCode}: ${response.body}');
+        }
       }
-      return null;
     } catch (e) {
       if (kDebugMode) {
         print('Token refresh failed: $e');
       }
-      return null;
     }
+    return null;
   }
 }
