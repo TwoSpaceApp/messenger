@@ -60,7 +60,26 @@ class ChatMatrixService {
   }
 
   Future<Map<String, dynamic>> getUserInfo(String userId) async {
-    return {};
+    // In a real app, this would make an API call to the Matrix homeserver
+    // to get the user's profile information.
+    // For now, we'll return some dummy data.
+    await Future.delayed(const Duration(milliseconds: 300));
+    return {
+      'displayname': userId.split(':')[0].substring(1),
+      'avatar_url': null, // Replace with a real avatar URL if available
+      'about': 'This is a dummy bio for the user.',
+      'spotify': 'spotify_username',
+      'x': 'twitter_handle',
+      'github': 'github_username',
+      // Add other social media keys here
+    };
+  }
+
+  Future<void> setUserInfo(String userId, Map<String, dynamic> data) async {
+    // In a real app, this would make an API call to the Matrix homeserver
+    // to update the user's profile information.
+    print('Setting user info for $userId: $data');
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   Future<List<String>> getPinnedEvents(String roomId) async {

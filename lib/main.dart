@@ -11,6 +11,7 @@ import 'screens/register_screen.dart';
 import 'screens/customization_screen.dart';
 import 'screens/privacy_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/edit_profile_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/change_email_screen.dart';
 import 'screens/forgot_password_screen.dart';
@@ -196,6 +197,16 @@ class TwoSpaceApp extends ConsumerWidget {
           return ProfileScreen(userId: args);
         }
         return _buildInvalidArgsScreen('Invalid arguments for profile');
+      },
+      '/edit_profile': (context) {
+        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+        if (args != null && args.containsKey('userId') && args.containsKey('profileData')) {
+          return EditProfileScreen(
+            userId: args['userId'],
+            initialProfileData: args['profileData'],
+          );
+        }
+        return _buildInvalidArgsScreen('Invalid arguments for edit profile');
       },
       '/change_email': (context) => const ChangeEmailScreen(),
       '/chat': (context) {

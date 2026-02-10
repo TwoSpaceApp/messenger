@@ -207,3 +207,9 @@ void stop_playing() {
 bool is_playing_query() {
     return is_playing;
 }
+
+const char* get_now_playing() {
+    // In a real implementation, this would query the OS for the current media session.
+    // For now, it returns a static JSON string.
+    return "{\"artist\": \"foobar2000\", \"track\": \"Some Great Song\"}";
+}

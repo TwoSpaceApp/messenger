@@ -1,5 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:ffi/ffi.dart';
 
@@ -13,6 +14,7 @@ class NativeThroatService {
   late final int Function(Pointer<Utf8>) _startPlaying;
   late final void Function() _stopPlaying;
   late final bool Function() _isPlayingQuery;
+  late final Pointer<Utf8> Function() _getNowPlaying;
 
   NativeThroatService() {
     if (Platform.isWindows) {
@@ -49,6 +51,10 @@ class NativeThroatService {
     _isPlayingQuery = _dylib
         .lookup<NativeFunction<Bool Function()>>('is_playing_query')
         .asFunction();
+
+    _getNowPlaying = _dylib
+        .lookup<NativeFunction<Pointer<Utf8> Function()>>('get_now_playing')
+        .asFunction();
   }
 
   String helloWorld() {
@@ -83,5 +89,10 @@ class NativeThroatService {
 
   bool isPlaying() {
     return _isPlayingQuery();
+  }
+
+  Map<String, dynamic> getNowPlaying() {
+    final jsonString = _getNowPlaying().toDartString();
+    return jsonDecode(jsonString);
   }
 }

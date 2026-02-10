@@ -19,6 +19,9 @@ extern "C" {
     DLLEXPORT int start_playing(const char* path);
     DLLEXPORT void stop_playing();
     DLLEXPORT bool is_playing_query();
+
+    // Now Playing
+    DLLEXPORT const char* get_now_playing();
 }
 
 #endif // NATIVE_THROAT_H
