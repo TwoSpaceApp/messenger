@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart'; // Import Dio
 import 'package:path_provider/path_provider.dart';
 import '../config/environment.dart';
 import 'chat_matrix_service.dart';
 import 'token_manager.dart';
+import 'http_client.dart'; // Import HttpClient
 
 class MatrixService {
   final String _homeserverUrl = Environment.matrixHomeserverUrl;
+  final Dio _dio = HttpClient().dio; // Use the configured Dio instance
 
   Future<String?> getCurrentUserId() async {
     final token = await TokenManager.getValidToken();
@@ -28,7 +30,7 @@ class MatrixService {
     Map<String, dynamic>? body,
     bool authenticate = true,
   }) async {
-    final url = Uri.parse('$_homeserverUrl$endpoint');
+    final url = '$_homeserverUrl$endpoint';
     final headers = {'Content-Type': 'application/json'};
     if (authenticate) {
       final token = await TokenManager.getValidToken();
@@ -36,17 +38,21 @@ class MatrixService {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    http.Response response;
-    if (method == 'GET') {
-      response = await http.get(url, headers: headers);
-    } else {
-      response = await http.post(url, headers: headers, body: jsonEncode(body));
-    }
+    Response response;
+    try {
+      if (method == 'GET') {
+        response = await _dio.get(url, options: Options(headers: headers));
+      } else {
+        response = await _dio.post(url, options: Options(headers: headers), data: body);
+      }
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to execute request: ${response.body}');
+      if (response.statusCode! >= 200 && response.statusCode! < 300) {
+        return response.data;
+      } else {
+        throw Exception('Failed to execute request: ${response.data}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Failed to execute request: ${e.message} - ${e.response?.data}');
     }
   }
 
@@ -57,7 +63,7 @@ class MatrixService {
       case 'get-room-meta':
         return await ChatMatrixService().getRoomNameAndAvatar(payload['roomId']);
       case 'get-messages':
-        return await ChatMatrixService().loadMessages(payload['chatId'], limit: payload['limit'] ?? 50);
+        return await ChatMatrixService().loadMessages(roomId: payload['chatId'], limit: payload['limit'] ?? 50);
       case 'send-message':
         return await _sendMessage(payload);
       case 'upload-file':
@@ -100,7 +106,7 @@ class MatrixService {
   Future<Map<String, dynamic>> uploadBytesToStorage(List<int> bytes, String filename) async {
     if (Environment.useMatrix) {
       const contentType = 'application/octet-stream';
-      final mxc = await ChatMatrixService().uploadMedia(bytes, contentType: contentType, fileName: filename);
+      final mxc = await ChatMatrixService().uploadMedia(bytes, contentType, filename);
       return {'\$id': mxc, 'id': mxc, 'viewUrl': getFileViewUrl(mxc ?? '').toString()};
     }
     throw Exception('uploadBytesToStorage: Matrix mode required');
@@ -117,16 +123,20 @@ class MatrixService {
   }
 
   Future<String> downloadFile(String mxcUrl) async {
-    final url = getFileViewUrl(mxcUrl);
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
-      final tempDir = await getTemporaryDirectory();
-      final filename = mxcUrl.split('/').last;
-      final file = File('${tempDir.path}/$filename');
-      await file.writeAsBytes(response.bodyBytes);
-      return file.path;
-    } else {
-      throw Exception('Failed to download file: ${response.statusCode}');
+    final url = getFileViewUrl(mxcUrl).toString();
+    try {
+      final response = await _dio.get(url, options: Options(responseType: ResponseType.bytes));
+      if (response.statusCode == 200) {
+        final tempDir = await getTemporaryDirectory();
+        final filename = mxcUrl.split('/').last;
+        final file = File('${tempDir.path}/$filename');
+        await file.writeAsBytes(response.data);
+        return file.path;
+      } else {
+        throw Exception('Failed to download file: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Failed to download file: ${e.message}');
     }
   }
 

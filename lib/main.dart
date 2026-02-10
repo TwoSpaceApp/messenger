@@ -12,6 +12,7 @@ import 'screens/customization_screen.dart';
 import 'screens/privacy_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/edit_profile_screen.dart';
+import 'screens/proxy_settings_screen.dart'; // Import ProxySettingsScreen
 import 'screens/chat_screen.dart';
 import 'screens/change_email_screen.dart';
 import 'screens/forgot_password_screen.dart';
@@ -23,6 +24,8 @@ import 'services/settings_service.dart';
 import 'services/navigation_service.dart';
 import 'services/call_service.dart';
 import 'services/notification_service.dart';
+import 'services/http_client.dart'; // Import HttpClient
+import 'services/watch_service.dart'; // Import WatchService
 import 'config/environment.dart';
 import 'widgets/dev_fab.dart';
 import 'providers/auth_notifier.dart';
@@ -34,6 +37,7 @@ Future<void> main() async {
 
   // Initialize services
   await NotificationService().init();
+  await WatchService().init(); // Initialize WatchService
   final initResult = await InitializationService.initialize();
 
   // Set up global error handlers
@@ -147,38 +151,46 @@ class TwoSpaceApp extends ConsumerWidget {
       }
     }
 
-    return ValueListenableBuilder<ThemeSettings>(
-      valueListenable: SettingsService.themeNotifier,
-      builder: (context, settings, _) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: SettingsService.paleVioletNotifier,
-          builder: (context, paleVioletEnabled, __) {
-            // Build theme using extracted builder
-            final theme = AppThemeBuilder.build(settings, paleVioletEnabled);
+    return ValueListenableBuilder<Map<String, dynamic>>(
+      valueListenable: SettingsService.proxySettingsNotifier,
+      builder: (context, proxySettings, _) {
+        // Reconfigure HttpClient whenever proxy settings change
+        HttpClient().reconfigure();
+        
+        return ValueListenableBuilder<ThemeSettings>(
+          valueListenable: SettingsService.themeNotifier,
+          builder: (context, settings, _) {
+            return ValueListenableBuilder<bool>(
+              valueListenable: SettingsService.paleVioletNotifier,
+              builder: (context, paleVioletEnabled, __) {
+                // Build theme using extracted builder
+                final theme = AppThemeBuilder.build(settings, paleVioletEnabled);
 
-            final app = MaterialApp(
-              navigatorKey: appNavigatorKey,
-              title: 'TwoSpace',
-              // onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
-              debugShowCheckedModeBanner: false,
-              theme: theme,
-              // localizationsDelegates: AppLocalizations.localizationsDelegates,
-              // supportedLocales: AppLocalizations.supportedLocales,
-              home: const AuthListener(child: AuthGate()),
-              routes: _buildRoutes(context),
+                final app = MaterialApp(
+                  navigatorKey: appNavigatorKey,
+                  title: 'TwoSpace',
+                  // onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
+                  debugShowCheckedModeBanner: false,
+                  theme: theme,
+                  // localizationsDelegates: AppLocalizations.localizationsDelegates,
+                  // supportedLocales: AppLocalizations.supportedLocales,
+                  home: const AuthListener(child: AuthGate()),
+                  routes: _buildRoutes(context),
+                );
+
+                // Add dev tools in debug mode
+                if (kDebugMode || Environment.enableDevTools) {
+                  return Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Stack(children: [app, const DevFab()]),
+                  );
+                }
+                return app;
+              },
             );
-
-            // Add dev tools in debug mode
-            if (kDebugMode || Environment.enableDevTools) {
-              return Directionality(
-                textDirection: TextDirection.ltr,
-                child: Stack(children: [app, const DevFab()]),
-              );
-            }
-            return app;
           },
         );
-      },
+      }
     );
   }
 
@@ -208,6 +220,7 @@ class TwoSpaceApp extends ConsumerWidget {
         }
         return _buildInvalidArgsScreen('Invalid arguments for edit profile');
       },
+      '/proxy_settings': (context) => const ProxySettingsScreen(), // Added proxy settings route
       '/change_email': (context) => const ChangeEmailScreen(),
       '/chat': (context) {
         final args = ModalRoute.of(context)!.settings.arguments;

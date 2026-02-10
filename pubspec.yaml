@@ -60,6 +60,7 @@ dependencies:
   flutter_displaymode: ^0.7.0
   path: ^1.9.0
   uuid: ^4.4.0
+  wear: ^1.1.0
 
 dev_dependencies:
   flutter_test:

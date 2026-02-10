@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart'; // Import Dio
 import 'dart:convert';
 import 'package:two_space_app/config/environment.dart';
 import 'package:two_space_app/utils/jwt_helper.dart';
 import 'package:two_space_app/utils/secure_store.dart';
+import 'package:two_space_app/services/http_client.dart'; // Import HttpClient
 
 /// Manages authentication tokens with automatic refresh and validation
 class TokenManager {
@@ -235,15 +236,15 @@ class TokenManager {
         return null;
       }
 
-      final url = Uri.parse(Environment.matrixRefreshTokenEndpoint);
-      final response = await http.post(
+      final url = Environment.matrixRefreshTokenEndpoint;
+      final response = await HttpClient().dio.post(
         url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refresh_token': refreshToken}),
+        data: {'refresh_token': refreshToken},
+        options: Options(headers: {'Content-Type': 'application/json'}),
       );
 
       if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
+        final body = response.data;
         final newAccessToken = body['access_token'] as String?;
         final newRefreshToken = body['refresh_token'] as String?;
 
@@ -259,7 +260,14 @@ class TokenManager {
         }
       } else {
         if (kDebugMode) {
-          print('Token refresh failed with status ${response.statusCode}: ${response.body}');
+          print('Token refresh failed with status ${response.statusCode}: ${response.data}');
+        }
+      }
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print('Token refresh failed: ${e.message}');
+        if (e.response != null) {
+          print('Response data: ${e.response?.data}');
         }
       }
     } catch (e) {

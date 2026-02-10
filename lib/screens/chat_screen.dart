@@ -11,6 +11,7 @@ import 'package:two_space_app/services/voice_service.dart';
 import 'package:two_space_app/services/group_matrix_service.dart';
 import 'package:two_space_app/services/draft_service.dart';
 import 'package:two_space_app/services/call_service.dart';
+import 'package:two_space_app/services/settings_service.dart'; // Import SettingsService
 import 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/screens/profile_screen.dart';
 import 'package:two_space_app/widgets/group_background_widget.dart';
@@ -18,6 +19,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'dart:math' as math;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:two_space_app/models/matrix.dart';
+import 'package:url_launcher/url_launcher.dart'; // Import url_launcher
 
 class ChatScreen extends ConsumerStatefulWidget {
   final Chat chat;
@@ -817,16 +819,16 @@ class _Msg {
   _Msg({required this.id, required this.text, required this.isOwn, required this.time, this.senderId, this.senderName, this.senderAvatar, this.type, this.mediaId});
 }
 
-class _AudioMessageWidget extends StatefulWidget {
+class _AudioMessageWidget extends ConsumerStatefulWidget {
   final _Msg message;
   final ChatMatrixService svc;
   final Map<String, AudioPlayer> audioPlayers;
   const _AudioMessageWidget({required this.message, required this.svc, required this.audioPlayers});
   @override
-  State<_AudioMessageWidget> createState() => _AudioMessageWidgetState();
+  ConsumerState<_AudioMessageWidget> createState() => _AudioMessageWidgetState();
 }
 
-class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
+class _AudioMessageWidgetState extends ConsumerState<_AudioMessageWidget> {
   String? _localPath;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
@@ -894,43 +896,111 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
     await _player!.seek(Duration(milliseconds: ms));
   }
 
+  Future<void> _playWithExternalPlayer(AudioPlayerType playerType, String filePath) async {
+    String? appPath;
+    String scheme;
+
+    // This is a simplified example. Real paths would vary by OS and user installation.
+    // You might need to use platform channels to find installed apps.
+    switch (playerType) {
+      case AudioPlayerType.externalAIMP:
+        appPath = 'aimp.exe'; // Placeholder
+        scheme = 'aimp';
+        break;
+      case AudioPlayerType.externalFoobar2000:
+        appPath = 'foobar2000.exe'; // Placeholder
+        scheme = 'foobar2000';
+        break;
+      case AudioPlayerType.externalWinamp:
+        appPath = 'winamp.exe'; // Placeholder
+        scheme = 'winamp';
+        break;
+      case AudioPlayerType.systemDefault:
+        scheme = 'file';
+        break;
+      default:
+        return; // Should not happen for external players
+    }
+
+    try {
+      final uri = Uri.parse('$scheme://${Uri.encodeComponent(filePath)}');
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        // Fallback for Windows: try to open directly with the file path
+        if (Platform.isWindows && appPath != null) {
+          // This is a very basic attempt and might not work for all setups
+          Process.run(appPath, [filePath]);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Could not launch $playerType for $filePath')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error launching external player: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final audioPlayerType = ref.watch(SettingsService.audioPlayerTypeNotifier);
     final samples = (_waveform.isNotEmpty) ? _waveform : List<double>.generate(24, (i) => 0.2 + (i.isEven ? 0.12 : 0.0));
     final bars = Row(mainAxisSize: MainAxisSize.min, children: List.generate(samples.length, (i) { final h = 12.0 + (samples[i] * 48.0); return Container(margin: const EdgeInsets.symmetric(horizontal: 2), width: 4, height: h, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.12), borderRadius: BorderRadius.circular(2))); }));
     final progress = (_duration.inMilliseconds > 0) ? (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0) : 0.0;
-    return GestureDetector(
-      onTapDown: (ev) {
-        // allow tapping waveform to seek
-        final box = context.findRenderObject() as RenderBox?;
-        if (box != null && _duration.inMilliseconds > 0) {
-          final local = box.globalToLocal(ev.globalPosition);
-          _seekTo((local.dx / box.size.width).clamp(0.0, 1.0));
-        }
-      },
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        IconButton(icon: _playing ? const Icon(Icons.pause_circle) : const Icon(Icons.play_circle), onPressed: _togglePlay),
-        Stack(children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: math.min(MediaQuery.of(context).size.width * 0.35, 260.0),
-              height: 36,
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.08),
-              child: Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8.0), child: bars)),
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTapDown: (ev) {
+            // allow tapping waveform to seek
+            final box = context.findRenderObject() as RenderBox?;
+            if (box != null && _duration.inMilliseconds > 0) {
+              final local = box.globalToLocal(ev.globalPosition);
+              _seekTo((local.dx / box.size.width).clamp(0.0, 1.0));
+            }
+          },
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            IconButton(icon: _playing ? const Icon(Icons.pause_circle) : const Icon(Icons.play_circle), onPressed: _togglePlay),
+            Stack(children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: math.min(MediaQuery.of(context).size.width * 0.35, 260.0),
+                  height: 36,
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.08),
+                  child: Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8.0), child: bars)),
+                ),
+              ),
+              Positioned.fill(
+                child: FractionallySizedBox(
+                  widthFactor: progress,
+                  alignment: Alignment.centerLeft,
+                  child: Container(decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withOpacity(0.18), borderRadius: BorderRadius.circular(8))),
+                ),
+              ),
+            ]),
+            const SizedBox(width: 8),
+            Text(_formatDuration(_position)),
+          ]),
+        ),
+        if (_localPath != null && audioPlayerType != AudioPlayerType.internal)
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0, top: 4.0),
+            child: TextButton.icon(
+              icon: const Icon(Icons.open_in_new, size: 18),
+              label: Text('Play with ${audioPlayerType.toString().split('.').last.replaceFirst('external', '')}'),
+              onPressed: () => _playWithExternalPlayer(audioPlayerType, _localPath!),
             ),
           ),
-          Positioned.fill(
-            child: FractionallySizedBox(
-              widthFactor: progress,
-              alignment: Alignment.centerLeft,
-              child: Container(decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withOpacity(0.18), borderRadius: BorderRadius.circular(8))),
-            ),
-          ),
-        ]),
-        const SizedBox(width: 8),
-        Text(_formatDuration(_position)),
-      ]),
+      ],
     );
   }
 

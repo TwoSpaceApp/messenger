@@ -4,6 +4,7 @@ import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/screens/chat_screen.dart';
 import 'package:two_space_app/screens/group_settings_screen.dart';
+import 'package:two_space_app/screens/proxy_settings_screen.dart'; // Import ProxySettingsScreen
 import 'package:two_space_app/widgets/user_avatar.dart';
 import 'package:two_space_app/services/auth_service.dart';
 import 'package:two_space_app/utils/responsive.dart';
@@ -151,6 +152,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: isWide ? null : AppBar(
         title: Text(chatName),
         backgroundColor: const Color(0xFF1D2227),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).pushNamed('/proxy_settings');
+            },
+          ),
+        ],
       ),
       drawer: isWide ? null : Drawer(child: _buildRoomList()),
       body: Row(

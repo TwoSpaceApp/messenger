@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:two_space_app/services/chat_matrix_service.dart';
+import 'package:two_space_app/services/watch_service.dart'; // Import WatchService
 import 'package:uuid/uuid.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
@@ -60,6 +61,7 @@ class CallStateData {
 
 class CallService extends StateNotifier<CallStateData> {
   final ChatMatrixService _matrixService = ChatMatrixService();
+  final WatchService _watchService = WatchService();
   final Uuid _uuid = const Uuid();
   RTCPeerConnection? _peerConnection;
   MediaStream? _audioStream; // To hold the original audio stream
@@ -70,7 +72,10 @@ class CallService extends StateNotifier<CallStateData> {
     ]
   };
 
-  CallService() : super(CallStateData());
+  CallService() : super(CallStateData()) {
+    _watchService.onAcceptCall = answerCall;
+    _watchService.onDeclineCall = hangupCall;
+  }
 
   Future<void> startCall(String roomId, String userId, String userName, String? userAvatar) async {
     final callId = _uuid.v4();
@@ -104,6 +109,7 @@ class CallService extends StateNotifier<CallStateData> {
       remoteUserAvatar: userAvatar,
     );
 
+    _watchService.sendIncomingCallNotification(userName);
     await _createPeerConnection(withVideo: true); // Be ready to receive video
     await _peerConnection!.setRemoteDescription(RTCSessionDescription(sdpOffer, 'offer'));
   }
@@ -130,6 +136,7 @@ class CallService extends StateNotifier<CallStateData> {
     _audioStream = null;
 
     _matrixService.sendCallHangup(state.roomId!, state.callId!);
+    _watchService.sendHangupNotification();
     state = CallStateData();
   }
 

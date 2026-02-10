@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:two_space_app/services/watch_service.dart'; // Import WatchService
 
 class ChatMatrixService {
+  final WatchService _watchService = WatchService();
   String get homeserver => 'matrix.org';
 
   Future<List<String>> getJoinedRooms() async {
@@ -103,7 +105,20 @@ class ChatMatrixService {
   }
 
   Future<void> startSync([Function(Map<String, dynamic>)? onEvent]) async {
-    // Stub
+    // Stub: In a real app, this would listen for new events from the homeserver.
+    // For now, we'll simulate a new message event.
+    Timer.periodic(const Duration(seconds: 15), (timer) {
+      final event = {
+        'type': 'm.room.message',
+        'sender': '@bob:matrix.org',
+        'content': {
+          'msgtype': 'm.text',
+          'body': 'Hello from Bob! This is a simulated message.',
+        },
+      };
+      onEvent?.call({'rooms': {'join': {'!example1:matrix.org': {'timeline': {'events': [event]}}}}});
+      _watchService.sendNewMessageNotification('Bob', 'Hello from Bob!');
+    });
   }
 
   Future<void> stopSync() async {
