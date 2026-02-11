@@ -6,6 +6,7 @@ import 'package:two_space_app/screens/chat_screen.dart';
 import 'package:two_space_app/screens/group_settings_screen.dart';
 import 'package:two_space_app/screens/proxy_settings_screen.dart'; // Import ProxySettingsScreen
 import 'package:two_space_app/widgets/user_avatar.dart';
+import 'package:two_space_app/widgets/channel_icon.dart'; // Import ChannelIcon
 import 'package:two_space_app/services/auth_service.dart';
 import 'package:two_space_app/utils/responsive.dart';
 
@@ -63,6 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             {'roomId': '!example1:matrix.org', 'name': 'General'},
             {'roomId': '!example2:matrix.org', 'name': 'Development'},
             {'roomId': '!example3:matrix.org', 'name': 'Random'},
+            {'roomId': '!example4:matrix.org', 'name': 'Design'},
           ];
           if (_rooms.isNotEmpty && _selectedRoomId == null) {
             _selectedRoomId = _rooms.first['roomId'] as String?;
@@ -111,16 +113,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       final r = filteredRooms[index];
                       final id = r['roomId'] as String;
                       final name = r['name'] as String? ?? id;
+                      final avatarUrl = r['avatar'] as String?;
                       final selected = _selectedRoomId == id;
                       return ListTile(
                         selected: selected,
                         selectedTileColor: Colors.grey.withOpacity(0.2),
                         title: Text(name, style: const TextStyle(color: Colors.white)),
-                        leading: UserAvatar(
-                          avatarUrl: r['avatar'] as String?,
-                          name: name,
-                          radius: 18,
-                        ),
+                        leading: avatarUrl != null
+                            ? UserAvatar(avatarUrl: avatarUrl, name: name, radius: 18)
+                            : ChannelIcon(channelName: name, radius: 18),
                         onTap: () {
                           setState(() {
                             _selectedRoomId = id;

@@ -76,6 +76,8 @@ flutter:
   generate: true
 
   assets:
+
+    - assets/sounds/
     - .env
     - assets/
     - assets/images/

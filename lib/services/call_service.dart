@@ -3,6 +3,7 @@ import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/services/watch_service.dart'; // Import WatchService
 import 'package:uuid/uuid.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:audioplayers/audioplayers.dart'; // Import audioplayers
 
 enum CallState {
   none,
@@ -65,6 +66,7 @@ class CallService extends StateNotifier<CallStateData> {
   final Uuid _uuid = const Uuid();
   RTCPeerConnection? _peerConnection;
   MediaStream? _audioStream; // To hold the original audio stream
+  final AudioPlayer _ringtonePlayer = AudioPlayer();
 
   final Map<String, dynamic> _iceServers = {
     'iceServers': [
@@ -75,6 +77,13 @@ class CallService extends StateNotifier<CallStateData> {
   CallService() : super(CallStateData()) {
     _watchService.onAcceptCall = answerCall;
     _watchService.onDeclineCall = hangupCall;
+    _ringtonePlayer.setReleaseMode(ReleaseMode.loop);
+  }
+
+  @override
+  void dispose() {
+    _ringtonePlayer.dispose();
+    super.dispose();
   }
 
   Future<void> startCall(String roomId, String userId, String userName, String? userAvatar) async {
@@ -110,12 +119,14 @@ class CallService extends StateNotifier<CallStateData> {
     );
 
     _watchService.sendIncomingCallNotification(userName);
+    await _ringtonePlayer.play(AssetSource('sounds/ringtone.mp3'));
     await _createPeerConnection(withVideo: true); // Be ready to receive video
     await _peerConnection!.setRemoteDescription(RTCSessionDescription(sdpOffer, 'offer'));
   }
 
   Future<void> answerCall() async {
     if (state.callState != CallState.incoming) return;
+    await _ringtonePlayer.stop();
 
     final answer = await _peerConnection!.createAnswer();
     await _peerConnection!.setLocalDescription(answer);
@@ -126,6 +137,7 @@ class CallService extends StateNotifier<CallStateData> {
 
   Future<void> hangupCall() async {
     if (state.callState == CallState.none) return;
+    await _ringtonePlayer.stop();
 
     await _audioStream?.dispose();
     await state.localStream?.dispose();
