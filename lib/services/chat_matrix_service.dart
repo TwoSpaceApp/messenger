@@ -16,10 +16,12 @@ class ChatMatrixService {
   static const _tokenKey = 'matrix_access_token';
   static const _userIdKey = 'matrix_user_id';
   static const _syncTokenKey = 'matrix_sync_token';
+  static const _refreshTokenKey = 'matrix_refresh_token';
 
   String? _accessToken;
   String? _userId;
   String? _syncToken;
+  String? _refreshToken;
   Timer? _syncTimer;
   bool _syncing = false;
 
@@ -36,6 +38,7 @@ class ChatMatrixService {
     _accessToken = await _secure.read(key: _tokenKey);
     _userId = await _secure.read(key: _userIdKey);
     _syncToken = await _secure.read(key: _syncTokenKey);
+    _refreshToken = await _secure.read(key: _refreshTokenKey);
   }
 
   /// Check if we have valid credentials
@@ -49,11 +52,20 @@ class ChatMatrixService {
   }
 
   /// Save credentials after login
-  Future<void> saveCredentials(String accessToken, String userId, {String? deviceId}) async {
+  Future<void> saveCredentials(
+    String accessToken,
+    String userId, {
+    String? deviceId,
+    String? refreshToken,
+  }) async {
     _accessToken = accessToken;
     _userId = userId;
+    _refreshToken = refreshToken;
     await _secure.write(key: _tokenKey, value: accessToken);
     await _secure.write(key: _userIdKey, value: userId);
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _secure.write(key: _refreshTokenKey, value: refreshToken);
+    }
   }
 
   /// Clear credentials on logout
@@ -61,9 +73,11 @@ class ChatMatrixService {
     _accessToken = null;
     _userId = null;
     _syncToken = null;
+    _refreshToken = null;
     await _secure.delete(key: _tokenKey);
     await _secure.delete(key: _userIdKey);
     await _secure.delete(key: _syncTokenKey);
+    await _secure.delete(key: _refreshTokenKey);
   }
 
   /// HTTP headers with auth
@@ -99,6 +113,7 @@ class ChatMatrixService {
 
     final js = jsonDecode(res.body) as Map<String, dynamic>;
     final token = js['access_token'] as String?;
+    final refreshToken = js['refresh_token'] as String?;
     final userId = js['user_id'] as String?;
     final deviceId = js['device_id'] as String?;
 
@@ -106,8 +121,46 @@ class ChatMatrixService {
       throw Exception('Invalid login response');
     }
 
-    await saveCredentials(token, userId, deviceId: deviceId);
+    await saveCredentials(token, userId, deviceId: deviceId, refreshToken: refreshToken);
     return js;
+  }
+
+  /// Refresh Matrix access token using `refresh_token` (if the homeserver supports it).
+  /// Throws on transport/protocol errors.
+  Future<void> refreshAccessToken({String? refreshToken}) async {
+    final token = refreshToken ?? _refreshToken;
+    if (token == null || token.isEmpty) {
+      throw Exception('No refresh token available');
+    }
+
+    final uri = Uri.parse('$homeserver/_matrix/client/v3/refresh');
+    final body = jsonEncode({'refresh_token': token});
+    final res = await http
+        .post(uri, headers: {'Content-Type': 'application/json'}, body: body)
+        .timeout(const Duration(seconds: 12));
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      // If refresh rejected, clear refresh token so we don't loop.
+      if (res.statusCode == 401 || res.statusCode == 403) {
+        _refreshToken = null;
+        await _secure.delete(key: _refreshTokenKey);
+      }
+      throw Exception('Matrix refresh failed ${res.statusCode}: ${res.body}');
+    }
+
+    final js = jsonDecode(res.body) as Map<String, dynamic>;
+    final newAccess = js['access_token'] as String?;
+    final newRefresh = js['refresh_token'] as String?;
+    if (newAccess == null || newAccess.isEmpty) {
+      throw Exception('Matrix refresh response missing access_token');
+    }
+
+    _accessToken = newAccess;
+    await _secure.write(key: _tokenKey, value: newAccess);
+    if (newRefresh != null && newRefresh.isNotEmpty) {
+      _refreshToken = newRefresh;
+      await _secure.write(key: _refreshTokenKey, value: newRefresh);
+    }
   }
 
   /// Get list of joined rooms

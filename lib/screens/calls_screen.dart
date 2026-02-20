@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/widgets/screen_background.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
@@ -37,6 +38,8 @@ class _CallsScreenState extends State<CallsScreen> {
   String _searchQuery = '';
   CallType? _filterType;
   final _searchController = TextEditingController();
+  List<CallRecord> _cachedFilteredCalls = const [];
+  Timer? _searchDebounce;
 
   // Fake call records
   final List<CallRecord> _calls = [
@@ -197,7 +200,30 @@ class _CallsScreenState extends State<CallsScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _cachedFilteredCalls = _filteredCalls;
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    // Debounce to avoid rebuilding list on every keystroke.
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 150), () {
+      if (!mounted) return;
+      final next = _searchController.text;
+      if (next == _searchQuery) return;
+      setState(() {
+        _searchQuery = next;
+        _cachedFilteredCalls = _filteredCalls;
+      });
+    });
+  }
+
+  @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -288,7 +314,7 @@ class _CallsScreenState extends State<CallsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final filteredCalls = _filteredCalls;
+    final filteredCalls = _cachedFilteredCalls;
     
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -333,12 +359,14 @@ class _CallsScreenState extends State<CallsScreen> {
                               icon: const Icon(Icons.clear, color: Colors.white70),
                               onPressed: () {
                                 _searchController.clear();
-                                setState(() => _searchQuery = '');
+                                setState(() {
+                                  _searchQuery = '';
+                                  _cachedFilteredCalls = _filteredCalls;
+                                });
                               },
                             )
                           : null,
                     ),
-                    onChanged: (value) => setState(() => _searchQuery = value),
                   ),
                 ),
               ),
@@ -518,7 +546,10 @@ class _CallsScreenState extends State<CallsScreen> {
       label: Text(label),
       selected: isSelected,
       onSelected: (selected) {
-        setState(() => _filterType = selected ? type : null);
+        setState(() {
+          _filterType = selected ? type : null;
+          _cachedFilteredCalls = _filteredCalls;
+        });
       },
       backgroundColor: Colors.white.withAlpha(20),
       selectedColor: Theme.of(context).colorScheme.primary.withAlpha(150),

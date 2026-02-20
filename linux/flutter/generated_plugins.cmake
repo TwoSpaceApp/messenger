@@ -8,7 +8,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
   flutter_secure_storage_linux
   gtk
-  open_file_linux
   record_linux
   sentry_flutter
   url_launcher_linux

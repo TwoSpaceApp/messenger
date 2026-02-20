@@ -30,6 +30,10 @@ class AuthService {
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
   final ChatMatrixService _matrixService = ChatMatrixService();
 
+  // ChatMatrixService storage keys (kept here to avoid tight coupling to its private consts)
+  static const String _kChatMatrixAccessTokenKey = 'matrix_access_token';
+  static const String _kChatMatrixRefreshTokenKey = 'matrix_refresh_token';
+
   // Email/password sign in using real Matrix login
   Future<void> signInWithEmail(String email, String password) async {
     _logger.info('🔐 Matrix login attempt: $email');
@@ -258,20 +262,42 @@ class AuthService {
 
   /// Retrieve stored Matrix access token for given app user id (or current user if null)
   Future<String?> getMatrixTokenForUser({String? appUserId}) async {
-    // First check if ChatMatrixService has token
+    // Primary source: ChatMatrixService stores token globally.
     await _matrixService.init();
-    if (_matrixService.isLoggedIn) {
-      // Get from secure storage
-      String? keyId = appUserId;
-      if (keyId == null || keyId.isEmpty) {
-        keyId = await _matrixService.getCurrentUserId();
-      }
-      if (keyId != null && keyId.isNotEmpty) {
-        final token = await _secure.read(key: '$_kMatrixTokenKeyPrefix$keyId');
-        if (token != null) return token;
+    final direct = await _secure.read(key: _kChatMatrixAccessTokenKey);
+    if (direct != null && direct.isNotEmpty) return direct;
+
+    // Backward-compatible fallback: per-user storage (older logic).
+    String? keyId = appUserId;
+    if (keyId == null || keyId.isEmpty) {
+      keyId = await _matrixService.getCurrentUserId();
+    }
+    if (keyId != null && keyId.isNotEmpty) {
+      final token = await _secure.read(key: '$_kMatrixTokenKeyPrefix$keyId');
+      if (token != null && token.isNotEmpty) return token;
+    }
+
+    // If no access token, try refresh (best-effort) and re-read.
+    final refreshed = await tryRefreshMatrixToken(appUserId: keyId);
+    if (refreshed != null && refreshed.isNotEmpty) return refreshed;
+    return null;
+  }
+
+  /// Best-effort refresh of Matrix access token.
+  /// Returns new access token on success, otherwise null.
+  Future<String?> tryRefreshMatrixToken({String? appUserId}) async {
+    // Prefer ChatMatrixService refresh token (global key), fallback to per-user refresh.
+    final globalRefresh = await _secure.read(key: _kChatMatrixRefreshTokenKey);
+    if (globalRefresh != null && globalRefresh.isNotEmpty) {
+      try {
+        await _matrixService.refreshAccessToken(refreshToken: globalRefresh);
+        final after = await _secure.read(key: _kChatMatrixAccessTokenKey);
+        if (after != null && after.isNotEmpty) return after;
+      } catch (_) {
+        // Non-fatal: fall back to per-user refresh path.
       }
     }
-    return null;
+    return refreshMatrixTokenForUser(appUserId: appUserId);
   }
 
   /// Exchange an SSO/login token (returned by Synapse after OIDC) for a Matrix session.
