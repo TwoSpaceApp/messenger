@@ -40,7 +40,7 @@ class AuthState {
 }
 
 /// Provider for AuthService singleton
-@riverpod
+@Riverpod(keepAlive: true)
 AuthService authService(Ref ref) {
   return AuthService();
 }
@@ -58,7 +58,7 @@ AuthService authService(Ref ref) {
 /// // Logout
 /// await ref.read(authNotifierProvider.notifier).logout();
 /// ```
-@riverpod
+@Riverpod(keepAlive: true)
 class AuthNotifier extends _$AuthNotifier {
   AuthService? _authServiceInstance;
   

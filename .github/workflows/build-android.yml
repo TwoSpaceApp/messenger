@@ -2,6 +2,15 @@ name: Build Android
 
 on:
   workflow_dispatch:
+    inputs:
+      build_mode:
+        description: 'Build mode'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - debug
+          - release
   push:
     branches:
       - main
@@ -25,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      BUILD_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode || 'debug' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,15 +59,14 @@ jobs:
           flutter doctor -v
 
       - name: Get dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
-      # PR builds should not depend on repository secrets (signing keys, etc.).
-      - name: Build Debug APK (PR)
-        if: github.event_name == 'pull_request'
+      - name: Build Debug APK
+        if: env.BUILD_MODE == 'debug'
         run: flutter build apk --debug
 
-      - name: Upload Debug APK artifact (PR)
-        if: github.event_name == 'pull_request'
+      - name: Upload Debug APK artifact
+        if: env.BUILD_MODE == 'debug'
         uses: actions/upload-artifact@v4
         id: upload_android_debug
         with:
@@ -64,21 +74,20 @@ jobs:
           path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 30
 
-      - name: Summary (Android PR)
-        if: github.event_name == 'pull_request'
+      - name: Summary (Android debug)
+        if: env.BUILD_MODE == 'debug'
         run: |
           {
             echo "### Android (debug)";
             echo "- Download: [app-debug.apk](${{ steps.upload_android_debug.outputs.artifact-url }})";
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # Release artifacts for manual runs and pushes to main/master.
       - name: Build Split APKs (Release)
-        if: github.event_name != 'pull_request'
+        if: env.BUILD_MODE == 'release'
         run: flutter build apk --release --split-per-abi
 
       - name: Upload APK artifacts (Release)
-        if: github.event_name != 'pull_request'
+        if: env.BUILD_MODE == 'release'
         uses: actions/upload-artifact@v4
         id: upload_android_apks
         with:
@@ -87,11 +96,11 @@ jobs:
           retention-days: 30
 
       - name: Build App Bundle (Release)
-        if: github.event_name != 'pull_request'
+        if: env.BUILD_MODE == 'release'
         run: flutter build appbundle --release
 
       - name: Upload App Bundle artifact (Release)
-        if: github.event_name != 'pull_request'
+        if: env.BUILD_MODE == 'release'
         uses: actions/upload-artifact@v4
         id: upload_android_aab
         with:
@@ -100,7 +109,7 @@ jobs:
           retention-days: 30
 
       - name: Summary (Android release)
-        if: github.event_name != 'pull_request'
+        if: env.BUILD_MODE == 'release'
         run: |
           {
             echo "### Android (release)";

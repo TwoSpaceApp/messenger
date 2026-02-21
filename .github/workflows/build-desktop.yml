@@ -2,6 +2,15 @@ name: Build Desktop (Windows & Linux)
 
 on:
   workflow_dispatch:
+    inputs:
+      build_mode:
+        description: 'Build mode'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - debug
+          - release
   push:
     branches:
       - main
@@ -30,6 +39,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+    env:
+      BUILD_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode || 'debug' }}
 
     strategy:
       fail-fast: false
@@ -60,6 +71,7 @@ jobs:
             cmake \
             ninja-build \
             pkg-config \
+            libunwind-dev \
             libcurl4-openssl-dev \
             libc-ares-dev \
             libssl-dev \
@@ -84,14 +96,18 @@ jobs:
         run: flutter config --enable-windows-desktop
 
       - name: Get dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
-      - name: Build Linux (PR, debug)
-        if: github.event_name == 'pull_request' && matrix.platform == 'linux'
+      - name: Build Linux (debug)
+        if: env.BUILD_MODE == 'debug' && matrix.platform == 'linux'
         run: flutter build linux --debug
 
-      - name: Upload Linux artifact (PR, debug)
-        if: github.event_name == 'pull_request' && matrix.platform == 'linux'
+      - name: Build Linux (release)
+        if: env.BUILD_MODE == 'release' && matrix.platform == 'linux'
+        run: flutter build linux --release
+
+      - name: Upload Linux artifact (debug)
+        if: env.BUILD_MODE == 'debug' && matrix.platform == 'linux'
         uses: actions/upload-artifact@v4
         id: upload_linux_debug
         with:
@@ -99,40 +115,8 @@ jobs:
           retention-days: 30
           path: build/linux/x64/debug/bundle
 
-      - name: Summary (Linux PR)
-        if: github.event_name == 'pull_request' && matrix.platform == 'linux'
-        run: |
-          {
-            echo "### Linux (debug)";
-            echo "- Download (zip artifact): [twospace-linux-debug](${{ steps.upload_linux_debug.outputs.artifact-url }})";
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Build Windows (PR, debug)
-        if: github.event_name == 'pull_request' && matrix.platform == 'windows'
-        run: flutter build windows --debug
-
-      - name: Upload Windows artifact (PR, debug)
-        if: github.event_name == 'pull_request' && matrix.platform == 'windows'
-        uses: actions/upload-artifact@v4
-        id: upload_windows_debug
-        with:
-          name: twospace-windows-debug
-          retention-days: 30
-          path: build/windows/x64/runner/Debug
-
-      - name: Summary (Windows PR)
-        if: github.event_name == 'pull_request' && matrix.platform == 'windows'
-        run: |
-          "### Windows (debug)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
-          "- Download (zip artifact): [twospace-windows-debug](${{ steps.upload_windows_debug.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
-        shell: pwsh
-
-      - name: Build Linux (push/manual, release)
-        if: github.event_name != 'pull_request' && matrix.platform == 'linux'
-        run: flutter build linux --release
-
-      - name: Upload Linux artifact (push/manual, release)
-        if: github.event_name != 'pull_request' && matrix.platform == 'linux'
+      - name: Upload Linux artifact (release)
+        if: env.BUILD_MODE == 'release' && matrix.platform == 'linux'
         uses: actions/upload-artifact@v4
         id: upload_linux_release
         with:
@@ -140,20 +124,41 @@ jobs:
           retention-days: 30
           path: build/linux/x64/release/bundle
 
+      - name: Summary (Linux debug)
+        if: env.BUILD_MODE == 'debug' && matrix.platform == 'linux'
+        run: |
+          {
+            echo "### Linux (debug)";
+            echo "- Download (zip artifact): [twospace-linux-debug](${{ steps.upload_linux_debug.outputs.artifact-url }})";
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Summary (Linux release)
-        if: github.event_name != 'pull_request' && matrix.platform == 'linux'
+        if: env.BUILD_MODE == 'release' && matrix.platform == 'linux'
         run: |
           {
             echo "### Linux (release)";
             echo "- Download (zip artifact): [twospace-linux-release](${{ steps.upload_linux_release.outputs.artifact-url }})";
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Build Windows (push/manual, release)
-        if: github.event_name != 'pull_request' && matrix.platform == 'windows'
+      - name: Build Windows (debug)
+        if: env.BUILD_MODE == 'debug' && matrix.platform == 'windows'
+        run: flutter build windows --debug
+
+      - name: Build Windows (release)
+        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
         run: flutter build windows --release
 
-      - name: Upload Windows artifact (push/manual, release)
-        if: github.event_name != 'pull_request' && matrix.platform == 'windows'
+      - name: Upload Windows artifact (debug)
+        if: env.BUILD_MODE == 'debug' && matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        id: upload_windows_debug
+        with:
+          name: twospace-windows-debug
+          retention-days: 30
+          path: build/windows/x64/runner/Debug
+
+      - name: Upload Windows artifact (release)
+        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
         uses: actions/upload-artifact@v4
         id: upload_windows_release
         with:
@@ -161,9 +166,53 @@ jobs:
           retention-days: 30
           path: build/windows/x64/runner/Release
 
+      - name: Summary (Windows debug)
+        if: env.BUILD_MODE == 'debug' && matrix.platform == 'windows'
+        run: |
+          "### Windows (debug)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          "- Download (zip artifact): [twospace-windows-debug](${{ steps.upload_windows_debug.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+        shell: pwsh
+
+      - name: Install Inno Setup (Windows)
+        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
+        run: |
+          choco install innosetup -y --no-progress
+        shell: pwsh
+
+      - name: Build Windows installer (Inno Setup)
+        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
+        run: |
+          $verLine = (Get-Content pubspec.yaml | Select-String -Pattern '^version:' | Select-Object -First 1).Line
+          if (-not $verLine) { throw 'pubspec.yaml: version not found' }
+
+          $ver = $verLine.Split(':', 2)[1].Trim()
+          $verShort = $ver.Split('+')[0]
+
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc)) { throw "ISCC not found at $iscc" }
+
+          & $iscc "/DMyAppVersion=$verShort" /Odist setup.iss
+
+          $out = Get-ChildItem -Path dist -Filter '*_setup_v*.exe' | Select-Object -First 1
+          if (-not $out) { throw 'Installer .exe not found in dist/' }
+          Write-Host "Built installer: $($out.FullName)"
+        shell: pwsh
+
+      - name: Upload Windows installer artifact (push/manual, release)
+        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        id: upload_windows_installer_release
+        with:
+          name: twospace-windows-installer
+          retention-days: 30
+          path: dist/*_setup_v*.exe
+
       - name: Summary (Windows release)
-        if: github.event_name != 'pull_request' && matrix.platform == 'windows'
+        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
         run: |
           "### Windows (release)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
           "- Download (zip artifact): [twospace-windows-release](${{ steps.upload_windows_release.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          "- Installer (.exe): [twospace-windows-installer](${{ steps.upload_windows_installer_release.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
         shell: pwsh

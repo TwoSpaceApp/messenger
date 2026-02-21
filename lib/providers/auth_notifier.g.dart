@@ -25,7 +25,7 @@ final class AuthServiceProvider
           argument: null,
           retry: null,
           name: r'authServiceProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -52,7 +52,7 @@ final class AuthServiceProvider
   }
 }
 
-String _$authServiceHash() => r'e771c719cfb4bd87b7f15fc6722ef9f56a9844e4';
+String _$authServiceHash() => r'1a086f396b6916ee8c5a9a14df3ece637f134805';
 
 /// Main authentication notifier managing auth state
 ///
@@ -105,7 +105,7 @@ final class AuthNotifierProvider
           argument: null,
           retry: null,
           name: r'authProvider',
-          isAutoDispose: true,
+          isAutoDispose: false,
           dependencies: null,
           $allTransitiveDependencies: null,
         );
@@ -118,7 +118,7 @@ final class AuthNotifierProvider
   AuthNotifier create() => AuthNotifier();
 }
 
-String _$authNotifierHash() => r'a693317f1192949530fad1c2b5927d005481429c';
+String _$authNotifierHash() => r'dd2b74be48d77bc8a69f649b173e2fe7b94baf1a';
 
 /// Main authentication notifier managing auth state
 ///
@@ -186,7 +186,7 @@ final class IsAuthenticatedProvider
   }
 }
 
-String _$isAuthenticatedHash() => r'e60b57f4f522b0dab2413dc2d5600d475b68f5c2';
+String _$isAuthenticatedHash() => r'c4ebbdbf555f57b44766e435523e030c1080e5a2';
 
 /// Convenience provider for getting current user ID
 
@@ -224,4 +224,4 @@ final class CurrentUserIdProvider
   }
 }
 
-String _$currentUserIdHash() => r'ac5b37af29dc9c950b5f4c83ecdf0d4c8fabcb9e';
+String _$currentUserIdHash() => r'a3d5220af1599b59ba610bdc763274684f9db2cc';
