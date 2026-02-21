@@ -3,6 +3,7 @@ import 'package:two_space_app/config/environment.dart';
 import 'package:two_space_app/config/environment_validator.dart';
 import 'package:two_space_app/services/sentry_service.dart';
 import 'package:two_space_app/services/matrix_service.dart';
+import 'package:two_space_app/services/settings_service.dart';
 
 /// Result of an initialization step
 class InitStepResult {
@@ -255,7 +256,7 @@ class _SettingsStep implements InitializationStep {
 
   @override
   Future<void> execute() async {
-    // await SettingsService.initialize();
+    await SettingsService.loadSettings();
   }
 }
 

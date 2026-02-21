@@ -36,6 +36,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _textScale = SettingsService.textScaleNotifier.value;
       _autoDownloadMedia = SettingsService.autoDownloadMediaNotifier.value;
       _sendByEnter = SettingsService.sendByEnterNotifier.value;
+      _selectedTheme = switch (SettingsService.themeModeNotifier.value) {
+        ThemeMode.light => 'light',
+        ThemeMode.dark => 'dark',
+        _ => 'system',
+      };
       
       // Load notifications/sound if they exist in service, otherwise default
       // Assuming existing service has notification settings (checked previously, didn't see explicit pub methods but maybe notifiers?)
@@ -122,13 +127,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: const Text('Тема'),
                       trailing: DropdownButton<String>(
                         value: _selectedTheme,
-                        onChanged: (value) => setState(() => _selectedTheme = value ?? 'system'),
+                        onChanged: (value) async {
+                          final next = value ?? 'system';
+                          setState(() => _selectedTheme = next);
+                          final mode = switch (next) {
+                            'light' => ThemeMode.light,
+                            'dark' => ThemeMode.dark,
+                            _ => ThemeMode.system,
+                          };
+                          await SettingsService.setThemeMode(mode);
+                        },
                         items: const [
                           DropdownMenuItem(value: 'system', child: Text('Система')),
                           DropdownMenuItem(value: 'light', child: Text('Светлая')),
                           DropdownMenuItem(value: 'dark', child: Text('Темная')),
                         ],
                       ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.palette),
+                      title: const Text('Кастомизация'),
+                      subtitle: const Text('Цвета, шрифт и UI-эффекты'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.pushNamed(context, '/customization'),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                   ],
@@ -412,6 +435,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       subtitle: const Text('Клиент TwoSpace написан на Flutter/Dart'),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.lightbulb_outline),
+                      title: const Text('Предложить улучшение'),
+                      subtitle: const Text('Форма идей и больших нововведений'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.pushNamed(context, '/feedback'),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                   ],
                 ),

@@ -5,9 +5,13 @@ import 'package:two_space_app/services/settings_service.dart';
 class AppThemeBuilder {
   AppThemeBuilder._();
 
-  static ThemeData build(ThemeSettings settings, bool paleVioletEnabled) {
+  static ThemeData build(
+    ThemeSettings settings,
+    bool paleVioletEnabled, {
+    Brightness? brightnessOverride,
+  }) {
     final selectedColorInt = settings.primaryColorValue;
-    final isLightTheme = _isLightIntention(selectedColorInt);
+    final isLightTheme = (brightnessOverride ?? (_isLightIntention(selectedColorInt) ? Brightness.light : Brightness.dark)) == Brightness.light;
     
     final primaryColor = Color(selectedColorInt);
     

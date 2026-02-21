@@ -77,6 +77,7 @@ class SettingsService {
   static const _textScaleKey = 'app_text_scale';
   static const _autoDownloadKey = 'app_auto_download';
   static const _sendByEnterKey = 'app_send_enter';
+  static const _themeModeKey = 'app_theme_mode';
 
   // Theme Notifier
   static final ValueNotifier<ThemeSettings> themeNotifier = 
@@ -91,6 +92,7 @@ class SettingsService {
   static final ValueNotifier<double> textScaleNotifier = ValueNotifier(1.0);
   static final ValueNotifier<bool> autoDownloadMediaNotifier = ValueNotifier(true);
   static final ValueNotifier<bool> sendByEnterNotifier = ValueNotifier(true);
+  static final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
 
   static Future<void> loadSettings() async {
     // Load Theme
@@ -127,6 +129,38 @@ class SettingsService {
     textScaleNotifier.value = double.tryParse(await SecureStore.read(_textScaleKey) ?? '') ?? 1.0;
     autoDownloadMediaNotifier.value = (await SecureStore.read(_autoDownloadKey)) != 'false';
     sendByEnterNotifier.value = (await SecureStore.read(_sendByEnterKey)) != 'false';
+
+    // Theme mode (system/light/dark)
+    themeModeNotifier.value = _themeModeFromString(await SecureStore.read(_themeModeKey));
+  }
+
+  static ThemeMode _themeModeFromString(String? v) {
+    switch ((v ?? '').trim().toLowerCase()) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      case 'system':
+      default:
+        return ThemeMode.system;
+    }
+  }
+
+  static String _themeModeToString(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return 'light';
+      case ThemeMode.dark:
+        return 'dark';
+      case ThemeMode.system:
+      default:
+        return 'system';
+    }
+  }
+
+  static Future<void> setThemeMode(ThemeMode mode) async {
+    themeModeNotifier.value = mode;
+    await SecureStore.write(_themeModeKey, _themeModeToString(mode));
   }
 
   static Future<void> updateTheme({

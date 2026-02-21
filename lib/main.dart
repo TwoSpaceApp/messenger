@@ -17,6 +17,7 @@ import 'screens/chat_screen.dart';
 import 'screens/change_email_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/account_settings_screen.dart';
+import 'screens/feedback_screen.dart';
 import 'services/chat_service.dart';
 import 'services/initialization_service.dart';
 import 'services/sentry_service.dart';
@@ -137,29 +138,44 @@ class TwoSpaceApp extends StatelessWidget {
         return ValueListenableBuilder<bool>(
           valueListenable: SettingsService.paleVioletNotifier,
           builder: (context, paleVioletEnabled, __) {
-            // Build theme using extracted builder
-            final theme = AppThemeBuilder.build(settings, paleVioletEnabled);
+            return ValueListenableBuilder<ThemeMode>(
+              valueListenable: SettingsService.themeModeNotifier,
+              builder: (context, themeMode, ___) {
+                final lightTheme = AppThemeBuilder.build(
+                  settings,
+                  paleVioletEnabled,
+                  brightnessOverride: Brightness.light,
+                );
+                final darkTheme = AppThemeBuilder.build(
+                  settings,
+                  paleVioletEnabled,
+                  brightnessOverride: Brightness.dark,
+                );
 
-            final app = MaterialApp(
-              navigatorKey: appNavigatorKey,
-              title: 'TwoSpace',
-              // onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
-              debugShowCheckedModeBanner: false,
-              theme: theme,
-              // localizationsDelegates: AppLocalizations.localizationsDelegates,
-              // supportedLocales: AppLocalizations.supportedLocales,
-              home: const AuthListener(child: AuthGate()),
-              routes: _buildRoutes(context),
+                final app = MaterialApp(
+                  navigatorKey: appNavigatorKey,
+                  title: 'TwoSpace',
+                  // onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
+                  debugShowCheckedModeBanner: false,
+                  theme: lightTheme,
+                  darkTheme: darkTheme,
+                  themeMode: themeMode,
+                  // localizationsDelegates: AppLocalizations.localizationsDelegates,
+                  // supportedLocales: AppLocalizations.supportedLocales,
+                  home: const AuthListener(child: AuthGate()),
+                  routes: _buildRoutes(context),
+                );
+
+                // Add dev tools in debug mode
+                if (kDebugMode || Environment.enableDevTools) {
+                  return Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Stack(children: [app, const DevFab()]),
+                  );
+                }
+                return app;
+              },
             );
-
-            // Add dev tools in debug mode
-            if (kDebugMode || Environment.enableDevTools) {
-              return Directionality(
-                textDirection: TextDirection.ltr,
-                child: Stack(children: [app, const DevFab()]),
-              );
-            }
-            return app;
           },
         );
       },
@@ -176,6 +192,7 @@ class TwoSpaceApp extends StatelessWidget {
       AppStrings.routeCustomization: (context) => const CustomizationScreen(),
       AppStrings.routePrivacy: (context) => const PrivacyScreen(),
       AppStrings.routeAccountSettings: (context) => const AccountSettingsScreen(),
+      AppStrings.routeFeedback: (context) => const FeedbackScreen(),
       AppStrings.routeProfile: (context) {
         final args = ModalRoute.of(context)!.settings.arguments;
         if (args is String) {

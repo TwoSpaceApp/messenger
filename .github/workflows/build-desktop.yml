@@ -1,0 +1,126 @@
+name: Build Desktop (Windows & Linux)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'lib/**'
+      - 'linux/**'
+      - 'windows/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/build-desktop.yml'
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'linux/**'
+      - 'windows/**'
+      - 'assets/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/build-desktop.yml'
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            os: windows-latest
+          - platform: linux
+            os: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            liblzma-dev
+
+      - name: Flutter doctor
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Enable Linux desktop
+        if: matrix.platform == 'linux'
+        run: flutter config --enable-linux-desktop
+
+      - name: Enable Windows desktop
+        if: matrix.platform == 'windows'
+        run: flutter config --enable-windows-desktop
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Linux (PR, debug)
+        if: github.event_name == 'pull_request' && matrix.platform == 'linux'
+        run: flutter build linux --debug
+
+      - name: Upload Linux artifact (PR, debug)
+        if: github.event_name == 'pull_request' && matrix.platform == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: twospace-linux-debug
+          retention-days: 30
+          path: build/linux/**/debug/bundle/**
+
+      - name: Build Windows (PR, debug)
+        if: github.event_name == 'pull_request' && matrix.platform == 'windows'
+        run: flutter build windows --debug
+
+      - name: Upload Windows artifact (PR, debug)
+        if: github.event_name == 'pull_request' && matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: twospace-windows-debug
+          retention-days: 30
+          path: build/windows/**/runner/Debug/**
+
+      - name: Build Linux (push/manual, release)
+        if: github.event_name != 'pull_request' && matrix.platform == 'linux'
+        run: flutter build linux --release
+
+      - name: Upload Linux artifact (push/manual, release)
+        if: github.event_name != 'pull_request' && matrix.platform == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: twospace-linux-release
+          retention-days: 30
+          path: build/linux/**/release/bundle/**
+
+      - name: Build Windows (push/manual, release)
+        if: github.event_name != 'pull_request' && matrix.platform == 'windows'
+        run: flutter build windows --release
+
+      - name: Upload Windows artifact (push/manual, release)
+        if: github.event_name != 'pull_request' && matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: twospace-windows-release
+          retention-days: 30
+          path: build/windows/**/runner/Release/**
