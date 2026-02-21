@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'dotenv_filesystem_loader.dart';
+
 /// Environment configuration manager
 ///
 /// Provides strongly-typed access to environment variables from a `.env` file.
@@ -27,17 +29,93 @@ class Environment {
   Environment._();
 
   static Future<void> load() async {
-    await dotenv.load();
+    // Load defaults from bundled .env.example first.
+    // Then try optional .env (asset) and optional .env from filesystem (desktop).
+    try {
+      await dotenv.load(
+        fileName: '.env.example',
+        isOptional: true,
+        mergeWith: const {},
+      );
+    } catch (_) {
+      // Best-effort: app should still start.
+    }
+
+    // Optional bundled .env (some local setups may include it as an asset).
+    try {
+      final current = Map<String, String>.from(dotenv.env);
+      await dotenv.load(
+        fileName: '.env',
+        isOptional: true,
+        mergeWith: current,
+      );
+    } catch (_) {
+      // Best-effort.
+    }
+
+    // Optional filesystem .env for desktop/dev (overrides asset values).
+    try {
+      final fileInput = await readDotenvFromFilesystem();
+      if (fileInput != null && fileInput.trim().isNotEmpty) {
+        dotenv.env.addAll(_parseDotenv(fileInput));
+      }
+    } catch (_) {
+      // Best-effort.
+    }
+  }
+
+  static Map<String, String> _parseDotenv(String content) {
+    final out = <String, String>{};
+    final lines = content.split(RegExp(r'\r?\n'));
+    for (final raw in lines) {
+      final line = raw.trim();
+      if (line.isEmpty) continue;
+      if (line.startsWith('#')) continue;
+
+      final idx = line.indexOf('=');
+      if (idx <= 0) continue;
+      final key = line.substring(0, idx).trim();
+      var value = line.substring(idx + 1).trim();
+
+      if (value.length >= 2) {
+        final q = value[0];
+        if ((q == '"' || q == "'") && value.endsWith(q)) {
+          value = value.substring(1, value.length - 1);
+        }
+      }
+
+      if (key.isNotEmpty) out[key] = value;
+    }
+    return out;
   }
 
   static String _get(String name, {String fallback = ''}) {
     return dotenv.env[name] ?? fallback;
   }
 
+  static String _getFirst(List<String> names, {String fallback = ''}) {
+    for (final name in names) {
+      final v = dotenv.env[name];
+      if (v != null && v.isNotEmpty) return v;
+    }
+    return fallback;
+  }
+
   /// Matrix configuration
-  static bool get useMatrix => _get('USE_MATRIX', fallback: 'true') == 'true';
-  static String get matrixHomeserver => _get('MATRIX_HOMESERVER', fallback: 'https://matrix.org');
-  static String get matrixHomeserverUrl => _get('MATRIX_SERVER_URL', fallback: _get('MATRIX_HOMESERVER', fallback: 'https://matrix.org'));
+  static bool get useMatrix =>
+      _getFirst(['MATRIX_ENABLE', 'USE_MATRIX'], fallback: 'true') == 'true';
+
+  static String get matrixHomeserver => _getFirst(
+        ['MATRIX_HOMESERVER', 'MATRIX_SERVER_URL', 'MATRIX_HOMESERVER_URL'],
+        fallback: 'https://matrix.org',
+      );
+
+  static String get matrixHomeserverUrl => _getFirst(
+        ['MATRIX_HOMESERVER_URL', 'MATRIX_SERVER_URL', 'MATRIX_HOMESERVER'],
+        fallback: 'https://matrix.org',
+      );
+
+  static String get matrixServerName => _get('MATRIX_SERVER_NAME');
   static String get matrixEmailTokenEndpoint => _get('MATRIX_EMAIL_TOKEN_ENDPOINT');
   static String get matrixAccessToken => _get('MATRIX_ACCESS_TOKEN');
   static String get matrixTotpSetupEndpoint => _get('MATRIX_TOTP_SETUP_ENDPOINT');

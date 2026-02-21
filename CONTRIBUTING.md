@@ -8,11 +8,12 @@
 
 ### Требования
 
-- **Flutter**: 3.35.7 или выше
-- **Dart**: 3.9.2 или выше
-- **Java**: 11 или выше (для Android)
+- **Flutter**: 3.38.8 (желательно совпадать с CI)
+- **Dart**: 3.10.x (идёт вместе с Flutter)
+- **Java**: 17 (для Android; в CI используется Java 17)
 - **Xcode**: 13+ (для iOS)
-- **Node.js**: 24.11.0 (опционально, для DevTools)
+
+> Примечание: приложение загружает `.env.example` (встроен в билд). Файл `.env` опционален и может переопределять значения (удобно для разработки/desktop).
 
 ### Установка
 
@@ -26,12 +27,8 @@
    ```bash
    flutter pub get
    ```
-   Если Flutter не установлен:
-   ```bash
-   sudo snap install flutter --classic
-   ```
 
-3. **Подготовьте `.env` файл:**
+3. **(Опционально) Подготовьте `.env` файл:**
    ```bash
    cp .env.example .env
    # Отредактируйте .env с правильными значениями
@@ -41,6 +38,40 @@
    ```bash
    flutter run
    ```
+
+### Платформы (запуск и сборка)
+
+#### Android
+
+- Запуск: `flutter run -d android`
+- Release как в CI: `flutter build apk --release --split-per-abi`
+- AAB: `flutter build appbundle --release`
+
+#### Windows
+
+Нужно Visual Studio 2022 с компонентом **Desktop development with C++**.
+
+- Включить таргет: `flutter config --enable-windows-desktop`
+- Запуск: `flutter run -d windows`
+- Release как в CI: `flutter build windows --release`
+
+#### Linux (Ubuntu/Debian)
+
+Пакеты для сборки (пример как в CI):
+
+```bash
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends \
+   clang cmake ninja-build pkg-config \
+   libgtk-3-dev libsecret-1-dev libasound2-dev \
+   libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+   libcurl4-openssl-dev libc-ares-dev libssl-dev \
+   liblzma-dev
+```
+
+- Включить таргет: `flutter config --enable-linux-desktop`
+- Запуск: `flutter run -d linux`
+- Release как в CI: `flutter build linux --release`
 
 ## 🔧 Процесс разработки
 
@@ -69,10 +100,6 @@ dart format lib test
 
 # Анализ кода
 flutter analyze
-
-# Кастомные линты
-flutter pub global activate custom_lint
-custom_lint
 ```
 
 ### Именование переменных
@@ -202,9 +229,24 @@ flutter analyze
 flutter test --coverage
 
 # 4. Сборка (если возможно)
-flutter build apk --split-by-abi --release (для Android)
+flutter build apk --release --split-per-abi
 flutter build windows --release (для Windows)
+flutter build linux --release (для Linux)
 ```
+
+## 🤖 CI артефакты (что ожидать)
+
+Сборки публикуются в GitHub Actions → конкретный workflow run → **Summary** и **Artifacts**.
+
+- Android:
+   - `app-debug.apk` (PR)
+   - `app-*-release.apk` (split per ABI) + `app-release.aab` (push/manual)
+- Windows:
+   - артефакт `twospace-windows-debug` (PR) или `twospace-windows-release` (push/manual)
+- Linux:
+   - артефакт `twospace-linux-debug` (PR) или `twospace-linux-release` (push/manual)
+
+Примечание: GitHub Actions отдаёт артефакты как `.zip` (это нормально). Внутри — файлы приложения (без вложенного второго архива).
 
 ## 🐛 Репортинг багов
 

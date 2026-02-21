@@ -71,7 +71,9 @@ final cachedUserProfileProvider = FutureProvider.autoDispose.family<Map<String, 
     cache.set(userId, profile);
     
     // Keep alive for 5 minutes
-    ref.keepAlive();
+    final link = ref.keepAlive();
+    final timer = Timer(const Duration(minutes: 5), link.close);
+    ref.onDispose(timer.cancel);
 
     return profile;
   },
@@ -106,17 +108,12 @@ final batchUserProfilesProvider = FutureProvider.autoDispose.family<List<Map<Str
     }
     
     // Keep alive for 5 minutes
-    ref.keepAlive();
+    final link = ref.keepAlive();
+    final timer = Timer(const Duration(minutes: 5), link.close);
+    ref.onDispose(timer.cancel);
 
     return [...cachedProfiles, ...fetchedProfiles];
   },
 );
 
-extension AutoDisposeRefExtension on AutoDisposeRef {
-  void keepAlive() {
-    final timer = Timer(const Duration(minutes: 5), () {
-      invalidateSelf();
-    });
-    onDispose(() => timer.cancel());
-  }
-}
+

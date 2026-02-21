@@ -129,25 +129,6 @@ class AuthService {
     */
   }
 
-  Future<void> _matrixRegister(String username, String password) async {
-    final homeserver = Environment.matrixHomeserverUrl;
-    if (homeserver.isEmpty) return;
-    final uri = Uri.parse('$homeserver/_matrix/client/v3/register');
-    final body = jsonEncode({
-      'username': username,
-      'password': password,
-      'auth': {'type': 'm.login.dummy'}
-    });
-    try {
-      final res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: body);
-      if (res.statusCode >= 200 && res.statusCode < 300) return;
-      _logger.debug('Регистрация Matrix не удалась: ${res.statusCode}');
-      // If registration is disabled or fails, it's non-fatal here.
-    } catch (e) {
-      _logger.debug('Ошибка регистрации Matrix: $e');
-    }
-  }
-
   /// Sign in to a Matrix homeserver using password login and store the
   /// returned access token securely for the current Appwrite user id.
   ///

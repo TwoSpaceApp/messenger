@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -9,8 +8,6 @@ import 'chat_matrix_service.dart';
 import 'token_manager.dart';
 
 class MatrixService {
-  final String _homeserverUrl = Environment.matrixHomeserverUrl;
-
   Future<String?> getCurrentUserId() async {
     final token = await TokenManager.getValidToken();
     if (token == null) return null;
@@ -21,34 +18,6 @@ class MatrixService {
       return '@${parts[2]}:${Environment.matrixHomeserverUrl}';
     }
     return null;
-  }
-
-  Future<Map<String, dynamic>> _sendRequest(
-    String endpoint, {
-    String method = 'POST',
-    Map<String, dynamic>? body,
-    bool authenticate = true,
-  }) async {
-    final url = Uri.parse('$_homeserverUrl$endpoint');
-    final headers = {'Content-Type': 'application/json'};
-    if (authenticate) {
-      final token = await TokenManager.getValidToken();
-      if (token == null) throw Exception('Not authenticated');
-      headers['Authorization'] = 'Bearer $token';
-    }
-
-    http.Response response;
-    if (method == 'GET') {
-      response = await http.get(url, headers: headers);
-    } else {
-      response = await http.post(url, headers: headers, body: jsonEncode(body));
-    }
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to execute request: ${response.body}');
-    }
   }
 
   Future<dynamic> handleApiCall(String method, Map<String, dynamic> payload) async {
@@ -142,7 +111,12 @@ class MatrixService {
 
   static Future<bool> shareFile(String path, {String? text}) async {
     try {
-      await Share.shareXFiles([XFile(path)], text: text);
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(path)],
+          text: text,
+        ),
+      );
       return true;
     } catch (_) {
       return false;

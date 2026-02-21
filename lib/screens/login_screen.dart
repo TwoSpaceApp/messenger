@@ -37,7 +37,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final identifier = _emailCtl.text.trim();
     final password = _passCtl.text.trim();
-    final notifier = ref.read(authNotifierProvider.notifier);
+    final notifier = ref.read(authProvider.notifier);
 
     // Close keyboard
     FocusScope.of(context).unfocus();

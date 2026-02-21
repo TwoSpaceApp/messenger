@@ -2,79 +2,50 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:two_space_app/services/settings_service.dart';
 
+class ThemeSettingsController extends Notifier<ThemeSettings> {
+  @override
+  ThemeSettings build() {
+    void listener() => state = SettingsService.themeNotifier.value;
+    SettingsService.themeNotifier.addListener(listener);
+    ref.onDispose(() => SettingsService.themeNotifier.removeListener(listener));
+    return SettingsService.themeNotifier.value;
+  }
+
+  Future<void> updatePrimaryColor(Color color) async {
+    await SettingsService.updatePrimaryColor(color.toARGB32());
+  }
+
+  Future<void> updateFontFamily(String family) async {
+    await SettingsService.updateFontFamily(family);
+  }
+
+  Future<void> updateFontWeight(int weight) async {
+    await SettingsService.updateFontWeight(weight);
+  }
+}
+
+class PaleVioletSettingsController extends Notifier<bool> {
+  @override
+  bool build() {
+    void listener() => state = SettingsService.paleVioletNotifier.value;
+    SettingsService.paleVioletNotifier.addListener(listener);
+    ref.onDispose(() => SettingsService.paleVioletNotifier.removeListener(listener));
+    return SettingsService.paleVioletNotifier.value;
+  }
+
+  Future<void> toggle() async {
+    await SettingsService.togglePaleViolet();
+  }
+}
+
 /// Provider for theme settings
 final themeSettingsProvider =
-    StateNotifierProvider<ThemeSettingsNotifier, ThemeSettings>((ref) {
-  return ThemeSettingsNotifier();
-});
+    NotifierProvider<ThemeSettingsController, ThemeSettings>(
+  ThemeSettingsController.new,
+);
 
-/// Provider for pale violet mode
-final paleVioletProvider = StateNotifierProvider<PaleVioletNotifier, bool>((ref) {
-  return PaleVioletNotifier();
-});
-
-/// Notifier for theme settings
-class ThemeSettingsNotifier extends StateNotifier<ThemeSettings> {
-  ThemeSettingsNotifier()
-      : super(ThemeSettings(
-          primaryColorValue: 0xFF6200EA,
-          fontFamily: 'Roboto',
-          fontWeight: 400,
-        )) {
-    _init();
-  }
-
-  void _init() {
-    // Listen to ValueNotifier and update state
-    SettingsService.themeNotifier.addListener(_onThemeChanged);
-    state = SettingsService.themeNotifier.value;
-  }
-
-  void _onThemeChanged() {
-    state = SettingsService.themeNotifier.value;
-  }
-
-  void updatePrimaryColor(Color color) {
-    SettingsService.updatePrimaryColor(color.value);
-  }
-
-  void updateFontFamily(String family) {
-    SettingsService.updateFontFamily(family);
-  }
-
-  void updateFontWeight(int weight) {
-    SettingsService.updateFontWeight(weight);
-  }
-
-  @override
-  void dispose() {
-    SettingsService.themeNotifier.removeListener(_onThemeChanged);
-    super.dispose();
-  }
-}
-
-/// Notifier for pale violet mode
-class PaleVioletNotifier extends StateNotifier<bool> {
-  PaleVioletNotifier() : super(false) {
-    _init();
-  }
-
-  void _init() {
-    SettingsService.paleVioletNotifier.addListener(_onPaleVioletChanged);
-    state = SettingsService.paleVioletNotifier.value;
-  }
-
-  void _onPaleVioletChanged() {
-    state = SettingsService.paleVioletNotifier.value;
-  }
-
-  void toggle() {
-    SettingsService.togglePaleViolet();
-  }
-
-  @override
-  void dispose() {
-    SettingsService.paleVioletNotifier.removeListener(_onPaleVioletChanged);
-    super.dispose();
-  }
-}
+/// Provider for pale violet mode (settings-backed)
+final paleVioletSettingsProvider =
+    NotifierProvider<PaleVioletSettingsController, bool>(
+  PaleVioletSettingsController.new,
+);

@@ -450,7 +450,9 @@ class _ChatScreenState extends State<ChatScreen> {
   /// Share a message with system share sheet
   Future<void> _shareMessage(_Msg message) async {
     try {
-      await share.Share.share(message.text);
+      await share.SharePlus.instance.share(
+        share.ShareParams(text: message.text),
+      );
     } catch (e) {
       if (mounted) {
         _showErrorMessage('Не удалось поделиться: $e');

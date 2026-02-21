@@ -41,7 +41,7 @@ class AuthState {
 
 /// Provider for AuthService singleton
 @riverpod
-AuthService authService(AuthServiceRef ref) {
+AuthService authService(Ref ref) {
   return AuthService();
 }
 
@@ -155,14 +155,14 @@ class AuthNotifier extends _$AuthNotifier {
 
 /// Convenience provider for checking if user is authenticated
 @riverpod
-Future<bool> isAuthenticated(IsAuthenticatedRef ref) async {
-  final authState = await ref.watch(authNotifierProvider.future);
+Future<bool> isAuthenticated(Ref ref) async {
+  final authState = await ref.watch(authProvider.future);
   return authState.isAuthenticated;
 }
 
 /// Convenience provider for getting current user ID
 @riverpod
-Future<String?> currentUserId(CurrentUserIdRef ref) async {
-  final authState = await ref.watch(authNotifierProvider.future);
+Future<String?> currentUserId(Ref ref) async {
+  final authState = await ref.watch(authProvider.future);
   return authState.userId;
 }

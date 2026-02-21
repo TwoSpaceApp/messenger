@@ -95,7 +95,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     setState(() => _sending = true);
     try {
       final text = _buildMessage();
-      await Share.share(text, subject: 'TwoSpace — предложение');
+      await SharePlus.instance.share(
+        ShareParams(
+          text: text,
+          subject: 'TwoSpace — предложение',
+        ),
+      );
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -124,7 +129,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   child: Column(
                     children: [
                       DropdownButtonFormField<String>(
-                        value: _category,
+                        initialValue: _category,
                         decoration: const InputDecoration(
                           labelText: 'Категория',
                         ),

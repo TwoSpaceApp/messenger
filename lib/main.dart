@@ -273,7 +273,7 @@ class AuthGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authNotifierProvider);
+    final authState = ref.watch(authProvider);
 
     return authState.when(
       data: (state) {
@@ -334,7 +334,7 @@ class AuthGate extends ConsumerWidget {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      ref.invalidate(authNotifierProvider);
+                      ref.invalidate(authProvider);
                     },
                     child: const Text("Retry"), // Hardcoded English text
                   ),

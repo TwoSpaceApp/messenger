@@ -4,10 +4,10 @@ import 'package:two_space_app/config/environment_validator.dart';
 
 void main() {
   group('EnvironmentValidator', () {
-    setUp(() {
-      // `dotenv.env` throws NotInitializedError until dotenv is loaded.
-      // In tests we use testLoad to avoid touching the real filesystem.
-      dotenv.testLoad(fileInput: '');
+    setUp(() async {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      // flutter_dotenv 6.x removed testLoad; use optional load and in-memory env map.
+      await dotenv.load(isOptional: true, mergeWith: const {});
       dotenv.env.clear();
     });
 

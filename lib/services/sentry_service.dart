@@ -47,7 +47,6 @@ class SentryService {
           options.environment = Environment.appEnv;
           
           // Performance monitoring for slow and frozen frames
-          options.autoAppStart = true;
           options.enableAutoPerformanceTracing = true;
         },
       );
@@ -88,7 +87,7 @@ class SentryService {
         id: userId,
         email: email,
         username: username,
-        extras: extras,
+        data: extras,
       ));
     });
   }
@@ -143,7 +142,7 @@ class SentryService {
         level: level,
         withScope: (scope) {
           if (extra != null) {
-            extra.forEach((key, value) => scope.setExtra(key, value));
+            scope.setContexts('extra', extra);
           }
         },
       );

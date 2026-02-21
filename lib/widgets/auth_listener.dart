@@ -120,7 +120,7 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
   Widget build(BuildContext context) {
     // Listen to auth state changes within build method
     ref.listen<AsyncValue<AuthState>>(
-      authNotifierProvider,
+      authProvider,
       (previous, next) {
         _handleAuthStateChange(previous, next);
       },

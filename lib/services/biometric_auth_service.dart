@@ -33,10 +33,8 @@ class BiometricAuthService {
     try {
       return await _auth.authenticate(
         localizedReason: 'Аутентификация для доступа к TwoSpace',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
       );
     } catch (e) {
       return false;

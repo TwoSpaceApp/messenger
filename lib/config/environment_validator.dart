@@ -7,6 +7,22 @@ import 'package:two_space_app/services/dev_logger.dart';
 class EnvironmentValidator {
   static final DevLogger _logger = DevLogger('EnvironmentValidator');
 
+  static bool _isMatrixEnabled() {
+    final raw = (dotenv.env['MATRIX_ENABLE'] ?? dotenv.env['USE_MATRIX'] ?? 'true')
+        .trim()
+        .toLowerCase();
+    return raw == 'true' || raw == '1' || raw == 'yes';
+  }
+
+  static String? _matrixHomeserverUrl() {
+    final v = dotenv.env['MATRIX_HOMESERVER_URL'] ??
+        dotenv.env['MATRIX_SERVER_URL'] ??
+        dotenv.env['MATRIX_HOMESERVER'];
+    final vv = v?.trim();
+    if (vv == null || vv.isEmpty) return null;
+    return vv;
+  }
+
   /// Проверить все требуемые переменные окружения при старте
   static Future<ValidationResult> validateOnStartup() async {
     try {
@@ -16,10 +32,11 @@ class EnvironmentValidator {
       final warnings = <String>[];
 
       // Проверка критичных переменных
-      final requiredVars = ['MATRIX_SERVER_URL', 'APP_ENV'];
-      for (final variable in requiredVars) {
-        if (dotenv.env[variable] == null || dotenv.env[variable]!.isEmpty) {
-          errors.add('❌ Отсутствует требуемая переменная: $variable');
+      // Требуем homeserver URL только если Matrix включён.
+      if (_isMatrixEnabled()) {
+        final homeserver = _matrixHomeserverUrl();
+        if (homeserver == null) {
+          warnings.add('⚠️  Matrix включён, но не задан homeserver URL: MATRIX_HOMESERVER_URL (или MATRIX_SERVER_URL/MATRIX_HOMESERVER)');
         }
       }
 
@@ -32,15 +49,15 @@ class EnvironmentValidator {
       }
 
       // Проверка валидности URL
-      if (dotenv.env['MATRIX_SERVER_URL'] != null) {
-        if (!_isValidUrl(dotenv.env['MATRIX_SERVER_URL']!)) {
-          errors.add('❌ MATRIX_SERVER_URL содержит невалидный URL');
-        }
+      final homeserver = _matrixHomeserverUrl();
+      if (homeserver != null && !_isValidUrl(homeserver)) {
+        errors.add('❌ MATRIX_HOMESERVER_URL содержит невалидный URL');
       }
 
-      // Проверка APP_ENV
+      // Проверка APP_ENV (опционально; если не задан — используется дефолт)
       final validEnvironments = ['development', 'staging', 'production'];
-      if (dotenv.env['APP_ENV'] != null && !validEnvironments.contains(dotenv.env['APP_ENV'])) {
+      final appEnv = dotenv.env['APP_ENV']?.trim();
+      if (appEnv != null && appEnv.isNotEmpty && !validEnvironments.contains(appEnv)) {
         errors.add('❌ APP_ENV должен быть одним из: ${validEnvironments.join(", ")}');
       }
 
@@ -107,9 +124,14 @@ class EnvironmentValidator {
 
   /// Получить информацию об окружении для логирования
   static Map<String, String> getEnvironmentInfo() {
+    final homeserver = (dotenv.env['MATRIX_HOMESERVER_URL'] ??
+            dotenv.env['MATRIX_SERVER_URL'] ??
+            dotenv.env['MATRIX_HOMESERVER'])
+        ?.trim();
+
     return {
       'APP_ENV': dotenv.env['APP_ENV'] ?? 'unknown',
-      'MATRIX_SERVER': dotenv.env['MATRIX_SERVER_URL'] ?? 'not set',
+      'MATRIX_SERVER': (homeserver == null || homeserver.isEmpty) ? 'not set' : homeserver,
       'VERSION': AppConstants.appVersion,
       'BUILD': AppConstants.buildNumber.toString(),
     };

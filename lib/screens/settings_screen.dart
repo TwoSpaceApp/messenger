@@ -237,7 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.lock),
-                      title: const Text('Конфиденциальность'),
+                      title: const Text('Приватность'),
                       subtitle: const Text('Управление приватностью'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.pushNamed(context, '/privacy'),

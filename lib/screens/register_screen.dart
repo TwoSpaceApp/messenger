@@ -151,7 +151,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
     try {
       SentryService.addBreadcrumb('Начало регистрации', category: 'auth');
       
-      final notifier = ref.read(authNotifierProvider.notifier);
+      final notifier = ref.read(authProvider.notifier);
       
       // Apply customization settings before registering/logging in
       await SettingsService.updateTheme(
@@ -377,7 +377,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                     child: LinearProgressIndicator(
                       value: _getPasswordStrength(_passCtl.text) / 4,
                       minHeight: 4,
-                      backgroundColor: isDark ? Colors.white10 : Colors.grey.withOpacity(0.2),
+                      backgroundColor: isDark ? Colors.white10 : Colors.grey.withValues(alpha: 0.2),
                       valueColor: AlwaysStoppedAnimation<Color>(
                         _getPasswordStrengthColor(_getPasswordStrength(_passCtl.text)),
                       ),
@@ -457,7 +457,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                 ),
                 boxShadow: _avatarBytes != null ? [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 15,
                     spreadRadius: 5
                   )
@@ -539,7 +539,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                     : null,
                   boxShadow: [
                     BoxShadow(
-                      color: Color(colorValue).withOpacity(0.4),
+                      color: Color(colorValue).withValues(alpha: 0.4),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     )
@@ -563,7 +563,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
           decoration: BoxDecoration(
             color: theme.colorScheme.surface.withAlpha(50),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -632,7 +632,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
       height: 32,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isActive ? theme.colorScheme.primary : theme.disabledColor.withOpacity(0.2),
+        color: isActive ? theme.colorScheme.primary : theme.disabledColor.withValues(alpha: 0.2),
       ),
       child: Center(
         child: isActive
