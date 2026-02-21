@@ -58,6 +58,9 @@ jobs:
             cmake \
             ninja-build \
             pkg-config \
+            libcurl4-openssl-dev \
+            libc-ares-dev \
+            libssl-dev \
             libgtk-3-dev \
             libsecret-1-dev \
             libasound2-dev \
@@ -96,46 +99,104 @@ jobs:
         if: github.event_name == 'pull_request' && matrix.platform == 'linux'
         run: flutter build linux --debug
 
+      - name: Pack Linux artifact (PR, debug)
+        if: github.event_name == 'pull_request' && matrix.platform == 'linux'
+        run: |
+          tar -C build/linux/x64/debug/bundle -czf twospace-linux-x64-debug.tar.gz .
+
       - name: Upload Linux artifact (PR, debug)
         if: github.event_name == 'pull_request' && matrix.platform == 'linux'
         uses: actions/upload-artifact@v4
+        id: upload_linux_debug
         with:
           name: twospace-linux-debug
           retention-days: 30
-          path: build/linux/**/debug/bundle/**
+          path: twospace-linux-x64-debug.tar.gz
+
+      - name: Summary (Linux PR)
+        if: github.event_name == 'pull_request' && matrix.platform == 'linux'
+        run: |
+          {
+            echo "### Linux (debug)";
+            echo "- Download: [twospace-linux-x64-debug.tar.gz](${{ steps.upload_linux_debug.outputs.artifact-url }})";
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build Windows (PR, debug)
         if: github.event_name == 'pull_request' && matrix.platform == 'windows'
         run: flutter build windows --debug
 
+      - name: Pack Windows artifact (PR, debug)
+        if: github.event_name == 'pull_request' && matrix.platform == 'windows'
+        run: |
+          if (Test-Path twospace-windows-x64-debug.zip) { Remove-Item twospace-windows-x64-debug.zip -Force }
+          Compress-Archive -Path build\windows\x64\runner\Debug\* -DestinationPath twospace-windows-x64-debug.zip
+        shell: pwsh
+
       - name: Upload Windows artifact (PR, debug)
         if: github.event_name == 'pull_request' && matrix.platform == 'windows'
         uses: actions/upload-artifact@v4
+        id: upload_windows_debug
         with:
           name: twospace-windows-debug
           retention-days: 30
-          path: build/windows/**/runner/Debug/**
+          path: twospace-windows-x64-debug.zip
+
+      - name: Summary (Windows PR)
+        if: github.event_name == 'pull_request' && matrix.platform == 'windows'
+        run: |
+          "### Windows (debug)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          "- Download: [twospace-windows-x64-debug.zip](${{ steps.upload_windows_debug.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+        shell: pwsh
 
       - name: Build Linux (push/manual, release)
         if: github.event_name != 'pull_request' && matrix.platform == 'linux'
         run: flutter build linux --release
 
+      - name: Pack Linux artifact (push/manual, release)
+        if: github.event_name != 'pull_request' && matrix.platform == 'linux'
+        run: |
+          tar -C build/linux/x64/release/bundle -czf twospace-linux-x64-release.tar.gz .
+
       - name: Upload Linux artifact (push/manual, release)
         if: github.event_name != 'pull_request' && matrix.platform == 'linux'
         uses: actions/upload-artifact@v4
+        id: upload_linux_release
         with:
           name: twospace-linux-release
           retention-days: 30
-          path: build/linux/**/release/bundle/**
+          path: twospace-linux-x64-release.tar.gz
+
+      - name: Summary (Linux release)
+        if: github.event_name != 'pull_request' && matrix.platform == 'linux'
+        run: |
+          {
+            echo "### Linux (release)";
+            echo "- Download: [twospace-linux-x64-release.tar.gz](${{ steps.upload_linux_release.outputs.artifact-url }})";
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build Windows (push/manual, release)
         if: github.event_name != 'pull_request' && matrix.platform == 'windows'
         run: flutter build windows --release
 
+      - name: Pack Windows artifact (push/manual, release)
+        if: github.event_name != 'pull_request' && matrix.platform == 'windows'
+        run: |
+          if (Test-Path twospace-windows-x64-release.zip) { Remove-Item twospace-windows-x64-release.zip -Force }
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath twospace-windows-x64-release.zip
+        shell: pwsh
+
       - name: Upload Windows artifact (push/manual, release)
         if: github.event_name != 'pull_request' && matrix.platform == 'windows'
         uses: actions/upload-artifact@v4
+        id: upload_windows_release
         with:
           name: twospace-windows-release
           retention-days: 30
-          path: build/windows/**/runner/Release/**
+          path: twospace-windows-x64-release.zip
+
+      - name: Summary (Windows release)
+        if: github.event_name != 'pull_request' && matrix.platform == 'windows'
+        run: |
+          "### Windows (release)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          "- Download: [twospace-windows-x64-release.zip](${{ steps.upload_windows_release.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+        shell: pwsh

@@ -66,10 +66,19 @@ jobs:
       - name: Upload Debug APK artifact (PR)
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
+        id: upload_android_debug
         with:
           name: twospace-android-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 30
+
+      - name: Summary (Android PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          {
+            echo "### Android (debug)";
+            echo "- Download: [app-debug.apk](${{ steps.upload_android_debug.outputs.artifact-url }})";
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # Release artifacts for manual runs and pushes to main/master.
       - name: Build Split APKs (Release)
@@ -79,6 +88,7 @@ jobs:
       - name: Upload APK artifacts (Release)
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
+        id: upload_android_apks
         with:
           name: twospace-android-release-apks
           path: build/app/outputs/flutter-apk/app-*-release.apk
@@ -91,7 +101,17 @@ jobs:
       - name: Upload App Bundle artifact (Release)
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
+        id: upload_android_aab
         with:
           name: twospace-android-release-aab
           path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 30
+
+      - name: Summary (Android release)
+        if: github.event_name != 'pull_request'
+        run: |
+          {
+            echo "### Android (release)";
+            echo "- APKs (split per ABI): [twospace-android-release-apks](${{ steps.upload_android_apks.outputs.artifact-url }})";
+            echo "- AAB: [app-release.aab](${{ steps.upload_android_aab.outputs.artifact-url }})";
+          } >> "$GITHUB_STEP_SUMMARY"
