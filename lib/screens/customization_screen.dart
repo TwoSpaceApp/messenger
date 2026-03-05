@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/services/settings_service.dart';
 import 'package:two_space_app/config/ui_tokens.dart';
 import 'package:two_space_app/config/theme_options.dart';
@@ -80,6 +81,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
     return Scaffold(
@@ -100,7 +102,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     const AppLogo(large: false),
                     const SizedBox(width: 8),
                     Text(
-                      'Кастомизация',
+                      l10n.customizationTitle,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -123,10 +125,10 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   unselectedLabelColor: Colors.white60,
                   indicatorColor: theme.colorScheme.primary,
                   indicatorSize: TabBarIndicatorSize.tab,
-                  tabs: const [
-                    Tab(icon: Icon(Icons.palette), text: 'Цвета'),
-                    Tab(icon: Icon(Icons.font_download), text: 'Шрифты'),
-                    Tab(icon: Icon(Icons.tune), text: 'Эффекты'),
+                  tabs: [
+                    Tab(icon: Icon(Icons.palette), text: l10n.colorsTab),
+                    Tab(icon: Icon(Icons.font_download), text: l10n.fontsTab),
+                    Tab(icon: Icon(Icons.tune), text: l10n.effectsTab),
                   ],
                 ),
               ),
@@ -150,6 +152,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
   }
 
   Widget _buildColorTab() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -168,8 +171,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     children: [
                       Icon(Icons.palette, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
-                      const Text(
-                        'Выберите цветовую тему',
+                      Text(
+                        l10n.selectColorTheme,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -180,7 +183,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Выбранная тема применится ко всему приложению',
+                    l10n.themeAppliesEverywhere,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withAlpha(150),
@@ -272,6 +275,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
   }
 
   Widget _buildFontTab() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -290,8 +294,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     children: [
                       Icon(Icons.font_download, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
-                      const Text(
-                        'Настройки шрифта',
+                      Text(
+                        l10n.fontSettingsTitle,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -302,7 +306,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Выберите семейство шрифта и его параметры',
+                    l10n.selectFontFamily,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withAlpha(150),
@@ -314,7 +318,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
           ),
           const SizedBox(height: 16),
           Text(
-            'Шрифт приложения',
+            l10n.appFontLabel,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -352,7 +356,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
           ),
           const SizedBox(height: 24),
           Text(
-            'Толщина шрифта',
+            l10n.fontWeightLabel,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -403,7 +407,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Предпросмотр: Пример текста',
+                      l10n.fontPreview,
                       style: TextStyle(
                         fontFamily: _selectedFont,
                         fontWeight: _resolveFontWeight(_selectedWeight),
@@ -423,6 +427,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
   }
 
   Widget _buildEffectsTab() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -442,8 +447,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     children: [
                       Icon(Icons.blur_circular, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
-                      const Text(
-                        'Плавающие круги',
+                      Text(
+                        l10n.floatingCirclesLabel,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -454,7 +459,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Анимированные круги на фоне приложения',
+                    l10n.circlesDesc,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withAlpha(150),
@@ -474,9 +479,9 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
               children: [
                 SwitchListTile(
                   secondary: const Icon(Icons.blur_on, color: Colors.white70),
-                  title: const Text('Включить круги', style: TextStyle(color: Colors.white)),
+                  title: Text(l10n.enableCircles, style: const TextStyle(color: Colors.white)),
                   subtitle: Text(
-                    _enableFloatingCircles ? 'Круги отображаются' : 'Круги скрыты',
+                    _enableFloatingCircles ? l10n.circlesVisible : l10n.circlesHidden,
                     style: TextStyle(color: Colors.white.withAlpha(150)),
                   ),
                   value: _enableFloatingCircles,
@@ -488,9 +493,9 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                 const Divider(height: 1, color: Colors.white24),
                 SwitchListTile(
                   secondary: const Icon(Icons.sensors, color: Colors.white70),
-                  title: const Text('Параллакс-эффект', style: TextStyle(color: Colors.white)),
+                  title: Text(l10n.parallaxEffect, style: const TextStyle(color: Colors.white)),
                   subtitle: Text(
-                    _enableParallax ? 'Реагируют на наклон телефона' : 'Статичное движение',
+                    _enableParallax ? l10n.reactOnTilt : l10n.staticMotion,
                     style: TextStyle(color: Colors.white.withAlpha(150)),
                   ),
                   value: _enableParallax,
@@ -518,8 +523,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     children: [
                       const Icon(Icons.speed, color: Colors.white70, size: 20),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Скорость движения',
+                      Text(
+                        l10n.circlesSpeedLabel,
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
@@ -546,8 +551,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Медленно', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
-                      Text('Быстро', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
+                      Text(l10n.speedSlow, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
+                      Text(l10n.speedFast, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
                     ],
                   ),
                 ],
@@ -570,8 +575,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     children: [
                       const Icon(Icons.opacity, color: Colors.white70, size: 20),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Яркость',
+                      Text(
+                        l10n.brightnessLabel,
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
@@ -598,8 +603,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Тусклые', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
-                      Text('Яркие', style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
+                      Text(l10n.dimOpacity, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
+                      Text(l10n.brightOpacity, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
                     ],
                   ),
                 ],
@@ -623,8 +628,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     children: [
                       Icon(Icons.tune, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
-                      const Text(
-                        'Дополнительные настройки',
+                      Text(
+                        l10n.advancedSettingsLabel,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -647,7 +652,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
               children: [
                 ListTile(
                   leading: const Icon(Icons.text_fields, color: Colors.white70),
-                  title: const Text('Размер текста', style: TextStyle(color: Colors.white)),
+                  title: Text(l10n.textSizeLabel, style: const TextStyle(color: Colors.white)),
                   subtitle: Text(
                     '${_fontSize.toStringAsFixed(0)} pt',
                     style: TextStyle(color: Colors.white.withAlpha(150)),
@@ -666,9 +671,9 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                 const Divider(height: 1, color: Colors.white24),
                 SwitchListTile(
                   secondary: const Icon(Icons.compress, color: Colors.white70),
-                  title: const Text('Компактный режим', style: TextStyle(color: Colors.white)),
+                  title: Text(l10n.compactModeLabel, style: const TextStyle(color: Colors.white)),
                   subtitle: Text(
-                    'Уменьшить отступы и размеры',
+                    l10n.compactMode,
                     style: TextStyle(color: Colors.white.withAlpha(150)),
                   ),
                   value: _compactMode,

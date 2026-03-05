@@ -6,6 +6,7 @@ import '../models/group.dart';
 import '../models/chat.dart';
 import 'chat_screen.dart';
 import '../utils/responsive.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({Key? key}) : super(key: key);
@@ -38,6 +39,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   }
 
   Future<void> _pickImage() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -49,16 +51,17 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка выбора изображения: $e')),
+          SnackBar(content: Text(l10n.imagePickError(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _createGroup() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_nameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Пожалуйста, введите название комнаты')),
+        SnackBar(content: Text(l10n.enterRoomNameError)),
       );
       return;
     }
@@ -75,7 +78,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Комната успешно создана!')),
+          SnackBar(content: Text(l10n.roomCreatedSuccess)),
         );
         // Создаем Chat объект из GroupRoom
         final chatObj = Chat(
@@ -97,7 +100,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(content: Text(l10n.loadError(e.toString()))),
         );
       }
     } finally {
@@ -168,6 +171,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -179,7 +183,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Создать комнату'),
+          title: Text(l10n.createRoomTitle),
         centerTitle: !isWideScreen,
         actions: [
           Padding(
@@ -187,7 +191,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             child: TextButton.icon(
               onPressed: _isLoading ? null : _createGroup,
               icon: _isLoading ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary))) : const Icon(Icons.check),
-              label: const Text('Создать'),
+                label: Text(l10n.createButton),
               style: TextButton.styleFrom(
                 backgroundColor: _isLoading ? null : theme.colorScheme.primary.withValues(alpha: 0.1),
               ),
@@ -240,14 +244,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
                   // Group name field
                   Text(
-                    'Название комнаты',
+                    l10n.roomNameLabel,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 8),
                   TextField(
                     controller: _nameController,
                     decoration: InputDecoration(
-                      hintText: 'Например, название вашего проекта',
+                      hintText: l10n.roomNameHint,
                       filled: true,
                       fillColor: isDark ? Colors.grey[900] : Colors.grey[50],
                       border: OutlineInputBorder(
@@ -279,7 +283,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
                   // Description field
                   Text(
-                    'Тема (необязательно)',
+                    l10n.roomTopicLabel,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 8),
@@ -287,7 +291,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     controller: _descriptionController,
                     maxLines: 3,
                     decoration: InputDecoration(
-                      hintText: 'О чем эта комната?',
+                      hintText: l10n.roomTopicHint,
                       filled: true,
                       fillColor: isDark ? Colors.grey[900] : Colors.grey[50],
                       border: OutlineInputBorder(
@@ -319,19 +323,19 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
                   // Visibility section
                   Text(
-                    'Видимость комнаты',
+                    l10n.roomVisibilityLabel,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 12),
                   _buildVisibilityOption(
-                    title: 'Частная комната',
-                    subtitle: 'Только приглашенные пользователи могут присоединиться',
+                      title: l10n.privateRoomOption,
+                      subtitle: l10n.privateRoomSubtitle,
                     value: GroupVisibility.private,
                     icon: Icons.lock,
                   ),
                   _buildVisibilityOption(
-                    title: 'Общедоступная комната',
-                    subtitle: 'Любой пользователь может присоединиться',
+                      title: l10n.publicRoomOption,
+                      subtitle: l10n.publicRoomSubtitle,
                     value: GroupVisibility.public,
                     icon: Icons.public,
                   ),
@@ -351,11 +355,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         setState(() => _showMessageHistory = value ?? false);
                       },
                       title: Text(
-                        'Показывать историю сообщений',
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(
-                        'Новые пользователи смогут видеть предыдущие сообщения',
+                          l10n.showHistoryLabel,
+                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                        subtitle: Text(
+                          l10n.showHistorySubtitle,
                         style: theme.textTheme.bodySmall,
                       ),
                     ),

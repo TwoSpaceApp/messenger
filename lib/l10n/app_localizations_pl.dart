@@ -10,4 +10,1632 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get appTitle => 'TwoSpace';
+
+  @override
+  String get loading => 'Ładowanie...';
+
+  @override
+  String get initializing => 'Inicjalizacja...';
+
+  @override
+  String get errorGeneric => 'Wystąpił błąd';
+
+  @override
+  String get errorInitialization => 'Błąd inicjalizacji';
+
+  @override
+  String get errorInitializationFull =>
+      'Błąd inicjalizacji. Uruchom ponownie aplikację.';
+
+  @override
+  String get errorNetwork => 'Błąd sieci. Sprawdź połączenie.';
+
+  @override
+  String get errorAuth => 'Błąd uwierzytelniania.';
+
+  @override
+  String get errorInvalidArguments => 'Nieprawidłowe argumenty.';
+
+  @override
+  String get errorInvalidArgumentsProfile => 'Nieprawidłowe argumenty profilu.';
+
+  @override
+  String get errorInvalidArgumentsChat => 'Nieprawidłowe argumenty czatu.';
+
+  @override
+  String get retry => 'Ponów';
+
+  @override
+  String get cancel => 'Anuluj';
+
+  @override
+  String get save => 'Zapisz';
+
+  @override
+  String get delete => 'Usuń';
+
+  @override
+  String get edit => 'Edytuj';
+
+  @override
+  String get send => 'Wyślij';
+
+  @override
+  String get close => 'Zamknij';
+
+  @override
+  String errorWithDetail(String error) {
+    return 'Błąd: $error';
+  }
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get confirm => 'Potwierdź';
+
+  @override
+  String get yes => 'Tak';
+
+  @override
+  String get no => 'Nie';
+
+  @override
+  String get next => 'Dalej';
+
+  @override
+  String get back => 'Wstecz';
+
+  @override
+  String get done => 'Gotowe';
+
+  @override
+  String get noData => 'Brak danych';
+
+  @override
+  String get nothingFound => 'Nic nie znaleziono';
+
+  @override
+  String get copyAction => 'Kopiuj';
+
+  @override
+  String get shareAction => 'Udostępnij';
+
+  @override
+  String get textCopied => 'Tekst skopiowany';
+
+  @override
+  String get onlineLabel => 'Online';
+
+  @override
+  String get offlineLabel => 'Offline';
+
+  @override
+  String get userDefault => 'Użytkownik';
+
+  @override
+  String get lessThanMinuteAgo => 'mniej niż minutę temu';
+
+  @override
+  String minutesAgo(int count) {
+    return '$count min. temu';
+  }
+
+  @override
+  String hoursAgo(int count) {
+    return '$count godz. temu';
+  }
+
+  @override
+  String daysAgo(int count) {
+    return '$count dni temu';
+  }
+
+  @override
+  String get videoLabel => 'Wideo';
+
+  @override
+  String videoLoadError(String error) {
+    return 'Błąd wideo: $error';
+  }
+
+  @override
+  String get saveFailed => 'Zapisywanie nie powiodło się';
+
+  @override
+  String get shareSheetFailed => 'Nie można otworzyć udostępniania';
+
+  @override
+  String get speedLabel => 'Prędkość:';
+
+  @override
+  String get previewTitle => 'Podgląd';
+
+  @override
+  String fileDownloaded(String path) {
+    return 'Plik pobrany: $path';
+  }
+
+  @override
+  String fileSavedTemp(String path) {
+    return 'Plik tymczasowo zapisany: $path';
+  }
+
+  @override
+  String get savedToGallery => 'Zapisano w galerii';
+
+  @override
+  String authorizationError(String message) {
+    return 'Błąd autoryzacji: $message';
+  }
+
+  @override
+  String get loginTitle => 'Zaloguj się';
+
+  @override
+  String get welcomeBack => 'Witaj';
+
+  @override
+  String get emailOrUsernameLabel => 'E-mail lub nazwa użytkownika';
+
+  @override
+  String get passwordLabel => 'Hasło';
+
+  @override
+  String get loginButton => 'Zaloguj się';
+
+  @override
+  String get forgotPassword => 'Zapomniałeś hasła?';
+
+  @override
+  String get noAccount => 'Nie masz konta?';
+
+  @override
+  String get orDivider => 'Lub';
+
+  @override
+  String get validationEnterEmailOrUsername =>
+      'Wpisz e-mail lub nazwę użytkownika';
+
+  @override
+  String get validationEnterPassword => 'Wpisz hasło';
+
+  @override
+  String get registerTitle => 'Zarejestruj się';
+
+  @override
+  String get fillAllFields => 'Wypełnij wszystkie pola';
+
+  @override
+  String get passwordStrengthWeak => 'Słabe';
+
+  @override
+  String get passwordStrengthMedium => 'Średnie';
+
+  @override
+  String get passwordStrengthGood => 'Dobre';
+
+  @override
+  String get passwordStrengthStrong => 'Silne';
+
+  @override
+  String get fullNameLabel => 'Imię i nazwisko';
+
+  @override
+  String get nicknameAtLabel => 'Pseudonim (@użytkownik)';
+
+  @override
+  String get uploadPhotoPrompt => 'Prześlij zdjęcie profilowe';
+
+  @override
+  String get photoLooksGreat => 'Wygląda świetnie!';
+
+  @override
+  String get helpFriendsFind => 'Pomóż znajomym cię znaleźć';
+
+  @override
+  String get setupInterfaceTitle => 'Dostosuj interfejs';
+
+  @override
+  String get colorThemeLabel => 'Motyw kolorów';
+
+  @override
+  String get validationEnterEmail => 'Wpisz e-mail';
+
+  @override
+  String get validationInvalidEmail => 'Nieprawidłowy adres e-mail';
+
+  @override
+  String get validationPasswordTooShort => 'Hasło zbyt krótkie';
+
+  @override
+  String get backToLogin => 'Zaloguj się';
+
+  @override
+  String get finishButton => 'Zakończ';
+
+  @override
+  String filePickError(String error) {
+    return 'Błąd wyboru pliku: $error';
+  }
+
+  @override
+  String get chatsTitle => 'Czaty';
+
+  @override
+  String get noChats => 'Brak czatów';
+
+  @override
+  String get noMessages => '(brak wiadomości)';
+
+  @override
+  String get newChat => 'Nowy czat';
+
+  @override
+  String get messageInputHint => 'Napisz wiadomość...';
+
+  @override
+  String get replyAction => 'Odpowiedz';
+
+  @override
+  String get editShort => 'Edytuj';
+
+  @override
+  String get pinAction => 'Przypnij';
+
+  @override
+  String get moreReactions => 'Więcej';
+
+  @override
+  String get replyDialogTitle => 'Odpowiedź';
+
+  @override
+  String get replyHint => 'Tekst odpowiedzi';
+
+  @override
+  String get editMessageTitle => 'Edytuj wiadomość';
+
+  @override
+  String get editMessageHint => 'Nowy tekst';
+
+  @override
+  String get deleteMessageTitle => 'Usunąć wiadomość?';
+
+  @override
+  String get pinsUpdated => 'Pinezki zaktualizowane';
+
+  @override
+  String get messageEdited => 'Wiadomość edytowana';
+
+  @override
+  String get fileSent => 'Plik wysłany';
+
+  @override
+  String get voiceNotSupported =>
+      'Nagrywanie głosu nie jest obsługiwane na tej platformie';
+
+  @override
+  String get microphonePermRequired => 'Wymagane uprawnienie do mikrofonu';
+
+  @override
+  String get recordingError => 'Błąd nagrywania';
+
+  @override
+  String sendFailedError(String error) {
+    return 'Wysyłanie nie powiodło się: $error';
+  }
+
+  @override
+  String attachmentSendError(String error) {
+    return 'Błąd załącznika: $error';
+  }
+
+  @override
+  String shareFailedError(String error) {
+    return 'Udostępnianie nie powiodło się: $error';
+  }
+
+  @override
+  String replyError(String error) {
+    return 'Błąd odpowiedzi: $error';
+  }
+
+  @override
+  String pinError(String error) {
+    return 'Błąd pinezki: $error';
+  }
+
+  @override
+  String deleteError(String error) {
+    return 'Błąd usuwania: $error';
+  }
+
+  @override
+  String editMessageError(String error) {
+    return 'Błąd edycji: $error';
+  }
+
+  @override
+  String get userTyping => 'Użytkownik pisze...';
+
+  @override
+  String get statusOnline => 'Online';
+
+  @override
+  String get statusLastSeenRecently => 'Widziany ostatnio';
+
+  @override
+  String get settingsTitle => 'Ustawienia';
+
+  @override
+  String get appearanceSection => 'Wygląd';
+
+  @override
+  String get themeLabel => 'Motyw';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Jasny';
+
+  @override
+  String get themeDark => 'Ciemny';
+
+  @override
+  String get customizationLabel => 'Personalizacja';
+
+  @override
+  String get customizationSubtitle => 'Kolory, czcionka i efekty UI';
+
+  @override
+  String get notificationsSection => 'Powiadomienia';
+
+  @override
+  String get notificationsLabel => 'Powiadomienia';
+
+  @override
+  String get soundLabel => 'Dźwięk';
+
+  @override
+  String get accountSection => 'Konto';
+
+  @override
+  String get profileLabel => 'Profil';
+
+  @override
+  String get profileSubtitle => 'Edytuj informacje profilowe';
+
+  @override
+  String get accountSettingsLabel => 'Ustawienia konta';
+
+  @override
+  String get accountSettingsSubtitle => 'Hasło, bezpieczeństwo, 2FA';
+
+  @override
+  String get privacyLabel => 'Prywatność';
+
+  @override
+  String get privacySubtitle => 'Zarządzaj prywatnością';
+
+  @override
+  String get generalSection => 'Ogólne';
+
+  @override
+  String get languageLabel => 'Język';
+
+  @override
+  String get textSizeLabel => 'Rozmiar tekstu';
+
+  @override
+  String get sendByEnterLabel => 'Wyślij Enterem';
+
+  @override
+  String get sendByEnterSubtitle => 'Shift+Enter dla nowej linii';
+
+  @override
+  String get dataStorageSection => 'Dane i pamięć';
+
+  @override
+  String get autoDownloadLabel => 'Automatyczne pobieranie mediów';
+
+  @override
+  String get autoDownloadSubtitle => 'Automatycznie pobierz zdjęcia i filmy';
+
+  @override
+  String get storageManagementLabel => 'Zarządzanie pamięcią';
+
+  @override
+  String get storageManagementSubtitle => 'Wyczyść pamięć podręczną i dane';
+
+  @override
+  String get clearCacheTitle => 'Wyczyść pamięć podręczną';
+
+  @override
+  String get clearCacheContent => 'Usunąć dane z pamięci podręcznej?';
+
+  @override
+  String get cacheCleared => 'Pamięć podręczna wyczyszczona';
+
+  @override
+  String get developmentSection => 'Programowanie';
+
+  @override
+  String get devMenuSubtitle => 'Pływający przycisk debugowania';
+
+  @override
+  String get aboutSection => 'O aplikacji';
+
+  @override
+  String get suggestImprovementLabel => 'Zaproponuj ulepszenie';
+
+  @override
+  String get suggestImprovementSubtitle => 'Pomysły i prośby o nowe funkcje';
+
+  @override
+  String get dangerZoneSection => 'Strefa niebezpieczna';
+
+  @override
+  String get logoutLabel => 'Wyloguj się';
+
+  @override
+  String get logoutSubtitle => 'Wyloguj z tego urządzenia';
+
+  @override
+  String get logoutDialogTitle => 'Wyloguj się';
+
+  @override
+  String get logoutDialogContent => 'Czy na pewno chcesz się wylogować?';
+
+  @override
+  String get logoutAction => 'Wyloguj się';
+
+  @override
+  String get languageRussian => 'Rosyjski';
+
+  @override
+  String get languageUkrainian => 'Ukraiński';
+
+  @override
+  String get matrixTooltip =>
+      'Matrix to otwarty protokół do sfederowanej komunikacji';
+
+  @override
+  String get clientDescription =>
+      'Klient TwoSpace stworzony za pomocą Flutter/Dart';
+
+  @override
+  String errorLogout(String error) {
+    return 'Błąd: $error';
+  }
+
+  @override
+  String get accountSettingsTitle => 'Ustawienia konta';
+
+  @override
+  String get securitySection => 'Bezpieczeństwo';
+
+  @override
+  String get twoFactorLabel => 'Uwierzytelnianie dwuskładnikowe';
+
+  @override
+  String get twoFactorSubtitle => 'Dodatkowa ochrona konta';
+
+  @override
+  String get biometricLabel => 'Biometria';
+
+  @override
+  String get biometricSubtitle => 'Logowanie odciskiem palca';
+
+  @override
+  String get activeSessionsLabel => 'Aktywne sesje';
+
+  @override
+  String get activeSessionsSubtitle => 'Zarządzaj urządzeniami';
+
+  @override
+  String get currentDevice => 'Bieżące urządzenie';
+
+  @override
+  String get changePasswordSection => 'Zmień hasło';
+
+  @override
+  String get currentPasswordLabel => 'Aktualne hasło';
+
+  @override
+  String get newPasswordLabel => 'Nowe hasło';
+
+  @override
+  String get confirmPasswordLabel => 'Potwierdź hasło';
+
+  @override
+  String get minPasswordHelper => 'Minimum 8 znaków';
+
+  @override
+  String get changePasswordButton => 'Zmień hasło';
+
+  @override
+  String get passwordMismatch => 'Hasła nie są zgodne';
+
+  @override
+  String get passwordTooShort => 'Hasło musi mieć co najmniej 8 znaków';
+
+  @override
+  String get passwordChangeSuccess => 'Hasło zmienione pomyślnie';
+
+  @override
+  String get contactDataSection => 'Dane kontaktowe';
+
+  @override
+  String get emailLabel => 'E-mail';
+
+  @override
+  String get phoneLabel => 'Telefon';
+
+  @override
+  String get deleteAccountLabel => 'Usuń konto';
+
+  @override
+  String get deleteAccountSubtitle => 'Nieodwracalna operacja';
+
+  @override
+  String get deleteAccountTitle => 'Usuń konto';
+
+  @override
+  String get deleteAccountContent =>
+      'Czy na pewno chcesz usunąć konto? Ta operacja jest nieodwracalna.';
+
+  @override
+  String get deleteFeatureLater => 'Usuwanie konta będzie dostępne później';
+
+  @override
+  String get profileTitle => 'Profil';
+
+  @override
+  String get saveTooltip => 'Zapisz';
+
+  @override
+  String get editTooltip => 'Edytuj';
+
+  @override
+  String get writeMessageButton => 'Wiadomość';
+
+  @override
+  String get callButton => 'Zadzwoń';
+
+  @override
+  String get aboutField => 'O mnie';
+
+  @override
+  String get nicknameField => 'Pseudonim';
+
+  @override
+  String get locationField => 'Lokalizacja';
+
+  @override
+  String get birthdayField => 'Urodziny';
+
+  @override
+  String get nameField => 'Imię';
+
+  @override
+  String get avatarUploadLater => 'Przesyłanie awatara zostanie dodane później';
+
+  @override
+  String get profileSaved => 'Profil zapisany';
+
+  @override
+  String createChatError(String error) {
+    return 'Nie można utworzyć czatu: $error';
+  }
+
+  @override
+  String get privacyTitle => 'Prywatność';
+
+  @override
+  String get hideFromSearch => 'Ukryj z wyszukiwania';
+
+  @override
+  String get hideFromSearchSubtitle =>
+      'Nie pokazuj mnie w wynikach wyszukiwania';
+
+  @override
+  String get hideLastSeen => 'Ukryj ostatnią aktywność';
+
+  @override
+  String get hideLastSeenSubtitle => 'Inni nie zobaczą kiedy byłeś online';
+
+  @override
+  String get sessionExpiry => 'Wygaśnięcie sesji';
+
+  @override
+  String sessionExpirySubtitle(int days) {
+    return 'Automatyczne logowanie na tym urządzeniu: $days dni';
+  }
+
+  @override
+  String get sessionExpiryDaysTitle => 'Wygaśnięcie sesji (dni)';
+
+  @override
+  String get sessionExpiryDaysContent =>
+      'Wybierz liczbę dni (min: 7, maks: 365).';
+
+  @override
+  String get daysLabel => 'Dni';
+
+  @override
+  String get enterDaysError => 'Wpisz liczbę od 7 do 365';
+
+  @override
+  String sessionExpirySet(int days) {
+    return 'Wygaśnięcie sesji: $days dni';
+  }
+
+  @override
+  String get changeEmailLabel => 'Zmień e-mail';
+
+  @override
+  String get changeEmailSubtitle => 'Zaktualizuj adres e-mail';
+
+  @override
+  String get twoFactorPrivacySubtitle =>
+      'Włącz lub wyłącz zaawansowaną ochronę';
+
+  @override
+  String get changePhoneLabel => 'Zmień telefon';
+
+  @override
+  String get changePhoneSubtitle => 'Zaktualizuj numer telefonu';
+
+  @override
+  String updatePrivacyError(String error) {
+    return 'Nie można zaktualizować prywatności: $error';
+  }
+
+  @override
+  String updateSettingError(String error) {
+    return 'Nie można zaktualizować ustawienia: $error';
+  }
+
+  @override
+  String get contactsTitle => 'Kontakty';
+
+  @override
+  String get searchContactsHint => 'Szukaj kontaktów...';
+
+  @override
+  String get contactsAccessTitle => 'Dostęp do kontaktów';
+
+  @override
+  String get contactsPermDeniedPermanent =>
+      'Uprawnienie trwale odmówione. Otwórz ustawienia.';
+
+  @override
+  String get contactsPermRequired => 'Wymagane uprawnienie do kontaktów.';
+
+  @override
+  String get openSettingsButton => 'Otwórz ustawienia';
+
+  @override
+  String get requestPermissionButton => 'Poproś o uprawnienie';
+
+  @override
+  String get noContacts => 'Nie znaleziono kontaktów';
+
+  @override
+  String get callAction => 'Zadzwoń';
+
+  @override
+  String get writeMessageAction => 'Wiadomość';
+
+  @override
+  String callNotification(String number) {
+    return 'Połączenie: $number';
+  }
+
+  @override
+  String messageNotification(String name) {
+    return 'Wiadomość do: $name';
+  }
+
+  @override
+  String get callsTitle => 'Połączenia';
+
+  @override
+  String get searchByNameHint => 'Szukaj po nazwie...';
+
+  @override
+  String get allFilter => 'Wszystkie';
+
+  @override
+  String get incomingFilter => 'Przychodzące';
+
+  @override
+  String get outgoingFilter => 'Wychodzące';
+
+  @override
+  String get missedFilter => 'Nieodebrane';
+
+  @override
+  String get noCallsFound => 'Brak połączeń';
+
+  @override
+  String get yesterdayLabel => 'Wczoraj';
+
+  @override
+  String get incomingCall => 'Przychodzące';
+
+  @override
+  String get outgoingCall => 'Wychodzące';
+
+  @override
+  String get missedCall => 'Nieodebrane';
+
+  @override
+  String get videoCallLabel => 'Połączenie wideo';
+
+  @override
+  String get voiceCallLabel => 'Połączenie głosowe';
+
+  @override
+  String get sendMessageCallAction => 'Wiadomość';
+
+  @override
+  String get createRoomTitle => 'Utwórz pokój';
+
+  @override
+  String get createButton => 'Utwórz';
+
+  @override
+  String get roomNameLabel => 'Nazwa pokoju';
+
+  @override
+  String get roomNameHint => 'Np. nazwa projektu';
+
+  @override
+  String get roomTopicLabel => 'Temat (opcjonalnie)';
+
+  @override
+  String get roomTopicHint => 'O czym jest ten pokój?';
+
+  @override
+  String get roomVisibilityLabel => 'Widoczność pokoju';
+
+  @override
+  String get privateRoomOption => 'Prywatny pokój';
+
+  @override
+  String get privateRoomSubtitle =>
+      'Tylko zaproszeni użytkownicy mogą dołączyć';
+
+  @override
+  String get publicRoomOption => 'Publiczny pokój';
+
+  @override
+  String get publicRoomSubtitle => 'Każdy może dołączyć';
+
+  @override
+  String get showHistoryLabel => 'Pokaż historię wiadomości';
+
+  @override
+  String get showHistorySubtitle =>
+      'Nowi członkowie mogą zobaczyć poprzednie wiadomości';
+
+  @override
+  String get enterRoomNameError => 'Wpisz nazwę pokoju';
+
+  @override
+  String get roomCreatedSuccess => 'Pokój utworzony pomyślnie!';
+
+  @override
+  String imagePickError(String error) {
+    return 'Błąd wyboru obrazu: $error';
+  }
+
+  @override
+  String get groupInfoTab => 'Info';
+
+  @override
+  String get groupMembersTab => 'Członkowie';
+
+  @override
+  String get groupRolesTab => 'Role';
+
+  @override
+  String get groupBansTab => 'Bany';
+
+  @override
+  String get groupDeleteTab => 'Usuń';
+
+  @override
+  String membersCount(int count) {
+    return 'Członkowie: $count';
+  }
+
+  @override
+  String get messageHistoryToggle => 'Historia wiadomości';
+
+  @override
+  String get showHistoryToggleLabel => 'Pokaż historię';
+
+  @override
+  String get settingSaved => 'Ustawienie zapisane';
+
+  @override
+  String get backgroundColorLabel => 'Kolor tła';
+
+  @override
+  String get noMembers => 'Brak członków';
+
+  @override
+  String get roleAction => 'Rola';
+
+  @override
+  String get freezeAction => 'Zamroź';
+
+  @override
+  String get banAction => 'Zbanuj';
+
+  @override
+  String get kickAction => 'Wyrzuć';
+
+  @override
+  String get noBannedUsers => 'Brak zbanowanych użytkowników';
+
+  @override
+  String get bannedLabel => 'Zbanowany';
+
+  @override
+  String get userUnbanned => 'Użytkownik odbanowany';
+
+  @override
+  String get deleteGroupLabel => 'Usuń grupę';
+
+  @override
+  String get deleteGroupWarning =>
+      'Ta akcja jest NIEODWRACALNA. Grupa zostanie trwale usunięta.';
+
+  @override
+  String get confirmDeleteTitle => 'Potwierdź usunięcie';
+
+  @override
+  String get confirmDeleteContent =>
+      'Jesteś pewny? Ta akcja jest nieodwracalna.';
+
+  @override
+  String get changeRoleTitle => 'Zmień rolę';
+
+  @override
+  String get adminRole => 'Administrator';
+
+  @override
+  String get memberRole => 'Członek';
+
+  @override
+  String get freezeUserTitle => 'Zamroź użytkownika';
+
+  @override
+  String get userBanned => 'Użytkownik zbanowany';
+
+  @override
+  String get userKicked => 'Użytkownik wyrzucony';
+
+  @override
+  String get groupDeleted => 'Grupa usunięta';
+
+  @override
+  String loadError(String error) {
+    return 'Błąd ładowania: $error';
+  }
+
+  @override
+  String get publicLabel => 'Publiczny';
+
+  @override
+  String get privateLabel => 'Prywatny';
+
+  @override
+  String get noDescription => 'Brak opisu';
+
+  @override
+  String get membersLabel => 'Członkowie';
+
+  @override
+  String get generalLabel => 'Ogólne';
+
+  @override
+  String get newChatTitle => 'Nowy czat';
+
+  @override
+  String get directChatTab => 'Bezpośredni';
+
+  @override
+  String get groupChatTab => 'Grupa';
+
+  @override
+  String get startDirectChatTitle => 'Rozpocznij czat bezpośredni';
+
+  @override
+  String get matrixIdDescription =>
+      'Wpisz Matrix ID użytkownika (np. @user:server.com)';
+
+  @override
+  String get matrixIdLabel => 'Matrix ID użytkownika';
+
+  @override
+  String get startChatButton => 'Rozpocznij czat';
+
+  @override
+  String get hintCardTitle => 'Wskazówka';
+
+  @override
+  String get matrixIdExplanation => 'Matrix ID to @użytkownik:server.com';
+
+  @override
+  String get enterUserIdError => 'Wpisz ID użytkownika';
+
+  @override
+  String get createNewRoomTitle => 'Utwórz nowy pokój';
+
+  @override
+  String get descriptionOptionalLabel => 'Opis (opcjonalnie)';
+
+  @override
+  String get privateGroupLabel => 'Prywatna grupa';
+
+  @override
+  String get privateGroupSubtitle =>
+      'Tylko zaproszeni użytkownicy mogą dołączyć';
+
+  @override
+  String get createRoomButton => 'Utwórz pokój';
+
+  @override
+  String get customizationTitle => 'Personalizacja';
+
+  @override
+  String get colorsTab => 'Kolory';
+
+  @override
+  String get fontsTab => 'Czcionki';
+
+  @override
+  String get effectsTab => 'Efekty';
+
+  @override
+  String get selectColorTheme => 'Wybierz motyw kolorów';
+
+  @override
+  String get themeAppliesEverywhere =>
+      'Wybrany motyw jest stosowany w całej aplikacji';
+
+  @override
+  String get fontSettingsTitle => 'Ustawienia czcionki';
+
+  @override
+  String get selectFontFamily => 'Wybierz rodzinę czcionek';
+
+  @override
+  String get appFontLabel => 'Czcionka aplikacji';
+
+  @override
+  String get fontWeightLabel => 'Grubość czcionki';
+
+  @override
+  String get fontPreview => 'Podgląd: Przykładowy tekst';
+
+  @override
+  String get compactMode => 'Zmniejsz odstępy i rozmiary';
+
+  @override
+  String get enableCircles => 'Włącz okręgi';
+
+  @override
+  String get circlesDesc => 'Animowane okręgi w tle';
+
+  @override
+  String get floatingCirclesLabel => 'Pływające okręgi';
+
+  @override
+  String get reactOnTilt => 'Reaguj na pochylenie telefonu';
+
+  @override
+  String get parallaxEffect => 'Efekt paralaksy';
+
+  @override
+  String get circlesSpeedLabel => 'Prędkość ruchu';
+
+  @override
+  String get staticMotion => 'Statyczny';
+
+  @override
+  String get brightnessLabel => 'Jasność';
+
+  @override
+  String get dimOpacity => 'Przyciemniony';
+
+  @override
+  String get brightOpacity => 'Jasny';
+
+  @override
+  String get performanceLabel => 'Wydajność';
+
+  @override
+  String get currentSpeedPrefix => 'Aktualnie: ';
+
+  @override
+  String get speedPrefix => 'Prędkość:';
+
+  @override
+  String get advancedSearchTitle => 'Zaawansowane wyszukiwanie';
+
+  @override
+  String get searchQueryHint => 'Wpisz zapytanie...';
+
+  @override
+  String get searchTypeLabel => 'Typ wyszukiwania';
+
+  @override
+  String get searchTypeAll => 'Wszystko';
+
+  @override
+  String get searchTypeMessages => 'Wiadomości';
+
+  @override
+  String get searchTypeMedia => 'Media';
+
+  @override
+  String get searchTypeUsers => 'Użytkownicy';
+
+  @override
+  String get periodLabel => 'Okres';
+
+  @override
+  String get fromDate => 'Od';
+
+  @override
+  String get toDate => 'Do';
+
+  @override
+  String get searchButton => 'Szukaj';
+
+  @override
+  String resultsCount(int count) {
+    return 'Wyniki ($count)';
+  }
+
+  @override
+  String get noResultsFound => 'Nie znaleziono wyników';
+
+  @override
+  String get forgotPasswordTitle => 'Odzyskaj hasło';
+
+  @override
+  String get forgotPasswordDescription =>
+      'Wpisz e-mail, aby otrzymać link resetowania';
+
+  @override
+  String get sendResetButton => 'Wyślij';
+
+  @override
+  String get forgotPasswordUnavailable => 'Odzyskiwanie hasła niedostępne';
+
+  @override
+  String get changeEmailTitle => 'Zmień e-mail';
+
+  @override
+  String get changeEmailDescription => 'Wpisz nowy adres e-mail';
+
+  @override
+  String get currentPrefix => 'Aktualnie: ';
+
+  @override
+  String get newEmailLabel => 'Nowy e-mail';
+
+  @override
+  String get changeEmailButton => 'Zmień e-mail';
+
+  @override
+  String changeEmailError(String error) {
+    return 'Nie można zmienić e-maila: $error';
+  }
+
+  @override
+  String get changePhoneTitle => 'Zmień numer telefonu';
+
+  @override
+  String get changePhoneDescription =>
+      'Wpisz nowy numer telefonu i aktualne hasło.';
+
+  @override
+  String get newPhoneLabel => 'Nowy numer (+48...)';
+
+  @override
+  String get currentPasswordOptional => 'Aktualne hasło (jeśli wymagane)';
+
+  @override
+  String get changePhoneButton => 'Zmień numer';
+
+  @override
+  String get phoneCannotBeChanged => 'Numer telefonu nie może być zmieniony';
+
+  @override
+  String get emailCannotBeChanged => 'Adres email nie może zostać zmieniony';
+
+  @override
+  String changePhoneError(String error) {
+    return 'Nie można zmienić numeru: $error';
+  }
+
+  @override
+  String get confirmCodeTitle => 'Potwierdź kod';
+
+  @override
+  String codeSentTo(String phone) {
+    return 'Wysłaliśmy kod na $phone';
+  }
+
+  @override
+  String get enterCodeHint => 'Wpisz kod';
+
+  @override
+  String get confirmButton => 'Potwierdź';
+
+  @override
+  String resendCountdown(int seconds) {
+    return 'Wyślij ponownie za $seconds s';
+  }
+
+  @override
+  String get resendCodeButton => 'Wyślij kod ponownie';
+
+  @override
+  String get biometricSetupTitle => 'Bezpieczeństwo';
+
+  @override
+  String get authMethodsLabel => 'Metody uwierzytelniania';
+
+  @override
+  String get biometricAuthLabel => 'Uwierzytelnianie biometryczne';
+
+  @override
+  String get biometricAuthSubtitle => 'Odcisk palca lub Face ID';
+
+  @override
+  String get biometricEnabledLabel => 'Biometria włączona';
+
+  @override
+  String get aboutSecurityLabel => 'O bezpieczeństwie';
+
+  @override
+  String get aboutSecurityContent => 'Wybierz wygodną metodę uwierzytelniania.';
+
+  @override
+  String get setPinCode => 'Ustaw kod PIN';
+
+  @override
+  String get updateAvailableTitle => 'Dostępna aktualizacja';
+
+  @override
+  String get whatsNewLabel => 'Co nowego';
+
+  @override
+  String get noUpdateDescription => 'Brak opisu';
+
+  @override
+  String downloadingProgress(int percent) {
+    return 'Pobieranie... $percent%';
+  }
+
+  @override
+  String get checkingIntegrity => 'Sprawdzanie integralności...';
+
+  @override
+  String get requestingInstall => 'Żądanie instalacji...';
+
+  @override
+  String get updateMandatory => 'Aktualizacja obowiązkowa';
+
+  @override
+  String get laterButton => 'Później';
+
+  @override
+  String get downloadingLabel => 'Pobieranie...';
+
+  @override
+  String get installingLabel => 'Instalowanie...';
+
+  @override
+  String get updateButton => 'Aktualizuj';
+
+  @override
+  String get downloadFailed => 'Nie można pobrać aktualizacji';
+
+  @override
+  String get integrityCheckFailed =>
+      'Pobrany plik nie przeszedł kontroli integralności (sha256)';
+
+  @override
+  String get installPermissionTitle => 'Uprawnienie instalacji';
+
+  @override
+  String get installPermissionContent =>
+      'Zezwól na instalację z nieznanych źródeł.';
+
+  @override
+  String get installPermissionRequired => 'Wymagane uprawnienie do instalacji';
+
+  @override
+  String get installFailed => 'Instalacja nie powiodła się';
+
+  @override
+  String get ssoFeatureRequired =>
+      'Ta funkcja wymaga konfiguracji webview_flutter';
+
+  @override
+  String ssoLoginVia(String idpId) {
+    return 'Logowanie SSO przez $idpId';
+  }
+
+  @override
+  String get forwardMessageTitle => 'Przekaż wiadomość';
+
+  @override
+  String get searchChatHint => 'Szukaj czatu...';
+
+  @override
+  String forwardButton(int count) {
+    return 'Przekaż ($count)';
+  }
+
+  @override
+  String get roomAvatarUpdated => 'Awatar pokoju zaktualizowany';
+
+  @override
+  String roomAvatarUploadError(String error) {
+    return 'Błąd przesyłania awatara: $error';
+  }
+
+  @override
+  String get roomSettingsSaved => 'Ustawienia pokoju zapisane';
+
+  @override
+  String roomSettingsSaveError(String error) {
+    return 'Błąd zapisywania: $error';
+  }
+
+  @override
+  String get uploadAvatarButton => 'Prześlij awatar';
+
+  @override
+  String loadMembersError(String error) {
+    return 'Błąd ładowania członków: $error';
+  }
+
+  @override
+  String get leaveRoomTitle => 'Opuścić pokój?';
+
+  @override
+  String get leaveRoomContent =>
+      'Nie będziesz mógł wrócić bez ponownego zaproszenia.';
+
+  @override
+  String get leaveAction => 'Opuść';
+
+  @override
+  String get leftRoom => 'Opuściłeś pokój';
+
+  @override
+  String leaveRoomError(String error) {
+    return 'Błąd podczas opuszczania: $error';
+  }
+
+  @override
+  String get reportNotImplemented =>
+      'Funkcja zgłaszania nie jest jeszcze zaimplementowana';
+
+  @override
+  String get inviteAction => 'Zaproś';
+
+  @override
+  String get threadsLabel => 'Wątki';
+
+  @override
+  String get pinnedLabel => 'Przypięte';
+
+  @override
+  String get filesLabel => 'Pliki';
+
+  @override
+  String get mediaLabel => 'Media';
+
+  @override
+  String get extensionsLabel => 'Rozszerzenia';
+
+  @override
+  String get copyLinkAction => 'Kopiuj link';
+
+  @override
+  String get pollsLabel => 'Ankiety';
+
+  @override
+  String get exportChatAction => 'Eksportuj czat';
+
+  @override
+  String get reportAction => 'Zgłoś';
+
+  @override
+  String get leaveRoomAction => 'Opuść pokój';
+
+  @override
+  String roomTitle(String name) {
+    return 'Pokój — $name';
+  }
+
+  @override
+  String get roomSettingsLabel => 'Ustawienia pokoju';
+
+  @override
+  String authError(String error) {
+    return 'Błąd uwierzytelniania: $error';
+  }
+
+  @override
+  String get loginRequired => 'Wymagane logowanie';
+
+  @override
+  String get loginRequiredContent =>
+      'Musisz być zalogowany, aby szukać kontaktów. Przejść do logowania?';
+
+  @override
+  String get loginAction => 'Zaloguj się';
+
+  @override
+  String searchError(String error) {
+    return 'Błąd wyszukiwania: $error';
+  }
+
+  @override
+  String get searchContactsTitle => 'Szukaj kontaktów';
+
+  @override
+  String get nicknameOrPhoneHint => 'Pseudonim lub numer telefonu';
+
+  @override
+  String selectContactError(String error) {
+    return 'Nie można wybrać kontaktu: $error';
+  }
+
+  @override
+  String get categoryLabel => 'Kategoria';
+
+  @override
+  String get feedbackCategoryFeatures => 'Funkcje';
+
+  @override
+  String get feedbackCategoryPerformance => 'Wydajność';
+
+  @override
+  String get feedbackCategorySecurity => 'Bezpieczeństwo/Prywatność';
+
+  @override
+  String get feedbackCategoryNetworkSync => 'Synchronizacja/Sieć';
+
+  @override
+  String get shortDescriptionLabel => 'Krótki opis';
+
+  @override
+  String get shortDescriptionHint => 'Np. \"Kopia zapasowa czatów w chmurze\"';
+
+  @override
+  String get feedbackValidation =>
+      'Wybierz co najmniej jeden pomysł lub wpisz opis';
+
+  @override
+  String get detailsOptionalLabel => 'Szczegóły (opcjonalnie)';
+
+  @override
+  String get detailsHint =>
+      'Co powinno działać, jak to działa teraz i jak chciałbyś?';
+
+  @override
+  String get bigFeaturesTitle =>
+      'Główne funkcje (zaznacz co Cię najbardziej interesuje)';
+
+  @override
+  String get feedbackE2E =>
+      'Szyfrowanie E2E end-to-end (Olm/Megolm) + weryfikacja urządzeń';
+
+  @override
+  String get feedbackBackup =>
+      'Kopia zapasowa czatów (lokalna/chmura) + przeniesienie na nowe urządzenie';
+
+  @override
+  String get feedbackThreads =>
+      'Wątki, reakcje, wzmianki, ulepszone wyszukiwanie wiadomości';
+
+  @override
+  String get feedbackCalls => 'Rozmowy głosowe/wideo i szybkie pokoje głosowe';
+
+  @override
+  String get feedbackFolders =>
+      'Foldery/kategorie czatów i inteligentne filtry powiadomień';
+
+  @override
+  String get feedbackBots =>
+      'Boty i integracje (webhook, GitHub/Jira, przypomnienia)';
+
+  @override
+  String get feedbackSlowNet =>
+      'Tryb \"powolny internet\" + agresywne buforowanie multimediów';
+
+  @override
+  String get startChatTitle => 'Rozpocznij czat';
+
+  @override
+  String get createRoomSubtitle => 'Prywatna lub publiczna grupa';
+
+  @override
+  String get inviteUserTitle => 'Zaproś użytkownika';
+
+  @override
+  String get inviteUserSubtitle => 'Znajdź i napisz do użytkownika';
+
+  @override
+  String get joinByCodeTitle => 'Dołącz przez kod';
+
+  @override
+  String get joinByCodeSubtitle => 'Dołącz do pokoju używając kodu zaproszenia';
+
+  @override
+  String get fontLabel => 'Czcionka';
+
+  @override
+  String get pinCodeLabel => 'Kod PIN';
+
+  @override
+  String get pinCodeSubtitle => '4-6 cyfr dla ochrony';
+
+  @override
+  String get pinHint => 'PIN (4-6 cyfr)';
+
+  @override
+  String get pinLengthError => 'PIN musi mieć 4-6 cyfr';
+
+  @override
+  String get pinSetSuccess => 'PIN ustawiony';
+
+  @override
+  String get cancelButton => 'Anuluj';
+
+  @override
+  String get deleteButton => 'Usuń';
+
+  @override
+  String get closeButton => 'Zamknij';
+
+  @override
+  String get saveButton => 'Zapisz';
+
+  @override
+  String get sendButton => 'Wyślij';
+
+  @override
+  String get copyButton => 'Kopiuj';
+
+  @override
+  String get shareButton => 'Udostępnij';
+
+  @override
+  String get settingsLabel => 'Ustawienia';
+
+  @override
+  String get feedbackCategoryUxDesign => 'UX/Design';
+
+  @override
+  String get feedbackShareSubject => 'TwoSpace — sugestia';
+
+  @override
+  String get feedbackMessageHeader => 'TwoSpace — sugestia/ulepszenie';
+
+  @override
+  String feedbackVersion(String version) {
+    return 'Wersja: $version';
+  }
+
+  @override
+  String feedbackCategoryLine(String category) {
+    return 'Kategoria: $category';
+  }
+
+  @override
+  String feedbackShortTitle(String title) {
+    return 'Krótko: $title';
+  }
+
+  @override
+  String get feedbackWishList => 'Co byłoby szczególnie świetne:';
+
+  @override
+  String get feedbackDetailsLine => 'Szczegóły:';
+
+  @override
+  String get circlesVisible => 'Kółka widoczne';
+
+  @override
+  String get circlesHidden => 'Kółka ukryte';
+
+  @override
+  String get speedSlow => 'Wolno';
+
+  @override
+  String get speedFast => 'Szybko';
+
+  @override
+  String get advancedSettingsLabel => 'Zaawansowane ustawienia';
+
+  @override
+  String get compactModeLabel => 'Tryb kompaktowy';
+
+  @override
+  String get activeDeviceInfo => 'Android • Aktywny';
+
+  @override
+  String stubPlaceholder(String key) {
+    return 'Stub — $key';
+  }
+
+  @override
+  String loadMessagesError(String error) {
+    return 'Błąd ładowania wiadomości: $error';
+  }
+
+  @override
+  String get pinnedUpdated => 'Przypięte zaktualizowane';
+
+  @override
+  String editError(String error) {
+    return 'Błąd edycji: $error';
+  }
+
+  @override
+  String get moreButton => 'Więcej';
+
+  @override
+  String shareError(String error) {
+    return 'Nie można udostępnić: $error';
+  }
+
+  @override
+  String sendError(String error) {
+    return 'Błąd wysyłania: $error';
+  }
+
+  @override
+  String get voiceRecordingUnsupported =>
+      'Nagrywanie głosu nie jest obsługiwane na tej platformie';
+
+  @override
+  String get microphonePermissionRequired =>
+      'Wymagane uprawnienie do mikrofonu';
+
+  @override
+  String genericError(String error) {
+    return 'Błąd: $error';
+  }
+
+  @override
+  String get ownersLabel => '👑 Właściciele';
+
+  @override
+  String get administratorsLabel => '⚡ Administratorzy';
+
+  @override
+  String get oneHour => '1 godzina';
+
+  @override
+  String get oneDay => '1 dzień';
+
+  @override
+  String get sevenDays => '7 dni';
 }

@@ -6,9 +6,11 @@ import '../providers/auth_notifier.dart';
 import '../services/sentry_service.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/app_logo.dart';
+import '../widgets/language_switcher.dart';
 import '../config/theme_options.dart';
 import '../services/settings_service.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 /// Modern RegisterScreen including Customization Step
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -71,13 +73,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
   }
 
   Future<void> _nextStep() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _errorMessage = null);
     // Validation first
     if (_step == 0) {
       if (!_formKey.currentState!.validate()) return;
     } else if (_step == 1) {
       if (_nameCtl.text.isEmpty || _nicknameCtl.text.isEmpty) {
-        _showError('Заполните все поля');
+        _showError(l10n.fillAllFields);
         return;
       }
     }
@@ -126,13 +129,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
     return strength;
   }
 
-  String _getPasswordStrengthLabel(int strength) {
+  String _getPasswordStrengthLabel(int strength, AppLocalizations l10n) {
     switch (strength) {
       case 0:
-      case 1: return 'Слабый';
-      case 2: return 'Средний';
-      case 3: return 'Хороший';
-      default: return 'Сильный';
+      case 1: return l10n.passwordStrengthWeak;
+      case 2: return l10n.passwordStrengthMedium;
+      case 3: return l10n.passwordStrengthGood;
+      default: return l10n.passwordStrengthStrong;
     }
   }
 
@@ -207,30 +210,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
   }
 
   String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) return 'Введите email';
-    if (!value.contains('@')) return 'Некорректный email';
+    final l10n = AppLocalizations.of(context)!;
+    if (value == null || value.isEmpty) return l10n.validationEnterEmail;
+    if (!value.contains('@')) return l10n.validationInvalidEmail;
     return null;
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Введите пароль';
-    if (value.length < 6) return 'Пароль слишком короткий';
+    final l10n = AppLocalizations.of(context)!;
+    if (value == null || value.isEmpty) return l10n.validationEnterPassword;
+    if (value.length < 6) return l10n.validationPasswordTooShort;
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return AuthBackground(
-      title: 'Регистрация',
+      title: l10n.registerTitle,
       seed: _step + 1,
       isCovering: _isCovering,
       child: Form(
         key: _formKey,
         child: Column(
           children: [
+            // Переключатель языка — правый верхний угол
+            const Align(
+              alignment: Alignment.topRight,
+              child: LanguageSwitcherButton(),
+            ),
+            const SizedBox(height: 8),
             const Padding(
               padding: EdgeInsets.only(bottom: 24),
               child: AppLogo(large: false),
@@ -299,7 +311,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                  TextButton(
                     onPressed: (_loading || _isCovering) ? null : _prevStep,
                     child: Text(
-                      _step == 0 ? 'Вход' : 'Назад',
+                      _step == 0 ? l10n.backToLogin : l10n.back,
                       style: TextStyle(
                         color: isDark ? Colors.white70 : theme.colorScheme.primary,
                       ),
@@ -317,7 +329,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                   child: _loading 
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
                     : Text(
-                        _step == 3 ? 'Завершить' : 'Далее',
+                        _step == 3 ? l10n.finishButton : l10n.next,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                 ),
@@ -340,6 +352,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
   }
 
   Widget _buildStep0(ThemeData theme, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         TextFormField(
@@ -356,7 +369,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
           obscureText: _obscurePassword,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           onChanged: (_) => setState(() {}),
-          decoration: _inputDecoration(theme, 'Пароль', Icons.lock_outline, isDark).copyWith(
+          decoration: _inputDecoration(theme, l10n.passwordLabel, Icons.lock_outline, isDark).copyWith(
             suffixIcon: IconButton(
               icon: Icon(
                 _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -386,7 +399,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  _getPasswordStrengthLabel(_getPasswordStrength(_passCtl.text)),
+                  _getPasswordStrengthLabel(_getPasswordStrength(_passCtl.text), l10n),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -401,24 +414,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
   }
 
   Widget _buildStep1(ThemeData theme, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         TextFormField(
           controller: _nameCtl,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-          decoration: _inputDecoration(theme, 'Полное имя', Icons.person_outline, isDark),
+          decoration: _inputDecoration(theme, l10n.fullNameLabel, Icons.person_outline, isDark),
         ),
         const SizedBox(height: 16),
         TextFormField(
           controller: _nicknameCtl,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-          decoration: _inputDecoration(theme, 'Никнейм (@username)', Icons.alternate_email, isDark),
+          decoration: _inputDecoration(theme, l10n.nicknameAtLabel, Icons.alternate_email, isDark),
         ),
       ],
     );
   }
 
   Widget _buildStep2(ThemeData theme, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         GestureDetector(
@@ -439,7 +454,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                 });
               }
             } catch (e) {
-              _showError('Ошибка выбора файла: $e');
+              _showError(l10n.filePickError(e.toString()));
             }
           },
           child: ScaleTransition(
@@ -477,7 +492,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
         ),
         const SizedBox(height: 24),
         Text(
-          _avatarBytes != null ? 'Отлично выглядите!' : 'Загрузите фото профиля',
+          _avatarBytes != null ? l10n.photoLooksGreat : l10n.uploadPhotoPrompt,
           style: TextStyle(
             fontSize: 18, 
             fontWeight: FontWeight.bold,
@@ -486,7 +501,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
         ),
         const SizedBox(height: 8),
         Text(
-          'Это поможет друзьям найти вас',
+          l10n.helpFriendsFind,
           style: TextStyle(
              fontSize: 14, 
              color: isDark ? Colors.white60 : Colors.grey
@@ -497,12 +512,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
   }
 
   Widget _buildStep3(ThemeData theme, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Center(
           child: Text(
-            'Настройте интерфейс',
+            l10n.setupInterfaceTitle,
             style: TextStyle(
               fontSize: 20, 
               fontWeight: FontWeight.bold,
@@ -513,7 +529,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
         const SizedBox(height: 24),
         
         // Color Picker
-        Text('Цветова тема', style: TextStyle(color: theme.hintColor)),
+        Text(l10n.colorThemeLabel, style: TextStyle(color: theme.hintColor)),
         const SizedBox(height: 12),
         Wrap(
           spacing: 12,
@@ -556,7 +572,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
         const SizedBox(height: 24),
 
         // Font Picker
-        Text('Шрифт', style: TextStyle(color: theme.hintColor)),
+        Text(l10n.fontLabel, style: TextStyle(color: theme.hintColor)),
         const SizedBox(height: 12),
          Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),

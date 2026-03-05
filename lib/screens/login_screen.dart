@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import '../providers/auth_notifier.dart';
 import '../services/sentry_service.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/app_logo.dart';
+import '../widgets/language_switcher.dart';
 
 /// Modern LoginScreen using Riverpod for state management
 /// All auth logic delegated to AuthNotifier
@@ -64,15 +66,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
     
     return AuthBackground(
-      title: 'Вход',
+      title: l10n.loginTitle,
       seed: 0,
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Переключатель языка — правый верхний угол
+            Align(
+              alignment: Alignment.topRight,
+              child: const LanguageSwitcherButton(),
+            ),
+            const SizedBox(height: 8),
              const Center(
               child: Padding(
                 padding: EdgeInsets.only(bottom: 24),
@@ -81,7 +90,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             
             Text(
-              'Добро пожаловать',
+              l10n.welcomeBack,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -131,7 +140,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     cursorColor: theme.colorScheme.primary,
                     decoration: InputDecoration(
-                      labelText: 'Email или Username',
+                      labelText: l10n.emailOrUsernameLabel,
                       hintText: 'user@example.com',
                       prefixIcon: Icon(Icons.person_outline, color: theme.colorScheme.primary),
                       labelStyle: TextStyle(
@@ -158,7 +167,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                     ),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Введите email или имя пользователя' : null,
+                    validator: (v) => (v == null || v.isEmpty) ? l10n.validationEnterEmailOrUsername : null,
                   ),
                   const SizedBox(height: 16),
                   
@@ -173,7 +182,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     cursorColor: theme.colorScheme.primary,
                     decoration: InputDecoration(
-                      labelText: 'Пароль',
+                      labelText: l10n.passwordLabel,
                       prefixIcon: Icon(Icons.lock_outline, color: theme.colorScheme.primary),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -206,7 +215,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                     ),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Введите пароль' : null,
+                    validator: (v) => (v == null || v.isEmpty) ? l10n.validationEnterPassword : null,
                   ),
                 ],
               ),
@@ -219,7 +228,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // TODO: Implement forgot password
                 },
                 child: Text(
-                  'Забыли пароль?',
+                  l10n.forgotPassword,
                   style: TextStyle(
                     color: isDark ? const Color(0xFFBB86FC) : theme.colorScheme.primary,
                     fontWeight: FontWeight.w600,
@@ -248,8 +257,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text(
-                      'Войти',
+                  : Text(
+                      l10n.loginButton,
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
             ),
@@ -262,7 +271,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
-                    'Или', 
+                    l10n.orDivider,
                     style: TextStyle(
                       color: isDark ? Colors.white54 : Colors.grey.shade600,
                       fontWeight: FontWeight.w500,
@@ -290,7 +299,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Нет аккаунта?',
+                  l10n.noAccount,
                   style: TextStyle(
                     color: isDark ? Colors.white70 : Colors.black87,
                   ),
@@ -300,7 +309,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                        Navigator.pushReplacementNamed(context, '/register');
                   },
                   child: Text(
-                    'Регистрация',
+                    l10n.registerTitle,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,

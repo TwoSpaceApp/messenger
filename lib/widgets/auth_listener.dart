@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import '../providers/auth_notifier.dart';
 import '../screens/welcome_screen.dart';
 import '../services/chat_matrix_service.dart';
@@ -58,9 +59,10 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
 
   Future<void> _navigateToWelcome(String? userId) async {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     
     // Get user info for welcome screen
-    String userName = 'Пользователь';
+    String userName = l10n.userDefault;
     String? avatarUrl;
     
     if (userId != null) {
@@ -99,14 +101,15 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
 
   void _showErrorSnackBar(String message) {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Ошибка авторизации: $message'),
+        content: Text(l10n.authorizationError(message)),
         backgroundColor: Theme.of(context).colorScheme.error,
         duration: const Duration(seconds: 4),
         action: SnackBarAction(
-          label: 'Закрыть',
+          label: l10n.close,
           textColor: Colors.white,
           onPressed: () {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();

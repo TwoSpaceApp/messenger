@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import '../services/update_service.dart';
 
 class UpdateScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
   Future<void> _startDownload() async {
     // Start download state
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _downloading = true;
       _error = null;
@@ -35,7 +37,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
     if (!mounted) return;
     setState(() => _downloading = false);
     if (apkPath == null) {
-      setState(() => _error = 'Не удалось скачать обновление');
+      setState(() => _error = l10n.downloadFailed);
       return;
     }
 
@@ -47,7 +49,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
       if (!mounted) return;
       setState(() => _verifying = false);
       if (!ok) {
-        setState(() => _error = 'Скачанный файл не прошёл проверку целостности (sha256)');
+        setState(() => _error = l10n.integrityCheckFailed);
         return;
       }
     }
@@ -58,15 +60,15 @@ class _UpdateScreenState extends State<UpdateScreen> {
       if (!canInstall) {
         if (!mounted) return;
         final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
-          title: const Text('Разрешение на установку'),
-          content: const Text('Чтобы установить обновление, разрешите установку приложений из этого источника.'),
-          actions: [TextButton(onPressed: () => Navigator.of(c).pop(false), child: const Text('Отмена')), TextButton(onPressed: () => Navigator.of(c).pop(true), child: const Text('Открыть настройки'))],
+          title: Text(l10n.installPermissionTitle),
+          content: Text(l10n.installPermissionContent),
+          actions: [TextButton(onPressed: () => Navigator.of(c).pop(false), child: Text(l10n.cancel)), TextButton(onPressed: () => Navigator.of(c).pop(true), child: Text(l10n.openSettingsButton))],
         ));
         if (ok == true) {
           await UpdateService.openInstallSettings();
         } else {
           if (!mounted) return;
-          setState(() => _error = 'Нужны разрешения для установки');
+          setState(() => _error = l10n.installPermissionRequired);
           return;
         }
       }
@@ -77,12 +79,13 @@ class _UpdateScreenState extends State<UpdateScreen> {
     final installed = await UpdateService.installApk(apkPath);
     if (!mounted) return;
     setState(() => _installing = false);
-    if (!installed && mounted) setState(() => _error = 'Установка не удалась');
+    if (!installed && mounted) setState(() => _error = l10n.installFailed);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     // Modern full-screen card style similar to Telegram/Discord
     final forced = widget.info.forceUpdate;
     // Determine displayed ABI from the UpdateInfo if available
@@ -117,7 +120,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                             child: Icon(Icons.system_update, size: 44, color: theme.colorScheme.primary),
                           ),
                           const SizedBox(height: 16),
-                          Text('Доступно обновление', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
+                          Text(l10n.updateAvailableTitle, style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
                           const SizedBox(height: 6),
                           Text(widget.info.latestVersion, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurface.withAlpha((0.9 * 255).round()))),
                           if (_selectedAbi.isNotEmpty) ...[
@@ -125,13 +128,13 @@ class _UpdateScreenState extends State<UpdateScreen> {
                             Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: theme.colorScheme.primary.withAlpha((0.12 * 255).round()), borderRadius: BorderRadius.circular(8)), child: Text(_selectedAbi, style: theme.textTheme.bodySmall)),
                           ],
                           const SizedBox(height: 18),
-                          Align(alignment: Alignment.centerLeft, child: Text('Что нового', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
+                          Align(alignment: Alignment.centerLeft, child: Text(l10n.whatsNewLabel, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
                           const SizedBox(height: 8),
                           Container(
                             height: 160,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(color: theme.scaffoldBackgroundColor.withAlpha((0.03 * 255).round()), borderRadius: BorderRadius.circular(12)),
-                            child: SingleChildScrollView(child: Text(widget.info.notes.isNotEmpty ? widget.info.notes : 'Описание отсутствует', style: theme.textTheme.bodyMedium)),
+                            child: SingleChildScrollView(child: Text(widget.info.notes.isNotEmpty ? widget.info.notes : l10n.noUpdateDescription, style: theme.textTheme.bodyMedium)),
                           ),
                           const SizedBox(height: 18),
                           if (_error != null) ...[
@@ -139,19 +142,19 @@ class _UpdateScreenState extends State<UpdateScreen> {
                             const SizedBox(height: 12),
                           ],
                           if (_downloading) ...[
-                            Text('Скачивание... ${((_progress * 100).clamp(0, 100)).toStringAsFixed(0)}%', style: theme.textTheme.bodySmall),
+                            Text(l10n.downloadingProgress(((_progress * 100).clamp(0, 100)).toInt()), style: theme.textTheme.bodySmall),
                             const SizedBox(height: 8),
                             LinearProgressIndicator(value: _progress),
                             const SizedBox(height: 12),
                           ],
                           if (_verifying) ...[
-                            Text('Проверка целостности...', style: theme.textTheme.bodySmall),
+                            Text(l10n.checkingIntegrity, style: theme.textTheme.bodySmall),
                             const SizedBox(height: 8),
                             const LinearProgressIndicator(),
                             const SizedBox(height: 12),
                           ],
                           if (_installing) ...[
-                            Text('Запрос на установку...', style: theme.textTheme.bodySmall),
+                            Text(l10n.requestingInstall, style: theme.textTheme.bodySmall),
                             const SizedBox(height: 8),
                             const LinearProgressIndicator(),
                             const SizedBox(height: 12),
@@ -160,7 +163,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                             Expanded(
                               child: TextButton(
                                 onPressed: forced ? null : () => Navigator.of(context).pop(),
-                                child: Text(forced ? 'Обновление обязательно' : 'Позже'),
+                                child: Text(forced ? l10n.updateMandatory : l10n.laterButton),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -168,7 +171,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                               child: ElevatedButton(
                                 onPressed: (_downloading || _installing || _verifying) ? null : _startDownload,
                                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                                child: Text(_downloading ? 'Скачивается...' : (_installing ? 'Устанавливается...' : 'Обновить')),
+                                child: Text(_downloading ? l10n.downloadingLabel : (_installing ? l10n.installingLabel : l10n.updateButton)),
                               ),
                             ),
                           ])

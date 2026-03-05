@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/services/settings_service.dart';
 
 class ChangeEmailScreen extends StatefulWidget {
@@ -36,6 +37,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     final email = _emailCtrl.text.trim();
     _pwdCtrl.text.trim();
     if (email.isEmpty) return;
@@ -45,11 +47,11 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     try {
       // AppwriteService not available, skip server update
       if (!mounted) return;
-      messenger.showSnackBar(const SnackBar(content: Text('Email не может быть изменен')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.emailCannotBeChanged)));
       // navState.pop(true);
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text('Не удалось изменить email: $e')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.changeEmailError(e.toString()))));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -57,8 +59,9 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Изменить email')),
+      appBar: AppBar(title: Text(l10n.changeEmailTitle)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ValueListenableBuilder<bool>(
@@ -76,20 +79,20 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Введите новый email и, если требуется, текущий пароль для подтверждения.'),
+                  Text(l10n.changeEmailDescription),
                   if (_currentEmail != null) ...[
                     const SizedBox(height: 8),
-                    Text('Текущий: ', style: Theme.of(context).textTheme.bodySmall),
+                    Text(l10n.currentPrefix, style: Theme.of(context).textTheme.bodySmall),
                     Text(_currentEmail ?? '', style: Theme.of(context).textTheme.bodyMedium),
                   ],
                   const SizedBox(height: 12),
-                  TextField(controller: _emailCtrl, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Новый email')),
+                  TextField(controller: _emailCtrl, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: l10n.newEmailLabel)),
                   const SizedBox(height: 12),
-                  TextField(controller: _pwdCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'Текущий пароль')),
+                  TextField(controller: _pwdCtrl, obscureText: true, decoration: InputDecoration(labelText: l10n.currentPasswordLabel)),
                   const SizedBox(height: 18),
                   ElevatedButton(
                     onPressed: _loading ? null : _submit,
-                    child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Изменить email'),
+                    child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l10n.changeEmailButton),
                   ),
                 ],
               ),

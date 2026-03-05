@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class MediaViewer extends StatelessWidget {
   final Uint8List? bytes;
@@ -12,6 +13,7 @@ class MediaViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     Widget child;
     if (bytes != null) {
       child = InteractiveViewer(child: Image.memory(bytes!, fit: BoxFit.contain));
@@ -19,11 +21,11 @@ class MediaViewer extends StatelessWidget {
       final file = File(localPath!);
       child = InteractiveViewer(child: Image.file(file, fit: BoxFit.contain));
     } else {
-      child = const Center(child: Text('Нет данных'));
+      child = Center(child: Text(l10n.noData));
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(title ?? 'Просмотр')),
+      appBar: AppBar(title: Text(title ?? l10n.previewTitle)),
       body: Center(child: child),
     );
   }

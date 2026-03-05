@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../models/group.dart';
 import '../services/group_matrix_service.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class GroupSettingsScreen extends StatefulWidget {
   final String roomId;
@@ -30,6 +31,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   Future<void> _loadGroupData() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     try {
       final group = await _groupService.getGroupRoom(widget.roomId);
@@ -39,7 +41,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки: $e')),
+          SnackBar(content: Text(l10n.loadError(e.toString()))),
         );
       }
     } finally {
@@ -55,12 +57,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWideScreen = constraints.maxWidth > 800;
         return Scaffold(
           appBar: AppBar(
-            title: Text(_currentGroup?.name ?? 'Информация о группе'),
+            title: Text(_currentGroup?.name ?? l10n.groupInfoTab),
             centerTitle: !isWideScreen,
             elevation: 2,
           ),
@@ -78,13 +81,14 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   Widget _buildSidebar() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return Container(
       width: 250,
       color: theme.colorScheme.surface,
       child: Column(
         children: [
-          // Tabs с лучшей поддержкой темы
+          // Tabs
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Container(
@@ -97,11 +101,11 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               ),
               child: Row(
                 children: [
-                  _buildTab(0, 'Информация', Icons.info),
-                  _buildTab(1, 'Участники', Icons.people),
-                  _buildTab(2, 'Роли', Icons.admin_panel_settings),
-                  if (_canManageMembers) _buildTab(3, 'Запреты', Icons.block),
-                  if (_canDeleteGroup) _buildTab(4, 'Удалить', Icons.delete),
+                  _buildTab(0, l10n.groupInfoTab, Icons.info),
+                  _buildTab(1, l10n.groupMembersTab, Icons.people),
+                  _buildTab(2, l10n.groupRolesTab, Icons.admin_panel_settings),
+                  if (_canManageMembers) _buildTab(3, l10n.groupBansTab, Icons.block),
+                  if (_canDeleteGroup) _buildTab(4, l10n.groupDeleteTab, Icons.delete),
                 ],
               ),
             ),
@@ -126,21 +130,22 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   Widget _buildSettingsContent() {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tabs с лучшей поддержкой темы (встраиваемые в контент)
+          // Tabs
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildTab(0, 'Информация', Icons.info),
-                _buildTab(1, 'Участники', Icons.people),
-                _buildTab(2, 'Роли', Icons.admin_panel_settings),
-                if (_canManageMembers) _buildTab(3, 'Запреты', Icons.block),
-                if (_canDeleteGroup) _buildTab(4, 'Удалить', Icons.delete),
+                _buildTab(0, l10n.groupInfoTab, Icons.info),
+                _buildTab(1, l10n.groupMembersTab, Icons.people),
+                _buildTab(2, l10n.groupRolesTab, Icons.admin_panel_settings),
+                if (_canManageMembers) _buildTab(3, l10n.groupBansTab, Icons.block),
+                if (_canDeleteGroup) _buildTab(4, l10n.groupDeleteTab, Icons.delete),
               ],
             ),
           ),
@@ -204,6 +209,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   Widget _buildInfoTab() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -216,7 +222,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Название',
+                  l10n.nameField,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: theme.colorScheme.outline,
                     fontWeight: FontWeight.w600,
@@ -224,12 +230,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _currentGroup?.name ?? 'Нет названия',
+                  _currentGroup?.name ?? l10n.noDescription,
                   style: theme.textTheme.titleMedium,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Описание',
+                  l10n.descriptionOptionalLabel,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: theme.colorScheme.outline,
                     fontWeight: FontWeight.w600,
@@ -237,12 +243,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _currentGroup?.description ?? 'Нет описания',
+                  _currentGroup?.description ?? l10n.noDescription,
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Видимость',
+                  l10n.roomVisibilityLabel,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: theme.colorScheme.outline,
                     fontWeight: FontWeight.w600,
@@ -251,7 +257,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 const SizedBox(height: 8),
                 Chip(
                   label: Text(
-                    _currentGroup?.visibility == GroupVisibility.public ? 'Публичная' : 'Приватная',
+                    _currentGroup?.visibility == GroupVisibility.public ? l10n.publicLabel : l10n.privateLabel,
                   ),
                   backgroundColor: _currentGroup?.visibility == GroupVisibility.public
                       ? theme.colorScheme.primary.withValues(alpha: 0.08)
@@ -263,7 +269,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Участников: ${_currentGroup?.memberCount ?? 0}',
+                  l10n.membersCount(_currentGroup?.memberCount ?? 0),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.outline,
                   ),
@@ -271,7 +277,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 if (_canManageMembers) ...[
                   const SizedBox(height: 24),
                   Text(
-                    'История сообщений',
+                    l10n.messageHistoryToggle,
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.outline,
                       fontWeight: FontWeight.w600,
@@ -279,8 +285,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Показывать историю'),
-                    subtitle: const Text('Новые участники смогут видеть старые сообщения'),
+                    title: Text(l10n.showHistoryToggleLabel),
+                    subtitle: Text(l10n.showHistorySubtitle),
                     value: _currentGroup?.showMessageHistory ?? false,
                     onChanged: (value) async {
                       try {
@@ -288,13 +294,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                         await _loadGroupData();
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Настройка сохранена')),
+                            SnackBar(content: Text(l10n.settingSaved)),
                           );
                         }
                       } catch (e) {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Ошибка: $e')),
+                            SnackBar(content: Text(l10n.genericError(e.toString()))),
                           );
                         }
                       }
@@ -304,7 +310,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 if (_currentGroup?.backgroundColor != null) ...[
                   const SizedBox(height: 24),
                   Text(
-                    'Цвет фона',
+                    l10n.backgroundColorLabel,
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.outline,
                       fontWeight: FontWeight.w600,
@@ -332,13 +338,14 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   Widget _buildMembersTab() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final members = _currentGroup?.members ?? [];
     
     if (members.isEmpty) {
       return Center(
         child: Text(
-          'Нет участников',
+          l10n.noMembers,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.outline,
           ),
@@ -382,26 +389,26 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     icon: Icon(Icons.more_vert, color: theme.colorScheme.outline),
                     itemBuilder: (context) => [
                       PopupMenuItem(
-                        child: const Row(
-                          children: [Icon(Icons.admin_panel_settings, size: 18), SizedBox(width: 8), Text('Роль')],
+                        child: Row(
+                          children: [const Icon(Icons.admin_panel_settings, size: 18), const SizedBox(width: 8), Text(l10n.roleAction)],
                         ),
                         onTap: () => _showRoleDialog(member),
                       ),
                       PopupMenuItem(
-                        child: const Row(
-                          children: [Icon(Icons.lock, size: 18), SizedBox(width: 8), Text('Заморозить')],
+                        child: Row(
+                          children: [const Icon(Icons.lock, size: 18), const SizedBox(width: 8), Text(l10n.freezeAction)],
                         ),
                         onTap: () => _showFreezeDialog(member),
                       ),
                       PopupMenuItem(
-                        child: const Row(
-                          children: [Icon(Icons.block, size: 18), SizedBox(width: 8), Text('Забанить')],
+                        child: Row(
+                          children: [const Icon(Icons.block, size: 18), const SizedBox(width: 8), Text(l10n.banAction)],
                         ),
                         onTap: () => _banUser(member),
                       ),
                       PopupMenuItem(
-                        child: const Row(
-                          children: [Icon(Icons.exit_to_app, size: 18), SizedBox(width: 8), Text('Исключить')],
+                        child: Row(
+                          children: [const Icon(Icons.exit_to_app, size: 18), const SizedBox(width: 8), Text(l10n.kickAction)],
                         ),
                         onTap: () => _kickUser(member),
                       ),
@@ -415,6 +422,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   Widget _buildRolesTab() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final members = _currentGroup?.members ?? [];
     final owners = members.where((m) => m.role == GroupRole.owner).toList();
@@ -426,17 +434,18 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildRoleSection('👑 Владельцы', owners, _getRoleColor(GroupRole.owner, theme)),
+          _buildRoleSection(l10n.ownersLabel, owners, _getRoleColor(GroupRole.owner, theme)),
           const SizedBox(height: 16),
-          _buildRoleSection('⚡ Администраторы', admins, _getRoleColor(GroupRole.admin, theme)),
+          _buildRoleSection(l10n.administratorsLabel, admins, _getRoleColor(GroupRole.admin, theme)),
           const SizedBox(height: 16),
-          _buildRoleSection('👤 Участники', regular, _getRoleColor(GroupRole.member, theme)),
+          _buildRoleSection('👤 ${l10n.membersLabel}', regular, _getRoleColor(GroupRole.member, theme)),
         ],
       ),
     );
   }
 
   Widget _buildRoleSection(String title, List<GroupMember> members, Color roleColor) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
     return Card(
@@ -471,7 +480,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Center(
                   child: Text(
-                    'Нет пользователей',
+                    l10n.noMembers,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.outline,
                     ),
@@ -529,13 +538,14 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   Widget _buildBanListTab() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final banned = _currentGroup?.bannedMembers ?? [];
     
     if (banned.isEmpty) {
       return Center(
         child: Text(
-          'Нет забаненных пользователей',
+          l10n.noBannedUsers,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.outline,
           ),
@@ -568,7 +578,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   color: Colors.red,
                 ),
               ),
-              subtitle: const Text('Забанен'),
+              subtitle: Text(l10n.bannedLabel),
               trailing: IconButton(
                 icon: const Icon(Icons.close, color: Colors.red),
                 onPressed: () async {
@@ -577,12 +587,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     await _loadGroupData();
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Пользователь разбанен')),
+                        SnackBar(content: Text(l10n.userUnbanned)),
                       );
                     }
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Ошибка: $e')),
+                      SnackBar(content: Text(l10n.genericError(e.toString()))),
                     );
                   }
                 },
@@ -595,6 +605,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   Widget _buildDeleteTab() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
     return SingleChildScrollView(
@@ -619,7 +630,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   ),
                   const SizedBox(height: 16),
                 Text(
-                  'Удалить группу',
+                  l10n.deleteGroupLabel,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     color: Colors.red,
                     fontWeight: FontWeight.w700,
@@ -628,7 +639,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Это действие НЕОБРАТИМО. Все сообщения и данные группы будут полностью удалены и не смогут быть восстановлены.',
+                  l10n.deleteGroupWarning,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.outline,
@@ -644,9 +655,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     ),
                     onPressed: () => _showDeleteConfirmation(),
                     icon: const Icon(Icons.delete_forever),
-                    label: const Text(
-                      'Удалить группу',
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                    label: Text(
+                      l10n.deleteGroupLabel,
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -660,15 +671,16 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   void _showRoleDialog(GroupMember member) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Изменить роль'),
+        title: Text(l10n.changeRoleTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             RadioListTile<GroupRole>(
-              title: const Text('Администратор'),
+              title: Text(l10n.adminRole),
               value: GroupRole.admin,
               groupValue: member.role,
               onChanged: (role) async {
@@ -684,7 +696,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Ошибка: $e')),
+                        SnackBar(content: Text(l10n.genericError(e.toString()))),
                       );
                     }
                   }
@@ -692,7 +704,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               },
             ),
             RadioListTile<GroupRole>(
-              title: const Text('Участник'),
+              title: Text(l10n.memberRole),
               value: GroupRole.member,
               groupValue: member.role,
               onChanged: (role) async {
@@ -708,7 +720,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Ошибка: $e')),
+                        SnackBar(content: Text(l10n.genericError(e.toString()))),
                       );
                     }
                   }
@@ -722,17 +734,18 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   void _showFreezeDialog(GroupMember member) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Заморозить пользователя'),
+        title: Text(l10n.freezeUserTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final entry in [
-              MapEntry('1 час', Duration(hours: 1)),
-              MapEntry('1 день', Duration(days: 1)),
-              MapEntry('7 дней', Duration(days: 7)),
+              MapEntry(l10n.oneHour, const Duration(hours: 1)),
+              MapEntry(l10n.oneDay, const Duration(days: 1)),
+              MapEntry(l10n.sevenDays, const Duration(days: 7)),
             ])
               ListTile(
                 title: Text(entry.key),
@@ -748,7 +761,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Ошибка: $e')),
+                        SnackBar(content: Text(l10n.genericError(e.toString()))),
                       );
                     }
                   }
@@ -761,51 +774,54 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }
 
   Future<void> _banUser(GroupMember member) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await _groupService.banUser(widget.roomId, member.userId);
       await _loadGroupData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Пользователь забанен')),
+          SnackBar(content: Text(l10n.userBanned)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(content: Text(l10n.genericError(e.toString()))),
         );
       }
     }
   }
 
   Future<void> _kickUser(GroupMember member) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await _groupService.kickUser(widget.roomId, member.userId);
       await _loadGroupData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Пользователь исключен')),
+          SnackBar(content: Text(l10n.userKicked)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(content: Text(l10n.genericError(e.toString()))),
         );
       }
     }
   }
 
   void _showDeleteConfirmation() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Подтвердить удаление'),
-        content: const Text('Вы уверены? Это действие необратимо.'),
+        title: Text(l10n.confirmDeleteTitle),
+        content: Text(l10n.confirmDeleteContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -816,18 +832,18 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Группа удалена')),
+                    SnackBar(content: Text(l10n.groupDeleted)),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Ошибка: $e')),
+                    SnackBar(content: Text(l10n.genericError(e.toString()))),
                   );
                 }
               }
             },
-            child: const Text('Удалить', style: TextStyle(color: Colors.white)),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),

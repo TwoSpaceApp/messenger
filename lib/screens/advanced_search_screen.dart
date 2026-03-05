@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import '../services/chat_matrix_service.dart';
 import '../widgets/glass_card.dart';
 
@@ -37,9 +38,10 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Расширенный поиск'),
+        title: Text(l10n.advancedSearchTitle),
         elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.surface,
       ),
@@ -54,7 +56,7 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
                 controller: _queryController,
                 onSubmitted: (_) => _performSearch(),
                 decoration: InputDecoration(
-                  hintText: 'Введите запрос...',
+                  hintText: l10n.searchQueryHint,
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _isSearching
                       ? const SizedBox(
@@ -75,7 +77,7 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
 
               // Search type filter
               Text(
-                'Тип поиска',
+                l10n.searchTypeLabel,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
@@ -87,10 +89,10 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
                             padding: const EdgeInsets.only(right: 8),
                             child: FilterChip(
                               label: Text(
-                                type == 'all' ? 'Все'
-                                : type == 'messages' ? 'Сообщения'
-                                : type == 'media' ? 'Медиа'
-                                : 'Пользователи',
+                                type == 'all' ? l10n.searchTypeAll
+                                : type == 'messages' ? l10n.searchTypeMessages
+                                : type == 'media' ? l10n.searchTypeMedia
+                                : l10n.searchTypeUsers,
                               ),
                               selected: _searchType == type,
                               onSelected: (selected) {
@@ -105,7 +107,7 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
 
               // Date filters
               Text(
-                'Период',
+                l10n.periodLabel,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
@@ -127,7 +129,7 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
                           padding: const EdgeInsets.all(12),
                           child: Text(
                             _dateFrom == null
-                                ? 'От'
+                                ? l10n.fromDate
                                 : '${_dateFrom!.day}.${_dateFrom!.month}',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
@@ -152,7 +154,7 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
                           padding: const EdgeInsets.all(12),
                           child: Text(
                             _dateTo == null
-                                ? 'До'
+                                ? l10n.toDate
                                 : '${_dateTo!.day}.${_dateTo!.month}',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
@@ -170,7 +172,7 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _isSearching ? null : _performSearch,
                   icon: const Icon(Icons.search),
-                  label: const Text('Искать'),
+                  label: Text(l10n.searchButton),
                 ),
               ),
               const SizedBox(height: 24),
@@ -178,12 +180,12 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
               // Results
               if (_results.isNotEmpty)
                 Text(
-                  'Результаты (${_results.length})',
+                  l10n.resultsCount(_results.length),
                   style: Theme.of(context).textTheme.titleMedium,
                 )
               else if (!_isSearching && _queryController.text.isNotEmpty)
                 Text(
-                  'Результатов не найдено',
+                  l10n.noResultsFound,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),

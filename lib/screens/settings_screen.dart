@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
 import 'package:two_space_app/services/auth_service.dart';
 import 'package:two_space_app/services/settings_service.dart';
+import 'package:two_space_app/widgets/language_switcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -17,8 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedTheme = 'system';
   bool _loggingOut = false;
   bool _devMenuEnabled = false;
-  String _appVersion = 'загрузка...';
-  String _selectedLanguage = 'ru';
+  String _appVersion = '';
   bool _autoDownloadMedia = false;
   bool _sendByEnter = true;
   double _textScale = 1.0;
@@ -32,7 +33,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _loadSettings() {
     setState(() {
-      _selectedLanguage = SettingsService.languageNotifier.value;
       _textScale = SettingsService.textScaleNotifier.value;
       _autoDownloadMedia = SettingsService.autoDownloadMediaNotifier.value;
       _sendByEnter = SettingsService.sendByEnterNotifier.value;
@@ -55,22 +55,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final info = await PackageInfo.fromPlatform();
       setState(() => _appVersion = info.version);
     } catch (_) {
-      setState(() => _appVersion = 'неизвестно');
+      if (mounted) setState(() => _appVersion = '?');
     }
   }
 
   Future<void> _logout() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Выход из аккаунта'),
-        content: const Text('Вы уверены, что хотите выйти?'),
+        title: Text(l10n.logoutDialogTitle),
+        content: Text(l10n.logoutDialogContent),
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Выход', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.logoutAction, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -86,18 +87,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.errorLogout(e.toString()))));
       setState(() => _loggingOut = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Настройки'),
+        title: Text(l10n.settingsTitle),
         elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.surface,
       ),
@@ -106,11 +108,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            // Внешний вид
+            // Appearance
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
-                'Внешний вид',
+                l10n.appearanceSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -124,7 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     ListTile(
                       leading: Icon(isDark ? Icons.dark_mode : Icons.light_mode),
-                      title: const Text('Тема'),
+                      title: Text(l10n.themeLabel),
                       trailing: DropdownButton<String>(
                         value: _selectedTheme,
                         onChanged: (value) async {
@@ -137,10 +139,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           };
                           await SettingsService.setThemeMode(mode);
                         },
-                        items: const [
-                          DropdownMenuItem(value: 'system', child: Text('Система')),
-                          DropdownMenuItem(value: 'light', child: Text('Светлая')),
-                          DropdownMenuItem(value: 'dark', child: Text('Темная')),
+                        items: [
+                          DropdownMenuItem(value: 'system', child: Text(l10n.themeSystem)),
+                          DropdownMenuItem(value: 'light', child: Text(l10n.themeLight)),
+                          DropdownMenuItem(value: 'dark', child: Text(l10n.themeDark)),
                         ],
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -148,8 +150,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.palette),
-                      title: const Text('Кастомизация'),
-                      subtitle: const Text('Цвета, шрифт и UI-эффекты'),
+                      title: Text(l10n.customizationLabel),
+                      subtitle: Text(l10n.customizationSubtitle),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.pushNamed(context, '/customization'),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -159,11 +161,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            // Уведомления
+            // Notifications
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
-                'Уведомления',
+                l10n.notificationsSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -177,7 +179,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     SwitchListTile(
                       secondary: const Icon(Icons.notifications),
-                      title: const Text('Уведомления'),
+                      title: Text(l10n.notificationsLabel),
                       value: _notificationsEnabled,
                       onChanged: (v) => setState(() => _notificationsEnabled = v),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -185,7 +187,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Divider(height: 1),
                     SwitchListTile(
                       secondary: const Icon(Icons.volume_up),
-                      title: const Text('Звук'),
+                      title: Text(l10n.soundLabel),
                       value: _soundEnabled,
                       onChanged: (v) => setState(() => _soundEnabled = v),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -195,11 +197,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            // Аккаунт
+            // Account
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
-                'Аккаунт',
+                l10n.accountSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -213,8 +215,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     ListTile(
                       leading: const Icon(Icons.person),
-                      title: const Text('Профиль'),
-                      subtitle: const Text('Изменить данные профиля'),
+                      title: Text(l10n.profileLabel),
+                      subtitle: Text(l10n.profileSubtitle),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () async {
                         final auth = AuthService();
@@ -228,8 +230,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.manage_accounts),
-                      title: const Text('Настройки аккаунта'),
-                      subtitle: const Text('Пароль, безопасность, 2FA'),
+                      title: Text(l10n.accountSettingsLabel),
+                      subtitle: Text(l10n.accountSettingsSubtitle),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.pushNamed(context, '/account-settings'),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -237,8 +239,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.lock),
-                      title: const Text('Приватность'),
-                      subtitle: const Text('Управление приватностью'),
+                      title: Text(l10n.privacyLabel),
+                      subtitle: Text(l10n.privacySubtitle),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.pushNamed(context, '/privacy'),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -248,11 +250,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            // Общие настройки
+            // General
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
-                'Общие',
+                l10n.generalSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -266,28 +268,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     ListTile(
                       leading: const Icon(Icons.language),
-                      title: const Text('Язык'),
-                      trailing: DropdownButton<String>(
-                        value: _selectedLanguage,
-                        underline: const SizedBox(),
-                        onChanged: (value) async {
-                          if (value != null) {
-                            setState(() => _selectedLanguage = value);
-                            await SettingsService.setLanguage(value);
-                          }
-                        },
-                        items: const [
-                          DropdownMenuItem(value: 'ru', child: Text('Русский')),
-                          DropdownMenuItem(value: 'en', child: Text('English')),
-                          DropdownMenuItem(value: 'uk', child: Text('Українська')),
-                        ],
-                      ),
+                      title: Text(l10n.languageLabel),
+                      trailing: const LanguageSwitcherButton(),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.text_fields),
-                      title: const Text('Размер текста'),
+                      title: Text(l10n.textSizeLabel),
                       subtitle: Slider(
                         min: 0.8,
                         max: 1.4,
@@ -302,8 +290,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Divider(height: 1),
                     SwitchListTile(
                       secondary: const Icon(Icons.keyboard),
-                      title: const Text('Отправка по Enter'),
-                      subtitle: const Text('Shift+Enter для новой строки'),
+                      title: Text(l10n.sendByEnterLabel),
+                      subtitle: Text(l10n.sendByEnterSubtitle),
                       value: _sendByEnter,
                       onChanged: (v) async {
                         setState(() => _sendByEnter = v);
@@ -316,11 +304,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            // Данные и хранилище
+            // Data & Storage
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
-                'Данные и хранилище',
+                l10n.dataStorageSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -334,8 +322,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     SwitchListTile(
                       secondary: const Icon(Icons.download),
-                      title: const Text('Автозагрузка медиа'),
-                      subtitle: const Text('Загружать фото и видео автоматически'),
+                      title: Text(l10n.autoDownloadLabel),
+                      subtitle: Text(l10n.autoDownloadSubtitle),
                       value: _autoDownloadMedia,
                       onChanged: (v) async {
                         setState(() => _autoDownloadMedia = v);
@@ -346,25 +334,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.storage),
-                      title: const Text('Управление хранилищем'),
-                      subtitle: const Text('Очистить кеш и данные'),
+                      title: Text(l10n.storageManagementLabel),
+                      subtitle: Text(l10n.storageManagementSubtitle),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         showDialog(
                           context: context,
                           builder: (_) => AlertDialog(
-                            title: const Text('Очистить кеш'),
-                            content: const Text('Удалить кешированные данные?'),
+                            title: Text(l10n.clearCacheTitle),
+                            content: Text(l10n.clearCacheContent),
                             actions: [
-                              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+                              TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
                               TextButton(
                                 onPressed: () {
                                   Navigator.pop(context);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Кеш очищен')),
+                                    SnackBar(content: Text(l10n.cacheCleared)),
                                   );
                                 },
-                                child: const Text('Очистить'),
+                                child: Text(l10n.delete),
                               ),
                             ],
                           ),
@@ -377,11 +365,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            // Параметры разработчика
+            // Development
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
-                'Разработка',
+                l10n.developmentSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -394,7 +382,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: ListTile(
                   leading: const Icon(Icons.bug_report),
                   title: const Text('Developer Menu'),
-                  subtitle: const Text('Плавающая кнопка отладки'),
+                  subtitle: Text(l10n.devMenuSubtitle),
                   trailing: Switch(
                     value: _devMenuEnabled,
                     onChanged: (value) {
@@ -406,11 +394,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            // О приложении
+            // About
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
-                'О приложении',
+                l10n.aboutSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -425,22 +413,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ListTile(
                       leading: const Icon(Icons.info),
                       title: const Text('TwoSpace'),
-                      subtitle: Text(_appVersion),
+                      subtitle: Text(_appVersion.isEmpty ? l10n.loading : _appVersion),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                     const Divider(height: 1),
                     Tooltip(
-                      message: 'Matrix — это открытый протокол для обмена сообщениями, мы используем именно его!',
+                      message: l10n.matrixTooltip,
                       child: ListTile(
-                      subtitle: const Text('Клиент TwoSpace написан на Flutter/Dart'),
+                      subtitle: Text(l10n.clientDescription),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
                     ),
                     const Divider(height: 1),
                     ListTile(
                       leading: const Icon(Icons.lightbulb_outline),
-                      title: const Text('Предложить улучшение'),
-                      subtitle: const Text('Форма идей и больших нововведений'),
+                      title: Text(l10n.suggestImprovementLabel),
+                      subtitle: Text(l10n.suggestImprovementSubtitle),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.pushNamed(context, '/feedback'),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -450,11 +438,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-            // Опасная зона
+            // Danger zone
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
-                'Опасная зона',
+                l10n.dangerZoneSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Colors.red.shade400,
                       fontWeight: FontWeight.bold,
@@ -483,14 +471,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Выход из аккаунта',
+                                  l10n.logoutLabel,
                                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                         color: Colors.red.shade400,
                                         fontWeight: FontWeight.w600,
                                       ),
                                 ),
                                 Text(
-                                  'Выход с этого устройства',
+                                  l10n.logoutSubtitle,
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: Colors.red.withValues(alpha: 0.6),
                                       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 // import 'dart:async';
 // import 'package:webview_flutter/webview_flutter.dart';
 // import '../config/environment.dart';
@@ -17,6 +18,7 @@ class _SsoWebviewScreenState extends State<SsoWebviewScreen> {
   
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text('SSO — ${widget.idpId}')),
       body: Center(
@@ -25,11 +27,11 @@ class _SsoWebviewScreenState extends State<SsoWebviewScreen> {
           children: [
             const Icon(Icons.web, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            Text('SSO вход через ${widget.idpId}'),
+            Text(l10n.ssoLoginVia(widget.idpId)),
             const SizedBox(height: 24),
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            const Text('Функция требует конфигурации webview_flutter'),
+            Text(l10n.ssoFeatureRequired),
           ],
         ),
       ),

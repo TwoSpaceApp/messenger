@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/widgets/screen_background.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
 import 'package:two_space_app/widgets/app_logo.dart';
@@ -229,17 +230,18 @@ class _CallsScreenState extends State<CallsScreen> {
   }
 
   String _formatTime(DateTime time) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = now.difference(time);
     
     if (diff.inMinutes < 60) {
-      return '${diff.inMinutes} мин. назад';
+      return l10n.minutesAgo(diff.inMinutes);
     } else if (diff.inHours < 24) {
-      return '${diff.inHours} ч. назад';
+      return l10n.hoursAgo(diff.inHours);
     } else if (diff.inDays == 1) {
-      return 'Вчера';
+      return l10n.yesterdayLabel;
     } else if (diff.inDays < 7) {
-      return '${diff.inDays} дн. назад';
+      return l10n.daysAgo(diff.inDays);
     } else {
       return '${time.day}.${time.month.toString().padLeft(2, '0')}';
     }
@@ -284,15 +286,16 @@ class _CallsScreenState extends State<CallsScreen> {
   }
 
   String _getCallTypeLabel(CallType type) {
+    final l10n = AppLocalizations.of(context)!;
     switch (type) {
       case CallType.incoming:
-        return 'Входящий';
+        return l10n.incomingCall;
       case CallType.outgoing:
-        return 'Исходящий';
+        return l10n.outgoingCall;
       case CallType.missed:
-        return 'Пропущенный';
+        return l10n.missedCall;
       case CallType.video:
-        return 'Видеозвонок';
+        return l10n.videoCallLabel;
     }
   }
 
@@ -313,6 +316,7 @@ class _CallsScreenState extends State<CallsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final filteredCalls = _cachedFilteredCalls;
     
@@ -331,7 +335,7 @@ class _CallsScreenState extends State<CallsScreen> {
                     const AppLogo(large: false),
                     const SizedBox(width: 8),
                     Text(
-                      'Звонки',
+                      l10n.callsTitle,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -350,7 +354,7 @@ class _CallsScreenState extends State<CallsScreen> {
                     controller: _searchController,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Поиск по имени...',
+                        hintText: l10n.searchByNameHint,
                       hintStyle: TextStyle(color: Colors.white.withAlpha(120)),
                       prefixIcon: const Icon(Icons.search, color: Colors.white70),
                       border: InputBorder.none,
@@ -379,13 +383,13 @@ class _CallsScreenState extends State<CallsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    _buildFilterChip(null, 'Все'),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(CallType.incoming, 'Входящие'),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(CallType.outgoing, 'Исходящие'),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(CallType.missed, 'Пропущенные'),
+                      _buildFilterChip(null, l10n.allFilter),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(CallType.incoming, l10n.incomingFilter),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(CallType.outgoing, l10n.outgoingFilter),
+                      const SizedBox(width: 8),
+                      _buildFilterChip(CallType.missed, l10n.missedFilter),
                   ],
                 ),
               ),
@@ -407,8 +411,8 @@ class _CallsScreenState extends State<CallsScreen> {
                             const SizedBox(height: 16),
                             Text(
                               _searchQuery.isNotEmpty || _filterType != null
-                                  ? 'Ничего не найдено'
-                                  : 'Нет звонков',
+                                    ? l10n.nothingFound
+                                    : l10n.noCallsFound,
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.white.withAlpha(150),
@@ -562,6 +566,7 @@ class _CallsScreenState extends State<CallsScreen> {
   }
 
   void _showCallOptions(CallRecord call) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -594,7 +599,7 @@ class _CallsScreenState extends State<CallsScreen> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.call, color: Colors.green),
-              title: const Text('Голосовой звонок'),
+              title: Text(l10n.voiceCallLabel),
               onTap: () {
                 Navigator.pop(context);
                 _makeCall(call, false);
@@ -602,7 +607,7 @@ class _CallsScreenState extends State<CallsScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.videocam, color: Colors.blue),
-              title: const Text('Видеозвонок'),
+              title: Text(l10n.videoCallLabel),
               onTap: () {
                 Navigator.pop(context);
                 _makeCall(call, true);
@@ -610,11 +615,11 @@ class _CallsScreenState extends State<CallsScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.chat),
-              title: const Text('Написать сообщение'),
+              title: Text(l10n.sendMessageCallAction),
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Сообщение для: ${call.name}')),
+                    SnackBar(content: Text(l10n.messageNotification(call.name))),
                 );
               },
             ),

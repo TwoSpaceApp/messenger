@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/biometric_auth_service.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class BiometricSetupScreen extends StatefulWidget {
   const BiometricSetupScreen({Key? key}) : super(key: key);
@@ -13,9 +14,10 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Безопасность'),
+        title: Text(l10n.biometricSetupTitle),
         elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.surface,
       ),
@@ -26,7 +28,7 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Методы аутентификации',
+                l10n.authMethodsLabel,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
@@ -42,8 +44,8 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                   return Card(
                     child: ListTile(
                       leading: const Icon(Icons.fingerprint),
-                      title: const Text('Биометрическая аутентификация'),
-                      subtitle: const Text('Отпечаток пальца или Face ID'),
+                        title: Text(l10n.biometricAuthLabel),
+                        subtitle: Text(l10n.biometricAuthSubtitle),
                       trailing: Switch(
                         value: true,
                         onChanged: (value) async {
@@ -54,9 +56,9 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                               await biometricService.setBiometricEnabled(true);
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                     content:
-                                        Text('Биометрия включена'),
+                                          Text(l10n.biometricEnabledLabel),
                                   ),
                                 );
                               }
@@ -74,8 +76,8 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
               Card(
                 child: ListTile(
                   leading: const Icon(Icons.lock),
-                  title: const Text('PIN-код'),
-                  subtitle: const Text('4-6 цифр для защиты'),
+                  title: Text(l10n.pinCodeLabel),
+                  subtitle: Text(l10n.pinCodeSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     _showPinDialog(context, biometricService);
@@ -95,13 +97,12 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'О безопасности',
+                      l10n.aboutSecurityLabel,
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Выберите удобный метод для защиты вашего аккаунта. '
-                      'Биометрия безопаснее и удобнее, но PIN-код работает везде.',
+                        l10n.aboutSecurityContent,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),
@@ -139,8 +140,9 @@ class _PinInputDialogState extends State<PinInputDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Установить PIN-код'),
+      title: Text(l10n.setPinCode),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -150,7 +152,7 @@ class _PinInputDialogState extends State<PinInputDialog> {
             obscureText: true,
             maxLength: 6,
             decoration: InputDecoration(
-              labelText: 'PIN (4-6 цифр)',
+              labelText: l10n.pinHint,
               errorText: _errorText,
               border: const OutlineInputBorder(),
             ),
@@ -160,13 +162,13 @@ class _PinInputDialogState extends State<PinInputDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Отмена'),
+          child: Text(l10n.cancel),
         ),
         ElevatedButton(
           onPressed: () async {
             final pin = _pinController.text.trim();
             if (pin.length < 4 || pin.length > 6) {
-              setState(() => _errorText = 'PIN должен быть 4-6 цифр');
+              setState(() => _errorText = l10n.pinLengthError);
               return;
             }
 
@@ -174,11 +176,11 @@ class _PinInputDialogState extends State<PinInputDialog> {
             if (context.mounted) {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('PIN установлен')),
+                SnackBar(content: Text(AppLocalizations.of(context)!.pinSetSuccess)),
               );
             }
           },
-          child: const Text('Сохранить'),
+            child: Text(l10n.save),
         ),
       ],
     );

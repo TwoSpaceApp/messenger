@@ -1,5 +1,6 @@
 // Chat list item widget with preview and unread badge
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import '../models/chat.dart';
 
 class ChatListItem extends StatelessWidget {
@@ -15,8 +16,8 @@ class ChatListItem extends StatelessWidget {
     this.onLongPress,
   });
 
-  String _getPreview(String text) {
-    if (text.isEmpty) return '(нет сообщений)';
+  String _getPreview(String text, String emptyFallback) {
+    if (text.isEmpty) return emptyFallback;
     if (text.length > 50) return '${text.substring(0, 50)}...';
     return text;
   }
@@ -33,7 +34,8 @@ class ChatListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final preview = _getPreview(chat.lastMessage);
+    final l10n = AppLocalizations.of(context)!;
+    final preview = _getPreview(chat.lastMessage, l10n.noMessages);
     final timeStr = _formatTime(chat.lastMessageTime);
 
     return ListTile(
@@ -102,7 +104,7 @@ class ChatListItem extends StatelessWidget {
           if (chat.members.length > 1) ...[
             const SizedBox(height: 2),
             Text(
-              '${chat.members.length} участников',
+              l10n.membersCount(chat.members.length),
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.outline,
               ),

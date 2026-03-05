@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import '../services/settings_service.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -52,29 +53,30 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final primaryColor = Color(SettingsService.themeNotifier.value.primaryColorValue);
     return Scaffold(
-  appBar: AppBar(title: const Text('Подтвердите код')),
+  appBar: AppBar(title: Text(l10n.confirmCodeTitle)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Мы отправили код на ${widget.phone}', style: Theme.of(context).textTheme.bodyLarge),
+            Text(l10n.codeSentTo(widget.phone), style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 12),
             TextField(
               controller: _controller,
               keyboardType: TextInputType.number,
               maxLength: 6,
               autofocus: true,
-              decoration: const InputDecoration(hintText: 'Введите код'),
+              decoration: InputDecoration(hintText: l10n.enterCodeHint),
               onSubmitted: (_) => _submit(),
             ),
             const SizedBox(height: 8),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
               onPressed: _loading ? null : _submit,
-              child: _loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Подтвердить'),
+              child: _loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(l10n.confirmButton),
             ),
             const SizedBox(height: 8),
             TextButton(
@@ -82,7 +84,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 // Signal caller to resend by popping null and letting caller re-send token
                 Navigator.of(context).pop(null);
               },
-              child: Text(_secondsLeft > 0 ? 'Повторная отправка через $_secondsLeft с' : 'Отправить код повторно'),
+              child: Text(_secondsLeft > 0 ? l10n.resendCountdown(_secondsLeft) : l10n.resendCodeButton),
             ),
           ],
         ),

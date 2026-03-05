@@ -3,6 +3,7 @@ import 'package:two_space_app/screens/change_email_screen.dart';
 import 'package:two_space_app/screens/change_phone_screen.dart';
 import 'package:two_space_app/services/settings_service.dart';
 import 'package:two_space_app/screens/tfa_setup_screen.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class PrivacyScreen extends StatefulWidget {
   const PrivacyScreen({super.key});
@@ -33,6 +34,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   }
 
   Future<void> _toggle(bool v) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _loading = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -40,13 +42,14 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
       if (!mounted) return;
       setState(() => _hideFromSearch = v);
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Не удалось обновить приватность: $e')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.updatePrivacyError(e.toString()))));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _toggleLastSeen(bool v) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _loading = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -54,7 +57,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
       if (!mounted) return;
       setState(() => _hideLastSeen = v);
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Не удалось обновить настройку: $e')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.updateSettingError(e.toString()))));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -62,12 +65,13 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Приватность')),
+      appBar: AppBar(title: Text(l10n.privacyTitle)),
       body: ListView(padding: const EdgeInsets.all(12), children: [
-        SwitchListTile(title: const Text('Скрыть из поиска'), subtitle: const Text('Не показывать меня в результатах поиска по номеру или никнейму'), value: _hideFromSearch, onChanged: _loading ? null : _toggle),
+          SwitchListTile(title: Text(l10n.hideFromSearch), subtitle: Text(l10n.hideFromSearchSubtitle), value: _hideFromSearch, onChanged: _loading ? null : _toggle),
         const SizedBox(height: 6),
-        SwitchListTile(title: const Text('Скрывать статус "был(а) в сети"'), subtitle: const Text('Не показывать время последнего захода в приложение'), value: _hideLastSeen, onChanged: _loading ? null : _toggleLastSeen),
+          SwitchListTile(title: Text(l10n.hideLastSeen), subtitle: Text(l10n.hideLastSeenSubtitle), value: _hideLastSeen, onChanged: _loading ? null : _toggleLastSeen),
         const SizedBox(height: 12),
         // Session persistence setting (silent re-login)
         ValueListenableBuilder<int>(
@@ -79,8 +83,8 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 child: ListTile(
                   leading: const Icon(Icons.lock_clock),
-                  title: const Text('Срок действия входа'),
-                  subtitle: Text('Автоматический повторный вход на этом устройстве: $days дней'),
+                    title: Text(l10n.sessionExpiry),
+                    subtitle: Text(l10n.sessionExpirySubtitle(days)),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: _loading
                       ? null
@@ -89,29 +93,29 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                           final ok = await showDialog<bool>(
                             context: context,
                             builder: (ctx) => AlertDialog(
-                              title: const Text('Срок действия входа (дни)'),
-                              content: Column(mainAxisSize: MainAxisSize.min, children: [
-                                const Text('Выберите количество дней (мин: 7, макс: 365).'),
+                                title: Text(l10n.sessionExpiryDaysTitle),
+                                content: Column(mainAxisSize: MainAxisSize.min, children: [
+                                  Text(l10n.sessionExpiryDaysContent),
                                 const SizedBox(height: 8),
                                 TextField(
                                   controller: controller,
                                   keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(labelText: 'Дней'),
+                                    decoration: InputDecoration(labelText: l10n.daysLabel),
                                 ),
                               ]),
                               actions: [
-                                TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Отмена')),
+                                  TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancel)),
                                 TextButton(
                                     onPressed: () {
                                       final v = int.tryParse(controller.text.trim()) ?? -1;
                                       if (v < 7 || v > 365) {
                                         // show inline error
-                                        ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Введите число от 7 до 365')));
+                                          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.enterDaysError)));
                                         return;
                                       }
                                       Navigator.of(ctx).pop(true);
                                     },
-                                    child: const Text('Сохранить')),
+                                      child: Text(l10n.save)),
                               ],
                             ),
                           );
@@ -120,7 +124,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                               final newV = v.clamp(7, 365);
                               final messenger = ScaffoldMessenger.of(context);
                               await SettingsService.setSessionTimeoutDays(newV);
-                              messenger.showSnackBar(SnackBar(content: Text('Срок входа установлен: $newV дней')));
+                                messenger.showSnackBar(SnackBar(content: Text(l10n.sessionExpirySet(newV))));
                             }
                         },
                 ),
@@ -134,8 +138,8 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           child: ListTile(
             leading: const Icon(Icons.email),
-            title: const Text('Изменить email'),
-            subtitle: const Text('Безопасно поменяйте адрес электронной почты и подтвердите его'),
+              title: Text(l10n.changeEmailLabel),
+              subtitle: Text(l10n.changeEmailSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangeEmailScreen()));
@@ -148,8 +152,8 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           child: ListTile(
             leading: const Icon(Icons.security),
-            title: const Text('Двухфакторная аутентификация (2FA)'),
-            subtitle: const Text('Включить/отключить усиленную защиту'),
+              title: Text(l10n.twoFactorLabel),
+              subtitle: Text(l10n.twoFactorPrivacySubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
               // Navigate to TFA setup screen
@@ -163,8 +167,8 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           child: ListTile(
             leading: const Icon(Icons.phone),
-            title: const Text('Изменить телефон'),
-            subtitle: const Text('Безопасно поменяйте номер телефона и подтвердите его'),
+              title: Text(l10n.changePhoneLabel),
+              subtitle: Text(l10n.changePhoneSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ChangePhoneScreen()));

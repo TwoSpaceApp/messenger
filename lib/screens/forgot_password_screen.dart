@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/services/navigation_service.dart';
 // ui_tokens not needed here
 
@@ -14,10 +15,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _loading = false;
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     final email = _emailCtrl.text.trim();
     if (email.isEmpty) {
       final navCtx = appNavigatorKey.currentContext;
-      if (navCtx != null) ScaffoldMessenger.of(navCtx).showSnackBar(const SnackBar(content: Text('Введите email')));
+      if (navCtx != null) ScaffoldMessenger.of(navCtx).showSnackBar(SnackBar(content: Text(l10n.validationEnterEmail)));
       return;
     }
     setState(() => _loading = true);
@@ -25,12 +27,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       // AppwriteService not available
   if (!mounted) return;
   final navCtx = appNavigatorKey.currentContext;
-  if (navCtx != null) ScaffoldMessenger.of(navCtx).showSnackBar(const SnackBar(content: Text('Функция восстановления пароля недоступна')));
+  if (navCtx != null) ScaffoldMessenger.of(navCtx).showSnackBar(SnackBar(content: Text(l10n.forgotPasswordUnavailable)));
   // appNavigatorKey.currentState?.pop();
     } catch (e) {
   if (!mounted) return;
   final navCtx = appNavigatorKey.currentContext;
-  if (navCtx != null) ScaffoldMessenger.of(navCtx).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+  if (navCtx != null) ScaffoldMessenger.of(navCtx).showSnackBar(SnackBar(content: Text(l10n.errorWithDetail(e.toString()))));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -44,17 +46,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Восстановление пароля')),
+      appBar: AppBar(title: Text(l10n.forgotPasswordTitle)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           const SizedBox(height: 8),
-          Text('Введите email, на который будет отправлена ссылка для восстановления пароля.', style: Theme.of(context).textTheme.bodyMedium),
+          Text(l10n.forgotPasswordDescription, style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 12),
           TextField(controller: _emailCtrl, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email')),
           const SizedBox(height: 16),
-          ElevatedButton(onPressed: _loading ? null : _submit, child: _loading ? const CircularProgressIndicator() : const Text('Отправить')),
+          ElevatedButton(onPressed: _loading ? null : _submit, child: _loading ? const CircularProgressIndicator() : Text(l10n.sendResetButton)),
         ]),
       ),
     );

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:two_space_app/services/dev_logger.dart';
 import 'package:two_space_app/services/update_service.dart';
+import 'package:two_space_app/services/settings_service.dart';
 import 'package:two_space_app/screens/login_screen.dart';
 import 'package:two_space_app/screens/register_screen.dart';
 import 'package:two_space_app/screens/home_screen.dart';
 import 'package:two_space_app/screens/customization_screen.dart';
 import 'package:two_space_app/screens/privacy_screen.dart';
 import 'package:two_space_app/services/navigation_service.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class DevMenuScreen extends StatefulWidget {
   const DevMenuScreen({super.key});
@@ -32,14 +34,20 @@ class _DevMenuScreenState extends State<DevMenuScreen> {
   }
 
   Color _getLogColor(String log) {
-    if (!_colorize) return Colors.white;
+    if (!_colorize) {
+      return Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
+    }
     if (log.contains('[ERROR]')) return const Color(0xFFEF5350);
     if (log.contains('[WARN]')) return const Color(0xFFFFA726);
     if (log.contains('[INFO]')) return const Color(0xFF29B6F6);
-    if (log.contains('[DEBUG]')) return Colors.grey[400] ?? Colors.white;
+    if (log.contains('[DEBUG]')) {
+      return Theme.of(context).brightness == Brightness.dark 
+          ? (Colors.grey[400] ?? Colors.white)
+          : Colors.grey[700]!;
+    }
     if (log.contains('[HTTP]')) return const Color(0xFF66BB6A);
     if (log.contains('API Response') || log.contains('Response:')) return const Color(0xFFAB47BC);
-    return Colors.white;
+    return Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
   }
 
   String _truncateLog(String log, {int maxLength = 500}) {
@@ -81,6 +89,7 @@ class _DevMenuScreenState extends State<DevMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final routes = <Map<String, dynamic>>[
       {
         'label': 'Home',
@@ -216,7 +225,7 @@ class _DevMenuScreenState extends State<DevMenuScreen> {
                       ElevatedButton.icon(
                         onPressed: () async {
                           _logger.debug('🗂️ Очистка кеша профиля');
-                          // await SettingsService.clearCachedProfile();
+                          await SettingsService.clearCachedProfile();
                           _logger.info('✓ Кеш профиля очищен');
                           if (!mounted) return;
                           final navCtx = appNavigatorKey.currentContext;
@@ -233,7 +242,7 @@ class _DevMenuScreenState extends State<DevMenuScreen> {
                         onPressed: () {
                           _logger.debug('📋 Тест логирования');
                           _logger.info('ℹ️ Информационное сообщение');
-                          _logger.warn('⚠️ Предупреждение');
+                          _logger.warning('⚠️ Предупреждение');
                           _logger.error('❌ Ошибка');
                           _logger.debug('🔍 Отладочная информация');
                           _logger.info('🌐 [HTTP] GET /api/v1/user - Response: 200');
@@ -316,84 +325,84 @@ class _DevMenuScreenState extends State<DevMenuScreen> {
                             final isError = log.contains('[ERROR]');
                             final isWarn = log.contains('[WARN]');
 
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  child: GestureDetector(
-                                    onLongPress: () {
-                                      showModalBottomSheet(
-                                        context: context,
-                                        builder: (ctx) => Container(
-                                          color: Theme.of(context).colorScheme.surface,
-                                          padding: const EdgeInsets.all(16),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                'Опции логи',
-                                                style: Theme.of(context).textTheme.titleMedium,
-                                              ),
-                                              const SizedBox(height: 16),
-                                              ListTile(
-                                                leading: const Icon(Icons.copy),
-                                                title: const Text('Копировать'),
-                                                onTap: () {
-                                                  _copyLog(log);
-                                                  Navigator.pop(ctx);
-                                                },
-                                              ),
-                                              ListTile(
-                                                leading: const Icon(Icons.search),
-                                                title: const Text('Найти похожие'),
-                                                onTap: () {
-                                                  final keyword = log.split(':').first;
-                                                  _logger.info('Поиск: $keyword');
-                                                  Navigator.pop(ctx);
-                                                },
-                                              ),
-                                              ListTile(
-                                                leading: const Icon(Icons.delete),
-                                                title: const Text('Удалить эту строку'),
-                                                onTap: () {
-                                                  DevLogger.all.remove(log);
-                                                  setState(() {});
-                                                  Navigator.pop(ctx);
-                                                },
-                                              ),
-                                            ],
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              child: GestureDetector(
+                                onLongPress: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    builder: (ctx) => Container(
+                                      color: Theme.of(context).colorScheme.surface,
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Опции логи',
+                                            style: Theme.of(context).textTheme.titleMedium,
                                           ),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: isError
-                                            ? Colors.red.withValues(alpha: 0.1)
-                                            : isWarn
-                                                ? Colors.orange.withValues(alpha: 0.1)
-                                                : null,
-                                        border: Border(
-                                          left: BorderSide(
-                                            color: _getLogColor(log),
-                                            width: 3,
+                                          const SizedBox(height: 16),
+                                          ListTile(
+                                            leading: const Icon(Icons.copy),
+                                            title: Text(l10n.copyButton),
+                                            onTap: () {
+                                              _copyLog(log);
+                                              Navigator.pop(ctx);
+                                            },
                                           ),
-                                        ),
+                                          ListTile(
+                                            leading: const Icon(Icons.search),
+                                            title: const Text('Найти похожие'),
+                                            onTap: () {
+                                              final keyword = log.split(':').first;
+                                              _logger.info('Поиск: $keyword');
+                                              Navigator.pop(ctx);
+                                            },
+                                          ),
+                                          ListTile(
+                                            leading: const Icon(Icons.delete),
+                                            title: const Text('Удалить эту строку'),
+                                            onTap: () {
+                                              DevLogger.all.remove(log);
+                                              setState(() {});
+                                              Navigator.pop(ctx);
+                                            },
+                                          ),
+                                        ],
                                       ),
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      child: SelectableText(
-                                        _truncateLog(log),
-                                        style: TextStyle(
-                                          fontFamily: 'monospace',
-                                          fontSize: 11,
-                                          color: _getLogColor(log),
-                                          height: 1.5,
-                                        ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: isError
+                                        ? Colors.red.withValues(alpha: 0.1)
+                                        : isWarn
+                                            ? Colors.orange.withValues(alpha: 0.1)
+                                            : null,
+                                    border: Border(
+                                      left: BorderSide(
+                                        color: _getLogColor(log),
+                                        width: 3,
                                       ),
                                     ),
                                   ),
-                                );
-                              },
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  child: SelectableText(
+                                    _truncateLog(log),
+                                    style: TextStyle(
+                                      fontFamily: 'monospace',
+                                      fontSize: 11,
+                                      color: _getLogColor(log),
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             );
+                          },
+                        );
                 },
               ),
             ),

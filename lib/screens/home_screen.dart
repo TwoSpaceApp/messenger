@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/screens/chat_screen.dart';
@@ -92,6 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
       extendBodyBehindAppBar: true, 
@@ -108,7 +110,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const AppLogo(large: false),
                     const SizedBox(width: 8),
                     Text(
-                      'Чаты',
+                      l10n.chatsTitle,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -149,7 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildChatList() {
     final rooms = _filteredRooms;
-    if (rooms.isEmpty) return const Center(child: Text('Нет чатов', style: TextStyle(color: Colors.white70)));
+    if (rooms.isEmpty) return Center(child: Text(AppLocalizations.of(context)!.noChats, style: const TextStyle(color: Colors.white70)));
     
     return ListView.builder(
       padding: const EdgeInsets.all(8), 

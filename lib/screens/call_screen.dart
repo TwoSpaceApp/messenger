@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class CallScreen extends StatelessWidget {
   final String room;
@@ -10,8 +11,9 @@ class CallScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(isVideo ? 'Видеозвонок' : 'Звонок')),
+      appBar: AppBar(title: Text(isVideo ? l10n.videoCallLabel : l10n.voiceCallLabel)),
       body: Center(child: Text('Call: $room')),
     );
   }

@@ -5,6 +5,7 @@ import 'package:two_space_app/widgets/glass_card.dart';
 import 'package:two_space_app/widgets/app_logo.dart';
 import 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/screens/chat_screen.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class CreateChatScreen extends StatefulWidget {
   const CreateChatScreen({super.key});
@@ -39,9 +40,10 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
   }
 
   Future<void> _createDirectChat() async {
+    final l10n = AppLocalizations.of(context)!;
     final userId = _userIdController.text.trim();
     if (userId.isEmpty) {
-      setState(() => _errorMessage = 'Введите ID пользователя');
+      setState(() => _errorMessage = l10n.enterUserIdError);
       return;
     }
 
@@ -89,9 +91,10 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
   }
 
   Future<void> _createGroupChat() async {
+    final l10n = AppLocalizations.of(context)!;
     final roomName = _roomNameController.text.trim();
     if (roomName.isEmpty) {
-      setState(() => _errorMessage = 'Введите название комнаты');
+      setState(() => _errorMessage = l10n.enterRoomNameError);
       return;
     }
 
@@ -130,6 +133,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
     return Scaffold(
@@ -150,7 +154,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                     const AppLogo(large: false),
                     const SizedBox(width: 8),
                     Text(
-                      'Новый чат',
+                      l10n.newChatTitle,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -169,9 +173,9 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                   labelColor: Colors.white,
                   unselectedLabelColor: Colors.white60,
                   indicatorColor: theme.colorScheme.primary,
-                  tabs: const [
-                    Tab(text: 'Личный чат'),
-                    Tab(text: 'Группа'),
+                  tabs: [
+                    Tab(text: l10n.directChatTab),
+                    Tab(text: l10n.groupChatTab),
                   ],
                 ),
               ),
@@ -196,6 +200,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
   }
 
   Widget _buildDirectChatTab() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -206,9 +211,9 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Начать личный чат',
-                  style: TextStyle(
+                Text(
+                  l10n.startDirectChatTitle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -216,7 +221,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Введите Matrix ID пользователя (например: @user:matrix.org)',
+                  l10n.matrixIdDescription,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.white.withAlpha(180),
@@ -227,7 +232,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                   controller: _userIdController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Matrix ID пользователя',
+                      labelText: l10n.matrixIdLabel,
                     hintText: '@username:server.com',
                     labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
                     hintStyle: TextStyle(color: Colors.white.withAlpha(100)),
@@ -266,7 +271,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                             height: 24,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Начать чат'),
+                          : Text(l10n.startChatButton),
                   ),
                 ),
               ],
@@ -282,9 +287,9 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                   children: [
                     Icon(Icons.info_outline, color: Colors.white.withAlpha(180)),
                     const SizedBox(width: 12),
-                    const Text(
-                      'Подсказка',
-                      style: TextStyle(
+                    Text(
+                      l10n.hintCardTitle,
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -293,9 +298,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Matrix ID состоит из имени пользователя и домена сервера, '
-                  'например: @ivan:matrix.org. Вы можете ввести просто имя '
-                  'пользователя, и сервер будет добавлен автоматически.',
+                    l10n.matrixIdExplanation,
                   style: TextStyle(
                     color: Colors.white.withAlpha(180),
                     fontSize: 13,
@@ -310,6 +313,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
   }
 
   Widget _buildGroupChatTab() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -320,9 +324,9 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Создать группу',
-                  style: TextStyle(
+                Text(
+                  l10n.createNewRoomTitle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -333,7 +337,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                   controller: _roomNameController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Название группы',
+                      labelText: l10n.roomNameLabel,
                     labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
                     prefixIcon: const Icon(Icons.group, color: Colors.white70),
                     enabledBorder: OutlineInputBorder(
@@ -352,7 +356,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                   style: const TextStyle(color: Colors.white),
                   maxLines: 2,
                   decoration: InputDecoration(
-                    labelText: 'Описание (опционально)',
+                      labelText: l10n.descriptionOptionalLabel,
                     labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
                     prefixIcon: const Icon(Icons.description, color: Colors.white70),
                     enabledBorder: OutlineInputBorder(
@@ -368,14 +372,14 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                 const SizedBox(height: 16),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text(
-                    'Приватная группа',
-                    style: TextStyle(color: Colors.white),
+                  title: Text(
+                    l10n.privateGroupLabel,
+                    style: const TextStyle(color: Colors.white),
                   ),
                   subtitle: Text(
                     _isPrivate 
-                        ? 'Только по приглашению'
-                        : 'Любой может присоединиться',
+                        ? l10n.privateGroupSubtitle
+                        : l10n.publicRoomSubtitle,
                     style: TextStyle(color: Colors.white.withAlpha(150)),
                   ),
                   value: _isPrivate,
@@ -405,7 +409,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                             height: 24,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Создать группу'),
+                          : Text(l10n.createRoomButton),
                   ),
                 ),
               ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/services/chat_service.dart';
 import 'package:two_space_app/services/chat_backend_factory.dart';
 import 'package:two_space_app/services/chat_matrix_service.dart';
@@ -102,20 +103,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickAvatar() async {
     final picker = ImagePicker();
+    final l10n = AppLocalizations.of(context)!;
     final image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       // TODO: Upload avatar to server
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Загрузка аватара будет добавлена позже')),
+        SnackBar(content: Text(l10n.avatarUploadLater)),
       );
     }
   }
 
   Future<void> _saveProfile() async {
     // TODO: Save profile changes to server
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isEditing = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Профиль сохранён')),
+      SnackBar(content: Text(l10n.profileSaved)),
     );
   }
 
@@ -145,19 +148,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final name = _displayName();
     final avatar = _avatarUrl();
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Профиль'),
+        title: Text(l10n.profileTitle),
         centerTitle: false,
         actions: [
           if (_isMe)
             IconButton(
               icon: Icon(_isEditing ? Icons.check : Icons.edit),
               onPressed: _isEditing ? _saveProfile : () => setState(() => _isEditing = true),
-              tooltip: _isEditing ? 'Сохранить' : 'Редактировать',
+              tooltip: _isEditing ? l10n.saveTooltip : l10n.editTooltip,
             ),
         ],
       ),
@@ -245,7 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         _buildActionButton(
                           icon: _actionLoading ? null : Icons.chat_bubble_outline,
-                          label: 'Написать',
+                          label: l10n.writeMessageButton,
                           loading: _actionLoading,
                           onPressed: _actionLoading
                               ? null
@@ -260,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     if (!mounted) return;
                                     navState?.pop(chat);
                                   } catch (e) {
-                                    messenger.showSnackBar(SnackBar(content: Text('Не удалось создать чат: $e')));
+                                    messenger.showSnackBar(SnackBar(content: Text(l10n.createChatError(e.toString()))));
                                   } finally {
                                     if (mounted) setState(() => _actionLoading = false);
                                   }
@@ -269,7 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(width: 12),
                         _buildActionButton(
                           icon: Icons.call_outlined,
-                          label: 'Позвонить',
+                          label: l10n.callButton,
                           onPressed: () async {
                             final roomName = 'call_${widget.userId.replaceAll(RegExp(r"[^a-zA-Z0-9_-]"), '_')}_${DateTime.now().millisecondsSinceEpoch}';
                             Navigator.of(context).push(
@@ -297,17 +301,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (_isEditing) ...[
-                            _buildEditableField('Имя', _nameController, Icons.person),
+                            _buildEditableField(l10n.nameField, _nameController, Icons.person),
                             const Divider(),
-                            _buildEditableField('Никнейм', _nicknameController, Icons.alternate_email),
+                            _buildEditableField(l10n.nicknameField, _nicknameController, Icons.alternate_email),
                             const Divider(),
-                            _buildEditableField('О себе', _aboutController, Icons.info_outline, maxLines: 3),
+                            _buildEditableField(l10n.aboutField, _aboutController, Icons.info_outline, maxLines: 3),
                             const Divider(),
-                            _buildEditableField('Место', _locationController, Icons.location_on_outlined),
+                            _buildEditableField(l10n.locationField, _locationController, Icons.location_on_outlined),
                             const Divider(),
-                            _buildEditableField('День рождения', _birthdayController, Icons.cake_outlined),
+                            _buildEditableField(l10n.birthdayField, _birthdayController, Icons.cake_outlined),
                           ] else ...[
-                            _buildInfoRow('О себе', (_user != null) ? (_user!['prefs']?['about'] ?? _user!['bio'] ?? '') : ''),
+                            _buildInfoRow(l10n.aboutField, (_user != null) ? (_user!['prefs']?['about'] ?? _user!['bio'] ?? '') : ''),
                             const Divider(),
                             if (_user != null)
                               Builder(builder: (c) {
@@ -317,7 +321,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 final shouldShowEmail = (_isMe ? SettingsService.showEmailNotifier.value : serverShowEmail);
                                 if (email.isNotEmpty && shouldShowEmail) {
                                   return Column(children: [
-                                    _buildInfoRow('Email', email),
+                                    _buildInfoRow(l10n.emailLabel, email),
                                     const Divider(),
                                   ]);
                                 }
@@ -331,17 +335,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 final shouldShowPhone = (_isMe ? SettingsService.showPhoneNotifier.value : serverShowPhone);
                                 if (phone.isNotEmpty && shouldShowPhone) {
                                   return Column(children: [
-                                    _buildInfoRow('Телефон', phone),
+                                    _buildInfoRow(l10n.phoneLabel, phone),
                                     const Divider(),
                                   ]);
                                 }
                                 return const SizedBox.shrink();
                               }),
-                            _buildInfoRow('Никнейм', (_user != null) ? (_user!['prefs']?['nickname'] ?? '') : ''),
+                            _buildInfoRow(l10n.nicknameField, (_user != null) ? (_user!['prefs']?['nickname'] ?? '') : ''),
                             const Divider(),
-                            _buildInfoRow('Место', (_user != null) ? (_user!['location'] ?? '') : ''),
+                            _buildInfoRow(l10n.locationField, (_user != null) ? (_user!['location'] ?? '') : ''),
                             const Divider(),
-                            _buildInfoRow('День рождения', (_user != null) ? (_user!['birthday'] ?? '') : ''),
+                            _buildInfoRow(l10n.birthdayField, (_user != null) ? (_user!['birthday'] ?? '') : ''),
                           ],
                         ],
                       ),

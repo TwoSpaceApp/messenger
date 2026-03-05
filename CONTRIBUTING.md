@@ -75,19 +75,35 @@ sudo apt-get install -y --no-install-recommends \
 
 ## 🔧 Процесс разработки
 
-### Структура проекта (TODO: актуализировать)
+### Структура проекта
 
 ```
 lib/
-├── main.dart                 # Точка входа
-├── config/                   # Конфигурация (environment, UI tokens)
+├── main.dart                 # Точка входа, MaterialApp + locale + theme
+├── config/                   # Конфигурация (environment.dart, UI tokens)
 ├── constants/                # Константы приложения
+├── l10n/                     # ARB-файлы локализации (10 языков)
 ├── models/                   # Модели данных
+├── providers/                # Riverpod-провайдеры
 ├── screens/                  # Экраны (UI)
-├── services/                 # Бизнес-логика (Aegis, auth, chat)
-├── sound/                    # Всё связяное с аудио (Пока в бете)
+├── services/
+│   ├── aegis/                # Нижний уровень: Aegis TCP-протокол
+│   │   ├── aegis_client.dart         # Основной клиент протокола
+│   │   ├── transport.dart            # TCP-транспорт с буферизацией фреймов
+│   │   ├── message.dart              # Модель протокольного фрейма
+│   │   ├── message_encoder.dart      # Кодирование/декодирование бинарного фрейма
+│   │   ├── message_payloads.dart     # Типы payload (запросы, ответы, сущности)
+│   │   ├── message_type.dart         # Enum типов сообщений
+│   │   ├── protocol_constants.dart   # Magic, размеры полей
+│   │   └── exceptions.dart           # Исключения протокола
+│   ├── aegis_auth_service.dart   # Flutter-обёртка над AegisClient (singleton)
+│   ├── auth_service.dart         # Высокоуровневая аутентификация (Aegis + Matrix)
+│   ├── settings_service.dart     # Тема, язык, настройки пользователя
+│   └── ...                       # Прочие сервисы
+├── sound/                    # Аудио (уведомления, звонки)
 ├── utils/                    # Вспомогательные функции
-└── widgets/                  # Переиспользуемые компоненты
+└── widgets/
+    └── ...                       # Прочие переиспользуемые компоненты
 ```
 
 ### Кодовый стиль
@@ -160,7 +176,78 @@ void main() {
 }
 ```
 
-## 📝 Правила коммитов
+## � Работа с протоколом Aegis
+
+Весь клиентский код протокола находится в `lib/services/aegis/`.
+
+### Добавление новой операции
+
+1. При необходимости добавьте значение в `MessageType` (`message_type.dart`) — согласуйте номер с командой сервера.
+2. Добавьте классы request/response в `message_payloads.dart` (по аналогии с `RegistrationRequest` / `RegistrationResponse`).
+3. Реализуйте метод в `AegisClient` (`aegis_client.dart`):
+   ```dart
+   Future<MyResponse> myOperation(MyRequest req) async {
+     _ensureConnectedAndAuthenticated();
+     final msg = Message.withType(MessageType.myOp, req.toBytes());
+     msg.flags = ProtocolConstants.flagRequiresAck;
+     await _transport.sendMessage(msg);
+     final resp = await messages
+         .firstWhere((m) => m.type == MessageType.myOpResponse)
+         .timeout(const Duration(seconds: 10));
+     return MyResponse.fromBytes(resp.payload);
+   }
+   ```
+4. При необходимости добавьте proxy-метод в `AegisAuthService`.
+5. Напишите unit-тест.
+
+### Тест соединения вручную
+
+```bash
+# Запустить Aegis-сервер локально (из Aegis-main/)
+# Затем установить переменные и запустить приложение:
+AEGIS_HOST=localhost AEGIS_PORT=8888 flutter run
+```
+
+---
+
+## 🌍 Локализация (i18n)
+
+Все строки UI хранятся в `lib/l10n/app_<код>.arb`. Генерация кода запускается автоматически при сборке.
+
+### Добавить новую строку
+
+1. Добавьте ключ во **все** 10 ARB-файлов (`app_ru.arb`, `app_en.arb`, …).
+2. Для строк с параметрами используйте плейсхолдеры:
+   ```json
+   "welcomeUser": "Привет, {name}!",
+   "@welcomeUser": {
+     "placeholders": { "name": { "type": "String" } }
+   }
+   ```
+3. Перегенерируйте:
+   ```bash
+   flutter gen-l10n
+   ```
+4. Используйте в коде как **позиционный** параметр:
+   ```dart
+   Text(l10n.welcomeUser(username))
+   ```
+   > ⚠️ Не используйте именованные параметры (`l10n.welcomeUser(name: x)`) — gen-l10n генерирует позиционную сигнатуру.
+
+### Добавить новый язык
+
+1. Создайте `lib/l10n/app_<код>.arb` (скопируйте `app_en.arb` и переведите).
+2. Добавьте `Locale('<код>')` в `supportedLocales` в `main.dart`.
+3. Добавьте запись в список `_languages` в `lib/widgets/language_switcher.dart`.
+4. Запустите `flutter gen-l10n`.
+
+### Смена языка в рантайме
+
+Используйте `SettingsService.setLanguage(code)`. Реактивная связка через `ValueListenableBuilder<String>` в `main.dart` применяет новую `locale` немедленно.
+
+---
+
+## �📝 Правила коммитов
 
 Используйте **Conventional Commits**:
 
@@ -300,9 +387,9 @@ class MatrixService {
 ## 🔐 Безопасность
 
 - **Никогда** не коммитьте `.env` или ключи
-- Используйте `flutter_secure_storage` для чувствительных данных
+- Используйте `flutter_secure_storage` для чувствительных данных (токены, учётные данные)
 - Проверяйте входные данные перед использованием
-- Используйте HTTPS для всех API запросов
+- Используйте HTTPS для всех REST API запросов
 
 ## 📞 Связь
 

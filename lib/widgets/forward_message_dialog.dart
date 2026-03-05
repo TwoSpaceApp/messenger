@@ -1,5 +1,6 @@
 // Forward message dialog
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import '../models/chat.dart';
 
 class ForwardMessageDialog extends StatefulWidget {
@@ -22,12 +23,13 @@ class _ForwardMessageDialogState extends State<ForwardMessageDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final filtered = widget.availableChats
         .where((c) => c.name.toLowerCase().contains(_searchQuery.toLowerCase()))
         .toList();
 
     return AlertDialog(
-      title: const Text('Переслать сообщение'),
+      title: Text(l10n.forwardMessageTitle),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
@@ -36,7 +38,7 @@ class _ForwardMessageDialogState extends State<ForwardMessageDialog> {
             // Search field
             TextField(
               decoration: InputDecoration(
-                hintText: 'Поиск чата...',
+                hintText: l10n.searchChatHint,
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -65,7 +67,7 @@ class _ForwardMessageDialogState extends State<ForwardMessageDialog> {
                     },
                     title: Text(chat.name),
                     subtitle: Text(
-                      '${chat.members.length} участников',
+                      l10n.membersCount(chat.members.length),
                       style: theme.textTheme.bodySmall,
                     ),
                   );
@@ -78,7 +80,7 @@ class _ForwardMessageDialogState extends State<ForwardMessageDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Отмена'),
+          child: Text(l10n.cancel),
         ),
         ElevatedButton(
           onPressed: _selectedChats.isEmpty
@@ -87,7 +89,7 @@ class _ForwardMessageDialogState extends State<ForwardMessageDialog> {
                   widget.onForward(_selectedChats.toList());
                   Navigator.pop(context);
                 },
-          child: Text('Переслать (${_selectedChats.length})'),
+          child: Text(l10n.forwardButton(_selectedChats.length)),
         ),
       ],
     );

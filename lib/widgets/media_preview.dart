@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:two_space_app/services/matrix_service.dart';
@@ -79,6 +80,7 @@ class _MediaPreviewState extends State<MediaPreview> {
   }
 
   Future<void> _download() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _loading = true;
       _error = null;
@@ -90,11 +92,11 @@ class _MediaPreviewState extends State<MediaPreview> {
         if (_bytes == null) throw Exception('No data');
         final tmp = await _writeBytesToTemp(_bytes!, widget.filename);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Файл загружен: $tmp')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.fileDownloaded(tmp))));
       } else {
         final path = await MatrixService.downloadFileToTemp(widget.mediaId, filename: widget.filename);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Файл загружен: $path')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.fileDownloaded(path))));
       }
     } catch (e) {
       setState(() {
@@ -110,6 +112,7 @@ class _MediaPreviewState extends State<MediaPreview> {
   }
 
   Future<void> _saveToGallery() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _loading = true;
       _error = null;
@@ -121,12 +124,12 @@ class _MediaPreviewState extends State<MediaPreview> {
         final tmp = await _writeBytesToTemp(_bytes!, widget.filename);
         // Saving to gallery isn't implemented for generic matrix media here.
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Файл сохранён временно: $tmp')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.fileSavedTemp(tmp))));
       } else {
         final temp = await MatrixService.downloadFileToTemp(widget.mediaId, filename: widget.filename);
         final ok = await MatrixService.saveFileToGallery(temp);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? 'Сохранено в галерею' : 'Не удалось сохранить')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(ok ? l10n.savedToGallery : l10n.saveFailed)));
       }
     } catch (e) {
       setState(() {
@@ -142,6 +145,7 @@ class _MediaPreviewState extends State<MediaPreview> {
   }
 
   Future<void> _share() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _loading = true;
       _error = null;
@@ -154,13 +158,13 @@ class _MediaPreviewState extends State<MediaPreview> {
         // Sharing implementation for Matrix media: reuse MatrixService.shareFile if available for file path
         final ok = await MatrixService.shareFile(tmp, text: widget.filename);
         if (!mounted) return;
-        if (!ok) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Не удалось открыть лист обмена')));
+        if (!ok) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.shareSheetFailed)));
       } else {
         final temp = await MatrixService.downloadFileToTemp(widget.mediaId, filename: widget.filename);
         final ok = await MatrixService.shareFile(temp, text: widget.filename);
         if (!mounted) return;
         if (!ok) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Не удалось открыть лист обмена')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.shareSheetFailed)));
         }
       }
     } catch (e) {
@@ -186,6 +190,7 @@ class _MediaPreviewState extends State<MediaPreview> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final viewUrl = MatrixService.getFileViewUrl(widget.mediaId).toString();
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -195,13 +200,13 @@ class _MediaPreviewState extends State<MediaPreview> {
           child: Builder(builder: (c) {
             if (Environment.useMatrix && widget.mediaId.startsWith('mxc://')) {
               if (_bytes != null) return Image.memory(_bytes!, fit: BoxFit.cover);
-              if (_error != null) return Center(child: Text('Ошибка: $_error'));
+              if (_error != null) return Center(child: Text(l10n.errorWithDetail(_error!)));
               return const Center(child: CircularProgressIndicator());
             }
             return Image.network(viewUrl, fit: BoxFit.cover, errorBuilder: (c, e, st) => const Center(child: Icon(Icons.broken_image)));
           }),
         ),
-        if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text('Ошибка: $_error', style: const TextStyle(color: Colors.red))),
+        if (_error != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(l10n.errorWithDetail(_error!), style: const TextStyle(color: Colors.red))),
         Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
           IconButton(onPressed: _loading ? null : _download, icon: const Icon(Icons.download)),
           IconButton(onPressed: _loading ? null : _saveToGallery, icon: const Icon(Icons.save_alt)),

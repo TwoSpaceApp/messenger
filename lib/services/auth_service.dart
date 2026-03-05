@@ -4,6 +4,7 @@ import 'package:two_space_app/services/matrix_service.dart';
 import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/services/dev_logger.dart';
 import 'package:two_space_app/config/environment.dart';
+import 'package:two_space_app/services/aegis_auth_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Keys used in secure storage for Matrix tokens per-user
@@ -29,6 +30,7 @@ class AuthService {
 
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
   final ChatMatrixService _matrixService = ChatMatrixService();
+  final AegisAuthService _aegis = AegisAuthService();
 
   // ChatMatrixService storage keys (kept here to avoid tight coupling to its private consts)
   static const String _kChatMatrixAccessTokenKey = 'matrix_access_token';
@@ -41,7 +43,7 @@ class AuthService {
       await _matrixService.login(email, password);
       _logger.info('✓ Matrix login successful');
     } catch (e) {
-      _logger.warn('❌ Matrix login failed: $e');
+      _logger.warning('❌ Matrix login failed: $e');
       rethrow;
     }
   }
@@ -65,7 +67,14 @@ class AuthService {
   /// Sign out current user: delete session on server and clear stored JWT/cookie
   Future<void> signOut() async {
     _logger.info('🚪 Выход из аккаунта...');
-    // Clear ChatMatrixService credentials
+    // Прежде всего выходим из Aegis
+    try {
+      await _aegis.logout();
+      _logger.info('✓ Aegis сессия завершена');
+    } catch (e) {
+      _logger.debug('⚠️ Aegis logout ошибка: $e');
+    }
+    // Зачищаем Matrix креденшиалы
     try {
       await _matrixService.clearCredentials();
       _logger.info('✓ Matrix credentials cleared');
@@ -93,40 +102,31 @@ class AuthService {
 
   // Backwards compatible wrappers used by existing screens
   Future<void> loginUser(String identifier, String password) async {
-    _logger.info('🔐 Попытка входа: $identifier');
-    // identifier may be pseudo-email created from phone; call signInWithEmail
-    final res = await signInWithEmail(identifier, password);
-    _logger.info('✓ Вход в приложение успешен');
-    // If Matrix integration enabled, attempt to sign in the same user on Matrix
+    _logger.info('🔐 Вход: $identifier');
     try {
-      if (Environment.useMatrix) {
-        _logger.info('🌐 Попытка входа в Matrix...');
-        // Try matrix login using identifier as username (app can adjust mapping)
-        // await signInMatrix(identifier, password); // STUB: Disable real matrix login
-        _logger.info('✓ Matrix вход успешен (STUB)');
-      }
+      await _aegis.login(identifier: identifier, password: password);
+      _logger.info('✓ Вход через Aegis успешен');
+      return;
     } catch (e) {
-      _logger.warn('⚠️ Matrix вход не удался: $e');
-      // Non-fatal: keep app login even if Matrix login fails
+      _logger.warning('❌ Aegis вход не удался: $e');
+      rethrow;
     }
-    return res;
   }
 
   Future<dynamic> registerUser(String name, String email, String password) async {
-    // STUB: Always success
-    return {'id': 'stub-id', 'name': name, 'email': email};
-    /*
-    // If SDK client available, use it; otherwise use REST fallback
-    // Use REST createAccount helper which works in both SDK and REST environments
-    final res = await MatrixService.createAccount(email, password, name: name);
-    // Try to provision Matrix account (best-effort). Server may disable registration.
+    _logger.info('📝 Регистрация: $name / $email');
     try {
-      if (Environment.useMatrix) {
-        await _matrixRegister(email, password);
-      }
-    } catch (_) {}
-    return res;
-    */
+      final user = await _aegis.register(
+        username: name,
+        email: email,
+        password: password,
+      );
+      _logger.info('✓ Зарегистрирован: ${user.username}');
+      return {'id': user.id.toString(), 'name': user.username, 'email': user.email};
+    } catch (e) {
+      _logger.warning('❌ Ошибка регистрации: $e');
+      rethrow;
+    }
   }
 
   /// Sign in to a Matrix homeserver using password login and store the
@@ -243,6 +243,9 @@ class AuthService {
 
   /// Retrieve stored Matrix access token for given app user id (or current user if null)
   Future<String?> getMatrixTokenForUser({String? appUserId}) async {
+    // Прежде всего ищем Aegis-токен
+    if (_aegis.token != null) return _aegis.token;
+
     // Primary source: ChatMatrixService stores token globally.
     await _matrixService.init();
     final direct = await _secure.read(key: _kChatMatrixAccessTokenKey);
@@ -320,6 +323,8 @@ class AuthService {
 
   /// Return current application user id from Matrix service.
   Future<String?> getCurrentUserId() async {
+    // В первую очередь возвращаем Aegis-пользователя
+    if (_aegis.username != null) return _aegis.username;
     return await _matrixService.getCurrentUserId();
   }
 
@@ -425,20 +430,25 @@ class AuthService {
     await MatrixService.saveJwt(jwt);
   }
 
-  /// Attempt to restore previous session from stored Matrix token.
+  /// Attempt to restore previous session from stored token.
   /// Returns true if session was successfully restored, false otherwise.
-  /// Call this on app startup to enable persistent login.
   Future<bool> restoreSessionFromToken() async {
+    // Сначала пробуем Aegis
     try {
-      // Try to get stored Matrix user id
+      final restored = await _aegis.restoreSession();
+      if (restored) {
+        _logger.info('✓ Aegis сессия восстановлена');
+        return true;
+      }
+    } catch (e) {
+      _logger.debug('Не удалось восстановить Aegis-сессию: $e');
+    }
+    // Фолбэк на Matrix
+    try {
       final userId = await MatrixService().getCurrentUserId();
       if (userId == null || userId.isEmpty) return false;
-
-      // Try to get stored token for this user
       final token = await getMatrixTokenForUser(appUserId: userId);
       if (token == null || token.isEmpty) return false;
-
-      // Token is valid - session restored
       return true;
     } catch (_) {
       return false;

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:two_space_app/l10n/app_localizations.dart';
+
 import 'package:two_space_app/services/settings_service.dart';
 import 'package:two_space_app/services/navigation_service.dart';
 import 'package:two_space_app/screens/profile_screen.dart';
@@ -26,7 +28,7 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
     } catch (e) {
       final navCtx = appNavigatorKey.currentContext;
       if (navCtx != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => ScaffoldMessenger.of(navCtx).showSnackBar(SnackBar(content: Text('Ошибка аутентификации: $e'))));
+        WidgetsBinding.instance.addPostFrameCallback((_) => ScaffoldMessenger.of(navCtx).showSnackBar(SnackBar(content: Text(AppLocalizations.of(navCtx)!.authError(e.toString())))));
       }
       return false;
     }
@@ -55,21 +57,24 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             final res = await showDialog<bool>(
               context: navCtx,
-              builder: (ctx) => AlertDialog(
-                title: const Text('Требуется вход'),
-                content: const Text('Для поиска контактов необходим вход в аккаунт. Хотите перейти на экран входа?'),
+              builder: (ctx) {
+              final l10n = AppLocalizations.of(ctx)!;
+              return AlertDialog(
+                title: Text(l10n.loginRequired),
+                content: Text(l10n.loginRequiredContent),
                 actions: [
-                  TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Отмена')),
-                  ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Войти')),
+                  TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancel)),
+                  ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(l10n.loginAction)),
                 ],
-              ),
+              );
+            },
             );
             if (res == true) appNavigatorKey.currentState?.pushReplacementNamed('/login');
           });
         }
       } else {
         final navCtx = appNavigatorKey.currentContext;
-        if (navCtx != null) WidgetsBinding.instance.addPostFrameCallback((_) => ScaffoldMessenger.of(navCtx).showSnackBar(SnackBar(content: Text('Ошибка поиска: $e'))));
+        if (navCtx != null) WidgetsBinding.instance.addPostFrameCallback((_) => ScaffoldMessenger.of(navCtx).showSnackBar(SnackBar(content: Text(AppLocalizations.of(navCtx)!.searchError(e.toString())))));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -77,17 +82,17 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
   }
 
   String _formatLastSeen(String? iso, Map<String,dynamic>? prefs) {
-    if (prefs != null && prefs['online'] == true) return 'В сети';
-    if (prefs != null && prefs['hideLastSeen'] == true) return 'Был(а) недавно';
+    if (prefs != null && prefs['online'] == true) return AppLocalizations.of(context)!.onlineLabel;
+    if (prefs != null && prefs['hideLastSeen'] == true) return AppLocalizations.of(context)!.statusLastSeenRecently;
     if (iso == null) return '';
     try {
       final dt = DateTime.parse(iso).toLocal();
       final now = DateTime.now();
       final diff = now.difference(dt);
-      if (diff.inSeconds < 60) return 'меньше минуты назад';
-      if (diff.inMinutes < 60) return '${diff.inMinutes} мин. назад';
-      if (diff.inHours < 24) return '${diff.inHours} ч. назад';
-      if (diff.inDays < 7) return '${diff.inDays} д. назад';
+      if (diff.inSeconds < 60) return AppLocalizations.of(context)!.lessThanMinuteAgo;
+      if (diff.inMinutes < 60) return AppLocalizations.of(context)!.minutesAgo(diff.inMinutes);
+      if (diff.inHours < 24) return AppLocalizations.of(context)!.hoursAgo(diff.inHours);
+      if (diff.inDays < 7) return AppLocalizations.of(context)!.daysAgo(diff.inDays);
       return DateFormat('dd.MM.yyyy').format(dt);
     } catch (_) { return ''; }
   }
@@ -101,8 +106,9 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(leading: BackButton(), title: const Text('Поиск контактов')),
+      appBar: AppBar(leading: BackButton(), title: Text(l10n.searchContactsTitle)),
       body: Padding(
         padding: EdgeInsets.all(12.0 * Responsive.scaleWidth(context)),
         child: Column(
@@ -142,7 +148,7 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
                                   size: 20 * Responsive.scaleFor(context),
                                 ),
                                 prefixIconColor: iconColor,
-                                hintText: 'Никнейм или номер телефона',
+                                hintText: l10n.nicknameOrPhoneHint,
                                 hintStyle: Theme.of(ctx).textTheme.bodySmall?.copyWith(
                                   fontSize: 14 * Responsive.scaleFor(context),
                                   color: iconColor.withAlpha((0.6 * 255).round()),
@@ -189,7 +195,7 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
                       });
                     },
                     child: Text(
-                      'Отмена',
+                      l10n.cancel,
                       style: TextStyle(fontSize: 14 * Responsive.scaleFor(context)),
                     ),
                   ),
@@ -228,7 +234,7 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
                       },
                     )
                   : _results.isEmpty && !_loading
-                      ? Center(child: Text('Ничего не найдено', style: Theme.of(context).textTheme.bodyMedium))
+                      ? Center(child: Text(l10n.noResultsFound, style: Theme.of(context).textTheme.bodyMedium))
                       : ListView.separated(
                       itemCount: _results.length,
                       cacheExtent: 600,
@@ -252,7 +258,7 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
                                 final peerId = (e['\$id'] ?? e['id'])?.toString() ?? '';
                                 if (peerId.isEmpty) throw Exception('invalid peer id');
                                 if (!mounted) return;
-                                // Open profile first; ProfileScreen will return a Chat or Map when "Написать" is used.
+                                // Open profile first; ProfileScreen will return a Chat or Map when "Message" is tapped.
                                 final res = await appNavigatorKey.currentState?.push(MaterialPageRoute(builder: (_) => ProfileScreen(userId: peerId, initialName: name.toString(), initialAvatar: avatar)));
                                 if (res != null) {
                                   // Return whatever profile returned (Chat or Map) to the caller (HomeScreen)
@@ -261,7 +267,7 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
                               } catch (err) {
                                 if (!mounted) return;
                                 final navCtx = appNavigatorKey.currentContext;
-                                if (navCtx != null) ScaffoldMessenger.of(navCtx).showSnackBar(SnackBar(content: Text('Не удалось выбрать контакт: $err')));
+                                if (navCtx != null) ScaffoldMessenger.of(navCtx).showSnackBar(SnackBar(content: Text(AppLocalizations.of(navCtx)!.selectContactError(err.toString()))));
                               }
                             },
                             child: Padding(

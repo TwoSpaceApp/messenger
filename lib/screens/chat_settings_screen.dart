@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
 import 'package:two_space_app/widgets/user_avatar.dart';
 import 'package:two_space_app/services/chat_matrix_service.dart';
@@ -30,6 +31,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   }
 
   Future<void> _pickAndUploadAvatar() async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result == null || result.files.isEmpty) return;
     final path = result.files.single.path;
@@ -39,16 +41,17 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       final bytes = await File(path).readAsBytes();
       await ChatMatrixService().setRoomAvatar(widget.roomId, bytes, fileName: path.split('/').last);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Аватар комнаты обновлен')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.roomAvatarUpdated)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка при загрузке аватара: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.roomAvatarUploadError(e.toString()))));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
   Future<void> _saveSettings() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _saving = true);
     try {
       final name = _nameController.text.trim();
@@ -56,30 +59,32 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       // set join rule
       await ChatMatrixService().setJoinRule(widget.roomId, _isPublic ? 'public' : 'invite');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Настройки комнаты сохранены')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.roomSettingsSaved)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка при сохранении: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.roomSettingsSaveError(e.toString()))));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
   Widget _buildSectionContent(String key) {
+    final l10n = AppLocalizations.of(context)!;
     switch (key) {
       case 'members':
         return _buildMembers();
       case 'settings':
         return _buildSettings();
       default:
-        return Center(child: Text('Заглушка — $key'));
+        return Center(child: Text(l10n.stubPlaceholder(key)));
     }
   }
 
   Widget _buildMembers() {
+    final l10n = AppLocalizations.of(context)!;
     if (_loadingMembers) return const Center(child: CircularProgressIndicator());
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Участники', style: Theme.of(context).textTheme.titleLarge),
+      Text(l10n.membersLabel, style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 12),
       Expanded(child: ListView.separated(itemBuilder: (c, i) {
         final m = _members[i];
@@ -93,21 +98,22 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   }
 
   Widget _buildSettings() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Общие', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      Text(l10n.generalLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       const SizedBox(height: 12),
-      TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Название комнаты')),
+      TextField(controller: _nameController, decoration: InputDecoration(labelText: l10n.roomNameLabel)),
       const SizedBox(height: 12),
-      Row(children: [ElevatedButton.icon(onPressed: _saving ? null : _pickAndUploadAvatar, icon: const Icon(Icons.image), label: const Text('Загрузить аватар'))]),
+      Row(children: [ElevatedButton.icon(onPressed: _saving ? null : _pickAndUploadAvatar, icon: const Icon(Icons.image), label: Text(l10n.uploadAvatarButton))]),
       const SizedBox(height: 16),
       SwitchListTile(
-        title: const Text('Публичная комната'),
-        subtitle: const Text('Опубликовать комнату в каталоге и разрешить всем присоединяться'),
+        title: Text(l10n.publicRoomOption),
+        subtitle: Text(l10n.publicRoomSubtitle),
         value: _isPublic,
         onChanged: (v) => setState(() => _isPublic = v),
       ),
       const SizedBox(height: 8),
-      Row(children: [TextButton(onPressed: _saving ? null : _saveSettings, child: _saving ? const CircularProgressIndicator() : const Text('Сохранить'))])
+      Row(children: [TextButton(onPressed: _saving ? null : _saveSettings, child: _saving ? const CircularProgressIndicator() : Text(l10n.saveButton))])
     ]));
   }
 
@@ -120,23 +126,24 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       if (!mounted) return;
       setState(() { _members = list; });
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка загрузки участников: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.loadMembersError(e.toString()))));
     } finally { if (mounted) setState(() => _loadingMembers = false); }
   }
 
   Future<void> _showLeaveConfirmation() async {
+    final l10n = AppLocalizations.of(context)!;
     // Telegram-like multi-step confirmation for leaving a room
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (_) => AlertDialog(
-        title: const Text('Покинуть комнату?'),
-        content: const Text('Вы не сможете вернуться в эту комнату, если вас не пригласят заново.'),
+        title: Text(l10n.leaveRoomTitle),
+        content: Text(l10n.leaveRoomContent),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Отмена')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancelButton)),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Покинуть', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.leaveAction, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -148,48 +155,50 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     try {
       await ChatMatrixService().leaveRoom(widget.roomId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Вы покинули комнату')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.leftRoom)));
       Future.delayed(const Duration(milliseconds: 500), () {
         if (!mounted) return;
         Navigator.pop(context);
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка при выходе: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.leaveRoomError(e.toString()))));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
   Future<void> _handleDangerAction(String key) async {
+    final l10n = AppLocalizations.of(context)!;
     if (key == 'leave') {
       await _showLeaveConfirmation();
     } else if (key == 'report') {
       // TODO: Implement report spam/abuse flow
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Функция жалобы еще не реализована')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.reportNotImplemented)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final sections = [
-      {'key': 'invite', 'title': 'Пригласить', 'icon': Icons.person_add},
-      {'key': 'members', 'title': 'Участники', 'icon': Icons.group},
-      {'key': 'threads', 'title': 'Ветки', 'icon': Icons.alt_route},
-      {'key': 'pinned', 'title': 'Закрепленные', 'icon': Icons.push_pin},
-      {'key': 'files', 'title': 'Файлы', 'icon': Icons.folder},
-      {'key': 'media', 'title': 'Медиа', 'icon': Icons.image},
-      {'key': 'extensions', 'title': 'Расширения', 'icon': Icons.extension},
-      {'key': 'copylink', 'title': 'Копировать ссылку', 'icon': Icons.link},
-      {'key': 'polls', 'title': 'Опросы', 'icon': Icons.poll},
-      {'key': 'export', 'title': 'Экспорт чата', 'icon': Icons.download},
-      {'key': 'settings', 'title': 'Настройки', 'icon': Icons.settings},
-      {'key': 'report', 'title': 'Пожаловаться', 'icon': Icons.flag, 'danger': true},
-      {'key': 'leave', 'title': 'Покинуть комнату', 'icon': Icons.exit_to_app, 'danger': true},
+      {'key': 'invite', 'title': l10n.inviteAction, 'icon': Icons.person_add},
+      {'key': 'members', 'title': l10n.membersLabel, 'icon': Icons.group},
+      {'key': 'threads', 'title': l10n.threadsLabel, 'icon': Icons.alt_route},
+      {'key': 'pinned', 'title': l10n.pinnedLabel, 'icon': Icons.push_pin},
+      {'key': 'files', 'title': l10n.filesLabel, 'icon': Icons.folder},
+      {'key': 'media', 'title': l10n.mediaLabel, 'icon': Icons.image},
+      {'key': 'extensions', 'title': l10n.extensionsLabel, 'icon': Icons.extension},
+      {'key': 'copylink', 'title': l10n.copyLinkAction, 'icon': Icons.link},
+      {'key': 'polls', 'title': l10n.pollsLabel, 'icon': Icons.poll},
+      {'key': 'export', 'title': l10n.exportChatAction, 'icon': Icons.download},
+      {'key': 'settings', 'title': l10n.settingsLabel, 'icon': Icons.settings},
+      {'key': 'report', 'title': l10n.reportAction, 'icon': Icons.flag, 'danger': true},
+      {'key': 'leave', 'title': l10n.leaveRoomAction, 'icon': Icons.exit_to_app, 'danger': true},
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text('Комната — ${widget.initialName}')),
+      appBar: AppBar(title: Text(l10n.roomTitle(widget.initialName))),
       body: LayoutBuilder(builder: (context, constraints) {
         final maxW = constraints.maxWidth;
         final isMobile = maxW < 900;
@@ -209,7 +218,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                     child: ListTile(
                       leading: meta['avatar'] != null ? UserAvatar(avatarUrl: meta['avatar'], radius: 22) : CircleAvatar(child: Text((meta['name'] ?? widget.initialName).isNotEmpty ? (meta['name'] ?? widget.initialName)[0] : '?')),
                       title: Text(meta['name'] ?? widget.initialName, style: Theme.of(context).textTheme.titleMedium),
-                      subtitle: Text('Настройки комнаты'),
+                      subtitle: Text(l10n.roomSettingsLabel),
                         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                           IconButton(icon: const Icon(Icons.refresh), onPressed: () async { setState(() {}); await ChatMatrixService().clearRoomCache(widget.roomId); }),
                           IconButton(icon: const Icon(Icons.edit), onPressed: _pickAndUploadAvatar),

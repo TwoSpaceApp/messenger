@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
 
 class FeedbackScreen extends StatefulWidget {
@@ -17,20 +18,44 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   final _titleController = TextEditingController();
   final _detailsController = TextEditingController();
 
-  String _category = 'Функции';
+  String _category = 'features';
   bool _sending = false;
 
   String _appVersion = '...';
 
   final Map<String, bool> _ideas = {
-    'Сквозное E2E-шифрование (Olm/Megolm) + верификация устройств': false,
-    'Резервное копирование чатов (локально/облако) + перенос на новое устройство': false,
-    'Треды, реакции и упоминания, улучшенный поиск по сообщениям': false,
-    'Голосовые/видео-звонки и быстрые voice rooms': false,
-    'Папки/категории чатов и умные фильтры уведомлений': false,
-    'Боты и интеграции (вебхуки, GitHub/Jira, напоминания)': false,
-    'Режим “медленного интернета” + агрессивное кэширование медиа': false,
+    'e2e': false,
+    'backup': false,
+    'threads': false,
+    'calls': false,
+    'folders': false,
+    'bots': false,
+    'slow_net': false,
   };
+
+  String _ideaLabel(String key, AppLocalizations l10n) {
+    switch (key) {
+      case 'e2e': return l10n.feedbackE2E;
+      case 'backup': return l10n.feedbackBackup;
+      case 'threads': return l10n.feedbackThreads;
+      case 'calls': return l10n.feedbackCalls;
+      case 'folders': return l10n.feedbackFolders;
+      case 'bots': return l10n.feedbackBots;
+      case 'slow_net': return l10n.feedbackSlowNet;
+      default: return key;
+    }
+  }
+
+  String _categoryLabel(AppLocalizations l10n) {
+    switch (_category) {
+      case 'features': return l10n.feedbackCategoryFeatures;
+      case 'ux_design': return l10n.feedbackCategoryUxDesign;
+      case 'performance': return l10n.feedbackCategoryPerformance;
+      case 'security': return l10n.feedbackCategorySecurity;
+      case 'network': return l10n.feedbackCategoryNetworkSync;
+      default: return _category;
+    }
+  }
 
   @override
   void initState() {
@@ -56,25 +81,25 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     super.dispose();
   }
 
-  String _buildMessage() {
-    final selected = _ideas.entries.where((e) => e.value).map((e) => '- ${e.key}').join('\n');
+  String _buildMessage(AppLocalizations l10n) {
+    final selected = _ideas.entries.where((e) => e.value).map((e) => '- ${_ideaLabel(e.key, l10n)}').join('\n');
 
     final title = _titleController.text.trim();
     final details = _detailsController.text.trim();
 
     return [
-      'TwoSpace — предложение/улучшение',
-      'Версия: $_appVersion',
-      'Категория: $_category',
-      if (title.isNotEmpty) 'Коротко: $title',
+      l10n.feedbackMessageHeader,
+      l10n.feedbackVersion(_appVersion),
+      l10n.feedbackCategoryLine(_categoryLabel(l10n)),
+      if (title.isNotEmpty) l10n.feedbackShortTitle(title),
       if (selected.isNotEmpty) ...[
         '',
-        'Что было бы особенно круто:',
+        l10n.feedbackWishList,
         selected,
       ],
       if (details.isNotEmpty) ...[
         '',
-        'Детали:',
+        l10n.feedbackDetailsLine,
         details,
       ],
     ].join('\n');
@@ -82,23 +107,25 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   Future<void> _copy() async {
     if (!_formKey.currentState!.validate()) return;
-    final text = _buildMessage();
+    final l10n = AppLocalizations.of(context)!;
+    final text = _buildMessage(l10n);
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Текст скопирован')),
+      SnackBar(content: Text(l10n.textCopied)),
     );
   }
 
   Future<void> _share() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _sending = true);
     try {
-      final text = _buildMessage();
+      final text = _buildMessage(l10n);
       await SharePlus.instance.share(
         ShareParams(
           text: text,
-          subject: 'TwoSpace — предложение',
+          subject: l10n.feedbackShareSubject,
         ),
       );
     } finally {
@@ -108,11 +135,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Предложить улучшение'),
+        title: Text(l10n.suggestImprovementLabel),
         backgroundColor: theme.colorScheme.surface,
         elevation: 0,
       ),
@@ -130,31 +158,31 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     children: [
                       DropdownButtonFormField<String>(
                         initialValue: _category,
-                        decoration: const InputDecoration(
-                          labelText: 'Категория',
+                        decoration: InputDecoration(
+                          labelText: l10n.categoryLabel,
                         ),
-                        items: const [
-                          DropdownMenuItem(value: 'Функции', child: Text('Функции')),
-                          DropdownMenuItem(value: 'UX/Дизайн', child: Text('UX/Дизайн')),
-                          DropdownMenuItem(value: 'Производительность', child: Text('Производительность')),
-                          DropdownMenuItem(value: 'Безопасность/Приватность', child: Text('Безопасность/Приватность')),
-                          DropdownMenuItem(value: 'Синхронизация/Сеть', child: Text('Синхронизация/Сеть')),
+                        items: [
+                          DropdownMenuItem(value: 'features', child: Text(l10n.feedbackCategoryFeatures)),
+                          DropdownMenuItem(value: 'ux_design', child: Text(l10n.feedbackCategoryUxDesign)),
+                          DropdownMenuItem(value: 'performance', child: Text(l10n.feedbackCategoryPerformance)),
+                          DropdownMenuItem(value: 'security', child: Text(l10n.feedbackCategorySecurity)),
+                          DropdownMenuItem(value: 'network', child: Text(l10n.feedbackCategoryNetworkSync)),
                         ],
-                        onChanged: (v) => setState(() => _category = v ?? 'Функции'),
+                        onChanged: (v) => setState(() => _category = v ?? 'features'),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _titleController,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Короткое описание',
-                          hintText: 'Например: “Бэкап чатов в облако”',
+                        decoration: InputDecoration(
+                          labelText: l10n.shortDescriptionLabel,
+                          hintText: l10n.shortDescriptionHint,
                         ),
                         validator: (v) {
                           final anyIdeaSelected = _ideas.values.any((x) => x);
                           final hasTitle = (v ?? '').trim().isNotEmpty;
                           if (!anyIdeaSelected && !hasTitle) {
-                            return 'Выберите хотя бы одну идею или напишите описание';
+                            return l10n.feedbackValidation;
                           }
                           return null;
                         },
@@ -164,9 +192,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         controller: _detailsController,
                         minLines: 3,
                         maxLines: 8,
-                        decoration: const InputDecoration(
-                          labelText: 'Детали (опционально)',
-                          hintText: 'Что именно должно работать, как сейчас и как хотелось бы?',
+                        decoration: InputDecoration(
+                          labelText: l10n.detailsOptionalLabel,
+                          hintText: l10n.detailsHint,
                         ),
                       ),
                     ],
@@ -174,7 +202,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Большие нововведения (выберите, что интереснее всего)',
+                  l10n.bigFeaturesTitle,
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
@@ -186,7 +214,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         value: e.value,
                         dense: false,
                         controlAffinity: ListTileControlAffinity.leading,
-                        title: Text(e.key),
+                        title: Text(_ideaLabel(e.key, l10n)),
                         onChanged: (v) => setState(() => _ideas[e.key] = v ?? false),
                       );
                     }).toList(),
@@ -199,7 +227,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                       child: OutlinedButton.icon(
                         onPressed: _sending ? null : _copy,
                         icon: const Icon(Icons.copy),
-                        label: const Text('Скопировать'),
+                        label: Text(l10n.copyButton),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -213,7 +241,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.send),
-                        label: const Text('Поделиться'),
+                        label: Text(l10n.shareButton),
                       ),
                     ),
                   ],

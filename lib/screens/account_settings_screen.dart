@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
 import 'package:two_space_app/config/ui_tokens.dart';
 
@@ -29,23 +30,24 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Future<void> _changePassword() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_newPasswordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Пароли не совпадают')),
+        SnackBar(content: Text(l10n.passwordMismatch)),
       );
       return;
     }
 
     if (_newPasswordController.text.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Пароль должен быть не менее 8 символов')),
+        SnackBar(content: Text(l10n.passwordTooShort)),
       );
       return;
     }
 
     // TODO: Implement password change logic
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Пароль успешно изменён')),
+      SnackBar(content: Text(l10n.passwordChangeSuccess)),
     );
 
     _currentPasswordController.clear();
@@ -54,22 +56,23 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Future<void> _deleteAccount() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Удаление аккаунта'),
-        content: const Text(
-          'Вы уверены, что хотите удалить аккаунт? Это действие необратимо.',
+        title: Text(l10n.deleteAccountTitle),
+        content: Text(
+          l10n.deleteAccountContent,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
+            child: Text(l10n.cancelButton),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Удалить'),
+            child: Text(l10n.deleteButton),
           ),
         ],
       ),
@@ -78,16 +81,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     if (confirmed == true) {
       // TODO: Implement account deletion
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Функция удаления будет добавлена позже')),
+        SnackBar(content: Text(l10n.deleteFeatureLater)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Настройки аккаунта'),
+        title: Text(l10n.accountSettingsTitle),
         elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.surface,
       ),
@@ -96,11 +100,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Безопасность
+              // Security
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
                 child: Text(
-                  'Безопасность',
+                  l10n.securitySection,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
@@ -114,8 +118,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     children: [
                       SwitchListTile(
                         secondary: const Icon(Icons.security),
-                        title: const Text('Двухфакторная аутентификация'),
-                        subtitle: const Text('Дополнительная защита аккаунта'),
+                        title: Text(l10n.twoFactorLabel),
+                        subtitle: Text(l10n.twoFactorSubtitle),
                         value: _twoFactorEnabled,
                         onChanged: (v) {
                           setState(() => _twoFactorEnabled = v);
@@ -128,8 +132,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       const Divider(height: 1),
                       SwitchListTile(
                         secondary: const Icon(Icons.fingerprint),
-                        title: const Text('Биометрия'),
-                        subtitle: const Text('Вход по отпечатку пальца'),
+                        title: Text(l10n.biometricLabel),
+                        subtitle: Text(l10n.biometricSubtitle),
                         value: _biometricEnabled,
                         onChanged: (v) {
                           setState(() => _biometricEnabled = v);
@@ -142,21 +146,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.devices),
-                        title: const Text('Активные сеансы'),
-                        subtitle: const Text('Управление устройствами'),
+                        title: Text(l10n.activeSessionsLabel),
+                        subtitle: Text(l10n.activeSessionsSubtitle),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           showDialog(
                             context: context,
                             builder: (_) => AlertDialog(
-                              title: const Text('Активные сеансы'),
+                              title: Text(l10n.activeSessionsLabel),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   ListTile(
                                     leading: const Icon(Icons.phone_android),
-                                    title: const Text('Текущее устройство'),
-                                    subtitle: const Text('Android • Активен'),
+                                    title: Text(l10n.currentDevice),
+                                    subtitle: Text(l10n.activeDeviceInfo),
                                     dense: true,
                                   ),
                                 ],
@@ -164,7 +168,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: const Text('Закрыть'),
+                                  child: Text(l10n.closeButton),
                                 ),
                               ],
                             ),
@@ -177,11 +181,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 ),
               ),
 
-              // Смена пароля
+              // Change password
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
                 child: Text(
-                  'Смена пароля',
+                  l10n.changePasswordSection,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
@@ -198,7 +202,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         controller: _currentPasswordController,
                         obscureText: _obscureCurrentPassword,
                         decoration: InputDecoration(
-                          labelText: 'Текущий пароль',
+                          labelText: l10n.currentPasswordLabel,
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(_obscureCurrentPassword ? Icons.visibility : Icons.visibility_off),
@@ -212,14 +216,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         controller: _newPasswordController,
                         obscureText: _obscureNewPassword,
                         decoration: InputDecoration(
-                          labelText: 'Новый пароль',
+                          labelText: l10n.newPasswordLabel,
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(_obscureNewPassword ? Icons.visibility : Icons.visibility_off),
                             onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
                           ),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(UITokens.cornerSm)),
-                          helperText: 'Минимум 8 символов',
+                          helperText: l10n.minPasswordHelper,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -227,7 +231,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         controller: _confirmPasswordController,
                         obscureText: _obscureConfirmPassword,
                         decoration: InputDecoration(
-                          labelText: 'Подтвердите пароль',
+                          labelText: l10n.confirmPasswordLabel,
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
@@ -242,7 +246,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         child: ElevatedButton.icon(
                           onPressed: _changePassword,
                           icon: const Icon(Icons.check),
-                          label: const Text('Изменить пароль'),
+                          label: Text(l10n.changePasswordButton),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.cornerSm)),
@@ -254,11 +258,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 ),
               ),
 
-              // Email и телефон
+              // Contact data
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
                 child: Text(
-                  'Контактные данные',
+                  l10n.contactDataSection,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
@@ -272,7 +276,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     children: [
                       ListTile(
                         leading: const Icon(Icons.email),
-                        title: const Text('Email'),
+                        title: Text(l10n.emailLabel),
                         subtitle: const Text('user@example.com'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => Navigator.pushNamed(context, '/change-email'),
@@ -281,7 +285,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.phone),
-                        title: const Text('Телефон'),
+                        title: Text(l10n.phoneLabel),
                         subtitle: const Text('+7 (XXX) XXX-XX-XX'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => Navigator.pushNamed(context, '/change-phone'),
@@ -292,11 +296,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 ),
               ),
 
-              // Опасная зона
+              // Danger zone
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
                 child: Text(
-                  'Опасная зона',
+                  l10n.dangerZoneSection,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Colors.red.shade400,
                         fontWeight: FontWeight.bold,
@@ -325,14 +329,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Удалить аккаунт',
+                                    l10n.deleteAccountLabel,
                                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                           color: Colors.red.shade400,
                                           fontWeight: FontWeight.w600,
                                         ),
                                   ),
                                   Text(
-                                    'Необратимое действие',
+                                    l10n.deleteAccountSubtitle,
                                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                           color: Colors.red.withValues(alpha: 0.6),
                                         ),

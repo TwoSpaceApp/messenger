@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class MediaPlayer extends StatefulWidget {
   final String? localPath;
@@ -50,7 +51,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Ошибка загрузки видео: ${e.toString()}';
+          _error = e.toString();
           _initialized = false;
         });
       }
@@ -75,9 +76,10 @@ class _MediaPlayerState extends State<MediaPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Видео'),
+        title: Text(l10n.videoLabel),
         actions: [
           if (_initialized)
             IconButton(
@@ -91,7 +93,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
       ),
       body: Center(
         child: _error != null
-            ? Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error))
+            ? Text(l10n.videoLoadError(_error!), style: TextStyle(color: Theme.of(context).colorScheme.error))
             : Stack(
                 alignment: Alignment.center,
                 children: [

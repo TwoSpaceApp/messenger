@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class StartChatBottomSheet extends StatelessWidget {
   final VoidCallback onCreateGroup;
@@ -15,6 +16,7 @@ class StartChatBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       decoration: BoxDecoration(
@@ -47,7 +49,7 @@ class StartChatBottomSheet extends StatelessWidget {
           ),
           SizedBox(height: 20),
           Text(
-            'Начать чат',
+            l10n.startChatTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -56,8 +58,8 @@ class StartChatBottomSheet extends StatelessWidget {
           _buildMenuItem(
             context,
             icon: Icons.add_circle_outline,
-            title: 'Создать новую комнату',
-            subtitle: 'Приватная или публичная группа',
+            title: l10n.createNewRoomTitle,
+            subtitle: l10n.createRoomSubtitle,
             onTap: () {
               Navigator.pop(context);
               onCreateGroup();
@@ -67,8 +69,8 @@ class StartChatBottomSheet extends StatelessWidget {
           _buildMenuItem(
             context,
             icon: Icons.person_add_alt_1_outlined,
-            title: 'Пригласить пользователя',
-            subtitle: 'Найти и написать пользователю',
+            title: l10n.inviteUserTitle,
+            subtitle: l10n.inviteUserSubtitle,
             onTap: () {
               Navigator.pop(context);
               onInviteUser();
@@ -78,8 +80,8 @@ class StartChatBottomSheet extends StatelessWidget {
           _buildMenuItem(
             context,
             icon: Icons.link_outlined,
-            title: 'Присоединиться по коду',
-            subtitle: 'Присоединиться к комнате по пригласительному коду',
+            title: l10n.joinByCodeTitle,
+            subtitle: l10n.joinByCodeSubtitle,
             onTap: () {
               Navigator.pop(context);
               onJoinByAddress();

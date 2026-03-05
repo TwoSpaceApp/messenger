@@ -1,5 +1,6 @@
 // User status indicator widget
 import 'package:flutter/material.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 enum UserStatus {
   online,
@@ -19,24 +20,25 @@ class UserStatusIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     
     switch (status) {
       case UserStatus.online:
         return _buildStatusBadge(
           context,
           color: Colors.green,
-          label: 'Онлайн',
+          label: l10n.onlineLabel,
           icon: Icons.circle,
         );
       case UserStatus.offline:
         return _buildStatusBadge(
           context,
           color: theme.colorScheme.outline,
-          label: 'Оффлайн',
+          label: l10n.offlineLabel,
           icon: Icons.circle,
         );
       case UserStatus.typing:
-        return _buildTypingIndicator(context, typingUser ?? 'Пользователь печатает...');
+        return _buildTypingIndicator(context, typingUser ?? l10n.userTyping);
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:two_space_app/widgets/screen_background.dart';
 import 'package:two_space_app/services/settings_service.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -167,6 +168,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
 
   Future<void> _loadMessages() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _loading = true);
     try {
       final msgs = await _svc.loadMessages(roomId: widget.chat.id, limit: 100);
@@ -256,7 +258,7 @@ class _ChatScreenState extends State<ChatScreen> {
         }();
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка загрузки сообщений: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.loadMessagesError(e.toString()))));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -293,14 +295,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _sendReplyForEvent(String eventId) async {
     // prompt for reply text then send as a reply
+    final l10n = AppLocalizations.of(context)!;
     final text = await showDialog<String>(context: context, builder: (c) {
       final ctl = TextEditingController();
       return AlertDialog(
-        title: const Text('Ответить'),
-        content: TextField(controller: ctl, decoration: const InputDecoration(hintText: 'Текст ответа')),
+        title: Text(l10n.replyAction),
+        content: TextField(controller: ctl, decoration: InputDecoration(hintText: l10n.replyHint)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, null), child: const Text('Отмена')),
-          ElevatedButton(onPressed: () => Navigator.pop(c, ctl.text.trim()), child: const Text('Отправить')),
+          TextButton(onPressed: () => Navigator.pop(c, null), child: Text(l10n.cancelButton)),
+          ElevatedButton(onPressed: () => Navigator.pop(c, ctl.text.trim()), child: Text(l10n.sendButton)),
         ],
       );
     });
@@ -310,13 +313,14 @@ class _ChatScreenState extends State<ChatScreen> {
       await _svc.sendReply(widget.chat.id, eventId, body: text, formattedBody: formatted);
       await _loadMessages();
     } catch (e) {
-      if (mounted) _showErrorMessage('Ошибка ответа: $e');
+      if (mounted) _showErrorMessage(l10n.replyError(e.toString()));
     }
   }
 
 
 
   Future<void> _pinUnpinEvent(String eventId) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final pinned = await _svc.getPinnedEvents(widget.chat.id);
       if (pinned.contains(eventId)) {
@@ -325,36 +329,38 @@ class _ChatScreenState extends State<ChatScreen> {
         pinned.insert(0, eventId);
       }
       await _svc.setPinnedEvents(widget.chat.id, pinned);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Закрепления обновлены'), duration: Duration(seconds: 2)));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.pinnedUpdated), duration: const Duration(seconds: 2)));
     } catch (e) {
-      if (mounted) _showErrorMessage('Ошибка закрепа: $e');
+      if (mounted) _showErrorMessage(l10n.pinError(e.toString()));
     }
   }
 
   Future<void> _redactEvent(String eventId) async {
-    final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: const Text('Удалить сообщение?'), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Отмена')), ElevatedButton(onPressed: () => Navigator.pop(c, true), child: const Text('Удалить'))]));
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: Text(l10n.deleteMessageTitle), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.cancelButton)), ElevatedButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.deleteButton))]));
     if (ok != true) return;
     try {
       await _svc.redactEvent(widget.chat.id, eventId);
       await _loadMessages();
     } catch (e) {
-      if (mounted) _showErrorMessage('Ошибка удаления: $e');
+      if (mounted) _showErrorMessage(l10n.deleteError(e.toString()));
     }
   }
 
   Future<void> _editEvent(String eventId, String currentText) async {
+    final l10n = AppLocalizations.of(context)!;
     final newText = await showDialog<String>(context: context, builder: (c) {
       final ctl = TextEditingController(text: currentText);
       return AlertDialog(
-        title: const Text('Редактировать сообщение'),
+        title: Text(l10n.editMessageTitle),
         content: TextField(
           controller: ctl,
-          decoration: const InputDecoration(hintText: 'Новый текст'),
+          decoration: InputDecoration(hintText: l10n.editMessageHint),
           maxLines: null,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, null), child: const Text('Отмена')),
-          ElevatedButton(onPressed: () => Navigator.pop(c, ctl.text.trim()), child: const Text('Сохранить')),
+          TextButton(onPressed: () => Navigator.pop(c, null), child: Text(l10n.cancelButton)),
+          ElevatedButton(onPressed: () => Navigator.pop(c, ctl.text.trim()), child: Text(l10n.saveButton)),
         ],
       );
     });
@@ -362,13 +368,14 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       await _svc.editMessage(widget.chat.id, eventId, newText);
       await _loadMessages();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Сообщение отредактировано'), duration: Duration(seconds: 2)));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.messageEdited), duration: const Duration(seconds: 2)));
     } catch (e) {
-      if (mounted) _showErrorMessage('Ошибка редактирования: $e');
+      if (mounted) _showErrorMessage(l10n.editError(e.toString()));
     }
   }
 
   Future<void> _showMessageActions(_Msg m, Offset globalPos) async {
+    final l10n = AppLocalizations.of(context)!;
   final overlay = Overlay.of(context);
     OverlayEntry? entry;
     entry = OverlayEntry(builder: (ctx) {
@@ -415,12 +422,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     ]),
                     const SizedBox(height: 6),
                     Row(mainAxisSize: MainAxisSize.min, children: [
-                      TextButton.icon(onPressed: () { entry?.remove(); _sendReplyForEvent(m.id); }, icon: const Icon(Icons.reply), label: const Text('Ответ')), 
-                      if (m.isOwn) TextButton.icon(onPressed: () { entry?.remove(); _editEvent(m.id, m.text); }, icon: const Icon(Icons.edit), label: const Text('Редакт.')), 
-                      TextButton.icon(onPressed: () { entry?.remove(); _pinUnpinEvent(m.id); }, icon: const Icon(Icons.push_pin), label: const Text('Закрепить')), 
-                      if (m.isOwn) TextButton.icon(onPressed: () { entry?.remove(); _redactEvent(m.id); }, icon: const Icon(Icons.delete), label: const Text('Удалить')),
-                      TextButton.icon(onPressed: () { entry?.remove(); _shareMessage(m); }, icon: const Icon(Icons.share), label: const Text('Поделиться')),
-                      TextButton.icon(onPressed: () async { entry?.remove(); final picked = await _showEmojiPickerDialog(); if (picked != null) { try { await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: picked); await _loadMessages(); } catch (_) {} } }, icon: const Icon(Icons.emoji_emotions), label: const Text('Ещё')),
+                      TextButton.icon(onPressed: () { entry?.remove(); _sendReplyForEvent(m.id); }, icon: const Icon(Icons.reply), label: Text(l10n.replyAction)), 
+                      if (m.isOwn) TextButton.icon(onPressed: () { entry?.remove(); _editEvent(m.id, m.text); }, icon: const Icon(Icons.edit), label: Text(l10n.editShort)), 
+                      TextButton.icon(onPressed: () { entry?.remove(); _pinUnpinEvent(m.id); }, icon: const Icon(Icons.push_pin), label: Text(l10n.pinAction)), 
+                      if (m.isOwn) TextButton.icon(onPressed: () { entry?.remove(); _redactEvent(m.id); }, icon: const Icon(Icons.delete), label: Text(l10n.deleteButton)),
+                      TextButton.icon(onPressed: () { entry?.remove(); _shareMessage(m); }, icon: const Icon(Icons.share), label: Text(l10n.shareAction)),
+                      TextButton.icon(onPressed: () async { entry?.remove(); final picked = await _showEmojiPickerDialog(); if (picked != null) { try { await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: picked); await _loadMessages(); } catch (_) {} } }, icon: const Icon(Icons.emoji_emotions), label: Text(l10n.moreButton)),
                     ]),
                   ]),
                 ),
@@ -449,13 +456,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   /// Share a message with system share sheet
   Future<void> _shareMessage(_Msg message) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await share.SharePlus.instance.share(
         share.ShareParams(text: message.text),
       );
     } catch (e) {
       if (mounted) {
-        _showErrorMessage('Не удалось поделиться: $e');
+        _showErrorMessage(l10n.shareError(e.toString()));
       }
     }
   }
@@ -463,6 +471,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendText() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _sending = true);
     try {
       await _svc.sendMessage(roomId: widget.chat.id, text: text, type: 'm.text');
@@ -473,16 +482,17 @@ class _ChatScreenState extends State<ChatScreen> {
       // Clear draft after successful send
       await _draftService.deleteDraft(widget.chat.id);
     } catch (e) {
-      if (mounted) _showErrorMessage('Отправка не удалась: $e');
+      if (mounted) _showErrorMessage(l10n.sendError(e.toString()));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
 
   Future<void> _recordVoiceMessage() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_voiceService.isInitialized) {
       if (mounted) {
-        _showErrorMessage('Запись голоса не поддерживается на этой платформе');
+        _showErrorMessage(l10n.voiceRecordingUnsupported);
       }
       return;
     }
@@ -490,7 +500,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final path = await _voiceService.startRecording();
     if (path == null) {
       if (mounted) {
-        _showErrorMessage('Нужно разрешение микрофона');
+        _showErrorMessage(l10n.microphonePermissionRequired);
       }
       return;
     }
@@ -508,9 +518,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _stopVoiceAndSend() async {
+    final l10n = AppLocalizations.of(context)!;
     final path = await _voiceService.stopRecording();
     if (path == null || !File(path).existsSync()) {
-      if (mounted) _showErrorMessage('Ошибка записи');
+      if (mounted) _showErrorMessage(l10n.recordingError);
       return;
     }
 
@@ -534,13 +545,14 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.genericError(e.toString()))));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
 
   Future<void> _sendAttachment() async {
+    final l10n = AppLocalizations.of(context)!;
     final res = await FilePicker.platform.pickFiles();
     if (res == null || res.files.isEmpty) return;
     final path = res.files.single.path;
@@ -551,9 +563,9 @@ class _ChatScreenState extends State<ChatScreen> {
       final mxc = await _svc.uploadMedia(bytes, 'application/octet-stream', res.files.single.name);
       await _svc.sendMessage(roomId: widget.chat.id, text: '', type: 'm.image', mediaFileId: mxc);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Файл отправлен'), duration: Duration(seconds: 2)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.fileSent), duration: const Duration(seconds: 2)));
     } catch (e) {
-      if (mounted) _showErrorMessage('Ошибка отправки вложения: $e');
+      if (mounted) _showErrorMessage(l10n.attachmentSendError(e.toString()));
     } finally {
       if (mounted) setState(() => _sending = false);
     }

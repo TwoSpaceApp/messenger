@@ -1,6 +1,7 @@
 // Enhanced audio player widget with waveform and playback speed
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 
 class EnhancedAudioPlayer extends StatefulWidget {
   final String audioUrl;
@@ -72,6 +73,7 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isPlaying = _playerState == PlayerState.playing;
 
     return Container(
@@ -121,7 +123,7 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                Text('Скорость:', style: theme.textTheme.bodySmall),
+                Text(l10n.speedLabel, style: theme.textTheme.bodySmall),
                 const SizedBox(width: 8),
                 for (final speed in _speeds)
                   Padding(

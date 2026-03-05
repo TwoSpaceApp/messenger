@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/widgets/screen_background.dart';
 import 'package:two_space_app/widgets/glass_card.dart';
 import 'package:two_space_app/widgets/app_logo.dart';
@@ -107,6 +108,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
       backgroundColor: Colors.transparent, 
@@ -122,7 +124,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                     const AppLogo(large: false),
                     const SizedBox(width: 8),
                     Text(
-                      'Контакты',
+                      l10n.contactsTitle,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -142,7 +144,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                       controller: _searchController,
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        hintText: 'Поиск контактов...',
+                        hintText: l10n.searchContactsHint,
                         hintStyle: TextStyle(color: Colors.white.withAlpha(120)),
                         prefixIcon: const Icon(Icons.search, color: Colors.white70),
                         border: InputBorder.none,
@@ -170,6 +172,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context)!;
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -189,9 +192,9 @@ class _ContactsScreenState extends State<ContactsScreen> {
                   color: Colors.white.withAlpha(150),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Доступ к контактам',
-                  style: TextStyle(
+                Text(
+                  l10n.contactsAccessTitle,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -201,8 +204,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 const SizedBox(height: 12),
                 Text(
                   _permissionPermanentlyDenied
-                      ? 'Разрешение на доступ к контактам отклонено. Пожалуйста, откройте настройки приложения и предоставьте доступ.'
-                      : 'Для отображения контактов необходимо разрешение на доступ к контактам устройства.',
+                      ? l10n.contactsPermDeniedPermanent
+                      : l10n.contactsPermRequired,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.white.withAlpha(180),
@@ -220,8 +223,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
                         ? Icons.settings 
                         : Icons.refresh),
                     label: Text(_permissionPermanentlyDenied 
-                        ? 'Открыть настройки' 
-                        : 'Запросить разрешение'),
+                        ? l10n.openSettingsButton 
+                        : l10n.requestPermissionButton),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -249,7 +252,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Контакты не найдены',
+              l10n.noContacts,
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.white.withAlpha(180),
@@ -265,7 +268,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
     if (filteredContacts.isEmpty) {
       return Center(
         child: Text(
-          'Ничего не найдено',
+          l10n.noResultsFound,
           style: TextStyle(
             fontSize: 16,
             color: Colors.white.withAlpha(150),
@@ -342,6 +345,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
   }
 
   void _showContactOptions(Contact contact) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -376,7 +380,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
             if (contact.phones.isNotEmpty)
               ListTile(
                 leading: const Icon(Icons.call),
-                title: const Text('Позвонить'),
+                title: Text(l10n.callAction),
                 onTap: () {
                   Navigator.pop(context);
                   _callContact(contact);
@@ -384,7 +388,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
               ),
             ListTile(
               leading: const Icon(Icons.chat),
-              title: const Text('Написать сообщение'),
+              title: Text(l10n.writeMessageAction),
               onTap: () {
                 Navigator.pop(context);
                 _messageContact(contact);
@@ -399,14 +403,16 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
   void _callContact(Contact contact) {
     if (contact.phones.isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Звонок: ${contact.phones.first.number}')),
+      SnackBar(content: Text(l10n.callNotification(contact.phones.first.number))),
     );
   }
 
   void _messageContact(Contact contact) {
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Сообщение для: ${contact.displayName}')),
+      SnackBar(content: Text(l10n.messageNotification(contact.displayName))),
     );
   }
 }

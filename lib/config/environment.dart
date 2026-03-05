@@ -122,6 +122,12 @@ class Environment {
   static String get matrixTotpVerifyEndpoint => _get('MATRIX_TOTP_VERIFY_ENDPOINT');
   static String get matrixStorageMediaBucketId => _get('MATRIX_STORAGE_MEDIA_BUCKET_ID');
 
+  /// Aegis protocol configuration
+  static String get aegisHost => _get('AEGIS_HOST', fallback: 'localhost');
+  static int get aegisPort => int.tryParse(_get('AEGIS_PORT', fallback: '8888')) ?? 8888;
+  static Duration get aegisConnectTimeout =>
+      Duration(seconds: int.tryParse(_get('AEGIS_CONNECT_TIMEOUT_SECONDS', fallback: '10')) ?? 10);
+
   /// Appwrite configuration (legacy/backup)
   static String get appwriteProjectId => _get('APPWRITE_PROJECT_ID');
   static String get appwriteDatabaseId => _get('APPWRITE_DATABASE_ID');

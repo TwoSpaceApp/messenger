@@ -65,6 +65,5 @@ class DevLogger {
     } catch (_) {}
   }
 
-  void warn(String s) {}
 }
 

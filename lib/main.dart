@@ -24,10 +24,10 @@ import 'services/sentry_service.dart';
 import 'services/settings_service.dart';
 import 'services/navigation_service.dart';
 import 'config/environment.dart';
+import 'l10n/app_localizations.dart';
 import 'widgets/dev_fab.dart';
 import 'providers/auth_notifier.dart';
 import 'widgets/auth_listener.dart';
-// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -132,48 +132,54 @@ class TwoSpaceApp extends StatelessWidget {
       }
     }
 
-    return ValueListenableBuilder<ThemeSettings>(
-      valueListenable: SettingsService.themeNotifier,
-      builder: (context, settings, _) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: SettingsService.paleVioletNotifier,
-          builder: (context, paleVioletEnabled, __) {
-            return ValueListenableBuilder<ThemeMode>(
-              valueListenable: SettingsService.themeModeNotifier,
-              builder: (context, themeMode, ___) {
-                final lightTheme = AppThemeBuilder.build(
-                  settings,
-                  paleVioletEnabled,
-                  brightnessOverride: Brightness.light,
-                );
-                final darkTheme = AppThemeBuilder.build(
-                  settings,
-                  paleVioletEnabled,
-                  brightnessOverride: Brightness.dark,
-                );
+    return ValueListenableBuilder<String>(
+      valueListenable: SettingsService.languageNotifier,
+      builder: (context, languageCode, ____) {
+        return ValueListenableBuilder<ThemeSettings>(
+          valueListenable: SettingsService.themeNotifier,
+          builder: (context, settings, _) {
+            return ValueListenableBuilder<bool>(
+              valueListenable: SettingsService.paleVioletNotifier,
+              builder: (context, paleVioletEnabled, __) {
+                return ValueListenableBuilder<ThemeMode>(
+                  valueListenable: SettingsService.themeModeNotifier,
+                  builder: (context, themeMode, ___) {
+                    final lightTheme = AppThemeBuilder.build(
+                      settings,
+                      paleVioletEnabled,
+                      brightnessOverride: Brightness.light,
+                    );
+                    final darkTheme = AppThemeBuilder.build(
+                      settings,
+                      paleVioletEnabled,
+                      brightnessOverride: Brightness.dark,
+                    );
 
-                final app = MaterialApp(
-                  navigatorKey: appNavigatorKey,
-                  title: 'TwoSpace',
-                  // onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
-                  debugShowCheckedModeBanner: false,
-                  theme: lightTheme,
-                  darkTheme: darkTheme,
-                  themeMode: themeMode,
-                  // localizationsDelegates: AppLocalizations.localizationsDelegates,
-                  // supportedLocales: AppLocalizations.supportedLocales,
-                  home: const AuthListener(child: AuthGate()),
-                  routes: _buildRoutes(context),
-                );
+                    final app = MaterialApp(
+                      navigatorKey: appNavigatorKey,
+                      title: 'TwoSpace',
+                      onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
+                      debugShowCheckedModeBanner: false,
+                      theme: lightTheme,
+                      darkTheme: darkTheme,
+                      themeMode: themeMode,
+                      locale: Locale(languageCode),
+                      localizationsDelegates: AppLocalizations.localizationsDelegates,
+                      supportedLocales: AppLocalizations.supportedLocales,
+                      home: const AuthListener(child: AuthGate()),
+                      routes: _buildRoutes(context),
+                    );
 
                 // Add dev tools in debug mode
-                if (kDebugMode || Environment.enableDevTools) {
-                  return Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Stack(children: [app, const DevFab()]),
-                  );
-                }
-                return app;
+                    if (kDebugMode || Environment.enableDevTools) {
+                      return Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Stack(children: [app, const DevFab()]),
+                      );
+                    }
+                    return app;
+                  },
+                );
               },
             );
           },
@@ -198,7 +204,10 @@ class TwoSpaceApp extends StatelessWidget {
         if (args is String) {
           return ProfileScreen(userId: args);
         }
-        return _buildInvalidArgsScreen('Invalid arguments for profile');
+        return _buildInvalidArgsScreen(
+          AppLocalizations.of(context)?.errorInvalidArgumentsProfile ??
+              'Invalid arguments for profile',
+        );
       },
       '/change_email': (context) => const ChangeEmailScreen(),
       '/chat': (context) {
@@ -206,7 +215,10 @@ class TwoSpaceApp extends StatelessWidget {
         if (args is Chat) {
           return ChatScreen(chat: args);
         }
-        return _buildInvalidArgsScreen('Invalid arguments for chat');
+        return _buildInvalidArgsScreen(
+          AppLocalizations.of(context)?.errorInvalidArgumentsChat ??
+              'Invalid arguments for chat',
+        );
       },
     };
   }
