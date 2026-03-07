@@ -499,9 +499,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _shareMessage(_Msg message) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      await share.SharePlus.instance.share(
-        share.ShareParams(text: message.text),
-      );
+      await share.Share.share(message.text);
     } catch (e) {
       if (mounted) {
         _showErrorMessage(l10n.shareError(e.toString()));

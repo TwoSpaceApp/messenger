@@ -122,12 +122,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     setState(() => _sending = true);
     try {
       final text = _buildMessage(l10n);
-      await SharePlus.instance.share(
-        ShareParams(
-          text: text,
-          subject: l10n.feedbackShareSubject,
-        ),
-      );
+      await Share.share(text, subject: l10n.feedbackShareSubject);
     } finally {
       if (mounted) setState(() => _sending = false);
     }

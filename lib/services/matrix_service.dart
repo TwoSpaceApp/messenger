@@ -111,12 +111,7 @@ class MatrixService {
 
   static Future<bool> shareFile(String path, {String? text}) async {
     try {
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(path)],
-          text: text,
-        ),
-      );
+      await Share.shareXFiles([XFile(path)], text: text);
       return true;
     } catch (_) {
       return false;
