@@ -18,6 +18,8 @@ import 'package:two_space_app/screens/profile_screen.dart';
 import 'dart:math' as math;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 
+import 'package:two_space_app/widgets/typing_indicator.dart';
+
 // Stub for AudioPlayer when audioplayers is disabled
 class AudioPlayer {
   Future<void> setReleaseMode(dynamic mode) async {}
@@ -68,6 +70,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final Set<String> _highlighted = {};
   bool _loading = true;
   bool _sending = false;
+  bool _isTyping = false;
   final Map<String, AudioPlayer> _audioPlayers = {};
   final Map<String, Map<String, dynamic>> _userInfoCache = {};
   late final VoiceService _voiceService;
@@ -374,6 +377,43 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void _showEmojiBurst(BuildContext context, String emoji, Offset position) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry burstEntry;
+    
+    burstEntry = OverlayEntry(builder: (ctx) {
+      return TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 600),
+        onEnd: () => burstEntry.remove(),
+        builder: (context, val, child) {
+          return Stack(
+            children: List.generate(6, (index) {
+              final angle = (index / 6) * 2 * math.pi;
+              final distance = val * 60;
+              final dx = position.dx + math.cos(angle) * distance;
+              final dy = position.dy + math.sin(angle) * distance - (val * 40); // curve up
+              
+              return Positioned(
+                left: dx - 12, // center offset
+                top: dy - 12,
+                child: Transform.scale(
+                  scale: math.max(0.0, 1.0 - val), // shrink
+                  child: Text(
+                    emoji,
+                    style: const TextStyle(fontSize: 24, decoration: TextDecoration.none),
+                  ),
+                ),
+              );
+            }),
+          );
+        },
+      );
+    });
+    
+    overlay.insert(burstEntry);
+  }
+
   Future<void> _showMessageActions(_Msg m, Offset globalPos) async {
     final l10n = AppLocalizations.of(context)!;
   final overlay = Overlay.of(context);
@@ -407,6 +447,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           child: InkWell(
                             onTap: () async {
                               entry?.remove();
+                              _showEmojiBurst(context, e, globalPos);
                               try {
                                 await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: e);
                                 await _loadMessages();
@@ -427,7 +468,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       TextButton.icon(onPressed: () { entry?.remove(); _pinUnpinEvent(m.id); }, icon: const Icon(Icons.push_pin), label: Text(l10n.pinAction)), 
                       if (m.isOwn) TextButton.icon(onPressed: () { entry?.remove(); _redactEvent(m.id); }, icon: const Icon(Icons.delete), label: Text(l10n.deleteButton)),
                       TextButton.icon(onPressed: () { entry?.remove(); _shareMessage(m); }, icon: const Icon(Icons.share), label: Text(l10n.shareAction)),
-                      TextButton.icon(onPressed: () async { entry?.remove(); final picked = await _showEmojiPickerDialog(); if (picked != null) { try { await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: picked); await _loadMessages(); } catch (_) {} } }, icon: const Icon(Icons.emoji_emotions), label: Text(l10n.moreButton)),
+                      TextButton.icon(onPressed: () async { entry?.remove(); final picked = await _showEmojiPickerDialog(); if (picked != null) { try { _showEmojiBurst(context, picked, globalPos); await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: picked); await _loadMessages(); } catch (_) {} } }, icon: const Icon(Icons.emoji_emotions), label: Text(l10n.moreButton)),
                     ]),
                   ]),
                 ),
@@ -690,37 +731,58 @@ class _ChatScreenState extends State<ChatScreen> {
                 ]),
               ]
             ]);
-          return KeyedSubtree(
-            key: key,
-            child: Row(
-              mainAxisAlignment: m.isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (!m.isOwn)
-                  GestureDetector(
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: m.senderId ?? ''))),
-                    child: UserAvatar(avatarUrl: m.senderAvatar, name: (m.senderName ?? '?'), radius: 16),
-                  ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 8.0, end: 0.0),
-                    duration: Duration(milliseconds: 240 + (i % 5) * 30),
-                    builder: (context, val, child) => Transform.translate(offset: Offset(0, val), child: Opacity(opacity: 1.0 - (val / 12.0).clamp(0.0, 1.0), child: child)),
-                    child: GestureDetector(
-                      onLongPressStart: (details) => _showMessageActions(m, details.globalPosition),
-                      child: _SquishyBubble(
-                        isOwn: m.isOwn,
-                        highlighted: _highlighted.contains(m.id),
-                        child: bubbleContent,
+          return Dismissible(
+            key: Key('dismiss_${m.id}'),
+            direction: DismissDirection.startToEnd,
+            confirmDismiss: (direction) async {
+              _sendReplyForEvent(m.id);
+              return false; // don't actually dismiss
+            },
+            background: Container(
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 16),
+              child: const Icon(Icons.reply, color: Colors.blue),
+            ),
+            child: KeyedSubtree(
+              key: key,
+              child: Row(
+                mainAxisAlignment: m.isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!m.isOwn)
+                    GestureDetector(
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: m.senderId ?? ''))),
+                      child: UserAvatar(avatarUrl: m.senderAvatar, name: (m.senderName ?? '?'), radius: 16),
+                    ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: Duration(milliseconds: 300 + (i % 5) * 30),
+                      curve: Curves.elasticOut,
+                      builder: (context, val, child) => Transform.scale(
+                        scale: 0.7 + (0.3 * val),
+                        alignment: m.isOwn ? Alignment.bottomRight : Alignment.bottomLeft,
+                        child: Opacity(
+                          opacity: val.clamp(0.0, 1.0),
+                          child: child,
+                        ),
+                      ),
+                      child: GestureDetector(
+                        onLongPressStart: (details) => _showMessageActions(m, details.globalPosition),
+                        child: _SquishyBubble(
+                          isOwn: m.isOwn,
+                          highlighted: _highlighted.contains(m.id),
+                          child: bubbleContent,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                if (m.isOwn) const SizedBox(width: 8),
-                if (m.isOwn) const CircleAvatar(radius: 16, child: Text('Y')),
-              ],
+                  if (m.isOwn) const SizedBox(width: 8),
+                  if (m.isOwn) const CircleAvatar(radius: 16, child: Text('Y')),
+                ],
+              ),
             ),
           );
         },
@@ -735,13 +797,46 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFF21262C).withValues(alpha: 0.7),
-        title: Text(widget.chat.name),
+        title: Row(
+          children: [
+            Hero(
+              tag: 'avatar_${widget.chat.id}',
+              child: UserAvatar(
+                avatarUrl: widget.chat.avatarUrl,
+                name: widget.chat.name,
+                radius: 18,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                widget.chat.name,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
       body: ScreenBackground(
         child: SafeArea(
           child: Column(children: [
         
         Expanded(child: bodyWidget),
+        if (_isTyping)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E3338),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const TypingIndicator(dotColor: Colors.white70),
+              ),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Container(

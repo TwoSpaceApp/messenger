@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:animations/animations.dart';
 import 'package:two_space_app/l10n/app_localizations.dart';
 import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/models/chat.dart';
@@ -132,7 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               Expanded(
                 child: _loading 
-                  ? const Center(child: CircularProgressIndicator())
+                  ? _buildShimmerLoading()
                   : _buildChatList(),
               ),
             ],
@@ -149,6 +151,54 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Widget _buildShimmerLoading() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(8),
+      itemCount: 6,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: Shimmer.fromColors(
+            baseColor: Colors.white.withValues(alpha: 0.1),
+            highlightColor: Colors.white.withValues(alpha: 0.2),
+            child: Container(
+              height: 72,
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(width: 150, height: 16, color: Colors.white),
+                        const SizedBox(height: 8),
+                        Container(width: 100, height: 12, color: Colors.white),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildChatList() {
     final rooms = _filteredRooms;
     if (rooms.isEmpty) return Center(child: Text(AppLocalizations.of(context)!.noChats, style: const TextStyle(color: Colors.white70)));
@@ -159,17 +209,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       itemBuilder: (c, i) {
         final r = rooms[i];
         final id = r['id'] as String;
-        return Padding(
+        
+        final item = Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: GlassCard( 
             onTap: () => _openChat(id),
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                UserAvatar(
-                  avatarUrl: r['avatar'],
-                  name: r['name'],
-                  radius: 24,
+                Hero(
+                  tag: 'avatar_$id',
+                  child: UserAvatar(
+                    avatarUrl: r['avatar'],
+                    name: r['name'],
+                    radius: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -200,11 +254,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         );
+        
+        // Use staggered entry animation
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 50 * (1 - value)),
+              child: Opacity(
+                opacity: value,
+                child: child,
+              ),
+            );
+          },
+          child: item,
+        );
       },
     );
   }
 
   void _openChat(String id) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(chat: Chat(id: id, name: id, members: []))));
+    Navigator.push(
+      context, 
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => ChatScreen(
+          chat: Chat(id: id, name: id, members: [])
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SharedAxisTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            transitionType: SharedAxisTransitionType.horizontal,
+            child: child,
+          );
+        },
+      )
+    );
   }
 }

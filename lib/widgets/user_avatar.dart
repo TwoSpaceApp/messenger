@@ -141,11 +141,47 @@ class _UserAvatarState extends State<UserAvatar> {
         onBackgroundImageError: (exception, stackTrace) {
           // Fallback on network image load error
         },
-        child: widget.name == null ? null : Text(widget.name!),
       );
     }
 
-    // Fallback: display local initials text (no Appwrite dependency)
-    return CircleAvatar(radius: r, backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Text(widget.name ?? '?'));
+    // Gradient fallback for text avatars
+    final nameVal = widget.name ?? '?';
+    final hash = nameVal.hashCode;
+    final h1 = (hash % 360).toDouble();
+    final h2 = ((hash ~/ 360) % 360).toDouble();
+    final colors = [
+      HSVColor.fromAHSV(1.0, h1, 0.7, 0.9).toColor(),
+      HSVColor.fromAHSV(1.0, h2, 0.8, 0.8).toColor(),
+    ];
+    final initial = nameVal.isNotEmpty ? nameVal[0].toUpperCase() : '?';
+
+    return Container(
+      width: r * 2,
+      height: r * 2,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: r * 0.9, // Adjust size based on radius
+          fontWeight: FontWeight.bold,
+          shadows: [
+            Shadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              offset: const Offset(1, 1),
+              blurRadius: 2,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

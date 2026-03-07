@@ -1,7 +1,76 @@
 // Chat list item widget with preview and unread badge
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/l10n/app_localizations.dart';
 import '../models/chat.dart';
+
+class GradientAvatar extends StatelessWidget {
+  final String name;
+  final String? avatarUrl;
+  final double radius;
+
+  const GradientAvatar({
+    Key? key,
+    required this.name,
+    this.avatarUrl,
+    this.radius = 24.0,
+  }) : super(key: key);
+
+  List<Color> _generateGradient(String text) {
+    if (text.isEmpty) return [Colors.blue, Colors.purple];
+    final hash = text.hashCode;
+    
+    // Generate saturated, bright colors
+    final h1 = (hash % 360).toDouble();
+    final h2 = ((hash ~/ 360) % 360).toDouble();
+    
+    return [
+      HSVColor.fromAHSV(1.0, h1, 0.7, 0.9).toColor(),
+      HSVColor.fromAHSV(1.0, h2, 0.8, 0.8).toColor(),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (avatarUrl != null && avatarUrl!.isNotEmpty) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundImage: NetworkImage(avatarUrl!),
+      );
+    }
+
+    final colors = _generateGradient(name);
+    
+    return Container(
+      width: radius * 2,
+      height: radius * 2,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        name.isEmpty ? '?' : name[0].toUpperCase(),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: radius * 0.9,
+          fontWeight: FontWeight.bold,
+          shadows: [
+            Shadow(
+              color: Colors.black.withOpacity(0.2),
+              offset: const Offset(1, 1),
+              blurRadius: 2,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class ChatListItem extends StatelessWidget {
   final Chat chat;
@@ -45,35 +114,50 @@ class ChatListItem extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       leading: Stack(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundImage: chat.avatarUrl != null
-                ? NetworkImage(chat.avatarUrl!)
-                : null,
-            child: chat.avatarUrl == null
-                ? Text(chat.name.isEmpty ? '?' : chat.name[0])
-                : null,
-          ),
-          if (chat.unreadCount > 0)
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.error,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  chat.unreadCount > 99 ? '99+' : chat.unreadCount.toString(),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+          Hero(
+            tag: 'avatar_${chat.id}',
+            child: GradientAvatar(
+              name: chat.name,
+              avatarUrl: chat.avatarUrl,
+              radius: 24,
             ),
+          ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return ScaleTransition(scale: animation, child: child);
+              },
+              child: chat.unreadCount > 0
+                  ? Container(
+                      key: ValueKey<int>(chat.unreadCount),
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.colorScheme.error.withValues(alpha: 0.4),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          )
+                        ],
+                      ),
+                      child: Text(
+                        chat.unreadCount > 99 ? '99+' : chat.unreadCount.toString(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : const SizedBox.shrink(key: ValueKey<int>(0)),
+            ),
+          ),
         ],
       ),
       title: Text(
