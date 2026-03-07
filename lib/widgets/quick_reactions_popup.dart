@@ -4,7 +4,7 @@ class QuickReactionsPopup extends StatefulWidget {
   final Function(String emoji) onEmojiSelected;
   final Offset position;
 
-  const QuickReactionsPopup({
+  const QuickReactionsPopup({super.key, 
     required this.onEmojiSelected,
     required this.position,
   });

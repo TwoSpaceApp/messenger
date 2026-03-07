@@ -7,7 +7,7 @@ class EnhancedUserAvatar extends StatelessWidget {
   final double radius;
   final List<Color>? gradientColors;
 
-  const EnhancedUserAvatar({
+  const EnhancedUserAvatar({super.key, 
     required this.initials,
     this.avatarUrl,
     this.radius = 20,

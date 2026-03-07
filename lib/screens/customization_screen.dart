@@ -126,9 +126,9 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   indicatorColor: theme.colorScheme.primary,
                   indicatorSize: TabBarIndicatorSize.tab,
                   tabs: [
-                    Tab(icon: Icon(Icons.palette), text: l10n.colorsTab),
-                    Tab(icon: Icon(Icons.font_download), text: l10n.fontsTab),
-                    Tab(icon: Icon(Icons.tune), text: l10n.effectsTab),
+                    Tab(icon: const Icon(Icons.palette), text: l10n.colorsTab),
+                    Tab(icon: const Icon(Icons.font_download), text: l10n.fontsTab),
+                    Tab(icon: const Icon(Icons.tune), text: l10n.effectsTab),
                   ],
                 ),
               ),
@@ -173,7 +173,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                       const SizedBox(width: 12),
                       Text(
                         l10n.selectColorTheme,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -296,7 +296,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                       const SizedBox(width: 12),
                       Text(
                         l10n.fontSettingsTitle,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -449,7 +449,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                       const SizedBox(width: 12),
                       Text(
                         l10n.floatingCirclesLabel,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
@@ -525,7 +525,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                       const SizedBox(width: 8),
                       Text(
                         l10n.circlesSpeedLabel,
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
                       Text(
@@ -577,7 +577,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                       const SizedBox(width: 8),
                       Text(
                         l10n.brightnessLabel,
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
                       Text(
@@ -630,7 +630,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                       const SizedBox(width: 12),
                       Text(
                         l10n.advancedSettingsLabel,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,

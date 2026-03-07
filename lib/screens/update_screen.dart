@@ -5,7 +5,7 @@ import '../services/update_service.dart';
 
 class UpdateScreen extends StatefulWidget {
   final UpdateInfo info;
-  const UpdateScreen({Key? key, required this.info}) : super(key: key);
+  const UpdateScreen({super.key, required this.info});
 
   @override
   State<UpdateScreen> createState() => _UpdateScreenState();

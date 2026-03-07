@@ -7,7 +7,7 @@ class ForwardMessageDialog extends StatefulWidget {
   final List<Chat> availableChats;
   final Function(List<String> selectedChatIds) onForward;
 
-  const ForwardMessageDialog({
+  const ForwardMessageDialog({super.key, 
     required this.availableChats,
     required this.onForward,
   });

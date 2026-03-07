@@ -79,7 +79,7 @@ class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerPr
     _blob2Y += _tiltY * speedMultiplier * 2.0;
 
     // Wrap around screen edges with some buffer
-    final buffer = 100.0;
+    const buffer = 100.0;
 
     // Blob 1 wrapping
     if (_blob1X < -_blob1Size - buffer) _blob1X = screenW + buffer;

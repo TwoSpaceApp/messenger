@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:two_space_app/services/dev_http_client.dart' as http;
 import 'package:crypto/crypto.dart';
 import '../screens/update_screen.dart';
 import 'package:path_provider/path_provider.dart';

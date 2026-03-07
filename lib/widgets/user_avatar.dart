@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:two_space_app/services/dev_http_client.dart' as http;
 import 'package:two_space_app/config/environment.dart';
 import 'package:two_space_app/services/auth_service.dart';
 import 'package:two_space_app/services/matrix_service.dart';
@@ -68,8 +68,9 @@ class _UserAvatarState extends State<UserAvatar> {
         String? token;
         try { token = await AuthService().getMatrixTokenForUser(); } catch (_) { token = null; }
         String tokenString = '';
-        if (token != null && token.isNotEmpty) tokenString = token;
-        else if (Environment.matrixHomeserverUrl.isNotEmpty) tokenString = Environment.matrixHomeserverUrl;
+        if (token != null && token.isNotEmpty) {
+          tokenString = token;
+        } else if (Environment.matrixHomeserverUrl.isNotEmpty) tokenString = Environment.matrixHomeserverUrl;
         final headers = tokenString.isNotEmpty ? {'Authorization': 'Bearer $tokenString'} : <String, String>{};
         final res = await http.get(uri, headers: headers);
         if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
@@ -98,8 +99,9 @@ class _UserAvatarState extends State<UserAvatar> {
               token = null;
             }
             String tokenString = '';
-            if (token != null && token.isNotEmpty) tokenString = token;
-            else if (Environment.matrixHomeserverUrl.isNotEmpty) tokenString = Environment.matrixHomeserverUrl;
+            if (token != null && token.isNotEmpty) {
+              tokenString = token;
+            } else if (Environment.matrixHomeserverUrl.isNotEmpty) tokenString = Environment.matrixHomeserverUrl;
             final headers = tokenString.isNotEmpty ? {'Authorization': 'Bearer $tokenString'} : <String, String>{};
             final res = await http.get(uri, headers: headers);
             if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {

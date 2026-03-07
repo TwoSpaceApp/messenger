@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:two_space_app/services/dev_http_client.dart' as http;
 import 'package:two_space_app/models/chat.dart';
 export 'package:two_space_app/models/chat.dart';
 import 'package:two_space_app/config/environment.dart';
@@ -95,6 +95,6 @@ class MatrixChatBackend implements ChatBackend {
         return {'id': js['room_id'] ?? '', 'name': '', 'members': [otherUserId]};
       }
     } catch (_) {}
-    return {'id': 'dm:${otherUserId}', 'name': otherUserId, 'members': [otherUserId]};
+    return {'id': 'dm:$otherUserId', 'name': otherUserId, 'members': [otherUserId]};
   }
 }

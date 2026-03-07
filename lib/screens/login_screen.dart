@@ -77,9 +77,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Переключатель языка — правый верхний угол
-            Align(
+            const Align(
               alignment: Alignment.topRight,
-              child: const LanguageSwitcherButton(),
+              child: LanguageSwitcherButton(),
             ),
             const SizedBox(height: 8),
              const Center(
@@ -259,7 +259,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     )
                   : Text(
                       l10n.loginButton,
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
             ),
             

@@ -3,7 +3,7 @@ import '../services/biometric_auth_service.dart';
 import 'package:two_space_app/l10n/app_localizations.dart';
 
 class BiometricSetupScreen extends StatefulWidget {
-  const BiometricSetupScreen({Key? key}) : super(key: key);
+  const BiometricSetupScreen({super.key});
 
   @override
   State<BiometricSetupScreen> createState() => _BiometricSetupScreenState();
@@ -128,7 +128,7 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
 class PinInputDialog extends StatefulWidget {
   final BiometricAuthService biometricService;
 
-  const PinInputDialog({required this.biometricService});
+  const PinInputDialog({super.key, required this.biometricService});
 
   @override
   State<PinInputDialog> createState() => _PinInputDialogState();

@@ -12,7 +12,7 @@ class UserStatusIndicator extends StatelessWidget {
   final UserStatus status;
   final String? typingUser; // For 'typing' status: "User is typing..."
 
-  const UserStatusIndicator({
+  const UserStatusIndicator({super.key, 
     required this.status,
     this.typingUser,
   });
@@ -126,7 +126,7 @@ class __TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin
 }
 
 class DotWidget extends StatelessWidget {
-  const DotWidget();
+  const DotWidget({super.key});
 
   @override
   Widget build(BuildContext context) {

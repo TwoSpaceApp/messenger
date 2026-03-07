@@ -1,15 +1,27 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
+import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/services/dev_logger.dart';
+import 'package:two_space_app/services/dev_network_logger.dart';
 import 'package:two_space_app/services/update_service.dart';
 import 'package:two_space_app/services/settings_service.dart';
 import 'package:two_space_app/screens/login_screen.dart';
 import 'package:two_space_app/screens/register_screen.dart';
 import 'package:two_space_app/screens/home_screen.dart';
 import 'package:two_space_app/screens/customization_screen.dart';
-import 'package:two_space_app/screens/privacy_screen.dart';
-import 'package:two_space_app/services/navigation_service.dart';
-import 'package:two_space_app/l10n/app_localizations.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+// Флаги фичей для локального тестирования
+class FeatureFlags {
+  static final ValueNotifier<bool> enableNewChatUI = ValueNotifier(false);
+  static final ValueNotifier<bool> forceVideoCompression = ValueNotifier(true);
+  static final ValueNotifier<bool> enableAggressiveCaching = ValueNotifier(false);
+}
 
 class DevMenuScreen extends StatefulWidget {
   const DevMenuScreen({super.key});
@@ -18,397 +30,392 @@ class DevMenuScreen extends StatefulWidget {
   State<DevMenuScreen> createState() => _DevMenuScreenState();
 }
 
-class _DevMenuScreenState extends State<DevMenuScreen> {
-  late final Stream<List<String>> _logStream;
-  late final DevLogger _logger = DevLogger('DevMenu');
-  int _autoScrollLines = 50;
-  bool _colorize = true;
+class _DevMenuScreenState extends State<DevMenuScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final DevLogger _logger = DevLogger('DevMenu');
 
   @override
   void initState() {
     super.initState();
-    _logStream = DevLogger.stream;
-    _logger.info('═══════════════════════════════════════════════════════');
-    _logger.info('🚀 DEVELOPER MENU OPENED');
-    _logger.info('═══════════════════════════════════════════════════════');
+    _tabController = TabController(length: 5, vsync: this);
   }
 
-  Color _getLogColor(String log) {
-    if (!_colorize) {
-      return Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
-    }
-    if (log.contains('[ERROR]')) return const Color(0xFFEF5350);
-    if (log.contains('[WARN]')) return const Color(0xFFFFA726);
-    if (log.contains('[INFO]')) return const Color(0xFF29B6F6);
-    if (log.contains('[DEBUG]')) {
-      return Theme.of(context).brightness == Brightness.dark 
-          ? (Colors.grey[400] ?? Colors.white)
-          : Colors.grey[700]!;
-    }
-    if (log.contains('[HTTP]')) return const Color(0xFF66BB6A);
-    if (log.contains('API Response') || log.contains('Response:')) return const Color(0xFFAB47BC);
-    return Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87;
-  }
-
-  String _truncateLog(String log, {int maxLength = 500}) {
-    if (log.length <= maxLength) return log;
-    return '${log.substring(0, maxLength)}...';
-  }
-
-  void _copyLog(String log) {
-    Clipboard.setData(ClipboardData(text: log));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('✓ Лог скопирован в буфер обмена'), duration: Duration(seconds: 1)),
-    );
-  }
-
-  void _copyAllLogs() {
-    final allLogs = DevLogger.all.join('\n');
-    Clipboard.setData(ClipboardData(text: allLogs));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('✓ ${DevLogger.all.length} логов скопировано'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-  }
-
-  void _exportLogs() {
-    final timestamp = DateTime.now().toIso8601String();
-    final header = '''
-═══════════════════════════════════════════════════════════════════
-🔍 DEBUG LOG EXPORT - TwoSpace
-Время: $timestamp
-Количество логов: ${DevLogger.all.length}
-═══════════════════════════════════════════════════════════════════
-''';
-    final allLogs = header + DevLogger.all.join('\n');
-    Clipboard.setData(ClipboardData(text: allLogs));
-    _logger.info('✓ Экспортировано ${DevLogger.all.length} логов');
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final routes = <Map<String, dynamic>>[
-      {
-        'label': 'Home',
-        'action': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HomeScreen())),
-      },
-      {
-        'label': 'Login',
-        'action': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen())),
-      },
-      {
-        'label': 'Register',
-        'action': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
-      },
-      {
-        'label': 'Customization',
-        'action': () =>
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomizationScreen())),
-      },
-      {
-        'label': 'Privacy',
-        'action': () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyScreen())),
-      },
-    ];
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('🔧 Developer Menu'),
-        elevation: 2,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Обновить логи',
-            onPressed: () => setState(() {}),
-          ),
-          IconButton(
-            icon: const Icon(Icons.copy),
-            tooltip: 'Копировать все',
-            onPressed: _copyAllLogs,
-          ),
-          IconButton(
-            icon: const Icon(Icons.cloud_download),
-            tooltip: 'Экспортировать',
-            onPressed: _exportLogs,
-          ),
-          IconButton(
-            icon: const Icon(Icons.clear_all),
-            tooltip: 'Очистить логи',
-            onPressed: () {
-              DevLogger.clear();
-              _logger.info('🗑️ Логи очищены');
-              setState(() {});
-            },
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Navigation buttons
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Навигация',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: routes.map((r) {
-                      return ElevatedButton(
-                        onPressed: () {
-                          _logger.info('▶️ Navigate: ${r['label']}');
-                          try {
-                            (r['action'] as void Function())();
-                          } catch (e) {
-                            _logger.error('Navigation failed: $e');
-                          }
-                        },
-                        child: Text(r['label'] ?? ''),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-
-            // Debug actions
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Действия',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          _logger.info('📡 Проверка обновлений...');
-                          try {
-                            final info = await UpdateService.checkForUpdate();
-                            _logger.info('✓ Обновления: ${info != null ? 'Найдены' : 'Нет'}');
-                            if (!mounted) return;
-                            final navCtx = appNavigatorKey.currentContext;
-                            if (navCtx != null) {
-                              ScaffoldMessenger.of(navCtx).showSnackBar(
-                                const SnackBar(content: Text('✓ Проверка завершена (см. логи)')),
-                              );
-                            }
-                          } catch (e) {
-                            _logger.error('Проверка обновлений: $e');
-                            if (!mounted) return;
-                            final navCtx = appNavigatorKey.currentContext;
-                            if (navCtx != null) {
-                              ScaffoldMessenger.of(navCtx)
-                                  .showSnackBar(SnackBar(content: Text('❌ Ошибка: $e')));
-                            }
-                          }
-                        },
-                        icon: const Icon(Icons.system_update),
-                        label: const Text('Проверить обновления'),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          _logger.debug('🗂️ Очистка кеша профиля');
-                          await SettingsService.clearCachedProfile();
-                          _logger.info('✓ Кеш профиля очищен');
-                          if (!mounted) return;
-                          final navCtx = appNavigatorKey.currentContext;
-                          if (navCtx != null) {
-                            ScaffoldMessenger.of(navCtx).showSnackBar(
-                              const SnackBar(content: Text('✓ Кеш очищен')),
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.delete),
-                        label: const Text('Очистить кеш'),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          _logger.debug('📋 Тест логирования');
-                          _logger.info('ℹ️ Информационное сообщение');
-                          _logger.warning('⚠️ Предупреждение');
-                          _logger.error('❌ Ошибка');
-                          _logger.debug('🔍 Отладочная информация');
-                          _logger.info('🌐 [HTTP] GET /api/v1/user - Response: 200');
-                        },
-                        icon: const Icon(Icons.bug_report),
-                        label: const Text('Тест логов'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-
-            // Settings
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: _colorize,
-                        onChanged: (v) {
-                          setState(() => _colorize = v ?? true);
-                          _logger.debug(_colorize ? '🎨 Цветизация: ВКЛ' : '⚫ Цветизация: ВЫКЛ');
-                        },
-                      ),
-                      const Text('Цветизация логов'),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const Text('Строк: '),
-                      DropdownButton<int>(
-                        value: _autoScrollLines,
-                        items: [10, 25, 50, 100, 200].map((v) {
-                          return DropdownMenuItem(value: v, child: Text(v.toString()));
-                        }).toList(),
-                        onChanged: (v) => setState(() => _autoScrollLines = v ?? 50),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const Divider(),
-
-            // Logs viewer
-            Expanded(
-              child: StreamBuilder<List<String>>(
-                stream: _logStream,
-                initialData: DevLogger.all,
-                builder: (context, snap) {
-                  final logs = snap.data ?? [];
-                  final displayLogs = logs.length > _autoScrollLines
-                      ? logs.sublist(logs.length - _autoScrollLines)
-                      : logs;
-
-                  return logs.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.history, size: 64, color: Colors.grey),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Логи пусты',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: displayLogs.length,
-                          reverse: false,
-                          itemBuilder: (c, i) {
-                            final log = displayLogs[i];
-                            final isError = log.contains('[ERROR]');
-                            final isWarn = log.contains('[WARN]');
-
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              child: GestureDetector(
-                                onLongPress: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    builder: (ctx) => Container(
-                                      color: Theme.of(context).colorScheme.surface,
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            'Опции логи',
-                                            style: Theme.of(context).textTheme.titleMedium,
-                                          ),
-                                          const SizedBox(height: 16),
-                                          ListTile(
-                                            leading: const Icon(Icons.copy),
-                                            title: Text(l10n.copyButton),
-                                            onTap: () {
-                                              _copyLog(log);
-                                              Navigator.pop(ctx);
-                                            },
-                                          ),
-                                          ListTile(
-                                            leading: const Icon(Icons.search),
-                                            title: const Text('Найти похожие'),
-                                            onTap: () {
-                                              final keyword = log.split(':').first;
-                                              _logger.info('Поиск: $keyword');
-                                              Navigator.pop(ctx);
-                                            },
-                                          ),
-                                          ListTile(
-                                            leading: const Icon(Icons.delete),
-                                            title: const Text('Удалить эту строку'),
-                                            onTap: () {
-                                              DevLogger.all.remove(log);
-                                              setState(() {});
-                                              Navigator.pop(ctx);
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: isError
-                                        ? Colors.red.withValues(alpha: 0.1)
-                                        : isWarn
-                                            ? Colors.orange.withValues(alpha: 0.1)
-                                            : null,
-                                    border: Border(
-                                      left: BorderSide(
-                                        color: _getLogColor(log),
-                                        width: 3,
-                                      ),
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  child: SelectableText(
-                                    _truncateLog(log),
-                                    style: TextStyle(
-                                      fontFamily: 'monospace',
-                                      fontSize: 11,
-                                      color: _getLogColor(log),
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                },
-              ),
-            ),
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          tabs: const [
+            Tab(icon: Icon(Icons.build), text: 'Actions'),
+            Tab(icon: Icon(Icons.brush), text: 'UI Inspect'),
+            Tab(icon: Icon(Icons.network_check), text: 'Network'),
+            Tab(icon: Icon(Icons.flag), text: 'Features'),
+            Tab(icon: Icon(Icons.info), text: 'Info'),
           ],
         ),
       ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _DevMenuActionsTab(logger: _logger),
+          _DevMenuUIInspectorTab(),
+          _DevMenuNetworkTab(),
+          _DevMenuFeatureFlagsTab(),
+          _DevMenuInfoTab(),
+        ],
+      ),
+    );
+  }
+}
+
+// ----------------------------------------------------------------------
+// ACTIONS TAB
+// ----------------------------------------------------------------------
+class _DevMenuActionsTab extends StatelessWidget {
+  final DevLogger logger;
+  const _DevMenuActionsTab({required this.logger});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildSectionTitle(context, 'Navigation Bypass'),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _buildAction(context, '🏠 Force to Home', Icons.home, () {
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+            }, color: Colors.green),
+            _buildAction(context, '🔑 Force to Login', Icons.login, () {
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+            }),
+            _buildAction(context, '📝 Force to Register', Icons.app_registration, () {
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
+            }),
+            _buildAction(context, '🎨 Customization', Icons.color_lens, () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomizationScreen()));
+            }),
+          ],
+        ),
+        const SizedBox(height: 24),
+        
+        _buildSectionTitle(context, 'Testing & Load Gen'),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _buildAction(context, '💥 Force Crash', Icons.bug_report, () {
+              throw Exception('Test Crash triggered from Dev Menu');
+            }, color: Colors.orange),
+            _buildAction(context, '🔥 1000 Mock Messages', Icons.data_array, () {
+               // Здесь в будущем можно вызывать сервис добавления моков в базу
+               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Load Gen: Added 1000 mock messages (simulated)')));
+            }, color: Colors.orange),
+             _buildAction(context, 'Обновить OTA', Icons.system_update, () async {
+              logger.info('Обновление...');
+              await UpdateService.checkForUpdate();
+            }),
+          ],
+        ),
+        const SizedBox(height: 24),
+
+        _buildSectionTitle(context, 'Storage & State'),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _buildAction(context, '🗑️ Clear Secure Storage', Icons.delete_forever, () async {
+              const storage = FlutterSecureStorage();
+              await storage.deleteAll();
+              logger.info('Secure storage cleared');
+            }, color: Colors.red),
+            _buildAction(context, '🗂️ Clear Cache Profile', Icons.layers_clear, () async {
+              await SettingsService.clearCachedProfile();
+              logger.info('Profile cache cleared');
+            }, color: Colors.red),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAction(BuildContext context, String label, IconData icon, VoidCallback onTap, {Color? color}) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        backgroundColor: color?.withValues(alpha: 0.1),
+        foregroundColor: color ?? Theme.of(context).colorScheme.onSurface,
+      ),
+      onPressed: onTap,
+      icon: Icon(icon, size: 20),
+      label: Text(label),
+    );
+  }
+}
+
+// ----------------------------------------------------------------------
+// UI INSPECTOR TAB
+// ----------------------------------------------------------------------
+class _DevMenuUIInspectorTab extends StatefulWidget {
+  @override
+  State<_DevMenuUIInspectorTab> createState() => _DevMenuUIInspectorTabState();
+}
+
+class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        SwitchListTile(
+          title: const Text('Показывать границы (debugPaintSize)'),
+          subtitle: const Text('Отображение отступов и границ всех виджетов'),
+          value: debugPaintSizeEnabled,
+          onChanged: (val) {
+            setState(() {
+              debugPaintSizeEnabled = val;
+            });
+          },
+        ),
+        SwitchListTile(
+          title: const Text('Закрашивать перерисовки (RepaintRainbow)'),
+          subtitle: const Text('Подсвечивает элементы, которые перерисовываются'),
+          value: debugRepaintRainbowEnabled,
+          onChanged: (val) {
+            setState(() {
+              debugRepaintRainbowEnabled = val;
+            });
+          },
+        ),
+        SwitchListTile(
+          title: const Text('Медленные анимации (timeDilation = 5.0)'),
+          subtitle: const Text('Замедляет все анимации в приложении'),
+          value: timeDilation != 1.0,
+          onChanged: (val) {
+            setState(() {
+              timeDilation = val ? 5.0 : 1.0;
+            });
+          },
+        ),
+        SwitchListTile(
+          title: const Text('Профилирование производительности'),
+          subtitle: const Text('Отображает Performance Overlay сверху'),
+          value: WidgetsApp.showPerformanceOverlayOverride,
+          onChanged: (val) {
+            setState(() {
+               WidgetsApp.showPerformanceOverlayOverride = val;
+            });
+          },
+        ),
+      ],
+    );
+  }
+}
+
+// ----------------------------------------------------------------------
+// FEATURE FLAGS TAB
+// ----------------------------------------------------------------------
+class _DevMenuFeatureFlagsTab extends StatefulWidget {
+  @override
+  State<_DevMenuFeatureFlagsTab> createState() => _DevMenuFeatureFlagsTabState();
+}
+
+class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildFlagTile('Enable New Chat UI', FeatureFlags.enableNewChatUI),
+        _buildFlagTile('Force Video Compression', FeatureFlags.forceVideoCompression),
+        _buildFlagTile('Enable Aggressive Caching', FeatureFlags.enableAggressiveCaching),
+      ],
+    );
+  }
+
+  Widget _buildFlagTile(String title, ValueNotifier<bool> flag) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: flag,
+      builder: (context, value, child) {
+        return SwitchListTile(
+          title: Text(title),
+          value: value,
+          onChanged: (val) => flag.value = val,
+        );
+      },
+    );
+  }
+}
+
+// ----------------------------------------------------------------------
+// NETWORK TAB
+// ----------------------------------------------------------------------
+class _DevMenuNetworkTab extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<DevNetworkLog>>(
+      stream: DevNetworkLogger.instance.logsStream,
+      initialData: DevNetworkLogger.instance.logs,
+      builder: (context, snapshot) {
+        final logs = snapshot.data ?? [];
+        if (logs.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.wifi_off, size: 64, color: Colors.grey.withAlpha(128)),
+                const SizedBox(height: 16),
+                const Text('No Network Logs', style: TextStyle(color: Colors.grey)),
+              ],
+            )
+          );
+        }
+        return ListView.separated(
+          itemCount: logs.length,
+          separatorBuilder: (c, i) => const Divider(height: 1),
+          itemBuilder: (c, index) {
+            final log = logs[index];
+            final color = (log.statusCode ?? 0) >= 400 ? Colors.red : Colors.green;
+            return ExpansionTile(
+              leading: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(color: color.withAlpha(50), borderRadius: BorderRadius.circular(8)),
+                child: Text(log.method, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+              ),
+              title: Text(log.url, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
+              subtitle: Text('${log.statusCode ?? '???'} • ${log.latencyMs}ms', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              children: [
+                if (log.requestBody != null)
+                  _buildCodeBlock('Request', log.requestBody),
+                if (log.responseBody != null)
+                  _buildCodeBlock('Response', log.responseBody),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildCodeBlock(String title, dynamic data) {
+    String pretty = '';
+    try {
+      if (data is Map || data is List) {
+        pretty = const JsonEncoder.withIndent('  ').convert(data);
+      } else {
+        pretty = data.toString();
+      }
+    } catch (_) {
+      pretty = data.toString();
+    }
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(8)),
+            child: SelectableText(pretty, style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.greenAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ----------------------------------------------------------------------
+// INFO TAB
+// ----------------------------------------------------------------------
+class _DevMenuInfoTab extends StatefulWidget {
+  @override
+  State<_DevMenuInfoTab> createState() => _DevMenuInfoTabState();
+}
+
+class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
+  PackageInfo? _packageInfo;
+  String _deviceInfo = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInfo();
+  }
+
+  Future<void> _loadInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    final deviceInfoPlugin = DeviceInfoPlugin();
+    String devInfo = '';
+    
+    if (Platform.isAndroid) {
+      final androidInfo = await deviceInfoPlugin.androidInfo;
+      devInfo = '${androidInfo.manufacturer} ${androidInfo.model} (Android ${androidInfo.version.release})';
+    } else if (Platform.isIOS) {
+      final iosInfo = await deviceInfoPlugin.iosInfo;
+      devInfo = '${iosInfo.name} (iOS ${iosInfo.systemVersion})';
+    }
+
+    setState(() {
+      _packageInfo = info;
+      _deviceInfo = devInfo;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_packageInfo == null) return const Center(child: CircularProgressIndicator());
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        ListTile(
+          leading: const Icon(Icons.info_outline),
+          title: const Text('App Name'),
+          subtitle: Text(_packageInfo!.appName),
+        ),
+        ListTile(
+          leading: const Icon(Icons.numbers),
+          title: const Text('Version'),
+          subtitle: Text('${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.code),
+          title: const Text('Package Name'),
+          subtitle: Text(_packageInfo!.packageName),
+        ),
+        ListTile(
+          leading: const Icon(Icons.phone_android),
+          title: const Text('Device'),
+          subtitle: Text(_deviceInfo),
+        ),
+      ],
     );
   }
 }

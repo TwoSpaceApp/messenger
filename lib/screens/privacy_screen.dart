@@ -26,10 +26,12 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   Future<void> _loadPref() async {
     try {
       // AppwriteService not available, skip loading prefs
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _hideFromSearch = false;
         _hideLastSeen = false;
       });
+      }
     } catch (_) {}
   }
 

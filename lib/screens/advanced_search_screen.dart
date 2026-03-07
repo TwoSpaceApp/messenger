@@ -4,7 +4,7 @@ import '../services/chat_matrix_service.dart';
 import '../widgets/glass_card.dart';
 
 class AdvancedSearchScreen extends StatefulWidget {
-  const AdvancedSearchScreen({Key? key}) : super(key: key);
+  const AdvancedSearchScreen({super.key});
 
   @override
   State<AdvancedSearchScreen> createState() => _AdvancedSearchScreenState();

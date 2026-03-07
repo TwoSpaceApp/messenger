@@ -7,7 +7,7 @@ class EnhancedAudioPlayer extends StatefulWidget {
   final String audioUrl;
   final String? displayName;
 
-  const EnhancedAudioPlayer({
+  const EnhancedAudioPlayer({super.key, 
     required this.audioUrl,
     this.displayName,
   });
@@ -96,9 +96,9 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
               // Waveform placeholder (can be enhanced with actual waveform)
               Expanded(
                 child: SliderTheme(
-                  data: SliderThemeData(
+                  data: const SliderThemeData(
                     trackHeight: 4,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
                   ),
                   child: Slider(
                     min: 0,

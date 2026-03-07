@@ -1,6 +1,5 @@
 import 'package:two_space_app/services/aegis/aegis_client.dart';
 import 'package:two_space_app/services/aegis/message_payloads.dart';
-import 'package:two_space_app/services/aegis/exceptions.dart';
 import 'package:two_space_app/config/environment.dart';
 import 'package:two_space_app/services/dev_logger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

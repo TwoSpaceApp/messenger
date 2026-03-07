@@ -167,7 +167,7 @@ class InitializationService {
   static void _logInitializationResult(InitializationResult result) {
     if (!kDebugMode) return;
 
-    print('\n' + '=' * 50);
+    print('\n${'=' * 50}');
     print('INITIALIZATION SUMMARY');
     print('=' * 50);
     print('Total Duration: ${result.totalDuration.inMilliseconds}ms');
@@ -272,7 +272,7 @@ class _MatrixJwtStep implements InitializationStep {
 
   @override
   Future<void> execute() async {
-    await MatrixService.restoreJwt();
+    MatrixService.restoreJwt();
   }
 }
 

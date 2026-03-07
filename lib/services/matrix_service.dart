@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:two_space_app/services/dev_http_client.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../config/environment.dart';
@@ -127,25 +127,25 @@ class MatrixService {
     return downloadFileToTemp(mxcUrl);
   }
 
-  static createAccount(String email, String password, {String? name}) {}
+static Future<void> createAccount(String email, String password, {String? name}) async {}
   
-  static restoreJwt() {}
+  static Future<void> restoreJwt() async {}
   
-  static getJwt() {}
+  static Future<String?> getJwt() async { return null; }
   
-  static deleteCurrentSession() {}
+  static Future<void> deleteCurrentSession() async {}
   
-  static saveSessionCookie(String? receivedCookie) {}
+  static Future<void> saveSessionCookie(String? receivedCookie) async {}
   
-  static clearJwt() {}
+  static Future<void> clearJwt() async {}
   
-  static createPhoneToken(String phone) {}
+  static Future<void> createPhoneToken(String phone) async {}
   
-  static createEmailSession(String email, String s) {}
+  static Future<void> createEmailSession(String email, String s) async {}
   
-  static v1Endpoint() {}
+  static String v1Endpoint() { return ''; }
+
+  static Future<void> saveJwt(String jwt) async {}
   
-  static saveJwt(String jwt) {}
-  
-  static setCurrentUserId(String userId) {}
+  static void setCurrentUserId(String userId) {}
 }

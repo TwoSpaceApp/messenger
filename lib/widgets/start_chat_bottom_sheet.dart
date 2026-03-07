@@ -7,11 +7,11 @@ class StartChatBottomSheet extends StatelessWidget {
   final VoidCallback onJoinByAddress;
 
   const StartChatBottomSheet({
-    Key? key,
+    super.key,
     required this.onCreateGroup,
     required this.onInviteUser,
     required this.onJoinByAddress,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class StartChatBottomSheet extends StatelessWidget {
           ),
         ],
       ),
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         vertical: 24,
         horizontal: 16,
       ),
@@ -47,14 +47,14 @@ class StartChatBottomSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Text(
             l10n.startChatTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           _buildMenuItem(
             context,
             icon: Icons.add_circle_outline,
@@ -65,7 +65,7 @@ class StartChatBottomSheet extends StatelessWidget {
               onCreateGroup();
             },
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           _buildMenuItem(
             context,
             icon: Icons.person_add_alt_1_outlined,
@@ -76,7 +76,7 @@ class StartChatBottomSheet extends StatelessWidget {
               onInviteUser();
             },
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           _buildMenuItem(
             context,
             icon: Icons.link_outlined,
@@ -87,7 +87,7 @@ class StartChatBottomSheet extends StatelessWidget {
               onJoinByAddress();
             },
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -109,7 +109,7 @@ class StartChatBottomSheet extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 16,
           ),
@@ -145,7 +145,7 @@ class StartChatBottomSheet extends StatelessWidget {
                   size: 28,
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +156,7 @@ class StartChatBottomSheet extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -168,7 +168,7 @@ class StartChatBottomSheet extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,

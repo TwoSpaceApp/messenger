@@ -9,7 +9,7 @@ import '../utils/responsive.dart';
 import 'package:two_space_app/l10n/app_localizations.dart';
 
 class CreateGroupScreen extends StatefulWidget {
-  const CreateGroupScreen({Key? key}) : super(key: key);
+  const CreateGroupScreen({super.key});
 
   @override
   State<CreateGroupScreen> createState() => _CreateGroupScreenState();
@@ -240,14 +240,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
                   // Group name field
                   Text(
                     l10n.roomNameLabel,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: _nameController,
                     decoration: InputDecoration(
@@ -279,14 +279,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
                   // Description field
                   Text(
                     l10n.roomTopicLabel,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: _descriptionController,
                     maxLines: 3,
@@ -319,14 +319,14 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
                   // Visibility section
                   Text(
                     l10n.roomVisibilityLabel,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   _buildVisibilityOption(
                       title: l10n.privateRoomOption,
                       subtitle: l10n.privateRoomSubtitle,
@@ -339,7 +339,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     value: GroupVisibility.public,
                     icon: Icons.public,
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
                   // Message history checkbox
                   Container(
@@ -364,7 +364,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 32),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),

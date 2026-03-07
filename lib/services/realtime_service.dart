@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'package:http/http.dart' as http;
+import 'package:two_space_app/services/dev_http_client.dart' as http;
 import 'package:flutter/foundation.dart';
 // Appwrite SDK is optional; use AppwriteService wrapper or Matrix sync when available.
 // Emit plain Map<String,dynamic> events instead of Appwrite models to avoid
@@ -151,7 +151,7 @@ class RealtimeService {
   if (kDebugMode) debugPrint('Matrix sync: processed ${processed ?? 0} events, next_batch=$_syncToken, before=$beforeToken');
 
         // small yield to avoid hot loop if server returns quickly
-        await Future<void>.delayed(Duration(milliseconds: successPauseMs));
+        await Future<void>.delayed(const Duration(milliseconds: successPauseMs));
         continue;
       } on _MatrixAuthException catch (e) {
         // Authentication issues: try refreshing the token, otherwise surface an auth event
@@ -191,7 +191,7 @@ class RealtimeService {
         break;
       } catch (err, st) {
     _consecutiveFailures++;
-    if (kDebugMode) debugPrint('Matrix sync loop error (#${_consecutiveFailures}): $err\n$st');
+    if (kDebugMode) debugPrint('Matrix sync loop error (#$_consecutiveFailures): $err\n$st');
     if (!_matrixSyncRunning) break;
 
         // add jitter to backoff (±50%)

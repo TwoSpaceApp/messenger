@@ -97,12 +97,12 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
               final coverT = Curves.easeInOutCubic.transform(_coverController.value);
 
               // Static starting positions
-              final b1Start = const Alignment(-0.6, 0.6);
-              final b2Start = const Alignment(0.6, -0.6);
+              const b1Start = Alignment(-0.6, 0.6);
+              const b2Start = Alignment(0.6, -0.6);
 
               // Target positions (center)
-              final b1End = const Alignment(-0.2, 0);
-              final b2End = const Alignment(0.2, 0);
+              const b1End = Alignment(-0.2, 0);
+              const b2End = Alignment(0.2, 0);
 
               final p1 = Alignment.lerp(b1Start, b1End, coverT)!;
               final p2 = Alignment.lerp(b2Start, b2End, coverT)!;

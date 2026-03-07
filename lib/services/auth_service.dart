@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:two_space_app/services/dev_http_client.dart' as http;
 import 'package:two_space_app/services/matrix_service.dart';
 import 'package:two_space_app/services/chat_matrix_service.dart';
 import 'package:two_space_app/services/dev_logger.dart';
@@ -50,7 +50,7 @@ class AuthService {
 
   /// Return currently cached JWT, or null if none.
   Future<String?> getJwt() async {
-    return await MatrixService.getJwt();
+    return MatrixService.getJwt();
   }
 
   /// Ensure we have valid credentials: check ChatMatrixService for stored tokens
@@ -82,18 +82,18 @@ class AuthService {
       _logger.debug('❌ Ошибка очистки Matrix credentials: $e');
     }
     try {
-      await MatrixService.deleteCurrentSession();
+      MatrixService.deleteCurrentSession();
       _logger.info('✓ Сессия удалена');
     } catch (e) {
       _logger.debug('❌ Ошибка удаления сессии: $e');
     }
     try {
-      await MatrixService.saveSessionCookie(null);
+      MatrixService.saveSessionCookie(null);
     } catch (e) {
       _logger.debug('❌ Ошибка очистки cookie: $e');
     }
     try {
-      await MatrixService.clearJwt();
+      MatrixService.clearJwt();
       _logger.info('✓ Токены очищены');
     } catch (e) {
       _logger.debug('❌ Ошибка очистки: $e');
@@ -186,7 +186,7 @@ class AuthService {
     await _secure.write(key: '$_kMatrixTokenKeyPrefix$keyId', value: token);
     // Remember current matrix user id for other services
     try {
-      await MatrixService.setCurrentUserId(userId);
+      MatrixService.setCurrentUserId(userId);
     } catch (e) {
       _logger.debug('Не удалось сохранить userId: $e');
     }
@@ -313,7 +313,7 @@ class AuthService {
     }
     await _secure.write(key: '$_kMatrixTokenKeyPrefix$keyId', value: tokenResp);
     try { 
-      await MatrixService.setCurrentUserId(userId); 
+      MatrixService.setCurrentUserId(userId); 
     } catch (e) {
       _logger.debug('Не удалось сохранить userId: $e');
     }
@@ -339,7 +339,7 @@ class AuthService {
   }
 
   Future<dynamic> sendPhoneToken(String phone) async {
-    return await MatrixService.createPhoneToken(phone);
+    return MatrixService.createPhoneToken(phone);
   }
 
   /// Send a login token to email (passwordless login / verification)
@@ -358,7 +358,7 @@ class AuthService {
 
     // Try Matrix-level path (server-provided endpoint must implement this)
       try {
-        final res = await MatrixService.createEmailSession(email, '');
+        final res = MatrixService.createEmailSession(email, '');
         return res;
       } catch (e) {
         throw Exception('Email token delivery not implemented; configure MATRIX_EMAIL_TOKEN_ENDPOINT. $e');
@@ -404,7 +404,7 @@ class AuthService {
       final jwtResp = await accountClient.createJWT();
       final jwt = jwtResp is Map && jwtResp.containsKey('jwt') ? jwtResp['jwt'] as String : null;
       if (jwt == null) throw Exception('Не удалось получить JWT после создания сессии');
-      await MatrixService.saveJwt(jwt);
+      MatrixService.saveJwt(jwt);
       return;
     }
 
@@ -426,8 +426,8 @@ class AuthService {
     final jwtJson = jsonDecode(jwtResp.body) as Map<String, dynamic>;
     final jwt = jwtJson['jwt'] as String?;
     if (jwt == null) throw Exception('JWT отсутствует в ответе');
-    if (receivedCookie != null && receivedCookie.isNotEmpty) await MatrixService.saveSessionCookie(receivedCookie);
-    await MatrixService.saveJwt(jwt);
+    if (receivedCookie != null && receivedCookie.isNotEmpty) MatrixService.saveSessionCookie(receivedCookie);
+    MatrixService.saveJwt(jwt);
   }
 
   /// Attempt to restore previous session from stored token.

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/l10n/app_localizations.dart';
-import 'package:http/http.dart' as http;
+import 'package:two_space_app/services/dev_http_client.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:two_space_app/services/matrix_service.dart';
 import 'package:two_space_app/config/environment.dart';
@@ -55,7 +55,7 @@ class _MediaPreviewState extends State<MediaPreview> {
       final server = parts[0];
       final mediaId = parts.sublist(1).join('/');
       final homeserver = ChatMatrixService().homeserver;
-      final uri = Uri.parse(homeserver + '/_matrix/media/v3/download/$server/$mediaId');
+      final uri = Uri.parse('$homeserver/_matrix/media/v3/download/$server/$mediaId');
       String? token;
       try {
         token = await AuthService().getMatrixTokenForUser();
@@ -63,8 +63,9 @@ class _MediaPreviewState extends State<MediaPreview> {
         token = null;
       }
       String tokenString = '';
-      if (token != null && token.isNotEmpty) tokenString = token;
-      else if (Environment.matrixAccessToken.isNotEmpty) tokenString = Environment.matrixAccessToken;
+      if (token != null && token.isNotEmpty) {
+        tokenString = token;
+      } else if (Environment.matrixAccessToken.isNotEmpty) tokenString = Environment.matrixAccessToken;
       final headers = tokenString.isNotEmpty ? {'Authorization': 'Bearer $tokenString'} : <String, String>{};
       final res = await http.get(uri, headers: headers);
       if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {

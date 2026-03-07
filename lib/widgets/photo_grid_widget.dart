@@ -8,7 +8,7 @@ class PhotoGridWidget extends StatelessWidget {
   final int maxItems;
   final Function(int)? onMediaTap;
 
-  const PhotoGridWidget({
+  const PhotoGridWidget({super.key, 
     required this.mediaUrls,
     this.maxItems = 4,
     this.onMediaTap,

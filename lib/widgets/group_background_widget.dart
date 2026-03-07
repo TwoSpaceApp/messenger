@@ -6,11 +6,11 @@ class GroupBackgroundWidget extends StatelessWidget {
   final Widget child;
 
   const GroupBackgroundWidget({
-    Key? key,
+    super.key,
     this.backgroundColor,
     this.backgroundImageUrl,
     required this.child,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

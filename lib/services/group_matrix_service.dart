@@ -1,6 +1,6 @@
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:two_space_app/services/dev_http_client.dart' as http;
 import '../models/group.dart';
 import '../config/environment.dart';
 import 'auth_service.dart';
@@ -85,7 +85,7 @@ class GroupMatrixService {
   Future<void> inviteUserByUsername(String roomId, String username) async {
     try {
       // Преобразовать username в полный ID
-      final userId = '@\${username}:matrix.org';
+      const userId = '@\${username}:matrix.org';
       await inviteUserById(roomId, userId);
     } catch (e) {
       throw Exception('Ошибка приглашения по username: $e');

@@ -38,7 +38,7 @@ class _TypingIndicatorState extends State<TypingIndicator> with SingleTickerProv
             // Calculate a wave effect relying on math.sin
             final progress = _controller.value * 2 * math.pi;
             final offset = math.sin(progress - (index * math.pi / 3));
-            final dy = (offset > 0 ? -offset : 0) * 6; // only jump up
+            final dy = (offset > 0 ? -offset : 0.0) * 6.0; // only jump up
 
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 2.5),

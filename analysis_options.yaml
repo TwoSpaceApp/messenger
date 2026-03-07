@@ -11,3 +11,6 @@ linter:
     avoid_print: false
     prefer_const_constructors: true
     prefer_const_declarations: true
+    use_build_context_synchronously: false
+    curly_braces_in_flow_control_structures: false
+    use_key_in_widget_constructors: false

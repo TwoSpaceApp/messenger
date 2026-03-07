@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class MessageDateDivider extends StatelessWidget {
   final String dateLabel;
 
-  const MessageDateDivider({required this.dateLabel});
+  const MessageDateDivider({super.key, required this.dateLabel});
 
   @override
   Widget build(BuildContext context) {

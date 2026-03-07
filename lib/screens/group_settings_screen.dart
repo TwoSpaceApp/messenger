@@ -9,9 +9,9 @@ class GroupSettingsScreen extends StatefulWidget {
   final String roomId;
 
   const GroupSettingsScreen({
-    Key? key,
+    super.key,
     required this.roomId,
-  }) : super(key: key);
+  });
 
   @override
   State<GroupSettingsScreen> createState() => _GroupSettingsScreenState();
@@ -497,13 +497,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       backgroundImage: m.avatarUrl != null
                           ? NetworkImage(m.avatarUrl!)
                           : null,
+                      radius: 16,
                       child: m.avatarUrl == null
                           ? Text(
                               m.displayName.isNotEmpty ? m.displayName[0] : '?',
                               style: TextStyle(color: roleColor),
                             )
                           : null,
-                      radius: 16,
                     ),
                     const SizedBox(width: 12),
                     Expanded(

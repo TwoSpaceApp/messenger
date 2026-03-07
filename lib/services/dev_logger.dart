@@ -22,7 +22,7 @@ class DevLogger {
   /// Логировать сообщение с определённым уровнем
   static void _log(String msg, LogLevel level) {
     final timestamp = DateTime.now().toIso8601String();
-    final line = '[${timestamp}] ${level.emoji} $msg';
+    final line = '[$timestamp] ${level.emoji} $msg';
     _logs.add(line);
     // Сохраняем последние 200 записей
     if (_logs.length > 200) _logs.removeRange(0, _logs.length - 200);

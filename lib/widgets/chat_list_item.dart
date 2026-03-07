@@ -1,5 +1,4 @@
 // Chat list item widget with preview and unread badge
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/l10n/app_localizations.dart';
 import '../models/chat.dart';
@@ -10,11 +9,11 @@ class GradientAvatar extends StatelessWidget {
   final double radius;
 
   const GradientAvatar({
-    Key? key,
+    super.key,
     required this.name,
     this.avatarUrl,
     this.radius = 24.0,
-  }) : super(key: key);
+  });
 
   List<Color> _generateGradient(String text) {
     if (text.isEmpty) return [Colors.blue, Colors.purple];
@@ -61,7 +60,7 @@ class GradientAvatar extends StatelessWidget {
           fontWeight: FontWeight.bold,
           shadows: [
             Shadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               offset: const Offset(1, 1),
               blurRadius: 2,
             ),
@@ -78,7 +77,7 @@ class ChatListItem extends StatelessWidget {
   final VoidCallback onTap;
   final Function(Chat)? onLongPress;
 
-  const ChatListItem({
+  const ChatListItem({super.key, 
     required this.chat,
     required this.isSelected,
     required this.onTap,

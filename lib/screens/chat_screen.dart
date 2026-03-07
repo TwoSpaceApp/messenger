@@ -70,7 +70,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final Set<String> _highlighted = {};
   bool _loading = true;
   bool _sending = false;
-  bool _isTyping = false;
+  final bool _isTyping = false;
   final Map<String, AudioPlayer> _audioPlayers = {};
   final Map<String, Map<String, dynamic>> _userInfoCache = {};
   late final VoiceService _voiceService;
@@ -239,7 +239,7 @@ class _ChatScreenState extends State<ChatScreen> {
               // Fallback to index-based scroll
               final idx = _messages.indexWhere((m) => m.id == targetId);
               if (idx >= 0 && _listController.hasClients) {
-                final approxItemHeight = 84.0;
+                const approxItemHeight = 84.0;
                 final N = _messages.length;
                 final revIdx = (N - 1 - idx);
                 final offset = revIdx * approxItemHeight;
@@ -437,7 +437,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 Positioned(left: 20, top: -8, child: Transform.rotate(angle: 0.0, child: ClipPath(clipper: _TriangleClipper(), child: Container(width: 18, height: 12, color: Theme.of(context).colorScheme.surface)))),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8)]),
+                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(12), boxShadow: [const BoxShadow(color: Colors.black26, blurRadius: 8)]),
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     // reactions row
                     Row(mainAxisSize: MainAxisSize.min, children: [

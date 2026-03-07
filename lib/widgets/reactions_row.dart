@@ -6,7 +6,7 @@ class ReactionsRow extends StatelessWidget {
   final Function(String emoji) onReactionTap;
   final Function(String emoji) onAddReaction;
 
-  const ReactionsRow({
+  const ReactionsRow({super.key, 
     required this.reactions,
     required this.onReactionTap,
     required this.onAddReaction,
@@ -14,7 +14,7 @@ class ReactionsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (reactions.isEmpty) return SizedBox.shrink();
+    if (reactions.isEmpty) return const SizedBox.shrink();
     
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
@@ -41,7 +41,7 @@ class ReactionsRow extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.add, size: 16),
+              child: const Icon(Icons.add, size: 16),
             ),
           ),
         ],

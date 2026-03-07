@@ -2,11 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:crypto/crypto.dart';
 import 'package:two_space_app/services/aegis/message.dart';
 import 'package:two_space_app/services/aegis/message_type.dart';
 import 'package:two_space_app/services/aegis/message_payloads.dart';
-import 'package:two_space_app/services/aegis/message_encoder.dart';
 import 'package:two_space_app/services/aegis/transport.dart';
 import 'package:two_space_app/services/aegis/exceptions.dart';
 import 'package:two_space_app/services/aegis/protocol_constants.dart';
@@ -14,6 +12,7 @@ import 'package:two_space_app/services/aegis/protocol_constants.dart';
 /// Main Aegis client class
 class AegisClient {
   late AegisTransport _transport;
+  // ignore: unused_field
   String? _authToken;
   bool _isAuthenticated = false;
   

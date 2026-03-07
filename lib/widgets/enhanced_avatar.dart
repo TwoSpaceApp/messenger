@@ -7,7 +7,7 @@ class EnhancedAvatar extends StatelessWidget {
   final double radius;
   final bool showInitials;
 
-  const EnhancedAvatar({
+  const EnhancedAvatar({super.key, 
     this.imageUrl,
     required this.name,
     this.radius = 20,
@@ -100,7 +100,7 @@ class GroupAvatar extends StatelessWidget {
   final List<String> memberNames; // Top members for preview
   final double radius;
 
-  const GroupAvatar({
+  const GroupAvatar({super.key, 
     this.imageUrl,
     required this.name,
     this.memberNames = const [],

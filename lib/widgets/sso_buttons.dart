@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SsoButtons extends StatelessWidget {
-  const SsoButtons({Key? key}) : super(key: key);
+  const SsoButtons({super.key});
 
   void _handleSsoLogin(String provider) {
     // Handle SSO login for the given provider
@@ -17,7 +17,7 @@ class SsoButtons extends StatelessWidget {
       icon: Icon(icon),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        minimumSize: Size(double.infinity, 50), // Make button full width
+        minimumSize: const Size(double.infinity, 50), // Make button full width
       ),
     );
   }

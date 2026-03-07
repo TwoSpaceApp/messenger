@@ -26,7 +26,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
 
-  String _searchQuery = '';
+  final String _searchQuery = '';
 
   List<Map<String, dynamic>> get _filteredRooms {
     if (_searchQuery.isEmpty) return _rooms;
@@ -244,10 +244,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                 ),
-                Column(
+                const Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                     const Text('12:00', style: TextStyle(fontSize: 12, color: Colors.white54)),
+                     Text('12:00', style: TextStyle(fontSize: 12, color: Colors.white54)),
                   ],
                 ),
               ],

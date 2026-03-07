@@ -108,7 +108,7 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(leading: BackButton(), title: Text(l10n.searchContactsTitle)),
+      appBar: AppBar(leading: const BackButton(), title: Text(l10n.searchContactsTitle)),
       body: Padding(
         padding: EdgeInsets.all(12.0 * Responsive.scaleWidth(context)),
         child: Column(
