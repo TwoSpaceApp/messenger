@@ -17,7 +17,7 @@ mixin _$User {
   String get id;
   String get name;
   String get email;
-  Map<String, Object?> get prefs;
+  Map<String, dynamic> get prefs;
   String? get avatarUrl;
   String? get avatarFileId;
   String? get description;
@@ -79,7 +79,7 @@ abstract mixin class $UserCopyWith<$Res> {
       {String id,
       String name,
       String email,
-      Map<String, Object?> prefs,
+      Map<String, dynamic> prefs,
       String? avatarUrl,
       String? avatarFileId,
       String? description,
@@ -123,7 +123,7 @@ class _$UserCopyWithImpl<$Res> implements $UserCopyWith<$Res> {
       prefs: null == prefs
           ? _self.prefs
           : prefs // ignore: cast_nullable_to_non_nullable
-              as Map<String, Object?>,
+              as Map<String, dynamic>,
       avatarUrl: freezed == avatarUrl
           ? _self.avatarUrl
           : avatarUrl // ignore: cast_nullable_to_non_nullable
@@ -241,7 +241,7 @@ extension UserPatterns on User {
             String id,
             String name,
             String email,
-            Map<String, Object?> prefs,
+            Map<String, dynamic> prefs,
             String? avatarUrl,
             String? avatarFileId,
             String? description,
@@ -285,7 +285,7 @@ extension UserPatterns on User {
             String id,
             String name,
             String email,
-            Map<String, Object?> prefs,
+            Map<String, dynamic> prefs,
             String? avatarUrl,
             String? avatarFileId,
             String? description,
@@ -327,7 +327,7 @@ extension UserPatterns on User {
             String id,
             String name,
             String email,
-            Map<String, Object?> prefs,
+            Map<String, dynamic> prefs,
             String? avatarUrl,
             String? avatarFileId,
             String? description,
@@ -359,7 +359,7 @@ class _User extends User {
       {required this.id,
       required this.name,
       required this.email,
-      final Map<String, Object?> prefs = const {},
+      final Map<String, dynamic> prefs = const {},
       this.avatarUrl,
       this.avatarFileId,
       this.description,
@@ -374,10 +374,10 @@ class _User extends User {
   final String name;
   @override
   final String email;
-  final Map<String, Object?> _prefs;
+  final Map<String, dynamic> _prefs;
   @override
   @JsonKey()
-  Map<String, Object?> get prefs {
+  Map<String, dynamic> get prefs {
     if (_prefs is EqualUnmodifiableMapView) return _prefs;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_prefs);
@@ -454,7 +454,7 @@ abstract mixin class _$UserCopyWith<$Res> implements $UserCopyWith<$Res> {
       {String id,
       String name,
       String email,
-      Map<String, Object?> prefs,
+      Map<String, dynamic> prefs,
       String? avatarUrl,
       String? avatarFileId,
       String? description,
@@ -498,7 +498,7 @@ class __$UserCopyWithImpl<$Res> implements _$UserCopyWith<$Res> {
       prefs: null == prefs
           ? _self._prefs
           : prefs // ignore: cast_nullable_to_non_nullable
-              as Map<String, Object?>,
+              as Map<String, dynamic>,
       avatarUrl: freezed == avatarUrl
           ? _self.avatarUrl
           : avatarUrl // ignore: cast_nullable_to_non_nullable

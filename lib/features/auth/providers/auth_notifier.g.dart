@@ -123,7 +123,7 @@ final class IsAuthenticatedProvider
   }
 }
 
-String _$isAuthenticatedHash() => r'97f64fde56d0f39c3d9a4a98f1dc408267324c72';
+String _$isAuthenticatedHash() => r'fd7b27b34404b60e54b3ca75e6495746e33ab91a';
 
 @ProviderFor(currentUserId)
 const currentUserIdProvider = CurrentUserIdProvider._();
@@ -156,4 +156,4 @@ final class CurrentUserIdProvider
   }
 }
 
-String _$currentUserIdHash() => r'ea209d75e499fdb51f7130f745101f30569769f8';
+String _$currentUserIdHash() => r'272ccad63a0622b96a4f42127a3ed4d16dfe8468';
