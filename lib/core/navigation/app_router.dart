@@ -19,6 +19,7 @@ import 'package:two_space_app/features/profile/presentation/screens/profile_scre
 import 'package:two_space_app/features/profile/presentation/screens/account_settings_screen.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
+import 'package:two_space_app/core/navigation/title_observer.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -28,6 +29,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: AppStrings.routeSplash,
+    observers: [TitleObserver()],
     redirect: (context, state) {
       final isAuthRoute = state.matchedLocation == AppStrings.routeLogin ||
                           state.matchedLocation == AppStrings.routeRegister ||
