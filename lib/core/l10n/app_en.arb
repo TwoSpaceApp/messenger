@@ -1,0 +1,2248 @@
+{
+  "@@locale": "en",
+  "appTitle": "TwoSpace",
+  "@appTitle": {
+    "description": "Application title"
+  },
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Generic loading indicator"
+  },
+  "initializing": "Initializing...",
+  "@initializing": {
+    "description": "App initialization label"
+  },
+  "errorGeneric": "An error occurred",
+  "@errorGeneric": {
+    "description": "Generic error message"
+  },
+  "errorInitialization": "Initialization error",
+  "@errorInitialization": {
+    "description": "Short init error label"
+  },
+  "errorInitializationFull": "Initialization error. Please restart the app.",
+  "@errorInitializationFull": {
+    "description": "Full init error message"
+  },
+  "errorNetwork": "Network error. Check your connection.",
+  "@errorNetwork": {
+    "description": "Network error message"
+  },
+  "errorAuth": "Authentication error.",
+  "@errorAuth": {
+    "description": "Auth error message"
+  },
+  "errorInvalidArguments": "Invalid arguments.",
+  "@errorInvalidArguments": {
+    "description": "Invalid arguments error"
+  },
+  "errorInvalidArgumentsProfile": "Invalid arguments for profile.",
+  "@errorInvalidArgumentsProfile": {
+    "description": "Profile invalid args"
+  },
+  "errorInvalidArgumentsChat": "Invalid arguments for chat.",
+  "@errorInvalidArgumentsChat": {
+    "description": "Chat invalid args"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Save button"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button"
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit button"
+  },
+  "send": "Send",
+  "@send": {
+    "description": "Send button"
+  },
+  "close": "Close",
+  "@close": {
+    "description": "Close button"
+  },
+  "errorWithDetail": "Error: {error}",
+  "@errorWithDetail": {
+    "description": "Error with detail",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "ok": "OK",
+  "@ok": {
+    "description": "OK button"
+  },
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "Confirm button"
+  },
+  "yes": "Yes",
+  "@yes": {
+    "description": "Yes button"
+  },
+  "no": "No",
+  "@no": {
+    "description": "No button"
+  },
+  "next": "Next",
+  "@next": {
+    "description": "Next button"
+  },
+  "back": "Back",
+  "@back": {
+    "description": "Back button"
+  },
+  "done": "Done",
+  "@done": {
+    "description": "Done button"
+  },
+  "noData": "No data",
+  "@noData": {
+    "description": "No data label"
+  },
+  "nothingFound": "Nothing found",
+  "@nothingFound": {
+    "description": "Empty search result"
+  },
+  "copyAction": "Copy",
+  "@copyAction": {
+    "description": "Copy action"
+  },
+  "shareAction": "Share",
+  "@shareAction": {
+    "description": "Share action in message bubble"
+  },
+  "textCopied": "Text copied",
+  "@textCopied": {
+    "description": "Snackbar text when text is copied to clipboard"
+  },
+  "onlineLabel": "Online",
+  "@onlineLabel": {
+    "description": "Online status"
+  },
+  "offlineLabel": "Offline",
+  "@offlineLabel": {
+    "description": "Offline status"
+  },
+  "userDefault": "User",
+  "@userDefault": {
+    "description": "Default user name"
+  },
+  "lessThanMinuteAgo": "less than a minute ago",
+  "@lessThanMinuteAgo": {
+    "description": "Relative time string"
+  },
+  "minutesAgo": "{count} min. ago",
+  "@minutesAgo": {
+    "description": "Minutes ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count} h. ago",
+  "@hoursAgo": {
+    "description": "Hours ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count} d. ago",
+  "@daysAgo": {
+    "description": "Days ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoLabel": "Video",
+  "@videoLabel": {
+    "description": "Video label"
+  },
+  "videoLoadError": "Video load error: {error}",
+  "@videoLoadError": {
+    "description": "Video load error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "saveFailed": "Failed to save",
+  "@saveFailed": {
+    "description": "Save failed message"
+  },
+  "shareSheetFailed": "Could not open share sheet",
+  "@shareSheetFailed": {
+    "description": "Share sheet error"
+  },
+  "speedLabel": "Speed:",
+  "@speedLabel": {
+    "description": "Speed label in audio player"
+  },
+  "previewTitle": "Preview",
+  "@previewTitle": {
+    "description": "Media viewer default title"
+  },
+  "fileDownloaded": "File downloaded: {path}",
+  "@fileDownloaded": {
+    "description": "File downloaded notification",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedTemp": "File saved temporarily: {path}",
+  "@fileSavedTemp": {
+    "description": "File saved temporarily",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "savedToGallery": "Saved to gallery",
+  "@savedToGallery": {
+    "description": "Saved to gallery notification"
+  },
+  "authorizationError": "Authorization error: {message}",
+  "@authorizationError": {
+    "description": "Authorization error with message",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "loginTitle": "Sign In",
+  "@loginTitle": {
+    "description": "Login screen title"
+  },
+  "welcomeBack": "Welcome",
+  "@welcomeBack": {
+    "description": "Login screen welcome text"
+  },
+  "emailOrUsernameLabel": "Email or Username",
+  "@emailOrUsernameLabel": {
+    "description": "Login email/username field"
+  },
+  "passwordLabel": "Password",
+  "@passwordLabel": {
+    "description": "Password field label"
+  },
+  "loginButton": "Sign In",
+  "@loginButton": {
+    "description": "Login button"
+  },
+  "forgotPassword": "Forgot password?",
+  "@forgotPassword": {
+    "description": "Forgot password link"
+  },
+  "noAccount": "Don't have an account?",
+  "@noAccount": {
+    "description": "No account prompt"
+  },
+  "orDivider": "Or",
+  "@orDivider": {
+    "description": "Or divider in login"
+  },
+  "validationEnterEmailOrUsername": "Please enter email or username",
+  "@validationEnterEmailOrUsername": {
+    "description": "Validation: enter email or username"
+  },
+  "validationEnterPassword": "Please enter password",
+  "@validationEnterPassword": {
+    "description": "Validation: enter password"
+  },
+  "registerTitle": "Register",
+  "@registerTitle": {
+    "description": "Register screen title"
+  },
+  "fillAllFields": "Please fill in all fields",
+  "@fillAllFields": {
+    "description": "Validation: fill all fields"
+  },
+  "passwordStrengthWeak": "Weak",
+  "@passwordStrengthWeak": {
+    "description": "Password strength: weak"
+  },
+  "passwordStrengthMedium": "Medium",
+  "@passwordStrengthMedium": {
+    "description": "Password strength: medium"
+  },
+  "passwordStrengthGood": "Good",
+  "@passwordStrengthGood": {
+    "description": "Password strength: good"
+  },
+  "passwordStrengthStrong": "Strong",
+  "@passwordStrengthStrong": {
+    "description": "Password strength: strong"
+  },
+  "fullNameLabel": "Full Name",
+  "@fullNameLabel": {
+    "description": "Full name field"
+  },
+  "nicknameAtLabel": "Nickname (@username)",
+  "@nicknameAtLabel": {
+    "description": "Nickname field with @ hint"
+  },
+  "uploadPhotoPrompt": "Upload profile photo",
+  "@uploadPhotoPrompt": {
+    "description": "Photo upload prompt"
+  },
+  "photoLooksGreat": "Looking great!",
+  "@photoLooksGreat": {
+    "description": "Photo upload positive feedback"
+  },
+  "helpFriendsFind": "Help friends find you",
+  "@helpFriendsFind": {
+    "description": "Register: help friends find you"
+  },
+  "setupInterfaceTitle": "Customize your interface",
+  "@setupInterfaceTitle": {
+    "description": "Register: setup interface step title"
+  },
+  "colorThemeLabel": "Color theme",
+  "@colorThemeLabel": {
+    "description": "Color theme label"
+  },
+  "validationEnterEmail": "Please enter email",
+  "@validationEnterEmail": {
+    "description": "Validation: enter email"
+  },
+  "validationInvalidEmail": "Invalid email address",
+  "@validationInvalidEmail": {
+    "description": "Validation: invalid email"
+  },
+  "validationPasswordTooShort": "Password is too short",
+  "@validationPasswordTooShort": {
+    "description": "Validation: password too short"
+  },
+  "backToLogin": "Sign In",
+  "@backToLogin": {
+    "description": "Back to login link"
+  },
+  "finishButton": "Finish",
+  "@finishButton": {
+    "description": "Finish registration button"
+  },
+  "filePickError": "File pick error: {error}",
+  "@filePickError": {
+    "description": "File pick error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chatsTitle": "Chats",
+  "@chatsTitle": {
+    "description": "Home screen title"
+  },
+  "noChats": "No chats",
+  "@noChats": {
+    "description": "Empty chats list"
+  },
+  "noMessages": "(no messages)",
+  "@noMessages": {
+    "description": "No messages in chat"
+  },
+  "newChat": "New chat",
+  "@newChat": {
+    "description": "New chat button"
+  },
+  "messageInputHint": "Write a message...",
+  "@messageInputHint": {
+    "description": "Message input placeholder"
+  },
+  "replyAction": "Reply",
+  "@replyAction": {
+    "description": "Reply action label"
+  },
+  "editShort": "Edit",
+  "@editShort": {
+    "description": "Short edit label in message action bar"
+  },
+  "pinAction": "Pin",
+  "@pinAction": {
+    "description": "Pin message action"
+  },
+  "moreReactions": "More",
+  "@moreReactions": {
+    "description": "More reactions button"
+  },
+  "replyDialogTitle": "Reply",
+  "@replyDialogTitle": {
+    "description": "Reply dialog title"
+  },
+  "replyHint": "Reply text",
+  "@replyHint": {
+    "description": "Reply text field hint"
+  },
+  "editMessageTitle": "Edit message",
+  "@editMessageTitle": {
+    "description": "Edit message dialog title"
+  },
+  "editMessageHint": "New text",
+  "@editMessageHint": {
+    "description": "Edit message text field hint"
+  },
+  "deleteMessageTitle": "Delete message?",
+  "@deleteMessageTitle": {
+    "description": "Delete message dialog title"
+  },
+  "pinsUpdated": "Pins updated",
+  "@pinsUpdated": {
+    "description": "Pins updated notification"
+  },
+  "messageEdited": "Message edited",
+  "@messageEdited": {
+    "description": "Message edited snackbar"
+  },
+  "fileSent": "File sent",
+  "@fileSent": {
+    "description": "File sent confirmation snackbar"
+  },
+  "voiceNotSupported": "Voice recording is not supported on this platform",
+  "@voiceNotSupported": {
+    "description": "Voice recording not supported"
+  },
+  "microphonePermRequired": "Microphone permission is required",
+  "@microphonePermRequired": {
+    "description": "Microphone permission required"
+  },
+  "recordingError": "Recording error",
+  "@recordingError": {
+    "description": "Recording error message"
+  },
+  "sendFailedError": "Send failed: {error}",
+  "@sendFailedError": {
+    "description": "Send failed error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "attachmentSendError": "Attachment send error: {error}",
+  "@attachmentSendError": {
+    "description": "Attachment send error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shareFailedError": "Share failed: {error}",
+  "@shareFailedError": {
+    "description": "Share failed error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "replyError": "Reply error: {error}",
+  "@replyError": {
+    "description": "Reply error message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pinError": "Pin error: {error}",
+  "@pinError": {
+    "description": "Pin/unpin error message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteError": "Delete error: {error}",
+  "@deleteError": {
+    "description": "Delete error message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editMessageError": "Edit message error: {error}",
+  "@editMessageError": {
+    "description": "Edit message error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "userTyping": "User is typing...",
+  "@userTyping": {
+    "description": "User typing indicator"
+  },
+  "statusOnline": "Online",
+  "@statusOnline": {
+    "description": "Online status label"
+  },
+  "statusLastSeenRecently": "Last seen recently",
+  "@statusLastSeenRecently": {
+    "description": "Last seen recently status"
+  },
+  "settingsTitle": "Settings",
+  "@settingsTitle": {
+    "description": "Settings screen title"
+  },
+  "appearanceSection": "Appearance",
+  "@appearanceSection": {
+    "description": "Settings: appearance section"
+  },
+  "themeLabel": "Theme",
+  "@themeLabel": {
+    "description": "Theme label"
+  },
+  "themeSystem": "System",
+  "@themeSystem": {
+    "description": "System theme option"
+  },
+  "themeLight": "Light",
+  "@themeLight": {
+    "description": "Light theme option"
+  },
+  "themeDark": "Dark",
+  "@themeDark": {
+    "description": "Dark theme option"
+  },
+  "customizationLabel": "Customization",
+  "@customizationLabel": {
+    "description": "Customization label"
+  },
+  "customizationSubtitle": "Colors, font and UI effects",
+  "@customizationSubtitle": {
+    "description": "Customization subtitle"
+  },
+  "notificationsSection": "Notifications",
+  "@notificationsSection": {
+    "description": "Notifications section"
+  },
+  "notificationsLabel": "Notifications",
+  "@notificationsLabel": {
+    "description": "Notifications label"
+  },
+  "soundLabel": "Sound",
+  "@soundLabel": {
+    "description": "Sound label"
+  },
+  "accountSection": "Account",
+  "@accountSection": {
+    "description": "Account section"
+  },
+  "profileLabel": "Profile",
+  "@profileLabel": {
+    "description": "Profile label"
+  },
+  "profileSubtitle": "Edit profile information",
+  "@profileSubtitle": {
+    "description": "Profile subtitle"
+  },
+  "accountSettingsLabel": "Account settings",
+  "@accountSettingsLabel": {
+    "description": "Account settings label"
+  },
+  "accountSettingsSubtitle": "Password, security, 2FA",
+  "@accountSettingsSubtitle": {
+    "description": "Account settings subtitle"
+  },
+  "privacyLabel": "Privacy",
+  "@privacyLabel": {
+    "description": "Privacy label"
+  },
+  "privacySubtitle": "Manage privacy",
+  "@privacySubtitle": {
+    "description": "Privacy subtitle"
+  },
+  "generalSection": "General",
+  "@generalSection": {
+    "description": "General section"
+  },
+  "languageLabel": "Language",
+  "@languageLabel": {
+    "description": "Language label"
+  },
+  "textSizeLabel": "Text size",
+  "@textSizeLabel": {
+    "description": "Text size setting label"
+  },
+  "sendByEnterLabel": "Send by Enter",
+  "@sendByEnterLabel": {
+    "description": "Send by enter label"
+  },
+  "sendByEnterSubtitle": "Shift+Enter for new line",
+  "@sendByEnterSubtitle": {
+    "description": "Send by enter subtitle"
+  },
+  "dataStorageSection": "Data & Storage",
+  "@dataStorageSection": {
+    "description": "Data and storage section"
+  },
+  "autoDownloadLabel": "Auto-download media",
+  "@autoDownloadLabel": {
+    "description": "Auto download label"
+  },
+  "autoDownloadSubtitle": "Download photos and videos automatically",
+  "@autoDownloadSubtitle": {
+    "description": "Auto download subtitle"
+  },
+  "storageManagementLabel": "Storage management",
+  "@storageManagementLabel": {
+    "description": "Storage management label"
+  },
+  "storageManagementSubtitle": "Clear cache and data",
+  "@storageManagementSubtitle": {
+    "description": "Storage management subtitle"
+  },
+  "clearCacheTitle": "Clear cache",
+  "@clearCacheTitle": {
+    "description": "Clear cache dialog title"
+  },
+  "clearCacheContent": "Delete cached data?",
+  "@clearCacheContent": {
+    "description": "Clear cache dialog content"
+  },
+  "cacheCleared": "Cache cleared",
+  "@cacheCleared": {
+    "description": "Cache cleared notification"
+  },
+  "developmentSection": "Development",
+  "@developmentSection": {
+    "description": "Development section"
+  },
+  "devMenuSubtitle": "Floating debug button",
+  "@devMenuSubtitle": {
+    "description": "Dev menu subtitle"
+  },
+  "aboutSection": "About",
+  "@aboutSection": {
+    "description": "About section"
+  },
+  "suggestImprovementLabel": "Suggest improvement",
+  "@suggestImprovementLabel": {
+    "description": "Suggest improvement label"
+  },
+  "suggestImprovementSubtitle": "Ideas and major feature requests",
+  "@suggestImprovementSubtitle": {
+    "description": "Suggest improvement subtitle"
+  },
+  "dangerZoneSection": "Danger zone",
+  "@dangerZoneSection": {
+    "description": "Danger zone section"
+  },
+  "logoutLabel": "Sign out",
+  "@logoutLabel": {
+    "description": "Logout label"
+  },
+  "logoutSubtitle": "Sign out from this device",
+  "@logoutSubtitle": {
+    "description": "Logout subtitle"
+  },
+  "logoutDialogTitle": "Sign out",
+  "@logoutDialogTitle": {
+    "description": "Logout dialog title"
+  },
+  "logoutDialogContent": "Are you sure you want to sign out?",
+  "@logoutDialogContent": {
+    "description": "Logout dialog content"
+  },
+  "logoutAction": "Sign out",
+  "@logoutAction": {
+    "description": "Logout action button"
+  },
+  "languageRussian": "Russian",
+  "@languageRussian": {
+    "description": "Russian language option"
+  },
+  "languageUkrainian": "Ukrainian",
+  "@languageUkrainian": {
+    "description": "Ukrainian language option"
+  },
+  "matrixTooltip": "Matrix is an open protocol for federated messaging",
+  "@matrixTooltip": {
+    "description": "Matrix protocol tooltip"
+  },
+  "clientDescription": "TwoSpace client built with Flutter/Dart",
+  "@clientDescription": {
+    "description": "Client description"
+  },
+  "errorLogout": "Error: {error}",
+  "@errorLogout": {
+    "description": "Logout error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "accountSettingsTitle": "Account settings",
+  "@accountSettingsTitle": {
+    "description": "Account settings screen title"
+  },
+  "securitySection": "Security",
+  "@securitySection": {
+    "description": "Security section"
+  },
+  "twoFactorLabel": "Two-factor authentication",
+  "@twoFactorLabel": {
+    "description": "2FA label"
+  },
+  "twoFactorSubtitle": "Extra account protection",
+  "@twoFactorSubtitle": {
+    "description": "2FA subtitle"
+  },
+  "biometricLabel": "Biometrics",
+  "@biometricLabel": {
+    "description": "Biometrics label"
+  },
+  "biometricSubtitle": "Sign in with fingerprint",
+  "@biometricSubtitle": {
+    "description": "Biometrics subtitle"
+  },
+  "activeSessionsLabel": "Active sessions",
+  "@activeSessionsLabel": {
+    "description": "Active sessions label"
+  },
+  "activeSessionsSubtitle": "Manage devices",
+  "@activeSessionsSubtitle": {
+    "description": "Active sessions subtitle"
+  },
+  "currentDevice": "Current device",
+  "@currentDevice": {
+    "description": "Current device label"
+  },
+  "changePasswordSection": "Change password",
+  "@changePasswordSection": {
+    "description": "Change password section"
+  },
+  "currentPasswordLabel": "Current password",
+  "@currentPasswordLabel": {
+    "description": "Current password field"
+  },
+  "newPasswordLabel": "New password",
+  "@newPasswordLabel": {
+    "description": "New password field"
+  },
+  "confirmPasswordLabel": "Confirm password",
+  "@confirmPasswordLabel": {
+    "description": "Confirm password field"
+  },
+  "minPasswordHelper": "Minimum 8 characters",
+  "@minPasswordHelper": {
+    "description": "Minimum password helper"
+  },
+  "changePasswordButton": "Change password",
+  "@changePasswordButton": {
+    "description": "Change password button"
+  },
+  "passwordMismatch": "Passwords do not match",
+  "@passwordMismatch": {
+    "description": "Password mismatch error"
+  },
+  "passwordTooShort": "Password must be at least 8 characters",
+  "@passwordTooShort": {
+    "description": "Password too short error"
+  },
+  "passwordChangeSuccess": "Password changed successfully",
+  "@passwordChangeSuccess": {
+    "description": "Password change success"
+  },
+  "contactDataSection": "Contact information",
+  "@contactDataSection": {
+    "description": "Contact data section"
+  },
+  "emailLabel": "Email",
+  "@emailLabel": {
+    "description": "Email label"
+  },
+  "phoneLabel": "Phone",
+  "@phoneLabel": {
+    "description": "Phone label"
+  },
+  "deleteAccountLabel": "Delete account",
+  "@deleteAccountLabel": {
+    "description": "Delete account label"
+  },
+  "deleteAccountSubtitle": "Irreversible action",
+  "@deleteAccountSubtitle": {
+    "description": "Delete account subtitle"
+  },
+  "deleteAccountTitle": "Delete account",
+  "@deleteAccountTitle": {
+    "description": "Delete account dialog title"
+  },
+  "deleteAccountContent": "Are you sure you want to delete your account? This action is irreversible.",
+  "@deleteAccountContent": {
+    "description": "Delete account dialog content"
+  },
+  "deleteFeatureLater": "Account deletion will be available later",
+  "@deleteFeatureLater": {
+    "description": "Delete feature not yet available"
+  },
+  "profileTitle": "Profile",
+  "@profileTitle": {
+    "description": "Profile screen title"
+  },
+  "saveTooltip": "Save",
+  "@saveTooltip": {
+    "description": "Save tooltip"
+  },
+  "editTooltip": "Edit",
+  "@editTooltip": {
+    "description": "Edit tooltip"
+  },
+  "writeMessageButton": "Message",
+  "@writeMessageButton": {
+    "description": "Write message button"
+  },
+  "callButton": "Call",
+  "@callButton": {
+    "description": "Call button"
+  },
+  "aboutField": "About me",
+  "@aboutField": {
+    "description": "About me field"
+  },
+  "nicknameField": "Nickname",
+  "@nicknameField": {
+    "description": "Nickname field"
+  },
+  "locationField": "Location",
+  "@locationField": {
+    "description": "Location field"
+  },
+  "birthdayField": "Birthday",
+  "@birthdayField": {
+    "description": "Birthday field"
+  },
+  "nameField": "Name",
+  "@nameField": {
+    "description": "Name field"
+  },
+  "avatarUploadLater": "Avatar upload will be added later",
+  "@avatarUploadLater": {
+    "description": "Avatar upload not yet available"
+  },
+  "profileSaved": "Profile saved",
+  "@profileSaved": {
+    "description": "Profile saved notification"
+  },
+  "createChatError": "Could not create chat: {error}",
+  "@createChatError": {
+    "description": "Create chat error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "privacyTitle": "Privacy",
+  "@privacyTitle": {
+    "description": "Privacy screen title"
+  },
+  "hideFromSearch": "Hide from search",
+  "@hideFromSearch": {
+    "description": "Hide from search toggle"
+  },
+  "hideFromSearchSubtitle": "Do not show me in search results",
+  "@hideFromSearchSubtitle": {
+    "description": "Hide from search subtitle"
+  },
+  "hideLastSeen": "Hide last seen status",
+  "@hideLastSeen": {
+    "description": "Hide last seen toggle"
+  },
+  "hideLastSeenSubtitle": "Others won't see when you were last online",
+  "@hideLastSeenSubtitle": {
+    "description": "Hide last seen subtitle"
+  },
+  "sessionExpiry": "Login session expiry",
+  "@sessionExpiry": {
+    "description": "Session expiry label"
+  },
+  "sessionExpirySubtitle": "Auto re-login on this device: {days} days",
+  "@sessionExpirySubtitle": {
+    "description": "Session expiry subtitle",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionExpiryDaysTitle": "Session expiry (days)",
+  "@sessionExpiryDaysTitle": {
+    "description": "Session expiry days dialog title"
+  },
+  "sessionExpiryDaysContent": "Choose number of days (min: 7, max: 365).",
+  "@sessionExpiryDaysContent": {
+    "description": "Session expiry days dialog content"
+  },
+  "daysLabel": "Days",
+  "@daysLabel": {
+    "description": "Days label"
+  },
+  "enterDaysError": "Enter a number from 7 to 365",
+  "@enterDaysError": {
+    "description": "Days validation error"
+  },
+  "sessionExpirySet": "Session expiry set: {days} days",
+  "@sessionExpirySet": {
+    "description": "Session expiry set notification",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "changeEmailLabel": "Change email",
+  "@changeEmailLabel": {
+    "description": "Change email label"
+  },
+  "changeEmailSubtitle": "Update your email address",
+  "@changeEmailSubtitle": {
+    "description": "Change email subtitle"
+  },
+  "twoFactorPrivacySubtitle": "Enable or disable enhanced protection",
+  "@twoFactorPrivacySubtitle": {
+    "description": "2FA privacy subtitle"
+  },
+  "changePhoneLabel": "Change phone",
+  "@changePhoneLabel": {
+    "description": "Change phone label"
+  },
+  "changePhoneSubtitle": "Update your phone number",
+  "@changePhoneSubtitle": {
+    "description": "Change phone subtitle"
+  },
+  "updatePrivacyError": "Could not update privacy: {error}",
+  "@updatePrivacyError": {
+    "description": "Update privacy error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "updateSettingError": "Could not update setting: {error}",
+  "@updateSettingError": {
+    "description": "Update setting error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "contactsTitle": "Contacts",
+  "@contactsTitle": {
+    "description": "Contacts screen title"
+  },
+  "searchContactsHint": "Search contacts...",
+  "@searchContactsHint": {
+    "description": "Search contacts hint"
+  },
+  "contactsAccessTitle": "Contacts access",
+  "@contactsAccessTitle": {
+    "description": "Contacts access title"
+  },
+  "contactsPermDeniedPermanent": "Permission permanently denied. Open settings to allow contacts access.",
+  "@contactsPermDeniedPermanent": {
+    "description": "Contacts permission permanently denied"
+  },
+  "contactsPermRequired": "Contacts permission is required to show contacts.",
+  "@contactsPermRequired": {
+    "description": "Contacts permission required"
+  },
+  "openSettingsButton": "Open settings",
+  "@openSettingsButton": {
+    "description": "Open settings button"
+  },
+  "requestPermissionButton": "Request permission",
+  "@requestPermissionButton": {
+    "description": "Request permission button"
+  },
+  "noContacts": "No contacts found",
+  "@noContacts": {
+    "description": "Empty contacts list"
+  },
+  "callAction": "Call",
+  "@callAction": {
+    "description": "Call action"
+  },
+  "writeMessageAction": "Message",
+  "@writeMessageAction": {
+    "description": "Write message action"
+  },
+  "callNotification": "Call: {number}",
+  "@callNotification": {
+    "description": "Call notification",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "messageNotification": "Message to: {name}",
+  "@messageNotification": {
+    "description": "Message notification",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callsTitle": "Calls",
+  "@callsTitle": {
+    "description": "Calls screen title"
+  },
+  "searchByNameHint": "Search by name...",
+  "@searchByNameHint": {
+    "description": "Search by name hint"
+  },
+  "allFilter": "All",
+  "@allFilter": {
+    "description": "All calls filter"
+  },
+  "incomingFilter": "Incoming",
+  "@incomingFilter": {
+    "description": "Incoming calls filter"
+  },
+  "outgoingFilter": "Outgoing",
+  "@outgoingFilter": {
+    "description": "Outgoing calls filter"
+  },
+  "missedFilter": "Missed",
+  "@missedFilter": {
+    "description": "Missed calls filter"
+  },
+  "noCallsFound": "No calls",
+  "@noCallsFound": {
+    "description": "Empty calls list"
+  },
+  "yesterdayLabel": "Yesterday",
+  "@yesterdayLabel": {
+    "description": "Yesterday label"
+  },
+  "incomingCall": "Incoming",
+  "@incomingCall": {
+    "description": "Incoming call label"
+  },
+  "outgoingCall": "Outgoing",
+  "@outgoingCall": {
+    "description": "Outgoing call label"
+  },
+  "missedCall": "Missed",
+  "@missedCall": {
+    "description": "Missed call label"
+  },
+  "videoCallLabel": "Video call",
+  "@videoCallLabel": {
+    "description": "Video call label"
+  },
+  "voiceCallLabel": "Voice call",
+  "@voiceCallLabel": {
+    "description": "Voice call label"
+  },
+  "sendMessageCallAction": "Message",
+  "@sendMessageCallAction": {
+    "description": "Send message from call list"
+  },
+  "createRoomTitle": "Create room",
+  "@createRoomTitle": {
+    "description": "Create room title"
+  },
+  "createButton": "Create",
+  "@createButton": {
+    "description": "Create button"
+  },
+  "roomNameLabel": "Room name",
+  "@roomNameLabel": {
+    "description": "Room name field"
+  },
+  "roomNameHint": "E.g. your project name",
+  "@roomNameHint": {
+    "description": "Room name hint"
+  },
+  "roomTopicLabel": "Topic (optional)",
+  "@roomTopicLabel": {
+    "description": "Room topic label"
+  },
+  "roomTopicHint": "What is this room about?",
+  "@roomTopicHint": {
+    "description": "Room topic hint"
+  },
+  "roomVisibilityLabel": "Room visibility",
+  "@roomVisibilityLabel": {
+    "description": "Room visibility label"
+  },
+  "privateRoomOption": "Private room",
+  "@privateRoomOption": {
+    "description": "Private room option"
+  },
+  "privateRoomSubtitle": "Only invited users can join",
+  "@privateRoomSubtitle": {
+    "description": "Private room subtitle"
+  },
+  "publicRoomOption": "Public room",
+  "@publicRoomOption": {
+    "description": "Public room option"
+  },
+  "publicRoomSubtitle": "Anyone can join",
+  "@publicRoomSubtitle": {
+    "description": "Public room subtitle"
+  },
+  "showHistoryLabel": "Show message history",
+  "@showHistoryLabel": {
+    "description": "Show history label"
+  },
+  "showHistorySubtitle": "New members can see previous messages",
+  "@showHistorySubtitle": {
+    "description": "Show history subtitle"
+  },
+  "enterRoomNameError": "Please enter a room name",
+  "@enterRoomNameError": {
+    "description": "Enter room name validation"
+  },
+  "roomCreatedSuccess": "Room created successfully!",
+  "@roomCreatedSuccess": {
+    "description": "Room created success"
+  },
+  "imagePickError": "Image pick error: {error}",
+  "@imagePickError": {
+    "description": "Image pick error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "groupInfoTab": "Info",
+  "@groupInfoTab": {
+    "description": "Group settings info tab"
+  },
+  "groupMembersTab": "Members",
+  "@groupMembersTab": {
+    "description": "Group settings members tab"
+  },
+  "groupRolesTab": "Roles",
+  "@groupRolesTab": {
+    "description": "Group settings roles tab"
+  },
+  "groupBansTab": "Bans",
+  "@groupBansTab": {
+    "description": "Group settings bans tab"
+  },
+  "groupDeleteTab": "Delete",
+  "@groupDeleteTab": {
+    "description": "Group settings delete tab"
+  },
+  "membersCount": "Members: {count}",
+  "@membersCount": {
+    "description": "Members count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messageHistoryToggle": "Message history",
+  "@messageHistoryToggle": {
+    "description": "Message history toggle"
+  },
+  "showHistoryToggleLabel": "Show history",
+  "@showHistoryToggleLabel": {
+    "description": "Show history toggle label"
+  },
+  "settingSaved": "Setting saved",
+  "@settingSaved": {
+    "description": "Setting saved notification"
+  },
+  "backgroundColorLabel": "Background color",
+  "@backgroundColorLabel": {
+    "description": "Background color label"
+  },
+  "noMembers": "No members",
+  "@noMembers": {
+    "description": "No members label"
+  },
+  "roleAction": "Role",
+  "@roleAction": {
+    "description": "Role action"
+  },
+  "freezeAction": "Freeze",
+  "@freezeAction": {
+    "description": "Freeze action"
+  },
+  "banAction": "Ban",
+  "@banAction": {
+    "description": "Ban action"
+  },
+  "kickAction": "Kick",
+  "@kickAction": {
+    "description": "Kick action"
+  },
+  "noBannedUsers": "No banned users",
+  "@noBannedUsers": {
+    "description": "No banned users label"
+  },
+  "bannedLabel": "Banned",
+  "@bannedLabel": {
+    "description": "Banned label"
+  },
+  "userUnbanned": "User unbanned",
+  "@userUnbanned": {
+    "description": "User unbanned notification"
+  },
+  "deleteGroupLabel": "Delete group",
+  "@deleteGroupLabel": {
+    "description": "Delete group label"
+  },
+  "deleteGroupWarning": "This action is IRREVERSIBLE. The group will be permanently deleted.",
+  "@deleteGroupWarning": {
+    "description": "Delete group warning"
+  },
+  "confirmDeleteTitle": "Confirm deletion",
+  "@confirmDeleteTitle": {
+    "description": "Confirm delete dialog title"
+  },
+  "confirmDeleteContent": "Are you sure? This action is irreversible.",
+  "@confirmDeleteContent": {
+    "description": "Confirm delete dialog content"
+  },
+  "changeRoleTitle": "Change role",
+  "@changeRoleTitle": {
+    "description": "Change role dialog title"
+  },
+  "adminRole": "Administrator",
+  "@adminRole": {
+    "description": "Admin role"
+  },
+  "memberRole": "Member",
+  "@memberRole": {
+    "description": "Member role"
+  },
+  "freezeUserTitle": "Freeze user",
+  "@freezeUserTitle": {
+    "description": "Freeze user dialog title"
+  },
+  "userBanned": "User banned",
+  "@userBanned": {
+    "description": "User banned notification"
+  },
+  "userKicked": "User kicked",
+  "@userKicked": {
+    "description": "User kicked notification"
+  },
+  "groupDeleted": "Group deleted",
+  "@groupDeleted": {
+    "description": "Group deleted notification"
+  },
+  "loadError": "Load error: {error}",
+  "@loadError": {
+    "description": "Load error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "publicLabel": "Public",
+  "@publicLabel": {
+    "description": "Public label"
+  },
+  "privateLabel": "Private",
+  "@privateLabel": {
+    "description": "Private label"
+  },
+  "noDescription": "No description",
+  "@noDescription": {
+    "description": "No description label"
+  },
+  "membersLabel": "Members",
+  "@membersLabel": {
+    "description": "Members label"
+  },
+  "generalLabel": "General",
+  "@generalLabel": {
+    "description": "General label"
+  },
+  "newChatTitle": "New chat",
+  "@newChatTitle": {
+    "description": "New chat screen title"
+  },
+  "directChatTab": "Direct",
+  "@directChatTab": {
+    "description": "Direct chat tab"
+  },
+  "groupChatTab": "Group",
+  "@groupChatTab": {
+    "description": "Group chat tab"
+  },
+  "startDirectChatTitle": "Start a direct chat",
+  "@startDirectChatTitle": {
+    "description": "Start direct chat title"
+  },
+  "matrixIdDescription": "Enter the user's Matrix ID (e.g. @user:server.com)",
+  "@matrixIdDescription": {
+    "description": "Matrix ID description"
+  },
+  "matrixIdLabel": "User's Matrix ID",
+  "@matrixIdLabel": {
+    "description": "Matrix ID label"
+  },
+  "startChatButton": "Start chat",
+  "@startChatButton": {
+    "description": "Start chat button"
+  },
+  "hintCardTitle": "Hint",
+  "@hintCardTitle": {
+    "description": "Hint card title"
+  },
+  "matrixIdExplanation": "Matrix ID consists of @username:server.com",
+  "@matrixIdExplanation": {
+    "description": "Matrix ID explanation"
+  },
+  "enterUserIdError": "Enter user ID",
+  "@enterUserIdError": {
+    "description": "Enter user ID validation"
+  },
+  "createNewRoomTitle": "Create new room",
+  "@createNewRoomTitle": {
+    "description": "Create new room title"
+  },
+  "descriptionOptionalLabel": "Description (optional)",
+  "@descriptionOptionalLabel": {
+    "description": "Description optional label"
+  },
+  "privateGroupLabel": "Private group",
+  "@privateGroupLabel": {
+    "description": "Private group label"
+  },
+  "privateGroupSubtitle": "Only invited users can join",
+  "@privateGroupSubtitle": {
+    "description": "Private group subtitle"
+  },
+  "createRoomButton": "Create room",
+  "@createRoomButton": {
+    "description": "Create room button"
+  },
+  "customizationTitle": "Customization",
+  "@customizationTitle": {
+    "description": "Customization screen title"
+  },
+  "colorsTab": "Colors",
+  "@colorsTab": {
+    "description": "Colors tab"
+  },
+  "fontsTab": "Fonts",
+  "@fontsTab": {
+    "description": "Fonts tab"
+  },
+  "effectsTab": "Effects",
+  "@effectsTab": {
+    "description": "Effects tab"
+  },
+  "selectColorTheme": "Select color theme",
+  "@selectColorTheme": {
+    "description": "Select color theme label"
+  },
+  "themeAppliesEverywhere": "The selected theme is applied throughout the app",
+  "@themeAppliesEverywhere": {
+    "description": "Theme applies everywhere hint"
+  },
+  "fontSettingsTitle": "Font settings",
+  "@fontSettingsTitle": {
+    "description": "Font settings title"
+  },
+  "selectFontFamily": "Select font family",
+  "@selectFontFamily": {
+    "description": "Select font family label"
+  },
+  "appFontLabel": "App font",
+  "@appFontLabel": {
+    "description": "App font label"
+  },
+  "fontWeightLabel": "Font weight",
+  "@fontWeightLabel": {
+    "description": "Font weight label"
+  },
+  "fontPreview": "Preview: Sample text",
+  "@fontPreview": {
+    "description": "Font preview label"
+  },
+  "compactMode": "Reduce padding and sizes",
+  "@compactMode": {
+    "description": "Compact mode label"
+  },
+  "enableCircles": "Enable circles",
+  "@enableCircles": {
+    "description": "Enable circles label"
+  },
+  "circlesDesc": "Animated circles in the background",
+  "@circlesDesc": {
+    "description": "Circles description"
+  },
+  "floatingCirclesLabel": "Floating circles",
+  "@floatingCirclesLabel": {
+    "description": "Floating circles label"
+  },
+  "reactOnTilt": "React to phone tilt",
+  "@reactOnTilt": {
+    "description": "React on tilt label"
+  },
+  "parallaxEffect": "Parallax effect",
+  "@parallaxEffect": {
+    "description": "Parallax effect label"
+  },
+  "circlesSpeedLabel": "Movement speed",
+  "@circlesSpeedLabel": {
+    "description": "Circles speed label"
+  },
+  "staticMotion": "Static",
+  "@staticMotion": {
+    "description": "Static motion option"
+  },
+  "brightnessLabel": "Brightness",
+  "@brightnessLabel": {
+    "description": "Brightness label"
+  },
+  "dimOpacity": "Dim",
+  "@dimOpacity": {
+    "description": "Dim opacity option"
+  },
+  "brightOpacity": "Bright",
+  "@brightOpacity": {
+    "description": "Bright opacity option"
+  },
+  "performanceLabel": "Performance",
+  "@performanceLabel": {
+    "description": "Performance label"
+  },
+  "currentSpeedPrefix": "Current: ",
+  "@currentSpeedPrefix": {
+    "description": "Current speed prefix"
+  },
+  "speedPrefix": "Speed:",
+  "@speedPrefix": {
+    "description": "Speed prefix"
+  },
+  "advancedSearchTitle": "Advanced search",
+  "@advancedSearchTitle": {
+    "description": "Advanced search title"
+  },
+  "searchQueryHint": "Enter query...",
+  "@searchQueryHint": {
+    "description": "Search query hint"
+  },
+  "searchTypeLabel": "Search type",
+  "@searchTypeLabel": {
+    "description": "Search type label"
+  },
+  "searchTypeAll": "All",
+  "@searchTypeAll": {
+    "description": "Search type: all"
+  },
+  "searchTypeMessages": "Messages",
+  "@searchTypeMessages": {
+    "description": "Search type: messages"
+  },
+  "searchTypeMedia": "Media",
+  "@searchTypeMedia": {
+    "description": "Search type: media"
+  },
+  "searchTypeUsers": "Users",
+  "@searchTypeUsers": {
+    "description": "Search type: users"
+  },
+  "periodLabel": "Period",
+  "@periodLabel": {
+    "description": "Period label"
+  },
+  "fromDate": "From",
+  "@fromDate": {
+    "description": "From date label"
+  },
+  "toDate": "To",
+  "@toDate": {
+    "description": "To date label"
+  },
+  "searchButton": "Search",
+  "@searchButton": {
+    "description": "Search button"
+  },
+  "resultsCount": "Results ({count})",
+  "@resultsCount": {
+    "description": "Results count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noResultsFound": "No results found",
+  "@noResultsFound": {
+    "description": "No results found label"
+  },
+  "forgotPasswordTitle": "Password recovery",
+  "@forgotPasswordTitle": {
+    "description": "Forgot password title"
+  },
+  "forgotPasswordDescription": "Enter your email to receive a reset link",
+  "@forgotPasswordDescription": {
+    "description": "Forgot password description"
+  },
+  "sendResetButton": "Send",
+  "@sendResetButton": {
+    "description": "Send reset button"
+  },
+  "forgotPasswordUnavailable": "Password recovery is not available",
+  "@forgotPasswordUnavailable": {
+    "description": "Forgot password unavailable"
+  },
+  "changeEmailTitle": "Change email",
+  "@changeEmailTitle": {
+    "description": "Change email screen title"
+  },
+  "changeEmailDescription": "Enter a new email address",
+  "@changeEmailDescription": {
+    "description": "Change email description"
+  },
+  "currentPrefix": "Current: ",
+  "@currentPrefix": {
+    "description": "Current value prefix"
+  },
+  "newEmailLabel": "New email",
+  "@newEmailLabel": {
+    "description": "New email label"
+  },
+  "changeEmailButton": "Change email",
+  "@changeEmailButton": {
+    "description": "Change email button"
+  },
+  "changeEmailError": "Could not change email: {error}",
+  "@changeEmailError": {
+    "description": "Change email error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "changePhoneTitle": "Change phone number",
+  "@changePhoneTitle": {
+    "description": "Change phone screen title"
+  },
+  "changePhoneDescription": "Enter a new phone number and your current password.",
+  "@changePhoneDescription": {
+    "description": "Change phone description"
+  },
+  "newPhoneLabel": "New number (+1...)",
+  "@newPhoneLabel": {
+    "description": "New phone label"
+  },
+  "currentPasswordOptional": "Current password (if required)",
+  "@currentPasswordOptional": {
+    "description": "Current password optional label"
+  },
+  "changePhoneButton": "Change number",
+  "@changePhoneButton": {
+    "description": "Change phone button"
+  },
+  "phoneCannotBeChanged": "Phone number cannot be changed",
+  "emailCannotBeChanged": "Email cannot be changed",
+  "@phoneCannotBeChanged": {
+    "description": "Phone cannot be changed message"
+  },
+  "changePhoneError": "Could not change number: {error}",
+  "@changePhoneError": {
+    "description": "Change phone error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmCodeTitle": "Confirm code",
+  "@confirmCodeTitle": {
+    "description": "OTP screen title"
+  },
+  "codeSentTo": "We sent a code to {phone}",
+  "@codeSentTo": {
+    "description": "Code sent to phone",
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "enterCodeHint": "Enter code",
+  "@enterCodeHint": {
+    "description": "Enter code hint"
+  },
+  "confirmButton": "Confirm",
+  "@confirmButton": {
+    "description": "Confirm button"
+  },
+  "resendCountdown": "Resend in {seconds} s",
+  "@resendCountdown": {
+    "description": "Resend code countdown",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "resendCodeButton": "Resend code",
+  "@resendCodeButton": {
+    "description": "Resend code button"
+  },
+  "biometricSetupTitle": "Security",
+  "@biometricSetupTitle": {
+    "description": "Biometric setup title"
+  },
+  "authMethodsLabel": "Authentication methods",
+  "@authMethodsLabel": {
+    "description": "Auth methods label"
+  },
+  "biometricAuthLabel": "Biometric authentication",
+  "@biometricAuthLabel": {
+    "description": "Biometric auth label"
+  },
+  "biometricAuthSubtitle": "Fingerprint or Face ID",
+  "@biometricAuthSubtitle": {
+    "description": "Biometric auth subtitle"
+  },
+  "biometricEnabledLabel": "Biometrics enabled",
+  "@biometricEnabledLabel": {
+    "description": "Biometrics enabled label"
+  },
+  "aboutSecurityLabel": "About security",
+  "@aboutSecurityLabel": {
+    "description": "About security label"
+  },
+  "aboutSecurityContent": "Choose a convenient authentication method to protect your account.",
+  "@aboutSecurityContent": {
+    "description": "About security content"
+  },
+  "setPinCode": "Set PIN code",
+  "@setPinCode": {
+    "description": "Set PIN code label"
+  },
+  "updateAvailableTitle": "Update available",
+  "@updateAvailableTitle": {
+    "description": "Update available title"
+  },
+  "whatsNewLabel": "What's new",
+  "@whatsNewLabel": {
+    "description": "What's new label"
+  },
+  "noUpdateDescription": "No description",
+  "@noUpdateDescription": {
+    "description": "No update description"
+  },
+  "downloadingProgress": "Downloading... {percent}%",
+  "@downloadingProgress": {
+    "description": "Download progress",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "checkingIntegrity": "Checking integrity...",
+  "@checkingIntegrity": {
+    "description": "Checking integrity"
+  },
+  "requestingInstall": "Requesting installation...",
+  "@requestingInstall": {
+    "description": "Requesting install"
+  },
+  "updateMandatory": "Update is mandatory",
+  "@updateMandatory": {
+    "description": "Update mandatory label"
+  },
+  "laterButton": "Later",
+  "@laterButton": {
+    "description": "Later button"
+  },
+  "downloadingLabel": "Downloading...",
+  "@downloadingLabel": {
+    "description": "Downloading label"
+  },
+  "installingLabel": "Installing...",
+  "@installingLabel": {
+    "description": "Installing label"
+  },
+  "updateButton": "Update",
+  "@updateButton": {
+    "description": "Update button"
+  },
+  "downloadFailed": "Failed to download update",
+  "@downloadFailed": {
+    "description": "Download failed message"
+  },
+  "integrityCheckFailed": "Downloaded file failed integrity check (sha256)",
+  "@integrityCheckFailed": {
+    "description": "Integrity check failed"
+  },
+  "installPermissionTitle": "Install permission",
+  "@installPermissionTitle": {
+    "description": "Install permission dialog title"
+  },
+  "installPermissionContent": "To install the update, allow installation from unknown sources.",
+  "@installPermissionContent": {
+    "description": "Install permission dialog content"
+  },
+  "installPermissionRequired": "Install permission is required",
+  "@installPermissionRequired": {
+    "description": "Install permission required"
+  },
+  "installFailed": "Installation failed",
+  "@installFailed": {
+    "description": "Install failed message"
+  },
+  "ssoFeatureRequired": "This feature requires webview_flutter configuration",
+  "@ssoFeatureRequired": {
+    "description": "SSO feature required message"
+  },
+  "ssoLoginVia": "SSO login via {idpId}",
+  "@ssoLoginVia": {
+    "description": "SSO login via idp",
+    "placeholders": {
+      "idpId": {
+        "type": "String"
+      }
+    }
+  },
+  "forwardMessageTitle": "Forward message",
+  "@forwardMessageTitle": {
+    "description": "Forward message dialog title"
+  },
+  "searchChatHint": "Search chat...",
+  "@searchChatHint": {
+    "description": "Search chat hint"
+  },
+  "forwardButton": "Forward ({count})",
+  "@forwardButton": {
+    "description": "Forward button with count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "roomAvatarUpdated": "Room avatar updated",
+  "@roomAvatarUpdated": {
+    "description": "Room avatar updated notification"
+  },
+  "roomAvatarUploadError": "Error uploading avatar: {error}",
+  "@roomAvatarUploadError": {
+    "description": "Room avatar upload error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "roomSettingsSaved": "Room settings saved",
+  "@roomSettingsSaved": {
+    "description": "Room settings saved notification"
+  },
+  "roomSettingsSaveError": "Save error: {error}",
+  "@roomSettingsSaveError": {
+    "description": "Room settings save error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uploadAvatarButton": "Upload avatar",
+  "@uploadAvatarButton": {
+    "description": "Upload avatar button"
+  },
+  "loadMembersError": "Error loading members: {error}",
+  "@loadMembersError": {
+    "description": "Load members error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveRoomTitle": "Leave room?",
+  "@leaveRoomTitle": {
+    "description": "Leave room dialog title"
+  },
+  "leaveRoomContent": "You won't be able to return to this room unless re-invited.",
+  "@leaveRoomContent": {
+    "description": "Leave room dialog content"
+  },
+  "leaveAction": "Leave",
+  "@leaveAction": {
+    "description": "Leave action"
+  },
+  "leftRoom": "You left the room",
+  "@leftRoom": {
+    "description": "Left room notification"
+  },
+  "leaveRoomError": "Error leaving room: {error}",
+  "@leaveRoomError": {
+    "description": "Leave room error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "reportNotImplemented": "Report feature not yet implemented",
+  "@reportNotImplemented": {
+    "description": "Report not implemented notice"
+  },
+  "inviteAction": "Invite",
+  "@inviteAction": {
+    "description": "Invite action"
+  },
+  "threadsLabel": "Threads",
+  "@threadsLabel": {
+    "description": "Threads label"
+  },
+  "pinnedLabel": "Pinned",
+  "@pinnedLabel": {
+    "description": "Pinned messages label"
+  },
+  "filesLabel": "Files",
+  "@filesLabel": {
+    "description": "Files label"
+  },
+  "mediaLabel": "Media",
+  "@mediaLabel": {
+    "description": "Media label"
+  },
+  "extensionsLabel": "Extensions",
+  "@extensionsLabel": {
+    "description": "Extensions label"
+  },
+  "copyLinkAction": "Copy link",
+  "@copyLinkAction": {
+    "description": "Copy link action"
+  },
+  "pollsLabel": "Polls",
+  "@pollsLabel": {
+    "description": "Polls label"
+  },
+  "exportChatAction": "Export chat",
+  "@exportChatAction": {
+    "description": "Export chat action"
+  },
+  "reportAction": "Report",
+  "@reportAction": {
+    "description": "Report action"
+  },
+  "leaveRoomAction": "Leave room",
+  "@leaveRoomAction": {
+    "description": "Leave room action"
+  },
+  "roomTitle": "Room — {name}",
+  "@roomTitle": {
+    "description": "Room title in app bar",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "roomSettingsLabel": "Room settings",
+  "@roomSettingsLabel": {
+    "description": "Room settings label"
+  },
+  "authError": "Authentication error: {error}",
+  "@authError": {
+    "description": "Authentication error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loginRequired": "Login required",
+  "@loginRequired": {
+    "description": "Login required dialog title"
+  },
+  "loginRequiredContent": "You must be logged in to search contacts. Go to login?",
+  "@loginRequiredContent": {
+    "description": "Login required dialog content"
+  },
+  "loginAction": "Sign In",
+  "@loginAction": {
+    "description": "Login action button"
+  },
+  "searchError": "Search error: {error}",
+  "@searchError": {
+    "description": "Search error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "searchContactsTitle": "Search contacts",
+  "@searchContactsTitle": {
+    "description": "Search contacts screen title"
+  },
+  "nicknameOrPhoneHint": "Nickname or phone number",
+  "@nicknameOrPhoneHint": {
+    "description": "Nickname or phone hint"
+  },
+  "selectContactError": "Could not select contact: {error}",
+  "@selectContactError": {
+    "description": "Select contact error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryLabel": "Category",
+  "@categoryLabel": {
+    "description": "Category label"
+  },
+  "feedbackCategoryFeatures": "Features",
+  "@feedbackCategoryFeatures": {
+    "description": "Feedback category: features"
+  },
+  "feedbackCategoryPerformance": "Performance",
+  "@feedbackCategoryPerformance": {
+    "description": "Feedback category: performance"
+  },
+  "feedbackCategorySecurity": "Security/Privacy",
+  "@feedbackCategorySecurity": {
+    "description": "Feedback category: security/privacy"
+  },
+  "feedbackCategoryNetworkSync": "Sync/Network",
+  "@feedbackCategoryNetworkSync": {
+    "description": "Feedback category: sync/network"
+  },
+  "shortDescriptionLabel": "Short description",
+  "@shortDescriptionLabel": {
+    "description": "Short description label"
+  },
+  "shortDescriptionHint": "E.g. \"Chat backup to cloud\"",
+  "@shortDescriptionHint": {
+    "description": "Short description hint"
+  },
+  "feedbackValidation": "Select at least one idea or write a description",
+  "@feedbackValidation": {
+    "description": "Feedback form validation"
+  },
+  "detailsOptionalLabel": "Details (optional)",
+  "@detailsOptionalLabel": {
+    "description": "Details optional label"
+  },
+  "detailsHint": "What should work, how it works now and how you'd like it?",
+  "@detailsHint": {
+    "description": "Details hint"
+  },
+  "bigFeaturesTitle": "Major features (select what interests you most)",
+  "@bigFeaturesTitle": {
+    "description": "Big features section title"
+  },
+  "feedbackE2E": "End-to-end E2E encryption (Olm/Megolm) + device verification",
+  "@feedbackE2E": {
+    "description": "Feedback suggestion: E2E encryption"
+  },
+  "feedbackBackup": "Chat backup (local/cloud) + transfer to new device",
+  "@feedbackBackup": {
+    "description": "Feedback suggestion: backup"
+  },
+  "feedbackThreads": "Threads, reactions, mentions, improved message search",
+  "@feedbackThreads": {
+    "description": "Feedback suggestion: threads"
+  },
+  "feedbackCalls": "Voice/video calls and quick voice rooms",
+  "@feedbackCalls": {
+    "description": "Feedback suggestion: calls"
+  },
+  "feedbackFolders": "Chat folders/categories and smart notification filters",
+  "@feedbackFolders": {
+    "description": "Feedback suggestion: folders"
+  },
+  "feedbackBots": "Bots and integrations (webhooks, GitHub/Jira, reminders)",
+  "@feedbackBots": {
+    "description": "Feedback suggestion: bots"
+  },
+  "feedbackSlowNet": "\"Slow internet\" mode + aggressive media caching",
+  "@feedbackSlowNet": {
+    "description": "Feedback suggestion: slow net mode"
+  },
+  "startChatTitle": "Start chat",
+  "@startChatTitle": {
+    "description": "Start chat bottom sheet title"
+  },
+  "createRoomSubtitle": "Private or public group",
+  "@createRoomSubtitle": {
+    "description": "Create room subtitle"
+  },
+  "inviteUserTitle": "Invite user",
+  "@inviteUserTitle": {
+    "description": "Invite user option title"
+  },
+  "inviteUserSubtitle": "Find and message a user",
+  "@inviteUserSubtitle": {
+    "description": "Invite user option subtitle"
+  },
+  "joinByCodeTitle": "Join by code",
+  "@joinByCodeTitle": {
+    "description": "Join by code option title"
+  },
+  "joinByCodeSubtitle": "Join a room using an invite code",
+  "@joinByCodeSubtitle": {
+    "description": "Join by code option subtitle"
+  },
+  "fontLabel": "Font",
+  "@fontLabel": {
+    "description": "Font label"
+  },
+  "pinCodeLabel": "PIN code",
+  "@pinCodeLabel": {
+    "description": "PIN related string"
+  },
+  "pinCodeSubtitle": "4-6 digits for protection",
+  "@pinCodeSubtitle": {
+    "description": "PIN related string"
+  },
+  "pinHint": "PIN (4-6 digits)",
+  "@pinHint": {
+    "description": "PIN related string"
+  },
+  "pinLengthError": "PIN must be 4-6 digits",
+  "@pinLengthError": {
+    "description": "PIN related string"
+  },
+  "pinSetSuccess": "PIN set",
+  "@pinSetSuccess": {
+    "description": "PIN related string"
+  },
+  "cancelButton": "Cancel",
+  "@cancelButton": {
+    "description": "Generic cancel button"
+  },
+  "deleteButton": "Delete",
+  "@deleteButton": {
+    "description": "Generic delete button"
+  },
+  "closeButton": "Close",
+  "@closeButton": {
+    "description": "Generic close button"
+  },
+  "saveButton": "Save",
+  "@saveButton": {
+    "description": "Generic save button"
+  },
+  "sendButton": "Send",
+  "@sendButton": {
+    "description": "Generic send button"
+  },
+  "copyButton": "Copy",
+  "@copyButton": {
+    "description": "Generic copy button"
+  },
+  "shareButton": "Share",
+  "@shareButton": {
+    "description": "Generic share button"
+  },
+  "settingsLabel": "Settings",
+  "@settingsLabel": {
+    "description": "Generic settings label"
+  },
+  "feedbackCategoryUxDesign": "UX/Design",
+  "@feedbackCategoryUxDesign": {
+    "description": "Feedback category: UX/Design"
+  },
+  "feedbackShareSubject": "TwoSpace — suggestion",
+  "@feedbackShareSubject": {
+    "description": "Subject line for sharing feedback"
+  },
+  "feedbackMessageHeader": "TwoSpace — suggestion/improvement",
+  "@feedbackMessageHeader": {
+    "description": "Header line of feedback message"
+  },
+  "feedbackVersion": "Version: {version}",
+  "@feedbackVersion": {
+    "description": "Version line of feedback message",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackCategoryLine": "Category: {category}",
+  "@feedbackCategoryLine": {
+    "description": "Category line of feedback message",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackShortTitle": "Brief: {title}",
+  "@feedbackShortTitle": {
+    "description": "Short title line of feedback message",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackWishList": "What would be especially great:",
+  "@feedbackWishList": {
+    "description": "Wish list header in feedback message"
+  },
+  "feedbackDetailsLine": "Details:",
+  "@feedbackDetailsLine": {
+    "description": "Details header in feedback message"
+  },
+  "circlesVisible": "Circles displayed",
+  "@circlesVisible": {
+    "description": "Subtitle when floating circles are enabled"
+  },
+  "circlesHidden": "Circles hidden",
+  "@circlesHidden": {
+    "description": "Subtitle when floating circles are disabled"
+  },
+  "speedSlow": "Slow",
+  "@speedSlow": {
+    "description": "Slow speed label"
+  },
+  "speedFast": "Fast",
+  "@speedFast": {
+    "description": "Fast speed label"
+  },
+  "advancedSettingsLabel": "Advanced settings",
+  "@advancedSettingsLabel": {
+    "description": "Advanced settings section label"
+  },
+  "compactModeLabel": "Compact mode",
+  "@compactModeLabel": {
+    "description": "Compact mode toggle title"
+  },
+  "activeDeviceInfo": "Android • Active",
+  "@activeDeviceInfo": {
+    "description": "Current device info placeholder"
+  },
+  "stubPlaceholder": "Stub — {key}",
+  "@stubPlaceholder": {
+    "description": "Stub placeholder text",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "loadMessagesError": "Error loading messages: {error}",
+  "@loadMessagesError": {
+    "description": "Error loading messages",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pinnedUpdated": "Pins updated",
+  "@pinnedUpdated": {
+    "description": "Pins updated snackbar"
+  },
+  "editError": "Edit error: {error}",
+  "@editError": {
+    "description": "Edit message error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "moreButton": "More",
+  "@moreButton": {
+    "description": "More reactions button"
+  },
+  "shareError": "Could not share: {error}",
+  "@shareError": {
+    "description": "Share error message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sendError": "Send failed: {error}",
+  "@sendError": {
+    "description": "Send failed error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceRecordingUnsupported": "Voice recording is not supported on this platform",
+  "@voiceRecordingUnsupported": {
+    "description": "Voice recording unsupported message"
+  },
+  "microphonePermissionRequired": "Microphone permission required",
+  "@microphonePermissionRequired": {
+    "description": "Microphone permission required message"
+  },
+  "genericError": "Error: {error}",
+  "@genericError": {
+    "description": "Generic error with detail",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "ownersLabel": "👑 Owners",
+  "@ownersLabel": {
+    "description": "ownersLabel"
+  },
+  "administratorsLabel": "⚡ Administrators",
+  "@administratorsLabel": {
+    "description": "administratorsLabel"
+  },
+  "oneHour": "1 hour",
+  "@oneHour": {
+    "description": "oneHour"
+  },
+  "oneDay": "1 day",
+  "@oneDay": {
+    "description": "oneDay"
+  },
+  "sevenDays": "7 days",
+  "@sevenDays": {
+    "description": "sevenDays"
+  }
+}

@@ -1,0 +1,228 @@
+import 'package:flutter/material.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/core/widgets/glass_card.dart';
+
+class AdvancedSearchScreen extends StatefulWidget {
+  const AdvancedSearchScreen({super.key});
+
+  @override
+  State<AdvancedSearchScreen> createState() => _AdvancedSearchScreenState();
+}
+
+class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
+  final TextEditingController _queryController = TextEditingController();
+  String _searchType = 'all';
+  DateTime? _dateFrom;
+  DateTime? _dateTo;
+  List<Map<String, dynamic>> _results = [];
+  bool _isSearching = false;
+
+  Future<void> _performSearch() async {
+    if (_queryController.text.isEmpty) return;
+
+    setState(() => _isSearching = true);
+    try {
+      final chatService = ChatMatrixService();
+      final searchResults = await chatService.searchMessages(
+        query: _queryController.text,
+        type: _searchType,
+      );
+      setState(() => _results = searchResults);
+    } catch (e) {
+      setState(() => _results = []);
+    } finally {
+      setState(() => _isSearching = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.advancedSearchTitle),
+        elevation: 0,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Search input
+              TextField(
+                controller: _queryController,
+                onSubmitted: (_) => _performSearch(),
+                decoration: InputDecoration(
+                  hintText: l10n.searchQueryHint,
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _isSearching
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: Padding(
+                            padding: EdgeInsets.all(12),
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Search type filter
+              Text(
+                l10n.searchTypeLabel,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: ['all', 'messages', 'media', 'users']
+                      .map((type) => Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              label: Text(
+                                type == 'all' ? l10n.searchTypeAll
+                                : type == 'messages' ? l10n.searchTypeMessages
+                                : type == 'media' ? l10n.searchTypeMedia
+                                : l10n.searchTypeUsers,
+                              ),
+                              selected: _searchType == type,
+                              onSelected: (selected) {
+                                if (selected) setState(() => _searchType = type);
+                              },
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Date filters
+              Text(
+                l10n.periodLabel,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _dateFrom ?? DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) setState(() => _dateFrom = picked);
+                      },
+                      child: GlassCard(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            _dateFrom == null
+                                ? l10n.fromDate
+                                : '${_dateFrom!.day}.${_dateFrom!.month}',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _dateTo ?? DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) setState(() => _dateTo = picked);
+                      },
+                      child: GlassCard(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            _dateTo == null
+                                ? l10n.toDate
+                                : '${_dateTo!.day}.${_dateTo!.month}',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Search button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isSearching ? null : _performSearch,
+                  icon: const Icon(Icons.search),
+                  label: Text(l10n.searchButton),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Results
+              if (_results.isNotEmpty)
+                Text(
+                  l10n.resultsCount(_results.length),
+                  style: Theme.of(context).textTheme.titleMedium,
+                )
+              else if (!_isSearching && _queryController.text.isNotEmpty)
+                Text(
+                  l10n.noResultsFound,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                ),
+              const SizedBox(height: 12),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _results.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (context, index) {
+                  final result = _results[index];
+                  final sender = result['sender']?.toString() ?? 'Unknown';
+                  final body = result['content']?['body']?.toString() ?? '';
+                  return ListTile(
+                    leading: CircleAvatar(
+                      child: Text(sender.isNotEmpty ? sender[0] : '?'),
+                    ),
+                    title: Text(sender),
+                    subtitle: Text(
+                      body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _queryController.dispose();
+    super.dispose();
+  }
+}

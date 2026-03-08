@@ -1,0 +1,183 @@
+import 'package:flutter/material.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
+
+class StartChatBottomSheet extends StatelessWidget {
+  final VoidCallback onCreateGroup;
+  final VoidCallback onInviteUser;
+  final VoidCallback onJoinByAddress;
+
+  const StartChatBottomSheet({
+    super.key,
+    required this.onCreateGroup,
+    required this.onInviteUser,
+    required this.onJoinByAddress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(28),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(
+        vertical: 24,
+        horizontal: 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.outline.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            l10n.startChatTitle,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildMenuItem(
+            context,
+            icon: Icons.add_circle_outline,
+            title: l10n.createNewRoomTitle,
+            subtitle: l10n.createRoomSubtitle,
+            onTap: () {
+              Navigator.pop(context);
+              onCreateGroup();
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildMenuItem(
+            context,
+            icon: Icons.person_add_alt_1_outlined,
+            title: l10n.inviteUserTitle,
+            subtitle: l10n.inviteUserSubtitle,
+            onTap: () {
+              Navigator.pop(context);
+              onInviteUser();
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildMenuItem(
+            context,
+            icon: Icons.link_outlined,
+            title: l10n.joinByCodeTitle,
+            subtitle: l10n.joinByCodeSubtitle,
+            onTap: () {
+              Navigator.pop(context);
+              onJoinByAddress();
+            },
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            color: isDark
+                ? theme.colorScheme.surface.withValues(alpha: 0.5)
+                : theme.colorScheme.primary.withValues(alpha: 0.03),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary.withValues(alpha: 0.2),
+                      theme.colorScheme.primary.withValues(alpha: 0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  icon,
+                  color: theme.colorScheme.primary,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
