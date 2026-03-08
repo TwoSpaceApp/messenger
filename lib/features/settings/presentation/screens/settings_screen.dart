@@ -17,7 +17,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
-  bool _soundEnabled = true;
   bool _loggingOut = false;
   bool _devMenuEnabled = false;
   String _appVersion = '';
@@ -95,7 +94,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
 
     return Scaffold(
       appBar: AppBar(
@@ -129,9 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         leading: ValueListenableBuilder<ThemeMode>(
                           valueListenable: SettingsService.themeModeNotifier,
                           builder: (context, mode, _) {
-                            return Icon(mode == ThemeMode.dark
-                                ? Icons.dark_mode
-                                : Icons.light_mode);
+                            return Icon(mode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode);
                           },
                         ),
                         title: Text(l10n.themeLabel),
@@ -171,21 +167,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Column(
                     children: [
-                      SwitchListTile(
-                        secondary: const Icon(Icons.notifications),
-                        title: Text(l10n.notificationsLabel),
-                        value: _notificationsEnabled,
-                        onChanged: (v) =>
-                            setState(() => _notificationsEnabled = v),
+                      ListTile(
+                        leading: const Icon(Icons.notifications),
+                        title: Text(l10n.settingsNotificationNew),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/notifications'),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
                       const Divider(height: 1),
                       SwitchListTile(
-                        secondary: const Icon(Icons.volume_up),
-                        title: Text(l10n.soundLabel),
-                        value: _soundEnabled,
-                        onChanged: (v) => setState(() => _soundEnabled = v),
+                        secondary: const Icon(Icons.do_not_disturb),
+                        title: Text(l10n.settingsDoNotDisturb),
+                        value: _notificationsEnabled, // Reuse state for now
+                        onChanged: (v) =>
+                            setState(() => _notificationsEnabled = v),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Data & Storage
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                child: Text(
+                  l10n.settingsStorageManagement,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+              GlassCard(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.storage),
+                        title: Text(l10n.settingsStorageUsage),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/storage'),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
