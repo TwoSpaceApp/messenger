@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:two_space_app/services/initialization_service.dart';
+import 'package:two_space_app/core/services/initialization_service.dart';
 
 void main() {
   group('InitializationService', () {

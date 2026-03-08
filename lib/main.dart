@@ -3,31 +3,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 
-import 'constants/app_colors.dart';
-import 'constants/app_strings.dart';
-import 'config/theme_builder.dart';
-import 'screens/login_screen.dart';
+import 'package:two_space_app/core/constants/app_colors.dart';
+import 'package:two_space_app/core/config/theme_builder.dart';
 
-import 'screens/main_screen.dart';
-import 'screens/register_screen.dart';
-import 'screens/customization_screen.dart';
-import 'screens/privacy_screen.dart';
-import 'screens/profile_screen.dart';
-import 'screens/chat_screen.dart';
-import 'screens/change_email_screen.dart';
-import 'screens/forgot_password_screen.dart';
-import 'screens/account_settings_screen.dart';
-import 'screens/feedback_screen.dart';
-import 'services/chat_service.dart';
-import 'services/initialization_service.dart';
-import 'services/sentry_service.dart';
-import 'services/settings_service.dart';
-import 'services/navigation_service.dart';
-import 'config/environment.dart';
-import 'l10n/app_localizations.dart';
-import 'widgets/dev_fab.dart';
-import 'providers/auth_notifier.dart';
-import 'widgets/auth_listener.dart';
+import 'package:two_space_app/core/services/initialization_service.dart';
+import 'package:two_space_app/core/services/sentry_service.dart';
+import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+import 'package:two_space_app/core/navigation/app_router.dart';
+import 'package:two_space_app/core/config/environment.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/dev_fab.dart';
+import 'package:two_space_app/features/auth/presentation/widgets/auth_listener.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -111,7 +97,7 @@ Widget _buildErrorWidget(FlutterErrorDetails details) {
   );
 }
 
-class TwoSpaceApp extends StatelessWidget {
+class TwoSpaceApp extends ConsumerWidget {
   final InitializationResult initializationResult;
 
   const TwoSpaceApp({
@@ -120,7 +106,7 @@ class TwoSpaceApp extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Show critical initialization errors
     if (initializationResult.hasFailures) {
       final criticalFailures = initializationResult.failures
@@ -131,6 +117,8 @@ class TwoSpaceApp extends StatelessWidget {
         return _buildInitializationErrorApp(criticalFailures);
       }
     }
+
+    final goRouter = ref.watch(routerProvider);
 
     return ValueListenableBuilder<String>(
       valueListenable: SettingsService.languageNotifier,
@@ -155,8 +143,7 @@ class TwoSpaceApp extends StatelessWidget {
                       brightnessOverride: Brightness.dark,
                     );
 
-                    final app = MaterialApp(
-                      navigatorKey: appNavigatorKey,
+                    final app = MaterialApp.router(
                       title: 'TwoSpace',
                       onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
                       debugShowCheckedModeBanner: false,
@@ -166,11 +153,9 @@ class TwoSpaceApp extends StatelessWidget {
                       locale: Locale(languageCode),
                       localizationsDelegates: AppLocalizations.localizationsDelegates,
                       supportedLocales: AppLocalizations.supportedLocales,
-                      home: const AuthListener(child: AuthGate()),
-                      routes: _buildRoutes(context),
+                      routerConfig: goRouter, builder: (context, child) => AuthListener(child: child ?? const SizedBox()),
                     );
 
-                // Add dev tools in debug mode
                     if (kDebugMode || Environment.enableDevTools) {
                       return Directionality(
                         textDirection: TextDirection.ltr,
@@ -188,55 +173,6 @@ class TwoSpaceApp extends StatelessWidget {
     );
   }
 
-  /// Build app routes
-  Map<String, WidgetBuilder> _buildRoutes(BuildContext context) {
-    return {
-      AppStrings.routeLogin: (context) => const LoginScreen(),
-      AppStrings.routeHome: (context) => const MainScreen(),
-      AppStrings.routeRegister: (context) => const RegisterScreen(),
-      AppStrings.routeForgot: (context) => const ForgotPasswordScreen(),
-      AppStrings.routeCustomization: (context) => const CustomizationScreen(),
-      AppStrings.routePrivacy: (context) => const PrivacyScreen(),
-      AppStrings.routeAccountSettings: (context) => const AccountSettingsScreen(),
-      AppStrings.routeFeedback: (context) => const FeedbackScreen(),
-      AppStrings.routeProfile: (context) {
-        final args = ModalRoute.of(context)!.settings.arguments;
-        if (args is String) {
-          return ProfileScreen(userId: args);
-        }
-        return _buildInvalidArgsScreen(
-          AppLocalizations.of(context)?.errorInvalidArgumentsProfile ??
-              'Invalid arguments for profile',
-        );
-      },
-      '/change_email': (context) => const ChangeEmailScreen(),
-      '/chat': (context) {
-        final args = ModalRoute.of(context)!.settings.arguments;
-        if (args is Chat) {
-          return ChatScreen(chat: args);
-        }
-        return _buildInvalidArgsScreen(
-          AppLocalizations.of(context)?.errorInvalidArgumentsChat ??
-              'Invalid arguments for chat',
-        );
-      },
-    };
-  }
-
-  /// Build screen for invalid route arguments
-  Widget _buildInvalidArgsScreen(String message) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundError,
-      body: Center(
-        child: Text(
-          message,
-          style: const TextStyle(color: AppColors.textPrimary),
-        ),
-      ),
-    );
-  }
-
-  /// Build app for critical initialization errors (with hardcoded English text)
   Widget _buildInitializationErrorApp(List<InitStepResult> failures) {
     return MaterialApp(
       home: Scaffold(
@@ -279,83 +215,3 @@ class TwoSpaceApp extends StatelessWidget {
   }
 }
 
-/// Simplified AuthGate using Riverpod
-class AuthGate extends ConsumerWidget {
-  const AuthGate({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-
-    return authState.when(
-      data: (state) {
-        return state.isAuthenticated ? const MainScreen() : const LoginScreen();
-      },
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.backgroundError,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text(
-                "Loading...", // Hardcoded English text
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            ],
-          ),
-        ),
-      ),
-      error: (error, stack) {
-        // Report error to Sentry
-        SentryService.captureException(
-          error,
-          stackTrace: stack,
-          hint: {'screen': 'auth_gate'},
-        );
-
-        return Scaffold(
-          backgroundColor: AppColors.backgroundError,
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: AppColors.error,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Initialization Error", // Hardcoded English text
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    error.toString(),
-                    style: const TextStyle(color: AppColors.textSecondary),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      ref.invalidate(authProvider);
-                    },
-                    child: const Text("Retry"), // Hardcoded English text
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}

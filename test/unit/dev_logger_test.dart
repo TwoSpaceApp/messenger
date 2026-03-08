@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:two_space_app/services/dev_logger.dart';
+import 'package:two_space_app/core/services/dev_logger.dart';
 
 void main() {
   group('DevLogger', () {

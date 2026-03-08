@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:two_space_app/utils/jwt_helper.dart';
+import 'package:two_space_app/core/utils/jwt_helper.dart';
 
 void main() {
   group('JwtHelper', () {

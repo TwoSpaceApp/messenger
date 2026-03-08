@@ -1,6 +1,6 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:two_space_app/config/environment_validator.dart';
+import 'package:two_space_app/core/config/environment_validator.dart';
 
 void main() {
   group('EnvironmentValidator', () {
