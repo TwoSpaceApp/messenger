@@ -9,6 +9,7 @@ class AppStrings {
   AppStrings._();
 
   // Routes
+  static const routeSplash = '/splash';
   static const routeLogin = '/login';
   static const routeHome = '/home';
   static const routeRegister = '/register';

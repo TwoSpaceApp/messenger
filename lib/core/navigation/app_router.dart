@@ -18,6 +18,7 @@ import 'package:two_space_app/features/settings/presentation/screens/feedback_sc
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/account_settings_screen.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
+import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -26,14 +27,18 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: AppStrings.routeHome,
+    initialLocation: AppStrings.routeSplash,
     redirect: (context, state) {
       final isAuthRoute = state.matchedLocation == AppStrings.routeLogin ||
                           state.matchedLocation == AppStrings.routeRegister ||
                           state.matchedLocation == AppStrings.routeForgot;
+      final isSplashRoute = state.matchedLocation == AppStrings.routeSplash;
 
       return authState.when(
         data: (auth) {
+          if (isSplashRoute) {
+            return auth.isAuthenticated ? AppStrings.routeHome : AppStrings.routeLogin;
+          }
           if (!auth.isAuthenticated && !isAuthRoute) {
             return AppStrings.routeLogin;
           }
@@ -42,11 +47,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           }
           return null;
         },
-        loading: () => null,
+        loading: () => AppStrings.routeSplash,
         error: (_, __) => AppStrings.routeLogin,
       );
     },
     routes: [
+      GoRoute(
+        path: AppStrings.routeSplash,
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: AppStrings.routeLogin,
         builder: (context, state) => const LoginScreen(),

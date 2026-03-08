@@ -43,7 +43,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
   
   bool _loading = false;
   bool _obscurePassword = true;
-  bool _isCovering = false; // Controls transition animation
+  bool _isCovering = true; // Start hidden for entrance animation
+  bool _swapBlobs = false;
 
   // Customization State
   late int _selectedColor;
@@ -58,6 +59,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
   @override
   void initState() {
     super.initState();
+    // Reveal animation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _isCovering = false);
+    });
     // Initialize with current or default settings
     _selectedColor = SettingsService.themeNotifier.value.primaryColorValue;
     _selectedFont = SettingsService.themeNotifier.value.fontFamily;
@@ -96,7 +101,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
     if (_step < 3) {
       setState(() {
         _step++;
-         _isCovering = false; // Reveal new content
+        _swapBlobs = !_swapBlobs;
+        _isCovering = false; // Reveal new content
       });
     } else {
       // Final step, proceed to registration
@@ -112,11 +118,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
       await Future.delayed(const Duration(milliseconds: 600));
       setState(() {
         _step--;
+        _swapBlobs = !_swapBlobs;
         _isCovering = false;
       });
     } else {
-       // Navigate back to Login
-       context.go('/login');
+       // Navigate back to Login with animation
+       setState(() => _isCovering = true);
+       await Future.delayed(const Duration(milliseconds: 400));
+       if (mounted) context.go('/login');
     }
   }
 
@@ -234,6 +243,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
       title: l10n.registerTitle,
       seed: _step + 1,
       isCovering: _isCovering,
+      swapBlobs: _swapBlobs,
       child: Form(
         key: _formKey,
         child: Column(

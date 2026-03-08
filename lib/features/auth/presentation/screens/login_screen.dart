@@ -24,6 +24,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _loading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+  bool _isCovering = true; // start hidden for entrance animation
+  final bool _swapBlobs = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Reveal animation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _isCovering = false);
+    });
+  }
 
   @override
   void dispose() {
@@ -72,6 +83,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return AuthBackground(
       title: l10n.loginTitle,
       seed: 0,
+      isCovering: _isCovering,
+      swapBlobs: _swapBlobs,
       child: Form(
         key: _formKey,
         child: Column(
@@ -306,8 +319,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
-                       context.go('/register');
+                  onPressed: () async {
+                    setState(() => _isCovering = true);
+                    await Future.delayed(const Duration(milliseconds: 400));
+                    if (mounted) context.go('/register');
                   },
                   child: Text(
                     l10n.registerTitle,

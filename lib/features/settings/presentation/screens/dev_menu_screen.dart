@@ -90,23 +90,23 @@ class _DevMenuActionsTab extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         _buildSectionTitle(context, 'Navigation Bypass'),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            _buildAction(context, '🏠 Force to Home', Icons.home, () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-            }, color: Colors.green),
-            _buildAction(context, '🔑 Force to Login', Icons.login, () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-            }),
-            _buildAction(context, '📝 Force to Register', Icons.app_registration, () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
-            }),
-            _buildAction(context, '🎨 Customization', Icons.color_lens, () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomizationScreen()));
-            }),
+        DropdownButtonFormField<Widget>(
+          decoration: const InputDecoration(
+            labelText: 'Выберите экран для перехода',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.screen_share),
+          ),
+          items: const [
+            DropdownMenuItem(value: HomeScreen(), child: Text('🏠 Главный экран (Home)')),
+            DropdownMenuItem(value: LoginScreen(), child: Text('🔑 Вход (Login)')),
+            DropdownMenuItem(value: RegisterScreen(), child: Text('📝 Регистрация (Register)')),
+            DropdownMenuItem(value: CustomizationScreen(), child: Text('🎨 Кастомизация (Customization)')),
           ],
+          onChanged: (screen) {
+            if (screen != null) {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+            }
+          },
         ),
         const SizedBox(height: 24),
         

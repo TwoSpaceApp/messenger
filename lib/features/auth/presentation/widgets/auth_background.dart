@@ -5,6 +5,7 @@ class AuthBackground extends StatefulWidget {
   final Widget child;
   final String title;
   final bool isCovering; // State to trigger "cover" animation
+  final bool swapBlobs; // Swap positions when true
   final int seed; 
 
   const AuthBackground({
@@ -12,6 +13,7 @@ class AuthBackground extends StatefulWidget {
     required this.child,
     required this.title,
     this.isCovering = false,
+    this.swapBlobs = false,
     this.seed = 0,
   });
 
@@ -96,9 +98,9 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
             builder: (context, _) {
               final coverT = Curves.easeInOutCubic.transform(_coverController.value);
 
-              // Static starting positions
-              const b1Start = Alignment(-0.6, 0.6);
-              const b2Start = Alignment(0.6, -0.6);
+              // Static resting positions (swap if requested)
+              final b1Start = widget.swapBlobs ? const Alignment(0.6, -0.6) : const Alignment(-0.6, 0.6);
+              final b2Start = widget.swapBlobs ? const Alignment(-0.6, 0.6) : const Alignment(0.6, -0.6);
 
               // Target positions (center)
               const b1End = Alignment(-0.2, 0);
@@ -138,10 +140,14 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    AnimatedOpacity(
-                      opacity: widget.isCovering ? 0 : 1,
-                      duration: const Duration(milliseconds: 300),
-                      child: Container(
+                    AnimatedScale(
+                      scale: widget.isCovering ? 0.9 : 1.0,
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutCubic,
+                      child: AnimatedOpacity(
+                        opacity: widget.isCovering ? 0 : 1,
+                        duration: const Duration(milliseconds: 300),
+                        child: Container(
                         constraints: const BoxConstraints(maxWidth: 450),
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
@@ -161,6 +167,7 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
                         ),
                         child: widget.child,
                       ),
+                    ),
                     ),
                   ],
                 ),

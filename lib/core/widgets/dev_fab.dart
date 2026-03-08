@@ -6,7 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/features/settings/presentation/screens/dev_menu_screen.dart';
-import 'package:two_space_app/core/services/navigation_service.dart';
+import 'package:two_space_app/core/navigation/app_router.dart';
 
 class DevFab extends StatefulWidget {
   const DevFab({super.key});
@@ -63,7 +63,7 @@ class _DevFabState extends State<DevFab> with SingleTickerProviderStateMixin {
     _resetIdleTimer();
     _logger.debug('DevFab tapped');
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final nav = appNavigatorKey.currentState;
+      final nav = rootNavigatorKey.currentState;
       if (nav != null && mounted) {
         nav.push(MaterialPageRoute(builder: (_) => const DevMenuScreen()));
       }
@@ -115,9 +115,11 @@ class _DevFabState extends State<DevFab> with SingleTickerProviderStateMixin {
           _snapToEdge();
           _resetIdleTimer();
         },
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 300),
-          opacity: _opacity,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: _opacity,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
@@ -140,6 +142,7 @@ class _DevFabState extends State<DevFab> with SingleTickerProviderStateMixin {
               _buildButton(),
             ],
           ),
+        ),
         ),
       ),
     );
