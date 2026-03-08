@@ -24,10 +24,10 @@ class AppConstants {
   static const bool enableAnalytics = false; // GDPR compliant
 
   // UI Defaults
-  static const double defaultBorderRadius = 12.0;
-  static const double defaultElevation = 8.0;
-  static const double defaultPadding = 16.0;
-  static const double defaultMargin = 8.0;
+  static const double defaultBorderRadius = 12;
+  static const double defaultElevation = 8;
+  static const double defaultPadding = 16;
+  static const double defaultMargin = 8;
 
   // Cache settings
   static const Duration cacheExpiry = Duration(hours: 24);

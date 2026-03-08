@@ -11,17 +11,23 @@ class AppThemeBuilder {
     Brightness? brightnessOverride,
   }) {
     final selectedColorInt = settings.primaryColorValue;
-    final isLightTheme = (brightnessOverride ?? (_isLightIntention(selectedColorInt) ? Brightness.light : Brightness.dark)) == Brightness.light;
-    
+    final isLightTheme = (brightnessOverride ??
+            (_isLightIntention(selectedColorInt)
+                ? Brightness.light
+                : Brightness.dark)) ==
+        Brightness.light;
+
     final primaryColor = Color(selectedColorInt);
-    
-    final backgroundColor = isLightTheme ? const Color(0xFFF5F7FA) : const Color(0xFF0F1115);
-    final surfaceColor = isLightTheme ? const Color(0xFFFFFFFF) : const Color(0xFF1D2227);
+
+    final backgroundColor =
+        isLightTheme ? const Color(0xFFF5F7FA) : const Color(0xFF0F1115);
+    final surfaceColor =
+        isLightTheme ? const Color(0xFFFFFFFF) : const Color(0xFF1D2227);
     final onBackgroundColor = isLightTheme ? Colors.black87 : Colors.white;
     final onSurfaceColor = isLightTheme ? Colors.black87 : Colors.white;
 
     final baseTheme = isLightTheme ? ThemeData.light() : ThemeData.dark();
-    
+
     final mainTextTheme = baseTheme.textTheme.apply(
       bodyColor: onBackgroundColor,
       displayColor: onBackgroundColor,
@@ -29,7 +35,7 @@ class AppThemeBuilder {
 
     TextTheme textTheme;
     final fontName = settings.fontFamily;
-    
+
     if (fontName == 'Roboto') {
       textTheme = GoogleFonts.robotoTextTheme(mainTextTheme);
     } else if (fontName == 'NotoSans') {
@@ -53,7 +59,7 @@ class AppThemeBuilder {
         primary: primaryColor,
         surface: surfaceColor,
         onSurface: onSurfaceColor,
-        secondary: primaryColor, 
+        secondary: primaryColor,
       ),
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
@@ -61,8 +67,8 @@ class AppThemeBuilder {
         elevation: 0,
         centerTitle: true,
         titleTextStyle: textTheme.titleLarge?.copyWith(
-           fontWeight: FontWeight.w600,
-           color: onBackgroundColor,
+          fontWeight: FontWeight.w600,
+          color: onBackgroundColor,
         ),
         iconTheme: IconThemeData(color: onBackgroundColor),
       ),

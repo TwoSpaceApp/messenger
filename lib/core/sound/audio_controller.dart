@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/sound/audio_recorder_service.dart';
 import 'package:two_space_app/core/sound/audio_player_service.dart';
+import 'package:two_space_app/core/sound/audio_recorder_service.dart';
 import 'package:two_space_app/core/sound/audio_state.dart';
 
 class AudioController extends ChangeNotifier {
@@ -47,7 +47,8 @@ class AudioController extends ChangeNotifier {
     if (_state == AudioState.recording) {
       await stopAndSave();
     }
-    await _player.pause(); // audioplayers doesn't have stop properly implemented in wrappers sometimes, but let's assume specific logic or use pause
+    await _player
+        .pause(); // audioplayers doesn't have stop properly implemented in wrappers sometimes, but let's assume specific logic or use pause
     _state = AudioState.idle;
     notifyListeners();
   }

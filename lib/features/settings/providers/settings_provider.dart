@@ -29,7 +29,8 @@ class PaleVioletSettingsController extends Notifier<bool> {
   bool build() {
     void listener() => state = SettingsService.paleVioletNotifier.value;
     SettingsService.paleVioletNotifier.addListener(listener);
-    ref.onDispose(() => SettingsService.paleVioletNotifier.removeListener(listener));
+    ref.onDispose(
+        () => SettingsService.paleVioletNotifier.removeListener(listener));
     return SettingsService.paleVioletNotifier.value;
   }
 

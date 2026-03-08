@@ -1,14 +1,24 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
+import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
 
 enum CallType { incoming, outgoing, missed, video }
 
 class CallRecord {
+  const CallRecord({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.time,
+    this.avatarUrl,
+    this.duration,
+    this.isVideo = false,
+  });
   final String id;
   final String name;
   final String? avatarUrl;
@@ -16,16 +26,6 @@ class CallRecord {
   final DateTime time;
   final Duration? duration;
   final bool isVideo;
-
-  const CallRecord({
-    required this.id,
-    required this.name,
-    this.avatarUrl,
-    required this.type,
-    required this.time,
-    this.duration,
-    this.isVideo = false,
-  });
 }
 
 class CallsScreen extends StatefulWidget {
@@ -91,7 +91,7 @@ class _CallsScreenState extends State<CallsScreen> {
       name: 'Павел Морозов',
       type: CallType.incoming,
       time: DateTime.now().subtract(const Duration(days: 1)),
-      duration: const Duration(minutes: 25, seconds: 0),
+      duration: const Duration(minutes: 25),
     ),
     CallRecord(
       id: '8',
@@ -174,7 +174,7 @@ class _CallsScreenState extends State<CallsScreen> {
       name: 'Алексей Гусев',
       type: CallType.incoming,
       time: DateTime.now().subtract(const Duration(days: 10)),
-      duration: const Duration(minutes: 55, seconds: 0),
+      duration: const Duration(minutes: 55),
       isVideo: true,
     ),
     CallRecord(
@@ -233,7 +233,7 @@ class _CallsScreenState extends State<CallsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final diff = now.difference(time);
-    
+
     if (diff.inMinutes < 60) {
       return l10n.minutesAgo(diff.inMinutes);
     } else if (diff.inHours < 24) {
@@ -252,7 +252,7 @@ class _CallsScreenState extends State<CallsScreen> {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
     final seconds = duration.inSeconds.remainder(60);
-    
+
     if (hours > 0) {
       return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     }
@@ -319,7 +319,7 @@ class _CallsScreenState extends State<CallsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final filteredCalls = _cachedFilteredCalls;
-    
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: ScreenBackground(
@@ -329,7 +329,7 @@ class _CallsScreenState extends State<CallsScreen> {
             children: [
               // Header with TwoSpace logo
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     const AppLogo(large: false),
@@ -344,7 +344,7 @@ class _CallsScreenState extends State<CallsScreen> {
                   ],
                 ),
               ),
-              
+
               // Search bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -354,13 +354,15 @@ class _CallsScreenState extends State<CallsScreen> {
                     controller: _searchController,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                        hintText: l10n.searchByNameHint,
+                      hintText: l10n.searchByNameHint,
                       hintStyle: TextStyle(color: Colors.white.withAlpha(120)),
-                      prefixIcon: const Icon(Icons.search, color: Colors.white70),
+                      prefixIcon:
+                          const Icon(Icons.search, color: Colors.white70),
                       border: InputBorder.none,
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear, color: Colors.white70),
+                              icon: const Icon(Icons.clear,
+                                  color: Colors.white70),
                               onPressed: () {
                                 _searchController.clear();
                                 setState(() {
@@ -374,28 +376,28 @@ class _CallsScreenState extends State<CallsScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Filter chips
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                      _buildFilterChip(null, l10n.allFilter),
-                      const SizedBox(width: 8),
-                      _buildFilterChip(CallType.incoming, l10n.incomingFilter),
-                      const SizedBox(width: 8),
-                      _buildFilterChip(CallType.outgoing, l10n.outgoingFilter),
-                      const SizedBox(width: 8),
-                      _buildFilterChip(CallType.missed, l10n.missedFilter),
+                    _buildFilterChip(null, l10n.allFilter),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(CallType.incoming, l10n.incomingFilter),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(CallType.outgoing, l10n.outgoingFilter),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(CallType.missed, l10n.missedFilter),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Calls list
               Expanded(
                 child: filteredCalls.isEmpty
@@ -411,8 +413,8 @@ class _CallsScreenState extends State<CallsScreen> {
                             const SizedBox(height: 16),
                             Text(
                               _searchQuery.isNotEmpty || _filterType != null
-                                    ? l10n.nothingFound
-                                    : l10n.noCallsFound,
+                                  ? l10n.nothingFound
+                                  : l10n.noCallsFound,
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.white.withAlpha(150),
@@ -422,7 +424,8 @@ class _CallsScreenState extends State<CallsScreen> {
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+                        padding: const EdgeInsets.only(
+                            left: 16, right: 16, bottom: 100),
                         itemCount: filteredCalls.length,
                         itemBuilder: (c, i) {
                           final call = filteredCalls[i];
@@ -435,10 +438,11 @@ class _CallsScreenState extends State<CallsScreen> {
                                   children: [
                                     CircleAvatar(
                                       radius: 24,
-                                      backgroundColor: theme.colorScheme.primary.withAlpha(100),
+                                      backgroundColor: theme.colorScheme.primary
+                                          .withAlpha(100),
                                       child: Text(
-                                        call.name.isNotEmpty 
-                                            ? call.name[0].toUpperCase() 
+                                        call.name.isNotEmpty
+                                            ? call.name[0].toUpperCase()
                                             : '?',
                                         style: const TextStyle(
                                           color: Colors.white,
@@ -456,7 +460,9 @@ class _CallsScreenState extends State<CallsScreen> {
                                           decoration: BoxDecoration(
                                             color: Colors.purple,
                                             shape: BoxShape.circle,
-                                            border: Border.all(color: Colors.white, width: 1.5),
+                                            border: Border.all(
+                                                color: Colors.white,
+                                                width: 1.5),
                                           ),
                                           child: const Icon(
                                             Icons.videocam,
@@ -470,8 +476,8 @@ class _CallsScreenState extends State<CallsScreen> {
                                 title: Text(
                                   call.name,
                                   style: TextStyle(
-                                    color: call.type == CallType.missed 
-                                        ? Colors.redAccent 
+                                    color: call.type == CallType.missed
+                                        ? Colors.redAccent
                                         : Colors.white,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -485,7 +491,7 @@ class _CallsScreenState extends State<CallsScreen> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      call.duration != null 
+                                      call.duration != null
                                           ? '${_getCallTypeLabel(call.type)} • ${_formatDuration(call.duration)}'
                                           : _getCallTypeLabel(call.type),
                                       style: TextStyle(
@@ -590,11 +596,13 @@ class _CallsScreenState extends State<CallsScreen> {
             const SizedBox(height: 16),
             ListTile(
               leading: CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(100),
+                backgroundColor:
+                    Theme.of(context).colorScheme.primary.withAlpha(100),
                 child: Text(call.name[0]),
               ),
               title: Text(call.name),
-              subtitle: Text('${_getCallTypeLabel(call.type)} • ${_formatTime(call.time)}'),
+              subtitle: Text(
+                  '${_getCallTypeLabel(call.type)} • ${_formatTime(call.time)}'),
             ),
             const Divider(),
             ListTile(
@@ -619,7 +627,7 @@ class _CallsScreenState extends State<CallsScreen> {
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.messageNotification(call.name))),
+                  SnackBar(content: Text(l10n.messageNotification(call.name))),
                 );
               },
             ),

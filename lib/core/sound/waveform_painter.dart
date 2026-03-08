@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class WaveformPainter extends CustomPainter {
-  final List<double> samples;
   WaveformPainter(this.samples);
+  final List<double> samples;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -11,11 +11,14 @@ class WaveformPainter extends CustomPainter {
       ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
 
-    for (int i = 0; i < samples.length; i++) {
-      double x = (i / samples.length) * size.width;
-      double height = samples[i] * size.height;
-      canvas.drawLine(Offset(x, size.height / 2 - height / 2),
-          Offset(x, size.height / 2 + height / 2), paint);
+    for (var i = 0; i < samples.length; i++) {
+      final x = (i / samples.length) * size.width;
+      final height = samples[i] * size.height;
+      canvas.drawLine(
+        Offset(x, size.height / 2 - height / 2),
+        Offset(x, size.height / 2 + height / 2),
+        paint,
+      );
     }
   }
 

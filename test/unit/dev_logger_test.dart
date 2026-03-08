@@ -3,9 +3,7 @@ import 'package:two_space_app/core/services/dev_logger.dart';
 
 void main() {
   group('DevLogger', () {
-    setUp(() {
-      DevLogger.clear();
-    });
+    setUp(DevLogger.clear);
 
     test('создаёт экземпляр с тегом', () {
       final logger = DevLogger('TestTag');
@@ -58,7 +56,7 @@ void main() {
 
     test('сохраняет последние 200 логов', () {
       final logger = DevLogger('Buffer');
-      for (int i = 0; i < 250; i++) {
+      for (var i = 0; i < 250; i++) {
         logger.info('сообщение $i');
       }
       final logs = DevLogger.all;

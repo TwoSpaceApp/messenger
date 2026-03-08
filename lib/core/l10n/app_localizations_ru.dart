@@ -1638,4 +1638,55 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sevenDays => '7 дней';
+
+  @override
+  String get settingsThemeSelection => 'Тема';
+
+  @override
+  String get settingsNotificationNew => 'Уведомления';
+
+  @override
+  String get settingsDoNotDisturb => 'Не беспокоить';
+
+  @override
+  String get settingsSoundOptions => 'Настройки звука';
+
+  @override
+  String get settingsStorageManagement => 'Управление хранилищем';
+
+  @override
+  String get settingsStorageUsage => 'Использование хранилища';
+
+  @override
+  String get settingsStorageAppSize => 'Размер приложения';
+
+  @override
+  String get settingsStorageClearBtn => 'Очистить выбранное';
+
+  @override
+  String get settingsStorageKeepChat => 'Хранить данные чатов';
+
+  @override
+  String get settingsStorageKeepChannel => 'Хранить данные каналов';
+
+  @override
+  String get settingsStorageKeepGroup => 'Хранить данные групп';
+
+  @override
+  String get settingsAboutPropose => 'Предложить улучшение';
+
+  @override
+  String get settingsAboutCheckUpdate => 'Проверить обновление';
+
+  @override
+  String get biometricsEnable => 'Блокировка приложения';
+
+  @override
+  String get biometricsSetup => 'Настроить блокировку';
+
+  @override
+  String get contactsTwoSpaceYes => 'Есть в TwoSpace';
+
+  @override
+  String get contactsTwoSpaceNo => 'Нету в TwoSpace';
 }

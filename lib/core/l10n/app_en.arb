@@ -2244,5 +2244,73 @@
   "sevenDays": "7 days",
   "@sevenDays": {
     "description": "sevenDays"
+  },
+  "settingsThemeSelection": "Theme",
+  "@settingsThemeSelection": {
+    "description": "Auto added setting"
+  },
+  "settingsNotificationNew": "Notifications",
+  "@settingsNotificationNew": {
+    "description": "Auto added setting"
+  },
+  "settingsDoNotDisturb": "Do Not Disturb",
+  "@settingsDoNotDisturb": {
+    "description": "Auto added setting"
+  },
+  "settingsSoundOptions": "Sound Settings",
+  "@settingsSoundOptions": {
+    "description": "Auto added setting"
+  },
+  "settingsStorageManagement": "Storage Management",
+  "@settingsStorageManagement": {
+    "description": "Auto added setting"
+  },
+  "settingsStorageUsage": "Storage Usage",
+  "@settingsStorageUsage": {
+    "description": "Auto added setting"
+  },
+  "settingsStorageAppSize": "App Size",
+  "@settingsStorageAppSize": {
+    "description": "Auto added setting"
+  },
+  "settingsStorageClearBtn": "Clear Selected",
+  "@settingsStorageClearBtn": {
+    "description": "Auto added setting"
+  },
+  "settingsStorageKeepChat": "Keep Chat Data",
+  "@settingsStorageKeepChat": {
+    "description": "Auto added setting"
+  },
+  "settingsStorageKeepChannel": "Keep Channel Data",
+  "@settingsStorageKeepChannel": {
+    "description": "Auto added setting"
+  },
+  "settingsStorageKeepGroup": "Keep Group Data",
+  "@settingsStorageKeepGroup": {
+    "description": "Auto added setting"
+  },
+  "settingsAboutPropose": "Propose Improvement",
+  "@settingsAboutPropose": {
+    "description": "Auto added setting"
+  },
+  "settingsAboutCheckUpdate": "Check for Updates",
+  "@settingsAboutCheckUpdate": {
+    "description": "Auto added setting"
+  },
+  "biometricsEnable": "App Lock (Biometrics/PIN)",
+  "@biometricsEnable": {
+    "description": "Auto added setting"
+  },
+  "biometricsSetup": "Setup App Lock",
+  "@biometricsSetup": {
+    "description": "Auto added setting"
+  },
+  "contactsTwoSpaceYes": "Uses TwoSpace",
+  "@contactsTwoSpaceYes": {
+    "description": "Auto added setting"
+  },
+  "contactsTwoSpaceNo": "Not in TwoSpace",
+  "@contactsTwoSpaceNo": {
+    "description": "Auto added setting"
   }
 }

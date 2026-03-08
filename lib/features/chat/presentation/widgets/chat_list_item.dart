@@ -4,28 +4,27 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 
 class GradientAvatar extends StatelessWidget {
+  const GradientAvatar({
+    required this.name,
+    super.key,
+    this.avatarUrl,
+    this.radius = 24.0,
+  });
   final String name;
   final String? avatarUrl;
   final double radius;
 
-  const GradientAvatar({
-    super.key,
-    required this.name,
-    this.avatarUrl,
-    this.radius = 24.0,
-  });
-
   List<Color> _generateGradient(String text) {
     if (text.isEmpty) return [Colors.blue, Colors.purple];
     final hash = text.hashCode;
-    
+
     // Generate saturated, bright colors
     final h1 = (hash % 360).toDouble();
     final h2 = ((hash ~/ 360) % 360).toDouble();
-    
+
     return [
-      HSVColor.fromAHSV(1.0, h1, 0.7, 0.9).toColor(),
-      HSVColor.fromAHSV(1.0, h2, 0.8, 0.8).toColor(),
+      HSVColor.fromAHSV(1, h1, 0.7, 0.9).toColor(),
+      HSVColor.fromAHSV(1, h2, 0.8, 0.8).toColor(),
     ];
   }
 
@@ -39,7 +38,7 @@ class GradientAvatar extends StatelessWidget {
     }
 
     final colors = _generateGradient(name);
-    
+
     return Container(
       width: radius * 2,
       height: radius * 2,
@@ -72,17 +71,17 @@ class GradientAvatar extends StatelessWidget {
 }
 
 class ChatListItem extends StatelessWidget {
+  const ChatListItem({
+    required this.chat,
+    required this.isSelected,
+    required this.onTap,
+    super.key,
+    this.onLongPress,
+  });
   final Chat chat;
   final bool isSelected;
   final VoidCallback onTap;
   final Function(Chat)? onLongPress;
-
-  const ChatListItem({super.key, 
-    required this.chat,
-    required this.isSelected,
-    required this.onTap,
-    this.onLongPress,
-  });
 
   String _getPreview(String text, String emptyFallback) {
     if (text.isEmpty) return emptyFallback;
@@ -93,7 +92,9 @@ class ChatListItem extends StatelessWidget {
   String _formatTime(DateTime? time) {
     if (time == null) return '';
     final now = DateTime.now();
-    if (time.year == now.year && time.month == now.month && time.day == now.day) {
+    if (time.year == now.year &&
+        time.month == now.month &&
+        time.day == now.day) {
       return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
     }
     return '${time.day}.${time.month}';
@@ -118,7 +119,6 @@ class ChatListItem extends StatelessWidget {
             child: GradientAvatar(
               name: chat.name,
               avatarUrl: chat.avatarUrl,
-              radius: 24,
             ),
           ),
           Positioned(
@@ -138,14 +138,17 @@ class ChatListItem extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.error.withValues(alpha: 0.4),
+                            color:
+                                theme.colorScheme.error.withValues(alpha: 0.4),
                             blurRadius: 4,
                             spreadRadius: 1,
-                          )
+                          ),
                         ],
                       ),
                       child: Text(
-                        chat.unreadCount > 99 ? '99+' : chat.unreadCount.toString(),
+                        chat.unreadCount > 99
+                            ? '99+'
+                            : chat.unreadCount.toString(),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: Colors.white,
                           fontSize: 10,
@@ -162,7 +165,8 @@ class ChatListItem extends StatelessWidget {
       title: Text(
         chat.name,
         style: theme.textTheme.bodyLarge?.copyWith(
-          fontWeight: chat.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+          fontWeight:
+              chat.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -171,7 +175,8 @@ class ChatListItem extends StatelessWidget {
         preview,
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.outline,
-          fontWeight: chat.unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
+          fontWeight:
+              chat.unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,

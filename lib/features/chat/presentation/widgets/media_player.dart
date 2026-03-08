@@ -1,13 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:video_player/video_player.dart';
 
 class MediaPlayer extends StatefulWidget {
+  const MediaPlayer({super.key, this.localPath, this.networkUrl})
+      : assert(localPath != null || networkUrl != null,
+            'Either localPath or networkUrl must be provided');
   final String? localPath;
   final String? networkUrl;
-  const MediaPlayer({super.key, this.localPath, this.networkUrl}) : assert(localPath != null || networkUrl != null, 'Either localPath or networkUrl must be provided');
 
   @override
   State<MediaPlayer> createState() => _MediaPlayerState();
@@ -40,7 +42,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
       }
 
       _controller.addListener(_onPlayerChanged);
-      
+
       await _controller.initialize();
       if (mounted) {
         setState(() {
@@ -93,7 +95,8 @@ class _MediaPlayerState extends State<MediaPlayer> {
       ),
       body: Center(
         child: _error != null
-            ? Text(l10n.videoLoadError(_error!), style: TextStyle(color: Theme.of(context).colorScheme.error))
+            ? Text(l10n.videoLoadError(_error!),
+                style: TextStyle(color: Theme.of(context).colorScheme.error))
             : Stack(
                 alignment: Alignment.center,
                 children: [
@@ -113,14 +116,14 @@ class _MediaPlayerState extends State<MediaPlayer> {
                               : _controller.play();
                         });
                       },
-                      child: Container(
+                      child: ColoredBox(
                         color: Colors.transparent,
                         child: Center(
                           child: Icon(
                             _controller.value.isPlaying
                                 ? Icons.pause_circle_outline
                                 : Icons.play_circle_outline,
-                            size: 64.0,
+                            size: 64,
                             color: Colors.white.withAlpha((0.7 * 255).round()),
                           ),
                         ),
@@ -135,9 +138,11 @@ class _MediaPlayerState extends State<MediaPlayer> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(_controller.value.isPlaying
-                        ? Icons.pause
-                        : Icons.play_arrow),
+                    icon: Icon(
+                      _controller.value.isPlaying
+                          ? Icons.pause
+                          : Icons.play_arrow,
+                    ),
                     onPressed: () {
                       setState(() {
                         _controller.value.isPlaying

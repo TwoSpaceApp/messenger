@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:two_space_app/features/chat/data/services/matrix/matrix_auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/matrix/matrix_media_service.dart';
-import 'package:two_space_app/features/chat/data/services/matrix/matrix_profile_service.dart';
 import 'package:two_space_app/features/chat/data/services/matrix/matrix_messaging_service.dart';
+import 'package:two_space_app/features/chat/data/services/matrix/matrix_profile_service.dart';
 
 /// Provider for MatrixAuthService singleton
 final matrixAuthServiceProvider = Provider<MatrixAuthService>((ref) {
@@ -48,10 +48,10 @@ final userInfoProvider =
     FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
   (ref, userId) async {
     final profileService = ref.watch(matrixProfileServiceProvider);
-    
+
     // Keep the provider alive for 5 minutes
     ref.keepAlive();
-    
-    return await profileService.getUserInfo(userId);
+
+    return profileService.getUserInfo(userId);
   },
 );

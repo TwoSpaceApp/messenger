@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:two_space_app/core/services/dev_http_client.dart' as http;
+
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:two_space_app/core/config/environment.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/core/services/dev_http_client.dart' as http;
 import 'package:two_space_app/core/services/token_manager.dart';
+import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 
 class MatrixService {
   Future<String?> getCurrentUserId() async {
@@ -20,18 +21,20 @@ class MatrixService {
     return null;
   }
 
-  Future<dynamic> handleApiCall(String method, Map<String, dynamic> payload) async {
+  Future<dynamic> handleApiCall(
+      String method, Map<String, dynamic> payload) async {
     switch (method) {
       case 'get-rooms':
-        return await ChatMatrixService().getJoinedRooms();
+        return ChatMatrixService().getJoinedRooms();
       case 'get-room-meta':
-        return await ChatMatrixService().getRoomNameAndAvatar(payload['roomId']);
+        return ChatMatrixService().getRoomNameAndAvatar(payload['roomId']);
       case 'get-messages':
-        return await ChatMatrixService().loadMessages(roomId: payload['chatId'], limit: payload['limit'] ?? 50);
+        return ChatMatrixService().loadMessages(
+            roomId: payload['chatId'], limit: payload['limit'] ?? 50);
       case 'send-message':
-        return await _sendMessage(payload);
+        return _sendMessage(payload);
       case 'upload-file':
-        return await _uploadFile(payload);
+        return _uploadFile(payload);
       default:
         throw Exception('Unsupported API method: $method');
     }
@@ -46,9 +49,14 @@ class MatrixService {
 
     if (Environment.useMatrix) {
       final type = (payload['type'] ?? 'text').toString();
-      final media = payload['mediaFileId'] as String? ?? payload['mediaId'] as String?;
+      final media =
+          payload['mediaFileId'] as String? ?? payload['mediaId'] as String?;
       try {
-        await ChatMatrixService().sendMessage(roomId: chatId, text: text, type: type == 'image' ? 'm.image' : 'm.text', mediaFileId: media);
+        await ChatMatrixService().sendMessage(
+            roomId: chatId,
+            text: text,
+            type: type == 'image' ? 'm.image' : 'm.text',
+            mediaFileId: media);
       } catch (e) {
         rethrow;
       }
@@ -64,14 +72,20 @@ class MatrixService {
     }
 
     final bytes = await File(path).readAsBytes();
-    return await uploadBytesToStorage(bytes, filename);
+    return uploadBytesToStorage(bytes, filename);
   }
 
-  Future<Map<String, dynamic>> uploadBytesToStorage(List<int> bytes, String filename) async {
+  Future<Map<String, dynamic>> uploadBytesToStorage(
+      List<int> bytes, String filename) async {
     if (Environment.useMatrix) {
       const contentType = 'application/octet-stream';
-      final mxc = await ChatMatrixService().uploadMedia(bytes, contentType, filename);
-      return {'\$id': mxc, 'id': mxc, 'viewUrl': getFileViewUrl(mxc ?? '').toString()};
+      final mxc =
+          await ChatMatrixService().uploadMedia(bytes, contentType, filename);
+      return {
+        r'$id': mxc,
+        'id': mxc,
+        'viewUrl': getFileViewUrl(mxc ?? '').toString()
+      };
     }
     throw Exception('uploadBytesToStorage: Matrix mode required');
   }
@@ -80,7 +94,8 @@ class MatrixService {
     if (mxcUrl.startsWith('mxc://')) {
       final parts = mxcUrl.substring(6).split('/');
       if (parts.length == 2) {
-        return Uri.parse('${Environment.matrixHomeserverUrl}/_matrix/media/v3/download/${parts[0]}/${parts[1]}');
+        return Uri.parse(
+            '${Environment.matrixHomeserverUrl}/_matrix/media/v3/download/${parts[0]}/${parts[1]}');
       }
     }
     return Uri.parse(mxcUrl);
@@ -90,7 +105,8 @@ class MatrixService {
     return e.toString().replaceAll('Exception:', '').trim();
   }
 
-  static Future<String> downloadFileToTemp(String fileId, {String? filename}) async {
+  static Future<String> downloadFileToTemp(String fileId,
+      {String? filename}) async {
     final url = getFileViewUrl(fileId);
     final response = await http.get(url);
     if (response.statusCode == 200) {
@@ -105,8 +121,8 @@ class MatrixService {
   }
 
   static Future<bool> saveFileToGallery(String path) async {
-     // Stub: Implement with gal or image_gallery_saver
-     return false;
+    // Stub: Implement with gal or image_gallery_saver
+    return false;
   }
 
   static Future<bool> shareFile(String path, {String? text}) async {
@@ -122,25 +138,30 @@ class MatrixService {
     return downloadFileToTemp(mxcUrl);
   }
 
-static Future<void> createAccount(String email, String password, {String? name}) async {}
-  
+  static Future<void> createAccount(String email, String password,
+      {String? name}) async {}
+
   static Future<void> restoreJwt() async {}
-  
-  static Future<String?> getJwt() async { return null; }
-  
+
+  static Future<String?> getJwt() async {
+    return null;
+  }
+
   static Future<void> deleteCurrentSession() async {}
-  
+
   static Future<void> saveSessionCookie(String? receivedCookie) async {}
-  
+
   static Future<void> clearJwt() async {}
-  
+
   static Future<void> createPhoneToken(String phone) async {}
-  
+
   static Future<void> createEmailSession(String email, String s) async {}
-  
-  static String v1Endpoint() { return ''; }
+
+  static String v1Endpoint() {
+    return '';
+  }
 
   static Future<void> saveJwt(String jwt) async {}
-  
+
   static void setCurrentUserId(String userId) {}
 }

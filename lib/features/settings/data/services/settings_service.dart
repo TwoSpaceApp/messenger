@@ -89,10 +89,11 @@ class SettingsService {
   static final ValueNotifier<bool> showEmailNotifier = ValueNotifier(false);
   static final ValueNotifier<bool> showPhoneNotifier = ValueNotifier(false);
   static final ValueNotifier<String> languageNotifier = ValueNotifier('en');
-  static final ValueNotifier<double> textScaleNotifier = ValueNotifier(1.0);
+  static final ValueNotifier<double> textScaleNotifier = ValueNotifier(1);
   static final ValueNotifier<bool> autoDownloadMediaNotifier = ValueNotifier(true);
   static final ValueNotifier<bool> sendByEnterNotifier = ValueNotifier(true);
   static final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
+  static final ValueNotifier<bool> biometricsNotifier = ValueNotifier(false);
 
   static Future<void> loadSettings() async {
     // Load Theme
@@ -132,6 +133,14 @@ class SettingsService {
 
     // Theme mode (system/light/dark)
     themeModeNotifier.value = _themeModeFromString(await SecureStore.read(_themeModeKey));
+
+    final bioStr = await SecureStore.read('biometrics_enabled');
+    biometricsNotifier.value = (bioStr == 'true');
+  }
+
+  static Future<void> setBiometricsEnabled(bool value) async {
+    await SecureStore.write('biometrics_enabled', value.toString());
+    biometricsNotifier.value = value;
   }
 
   static ThemeMode _themeModeFromString(String? v) {

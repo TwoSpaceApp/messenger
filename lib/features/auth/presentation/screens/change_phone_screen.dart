@@ -47,11 +47,13 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
     try {
       // AppwriteService not available, skip server update
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.phoneCannotBeChanged)));
+      messenger
+          .showSnackBar(SnackBar(content: Text(l10n.phoneCannotBeChanged)));
       // navState.pop(true);
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.changePhoneError(e.toString()))));
+      messenger.showSnackBar(
+          SnackBar(content: Text(l10n.changePhoneError(e.toString()))));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -63,13 +65,14 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.changePhoneTitle)),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: ValueListenableBuilder<bool>(
           valueListenable: SettingsService.paleVioletNotifier,
           builder: (c, pale, _) {
             final theme = Theme.of(context).copyWith(
               inputDecorationTheme: InputDecorationTheme(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 filled: pale,
                 fillColor: pale ? const Color(0xFFF6F0FF) : null,
               ),
@@ -82,17 +85,32 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
                   Text(l10n.changePhoneDescription),
                   if (_currentPhone != null) ...[
                     const SizedBox(height: 8),
-                    Text(l10n.currentPrefix, style: Theme.of(context).textTheme.bodySmall),
-                    Text(_currentPhone ?? '', style: Theme.of(context).textTheme.bodyMedium),
+                    Text(l10n.currentPrefix,
+                        style: Theme.of(context).textTheme.bodySmall),
+                    Text(_currentPhone ?? '',
+                        style: Theme.of(context).textTheme.bodyMedium),
                   ],
                   const SizedBox(height: 12),
-                  TextField(controller: _phoneCtrl, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: l10n.newPhoneLabel)),
+                  TextField(
+                      controller: _phoneCtrl,
+                      keyboardType: TextInputType.phone,
+                      decoration:
+                          InputDecoration(labelText: l10n.newPhoneLabel)),
                   const SizedBox(height: 12),
-                  TextField(controller: _pwdCtrl, obscureText: true, decoration: InputDecoration(labelText: l10n.currentPasswordOptional)),
+                  TextField(
+                      controller: _pwdCtrl,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                          labelText: l10n.currentPasswordOptional)),
                   const SizedBox(height: 18),
                   ElevatedButton(
                     onPressed: _loading ? null : _submit,
-                    child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l10n.changePhoneButton),
+                    child: _loading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text(l10n.changePhoneButton),
                   ),
                 ],
               ),

@@ -37,7 +37,9 @@ class DateGroupingUtils {
 
   static String formatMessageTime(DateTime time) {
     final now = DateTime.now();
-    if (time.year == now.year && time.month == now.month && time.day == now.day) {
+    if (time.year == now.year &&
+        time.month == now.month &&
+        time.day == now.day) {
       return DateFormat('HH:mm').format(time);
     }
     return DateFormat('dd.MM.yyyy HH:mm').format(time);

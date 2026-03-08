@@ -1,18 +1,18 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:animations/animations.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
-import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
-import 'package:two_space_app/features/settings/presentation/screens/settings_screen.dart';
-import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
-import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
-import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
+import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
+import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
+import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
+import 'package:two_space_app/features/settings/presentation/screens/settings_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -45,11 +45,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _loadUserAndRooms() async {
     if (!mounted) return;
     setState(() => _loading = true);
-    
+
     try {
       final ids = await _chat.getJoinedRooms();
       final out = <Map<String, dynamic>>[];
-      
+
       for (final id in ids) {
         final meta = await _chat.getRoomNameAndAvatar(id);
         out.add({
@@ -96,9 +96,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
-      extendBodyBehindAppBar: true, 
+      extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       body: ScreenBackground(
         child: SafeArea(
@@ -106,7 +106,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               // Header with TwoSpace logo
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     const AppLogo(large: false),
@@ -126,16 +126,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     // Settings button
                     IconButton(
-                      icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                      icon: const Icon(Icons.settings_outlined,
+                          color: Colors.white),
                       onPressed: _openSettings,
                     ),
                   ],
                 ),
               ),
               Expanded(
-                child: _loading 
-                  ? _buildShimmerLoading()
-                  : _buildChatList(),
+                child: _loading ? _buildShimmerLoading() : _buildChatList(),
               ),
             ],
           ),
@@ -157,7 +156,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       itemCount: 6,
       itemBuilder: (context, index) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
+          padding: const EdgeInsets.only(bottom: 8),
           child: Shimmer.fromColors(
             baseColor: Colors.white.withValues(alpha: 0.1),
             highlightColor: Colors.white.withValues(alpha: 0.2),
@@ -201,18 +200,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildChatList() {
     final rooms = _filteredRooms;
-    if (rooms.isEmpty) return Center(child: Text(AppLocalizations.of(context)!.noChats, style: const TextStyle(color: Colors.white70)));
-    
+    if (rooms.isEmpty)
+      return Center(
+          child: Text(AppLocalizations.of(context)!.noChats,
+              style: const TextStyle(color: Colors.white70)));
+
     return ListView.builder(
-      padding: const EdgeInsets.all(8), 
+      padding: const EdgeInsets.all(8),
       itemCount: rooms.length,
       itemBuilder: (c, i) {
         final r = rooms[i];
         final id = r['id'] as String;
-        
+
         final item = Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
-          child: GlassCard( 
+          padding: const EdgeInsets.only(bottom: 8),
+          child: GlassCard(
             onTap: () => _openChat(id),
             padding: const EdgeInsets.all(12),
             child: Row(
@@ -222,7 +224,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: UserAvatar(
                     avatarUrl: r['avatar'],
                     name: r['name'],
-                    radius: 24,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -231,15 +232,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        r['name'], 
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
-                        maxLines: 1, overflow: TextOverflow.ellipsis
+                        r['name'],
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        r['lastMessage'], 
-                        style: const TextStyle(fontSize: 14, color: Colors.white70),
-                        maxLines: 1, overflow: TextOverflow.ellipsis
+                        r['lastMessage'],
+                        style: const TextStyle(
+                            fontSize: 14, color: Colors.white70),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -247,17 +254,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                     Text('12:00', style: TextStyle(fontSize: 12, color: Colors.white54)),
+                    Text('12:00',
+                        style: TextStyle(fontSize: 12, color: Colors.white54)),
                   ],
                 ),
               ],
             ),
           ),
         );
-        
+
         // Use staggered entry animation
         return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
+          tween: Tween(begin: 0, end: 1),
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeOutCubic,
           builder: (context, value, child) {
@@ -277,10 +285,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _openChat(String id) {
     Navigator.push(
-      context, 
+      context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => ChatScreen(
-          chat: Chat(id: id, name: id, members: [])
+          chat: Chat(id: id, name: id, members: []),
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(
@@ -290,7 +298,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: child,
           );
         },
-      )
+      ),
     );
   }
 }

@@ -1,88 +1,118 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http_pkg;
-import 'package:two_space_app/core/services/dev_network_logger.dart';
+import 'dart:typed_data';
+import 'package:dio/dio.dart' as dio_pkg;
 
-// Реэкспортируем важные классы http, чтобы не ломать импорты
-export 'package:http/http.dart' show MultipartRequest, StreamedResponse, Client, BaseRequest, Response, Request, ByteStream;
+// Симуляция классов пакета http
+class Response {
+  Response(this.body, this.statusCode,
+      {this.headers = const {}, Uint8List? bytes})
+      : bodyBytes = bytes ?? Uint8List.fromList(utf8.encode(body));
+  final String body;
+  final int statusCode;
+  final Map<String, String> headers;
+  final Uint8List bodyBytes;
+}
 
-class _DevDevHttpClient extends http_pkg.BaseClient {
-  final http_pkg.Client _inner = http_pkg.Client();
+class StreamedResponse extends Response {
+  StreamedResponse(super.body, super.statusCode, {super.headers});
+}
 
-  @override
-  Future<http_pkg.StreamedResponse> send(http_pkg.BaseRequest request) async {
-    final startTime = DateTime.now().millisecondsSinceEpoch;
-    
-    // Копируем тело для логера (если это обычный Request)
-    dynamic requestBody;
-    if (request is http_pkg.Request) {
-      if (request.bodyBytes.isNotEmpty) {
-        try {
-          requestBody = jsonDecode(request.body);
-        } catch (_) {
-          requestBody = request.body;
-        }
-      }
-    }
+// Заглушки для Multipart
+class BaseRequest {}
 
-    http_pkg.StreamedResponse? response;
+class Request extends BaseRequest {
+  Request(this.method, this.url) : headers = {};
+  final String method;
+  final Uri url;
+  final Map<String, String> headers;
+}
+
+class MultipartRequest extends BaseRequest {}
+
+class Client {
+  void close() {}
+}
+
+class ByteStream {}
+
+final dio_pkg.Dio _dio = dio_pkg.Dio();
+
+Response _mapDioResponse(dio_pkg.Response res) {
+  final dynamic data = res.data;
+  final body = data is String ? data : jsonEncode(data);
+  final headers = <String, String>{};
+  res.headers.forEach((name, values) {
+    if (values.isNotEmpty) headers[name] = values.first;
+  });
+  return Response(body, res.statusCode ?? 500, headers: headers);
+}
+
+dynamic _parseBody(Object? body) {
+  if (body == null) return null;
+  if (body is String) {
     try {
-      response = await _inner.send(request);
-      
-      // Для логирования ответа нам нужно прочитать Stream, но не испортить
-      // его для основного приложения. Поэтому мы читаем его в память:
-      final respBytes = await response.stream.toBytes();
-      final bodyString = utf8.decode(respBytes, allowMalformed: true);
-      
-      dynamic responseBody;
-      try {
-        responseBody = jsonDecode(bodyString);
-      } catch (_) {
-        responseBody = bodyString;
-      }
-      
-      final latencyMs = DateTime.now().millisecondsSinceEpoch - startTime;
-      
-      DevNetworkLogger.instance.logRequest(
-        method: request.method,
-        url: request.url.toString(),
-        statusCode: response.statusCode,
-        latencyMs: latencyMs,
-        requestBody: requestBody,
-        responseBody: responseBody,
-        headers: request.headers,
-      );
+      return jsonDecode(body);
+      // ignore: empty_catches
+    } catch (_) {}
+  }
+  return body;
+}
 
-      // Воссоздаем ответ с буферизированными данными, чтобы оригинальный код смог его прочесть
-      return http_pkg.StreamedResponse(
-        Stream.value(respBytes),
-        response.statusCode,
-        contentLength: respBytes.length,
-        request: request,
-        headers: response.headers,
-        isRedirect: response.isRedirect,
-        persistentConnection: response.persistentConnection,
-        reasonPhrase: response.reasonPhrase,
-      );
-    } catch (e) {
-      final latencyMs = DateTime.now().millisecondsSinceEpoch - startTime;
-      DevNetworkLogger.instance.logRequest(
-        method: request.method,
-        url: request.url.toString(),
-        statusCode: null,
-        latencyMs: latencyMs,
-        requestBody: requestBody,
-        responseBody: 'ERROR: $e',
-        headers: request.headers,
-      );
-      rethrow;
-    }
+Future<Response> get(Uri url, {Map<String, String>? headers}) async {
+  try {
+    final res =
+        await _dio.getUri(url, options: dio_pkg.Options(headers: headers));
+    return _mapDioResponse(res);
+  } on dio_pkg.DioException catch (e) {
+    if (e.response != null) return _mapDioResponse(e.response!);
+    throw Exception(e.message);
   }
 }
 
-final _client = _DevDevHttpClient();
+Future<Response> post(Uri url,
+    {Map<String, String>? headers, Object? body, Encoding? encoding}) async {
+  try {
+    final res = await _dio.postUri(url,
+        data: _parseBody(body), options: dio_pkg.Options(headers: headers));
+    return _mapDioResponse(res);
+  } on dio_pkg.DioException catch (e) {
+    if (e.response != null) return _mapDioResponse(e.response!);
+    throw Exception(e.message);
+  }
+}
 
-Future<http_pkg.Response> get(Uri url, {Map<String, String>? headers}) => _client.get(url, headers: headers);
-Future<http_pkg.Response> post(Uri url, {Map<String, String>? headers, Object? body, Encoding? encoding}) => _client.post(url, headers: headers, body: body, encoding: encoding);
-Future<http_pkg.Response> put(Uri url, {Map<String, String>? headers, Object? body, Encoding? encoding}) => _client.put(url, headers: headers, body: body, encoding: encoding);
-Future<http_pkg.Response> patch(Uri url, {Map<String, String>? headers, Object? body, Encoding? encoding}) => _client.patch(url, headers: headers, body: body, encoding: encoding);
-Future<http_pkg.Response> delete(Uri url, {Map<String, String>? headers, Object? body, Encoding? encoding}) => _client.delete(url, headers: headers, body: body, encoding: encoding);
+Future<Response> put(Uri url,
+    {Map<String, String>? headers, Object? body, Encoding? encoding}) async {
+  try {
+    final res = await _dio.putUri(url,
+        data: _parseBody(body), options: dio_pkg.Options(headers: headers));
+    return _mapDioResponse(res);
+  } on dio_pkg.DioException catch (e) {
+    if (e.response != null) return _mapDioResponse(e.response!);
+    throw Exception(e.message);
+  }
+}
+
+Future<Response> patch(Uri url,
+    {Map<String, String>? headers, Object? body, Encoding? encoding}) async {
+  try {
+    final res = await _dio.patchUri(url,
+        data: _parseBody(body), options: dio_pkg.Options(headers: headers));
+    return _mapDioResponse(res);
+  } on dio_pkg.DioException catch (e) {
+    if (e.response != null) return _mapDioResponse(e.response!);
+    throw Exception(e.message);
+  }
+}
+
+Future<Response> delete(Uri url,
+    {Map<String, String>? headers, Object? body, Encoding? encoding}) async {
+  try {
+    final res = await _dio.deleteUri(url,
+        data: _parseBody(body), options: dio_pkg.Options(headers: headers));
+    return _mapDioResponse(res);
+  } on dio_pkg.DioException catch (e) {
+    if (e.response != null) return _mapDioResponse(e.response!);
+    throw Exception(e.message);
+  }
+}

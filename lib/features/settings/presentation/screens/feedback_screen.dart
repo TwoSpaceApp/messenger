@@ -35,25 +35,39 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   String _ideaLabel(String key, AppLocalizations l10n) {
     switch (key) {
-      case 'e2e': return l10n.feedbackE2E;
-      case 'backup': return l10n.feedbackBackup;
-      case 'threads': return l10n.feedbackThreads;
-      case 'calls': return l10n.feedbackCalls;
-      case 'folders': return l10n.feedbackFolders;
-      case 'bots': return l10n.feedbackBots;
-      case 'slow_net': return l10n.feedbackSlowNet;
-      default: return key;
+      case 'e2e':
+        return l10n.feedbackE2E;
+      case 'backup':
+        return l10n.feedbackBackup;
+      case 'threads':
+        return l10n.feedbackThreads;
+      case 'calls':
+        return l10n.feedbackCalls;
+      case 'folders':
+        return l10n.feedbackFolders;
+      case 'bots':
+        return l10n.feedbackBots;
+      case 'slow_net':
+        return l10n.feedbackSlowNet;
+      default:
+        return key;
     }
   }
 
   String _categoryLabel(AppLocalizations l10n) {
     switch (_category) {
-      case 'features': return l10n.feedbackCategoryFeatures;
-      case 'ux_design': return l10n.feedbackCategoryUxDesign;
-      case 'performance': return l10n.feedbackCategoryPerformance;
-      case 'security': return l10n.feedbackCategorySecurity;
-      case 'network': return l10n.feedbackCategoryNetworkSync;
-      default: return _category;
+      case 'features':
+        return l10n.feedbackCategoryFeatures;
+      case 'ux_design':
+        return l10n.feedbackCategoryUxDesign;
+      case 'performance':
+        return l10n.feedbackCategoryPerformance;
+      case 'security':
+        return l10n.feedbackCategorySecurity;
+      case 'network':
+        return l10n.feedbackCategoryNetworkSync;
+      default:
+        return _category;
     }
   }
 
@@ -82,7 +96,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   }
 
   String _buildMessage(AppLocalizations l10n) {
-    final selected = _ideas.entries.where((e) => e.value).map((e) => '- ${_ideaLabel(e.key, l10n)}').join('\n');
+    final selected = _ideas.entries
+        .where((e) => e.value)
+        .map((e) => '- ${_ideaLabel(e.key, l10n)}')
+        .join('\n');
 
     final title = _titleController.text.trim();
     final details = _detailsController.text.trim();
@@ -148,7 +165,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GlassCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Column(
                     children: [
                       DropdownButtonFormField<String>(
@@ -157,13 +175,24 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                           labelText: l10n.categoryLabel,
                         ),
                         items: [
-                          DropdownMenuItem(value: 'features', child: Text(l10n.feedbackCategoryFeatures)),
-                          DropdownMenuItem(value: 'ux_design', child: Text(l10n.feedbackCategoryUxDesign)),
-                          DropdownMenuItem(value: 'performance', child: Text(l10n.feedbackCategoryPerformance)),
-                          DropdownMenuItem(value: 'security', child: Text(l10n.feedbackCategorySecurity)),
-                          DropdownMenuItem(value: 'network', child: Text(l10n.feedbackCategoryNetworkSync)),
+                          DropdownMenuItem(
+                              value: 'features',
+                              child: Text(l10n.feedbackCategoryFeatures)),
+                          DropdownMenuItem(
+                              value: 'ux_design',
+                              child: Text(l10n.feedbackCategoryUxDesign)),
+                          DropdownMenuItem(
+                              value: 'performance',
+                              child: Text(l10n.feedbackCategoryPerformance)),
+                          DropdownMenuItem(
+                              value: 'security',
+                              child: Text(l10n.feedbackCategorySecurity)),
+                          DropdownMenuItem(
+                              value: 'network',
+                              child: Text(l10n.feedbackCategoryNetworkSync)),
                         ],
-                        onChanged: (v) => setState(() => _category = v ?? 'features'),
+                        onChanged: (v) =>
+                            setState(() => _category = v ?? 'features'),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
@@ -198,11 +227,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 const SizedBox(height: 16),
                 Text(
                   l10n.bigFeaturesTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 GlassCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   child: Column(
                     children: _ideas.entries.map((e) {
                       return CheckboxListTile(
@@ -210,7 +241,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         dense: false,
                         controlAffinity: ListTileControlAffinity.leading,
                         title: Text(_ideaLabel(e.key, l10n)),
-                        onChanged: (v) => setState(() => _ideas[e.key] = v ?? false),
+                        onChanged: (v) =>
+                            setState(() => _ideas[e.key] = v ?? false),
                       );
                     }).toList(),
                   ),
@@ -233,7 +265,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.send),
                         label: Text(l10n.shareButton),

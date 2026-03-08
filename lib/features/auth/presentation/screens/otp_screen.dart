@@ -4,8 +4,8 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class OtpScreen extends StatefulWidget {
+  const OtpScreen({required this.phone, super.key});
   final String phone;
-  const OtpScreen({super.key, required this.phone});
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -54,15 +54,17 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final primaryColor = Color(SettingsService.themeNotifier.value.primaryColorValue);
+    final primaryColor =
+        Color(SettingsService.themeNotifier.value.primaryColorValue);
     return Scaffold(
-  appBar: AppBar(title: Text(l10n.confirmCodeTitle)),
+      appBar: AppBar(title: Text(l10n.confirmCodeTitle)),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.codeSentTo(widget.phone), style: Theme.of(context).textTheme.bodyLarge),
+            Text(l10n.codeSentTo(widget.phone),
+                style: Theme.of(context).textTheme.bodyLarge),
             const SizedBox(height: 12),
             TextField(
               controller: _controller,
@@ -76,15 +78,25 @@ class _OtpScreenState extends State<OtpScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
               onPressed: _loading ? null : _submit,
-              child: _loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(l10n.confirmButton),
+              child: _loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
+                  : Text(l10n.confirmButton),
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: _secondsLeft > 0 ? null : () {
-                // Signal caller to resend by popping null and letting caller re-send token
-                Navigator.of(context).pop(null);
-              },
-              child: Text(_secondsLeft > 0 ? l10n.resendCountdown(_secondsLeft) : l10n.resendCodeButton),
+              onPressed: _secondsLeft > 0
+                  ? null
+                  : () {
+                      // Signal caller to resend by popping null and letting caller re-send token
+                      Navigator.of(context).pop();
+                    },
+              child: Text(_secondsLeft > 0
+                  ? l10n.resendCountdown(_secondsLeft)
+                  : l10n.resendCodeButton),
             ),
           ],
         ),

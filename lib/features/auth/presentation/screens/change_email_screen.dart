@@ -47,11 +47,13 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     try {
       // AppwriteService not available, skip server update
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.emailCannotBeChanged)));
+      messenger
+          .showSnackBar(SnackBar(content: Text(l10n.emailCannotBeChanged)));
       // navState.pop(true);
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(content: Text(l10n.changeEmailError(e.toString()))));
+      messenger.showSnackBar(
+          SnackBar(content: Text(l10n.changeEmailError(e.toString()))));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -63,13 +65,14 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.changeEmailTitle)),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: ValueListenableBuilder<bool>(
           valueListenable: SettingsService.paleVioletNotifier,
           builder: (c, pale, _) {
             final theme = Theme.of(context).copyWith(
               inputDecorationTheme: InputDecorationTheme(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 filled: pale,
                 fillColor: pale ? const Color(0xFFF6F0FF) : null,
               ),
@@ -82,17 +85,32 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
                   Text(l10n.changeEmailDescription),
                   if (_currentEmail != null) ...[
                     const SizedBox(height: 8),
-                    Text(l10n.currentPrefix, style: Theme.of(context).textTheme.bodySmall),
-                    Text(_currentEmail ?? '', style: Theme.of(context).textTheme.bodyMedium),
+                    Text(l10n.currentPrefix,
+                        style: Theme.of(context).textTheme.bodySmall),
+                    Text(_currentEmail ?? '',
+                        style: Theme.of(context).textTheme.bodyMedium),
                   ],
                   const SizedBox(height: 12),
-                  TextField(controller: _emailCtrl, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: l10n.newEmailLabel)),
+                  TextField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration:
+                          InputDecoration(labelText: l10n.newEmailLabel)),
                   const SizedBox(height: 12),
-                  TextField(controller: _pwdCtrl, obscureText: true, decoration: InputDecoration(labelText: l10n.currentPasswordLabel)),
+                  TextField(
+                      controller: _pwdCtrl,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                          labelText: l10n.currentPasswordLabel)),
                   const SizedBox(height: 18),
                   ElevatedButton(
                     onPressed: _loading ? null : _submit,
-                    child: _loading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l10n.changeEmailButton),
+                    child: _loading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text(l10n.changeEmailButton),
                   ),
                 ],
               ),

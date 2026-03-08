@@ -1,26 +1,27 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
 
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/services/dev_network_logger.dart';
 import 'package:two_space_app/core/services/update_service.dart';
-import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:two_space_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/register_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/home_screen.dart';
+import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:two_space_app/features/settings/presentation/screens/customization_screen.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // Флаги фичей для локального тестирования
 class FeatureFlags {
   static final ValueNotifier<bool> enableNewChatUI = ValueNotifier(false);
   static final ValueNotifier<bool> forceVideoCompression = ValueNotifier(true);
-  static final ValueNotifier<bool> enableAggressiveCaching = ValueNotifier(false);
+  static final ValueNotifier<bool> enableAggressiveCaching =
+      ValueNotifier(false);
 }
 
 class DevMenuScreen extends StatefulWidget {
@@ -30,7 +31,8 @@ class DevMenuScreen extends StatefulWidget {
   State<DevMenuScreen> createState() => _DevMenuScreenState();
 }
 
-class _DevMenuScreenState extends State<DevMenuScreen> with SingleTickerProviderStateMixin {
+class _DevMenuScreenState extends State<DevMenuScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final DevLogger _logger = DevLogger('DevMenu');
 
@@ -81,8 +83,8 @@ class _DevMenuScreenState extends State<DevMenuScreen> with SingleTickerProvider
 // ACTIONS TAB
 // ----------------------------------------------------------------------
 class _DevMenuActionsTab extends StatelessWidget {
-  final DevLogger logger;
   const _DevMenuActionsTab({required this.logger});
+  final DevLogger logger;
 
   @override
   Widget build(BuildContext context) {
@@ -97,53 +99,85 @@ class _DevMenuActionsTab extends StatelessWidget {
             prefixIcon: Icon(Icons.screen_share),
           ),
           items: const [
-            DropdownMenuItem(value: HomeScreen(), child: Text('🏠 Главный экран (Home)')),
-            DropdownMenuItem(value: LoginScreen(), child: Text('🔑 Вход (Login)')),
-            DropdownMenuItem(value: RegisterScreen(), child: Text('📝 Регистрация (Register)')),
-            DropdownMenuItem(value: CustomizationScreen(), child: Text('🎨 Кастомизация (Customization)')),
+            DropdownMenuItem(
+                value: HomeScreen(), child: Text('🏠 Главный экран (Home)')),
+            DropdownMenuItem(
+                value: LoginScreen(), child: Text('🔑 Вход (Login)')),
+            DropdownMenuItem(
+                value: RegisterScreen(),
+                child: Text('📝 Регистрация (Register)')),
+            DropdownMenuItem(
+                value: CustomizationScreen(),
+                child: Text('🎨 Кастомизация (Customization)')),
           ],
           onChanged: (screen) {
             if (screen != null) {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => screen));
             }
           },
         ),
         const SizedBox(height: 24),
-        
         _buildSectionTitle(context, 'Testing & Load Gen'),
         Wrap(
           spacing: 10,
           runSpacing: 10,
           children: [
-            _buildAction(context, '💥 Force Crash', Icons.bug_report, () {
-              throw Exception('Test Crash triggered from Dev Menu');
-            }, color: Colors.orange),
-            _buildAction(context, '🔥 1000 Mock Messages', Icons.data_array, () {
-               // Здесь в будущем можно вызывать сервис добавления моков в базу
-               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Load Gen: Added 1000 mock messages (simulated)')));
-            }, color: Colors.orange),
-             _buildAction(context, 'Обновить OTA', Icons.system_update, () async {
+            _buildAction(
+              context,
+              '💥 Force Crash',
+              Icons.bug_report,
+              () {
+                throw Exception('Test Crash triggered from Dev Menu');
+              },
+              color: Colors.orange,
+            ),
+            _buildAction(
+              context,
+              '🔥 1000 Mock Messages',
+              Icons.data_array,
+              () {
+                // Здесь в будущем можно вызывать сервис добавления моков в базу
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text(
+                        'Load Gen: Added 1000 mock messages (simulated)')));
+              },
+              color: Colors.orange,
+            ),
+            _buildAction(context, 'Обновить OTA', Icons.system_update,
+                () async {
               logger.info('Обновление...');
               await UpdateService.checkForUpdate();
             }),
           ],
         ),
         const SizedBox(height: 24),
-
         _buildSectionTitle(context, 'Storage & State'),
         Wrap(
           spacing: 10,
           runSpacing: 10,
           children: [
-            _buildAction(context, '🗑️ Clear Secure Storage', Icons.delete_forever, () async {
-              const storage = FlutterSecureStorage();
-              await storage.deleteAll();
-              logger.info('Secure storage cleared');
-            }, color: Colors.red),
-            _buildAction(context, '🗂️ Clear Cache Profile', Icons.layers_clear, () async {
-              await SettingsService.clearCachedProfile();
-              logger.info('Profile cache cleared');
-            }, color: Colors.red),
+            _buildAction(
+              context,
+              '🗑️ Clear Secure Storage',
+              Icons.delete_forever,
+              () async {
+                const storage = FlutterSecureStorage();
+                await storage.deleteAll();
+                logger.info('Secure storage cleared');
+              },
+              color: Colors.red,
+            ),
+            _buildAction(
+              context,
+              '🗂️ Clear Cache Profile',
+              Icons.layers_clear,
+              () async {
+                await SettingsService.clearCachedProfile();
+                logger.info('Profile cache cleared');
+              },
+              color: Colors.red,
+            ),
           ],
         ),
       ],
@@ -156,14 +190,16 @@ class _DevMenuActionsTab extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
       ),
     );
   }
 
-  Widget _buildAction(BuildContext context, String label, IconData icon, VoidCallback onTap, {Color? color}) {
+  Widget _buildAction(
+      BuildContext context, String label, IconData icon, VoidCallback onTap,
+      {Color? color}) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -203,7 +239,8 @@ class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
         ),
         SwitchListTile(
           title: const Text('Закрашивать перерисовки (RepaintRainbow)'),
-          subtitle: const Text('Подсвечивает элементы, которые перерисовываются'),
+          subtitle:
+              const Text('Подсвечивает элементы, которые перерисовываются'),
           value: debugRepaintRainbowEnabled,
           onChanged: (val) {
             setState(() {
@@ -227,7 +264,7 @@ class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
           value: WidgetsApp.showPerformanceOverlayOverride,
           onChanged: (val) {
             setState(() {
-               WidgetsApp.showPerformanceOverlayOverride = val;
+              WidgetsApp.showPerformanceOverlayOverride = val;
             });
           },
         ),
@@ -241,7 +278,8 @@ class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
 // ----------------------------------------------------------------------
 class _DevMenuFeatureFlagsTab extends StatefulWidget {
   @override
-  State<_DevMenuFeatureFlagsTab> createState() => _DevMenuFeatureFlagsTabState();
+  State<_DevMenuFeatureFlagsTab> createState() =>
+      _DevMenuFeatureFlagsTabState();
 }
 
 class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
@@ -251,8 +289,10 @@ class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
       padding: const EdgeInsets.all(16),
       children: [
         _buildFlagTile('Enable New Chat UI', FeatureFlags.enableNewChatUI),
-        _buildFlagTile('Force Video Compression', FeatureFlags.forceVideoCompression),
-        _buildFlagTile('Enable Aggressive Caching', FeatureFlags.enableAggressiveCaching),
+        _buildFlagTile(
+            'Force Video Compression', FeatureFlags.forceVideoCompression),
+        _buildFlagTile(
+            'Enable Aggressive Caching', FeatureFlags.enableAggressiveCaching),
       ],
     );
   }
@@ -287,11 +327,13 @@ class _DevMenuNetworkTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.wifi_off, size: 64, color: Colors.grey.withAlpha(128)),
+                Icon(Icons.wifi_off,
+                    size: 64, color: Colors.grey.withAlpha(128)),
                 const SizedBox(height: 16),
-                const Text('No Network Logs', style: TextStyle(color: Colors.grey)),
+                const Text('No Network Logs',
+                    style: TextStyle(color: Colors.grey)),
               ],
-            )
+            ),
           );
         }
         return ListView.separated(
@@ -299,15 +341,26 @@ class _DevMenuNetworkTab extends StatelessWidget {
           separatorBuilder: (c, i) => const Divider(height: 1),
           itemBuilder: (c, index) {
             final log = logs[index];
-            final color = (log.statusCode ?? 0) >= 400 ? Colors.red : Colors.green;
+            final color =
+                (log.statusCode ?? 0) >= 400 ? Colors.red : Colors.green;
             return ExpansionTile(
               leading: Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: color.withAlpha(50), borderRadius: BorderRadius.circular(8)),
-                child: Text(log.method, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+                decoration: BoxDecoration(
+                    color: color.withAlpha(50),
+                    borderRadius: BorderRadius.circular(8)),
+                child: Text(log.method,
+                    style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12)),
               ),
-              title: Text(log.url, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
-              subtitle: Text('${log.statusCode ?? '???'} • ${log.latencyMs}ms', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+              title: Text(log.url,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 14)),
+              subtitle: Text('${log.statusCode ?? '???'} • ${log.latencyMs}ms',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12)),
               children: [
                 if (log.requestBody != null)
                   _buildCodeBlock('Request', log.requestBody),
@@ -322,7 +375,7 @@ class _DevMenuNetworkTab extends StatelessWidget {
   }
 
   Widget _buildCodeBlock(String title, dynamic data) {
-    String pretty = '';
+    var pretty = '';
     try {
       if (data is Map || data is List) {
         pretty = const JsonEncoder.withIndent('  ').convert(data);
@@ -337,13 +390,22 @@ class _DevMenuNetworkTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
+          Text(title,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: Colors.grey)),
           const SizedBox(height: 4),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(8)),
-            child: SelectableText(pretty, style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.greenAccent)),
+            decoration: BoxDecoration(
+                color: Colors.black87, borderRadius: BorderRadius.circular(8)),
+            child: SelectableText(pretty,
+                style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                    color: Colors.greenAccent)),
           ),
         ],
       ),
@@ -372,11 +434,12 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
   Future<void> _loadInfo() async {
     final info = await PackageInfo.fromPlatform();
     final deviceInfoPlugin = DeviceInfoPlugin();
-    String devInfo = '';
-    
+    var devInfo = '';
+
     if (Platform.isAndroid) {
       final androidInfo = await deviceInfoPlugin.androidInfo;
-      devInfo = '${androidInfo.manufacturer} ${androidInfo.model} (Android ${androidInfo.version.release})';
+      devInfo =
+          '${androidInfo.manufacturer} ${androidInfo.model} (Android ${androidInfo.version.release})';
     } else if (Platform.isIOS) {
       final iosInfo = await deviceInfoPlugin.iosInfo;
       devInfo = '${iosInfo.name} (iOS ${iosInfo.systemVersion})';
@@ -390,7 +453,8 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_packageInfo == null) return const Center(child: CircularProgressIndicator());
+    if (_packageInfo == null)
+      return const Center(child: CircularProgressIndicator());
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -403,7 +467,8 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
         ListTile(
           leading: const Icon(Icons.numbers),
           title: const Text('Version'),
-          subtitle: Text('${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})'),
+          subtitle: Text(
+              '${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})'),
         ),
         ListTile(
           leading: const Icon(Icons.code),

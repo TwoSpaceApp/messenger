@@ -1,13 +1,14 @@
 import 'dart:typed_data';
+
 import 'package:two_space_app/core/network/aegis/message.dart';
-import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
+import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 
 /// Exception thrown for protocol-related errors
 class ProtocolError implements Exception {
-  final String message;
   ProtocolError(this.message);
-  
+  final String message;
+
   @override
   String toString() => 'ProtocolError: $message';
 }
@@ -21,7 +22,7 @@ class MessageEncoder {
     }
 
     final buffer = Uint8List(message.totalSize);
-    int offset = 0;
+    var offset = 0;
 
     // Write magic (4 bytes, big-endian)
     _writeUint32BigEndian(buffer, offset, message.magic);
@@ -62,7 +63,7 @@ class MessageEncoder {
       throw ProtocolError('Message too short: ${data.length}');
     }
 
-    int offset = 0;
+    var offset = 0;
     final message = Message();
 
     // Read magic (4 bytes, big-endian)
@@ -70,7 +71,8 @@ class MessageEncoder {
     offset += 4;
 
     if (message.magic != ProtocolConstants.magic) {
-      throw ProtocolError('Invalid magic: 0x${message.magic.toRadixString(16)}');
+      throw ProtocolError(
+          'Invalid magic: 0x${message.magic.toRadixString(16)}');
     }
 
     // Read version and flags
@@ -95,12 +97,13 @@ class MessageEncoder {
       throw ProtocolError('Payload too large: ${message.payloadLength}');
     }
 
-    final expectedSize = ProtocolConstants.headerSize + 
-                        message.payloadLength + 
-                        ProtocolConstants.macSize;
-    
+    final expectedSize = ProtocolConstants.headerSize +
+        message.payloadLength +
+        ProtocolConstants.macSize;
+
     if (data.length < expectedSize) {
-      throw ProtocolError('Incomplete message: expected $expectedSize, got ${data.length}');
+      throw ProtocolError(
+          'Incomplete message: expected $expectedSize, got ${data.length}');
     }
 
     // Read payload if present
@@ -145,9 +148,9 @@ class MessageEncoder {
 
   static int _readUint32BigEndian(Uint8List buffer, int offset) {
     return (buffer[offset] << 24) |
-           (buffer[offset + 1] << 16) |
-           (buffer[offset + 2] << 8) |
-           buffer[offset + 3];
+        (buffer[offset + 1] << 16) |
+        (buffer[offset + 2] << 8) |
+        buffer[offset + 3];
   }
 
   static int _readUint16BigEndian(Uint8List buffer, int offset) {
@@ -156,12 +159,12 @@ class MessageEncoder {
 
   static int _readUint64BigEndian(Uint8List buffer, int offset) {
     return (buffer[offset] << 56) |
-           (buffer[offset + 1] << 48) |
-           (buffer[offset + 2] << 40) |
-           (buffer[offset + 3] << 32) |
-           (buffer[offset + 4] << 24) |
-           (buffer[offset + 5] << 16) |
-           (buffer[offset + 6] << 8) |
-           buffer[offset + 7];
+        (buffer[offset + 1] << 48) |
+        (buffer[offset + 2] << 40) |
+        (buffer[offset + 3] << 32) |
+        (buffer[offset + 4] << 24) |
+        (buffer[offset + 5] << 16) |
+        (buffer[offset + 6] << 8) |
+        buffer[offset + 7];
   }
 }

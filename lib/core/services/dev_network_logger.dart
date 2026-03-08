@@ -1,6 +1,17 @@
 import 'dart:async';
 
 class DevNetworkLog {
+  DevNetworkLog({
+    required this.id,
+    required this.timestamp,
+    required this.method,
+    required this.url,
+    required this.latencyMs,
+    this.statusCode,
+    this.requestBody,
+    this.responseBody,
+    this.headers = const {},
+  });
   final String id;
   final DateTime timestamp;
   final String method;
@@ -10,23 +21,11 @@ class DevNetworkLog {
   final dynamic requestBody;
   final dynamic responseBody;
   final Map<String, dynamic> headers;
-
-  DevNetworkLog({
-    required this.id,
-    required this.timestamp,
-    required this.method,
-    required this.url,
-    this.statusCode,
-    required this.latencyMs,
-    this.requestBody,
-    this.responseBody,
-    this.headers = const {},
-  });
 }
 
 class DevNetworkLogger {
-  static final DevNetworkLogger instance = DevNetworkLogger._internal();
   DevNetworkLogger._internal();
+  static final DevNetworkLogger instance = DevNetworkLogger._internal();
 
   final List<DevNetworkLog> _logs = [];
   final _controller = StreamController<List<DevNetworkLog>>.broadcast();
@@ -54,7 +53,7 @@ class DevNetworkLogger {
       responseBody: responseBody,
       headers: headers,
     );
-    
+
     _logs.insert(0, log);
     if (_logs.length > 200) {
       _logs.removeLast();

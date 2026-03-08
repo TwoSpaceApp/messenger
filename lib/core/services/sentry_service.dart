@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:two_space_app/core/config/environment.dart';
 
 /// A centralized service for interacting with Sentry.
@@ -38,21 +38,21 @@ class SentryService {
 
     try {
       final packageInfo = await PackageInfo.fromPlatform();
-      
+
       await SentryFlutter.init(
         (options) {
           options.dsn = Environment.sentryDsn;
           options.tracesSampleRate = 1.0;
           options.release = '${packageInfo.version}+${packageInfo.buildNumber}';
           options.environment = Environment.appEnv;
-          
+
           // Performance monitoring for slow and frozen frames
           options.enableAutoPerformanceTracing = true;
         },
       );
-      
+
       _initialized = true;
-      
+
       if (kDebugMode) {
         print('Sentry initialized successfully.');
       }
@@ -61,7 +61,7 @@ class SentryService {
         print('Failed to initialize Sentry: $e\n$stackTrace');
       }
     }
-    
+
     _initialized = true;
   }
 
@@ -83,12 +83,14 @@ class SentryService {
     if (!_initialized) return;
 
     Sentry.configureScope((scope) {
-      scope.setUser(SentryUser(
-        id: userId,
-        email: email,
-        username: username,
-        data: extras,
-      ));
+      scope.setUser(
+        SentryUser(
+          id: userId,
+          email: email,
+          username: username,
+          data: extras,
+        ),
+      );
     });
   }
 
@@ -146,7 +148,7 @@ class SentryService {
           }
         },
       );
-      
+
       if (kDebugMode) {
         print('Sentry message captured: $message');
       }
@@ -172,13 +174,15 @@ class SentryService {
   }) {
     if (!_initialized) return;
 
-    Sentry.addBreadcrumb(Breadcrumb(
-      message: message,
-      category: category,
-      data: data,
-      level: level,
-      timestamp: DateTime.now(),
-    ));
+    Sentry.addBreadcrumb(
+      Breadcrumb(
+        message: message,
+        category: category,
+        data: data,
+        level: level,
+        timestamp: DateTime.now(),
+      ),
+    );
   }
 
   static ISentrySpan? startTransaction(String name, String operation) {

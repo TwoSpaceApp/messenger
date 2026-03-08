@@ -1,12 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:two_space_app/features/chat/data/services/group_matrix_service.dart';
-import 'package:two_space_app/core/models/group.dart';
-import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
-import 'package:two_space_app/core/utils/responsive.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/models/group.dart';
+import 'package:two_space_app/core/utils/responsive.dart';
+import 'package:two_space_app/features/chat/data/services/group_matrix_service.dart';
+import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});
@@ -71,7 +72,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     try {
       final group = await _groupService.createGroupRoom(
         name: _nameController.text,
-        description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
+        description: _descriptionController.text.isEmpty
+            ? null
+            : _descriptionController.text,
         visibility: _visibility,
         showMessageHistory: _showMessageHistory,
       );
@@ -84,9 +87,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         final chatObj = Chat(
           id: group.roomId,
           name: group.name,
-          avatarUrl: null,
           members: group.members.map((m) => m.userId).toList(),
-          lastMessage: '',
           roomType: 'group',
           lastMessageTime: DateTime.now(),
         );
@@ -125,11 +126,18 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         padding: EdgeInsets.all(16 * Responsive.scaleFor(context)),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline.withValues(alpha: 0.3),
-            width: isSelected ? 2 * Responsive.scaleWidth(context) : 1 * Responsive.scaleWidth(context),
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline.withValues(alpha: 0.3),
+            width: isSelected
+                ? 2 * Responsive.scaleWidth(context)
+                : 1 * Responsive.scaleWidth(context),
           ),
-          borderRadius: BorderRadius.circular(12 * Responsive.scaleWidth(context)),
-          color: isSelected ? theme.colorScheme.primary.withValues(alpha: 0.08) : null,
+          borderRadius:
+              BorderRadius.circular(12 * Responsive.scaleWidth(context)),
+          color: isSelected
+              ? theme.colorScheme.primary.withValues(alpha: 0.08)
+              : null,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +145,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             Icon(
               icon,
               size: 24 * Responsive.scaleFor(context),
-              color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline,
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outline,
             ),
             SizedBox(width: 16 * Responsive.scaleWidth(context)),
             Expanded(
@@ -183,17 +193,27 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-          title: Text(l10n.createRoomTitle),
+        title: Text(l10n.createRoomTitle),
         centerTitle: !isWideScreen,
         actions: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8),
             child: TextButton.icon(
               onPressed: _isLoading ? null : _createGroup,
-              icon: _isLoading ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary))) : const Icon(Icons.check),
-                label: Text(l10n.createButton),
+              icon: _isLoading
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(
+                              theme.colorScheme.primary)))
+                  : const Icon(Icons.check),
+              label: Text(l10n.createButton),
               style: TextButton.styleFrom(
-                backgroundColor: _isLoading ? null : theme.colorScheme.primary.withValues(alpha: 0.1),
+                backgroundColor: _isLoading
+                    ? null
+                    : theme.colorScheme.primary.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -220,7 +240,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                           color: isDark ? Colors.grey[800] : Colors.grey[200],
                           borderRadius: BorderRadius.circular(60),
                           border: Border.all(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.3),
                             width: 2,
                           ),
                         ),
@@ -235,7 +256,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                             : Icon(
                                 Icons.add_a_photo,
                                 size: 40,
-                                color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                                color: theme.colorScheme.primary
+                                    .withValues(alpha: 0.6),
                               ),
                       ),
                     ),
@@ -245,7 +267,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   // Group name field
                   Text(
                     l10n.roomNameLabel,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   TextField(
@@ -257,13 +280,15 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                          color:
+                              theme.colorScheme.outline.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                          color:
+                              theme.colorScheme.outline.withValues(alpha: 0.2),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -284,7 +309,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   // Description field
                   Text(
                     l10n.roomTopicLabel,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   TextField(
@@ -297,13 +323,15 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                          color:
+                              theme.colorScheme.outline.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                          color:
+                              theme.colorScheme.outline.withValues(alpha: 0.2),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -324,18 +352,19 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   // Visibility section
                   Text(
                     l10n.roomVisibilityLabel,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 12),
                   _buildVisibilityOption(
-                      title: l10n.privateRoomOption,
-                      subtitle: l10n.privateRoomSubtitle,
+                    title: l10n.privateRoomOption,
+                    subtitle: l10n.privateRoomSubtitle,
                     value: GroupVisibility.private,
                     icon: Icons.lock,
                   ),
                   _buildVisibilityOption(
-                      title: l10n.publicRoomOption,
-                      subtitle: l10n.publicRoomSubtitle,
+                    title: l10n.publicRoomOption,
+                    subtitle: l10n.publicRoomSubtitle,
                     value: GroupVisibility.public,
                     icon: Icons.public,
                   ),
@@ -355,11 +384,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         setState(() => _showMessageHistory = value ?? false);
                       },
                       title: Text(
-                          l10n.showHistoryLabel,
-                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                        ),
-                        subtitle: Text(
-                          l10n.showHistorySubtitle,
+                        l10n.showHistoryLabel,
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      subtitle: Text(
+                        l10n.showHistorySubtitle,
                         style: theme.textTheme.bodySmall,
                       ),
                     ),

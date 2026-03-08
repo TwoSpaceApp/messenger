@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/features/settings/data/services/settings_service.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
-import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class CustomizationScreen extends StatefulWidget {
   const CustomizationScreen({super.key});
@@ -13,12 +13,13 @@ class CustomizationScreen extends StatefulWidget {
   State<CustomizationScreen> createState() => _CustomizationScreenState();
 }
 
-class _CustomizationScreenState extends State<CustomizationScreen> with SingleTickerProviderStateMixin {
+class _CustomizationScreenState extends State<CustomizationScreen>
+    with SingleTickerProviderStateMixin {
   late int _selectedColor;
   late TabController _tabController;
-  double _fontSize = 14.0;
+  double _fontSize = 14;
   bool _compactMode = false;
-  
+
   // Floating circles settings
   late bool _enableFloatingCircles;
   late double _floatingCirclesSpeed;
@@ -32,7 +33,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
     super.initState();
     _selectedColor = SettingsService.themeNotifier.value.primaryColorValue;
     _tabController = TabController(length: 3, vsync: this);
-    
+
     // Load floating circles settings
     final settings = SettingsService.themeNotifier.value;
     _enableFloatingCircles = settings.enableFloatingCircles;
@@ -83,7 +84,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: ScreenBackground(
@@ -92,7 +93,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     IconButton(
@@ -111,7 +112,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   ],
                 ),
               ),
-              
+
               // Tab bar
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -127,12 +128,14 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   indicatorSize: TabBarIndicatorSize.tab,
                   tabs: [
                     Tab(icon: const Icon(Icons.palette), text: l10n.colorsTab),
-                    Tab(icon: const Icon(Icons.font_download), text: l10n.fontsTab),
+                    Tab(
+                        icon: const Icon(Icons.font_download),
+                        text: l10n.fontsTab),
                     Tab(icon: const Icon(Icons.tune), text: l10n.effectsTab),
                   ],
                 ),
               ),
-              
+
               // Tab content
               Expanded(
                 child: TabBarView(
@@ -154,22 +157,24 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
   Widget _buildColorTab() {
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Card(
             elevation: 2,
             color: Colors.white.withAlpha(20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.palette, color: Theme.of(context).colorScheme.primary),
+                      Icon(Icons.palette,
+                          color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
                       Text(
                         l10n.selectColorTheme,
@@ -226,7 +231,12 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     width: selected ? 2 : 1,
                   ),
                   boxShadow: selected
-                      ? [BoxShadow(color: Color(v).withAlpha(80), blurRadius: 8, offset: const Offset(0, 4))]
+                      ? [
+                          BoxShadow(
+                              color: Color(v).withAlpha(80),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4))
+                        ]
                       : null,
                 ),
                 child: Material(
@@ -235,7 +245,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                     borderRadius: BorderRadius.circular(UITokens.cornerSm),
                     onTap: () => _select(v),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       child: Row(
                         children: [
                           Container(
@@ -244,7 +255,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                             decoration: BoxDecoration(
                               color: Color(v),
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white.withAlpha(100), width: 2),
+                              border: Border.all(
+                                  color: Colors.white.withAlpha(100), width: 2),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -252,14 +264,19 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                             child: Text(
                               name,
                               style: TextStyle(
-                                color: selected ? Colors.white : Colors.white.withAlpha(200),
-                                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                                color: selected
+                                    ? Colors.white
+                                    : Colors.white.withAlpha(200),
+                                fontWeight: selected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (selected)
-                            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                            const Icon(Icons.check_circle,
+                                color: Colors.white, size: 20),
                         ],
                       ),
                     ),
@@ -277,22 +294,24 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
   Widget _buildFontTab() {
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Card(
             elevation: 2,
             color: Colors.white.withAlpha(20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.font_download, color: Theme.of(context).colorScheme.primary),
+                      Icon(Icons.font_download,
+                          color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
                       Text(
                         l10n.fontSettingsTitle,
@@ -333,20 +352,33 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
               final sel = f == _selectedFont;
               final previewSize = f == 'Press Start 2P' ? 12.0 : 16.0;
               return ChoiceChip(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                avatar: sel ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                avatar: sel
+                    ? const Icon(Icons.check, size: 18, color: Colors.white)
+                    : null,
                 label: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Aa', style: TextStyle(fontFamily: f, fontWeight: _resolveFontWeight(600), fontSize: previewSize)),
+                    Text('Aa',
+                        style: TextStyle(
+                            fontFamily: f,
+                            fontWeight: _resolveFontWeight(600),
+                            fontSize: previewSize)),
                     const SizedBox(width: 8),
-                    Text(f, style: TextStyle(fontFamily: f, fontWeight: _resolveFontWeight(_selectedWeight), fontSize: previewSize)),
+                    Text(f,
+                        style: TextStyle(
+                            fontFamily: f,
+                            fontWeight: _resolveFontWeight(_selectedWeight),
+                            fontSize: previewSize)),
                   ],
                 ),
                 selected: sel,
-                selectedColor: Theme.of(context).colorScheme.primary.withAlpha(150),
+                selectedColor:
+                    Theme.of(context).colorScheme.primary.withAlpha(150),
                 backgroundColor: Colors.white.withAlpha(20),
-                labelStyle: TextStyle(color: sel ? Colors.white : Colors.white.withAlpha(180)),
+                labelStyle: TextStyle(
+                    color: sel ? Colors.white : Colors.white.withAlpha(180)),
                 onSelected: (_) {
                   _setFont(f);
                   setState(() => _selectedFont = f);
@@ -367,57 +399,61 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
           Card(
             elevation: 1,
             color: Colors.white.withAlpha(15),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: StatefulBuilder(builder: (c, setLocal) {
-                return Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.format_size, size: 20, color: Colors.white70),
-                        Expanded(
-                          child: Slider(
-                            min: 300,
-                            max: 900,
-                            divisions: 6,
-                            value: _selectedWeight.toDouble().clamp(300, 900),
-                            label: '$_selectedWeight',
-                            onChanged: (v) {
-                              setLocal(() => _selectedWeight = v.round());
-                              setState(() {});
-                            },
-                            onChangeEnd: (v) async {
-                              await SettingsService.setFontWeight(v.round());
-                            },
-                          ),
-                        ),
-                        Container(
-                          width: 48,
-                          alignment: Alignment.center,
-                          child: Text(
-                            '$_selectedWeight',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
+              padding: const EdgeInsets.all(16),
+              child: StatefulBuilder(
+                builder: (c, setLocal) {
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.format_size,
+                              size: 20, color: Colors.white70),
+                          Expanded(
+                            child: Slider(
+                              min: 300,
+                              max: 900,
+                              divisions: 6,
+                              value: _selectedWeight.toDouble().clamp(300, 900),
+                              label: '$_selectedWeight',
+                              onChanged: (v) {
+                                setLocal(() => _selectedWeight = v.round());
+                                setState(() {});
+                              },
+                              onChangeEnd: (v) async {
+                                await SettingsService.setFontWeight(v.round());
+                              },
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.fontPreview,
-                      style: TextStyle(
-                        fontFamily: _selectedFont,
-                        fontWeight: _resolveFontWeight(_selectedWeight),
-                        fontSize: 18,
-                        color: Colors.white,
+                          Container(
+                            width: 48,
+                            alignment: Alignment.center,
+                            child: Text(
+                              '$_selectedWeight',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                );
-              }),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.fontPreview,
+                        style: TextStyle(
+                          fontFamily: _selectedFont,
+                          fontWeight: _resolveFontWeight(_selectedWeight),
+                          fontSize: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -429,7 +465,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
   Widget _buildEffectsTab() {
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -437,15 +473,17 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
           Card(
             elevation: 2,
             color: Colors.white.withAlpha(20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.blur_circular, color: Theme.of(context).colorScheme.primary),
+                      Icon(Icons.blur_circular,
+                          color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
                       Text(
                         l10n.floatingCirclesLabel,
@@ -470,18 +508,22 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
             ),
           ),
           const SizedBox(height: 16),
-          
+
           Card(
             elevation: 1,
             color: Colors.white.withAlpha(15),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Column(
               children: [
                 SwitchListTile(
                   secondary: const Icon(Icons.blur_on, color: Colors.white70),
-                  title: Text(l10n.enableCircles, style: const TextStyle(color: Colors.white)),
+                  title: Text(l10n.enableCircles,
+                      style: const TextStyle(color: Colors.white)),
                   subtitle: Text(
-                    _enableFloatingCircles ? l10n.circlesVisible : l10n.circlesHidden,
+                    _enableFloatingCircles
+                        ? l10n.circlesVisible
+                        : l10n.circlesHidden,
                     style: TextStyle(color: Colors.white.withAlpha(150)),
                   ),
                   value: _enableFloatingCircles,
@@ -493,29 +535,33 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                 const Divider(height: 1, color: Colors.white24),
                 SwitchListTile(
                   secondary: const Icon(Icons.sensors, color: Colors.white70),
-                  title: Text(l10n.parallaxEffect, style: const TextStyle(color: Colors.white)),
+                  title: Text(l10n.parallaxEffect,
+                      style: const TextStyle(color: Colors.white)),
                   subtitle: Text(
                     _enableParallax ? l10n.reactOnTilt : l10n.staticMotion,
                     style: TextStyle(color: Colors.white.withAlpha(150)),
                   ),
                   value: _enableParallax,
-                  onChanged: _enableFloatingCircles ? (v) async {
-                    setState(() => _enableParallax = v);
-                    await SettingsService.updateTheme(enableParallax: v);
-                  } : null,
+                  onChanged: _enableFloatingCircles
+                      ? (v) async {
+                          setState(() => _enableParallax = v);
+                          await SettingsService.updateTheme(enableParallax: v);
+                        }
+                      : null,
                 ),
               ],
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Card(
             elevation: 1,
             color: Colors.white.withAlpha(15),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -525,7 +571,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                       const SizedBox(width: 8),
                       Text(
                         l10n.circlesSpeedLabel,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
                       Text(
@@ -537,47 +584,59 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   const SizedBox(height: 8),
                   Slider(
                     min: 0.2,
-                    max: 2.0,
+                    max: 2,
                     divisions: 18,
                     value: _floatingCirclesSpeed,
                     label: '${(_floatingCirclesSpeed * 100).round()}%',
-                    onChanged: _enableFloatingCircles ? (v) {
-                      setState(() => _floatingCirclesSpeed = v);
-                    } : null,
+                    onChanged: _enableFloatingCircles
+                        ? (v) {
+                            setState(() => _floatingCirclesSpeed = v);
+                          }
+                        : null,
                     onChangeEnd: (v) async {
-                      await SettingsService.updateTheme(floatingCirclesSpeed: v);
+                      await SettingsService.updateTheme(
+                          floatingCirclesSpeed: v);
                     },
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(l10n.speedSlow, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
-                      Text(l10n.speedFast, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
+                      Text(l10n.speedSlow,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withAlpha(120))),
+                      Text(l10n.speedFast,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withAlpha(120))),
                     ],
                   ),
                 ],
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Card(
             elevation: 1,
             color: Colors.white.withAlpha(15),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.opacity, color: Colors.white70, size: 20),
+                      const Icon(Icons.opacity,
+                          color: Colors.white70, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         l10n.brightnessLabel,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
                       Text(
@@ -589,44 +648,54 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   const SizedBox(height: 8),
                   Slider(
                     min: 0.1,
-                    max: 1.0,
                     divisions: 9,
                     value: _floatingCirclesOpacity,
                     label: '${(_floatingCirclesOpacity * 100).round()}%',
-                    onChanged: _enableFloatingCircles ? (v) {
-                      setState(() => _floatingCirclesOpacity = v);
-                    } : null,
+                    onChanged: _enableFloatingCircles
+                        ? (v) {
+                            setState(() => _floatingCirclesOpacity = v);
+                          }
+                        : null,
                     onChangeEnd: (v) async {
-                      await SettingsService.updateTheme(floatingCirclesOpacity: v);
+                      await SettingsService.updateTheme(
+                          floatingCirclesOpacity: v);
                     },
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(l10n.dimOpacity, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
-                      Text(l10n.brightOpacity, style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(120))),
+                      Text(l10n.dimOpacity,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withAlpha(120))),
+                      Text(l10n.brightOpacity,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white.withAlpha(120))),
                     ],
                   ),
                 ],
               ),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Other UI settings
           Card(
             elevation: 2,
             color: Colors.white.withAlpha(20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.tune, color: Theme.of(context).colorScheme.primary),
+                      Icon(Icons.tune,
+                          color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
                       Text(
                         l10n.advancedSettingsLabel,
@@ -643,16 +712,18 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
             ),
           ),
           const SizedBox(height: 16),
-          
+
           Card(
             elevation: 1,
             color: Colors.white.withAlpha(15),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.corner)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Column(
               children: [
                 ListTile(
                   leading: const Icon(Icons.text_fields, color: Colors.white70),
-                  title: Text(l10n.textSizeLabel, style: const TextStyle(color: Colors.white)),
+                  title: Text(l10n.textSizeLabel,
+                      style: const TextStyle(color: Colors.white)),
                   subtitle: Text(
                     '${_fontSize.toStringAsFixed(0)} pt',
                     style: TextStyle(color: Colors.white.withAlpha(150)),
@@ -660,8 +731,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                   trailing: SizedBox(
                     width: 120,
                     child: Slider(
-                      min: 12.0,
-                      max: 20.0,
+                      min: 12,
+                      max: 20,
                       divisions: 8,
                       value: _fontSize,
                       onChanged: (v) => setState(() => _fontSize = v),
@@ -671,7 +742,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> with SingleTi
                 const Divider(height: 1, color: Colors.white24),
                 SwitchListTile(
                   secondary: const Icon(Icons.compress, color: Colors.white70),
-                  title: Text(l10n.compactModeLabel, style: const TextStyle(color: Colors.white)),
+                  title: Text(l10n.compactModeLabel,
+                      style: const TextStyle(color: Colors.white)),
                   subtitle: Text(
                     l10n.compactMode,
                     style: TextStyle(color: Colors.white.withAlpha(150)),

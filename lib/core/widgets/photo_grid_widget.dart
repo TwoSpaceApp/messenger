@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/utils/responsive.dart';
 
 class PhotoGridWidget extends StatelessWidget {
-  final List<String> mediaUrls;
-  final int maxItems;
-  final Function(int)? onMediaTap;
-
-  const PhotoGridWidget({super.key, 
+  const PhotoGridWidget({
     required this.mediaUrls,
+    super.key,
     this.maxItems = 4,
     this.onMediaTap,
   });
+  final List<String> mediaUrls;
+  final int maxItems;
+  final Function(int)? onMediaTap;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,6 @@ class PhotoGridWidget extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: (scale > 1.5) ? 3 : 2,
-          childAspectRatio: 1,
           crossAxisSpacing: UITokens.spaceSm * scale,
           mainAxisSpacing: UITokens.spaceSm * scale,
         ),

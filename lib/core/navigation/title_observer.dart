@@ -6,16 +6,16 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 class TitleObserver extends NavigatorObserver {
   void _updateTitle(Route<dynamic>? route) {
     if (route == null || route.settings.name == null) return;
-    
+
     final context = navigator?.context;
     if (context == null) return;
-    
+
     final l10n = AppLocalizations.of(context);
     if (l10n == null) return;
 
-    String suffix = '';
+    var suffix = '';
     final name = route.settings.name!;
-    
+
     if (name == AppStrings.routeLogin) {
       suffix = l10n.loginTitle;
     } else if (name == AppStrings.routeRegister) {
@@ -33,9 +33,9 @@ class TitleObserver extends NavigatorObserver {
     } else if (name == AppStrings.routeFeedback) {
       suffix = 'Feedback';
     }
-    
+
     final newTitle = suffix.isNotEmpty ? 'TwoSpace - $suffix' : 'TwoSpace';
-    
+
     SystemChrome.setApplicationSwitcherDescription(
       ApplicationSwitcherDescription(
         label: newTitle,

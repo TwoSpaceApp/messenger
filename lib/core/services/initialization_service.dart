@@ -7,36 +7,34 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 
 /// Result of an initialization step
 class InitStepResult {
+  InitStepResult({
+    required this.stepName,
+    required this.success,
+    required this.duration,
+    this.error,
+    this.stackTrace,
+  });
   final String stepName;
   final bool success;
   final dynamic error;
   final StackTrace? stackTrace;
   final Duration duration;
 
-  InitStepResult({
-    required this.stepName,
-    required this.success,
-    this.error,
-    this.stackTrace,
-    required this.duration,
-  });
-
   bool get failed => !success;
 }
 
 /// Overall initialization result
 class InitializationResult {
-  final List<InitStepResult> steps;
-  final Duration totalDuration;
-
   InitializationResult({
     required this.steps,
     required this.totalDuration,
   });
+  final List<InitStepResult> steps;
+  final Duration totalDuration;
 
   bool get hasFailures => steps.any((s) => s.failed);
   bool get allSuccessful => steps.every((s) => s.success);
-  
+
   List<InitStepResult> get failures => steps.where((s) => s.failed).toList();
   List<InitStepResult> get successes => steps.where((s) => s.success).toList();
 
@@ -44,12 +42,16 @@ class InitializationResult {
     return {
       'totalDuration': totalDuration.inMilliseconds,
       'hasFailures': hasFailures,
-      'steps': steps.map((s) => {
-        'name': s.stepName,
-        'success': s.success,
-        'duration': s.duration.inMilliseconds,
-        'error': s.error?.toString(),
-      }).toList(),
+      'steps': steps
+          .map(
+            (s) => {
+              'name': s.stepName,
+              'success': s.success,
+              'duration': s.duration.inMilliseconds,
+              'error': s.error?.toString(),
+            },
+          )
+          .toList(),
     };
   }
 }
@@ -87,7 +89,8 @@ class InitializationService {
       // Stop if critical step failed
       if (stepResult.failed && step.critical) {
         if (kDebugMode) {
-          print('❌ Critical step "${step.name}" failed. Stopping initialization.');
+          print(
+              '❌ Critical step "${step.name}" failed. Stopping initialization.');
         }
         break;
       }
@@ -106,7 +109,7 @@ class InitializationService {
   /// Execute a single initialization step with timeout and error handling
   static Future<InitStepResult> _executeStep(InitializationStep step) async {
     final stepStartTime = DateTime.now();
-    
+
     try {
       if (kDebugMode) {
         print('➡️ Starting: ${step.name}');
@@ -115,12 +118,13 @@ class InitializationService {
       await step.execute().timeout(
         step.timeout,
         onTimeout: () {
-          throw TimeoutException('Step timed out after ${step.timeout.inSeconds}s');
+          throw TimeoutException(
+              'Step timed out after ${step.timeout.inSeconds}s');
         },
       );
 
       final duration = DateTime.now().difference(stepStartTime);
-      
+
       if (kDebugMode) {
         print('✅ Completed: ${step.name} (${duration.inMilliseconds}ms)');
       }
@@ -132,7 +136,7 @@ class InitializationService {
       );
     } catch (e, stackTrace) {
       final duration = DateTime.now().difference(stepStartTime);
-      
+
       if (kDebugMode) {
         print('❌ Failed: ${step.name} - $e');
       }
@@ -172,14 +176,14 @@ class InitializationService {
     print('=' * 50);
     print('Total Duration: ${result.totalDuration.inMilliseconds}ms');
     print('Successful: ${result.successes.length}/${result.steps.length}');
-    
+
     if (result.hasFailures) {
       print('\nFailed Steps:');
       for (final failure in result.failures) {
         print('  - ${failure.stepName}: ${failure.error}');
       }
     }
-    
+
     print('=' * 50 + '\n');
   }
 }
@@ -233,7 +237,7 @@ class _EnvironmentValidationStep implements InitializationStep {
   @override
   Future<void> execute() async {
     final validationResult = await EnvironmentValidator.validateOnStartup();
-    
+
     if (!validationResult.isValid) {
       final errors = validationResult.errors.join(', ');
       if (kDebugMode) {
@@ -277,8 +281,8 @@ class _MatrixJwtStep implements InitializationStep {
 }
 
 class TimeoutException implements Exception {
-  final String message;
   TimeoutException(this.message);
+  final String message;
 
   @override
   String toString() => 'TimeoutException: $message';

@@ -1638,4 +1638,55 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get sevenDays => '7 dni';
+
+  @override
+  String get settingsThemeSelection => 'Theme';
+
+  @override
+  String get settingsNotificationNew => 'Notifications';
+
+  @override
+  String get settingsDoNotDisturb => 'Do Not Disturb';
+
+  @override
+  String get settingsSoundOptions => 'Sound Settings';
+
+  @override
+  String get settingsStorageManagement => 'Storage Management';
+
+  @override
+  String get settingsStorageUsage => 'Storage Usage';
+
+  @override
+  String get settingsStorageAppSize => 'App Size';
+
+  @override
+  String get settingsStorageClearBtn => 'Clear Selected';
+
+  @override
+  String get settingsStorageKeepChat => 'Keep Chat Data';
+
+  @override
+  String get settingsStorageKeepChannel => 'Keep Channel Data';
+
+  @override
+  String get settingsStorageKeepGroup => 'Keep Group Data';
+
+  @override
+  String get settingsAboutPropose => 'Propose Improvement';
+
+  @override
+  String get settingsAboutCheckUpdate => 'Check for Updates';
+
+  @override
+  String get biometricsEnable => 'App Lock (Biometrics/PIN)';
+
+  @override
+  String get biometricsSetup => 'Setup App Lock';
+
+  @override
+  String get contactsTwoSpaceYes => 'Uses TwoSpace';
+
+  @override
+  String get contactsTwoSpaceNo => 'Not in TwoSpace';
 }

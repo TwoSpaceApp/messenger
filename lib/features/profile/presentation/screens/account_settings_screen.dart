@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -79,7 +79,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed ?? false) {
       // TODO: Implement account deletion
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.deleteFeatureLater)),
@@ -114,7 +114,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               ),
               GlassCard(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Column(
                     children: [
                       SwitchListTile(
@@ -128,7 +129,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             context.push('/tfa-setup');
                           }
                         },
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
                       ),
                       const Divider(height: 1),
                       SwitchListTile(
@@ -142,7 +144,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             context.push('/biometric-setup');
                           }
                         },
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
                       ),
                       const Divider(height: 1),
                       ListTile(
@@ -175,7 +178,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             ),
                           );
                         },
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
                       ),
                     ],
                   ),
@@ -206,10 +210,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           labelText: l10n.currentPasswordLabel,
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
-                            icon: Icon(_obscureCurrentPassword ? Icons.visibility : Icons.visibility_off),
-                            onPressed: () => setState(() => _obscureCurrentPassword = !_obscureCurrentPassword),
+                            icon: Icon(_obscureCurrentPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () => setState(() =>
+                                _obscureCurrentPassword =
+                                    !_obscureCurrentPassword),
                           ),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(UITokens.cornerSm)),
+                          border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(UITokens.cornerSm)),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -220,10 +230,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           labelText: l10n.newPasswordLabel,
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
-                            icon: Icon(_obscureNewPassword ? Icons.visibility : Icons.visibility_off),
-                            onPressed: () => setState(() => _obscureNewPassword = !_obscureNewPassword),
+                            icon: Icon(_obscureNewPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () => setState(() =>
+                                _obscureNewPassword = !_obscureNewPassword),
                           ),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(UITokens.cornerSm)),
+                          border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(UITokens.cornerSm)),
                           helperText: l10n.minPasswordHelper,
                         ),
                       ),
@@ -235,10 +250,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           labelText: l10n.confirmPasswordLabel,
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
-                            icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
-                            onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                            icon: Icon(_obscureConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () => setState(() =>
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword),
                           ),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(UITokens.cornerSm)),
+                          border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(UITokens.cornerSm)),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -250,7 +271,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           label: Text(l10n.changePasswordButton),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(UITokens.cornerSm)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(UITokens.cornerSm)),
                           ),
                         ),
                       ),
@@ -272,7 +295,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               ),
               GlassCard(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Column(
                     children: [
                       ListTile(
@@ -280,8 +304,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         title: Text(l10n.emailLabel),
                         subtitle: const Text('user@example.com'),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/change-email'),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        onTap: () => context.push('/change_email'),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
                       ),
                       const Divider(height: 1),
                       ListTile(
@@ -289,8 +314,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         title: Text(l10n.phoneLabel),
                         subtitle: const Text('+7 (XXX) XXX-XX-XX'),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/change-phone'),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        onTap: () => context.push('/change_phone'),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
                       ),
                     ],
                   ),
@@ -311,7 +337,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               GlassCard(
                 child: Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    border:
+                        Border.all(color: Colors.red.withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Material(
@@ -323,7 +350,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
-                            Icon(Icons.delete_forever, color: Colors.red.shade400),
+                            Icon(Icons.delete_forever,
+                                color: Colors.red.shade400),
                             const SizedBox(width: 16),
                             Expanded(
                               child: Column(
@@ -331,21 +359,29 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                 children: [
                                   Text(
                                     l10n.deleteAccountLabel,
-                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge
+                                        ?.copyWith(
                                           color: Colors.red.shade400,
                                           fontWeight: FontWeight.w600,
                                         ),
                                   ),
                                   Text(
                                     l10n.deleteAccountSubtitle,
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          color: Colors.red.withValues(alpha: 0.6),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color:
+                                              Colors.red.withValues(alpha: 0.6),
                                         ),
                                   ),
                                 ],
                               ),
                             ),
-                            Icon(Icons.chevron_right, color: Colors.red.shade400),
+                            Icon(Icons.chevron_right,
+                                color: Colors.red.shade400),
                           ],
                         ),
                       ),

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
+import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 
 class ContactsScreen extends StatefulWidget {
   const ContactsScreen({super.key});
@@ -18,13 +18,28 @@ class _ContactsScreenState extends State<ContactsScreen> {
   bool _permissionDenied = false;
   bool _permissionPermanentlyDenied = false;
   bool _loading = true;
+  bool _showTwoSpaceOnly = false;
   String _searchQuery = '';
   final _searchController = TextEditingController();
 
   List<Contact> get _filteredContacts {
     if (_contacts == null) return [];
-    if (_searchQuery.isEmpty) return _contacts!;
-    return _contacts!.where((c) {
+    var list = _contacts!;
+    
+    if (_showTwoSpaceOnly) {
+      // Mock logic: Keep contacts with a phone number ending in even digit for prototype
+      list = list.where((c) {
+        if (c.phones.isNotEmpty) {
+           final lastChar = c.phones.first.number.trim().characters.last;
+           final num = int.tryParse(lastChar) ?? 1;
+           return num % 2 == 0;
+        }
+        return false;
+      }).toList();
+    }
+
+    if (_searchQuery.isEmpty) return list;
+    return list.where((c) {
       final name = c.displayName.toLowerCase();
       final query = _searchQuery.toLowerCase();
       return name.contains(query);
@@ -45,9 +60,9 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
   Future<void> _checkAndRequestPermission() async {
     setState(() => _loading = true);
-    
+
     final status = await Permission.contacts.status;
-    
+
     if (status.isGranted) {
       await _fetchContacts();
     } else if (status.isPermanentlyDenied) {
@@ -59,7 +74,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
     } else {
       // Request permission
       final result = await Permission.contacts.request();
-      
+
       if (result.isGranted) {
         await _fetchContacts();
       } else if (result.isPermanentlyDenied) {
@@ -80,9 +95,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
   Future<void> _fetchContacts() async {
     try {
       final contacts = await FlutterContacts.getContacts(
-        withProperties: true, 
+        withProperties: true,
         withPhoto: true,
-        sorted: true,
       );
       if (mounted) {
         setState(() {
@@ -109,16 +123,16 @@ class _ContactsScreenState extends State<ContactsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
-      backgroundColor: Colors.transparent, 
+      backgroundColor: Colors.transparent,
       body: ScreenBackground(
         child: SafeArea(
           child: Column(
             children: [
               // Header with TwoSpace logo
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     const AppLogo(large: false),
@@ -130,14 +144,28 @@ class _ContactsScreenState extends State<ContactsScreen> {
                         color: Colors.white,
                       ),
                     ),
+                    const Spacer(),
+                    if (_contacts != null && _contacts!.isNotEmpty)
+                      FilterChip(
+                        label: Text(l10n.contactsTwoSpaceYes),
+                        selected: _showTwoSpaceOnly,
+                        onSelected: (bool selected) {
+                          setState(() {
+                            _showTwoSpaceOnly = selected;
+                          });
+                        },
+                        selectedColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+                        checkmarkColor: Colors.white,
+                      ),
                   ],
                 ),
               ),
-              
+
               // Search bar if contacts loaded
               if (_contacts != null && _contacts!.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: GlassCard(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: TextField(
@@ -145,12 +173,15 @@ class _ContactsScreenState extends State<ContactsScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: l10n.searchContactsHint,
-                        hintStyle: TextStyle(color: Colors.white.withAlpha(120)),
-                        prefixIcon: const Icon(Icons.search, color: Colors.white70),
+                        hintStyle:
+                            TextStyle(color: Colors.white.withAlpha(120)),
+                        prefixIcon:
+                            const Icon(Icons.search, color: Colors.white70),
                         border: InputBorder.none,
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear, color: Colors.white70),
+                                icon: const Icon(Icons.clear,
+                                    color: Colors.white70),
                                 onPressed: () {
                                   _searchController.clear();
                                   setState(() => _searchQuery = '');
@@ -158,11 +189,12 @@ class _ContactsScreenState extends State<ContactsScreen> {
                               )
                             : null,
                       ),
-                      onChanged: (value) => setState(() => _searchQuery = value),
+                      onChanged: (value) =>
+                          setState(() => _searchQuery = value),
                     ),
                   ),
                 ),
-              
+
               Expanded(child: _buildBody()),
             ],
           ),
@@ -176,7 +208,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
-    
+
     if (_permissionDenied) {
       return Center(
         child: Padding(
@@ -216,15 +248,19 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _permissionPermanentlyDenied 
-                        ? _openAppSettings 
+                    onPressed: _permissionPermanentlyDenied
+                        ? _openAppSettings
                         : _checkAndRequestPermission,
-                    icon: Icon(_permissionPermanentlyDenied 
-                        ? Icons.settings 
-                        : Icons.refresh),
-                    label: Text(_permissionPermanentlyDenied 
-                        ? l10n.openSettingsButton 
-                        : l10n.requestPermissionButton),
+                    icon: Icon(
+                      _permissionPermanentlyDenied
+                          ? Icons.settings
+                          : Icons.refresh,
+                    ),
+                    label: Text(
+                      _permissionPermanentlyDenied
+                          ? l10n.openSettingsButton
+                          : l10n.requestPermissionButton,
+                    ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -239,7 +275,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         ),
       );
     }
-    
+
     if (_contacts == null || _contacts!.isEmpty) {
       return Center(
         child: Column(
@@ -262,9 +298,9 @@ class _ContactsScreenState extends State<ContactsScreen> {
         ),
       );
     }
-    
+
     final filteredContacts = _filteredContacts;
-    
+
     if (filteredContacts.isEmpty) {
       return Center(
         child: Text(
@@ -276,7 +312,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         ),
       );
     }
-    
+
     return RefreshIndicator(
       onRefresh: _fetchContacts,
       child: ListView.builder(
@@ -297,10 +333,13 @@ class _ContactsScreenState extends State<ContactsScreen> {
                       )
                     : CircleAvatar(
                         radius: 24,
-                        backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(100),
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withAlpha(100),
                         child: Text(
-                          contact.displayName.isNotEmpty 
-                              ? contact.displayName[0].toUpperCase() 
+                          contact.displayName.isNotEmpty
+                              ? contact.displayName[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
                             color: Colors.white,
@@ -316,7 +355,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                subtitle: contact.phones.isNotEmpty 
+                subtitle: contact.phones.isNotEmpty
                     ? Text(
                         contact.phones.first.number,
                         style: TextStyle(color: Colors.white.withAlpha(150)),
@@ -372,7 +411,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                   ? CircleAvatar(backgroundImage: MemoryImage(contact.photo!))
                   : const CircleAvatar(child: Icon(Icons.person)),
               title: Text(contact.displayName),
-              subtitle: contact.phones.isNotEmpty 
+              subtitle: contact.phones.isNotEmpty
                   ? Text(contact.phones.first.number)
                   : null,
             ),
@@ -405,7 +444,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
     if (contact.phones.isEmpty) return;
     final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.callNotification(contact.phones.first.number))),
+      SnackBar(
+          content: Text(l10n.callNotification(contact.phones.first.number))),
     );
   }
 

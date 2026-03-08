@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 
 class AdvancedSearchScreen extends StatefulWidget {
   const AdvancedSearchScreen({super.key});
@@ -85,21 +85,26 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: ['all', 'messages', 'media', 'users']
-                      .map((type) => Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: FilterChip(
-                              label: Text(
-                                type == 'all' ? l10n.searchTypeAll
-                                : type == 'messages' ? l10n.searchTypeMessages
-                                : type == 'media' ? l10n.searchTypeMedia
-                                : l10n.searchTypeUsers,
-                              ),
-                              selected: _searchType == type,
-                              onSelected: (selected) {
-                                if (selected) setState(() => _searchType = type);
-                              },
+                      .map(
+                        (type) => Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(
+                              type == 'all'
+                                  ? l10n.searchTypeAll
+                                  : type == 'messages'
+                                      ? l10n.searchTypeMessages
+                                      : type == 'media'
+                                          ? l10n.searchTypeMedia
+                                          : l10n.searchTypeUsers,
                             ),
-                          ))
+                            selected: _searchType == type,
+                            onSelected: (selected) {
+                              if (selected) setState(() => _searchType = type);
+                            },
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
               ),
@@ -187,8 +192,8 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
                 Text(
                   l10n.noResultsFound,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                 ),
               const SizedBox(height: 12),
               ListView.separated(

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
 class GroupBackgroundWidget extends StatelessWidget {
-  final String? backgroundColor;
-  final String? backgroundImageUrl;
-  final Widget child;
-
   const GroupBackgroundWidget({
+    required this.child,
     super.key,
     this.backgroundColor,
     this.backgroundImageUrl,
-    required this.child,
   });
+  final String? backgroundColor;
+  final String? backgroundImageUrl;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +25,7 @@ class GroupBackgroundWidget extends StatelessWidget {
 
     // Если есть только цвет
     if (bgColor != null && backgroundImageUrl == null) {
-      return Container(
+      return ColoredBox(
         color: bgColor,
         child: child,
       );
@@ -40,7 +39,8 @@ class GroupBackgroundWidget extends StatelessWidget {
             image: NetworkImage(backgroundImageUrl!),
             fit: BoxFit.cover,
             colorFilter: bgColor != null
-                ? ColorFilter.mode(bgColor.withValues(alpha: 0.3), BlendMode.overlay)
+                ? ColorFilter.mode(
+                    bgColor.withValues(alpha: 0.3), BlendMode.overlay)
                 : null,
           ),
         ),

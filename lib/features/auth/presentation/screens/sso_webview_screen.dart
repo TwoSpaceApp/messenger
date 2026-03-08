@@ -6,8 +6,9 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 // import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 
 class SsoWebviewScreen extends StatefulWidget {
-  final String idpId; // e.g. 'google' or 'yandex'
-  const SsoWebviewScreen({super.key, required this.idpId});
+  // e.g. 'google' or 'yandex'
+  const SsoWebviewScreen({required this.idpId, super.key});
+  final String idpId;
 
   @override
   State<SsoWebviewScreen> createState() => _SsoWebviewScreenState();
@@ -15,7 +16,7 @@ class SsoWebviewScreen extends StatefulWidget {
 
 class _SsoWebviewScreenState extends State<SsoWebviewScreen> {
   // WebViewController not available, using placeholder
-  
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;

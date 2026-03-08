@@ -1,16 +1,40 @@
-include: package:flutter_lints/flutter.yaml
+include: package:very_good_analysis/analysis_options.yaml
 
 analyzer:
   exclude:
-    - Aegis-main/**
-    - build/**
+    - "Aegis-main/**"
+    - "build/**"
     - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.env.dart"
+  language:
+    strict-casts: false
+    strict-inference: false
+    strict-raw-types: false
 
 linter:
   rules:
     avoid_print: false
-    prefer_const_constructors: true
-    prefer_const_declarations: true
     use_build_context_synchronously: false
+    unawaited_futures: false
+    avoid_slow_async_io: false
+    avoid_setters_without_getters: false
+    use_setters_to_change_properties: false
+    missing_code_block_language_in_doc_comment: false
+    join_return_with_assignment: false
+    use_named_constants: false
+    use_string_buffers: false
+    use_is_even_rather_than_modulo: false
+    
+    # Отключение слишком жестких правил форматирования very_good_analysis
+    public_member_api_docs: false
+    sort_pub_dependencies: false
+    require_trailing_commas: false
+    lines_longer_than_80_chars: false
     curly_braces_in_flow_control_structures: false
-    use_key_in_widget_constructors: false
+    cascade_invocations: false
+    avoid_positional_boolean_parameters: false
+    flutter_style_todos: false
+    avoid_dynamic_calls: false
+    sort_constructors_first: false
+    omit_local_variable_types: false

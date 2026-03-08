@@ -496,5 +496,22 @@
   "administratorsLabel": "⚡ Администраторы",
   "oneHour": "1 час",
   "oneDay": "1 день",
-  "sevenDays": "7 дней"
+  "sevenDays": "7 дней",
+  "settingsThemeSelection": "Тема",
+  "settingsNotificationNew": "Уведомления",
+  "settingsDoNotDisturb": "Не беспокоить",
+  "settingsSoundOptions": "Настройки звука",
+  "settingsStorageManagement": "Управление хранилищем",
+  "settingsStorageUsage": "Использование хранилища",
+  "settingsStorageAppSize": "Размер приложения",
+  "settingsStorageClearBtn": "Очистить выбранное",
+  "settingsStorageKeepChat": "Хранить данные чатов",
+  "settingsStorageKeepChannel": "Хранить данные каналов",
+  "settingsStorageKeepGroup": "Хранить данные групп",
+  "settingsAboutPropose": "Предложить улучшение",
+  "settingsAboutCheckUpdate": "Проверить обновление",
+  "biometricsEnable": "Блокировка приложения",
+  "biometricsSetup": "Настроить блокировку",
+  "contactsTwoSpaceYes": "Есть в TwoSpace",
+  "contactsTwoSpaceNo": "Нету в TwoSpace"
 }

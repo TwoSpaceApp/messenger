@@ -1,17 +1,17 @@
-import 'dart:collection';
 import 'dart:async';
+import 'dart:collection';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:two_space_app/core/providers/service_providers.dart';
 
 /// LRU cache implementation for user profiles
 class UserProfileCache {
-  final int capacity;
-  final Map<String, Map<String, dynamic>> _cache;
-  final Queue<String> _queue;
-
   UserProfileCache({this.capacity = 100})
       : _cache = {},
         _queue = Queue();
+  final int capacity;
+  final Map<String, Map<String, dynamic>> _cache;
+  final Queue<String> _queue;
 
   /// Get a profile from the cache
   Map<String, dynamic>? get(String userId) {
@@ -44,18 +44,19 @@ class UserProfileCache {
 /// Provider for the user profile cache
 final userCacheProvider = Provider<UserProfileCache>((ref) {
   final cache = UserProfileCache();
-  
+
   // Clear cache when profile service is disposed (e.g., on logout)
   ref.onDispose(() {
     ref.read(matrixProfileServiceProvider).clearCache();
     cache.clear();
   });
-  
+
   return cache;
 });
 
 /// Cached user profile provider with automatic cache management
-final cachedUserProfileProvider = FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
+final cachedUserProfileProvider =
+    FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
   (ref, userId) async {
     final cache = ref.watch(userCacheProvider);
     final profileService = ref.watch(matrixProfileServiceProvider);
@@ -69,7 +70,7 @@ final cachedUserProfileProvider = FutureProvider.autoDispose.family<Map<String, 
     // Otherwise, fetch from the service
     final profile = await profileService.getUserProfile(userId);
     cache.set(userId, profile);
-    
+
     // Keep alive for 5 minutes
     final link = ref.keepAlive();
     final timer = Timer(const Duration(minutes: 5), link.close);
@@ -80,11 +81,12 @@ final cachedUserProfileProvider = FutureProvider.autoDispose.family<Map<String, 
 );
 
 /// Batch user profiles provider with optimized concurrent fetching
-final batchUserProfilesProvider = FutureProvider.autoDispose.family<List<Map<String, dynamic>>, List<String>>(
+final batchUserProfilesProvider =
+    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, List<String>>(
   (ref, userIds) async {
     final cache = ref.watch(userCacheProvider);
     final profileService = ref.watch(matrixProfileServiceProvider);
-    
+
     final uniqueIds = userIds.toSet().toList();
     final cachedProfiles = <Map<String, dynamic>>[];
     final idsToFetch = <String>[];
@@ -106,7 +108,7 @@ final batchUserProfilesProvider = FutureProvider.autoDispose.family<List<Map<Str
     for (final profile in fetchedProfiles) {
       cache.set(profile['id'], profile);
     }
-    
+
     // Keep alive for 5 minutes
     final link = ref.keepAlive();
     final timer = Timer(const Duration(minutes: 5), link.close);
@@ -115,5 +117,3 @@ final batchUserProfilesProvider = FutureProvider.autoDispose.family<List<Map<Str
     return [...cachedProfiles, ...fetchedProfiles];
   },
 );
-
-

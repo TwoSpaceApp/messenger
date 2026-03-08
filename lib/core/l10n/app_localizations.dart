@@ -3095,6 +3095,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'7 days'**
   String get sevenDays;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsThemeSelection;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotificationNew;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Do Not Disturb'**
+  String get settingsDoNotDisturb;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Sound Settings'**
+  String get settingsSoundOptions;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Management'**
+  String get settingsStorageManagement;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Usage'**
+  String get settingsStorageUsage;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'App Size'**
+  String get settingsStorageAppSize;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Selected'**
+  String get settingsStorageClearBtn;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Chat Data'**
+  String get settingsStorageKeepChat;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Channel Data'**
+  String get settingsStorageKeepChannel;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Keep Group Data'**
+  String get settingsStorageKeepGroup;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Propose Improvement'**
+  String get settingsAboutPropose;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Check for Updates'**
+  String get settingsAboutCheckUpdate;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'App Lock (Biometrics/PIN)'**
+  String get biometricsEnable;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Setup App Lock'**
+  String get biometricsSetup;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Uses TwoSpace'**
+  String get contactsTwoSpaceYes;
+
+  /// Auto added setting
+  ///
+  /// In en, this message translates to:
+  /// **'Not in TwoSpace'**
+  String get contactsTwoSpaceNo;
 }
 
 class _AppLocalizationsDelegate

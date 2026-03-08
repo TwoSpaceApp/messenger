@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/features/auth/data/services/biometric_auth_service.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/features/auth/data/services/biometric_auth_service.dart';
 
 class BiometricSetupScreen extends StatefulWidget {
   const BiometricSetupScreen({super.key});
@@ -44,8 +44,8 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                   return Card(
                     child: ListTile(
                       leading: const Icon(Icons.fingerprint),
-                        title: Text(l10n.biometricAuthLabel),
-                        subtitle: Text(l10n.biometricAuthSubtitle),
+                      title: Text(l10n.biometricAuthLabel),
+                      subtitle: Text(l10n.biometricAuthSubtitle),
                       trailing: Switch(
                         value: true,
                         onChanged: (value) async {
@@ -57,8 +57,7 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content:
-                                          Text(l10n.biometricEnabledLabel),
+                                    content: Text(l10n.biometricEnabledLabel),
                                   ),
                                 );
                               }
@@ -102,10 +101,10 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                        l10n.aboutSecurityContent,
+                      l10n.aboutSecurityContent,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
                     ),
                   ],
                 ),
@@ -126,9 +125,8 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
 }
 
 class PinInputDialog extends StatefulWidget {
+  const PinInputDialog({required this.biometricService, super.key});
   final BiometricAuthService biometricService;
-
-  const PinInputDialog({super.key, required this.biometricService});
 
   @override
   State<PinInputDialog> createState() => _PinInputDialogState();
@@ -176,11 +174,12 @@ class _PinInputDialogState extends State<PinInputDialog> {
             if (context.mounted) {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(AppLocalizations.of(context)!.pinSetSuccess)),
+                SnackBar(
+                    content: Text(AppLocalizations.of(context)!.pinSetSuccess)),
               );
             }
           },
-            child: Text(l10n.save),
+          child: Text(l10n.save),
         ),
       ],
     );

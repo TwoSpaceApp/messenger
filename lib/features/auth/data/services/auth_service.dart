@@ -1,11 +1,12 @@
 import 'dart:convert';
-import 'package:two_space_app/core/services/dev_http_client.dart' as http;
-import 'package:two_space_app/features/chat/data/services/matrix_service.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
-import 'package:two_space_app/core/services/dev_logger.dart';
-import 'package:two_space_app/core/config/environment.dart';
-import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:two_space_app/core/config/environment.dart';
+import 'package:two_space_app/core/services/dev_http_client.dart' as http;
+import 'package:two_space_app/core/services/dev_logger.dart';
+import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
+import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/matrix_service.dart';
 
 /// Keys used in secure storage for Matrix tokens per-user
 const _kMatrixTokenKeyPrefix = 'matrix_token_';
@@ -13,8 +14,6 @@ const _kMatrixRefreshKeyPrefix = 'matrix_refresh_';
 const _kMatrixDeviceIdPrefix = 'matrix_device_';
 
 class AuthService {
-  // Singleton pattern
-  static final AuthService _instance = AuthService._internal();
   factory AuthService({dynamic accountClient}) {
     if (accountClient != null) {
       _instance._accountClient = accountClient;
@@ -22,10 +21,12 @@ class AuthService {
     return _instance;
   }
   AuthService._internal();
+  // Singleton pattern
+  static final AuthService _instance = AuthService._internal();
 
   dynamic _accountClient;
   dynamic get accountClient => _accountClient;
-  
+
   final DevLogger _logger = DevLogger('AuthService');
 
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
@@ -113,7 +114,8 @@ class AuthService {
     }
   }
 
-  Future<dynamic> registerUser(String name, String email, String password) async {
+  Future<dynamic> registerUser(
+      String name, String email, String password) async {
     _logger.info('📝 Регистрация: $name / $email');
     try {
       final user = await _aegis.register(
@@ -122,7 +124,11 @@ class AuthService {
         password: password,
       );
       _logger.info('✓ Зарегистрирован: ${user.username}');
-      return {'id': user.id.toString(), 'name': user.username, 'email': user.email};
+      return {
+        'id': user.id.toString(),
+        'name': user.username,
+        'email': user.email
+      };
     } catch (e) {
       _logger.warning('❌ Ошибка регистрации: $e');
       rethrow;
@@ -140,11 +146,12 @@ class AuthService {
     if (homeserver.isEmpty) throw Exception('Matrix homeserver not configured');
     // Normalize homeserver URL: ensure scheme present
     var base = homeserver.trim();
-    if (!base.startsWith('http://') && !base.startsWith('https://')) base = 'https://$base';
+    if (!base.startsWith('http://') && !base.startsWith('https://'))
+      base = 'https://$base';
     base = base.replaceAll(RegExp(r'/$'), '');
 
     // Normalize username: support full MXID (@local:domain) or email-like input (local@domain) or plain localpart
-    String loginUser = username;
+    var loginUser = username;
     try {
       if (username.startsWith('@') && username.contains(':')) {
         // form @local:domain
@@ -165,18 +172,20 @@ class AuthService {
       'identifier': {'type': 'm.id.user', 'user': loginUser},
       'password': password,
     });
-    final res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: body);
+    final res = await http.post(uri,
+        headers: {'Content-Type': 'application/json'}, body: body);
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception('Matrix login failed ${res.statusCode}: ${res.body}');
     }
-  final js = jsonDecode(res.body) as Map<String, dynamic>;
-  final token = js['access_token'] as String?;
-  final refresh = js['refresh_token'] as String?;
-  final deviceId = js['device_id'] as String?;
-  final userId = js['user_id'] as String?;
-  if (token == null || userId == null) throw Exception('Matrix login response missing token/user_id');
+    final js = jsonDecode(res.body) as Map<String, dynamic>;
+    final token = js['access_token'] as String?;
+    final refresh = js['refresh_token'] as String?;
+    final deviceId = js['device_id'] as String?;
+    final userId = js['user_id'] as String?;
+    if (token == null || userId == null)
+      throw Exception('Matrix login response missing token/user_id');
     // Save token keyed by current app user id if available, otherwise by matrix user id
-    String keyId = userId;
+    var keyId = userId;
     try {
       final me = await MatrixService().getCurrentUserId();
       if (me != null && me.isNotEmpty) keyId = me;
@@ -192,17 +201,19 @@ class AuthService {
     }
     // Save optional refresh token and device id if present
     if (refresh != null && refresh.isNotEmpty) {
-      await _secure.write(key: '$_kMatrixRefreshKeyPrefix$keyId', value: refresh);
+      await _secure.write(
+          key: '$_kMatrixRefreshKeyPrefix$keyId', value: refresh);
     }
     if (deviceId != null && deviceId.isNotEmpty) {
-      await _secure.write(key: '$_kMatrixDeviceIdPrefix$keyId', value: deviceId);
+      await _secure.write(
+          key: '$_kMatrixDeviceIdPrefix$keyId', value: deviceId);
     }
   }
 
   /// Attempt to refresh Matrix access token using stored refresh token for user.
   /// Returns new access token on success, or null on failure.
   Future<String?> refreshMatrixTokenForUser({String? appUserId}) async {
-    String keyId = appUserId ?? '';
+    var keyId = appUserId ?? '';
     if (keyId.isEmpty) {
       try {
         final me = await MatrixService().getCurrentUserId();
@@ -217,15 +228,19 @@ class AuthService {
     final uri = Uri.parse('$homeserver/_matrix/client/v3/refresh');
     try {
       final body = jsonEncode({'refresh_token': refresh});
-      final res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: body).timeout(const Duration(seconds: 10));
+      final res = await http
+          .post(uri, headers: {'Content-Type': 'application/json'}, body: body)
+          .timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {
         final js = jsonDecode(res.body) as Map<String, dynamic>;
         final newAccess = js['access_token'] as String?;
         final newRefresh = js['refresh_token'] as String?;
         if (newAccess != null && newAccess.isNotEmpty) {
-          await _secure.write(key: '$_kMatrixTokenKeyPrefix$keyId', value: newAccess);
+          await _secure.write(
+              key: '$_kMatrixTokenKeyPrefix$keyId', value: newAccess);
           if (newRefresh != null && newRefresh.isNotEmpty) {
-            await _secure.write(key: '$_kMatrixRefreshKeyPrefix$keyId', value: newRefresh);
+            await _secure.write(
+                key: '$_kMatrixRefreshKeyPrefix$keyId', value: newRefresh);
           }
           return newAccess;
         }
@@ -252,7 +267,7 @@ class AuthService {
     if (direct != null && direct.isNotEmpty) return direct;
 
     // Backward-compatible fallback: per-user storage (older logic).
-    String? keyId = appUserId;
+    var keyId = appUserId;
     if (keyId == null || keyId.isEmpty) {
       keyId = await _matrixService.getCurrentUserId();
     }
@@ -290,21 +305,26 @@ class AuthService {
     final homeserver = Environment.matrixHomeserverUrl;
     if (homeserver.isEmpty) throw Exception('Не настроен Matrix homeserver');
     var base = homeserver.trim();
-    if (!base.startsWith('http://') && !base.startsWith('https://')) base = 'https://$base';
+    if (!base.startsWith('http://') && !base.startsWith('https://'))
+      base = 'https://$base';
     base = base.replaceAll(RegExp(r'/$'), '');
     final uri = Uri.parse('$base/_matrix/client/v3/login');
     final body = jsonEncode({'type': 'm.login.token', 'token': token});
-    final res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: body).timeout(const Duration(seconds: 15));
+    final res = await http
+        .post(uri, headers: {'Content-Type': 'application/json'}, body: body)
+        .timeout(const Duration(seconds: 15));
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('Ошибка обмена SSO токена ${res.statusCode}: ${res.body}');
+      throw Exception(
+          'Ошибка обмена SSO токена ${res.statusCode}: ${res.body}');
     }
     final js = jsonDecode(res.body) as Map<String, dynamic>;
     final tokenResp = js['access_token'] as String?;
     final refresh = js['refresh_token'] as String?;
     final deviceId = js['device_id'] as String?;
     final userId = js['user_id'] as String?;
-    if (tokenResp == null || userId == null) throw Exception('В ответе SSO отсутствует токен или user_id');
-    String keyId = userId;
+    if (tokenResp == null || userId == null)
+      throw Exception('В ответе SSO отсутствует токен или user_id');
+    var keyId = userId;
     try {
       final me = await MatrixService().getCurrentUserId();
       if (me != null && me.isNotEmpty) keyId = me;
@@ -312,20 +332,24 @@ class AuthService {
       _logger.debug('Не удалось получить текущий userId: $e');
     }
     await _secure.write(key: '$_kMatrixTokenKeyPrefix$keyId', value: tokenResp);
-    try { 
-      MatrixService.setCurrentUserId(userId); 
+    try {
+      MatrixService.setCurrentUserId(userId);
     } catch (e) {
       _logger.debug('Не удалось сохранить userId: $e');
     }
-    if (refresh != null && refresh.isNotEmpty) await _secure.write(key: '$_kMatrixRefreshKeyPrefix$keyId', value: refresh);
-    if (deviceId != null && deviceId.isNotEmpty) await _secure.write(key: '$_kMatrixDeviceIdPrefix$keyId', value: deviceId);
+    if (refresh != null && refresh.isNotEmpty)
+      await _secure.write(
+          key: '$_kMatrixRefreshKeyPrefix$keyId', value: refresh);
+    if (deviceId != null && deviceId.isNotEmpty)
+      await _secure.write(
+          key: '$_kMatrixDeviceIdPrefix$keyId', value: deviceId);
   }
 
   /// Return current application user id from Matrix service.
   Future<String?> getCurrentUserId() async {
     // В первую очередь возвращаем Aegis-пользователя
     if (_aegis.username != null) return _aegis.username;
-    return await _matrixService.getCurrentUserId();
+    return _matrixService.getCurrentUserId();
   }
 
   /// Clear stored Matrix token for current app user (sign out)
@@ -350,29 +374,33 @@ class AuthService {
         // Appwrite SDK: try to create an email session (passwordless) if supported
         // Fallback: request passwordless session or magic URL.
         if (accountClient.createEmailSession != null) {
-          final tokenResp = await accountClient.createEmailSession(email: email);
+          final tokenResp =
+              await accountClient.createEmailSession(email: email);
           return tokenResp;
         }
       } catch (_) {}
     }
 
     // Try Matrix-level path (server-provided endpoint must implement this)
-      try {
-        final res = MatrixService.createEmailSession(email, '');
-        return res;
-      } catch (e) {
-        throw Exception('Email token delivery not implemented; configure MATRIX_EMAIL_TOKEN_ENDPOINT. $e');
-      }
+    try {
+      final res = MatrixService.createEmailSession(email, '');
+      return res;
+    } catch (e) {
+      throw Exception(
+          'Email token delivery not implemented; configure MATRIX_EMAIL_TOKEN_ENDPOINT. $e');
+    }
   }
 
   // Request TOTP setup and return secret/otpauth URI
-  Future<Map<String,dynamic>> requestTotpSetup() async {
+  Future<Map<String, dynamic>> requestTotpSetup() async {
     if (!Environment.useMatrix) throw Exception('Matrix is not enabled');
     final endpoint = Environment.matrixHomeserverUrl;
     if (endpoint.isEmpty) throw Exception('TOTP endpoint not configured');
     final uri = Uri.parse(endpoint);
-    final res = await http.post(uri, headers: {'Content-Type': 'application/json'});
-    if (res.statusCode >= 200 && res.statusCode < 300) return jsonDecode(res.body) as Map<String, dynamic>;
+    final res =
+        await http.post(uri, headers: {'Content-Type': 'application/json'});
+    if (res.statusCode >= 200 && res.statusCode < 300)
+      return jsonDecode(res.body) as Map<String, dynamic>;
     throw Exception('Ошибка requestTotpSetup ${res.statusCode}: ${res.body}');
   }
 
@@ -380,10 +408,13 @@ class AuthService {
   Future<void> verifyTotpSetup(String code, {bool disable = false}) async {
     if (!Environment.useMatrix) throw Exception('Matrix is not enabled');
     final endpoint = Environment.matrixHomeserverUrl;
-    if (endpoint.isEmpty) throw Exception('TOTP verify endpoint not configured');
+    if (endpoint.isEmpty)
+      throw Exception('TOTP verify endpoint not configured');
     final uri = Uri.parse(endpoint);
-    final body = jsonEncode({'code': code, 'action': disable ? 'disable' : 'enable'});
-    final res = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: body);
+    final body =
+        jsonEncode({'code': code, 'action': disable ? 'disable' : 'enable'});
+    final res = await http.post(uri,
+        headers: {'Content-Type': 'application/json'}, body: body);
     if (res.statusCode >= 200 && res.statusCode < 300) return;
     throw Exception('Ошибка verifyTotpSetup ${res.statusCode}: ${res.body}');
   }
@@ -402,8 +433,11 @@ class AuthService {
     if (accountClient != null) {
       await accountClient.createPhoneSession(userId: userId, secret: secret);
       final jwtResp = await accountClient.createJWT();
-      final jwt = jwtResp is Map && jwtResp.containsKey('jwt') ? jwtResp['jwt'] as String : null;
-      if (jwt == null) throw Exception('Не удалось получить JWT после создания сессии');
+      final jwt = jwtResp is Map && jwtResp.containsKey('jwt')
+          ? jwtResp['jwt'] as String
+          : null;
+      if (jwt == null)
+        throw Exception('Не удалось получить JWT после создания сессии');
       MatrixService.saveJwt(jwt);
       return;
     }
@@ -411,22 +445,34 @@ class AuthService {
     // REST fallback - create session and then jwt
     final base = MatrixService.v1Endpoint();
     final uri = Uri.parse('$base/account/sessions/token');
-    final resp = await http.post(uri,
-        headers: {'X-Appwrite-Project': Environment.appwriteProjectId, 'Content-Type': 'application/json'},
-        body: jsonEncode({'userId': userId, 'secret': secret}));
-    if (resp.statusCode < 200 || resp.statusCode >= 300) throw Exception('Не удалось создать сессию: ${resp.statusCode} ${resp.body}');
+    final resp = await http.post(
+      uri,
+      headers: {
+        'X-Appwrite-Project': Environment.appwriteProjectId,
+        'Content-Type': 'application/json'
+      },
+      body: jsonEncode({'userId': userId, 'secret': secret}),
+    );
+    if (resp.statusCode < 200 || resp.statusCode >= 300)
+      throw Exception(
+          'Не удалось создать сессию: ${resp.statusCode} ${resp.body}');
     final jwtUri = Uri.parse('$base/account/jwt');
     final receivedCookie = resp.headers['set-cookie'];
-    final jwtHeaders = <String, String>{'X-Appwrite-Project': Environment.appwriteProjectId};
-    if (receivedCookie != null && receivedCookie.isNotEmpty) jwtHeaders['cookie'] = receivedCookie;
+    final jwtHeaders = <String, String>{
+      'X-Appwrite-Project': Environment.appwriteProjectId
+    };
+    if (receivedCookie != null && receivedCookie.isNotEmpty)
+      jwtHeaders['cookie'] = receivedCookie;
     final jwtResp = await http.post(jwtUri, headers: jwtHeaders);
     if (jwtResp.statusCode < 200 || jwtResp.statusCode >= 300) {
-      throw Exception('Не удалось создать JWT: ${jwtResp.statusCode} ${jwtResp.body}');
+      throw Exception(
+          'Не удалось создать JWT: ${jwtResp.statusCode} ${jwtResp.body}');
     }
     final jwtJson = jsonDecode(jwtResp.body) as Map<String, dynamic>;
     final jwt = jwtJson['jwt'] as String?;
     if (jwt == null) throw Exception('JWT отсутствует в ответе');
-    if (receivedCookie != null && receivedCookie.isNotEmpty) MatrixService.saveSessionCookie(receivedCookie);
+    if (receivedCookie != null && receivedCookie.isNotEmpty)
+      MatrixService.saveSessionCookie(receivedCookie);
     MatrixService.saveJwt(jwt);
   }
 
@@ -457,10 +503,10 @@ class AuthService {
 
   // Backwards-compatible method names for Riverpod providers
   Future<void> login(String identifier, String password) async {
-    return await loginUser(identifier, password);
+    return loginUser(identifier, password);
   }
 
   Future<void> logout() async {
-    return await signOut();
+    return signOut();
   }
 }

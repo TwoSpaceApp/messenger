@@ -1,8 +1,9 @@
-import 'package:crypto/crypto.dart';
 import 'dart:convert';
-import 'package:two_space_app/core/services/dev_http_client.dart' as http;
-import 'package:two_space_app/core/models/group.dart';
+
+import 'package:crypto/crypto.dart';
 import 'package:two_space_app/core/config/environment.dart';
+import 'package:two_space_app/core/models/group.dart';
+import 'package:two_space_app/core/services/dev_http_client.dart' as http;
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 
@@ -34,21 +35,22 @@ class GroupMatrixService {
 
       // Получаем созданную комнату
       final room = await getGroupRoom(roomId);
-      return room ?? GroupRoom(
-        roomId: roomId,
-        name: name,
-        description: description,
-        visibility: visibility,
-        members: [],
-        bannedMembers: [],
-        invites: [],
-        currentUserRole: GroupRole.owner,
-        memberCount: 1,
-        showMessageHistory: showMessageHistory,
-        backgroundColor: backgroundColor,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      return room ??
+          GroupRoom(
+            roomId: roomId,
+            name: name,
+            description: description,
+            visibility: visibility,
+            members: [],
+            bannedMembers: [],
+            invites: [],
+            currentUserRole: GroupRole.owner,
+            memberCount: 1,
+            showMessageHistory: showMessageHistory,
+            backgroundColor: backgroundColor,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
     } catch (e) {
       throw Exception('Ошибка создания группы: $e');
     }
@@ -64,7 +66,8 @@ class GroupMatrixService {
     try {
       // Формируем запрос (в реальном приложении это должно быть через Matrix API)
       // Для простоты используем генерируемый ID
-      final roomId = '!\${generateRandomString(18)}:${Environment.matrixHomeserverUrl}';
+      final roomId =
+          '!\${generateRandomString(18)}:${Environment.matrixHomeserverUrl}';
       return roomId;
     } catch (e) {
       throw Exception('Ошибка создания комнаты: $e');
@@ -85,7 +88,7 @@ class GroupMatrixService {
   Future<void> inviteUserByUsername(String roomId, String username) async {
     try {
       // Преобразовать username в полный ID
-      const userId = '@\${username}:matrix.org';
+      const userId = r'@${username}:matrix.org';
       await inviteUserById(roomId, userId);
     } catch (e) {
       throw Exception('Ошибка приглашения по username: $e');
@@ -143,12 +146,18 @@ class GroupMatrixService {
       final auth = AuthService();
       final token = await auth.getMatrixTokenForUser();
       if (token == null || token.isEmpty) throw Exception('Not authenticated');
-      
-      final uri = Uri.parse('${Environment.matrixHomeserverUrl}/_matrix/client/r0/rooms/$roomId/invite');
-      final headers = {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'};
+
+      final uri = Uri.parse(
+          '${Environment.matrixHomeserverUrl}/_matrix/client/r0/rooms/$roomId/invite');
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json'
+      };
       final body = jsonEncode({'user_id': userId});
-      
-      final res = await http.post(uri, headers: headers, body: body).timeout(const Duration(seconds: 10));
+
+      final res = await http
+          .post(uri, headers: headers, body: body)
+          .timeout(const Duration(seconds: 10));
       if (res.statusCode >= 400) {
         throw Exception('Failed to unban: ${res.statusCode}');
       }
@@ -193,8 +202,6 @@ class GroupMatrixService {
         createdBy: await AuthService().getCurrentUserId() ?? 'unknown',
         createdAt: DateTime.now(),
         maxUses: maxUses ?? 0,
-        currentUses: 0,
-        isActive: true,
         expiresAt: finalExpiresAt,
       );
 
@@ -220,19 +227,16 @@ class GroupMatrixService {
     try {
       // Получаем информацию через ChatService
       final meta = await _chatService.getRoomNameAndAvatar(roomId);
-      
+
       return GroupRoom(
         roomId: roomId,
         name: meta['name'] ?? roomId,
         description: meta['topic'],
-        visibility: GroupVisibility.private,
         members: [],
         bannedMembers: [],
         invites: [],
         currentUserRole: GroupRole.member,
         memberCount: 1,
-        showMessageHistory: false,
-        backgroundColor: null,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -281,25 +285,33 @@ class GroupMatrixService {
       final auth = AuthService();
       final token = await auth.getMatrixTokenForUser();
       if (token == null || token.isEmpty) throw Exception('Not authenticated');
-      
+
       // Get current pinned messages event
-      final uri = Uri.parse('${Environment.matrixHomeserverUrl}/_matrix/client/r0/rooms/$roomId/state/m.room.pinned_events');
-      final headers = {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'};
-      
-      List<String> pinnedEvents = [];
+      final uri = Uri.parse(
+          '${Environment.matrixHomeserverUrl}/_matrix/client/r0/rooms/$roomId/state/m.room.pinned_events');
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json'
+      };
+
+      var pinnedEvents = <String>[];
       try {
-        final res = await http.get(uri, headers: headers).timeout(const Duration(seconds: 10));
+        final res = await http
+            .get(uri, headers: headers)
+            .timeout(const Duration(seconds: 10));
         if (res.statusCode == 200) {
           final data = jsonDecode(res.body) as Map<String, dynamic>;
           pinnedEvents = List<String>.from(data['pinned'] ?? []);
         }
       } catch (_) {}
-      
+
       // Add new message if not already pinned
       if (!pinnedEvents.contains(messageId)) {
         pinnedEvents.add(messageId);
         final body = jsonEncode({'pinned': pinnedEvents});
-        final putRes = await http.put(uri, headers: headers, body: body).timeout(const Duration(seconds: 10));
+        final putRes = await http
+            .put(uri, headers: headers, body: body)
+            .timeout(const Duration(seconds: 10));
         if (putRes.statusCode >= 400) {
           throw Exception('Failed to pin message: ${putRes.statusCode}');
         }
@@ -315,21 +327,29 @@ class GroupMatrixService {
       final auth = AuthService();
       final token = await auth.getMatrixTokenForUser();
       if (token == null || token.isEmpty) throw Exception('Not authenticated');
-      
-      final uri = Uri.parse('${Environment.matrixHomeserverUrl}/_matrix/client/r0/rooms/$roomId/state/m.room.pinned_events');
-      final headers = {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'};
-      
+
+      final uri = Uri.parse(
+          '${Environment.matrixHomeserverUrl}/_matrix/client/r0/rooms/$roomId/state/m.room.pinned_events');
+      final headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json'
+      };
+
       // Get current pinned messages
-      final res = await http.get(uri, headers: headers).timeout(const Duration(seconds: 10));
+      final res = await http
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
-        List<String> pinnedEvents = List<String>.from(data['pinned'] ?? []);
-        
+        final pinnedEvents = List<String>.from(data['pinned'] ?? []);
+
         // Remove message
         pinnedEvents.removeWhere((id) => id == messageId);
-        
+
         final body = jsonEncode({'pinned': pinnedEvents});
-        final putRes = await http.put(uri, headers: headers, body: body).timeout(const Duration(seconds: 10));
+        final putRes = await http
+            .put(uri, headers: headers, body: body)
+            .timeout(const Duration(seconds: 10));
         if (putRes.statusCode >= 400) {
           throw Exception('Failed to unpin message: ${putRes.statusCode}');
         }
@@ -345,11 +365,14 @@ class GroupMatrixService {
       final auth = AuthService();
       final token = await auth.getMatrixTokenForUser();
       if (token == null || token.isEmpty) return [];
-      
-      final uri = Uri.parse('${Environment.matrixHomeserverUrl}/_matrix/client/r0/rooms/$roomId/state/m.room.pinned_events');
+
+      final uri = Uri.parse(
+          '${Environment.matrixHomeserverUrl}/_matrix/client/r0/rooms/$roomId/state/m.room.pinned_events');
       final headers = {'Authorization': 'Bearer $token'};
-      
-      final res = await http.get(uri, headers: headers).timeout(const Duration(seconds: 10));
+
+      final res = await http
+          .get(uri, headers: headers)
+          .timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         return List<String>.from(data['pinned'] ?? []);
@@ -371,8 +394,8 @@ class GroupMatrixService {
     const chars =
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     final random = DateTime.now().microsecond;
-    String result = '';
-    for (int i = 0; i < length; i++) {
+    var result = '';
+    for (var i = 0; i < length; i++) {
       result += chars[(random + i) % chars.length];
     }
     return result;

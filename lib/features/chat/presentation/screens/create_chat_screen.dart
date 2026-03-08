@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
-import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/core/widgets/glass_card.dart';
-import 'package:two_space_app/core/widgets/app_logo.dart';
-import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/widgets/app_logo.dart';
+import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 
 class CreateChatScreen extends StatefulWidget {
   const CreateChatScreen({super.key});
@@ -14,12 +14,13 @@ class CreateChatScreen extends StatefulWidget {
   State<CreateChatScreen> createState() => _CreateChatScreenState();
 }
 
-class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerProviderStateMixin {
+class _CreateChatScreenState extends State<CreateChatScreen>
+    with SingleTickerProviderStateMixin {
   final _userIdController = TextEditingController();
   final _roomNameController = TextEditingController();
   final _roomTopicController = TextEditingController();
   late TabController _tabController;
-  
+
   bool _loading = false;
   bool _isPrivate = true;
   String? _errorMessage;
@@ -48,15 +49,19 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
     }
 
     // Normalize userId
-    String normalizedUserId = userId;
+    var normalizedUserId = userId;
     if (!userId.startsWith('@')) {
       // Assume it's a username, add @ and domain
       final matrixService = ChatMatrixService();
-      final domain = matrixService.homeserver.replaceAll('https://', '').replaceAll('http://', '');
+      final domain = matrixService.homeserver
+          .replaceAll('https://', '')
+          .replaceAll('http://', '');
       normalizedUserId = '@$userId:$domain';
     } else if (!userId.contains(':')) {
       final matrixService = ChatMatrixService();
-      final domain = matrixService.homeserver.replaceAll('https://', '').replaceAll('http://', '');
+      final domain = matrixService.homeserver
+          .replaceAll('https://', '')
+          .replaceAll('http://', '');
       normalizedUserId = '$userId:$domain';
     }
 
@@ -68,7 +73,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
     try {
       final matrixService = ChatMatrixService();
       final roomId = await matrixService.createDirectChat(normalizedUserId);
-      
+
       if (mounted) {
         // Navigate to the chat
         Navigator.pushReplacement(
@@ -110,7 +115,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
         topic: _roomTopicController.text.trim(),
         isPublic: !_isPrivate,
       );
-      
+
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -135,7 +140,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: ScreenBackground(
@@ -144,7 +149,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     IconButton(
@@ -163,7 +168,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                   ],
                 ),
               ),
-              
+
               // Tab bar
               GlassCard(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -179,9 +184,9 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Tab content
               Expanded(
                 child: TabBarView(
@@ -232,7 +237,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                   controller: _userIdController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                      labelText: l10n.matrixIdLabel,
+                    labelText: l10n.matrixIdLabel,
                     hintText: '@username:server.com',
                     labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
                     hintStyle: TextStyle(color: Colors.white.withAlpha(100)),
@@ -243,7 +248,8 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
                 ),
@@ -271,7 +277,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                             height: 24,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                          : Text(l10n.startChatButton),
+                        : Text(l10n.startChatButton),
                   ),
                 ),
               ],
@@ -279,13 +285,13 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
           ),
           const SizedBox(height: 24),
           GlassCard(
-            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.white.withAlpha(180)),
+                    Icon(Icons.info_outline,
+                        color: Colors.white.withAlpha(180)),
                     const SizedBox(width: 12),
                     Text(
                       l10n.hintCardTitle,
@@ -298,7 +304,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                 ),
                 const SizedBox(height: 8),
                 Text(
-                    l10n.matrixIdExplanation,
+                  l10n.matrixIdExplanation,
                   style: TextStyle(
                     color: Colors.white.withAlpha(180),
                     fontSize: 13,
@@ -337,7 +343,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                   controller: _roomNameController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                      labelText: l10n.roomNameLabel,
+                    labelText: l10n.roomNameLabel,
                     labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
                     prefixIcon: const Icon(Icons.group, color: Colors.white70),
                     enabledBorder: OutlineInputBorder(
@@ -346,7 +352,8 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
                 ),
@@ -356,16 +363,18 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                   style: const TextStyle(color: Colors.white),
                   maxLines: 2,
                   decoration: InputDecoration(
-                      labelText: l10n.descriptionOptionalLabel,
+                    labelText: l10n.descriptionOptionalLabel,
                     labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
-                    prefixIcon: const Icon(Icons.description, color: Colors.white70),
+                    prefixIcon:
+                        const Icon(Icons.description, color: Colors.white70),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: Colors.white.withAlpha(50)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
                 ),
@@ -377,7 +386,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                     style: const TextStyle(color: Colors.white),
                   ),
                   subtitle: Text(
-                    _isPrivate 
+                    _isPrivate
                         ? l10n.privateGroupSubtitle
                         : l10n.publicRoomSubtitle,
                     style: TextStyle(color: Colors.white.withAlpha(150)),
@@ -409,7 +418,7 @@ class _CreateChatScreenState extends State<CreateChatScreen> with SingleTickerPr
                             height: 24,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                          : Text(l10n.createRoomButton),
+                        : Text(l10n.createRoomButton),
                   ),
                 ),
               ],

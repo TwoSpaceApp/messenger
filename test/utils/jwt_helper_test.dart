@@ -3,8 +3,10 @@ import 'package:two_space_app/core/utils/jwt_helper.dart';
 
 void main() {
   group('JwtHelper', () {
-    const validToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjo0MTAyNDQ0ODAwfQ.dummysignature';
-    const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNjA5NDU5MjAwfQ.dummysignature';
+    const validToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjo0MTAyNDQ0ODAwfQ.dummysignature';
+    const expiredToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNjA5NDU5MjAwfQ.dummysignature';
     const invalidToken = 'invalid.token';
 
     test('decodeToken returns payload for valid token', () {

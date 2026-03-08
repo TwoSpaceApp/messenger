@@ -1,3 +1,6 @@
+import 'package:two_space_app/core/l10n/app_localizations.dart'
+    show AppLocalizations;
+
 /// Route path constants for the app.
 ///
 /// UI strings (loading, errors, button labels, etc.) are defined in

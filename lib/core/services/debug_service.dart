@@ -21,7 +21,8 @@ class DebugService {
     final ts = DateTime.now().toIso8601String();
     final line = '[$ts] [$tag] $message';
     _logs.add(line);
-    if (_logs.length > maxEntries) _logs.removeRange(0, _logs.length - maxEntries);
+    if (_logs.length > maxEntries)
+      _logs.removeRange(0, _logs.length - maxEntries);
     try {
       _stream.add(line);
     } catch (_) {}
@@ -36,7 +37,8 @@ class DebugService {
 
   Future<String> exportToTempFile() async {
     final tmp = await getTemporaryDirectory();
-    final file = File('${tmp.path}/two_space_debug_${DateTime.now().millisecondsSinceEpoch}.log');
+    final file = File(
+        '${tmp.path}/two_space_debug_${DateTime.now().millisecondsSinceEpoch}.log');
     await file.writeAsString(_logs.join('\n'));
     return file.path;
   }

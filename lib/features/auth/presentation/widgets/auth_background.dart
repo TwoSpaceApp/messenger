@@ -1,27 +1,28 @@
-import 'package:flutter/material.dart';
 import 'dart:math';
 
-class AuthBackground extends StatefulWidget {
-  final Widget child;
-  final String title;
-  final bool isCovering; // State to trigger "cover" animation
-  final bool swapBlobs; // Swap positions when true
-  final int seed; 
+import 'package:flutter/material.dart';
 
+class AuthBackground extends StatefulWidget {
   const AuthBackground({
-    super.key,
     required this.child,
     required this.title,
+    super.key,
     this.isCovering = false,
     this.swapBlobs = false,
     this.seed = 0,
   });
+  final Widget child;
+  final String title;
+  final bool isCovering; // State to trigger "cover" animation
+  final bool swapBlobs; // Swap positions when true
+  final int seed;
 
   @override
   State<AuthBackground> createState() => _AuthBackgroundState();
 }
 
-class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStateMixin {
+class _AuthBackgroundState extends State<AuthBackground>
+    with TickerProviderStateMixin {
   late AnimationController _gradientController;
   late AnimationController _coverController;
 
@@ -29,15 +30,15 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
   void initState() {
     super.initState();
     _gradientController = AnimationController(
-       duration: const Duration(seconds: 20),
-       vsync: this,
+      duration: const Duration(seconds: 20),
+      vsync: this,
     )..repeat();
 
     _coverController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     if (widget.isCovering) {
       _coverController.value = 1.0;
     }
@@ -48,9 +49,9 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
     super.didUpdateWidget(oldWidget);
     if (widget.isCovering != oldWidget.isCovering) {
       if (widget.isCovering) {
-        _coverController.forward(from: 0.0);
+        _coverController.forward(from: 0);
       } else {
-        _coverController.reverse(from: 1.0);
+        _coverController.reverse(from: 1);
       }
     }
   }
@@ -91,16 +92,21 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
               ),
             ),
           ),
-          
+
           // Animated Blobs (Only move when covering)
           AnimatedBuilder(
             animation: _coverController,
             builder: (context, _) {
-              final coverT = Curves.easeInOutCubic.transform(_coverController.value);
+              final coverT =
+                  Curves.easeInOutCubic.transform(_coverController.value);
 
               // Static resting positions (swap if requested)
-              final b1Start = widget.swapBlobs ? const Alignment(0.6, -0.6) : const Alignment(-0.6, 0.6);
-              final b2Start = widget.swapBlobs ? const Alignment(-0.6, 0.6) : const Alignment(0.6, -0.6);
+              final b1Start = widget.swapBlobs
+                  ? const Alignment(0.6, -0.6)
+                  : const Alignment(-0.6, 0.6);
+              final b2Start = widget.swapBlobs
+                  ? const Alignment(-0.6, 0.6)
+                  : const Alignment(0.6, -0.6);
 
               // Target positions (center)
               const b1End = Alignment(-0.2, 0);
@@ -148,26 +154,27 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
                         opacity: widget.isCovering ? 0 : 1,
                         duration: const Duration(milliseconds: 300),
                         child: Container(
-                        constraints: const BoxConstraints(maxWidth: 450),
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface.withValues(alpha: 0.6), 
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
+                          constraints: const BoxConstraints(maxWidth: 450),
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface
+                                .withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.1),
                             ),
-                          ],
-                          border: Border.all(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                            width: 1,
                           ),
+                          child: widget.child,
                         ),
-                        child: widget.child,
                       ),
-                    ),
                     ),
                   ],
                 ),
@@ -180,18 +187,18 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
   }
 
   Widget _buildBlob(double size, double phaseOffset, bool isDark) {
-     return AnimatedBuilder(
-       animation: _gradientController,
-       builder: (context, child) {
-         final t = (_gradientController.value + phaseOffset) % 1.0;
-         
-         final hue1 = 260.0 + sin(t * 2 * pi) * 20; 
-         final hue2 = 280.0 + cos(t * 2 * pi) * 20; 
+    return AnimatedBuilder(
+      animation: _gradientController,
+      builder: (context, child) {
+        final t = (_gradientController.value + phaseOffset) % 1.0;
 
-         final c1 = HSVColor.fromAHSV(0.3, hue1, 0.6, 0.9).toColor();
-         final c2 = HSVColor.fromAHSV(0.3, hue2, 0.6, 0.9).toColor();
+        final hue1 = 260.0 + sin(t * 2 * pi) * 20;
+        final hue2 = 280.0 + cos(t * 2 * pi) * 20;
 
-         return Container(
+        final c1 = HSVColor.fromAHSV(0.3, hue1, 0.6, 0.9).toColor();
+        final c2 = HSVColor.fromAHSV(0.3, hue2, 0.6, 0.9).toColor();
+
+        return Container(
           width: size,
           height: size,
           decoration: BoxDecoration(
@@ -199,18 +206,18 @@ class _AuthBackgroundState extends State<AuthBackground> with TickerProviderStat
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [c1, c2], 
+              colors: [c1, c2],
             ),
             boxShadow: [
               BoxShadow(
-                color: c1.withValues(alpha: 0.2), 
-                blurRadius: 60, 
-                spreadRadius: -10, 
+                color: c1.withValues(alpha: 0.2),
+                blurRadius: 60,
+                spreadRadius: -10,
               ),
             ],
           ),
         );
-       },
-     );
+      },
+    );
   }
 }

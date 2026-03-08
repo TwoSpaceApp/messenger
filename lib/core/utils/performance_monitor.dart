@@ -1,36 +1,37 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
-import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:two_space_app/core/services/sentry_service.dart';
 
 /// Performance monitoring utility for tracking operation durations
 class PerformanceMonitor {
+  PerformanceMonitor(this.operationName) : _stopwatch = Stopwatch()..start();
   final String operationName;
   final Stopwatch _stopwatch;
   bool _isStopped = false;
-
-  PerformanceMonitor(this.operationName) : _stopwatch = Stopwatch()..start();
 
   /// Stop the timer and record the duration
   Duration stop() {
     if (_isStopped) {
       if (kDebugMode) {
-        print('Warning: PerformanceMonitor for "$operationName" was already stopped.');
+        print(
+            'Warning: PerformanceMonitor for "$operationName" was already stopped.');
       }
       return Duration.zero;
     }
     _stopwatch.stop();
     _isStopped = true;
-    
+
     final duration = _stopwatch.elapsed;
-    
+
     if (kDebugMode) {
       print('PERF: $operationName took ${duration.inMilliseconds}ms');
     }
-    
+
     // You can add logic here to report long operations to a monitoring service
     // For example, if duration > 500ms, send to Sentry or another service.
-    
+
     return duration;
   }
 
@@ -50,14 +51,13 @@ class PerformanceMonitor {
 
 /// Represents a single performance metric
 class PerformanceMetric {
-  final String operationName;
-  final Duration duration;
-  final DateTime timestamp;
-
   PerformanceMetric({
     required this.operationName,
     required this.duration,
   }) : timestamp = DateTime.now();
+  final String operationName;
+  final Duration duration;
+  final DateTime timestamp;
 }
 
 /// Centralized performance tracking service
@@ -71,14 +71,15 @@ class PerformanceService {
       operationName: operationName,
       duration: duration,
     );
-    
+
     if (_metrics.length >= _maxMetrics) {
       _metrics.removeAt(0);
     }
     _metrics.add(metric);
 
     if (kDebugMode) {
-      print('PERF_METRIC: ${metric.operationName} - ${metric.duration.inMilliseconds}ms');
+      print(
+          'PERF_METRIC: ${metric.operationName} - ${metric.duration.inMilliseconds}ms');
     }
   }
 

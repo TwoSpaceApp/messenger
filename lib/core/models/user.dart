@@ -5,8 +5,6 @@ part 'user.g.dart';
 
 @freezed
 abstract class User with _$User {
-  const User._();
-
   const factory User({
     required String id,
     required String name,
@@ -17,16 +15,20 @@ abstract class User with _$User {
     String? description,
     String? phone,
   }) = _User;
+  const User._();
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
   /// Backwards-compatible alias to keep existing API unbroken
   factory User.fromMap(Map<String, dynamic> map) {
-    final prefs = (map['prefs'] is Map) ? Map<String, dynamic>.from(map['prefs']) : <String, dynamic>{};
-    final idStr = (map['\$id'] ?? map['id'])?.toString() ?? '';
-    final nameStr = (map['name'] as String?) ?? (prefs['displayName'] as String?) ?? idStr;
+    final prefs = (map['prefs'] is Map)
+        ? Map<String, dynamic>.from(map['prefs'])
+        : <String, dynamic>{};
+    final idStr = (map[r'$id'] ?? map['id'])?.toString() ?? '';
+    final nameStr =
+        (map['name'] as String?) ?? (prefs['displayName'] as String?) ?? idStr;
     final emailStr = (map['email'] as String?) ?? '';
-    
+
     return User(
       id: idStr,
       name: nameStr,
@@ -41,7 +43,7 @@ abstract class User with _$User {
 
   Map<String, dynamic> toMap() {
     return {
-      '\$id': id,
+      r'$id': id,
       'name': name,
       'email': email,
       'prefs': {
@@ -56,7 +58,9 @@ abstract class User with _$User {
 
   String get displayName {
     if (name.isNotEmpty) return name;
-    if (prefs.containsKey('nickname') && (prefs['nickname'] as String?)?.isNotEmpty == true) return '@${prefs['nickname']}';
+    if (prefs.containsKey('nickname') &&
+        ((prefs['nickname'] as String?)?.isNotEmpty ?? false))
+      return '@${prefs['nickname']}';
     if (email.isNotEmpty) return email;
     return id;
   }

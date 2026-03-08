@@ -1,7 +1,8 @@
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/services/dev_http_client.dart' as http;
 import 'package:two_space_app/core/config/environment.dart';
+import 'package:two_space_app/core/services/dev_http_client.dart' as http;
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/matrix_service.dart';
 
@@ -9,12 +10,16 @@ import 'package:two_space_app/features/chat/data/services/matrix_service.dart';
 /// Prefer avatarFileId (fetch bytes via AppwriteService.getFileBytes).
 /// Fallback to avatarUrl (NetworkImage) or initials.
 class UserAvatar extends StatefulWidget {
+  const UserAvatar(
+      {super.key,
+      this.avatarUrl,
+      this.avatarFileId,
+      this.name,
+      this.radius = 24});
   final String? avatarUrl;
   final String? avatarFileId;
   final String? name;
   final double radius;
-
-  const UserAvatar({super.key, this.avatarUrl, this.avatarFileId, this.name, this.radius = 24});
 
   @override
   State<UserAvatar> createState() => _UserAvatarState();
@@ -34,7 +39,8 @@ class _UserAvatarState extends State<UserAvatar> {
   void didUpdateWidget(covariant UserAvatar oldWidget) {
     super.didUpdateWidget(oldWidget);
     // If avatar data changed, clear cached bytes and reload
-    if (oldWidget.avatarFileId != widget.avatarFileId || oldWidget.avatarUrl != widget.avatarUrl) {
+    if (oldWidget.avatarFileId != widget.avatarFileId ||
+        oldWidget.avatarUrl != widget.avatarUrl) {
       if (widget.avatarFileId != null && widget.avatarFileId!.isNotEmpty) {
         _cache.remove(widget.avatarFileId);
       }
@@ -44,9 +50,9 @@ class _UserAvatarState extends State<UserAvatar> {
   }
 
   Future<void> _loadIfNeeded() async {
-    String? fid = widget.avatarFileId;
+    var fid = widget.avatarFileId;
     // Avatar URL (if any)
-    final String? url = widget.avatarUrl;
+    final url = widget.avatarUrl;
     // If avatarFileId not provided, try to extract file id from avatarUrl if it contains /files/{id}
     if (fid == null || fid.isEmpty) {
       if (url != null && url.isNotEmpty) {
@@ -62,16 +68,26 @@ class _UserAvatarState extends State<UserAvatar> {
       }
     }
     // If url looks like a Matrix media download path, try authenticated fetch
-    if ((fid == null || fid.isEmpty) && Environment.useMatrix && url != null && url.contains('/_matrix/media/v3/download')) {
+    if ((fid == null || fid.isEmpty) &&
+        Environment.useMatrix &&
+        url != null &&
+        url.contains('/_matrix/media/v3/download')) {
       try {
         final uri = Uri.parse(url);
         String? token;
-        try { token = await AuthService().getMatrixTokenForUser(); } catch (_) { token = null; }
-        String tokenString = '';
+        try {
+          token = await AuthService().getMatrixTokenForUser();
+        } catch (_) {
+          token = null;
+        }
+        var tokenString = '';
         if (token != null && token.isNotEmpty) {
           tokenString = token;
-        } else if (Environment.matrixHomeserverUrl.isNotEmpty) tokenString = Environment.matrixHomeserverUrl;
-        final headers = tokenString.isNotEmpty ? {'Authorization': 'Bearer $tokenString'} : <String, String>{};
+        } else if (Environment.matrixHomeserverUrl.isNotEmpty)
+          tokenString = Environment.matrixHomeserverUrl;
+        final headers = tokenString.isNotEmpty
+            ? {'Authorization': 'Bearer $tokenString'}
+            : <String, String>{};
         final res = await http.get(uri, headers: headers);
         if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
           final u = Uint8List.fromList(res.bodyBytes);
@@ -83,14 +99,17 @@ class _UserAvatarState extends State<UserAvatar> {
     if (fid == null || fid.isEmpty) {
       // If using Matrix and avatarUrl is an mxc:// URL, try to fetch it from
       // the homeserver content repo using the authenticated download endpoint.
-      if (Environment.useMatrix && widget.avatarUrl != null && widget.avatarUrl!.startsWith('mxc://')) {
+      if (Environment.useMatrix &&
+          widget.avatarUrl != null &&
+          widget.avatarUrl!.startsWith('mxc://')) {
         try {
           final parts = widget.avatarUrl!.substring('mxc://'.length).split('/');
           if (parts.length >= 2) {
             final server = parts[0];
             final mediaId = parts.sublist(1).join('/');
             final homeserver = Environment.matrixHomeserverUrl;
-            final uri = Uri.parse('$homeserver/_matrix/media/v3/download/$server/$mediaId');
+            final uri = Uri.parse(
+                '$homeserver/_matrix/media/v3/download/$server/$mediaId');
             // Get auth header (per-user or global)
             String? token;
             try {
@@ -98,11 +117,14 @@ class _UserAvatarState extends State<UserAvatar> {
             } catch (_) {
               token = null;
             }
-            String tokenString = '';
+            var tokenString = '';
             if (token != null && token.isNotEmpty) {
               tokenString = token;
-            } else if (Environment.matrixHomeserverUrl.isNotEmpty) tokenString = Environment.matrixHomeserverUrl;
-            final headers = tokenString.isNotEmpty ? {'Authorization': 'Bearer $tokenString'} : <String, String>{};
+            } else if (Environment.matrixHomeserverUrl.isNotEmpty)
+              tokenString = Environment.matrixHomeserverUrl;
+            final headers = tokenString.isNotEmpty
+                ? {'Authorization': 'Bearer $tokenString'}
+                : <String, String>{};
             final res = await http.get(uri, headers: headers);
             if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
               final u = Uint8List.fromList(res.bodyBytes);
@@ -114,7 +136,7 @@ class _UserAvatarState extends State<UserAvatar> {
       }
       return;
     }
-  if (fid.isNotEmpty && _cache.containsKey(fid)) {
+    if (fid.isNotEmpty && _cache.containsKey(fid)) {
       setState(() => _bytes = _cache[fid]);
       return;
     }
@@ -132,7 +154,12 @@ class _UserAvatarState extends State<UserAvatar> {
   Widget build(BuildContext context) {
     final r = widget.radius;
     if (_bytes != null) {
-      return CircleAvatar(radius: r, backgroundColor: Colors.transparent, child: ClipOval(child: Image.memory(_bytes!, width: r * 2, height: r * 2, fit: BoxFit.cover)));
+      return CircleAvatar(
+          radius: r,
+          backgroundColor: Colors.transparent,
+          child: ClipOval(
+              child: Image.memory(_bytes!,
+                  width: r * 2, height: r * 2, fit: BoxFit.cover)));
     }
     if (widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty) {
       return CircleAvatar(
@@ -152,8 +179,8 @@ class _UserAvatarState extends State<UserAvatar> {
     final h1 = (hash % 360).toDouble();
     final h2 = ((hash ~/ 360) % 360).toDouble();
     final colors = [
-      HSVColor.fromAHSV(1.0, h1, 0.7, 0.9).toColor(),
-      HSVColor.fromAHSV(1.0, h2, 0.8, 0.8).toColor(),
+      HSVColor.fromAHSV(1, h1, 0.7, 0.9).toColor(),
+      HSVColor.fromAHSV(1, h2, 0.8, 0.8).toColor(),
     ];
     final initial = nameVal.isNotEmpty ? nameVal[0].toUpperCase() : '?';
 

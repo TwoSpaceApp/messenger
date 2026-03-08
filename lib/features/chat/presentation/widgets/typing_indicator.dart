@@ -1,22 +1,24 @@
-import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
+
 class TypingIndicator extends StatefulWidget {
-  final Color dotColor;
   const TypingIndicator({super.key, this.dotColor = Colors.white});
+  final Color dotColor;
 
   @override
   State<TypingIndicator> createState() => _TypingIndicatorState();
 }
 
-class _TypingIndicatorState extends State<TypingIndicator> with SingleTickerProviderStateMixin {
+class _TypingIndicatorState extends State<TypingIndicator>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-       vsync: this,
+      vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat();
   }

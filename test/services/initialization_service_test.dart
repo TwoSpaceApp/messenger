@@ -13,7 +13,7 @@ void main() {
       final result = await InitializationService.initialize();
       expect(result.totalDuration, isNotNull);
       expect(result.steps.length, greaterThan(0));
-      
+
       for (final step in result.steps) {
         expect(step.stepName, isNotEmpty);
         expect(step.duration, isNotNull);
@@ -23,7 +23,7 @@ void main() {
     test('toJson produces valid structure', () async {
       final result = await InitializationService.initialize();
       final json = result.toJson();
-      
+
       expect(json['totalDuration'], isNotNull);
       expect(json['hasFailures'], isA<bool>());
       expect(json['steps'], isA<List>());

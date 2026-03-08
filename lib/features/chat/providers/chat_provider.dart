@@ -1,6 +1,6 @@
 import 'package:riverpod/riverpod.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 
 final chatService = Provider((ref) => ChatMatrixService());
 
@@ -8,28 +8,30 @@ final chatService = Provider((ref) => ChatMatrixService());
 final joinedChatsProvider = FutureProvider<List<Chat>>((ref) async {
   final service = ref.watch(chatService);
   final roomIds = await service.getJoinedRooms();
-  
+
   final chats = <Chat>[];
   for (final id in roomIds) {
     try {
       final meta = await service.getRoomNameAndAvatar(id);
-      chats.add(Chat(
-        id: id,
-        name: meta['name'] ?? id,
-        avatarUrl: meta['avatar'],
-        members: [],
-        lastMessage: '',
-      ));
+      chats.add(
+        Chat(
+          id: id,
+          name: meta['name'] ?? id,
+          avatarUrl: meta['avatar'],
+          members: [],
+        ),
+      );
     } catch (e) {
       // Skip rooms that fail to load
     }
   }
-  
+
   return chats;
 });
 
 // Get specific chat by ID
-final chatByIdProvider = FutureProvider.family<Chat?, String>((ref, chatId) async {
+final chatByIdProvider =
+    FutureProvider.family<Chat?, String>((ref, chatId) async {
   final service = ref.watch(chatService);
   try {
     final meta = await service.getRoomNameAndAvatar(chatId);
@@ -38,7 +40,6 @@ final chatByIdProvider = FutureProvider.family<Chat?, String>((ref, chatId) asyn
       name: meta['name'] ?? chatId,
       avatarUrl: meta['avatar'],
       members: [],
-      lastMessage: '',
     );
   } catch (e) {
     return null;
@@ -46,13 +47,16 @@ final chatByIdProvider = FutureProvider.family<Chat?, String>((ref, chatId) asyn
 });
 
 // Messages for a specific chat
-final chatMessagesProvider = FutureProvider.family<List<dynamic>, String>((ref, chatId) async {
+final chatMessagesProvider =
+    FutureProvider.family<List<dynamic>, String>((ref, chatId) async {
   final service = ref.watch(chatService);
-  return service.loadMessages(roomId: chatId, limit: 50);
+  return service.loadMessages(roomId: chatId);
 });
 
 // Room members provider
-final roomMembersProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, roomId) async {
+final roomMembersProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, roomId) async {
   final service = ref.watch(chatService);
   return service.getRoomMembers(roomId);
 });

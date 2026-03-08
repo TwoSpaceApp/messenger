@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:two_space_app/core/config/environment.dart';
+import 'package:two_space_app/core/navigation/app_router.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/features/settings/presentation/screens/dev_menu_screen.dart';
-import 'package:two_space_app/core/navigation/app_router.dart';
 
 class DevFab extends StatefulWidget {
   const DevFab({super.key});
@@ -19,10 +20,10 @@ class _DevFabState extends State<DevFab> with SingleTickerProviderStateMixin {
   Offset _pos = const Offset(16, 120);
   late final DevLogger _logger = DevLogger('DevFab');
   Timer? _idleTimer;
-  double _opacity = 1.0;
+  double _opacity = 1;
   bool _showPerformance = false;
-  double _fps = 0.0;
-  
+  double _fps = 0;
+
   // To measure FPS
   int _frameCount = 0;
   DateTime _lastFpsCalculation = DateTime.now();
@@ -74,7 +75,7 @@ class _DevFabState extends State<DevFab> with SingleTickerProviderStateMixin {
     final sz = MediaQuery.of(context).size;
     final leftDist = _pos.dx;
     final rightDist = sz.width - _pos.dx - 56;
-    
+
     setState(() {
       if (leftDist < rightDist) {
         _pos = Offset(8, _pos.dy);
@@ -92,7 +93,8 @@ class _DevFabState extends State<DevFab> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    if (!(kDebugMode || Environment.enableDevTools)) return const SizedBox.shrink();
+    if (!(kDebugMode || Environment.enableDevTools))
+      return const SizedBox.shrink();
 
     return Positioned(
       left: _pos.dx,
@@ -120,29 +122,34 @@ class _DevFabState extends State<DevFab> with SingleTickerProviderStateMixin {
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 300),
             opacity: _opacity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_showPerformance)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.5)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_showPerformance)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: Colors.greenAccent.withValues(alpha: 0.5)),
+                    ),
+                    child: Text(
+                      '${_fps.toStringAsFixed(1)} FPS\n${(ProcessInfo.currentRss / 1024 / 1024).toStringAsFixed(1)} MB',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          color: Colors.greenAccent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          height: 1.2),
+                    ),
                   ),
-                  child: Text(
-                    '${_fps.toStringAsFixed(1)} FPS\n${(ProcessInfo.currentRss / 1024 / 1024).toStringAsFixed(1)} MB',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold, height: 1.2),
-                  ),
-                ),
-              _buildButton(),
-            ],
+                _buildButton(),
+              ],
+            ),
           ),
-        ),
         ),
       ),
     );
@@ -154,7 +161,9 @@ class _DevFabState extends State<DevFab> with SingleTickerProviderStateMixin {
       color: base,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5), width: 1.5),
+        side: BorderSide(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+            width: 1.5),
       ),
       elevation: 8,
       child: SizedBox(
@@ -162,7 +171,7 @@ class _DevFabState extends State<DevFab> with SingleTickerProviderStateMixin {
         height: 50,
         child: Center(
           child: Icon(
-            Icons.bug_report_rounded, 
+            Icons.bug_report_rounded,
             color: Theme.of(context).colorScheme.onPrimaryContainer,
             size: 28,
           ),

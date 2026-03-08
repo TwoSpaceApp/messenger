@@ -9,19 +9,21 @@ enum UserStatus {
 }
 
 class UserStatusIndicator extends StatelessWidget {
-  final UserStatus status;
-  final String? typingUser; // For 'typing' status: "User is typing..."
+  // For 'typing' status: "User is typing..."
 
-  const UserStatusIndicator({super.key, 
+  const UserStatusIndicator({
     required this.status,
+    super.key,
     this.typingUser,
   });
+  final UserStatus status;
+  final String? typingUser;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    
+
     switch (status) {
       case UserStatus.online:
         return _buildStatusBadge(
@@ -56,8 +58,8 @@ class UserStatusIndicator extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: color,
-          ),
+                color: color,
+              ),
         ),
       ],
     );
@@ -70,9 +72,9 @@ class UserStatusIndicator extends StatelessWidget {
         Text(
           text,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontStyle: FontStyle.italic,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+                fontStyle: FontStyle.italic,
+                color: Theme.of(context).colorScheme.primary,
+              ),
         ),
         const SizedBox(width: 4),
         _TypingDots(),
@@ -86,7 +88,8 @@ class _TypingDots extends StatefulWidget {
   State<_TypingDots> createState() => __TypingDotsState();
 }
 
-class __TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin {
+class __TypingDotsState extends State<_TypingDots>
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
 
   @override
@@ -144,15 +147,14 @@ class DotWidget extends StatelessWidget {
 
 // User status info model
 class UserStatusInfo {
-  final String userId;
-  final UserStatus status;
-  final DateTime lastSeen;
-  final bool isTyping;
-
   UserStatusInfo({
     required this.userId,
     required this.status,
     required this.lastSeen,
     this.isTyping = false,
   });
+  final String userId;
+  final UserStatus status;
+  final DateTime lastSeen;
+  final bool isTyping;
 }

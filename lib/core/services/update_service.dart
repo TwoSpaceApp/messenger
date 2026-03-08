@@ -1,24 +1,24 @@
 import 'dart:io';
+
+import 'package:crypto/crypto.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/services/dev_http_client.dart' as http;
-import 'package:crypto/crypto.dart';
-import 'package:two_space_app/features/settings/presentation/screens/update_screen.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:two_space_app/features/settings/presentation/screens/update_screen.dart';
 
 class UpdateInfo {
-  final String latestVersion;
-  final String updateUrl; // direct URL to APK
-  final String? apkFileId; // AppWrite file id
-  final String? apkBucketId; // optional bucket id
-  final String notes;
-  final String? sha256;
-  final String? platform;
-  final bool forceUpdate;
-  final String? selectedAbi;
-
-  UpdateInfo({required this.latestVersion, required this.updateUrl, this.notes = '', this.apkFileId, this.apkBucketId, this.sha256, this.platform, this.forceUpdate = false, this.selectedAbi});
+  UpdateInfo(
+      {required this.latestVersion,
+      required this.updateUrl,
+      this.notes = '',
+      this.apkFileId,
+      this.apkBucketId,
+      this.sha256,
+      this.platform,
+      this.forceUpdate = false,
+      this.selectedAbi});
 
   factory UpdateInfo.fromJson(Map<String, dynamic> j) => UpdateInfo(
         latestVersion: j['version']?.toString() ?? '',
@@ -28,9 +28,19 @@ class UpdateInfo {
         notes: j['notes']?.toString() ?? '',
         sha256: j['sha256']?.toString(),
         platform: j['platform']?.toString(),
-        forceUpdate: (j['forceUpdate'] == true) || (j['forceUpdate']?.toString().toLowerCase() == 'true'),
+        forceUpdate: (j['forceUpdate'] == true) ||
+            (j['forceUpdate']?.toString().toLowerCase() == 'true'),
         selectedAbi: j['selectedAbi']?.toString(),
       );
+  final String latestVersion;
+  final String updateUrl; // direct URL to APK
+  final String? apkFileId; // AppWrite file id
+  final String? apkBucketId; // optional bucket id
+  final String notes;
+  final String? sha256;
+  final String? platform;
+  final bool forceUpdate;
+  final String? selectedAbi;
 }
 
 class UpdateService {
@@ -38,8 +48,9 @@ class UpdateService {
 
   static Future<bool> canRequestInstallPackages() async {
     try {
-      final res = await _channel.invokeMethod<bool>('canRequestInstallPackages');
-      return res == true;
+      final res =
+          await _channel.invokeMethod<bool>('canRequestInstallPackages');
+      return res ?? false;
     } catch (_) {
       return false;
     }
@@ -48,7 +59,7 @@ class UpdateService {
   static Future<bool> openInstallSettings() async {
     try {
       final res = await _channel.invokeMethod<bool>('openInstallSettings');
-      return res == true;
+      return res ?? false;
     } catch (_) {
       return false;
     }
@@ -61,30 +72,23 @@ class UpdateService {
   }
 
   // downloads apk to temp file and returns local path
-  static Future<String?> downloadApk(String url, {ValueChanged<double>? onProgress}) async {
+  static Future<String?> downloadApk(String url,
+      {ValueChanged<double>? onProgress}) async {
     try {
-      final client = http.Client();
-      final uri = Uri.parse(url);
-      final req = http.Request('GET', uri);
-
-      // Appwrite headers not needed for non-Appwrite URLs
-      final resp = await client.send(req);
-      if (resp.statusCode != 200) {
-        if (kDebugMode) debugPrint('APK download request failed: ${resp.statusCode}');
-        return null;
-      }
-      final contentLength = resp.contentLength ?? 0;
       final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/update_${DateTime.now().millisecondsSinceEpoch}.apk');
-      final sink = file.openWrite();
-      int received = 0;
-      await for (final chunk in resp.stream) {
-        received += chunk.length;
-        sink.add(chunk);
-        if (onProgress != null && contentLength > 0) onProgress(received / contentLength);
-      }
-      await sink.close();
-      return file.path;
+      final savePath = '${tempDir.path}/update_${DateTime.now().millisecondsSinceEpoch}.apk';
+      
+      final dio = Dio();
+      await dio.download(
+        url,
+        savePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1 && onProgress != null) {
+            onProgress(received / total);
+          }
+        },
+      );
+      return savePath;
     } catch (e) {
       if (kDebugMode) debugPrint('APK download failed: $e');
       return null;
@@ -107,8 +111,9 @@ class UpdateService {
   // Ask platform to install the APK (Android). Returns true if the platform acknowledged the request.
   static Future<bool> installApk(String apkPath) async {
     try {
-      final res = await _channel.invokeMethod<bool>('installApk', {'path': apkPath});
-      return res == true;
+      final res =
+          await _channel.invokeMethod<bool>('installApk', {'path': apkPath});
+      return res ?? false;
     } catch (e) {
       if (kDebugMode) debugPrint('installApk failed: $e');
       return false;
@@ -124,7 +129,8 @@ class UpdateDialog {
     if (info == null) return;
     if (!context.mounted) return;
     // Push a full-screen update page that looks like Telegram's update prompt
-    Navigator.of(context).push(MaterialPageRoute(builder: (c) => UpdateScreen(info: info)));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (c) => UpdateScreen(info: info)));
   }
 }
 

@@ -1,16 +1,16 @@
 // Enhanced audio player widget with waveform and playback speed
-import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 
 class EnhancedAudioPlayer extends StatefulWidget {
-  final String audioUrl;
-  final String? displayName;
-
-  const EnhancedAudioPlayer({super.key, 
+  const EnhancedAudioPlayer({
     required this.audioUrl,
+    super.key,
     this.displayName,
   });
+  final String audioUrl;
+  final String? displayName;
 
   @override
   State<EnhancedAudioPlayer> createState() => _EnhancedAudioPlayerState();
@@ -21,7 +21,7 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
   PlayerState _playerState = PlayerState.stopped;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
-  double _playbackSpeed = 1.0;
+  double _playbackSpeed = 1;
   final List<double> _speeds = [1.0, 1.25, 1.5, 1.75, 2.0];
 
   @override
@@ -51,7 +51,7 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
     super.dispose();
   }
 
-  void _togglePlayPause() async {
+  Future<void> _togglePlayPause() async {
     if (_playerState == PlayerState.playing) {
       await _audioPlayer.pause();
     } else {
@@ -59,7 +59,7 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
     }
   }
 
-  void _changeSpeed(double speed) async {
+  Future<void> _changeSpeed(double speed) async {
     setState(() => _playbackSpeed = speed);
     await _audioPlayer.setPlaybackRate(speed);
   }
@@ -101,11 +101,13 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
                     thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6),
                   ),
                   child: Slider(
-                    min: 0,
                     max: _duration.inMilliseconds.toDouble(),
-                    value: _position.inMilliseconds.toDouble().clamp(0, _duration.inMilliseconds.toDouble()),
+                    value: _position.inMilliseconds
+                        .toDouble()
+                        .clamp(0, _duration.inMilliseconds.toDouble()),
                     onChanged: (value) async {
-                      await _audioPlayer.seek(Duration(milliseconds: value.toInt()));
+                      await _audioPlayer
+                          .seek(Duration(milliseconds: value.toInt()));
                     },
                   ),
                 ),

@@ -5,18 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 
 class MediaViewer extends StatelessWidget {
+  const MediaViewer({super.key, this.bytes, this.localPath, this.title});
   final Uint8List? bytes;
   final String? localPath;
   final String? title;
-
-  const MediaViewer({super.key, this.bytes, this.localPath, this.title});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     Widget child;
     if (bytes != null) {
-      child = InteractiveViewer(child: Image.memory(bytes!, fit: BoxFit.contain));
+      child =
+          InteractiveViewer(child: Image.memory(bytes!, fit: BoxFit.contain));
     } else if (localPath != null) {
       final file = File(localPath!);
       child = InteractiveViewer(child: Image.file(file, fit: BoxFit.contain));

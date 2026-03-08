@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 /// Данные о языке: код, родное название, код страны для флага
 class _LangInfo {
+  const _LangInfo(this.code, this.native, this.countryCode);
   final String code;
   final String native;
   final String countryCode;
-  const _LangInfo(this.code, this.native, this.countryCode);
-  
+
   String get flagUrl => 'https://flagcdn.com/w80/$countryCode.png';
 }
 
@@ -31,9 +31,10 @@ const _languages = [
 /// Работает через [SettingsService.setLanguage], изменение подхватывается
 /// [MaterialApp.locale] через [ValueListenableBuilder] в main.dart.
 class LanguageSwitcherButton extends StatelessWidget {
+  const LanguageSwitcherButton({super.key, this.showLabel = true});
+
   /// Показывать ли текстовую метку рядом с иконкой
   final bool showLabel;
-  const LanguageSwitcherButton({super.key, this.showLabel = true});
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +52,9 @@ class LanguageSwitcherButton extends StatelessWidget {
 }
 
 class _LanguageButton extends StatelessWidget {
+  const _LanguageButton({required this.info, required this.showLabel});
   final _LangInfo info;
   final bool showLabel;
-  const _LanguageButton({required this.info, required this.showLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -82,8 +83,12 @@ class _LanguageButton extends StatelessWidget {
                   width: 24,
                   height: 18,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(width: 24, height: 18, color: Colors.grey.withValues(alpha: 0.3)),
-                  errorWidget: (context, url, err) => const Icon(Icons.language, size: 18),
+                  placeholder: (context, url) => Container(
+                      width: 24,
+                      height: 18,
+                      color: Colors.grey.withValues(alpha: 0.3)),
+                  errorWidget: (context, url, err) =>
+                      const Icon(Icons.language, size: 18),
                 ),
               ),
               if (showLabel) ...[
@@ -120,14 +125,14 @@ class _LanguageButton extends StatelessWidget {
 }
 
 class _LanguagePickerSheet extends StatelessWidget {
-  final String currentCode;
   const _LanguagePickerSheet({required this.currentCode});
+  final String currentCode;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    
+
     return Container(
       constraints: BoxConstraints(maxHeight: size.height * 0.85),
       decoration: BoxDecoration(
@@ -152,13 +157,15 @@ class _LanguagePickerSheet extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
               child: Row(
                 children: [
-                   Container(
+                  Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                      color: theme.colorScheme.primaryContainer
+                          .withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.language_rounded, color: theme.colorScheme.primary, size: 24),
+                    child: Icon(Icons.language_rounded,
+                        color: theme.colorScheme.primary, size: 24),
                   ),
                   const SizedBox(width: 16),
                   Text(
@@ -182,9 +189,13 @@ class _LanguagePickerSheet extends StatelessWidget {
                   final lang = _languages[i];
                   final selected = lang.code == currentCode;
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: Material(
-                      color: selected ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3) : Colors.transparent,
+                      color: selected
+                          ? theme.colorScheme.primaryContainer
+                              .withValues(alpha: 0.3)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(16),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
@@ -193,7 +204,8 @@ class _LanguagePickerSheet extends StatelessWidget {
                           SettingsService.setLanguage(lang.code);
                         },
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           child: Row(
                             children: [
                               ClipRRect(
@@ -204,15 +216,18 @@ class _LanguagePickerSheet extends StatelessWidget {
                                   height: 26,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => Container(
-                                    width: 36, 
-                                    height: 26, 
-                                    color: theme.colorScheme.surfaceContainerHighest,
+                                    width: 36,
+                                    height: 26,
+                                    color: theme
+                                        .colorScheme.surfaceContainerHighest,
                                   ),
                                   errorWidget: (context, url, err) => Container(
-                                    width: 36, 
-                                    height: 26, 
-                                    color: theme.colorScheme.surfaceContainerHighest,
-                                    child: const Icon(Icons.error_outline, size: 16),
+                                    width: 36,
+                                    height: 26,
+                                    color: theme
+                                        .colorScheme.surfaceContainerHighest,
+                                    child: const Icon(Icons.error_outline,
+                                        size: 16),
                                   ),
                                 ),
                               ),
@@ -221,8 +236,12 @@ class _LanguagePickerSheet extends StatelessWidget {
                                 child: Text(
                                   lang.native,
                                   style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                                    color: selected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                                    fontWeight: selected
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
+                                    color: selected
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.onSurface,
                                   ),
                                 ),
                               ),

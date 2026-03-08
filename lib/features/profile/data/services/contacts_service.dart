@@ -2,10 +2,9 @@
 // ignore: uri_does_not_exist
 
 class ContactEntry {
+  ContactEntry({required this.displayName, required this.phones});
   final String displayName;
   final List<String> phones;
-
-  ContactEntry({required this.displayName, required this.phones});
 }
 
 class ContactsService {
@@ -30,7 +29,7 @@ class ContactsService {
     // Reserved for future use with flutter_contacts integration.
     var s = raw.trim();
     final hasPlus = s.startsWith('+');
-    s = s.replaceAll(RegExp(r'[^0-9]'), '');
+    s = s.replaceAll(RegExp('[^0-9]'), '');
     if (hasPlus) s = '+$s';
     return s;
   }

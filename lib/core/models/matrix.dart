@@ -1,10 +1,4 @@
 class MatrixEvent {
-  final String eventId;
-  final String roomId;
-  final String sender;
-  final DateTime originServerTs;
-  final Map<String, dynamic> content;
-
   MatrixEvent({
     required this.eventId,
     required this.roomId,
@@ -18,8 +12,14 @@ class MatrixEvent {
       eventId: json['event_id'],
       roomId: json['room_id'],
       sender: json['sender'],
-      originServerTs: DateTime.fromMillisecondsSinceEpoch(json['origin_server_ts']),
+      originServerTs:
+          DateTime.fromMillisecondsSinceEpoch(json['origin_server_ts']),
       content: json['content'],
     );
   }
+  final String eventId;
+  final String roomId;
+  final String sender;
+  final DateTime originServerTs;
+  final Map<String, dynamic> content;
 }

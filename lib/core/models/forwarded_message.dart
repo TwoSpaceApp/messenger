@@ -1,12 +1,5 @@
 // Forwarded message model
 class ForwardedMessage {
-  final String messageId;
-  final String senderId;
-  final String senderName;
-  final String sourceChat;
-  final String content;
-  final DateTime timestamp;
-
   ForwardedMessage({
     required this.messageId,
     required this.senderId,
@@ -15,6 +8,12 @@ class ForwardedMessage {
     required this.content,
     required this.timestamp,
   });
+  final String messageId;
+  final String senderId;
+  final String senderName;
+  final String sourceChat;
+  final String content;
+  final DateTime timestamp;
 
   String get forwardedFrom => 'Переслано от $senderName из $sourceChat';
 }

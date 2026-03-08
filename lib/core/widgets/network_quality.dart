@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/services/dev_http_client.dart' as http;
 import 'package:two_space_app/core/config/environment.dart';
+import 'package:two_space_app/core/services/dev_http_client.dart' as http;
 
 /// Shows simple network quality indicator (0-3 bars) based on ping RTT to
 /// the configured Matrix homeserver. This is a light-weight heuristic and
@@ -11,7 +11,8 @@ class NetworkQualityIndicator extends StatefulWidget {
   const NetworkQualityIndicator({super.key});
 
   @override
-  State<NetworkQualityIndicator> createState() => _NetworkQualityIndicatorState();
+  State<NetworkQualityIndicator> createState() =>
+      _NetworkQualityIndicatorState();
 }
 
 class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
@@ -39,26 +40,30 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
         if (mounted) setState(() => _bars = 0);
         return;
       }
-      final url = Uri.parse('${base.replaceAll(RegExp(r'/$'), '')}/_matrix/client/versions');
+      final url = Uri.parse(
+          '${base.replaceAll(RegExp(r'/$'), '')}/_matrix/client/versions');
       final sw = Stopwatch()..start();
       final res = await http.get(url).timeout(const Duration(seconds: 3));
       sw.stop();
       final rtt = sw.elapsedMilliseconds;
-      int bars = 0;
+      var bars = 0;
       if (res.statusCode >= 200 && res.statusCode < 300) {
         if (rtt < 120) {
           bars = 3;
-        } else if (rtt < 400) bars = 2;
-        else if (rtt < 1200) bars = 1;
-        else bars = 0;
+        } else if (rtt < 400)
+          bars = 2;
+        else if (rtt < 1200)
+          bars = 1;
+        else
+          bars = 0;
       } else {
         bars = 0;
       }
       if (mounted) {
         setState(() {
-        _bars = bars;
-        _rttMs = rtt;
-      });
+          _bars = bars;
+          _rttMs = rtt;
+        });
       }
     } catch (_) {
       if (mounted) setState(() => _bars = 0);
@@ -67,7 +72,9 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
 
   @override
   Widget build(BuildContext context) {
-    final color = _bars >= 2 ? Colors.greenAccent : (_bars == 1 ? Colors.orangeAccent : Colors.redAccent);
+    final color = _bars >= 2
+        ? Colors.greenAccent
+        : (_bars == 1 ? Colors.orangeAccent : Colors.redAccent);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -79,7 +86,9 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
               width: 8,
               height: 8 + i * 6,
               decoration: BoxDecoration(
-                color: active ? color : Theme.of(context).disabledColor.withValues(alpha: 0.2),
+                color: active
+                    ? color
+                    : Theme.of(context).disabledColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -88,7 +97,7 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
         if (_rttMs != null) ...[
           const SizedBox(width: 8),
           Text('${_rttMs!} ms', style: TextStyle(color: color, fontSize: 12)),
-        ]
+        ],
       ],
     );
   }

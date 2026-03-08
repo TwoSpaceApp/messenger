@@ -13,11 +13,11 @@ enum LogLevel {
 
 /// Журнал для разработчиков с поддержкой уровней логирования
 class DevLogger {
-  static final List<String> _logs = [];
-  static final StreamController<List<String>> _ctrl = StreamController.broadcast();
-  final String _tag;
-
   DevLogger(this._tag);
+  static final List<String> _logs = [];
+  static final StreamController<List<String>> _ctrl =
+      StreamController.broadcast();
+  final String _tag;
 
   /// Логировать сообщение с определённым уровнем
   static void _log(String msg, LogLevel level) {
@@ -64,6 +64,4 @@ class DevLogger {
       _ctrl.add(List<String>.from(_logs));
     } catch (_) {}
   }
-
 }
-

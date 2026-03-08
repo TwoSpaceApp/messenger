@@ -2,17 +2,17 @@
 class ProtocolConstants {
   // Magic number for protocol identification
   static const int magic = 0xAE6C5D7;
-  
+
   // Protocol version
   static const int versionMajor = 1;
   static const int versionMinor = 0;
-  
+
   // Header sizes
   static const int headerSize = 4 + 1 + 1 + 1 + 2 + 8 + 4; // 20 bytes
   static const int macSize = 32; // SHA256 HMAC
   static const int maxMessageSize = 1024 * 1024; // 1MB
   static const int maxPayloadSize = maxMessageSize - headerSize - macSize;
-  
+
   // Message type constants
   static const int typeUnknown = 0;
   static const int typeAuth = 1;
@@ -36,7 +36,7 @@ class ProtocolConstants {
   static const int typeUserSearchResult = 19;
   static const int typeRegister = 20;
   static const int typeRegisterResponse = 21;
-  
+
   // Message flags
   static const int flagNone = 0x00;
   static const int flagRequiresAck = 0x01;
@@ -44,7 +44,7 @@ class ProtocolConstants {
   static const int flagCompressed = 0x04;
   static const int flagEncrypted = 0x08;
   static const int flagPriority = 0x10;
-  
+
   // Acknowledgment status codes
   static const int ackOk = 0;
   static const int ackError = 1;

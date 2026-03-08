@@ -1,17 +1,17 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:async';
 
-class ConnectivityService {
-  static final ConnectivityService _instance = ConnectivityService._internal();
-  final Connectivity _connectivity = Connectivity();
-  late StreamSubscription<List<ConnectivityResult>> _subscription;
-  
-  bool _isOnline = true;
-  final List<Function(bool)> _listeners = [];
+import 'package:connectivity_plus/connectivity_plus.dart';
 
+class ConnectivityService {
   factory ConnectivityService() => _instance;
 
   ConnectivityService._internal();
+  static final ConnectivityService _instance = ConnectivityService._internal();
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<List<ConnectivityResult>> _subscription;
+
+  bool _isOnline = true;
+  final List<Function(bool)> _listeners = [];
 
   /// Initialize connectivity monitoring
   Future<void> initialize() async {
@@ -23,7 +23,7 @@ class ConnectivityService {
     _subscription = _connectivity.onConnectivityChanged.listen((results) {
       final wasOnline = _isOnline;
       _isOnline = !results.contains(ConnectivityResult.none);
-      
+
       if (wasOnline != _isOnline) {
         _notifyListeners(_isOnline);
       }

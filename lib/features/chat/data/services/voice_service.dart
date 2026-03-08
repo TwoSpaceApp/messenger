@@ -1,13 +1,14 @@
 import 'dart:io';
+
 import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:record/record.dart';
 
 /// Real VoiceService using the 'record' package for audio recording.
 class VoiceService {
-  static final VoiceService _instance = VoiceService._internal();
   factory VoiceService() => _instance;
   VoiceService._internal();
+  static final VoiceService _instance = VoiceService._internal();
 
   final AudioRecorder _recorder = AudioRecorder();
   bool _isRecording = false;
@@ -71,9 +72,6 @@ class VoiceService {
 
       // Configure recording
       const config = RecordConfig(
-        encoder: AudioEncoder.aacLc,
-        bitRate: 128000,
-        sampleRate: 44100,
         numChannels: 1,
       );
 

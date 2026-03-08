@@ -1,19 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 
-import 'package:two_space_app/core/constants/app_colors.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/config/theme_builder.dart';
-
+import 'package:two_space_app/core/constants/app_colors.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/navigation/app_router.dart';
 import 'package:two_space_app/core/services/initialization_service.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
-import 'package:two_space_app/features/settings/data/services/settings_service.dart';
-import 'package:two_space_app/core/navigation/app_router.dart';
-import 'package:two_space_app/core/config/environment.dart';
-import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/dev_fab.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_listener.dart';
+import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,7 +62,7 @@ Widget _buildErrorWidget(FlutterErrorDetails details) {
       backgroundColor: AppColors.backgroundError,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(20),
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -75,7 +74,7 @@ Widget _buildErrorWidget(FlutterErrorDetails details) {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  "Application Error", // Hardcoded English text
+                  'Application Error', // Hardcoded English text
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 18,
@@ -98,12 +97,11 @@ Widget _buildErrorWidget(FlutterErrorDetails details) {
 }
 
 class TwoSpaceApp extends ConsumerWidget {
-  final InitializationResult initializationResult;
-
   const TwoSpaceApp({
-    super.key,
     required this.initializationResult,
+    super.key,
   });
+  final InitializationResult initializationResult;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -112,7 +110,7 @@ class TwoSpaceApp extends ConsumerWidget {
       final criticalFailures = initializationResult.failures
           .where((f) => f.stepName.contains('Critical'))
           .toList();
-      
+
       if (criticalFailures.isNotEmpty && !kDebugMode) {
         return _buildInitializationErrorApp(criticalFailures);
       }
@@ -145,15 +143,19 @@ class TwoSpaceApp extends ConsumerWidget {
 
                     final app = MaterialApp.router(
                       title: 'TwoSpace',
-                      onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
+                      onGenerateTitle: (context) =>
+                          AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
                       debugShowCheckedModeBanner: false,
                       theme: lightTheme,
                       darkTheme: darkTheme,
                       themeMode: themeMode,
                       locale: Locale(languageCode),
-                      localizationsDelegates: AppLocalizations.localizationsDelegates,
+                      localizationsDelegates:
+                          AppLocalizations.localizationsDelegates,
                       supportedLocales: AppLocalizations.supportedLocales,
-                      routerConfig: goRouter, builder: (context, child) => AuthListener(child: child ?? const SizedBox()),
+                      routerConfig: goRouter,
+                      builder: (context, child) =>
+                          AuthListener(child: child ?? const SizedBox()),
                     );
 
                     if (kDebugMode || Environment.enableDevTools) {
@@ -179,7 +181,7 @@ class TwoSpaceApp extends ConsumerWidget {
         backgroundColor: AppColors.backgroundError,
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -190,7 +192,7 @@ class TwoSpaceApp extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  "Critical Initialization Failure", // Hardcoded English text
+                  'Critical Initialization Failure', // Hardcoded English text
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 18,
@@ -198,14 +200,16 @@ class TwoSpaceApp extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                ...failures.map((f) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text(
-                    '${f.stepName}: ${f.error}',
-                    style: const TextStyle(color: AppColors.textSecondary),
-                    textAlign: TextAlign.center,
+                ...failures.map(
+                  (f) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      '${f.stepName}: ${f.error}',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                )),
+                ),
               ],
             ),
           ),
@@ -214,4 +218,3 @@ class TwoSpaceApp extends ConsumerWidget {
     );
   }
 }
-

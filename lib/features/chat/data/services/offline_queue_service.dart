@@ -2,6 +2,24 @@ import 'dart:async';
 
 // Offline message model
 class OfflineMessage {
+  OfflineMessage({
+    required this.chatId,
+    required this.content,
+    required this.type,
+    required this.createdAt,
+    this.id,
+    this.sent = false,
+    this.errorMessage,
+  });
+
+  factory OfflineMessage.fromMap(Map<String, dynamic> map) => OfflineMessage(
+        chatId: map['chatId'] as String,
+        content: map['content'] as String,
+        type: map['type'] as String,
+        createdAt: DateTime.parse(map['createdAt'] as String),
+        sent: map['sent'] as bool? ?? false,
+        errorMessage: map['errorMessage'] as String?,
+      );
   final int? id;
   final String chatId;
   final String content;
@@ -10,45 +28,25 @@ class OfflineMessage {
   final bool sent;
   final String? errorMessage;
 
-  OfflineMessage({
-    this.id,
-    required this.chatId,
-    required this.content,
-    required this.type,
-    required this.createdAt,
-    this.sent = false,
-    this.errorMessage,
-  });
-
   Map<String, dynamic> toMap() => {
-    'chatId': chatId,
-    'content': content,
-    'type': type,
-    'createdAt': createdAt.toIso8601String(),
-    'sent': sent,
-    'errorMessage': errorMessage,
-  };
-
-  factory OfflineMessage.fromMap(Map<String, dynamic> map) => OfflineMessage(
-    chatId: map['chatId'] as String,
-    content: map['content'] as String,
-    type: map['type'] as String,
-    createdAt: DateTime.parse(map['createdAt'] as String),
-    sent: map['sent'] as bool? ?? false,
-    errorMessage: map['errorMessage'] as String?,
-  );
+        'chatId': chatId,
+        'content': content,
+        'type': type,
+        'createdAt': createdAt.toIso8601String(),
+        'sent': sent,
+        'errorMessage': errorMessage,
+      };
 }
 
 /// Stub implementation of OfflineQueueService using in-memory storage.
 /// Sembast/database plugin is optional; for now we cache messages in RAM.
 class OfflineQueueService {
-  static final OfflineQueueService _instance = OfflineQueueService._internal();
-  static final Map<int, Map<String, dynamic>> _queueCache = {};
-  static int _nextId = 1;
-
   factory OfflineQueueService() => _instance;
 
   OfflineQueueService._internal();
+  static final OfflineQueueService _instance = OfflineQueueService._internal();
+  static final Map<int, Map<String, dynamic>> _queueCache = {};
+  static int _nextId = 1;
 
   /// Initialize the offline queue database (stub: no-op)
   static Future<void> initialize() async {
@@ -73,9 +71,9 @@ class OfflineQueueService {
     return _queueCache.entries
         .where((e) => (e.value['chatId'] as String?) == chatId)
         .map((e) {
-          final msg = OfflineMessage.fromMap(e.value);
-          return msg.copyWith(id: e.key);
-        }).toList();
+      final msg = OfflineMessage.fromMap(e.value);
+      return msg.copyWith(id: e.key);
+    }).toList();
   }
 
   /// Mark message as sent
@@ -109,4 +107,3 @@ extension on OfflineMessage {
     );
   }
 }
-

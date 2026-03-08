@@ -2,17 +2,17 @@
 import 'package:flutter/material.dart';
 
 class EnhancedAvatar extends StatelessWidget {
+  const EnhancedAvatar({
+    required this.name,
+    super.key,
+    this.imageUrl,
+    this.radius = 20,
+    this.showInitials = true,
+  });
   final String? imageUrl;
   final String name;
   final double radius;
   final bool showInitials;
-
-  const EnhancedAvatar({super.key, 
-    this.imageUrl,
-    required this.name,
-    this.radius = 20,
-    this.showInitials = true,
-  });
 
   String _getInitials(String name) {
     if (name.isEmpty) return '?';
@@ -38,7 +38,7 @@ class EnhancedAvatar extends StatelessWidget {
       Colors.pink,
       Colors.amber,
     ];
-    final index = (hash.abs() % colors.length);
+    final index = hash.abs() % colors.length;
     if (isSecondary) {
       return colors[(index + 1) % colors.length];
     }
@@ -95,17 +95,17 @@ class EnhancedAvatar extends StatelessWidget {
 
 // Group avatar with multiple user initials
 class GroupAvatar extends StatelessWidget {
+  const GroupAvatar({
+    required this.name,
+    super.key,
+    this.imageUrl,
+    this.memberNames = const [],
+    this.radius = 20,
+  });
   final String? imageUrl;
   final String name;
   final List<String> memberNames; // Top members for preview
   final double radius;
-
-  const GroupAvatar({super.key, 
-    this.imageUrl,
-    required this.name,
-    this.memberNames = const [],
-    this.radius = 20,
-  });
 
   @override
   Widget build(BuildContext context) {

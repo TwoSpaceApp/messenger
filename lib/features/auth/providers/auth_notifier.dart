@@ -27,7 +27,7 @@ class AuthState with _$AuthState {
         authenticated: (s) => s.userId,
         orElse: () => null,
       );
-      
+
   String? get token => maybeMap(
         authenticated: (s) => s.token,
         orElse: () => null,
@@ -42,7 +42,7 @@ AuthService authService(Ref ref) {
 @Riverpod(keepAlive: true)
 class AuthNotifier extends _$AuthNotifier {
   AuthService? _authServiceInstance;
-  
+
   AuthService get _authService {
     _authServiceInstance ??= ref.read(authServiceProvider);
     return _authServiceInstance!;
@@ -114,12 +114,12 @@ class AuthNotifier extends _$AuthNotifier {
 Future<bool> isAuthenticated(Ref ref) async {
   // Since we are using riverpod_generator, the provider is generated.
   // We need to use `authProvider` manually here.
-  final AuthState authState = await ref.watch(authProvider.future);
+  final authState = await ref.watch(authProvider.future);
   return authState.isAuthenticated;
 }
 
 @riverpod
 Future<String?> currentUserId(Ref ref) async {
-  final AuthState authState = await ref.watch(authProvider.future);
+  final authState = await ref.watch(authProvider.future);
   return authState.userId;
 }

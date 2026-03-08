@@ -496,5 +496,22 @@
   "administratorsLabel": "⚡ Administradores",
   "oneHour": "1 hora",
   "oneDay": "1 día",
-  "sevenDays": "7 días"
+  "sevenDays": "7 días",
+  "settingsThemeSelection": "Theme",
+  "settingsNotificationNew": "Notifications",
+  "settingsDoNotDisturb": "Do Not Disturb",
+  "settingsSoundOptions": "Sound Settings",
+  "settingsStorageManagement": "Storage Management",
+  "settingsStorageUsage": "Storage Usage",
+  "settingsStorageAppSize": "App Size",
+  "settingsStorageClearBtn": "Clear Selected",
+  "settingsStorageKeepChat": "Keep Chat Data",
+  "settingsStorageKeepChannel": "Keep Channel Data",
+  "settingsStorageKeepGroup": "Keep Group Data",
+  "settingsAboutPropose": "Propose Improvement",
+  "settingsAboutCheckUpdate": "Check for Updates",
+  "biometricsEnable": "App Lock (Biometrics/PIN)",
+  "biometricsSetup": "Setup App Lock",
+  "contactsTwoSpaceYes": "Uses TwoSpace",
+  "contactsTwoSpaceNo": "Not in TwoSpace"
 }

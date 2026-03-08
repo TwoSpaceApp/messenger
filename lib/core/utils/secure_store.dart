@@ -8,7 +8,7 @@ class SecureStore {
   }
 
   static Future<String?> read(String key) async {
-    return await _storage.read(key: key);
+    return _storage.read(key: key);
   }
 
   static Future<void> delete(String key) async {

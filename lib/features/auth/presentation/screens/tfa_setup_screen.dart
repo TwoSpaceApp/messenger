@@ -42,7 +42,8 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
   Future<void> _verifyTfa() async {
     if (_codeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the code from your authenticator app')),
+        const SnackBar(
+            content: Text('Please enter the code from your authenticator app')),
       );
       return;
     }
@@ -78,8 +79,7 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
                     Center(
                       child: QrImageView(
                         data: _otpAuthUri!,
-                        version: QrVersions.auto,
-                        size: 200.0,
+                        size: 200,
                       ),
                     ),
                   const SizedBox(height: 16),
@@ -89,9 +89,12 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            const Text('Or enter this secret key into your authenticator app:'),
+                            const Text(
+                                'Or enter this secret key into your authenticator app:'),
                             const SizedBox(height: 8),
-                            SelectableText(_secret!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            SelectableText(_secret!,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),

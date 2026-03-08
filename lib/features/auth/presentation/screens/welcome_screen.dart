@@ -2,27 +2,32 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-
 import 'package:two_space_app/core/constants/greeting_constants.dart';
-import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
-import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
-
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/presentation/screens/main_screen.dart';
+import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
 class WelcomeScreen extends StatefulWidget {
+  const WelcomeScreen(
+      {required this.name,
+      super.key,
+      this.avatarUrl,
+      this.avatarFileId,
+      this.description,
+      this.phone});
   final String name;
   final String? avatarUrl;
   final String? avatarFileId;
   final String? description;
   final String? phone;
-  const WelcomeScreen({super.key, required this.name, this.avatarUrl, this.avatarFileId, this.description, this.phone});
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProviderStateMixin {
+class _WelcomeScreenState extends State<WelcomeScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _opacity;
   late Animation<double> _scale;
@@ -32,7 +37,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _greeting = GreetingConstants.greetings[Random().nextInt(GreetingConstants.greetings.length)];
+    _greeting = GreetingConstants
+        .greetings[Random().nextInt(GreetingConstants.greetings.length)];
     _ctrl = AnimationController(
       vsync: this,
       duration: GreetingConstants.animationDuration,
@@ -42,11 +48,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
       begin: GreetingConstants.scaleStart,
       end: GreetingConstants.scaleEnd,
     ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
-    
+
     _ctrl.forward();
-    
+
     // Transition to MainScreen after displaying welcome message
-    _timer = Timer(GreetingConstants.welcomeScreenDuration + const Duration(seconds: 1), _transitionToMain);
+    _timer = Timer(
+        GreetingConstants.welcomeScreenDuration + const Duration(seconds: 1),
+        _transitionToMain);
   }
 
   void _transitionToMain() {
@@ -77,9 +85,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
             child: ScaleTransition(
               scale: _scale,
               child: GlassCard(
-                borderRadius: GreetingConstants.cardBorderRadius,
-                 padding: const EdgeInsets.all(32),
-                 child: Column(
+                padding: const EdgeInsets.all(32),
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     UserAvatar(
@@ -92,23 +99,38 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                     Text(
                       _greeting, // Using random greeting
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontStyle: FontStyle.italic),
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontStyle: FontStyle.italic),
                     ),
-                     const SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       widget.name,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: GreetingConstants.spacingSmall),
-                    if (widget.description != null && widget.description!.isNotEmpty)
+                    if (widget.description != null &&
+                        widget.description!.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                         child: Text(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
                           widget.description!,
-                           textAlign: TextAlign.center,
-                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
-                         ),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color
+                                      ?.withValues(alpha: 0.7)),
+                        ),
                       ),
                   ],
                 ),

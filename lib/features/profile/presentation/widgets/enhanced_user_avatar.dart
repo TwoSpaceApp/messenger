@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 
 class EnhancedUserAvatar extends StatelessWidget {
-  final String? avatarUrl;
-  final String initials;
-  final double radius;
-  final List<Color>? gradientColors;
-
-  const EnhancedUserAvatar({super.key, 
+  const EnhancedUserAvatar({
     required this.initials,
+    super.key,
     this.avatarUrl,
     this.radius = 20,
     this.gradientColors,
   });
+  final String? avatarUrl;
+  final String initials;
+  final double radius;
+  final List<Color>? gradientColors;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,8 @@ class EnhancedUserAvatar extends StatelessWidget {
     );
   }
 
-  Widget _buildGradientAvatar(List<Color> colors, String text, BuildContext context) {
+  Widget _buildGradientAvatar(
+      List<Color> colors, String text, BuildContext context) {
     return Container(
       width: radius * 2,
       height: radius * 2,
@@ -71,9 +72,9 @@ class EnhancedUserAvatar extends StatelessWidget {
         child: Text(
           text,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ),
     );

@@ -1,12 +1,5 @@
 // Pinned message model
 class PinnedMessage {
-  final String messageId;
-  final String senderId;
-  final String senderName;
-  final String content;
-  final DateTime timestamp;
-  final String? senderAvatar;
-
   PinnedMessage({
     required this.messageId,
     required this.senderId,
@@ -26,13 +19,19 @@ class PinnedMessage {
       senderAvatar: json['sender_avatar'] as String?,
     );
   }
+  final String messageId;
+  final String senderId;
+  final String senderName;
+  final String content;
+  final DateTime timestamp;
+  final String? senderAvatar;
 
   Map<String, dynamic> toJson() => {
-    'message_id': messageId,
-    'sender_id': senderId,
-    'sender_name': senderName,
-    'content': content,
-    'timestamp': timestamp.toIso8601String(),
-    'sender_avatar': senderAvatar,
-  };
+        'message_id': messageId,
+        'sender_id': senderId,
+        'sender_name': senderName,
+        'content': content,
+        'timestamp': timestamp.toIso8601String(),
+        'sender_avatar': senderAvatar,
+      };
 }

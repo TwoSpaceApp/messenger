@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 class PasswordStrengthIndicator extends StatelessWidget {
+  const PasswordStrengthIndicator({required this.strength, super.key});
   final int strength;
-
-  const PasswordStrengthIndicator({super.key, required this.strength});
 
   @override
   Widget build(BuildContext context) {
@@ -13,9 +12,8 @@ class PasswordStrengthIndicator extends StatelessWidget {
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 2),
             height: 4,
-            color: index < strength
-                ? _getColor(strength)
-                : Colors.grey.shade300,
+            color:
+                index < strength ? _getColor(strength) : Colors.grey.shade300,
           ),
         );
       }),

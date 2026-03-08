@@ -4,13 +4,13 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 
 class ForwardMessageDialog extends StatefulWidget {
-  final List<Chat> availableChats;
-  final Function(List<String> selectedChatIds) onForward;
-
-  const ForwardMessageDialog({super.key, 
+  const ForwardMessageDialog({
     required this.availableChats,
     required this.onForward,
+    super.key,
   });
+  final List<Chat> availableChats;
+  final Function(List<String> selectedChatIds) onForward;
 
   @override
   State<ForwardMessageDialog> createState() => _ForwardMessageDialogState();
@@ -58,7 +58,7 @@ class _ForwardMessageDialogState extends State<ForwardMessageDialog> {
                     value: isSelected,
                     onChanged: (value) {
                       setState(() {
-                        if (value == true) {
+                        if (value ?? false) {
                           _selectedChats.add(chat.id);
                         } else {
                           _selectedChats.remove(chat.id);

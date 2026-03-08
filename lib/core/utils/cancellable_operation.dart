@@ -2,17 +2,16 @@ import 'dart:async';
 
 /// Represents a cancellable asynchronous operation
 class CancellableOperation<T> {
-  final Future<T> _future;
-  final Completer<void> _cancelCompleter = Completer<void>();
-  bool _isCancelled = false;
-  bool _isCompleted = false;
-
   CancellableOperation(Future<T> Function(CancelToken token) operation)
       : _future = Future(() async {
           final token = CancelToken();
           final result = operation(token);
           return result;
         });
+  final Future<T> _future;
+  final Completer<void> _cancelCompleter = Completer<void>();
+  bool _isCancelled = false;
+  bool _isCompleted = false;
 
   /// Check if operation has been cancelled
   bool get isCancelled => _isCancelled;
@@ -27,13 +26,13 @@ class CancellableOperation<T> {
         _future,
         _cancelCompleter.future.then((_) => null),
       ]);
-      
+
       _isCompleted = true;
-      
+
       if (_isCancelled) {
         return null;
       }
-      
+
       return result;
     } catch (e) {
       _isCompleted = true;
@@ -47,7 +46,7 @@ class CancellableOperation<T> {
   /// Cancel the operation
   void cancel() {
     if (_isCompleted || _isCancelled) return;
-    
+
     _isCancelled = true;
     if (!_cancelCompleter.isCompleted) {
       _cancelCompleter.complete();
@@ -77,9 +76,8 @@ class CancelToken {
 
 /// Exception thrown when operation is cancelled
 class OperationCancelledException implements Exception {
-  final String message;
-
   OperationCancelledException([this.message = 'Operation was cancelled']);
+  final String message;
 
   @override
   String toString() => 'OperationCancelledException: $message';
@@ -131,7 +129,7 @@ extension CancellableFutureExtension<T> on Future<T> {
   CancellableOperation<T> makeCancellable() {
     return CancellableOperation((token) async {
       token.throwIfCancelled();
-      return await this;
+      return this;
     });
   }
 }
@@ -149,7 +147,7 @@ mixin CancellationMixin {
   ) async {
     final cancellable = CancellableOperation(operation);
     _cancellationManager.register(key, cancellable);
-    return await cancellable.execute();
+    return cancellable.execute();
   }
 
   /// Cancel specific operation
@@ -164,7 +162,7 @@ mixin CancellationMixin {
 }
 
 /// Example usage in a service:
-/// 
+///
 /// ```dart
 /// class MyService with CancellationMixin {
 ///   Future<User?> fetchUser(String userId) async {
@@ -178,7 +176,7 @@ mixin CancellationMixin {
 ///       },
 ///     );
 ///   }
-///   
+///
 ///   @override
 ///   void dispose() {
 ///     cancelAllOperations();

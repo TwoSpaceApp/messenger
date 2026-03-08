@@ -6,44 +6,46 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 
 /// Live parallax background where blobs continuously drift toward phone tilt direction.
 class ScreenBackground extends StatefulWidget {
+  const ScreenBackground({required this.child, super.key});
   final Widget child;
-  const ScreenBackground({super.key, required this.child});
 
   @override
   State<ScreenBackground> createState() => _ScreenBackgroundState();
 }
 
-class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerProviderStateMixin {
+class _ScreenBackgroundState extends State<ScreenBackground>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  
+
   // Accelerometer tilt values (direction of gravity)
-  double _tiltX = 0.0;
-  double _tiltY = 0.0;
-  
+  double _tiltX = 0;
+  double _tiltY = 0;
+
   // Blob absolute positions (wrapping around screen edges)
-  double _blob1X = 0.0;
-  double _blob1Y = 0.0;
-  double _blob2X = 0.0;
-  double _blob2Y = 0.0;
+  double _blob1X = 0;
+  double _blob1Y = 0;
+  double _blob2X = 0;
+  double _blob2Y = 0;
 
   Size _lastScreenSize = Size.zero;
   bool _positionsInitialized = false;
-  
+
   StreamSubscription? _accelSub;
-  
-  static const double _blob1Size = 350.0;
-  static const double _blob2Size = 400.0;
+
+  static const double _blob1Size = 350;
+  static const double _blob2Size = 400;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Animation controller for continuous movement.
     // Important: don't call setState per frame; AnimatedBuilder will repaint the background.
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1))
-      ..addListener(_updateBlobPositions)
-      ..repeat();
-    
+    _controller =
+        AnimationController(vsync: this, duration: const Duration(seconds: 1))
+          ..addListener(_updateBlobPositions)
+          ..repeat();
+
     // Listen to accelerometer for tilt direction
     final settings = SettingsService.themeNotifier.value;
     if (settings.enableParallax && settings.enableFloatingCircles) {
@@ -56,7 +58,7 @@ class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerPr
       });
     }
   }
-  
+
   void _updateBlobPositions() {
     if (!mounted) return;
 
@@ -67,10 +69,10 @@ class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerPr
     if (size == Size.zero) return;
     final screenW = size.width;
     final screenH = size.height;
-    
+
     // Speed multiplier from settings (default 1.0, now faster with higher base)
     final speedMultiplier = settings.floatingCirclesSpeed * 0.8;
-    
+
     // Move blobs in the direction of tilt.
     // No setState: AnimatedBuilder repaints on every controller tick.
     _blob1X += _tiltX * speedMultiplier * 2.5;
@@ -146,9 +148,11 @@ class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerPr
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        primary.withValues(alpha: isDark ? opacity * 0.7 : opacity * 0.5),
-                        primary.withValues(alpha: isDark ? opacity * 0.3 : opacity * 0.2),
-                        Colors.transparent
+                        primary.withValues(
+                            alpha: isDark ? opacity * 0.7 : opacity * 0.5),
+                        primary.withValues(
+                            alpha: isDark ? opacity * 0.3 : opacity * 0.2),
+                        Colors.transparent,
                       ],
                       stops: const [0.0, 0.5, 1.0],
                     ),
@@ -171,9 +175,11 @@ class _ScreenBackgroundState extends State<ScreenBackground> with SingleTickerPr
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        theme.colorScheme.secondary.withValues(alpha: isDark ? opacity * 0.6 : opacity * 0.4),
-                        theme.colorScheme.secondary.withValues(alpha: isDark ? opacity * 0.25 : opacity * 0.15),
-                        Colors.transparent
+                        theme.colorScheme.secondary.withValues(
+                            alpha: isDark ? opacity * 0.6 : opacity * 0.4),
+                        theme.colorScheme.secondary.withValues(
+                            alpha: isDark ? opacity * 0.25 : opacity * 0.15),
+                        Colors.transparent,
                       ],
                       stops: const [0.0, 0.5, 1.0],
                     ),

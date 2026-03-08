@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/features/auth/presentation/screens/login_screen.dart';
-import 'package:two_space_app/features/auth/presentation/screens/register_screen.dart';
-import 'package:two_space_app/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:two_space_app/core/navigation/title_observer.dart';
 import 'package:two_space_app/features/auth/presentation/screens/change_email_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/change_phone_screen.dart';
-import 'package:two_space_app/features/auth/presentation/screens/tfa_setup_screen.dart';
-import 'package:two_space_app/features/chat/presentation/screens/main_screen.dart';
-import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
-import 'package:two_space_app/features/settings/presentation/screens/customization_screen.dart';
-import 'package:two_space_app/features/settings/presentation/screens/privacy_screen.dart';
-import 'package:two_space_app/features/settings/presentation/screens/feedback_screen.dart';
-import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
-import 'package:two_space_app/features/profile/presentation/screens/account_settings_screen.dart';
-import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
+import 'package:two_space_app/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:two_space_app/features/auth/presentation/screens/login_screen.dart';
+import 'package:two_space_app/features/auth/presentation/screens/register_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
-import 'package:two_space_app/core/navigation/title_observer.dart';
+import 'package:two_space_app/features/auth/presentation/screens/tfa_setup_screen.dart';
+import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
+import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/main_screen.dart';
+import 'package:two_space_app/features/profile/presentation/screens/account_settings_screen.dart';
+import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:two_space_app/features/settings/presentation/screens/customization_screen.dart';
+import 'package:two_space_app/features/settings/presentation/screens/feedback_screen.dart';
+import 'package:two_space_app/features/settings/presentation/screens/notifications_screen.dart';
+import 'package:two_space_app/features/settings/presentation/screens/privacy_screen.dart';
+import 'package:two_space_app/features/settings/presentation/screens/storage_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -32,14 +33,16 @@ final routerProvider = Provider<GoRouter>((ref) {
     observers: [TitleObserver()],
     redirect: (context, state) {
       final isAuthRoute = state.matchedLocation == AppStrings.routeLogin ||
-                          state.matchedLocation == AppStrings.routeRegister ||
-                          state.matchedLocation == AppStrings.routeForgot;
+          state.matchedLocation == AppStrings.routeRegister ||
+          state.matchedLocation == AppStrings.routeForgot;
       final isSplashRoute = state.matchedLocation == AppStrings.routeSplash;
 
       return authState.when(
         data: (auth) {
           if (isSplashRoute) {
-            return auth.isAuthenticated ? AppStrings.routeHome : AppStrings.routeLogin;
+            return auth.isAuthenticated
+                ? AppStrings.routeHome
+                : AppStrings.routeLogin;
           }
           if (!auth.isAuthenticated && !isAuthRoute) {
             return AppStrings.routeLogin;
@@ -108,6 +111,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/tfa_setup',
         builder: (context, state) => const TfaSetupScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/storage',
+        builder: (context, state) => const StorageScreen(),
       ),
       GoRoute(
         path: AppStrings.routeChat,

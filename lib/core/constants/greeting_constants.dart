@@ -22,24 +22,24 @@ class GreetingConstants {
 
   // Параметры масштабирования
   static const double scaleStart = 0.95;
-  static const double scaleEnd = 1.0;
+  static const double scaleEnd = 1;
 
   // Радиус аватара на экране приветствия
-  static const double avatarRadius = 48.0;
+  static const double avatarRadius = 48;
 
   // Отступы карточки
-  static const double cardPadding = 20.0;
+  static const double cardPadding = 20;
 
   // Расстояния между элементами
-  static const double spacingSmall = 6.0;
-  static const double spacingMedium = 8.0;
-  static const double spacingLarge = 12.0;
+  static const double spacingSmall = 6;
+  static const double spacingMedium = 8;
+  static const double spacingLarge = 12;
 
   // Радиус карточки
-  static const double cardBorderRadius = 16.0;
+  static const double cardBorderRadius = 16;
 
   // Тень карточки
-  static const double cardElevation = 8.0;
+  static const double cardElevation = 8;
 
   // Opacity для небольших текстов
   static const double subtleTextOpacity = 0.8;

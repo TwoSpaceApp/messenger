@@ -1,8 +1,8 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/network/aegis/aegis_client.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
-import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 export 'package:two_space_app/core/network/aegis/message_payloads.dart'
     show User, UserSearchResponse, UserSearchResult;
@@ -16,9 +16,9 @@ const _kAegisUserIdKey = 'aegis_user_id';
 /// Управляет жизненным циклом TCP-соединения, токенами сессии
 /// и предоставляет простой Flutter-friendly API.
 class AegisAuthService {
-  static final AegisAuthService _instance = AegisAuthService._internal();
   factory AegisAuthService() => _instance;
   AegisAuthService._internal();
+  static final AegisAuthService _instance = AegisAuthService._internal();
 
   final DevLogger _log = DevLogger('AegisAuthService');
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
@@ -39,7 +39,8 @@ class AegisAuthService {
   /// Подключиться к Aegis-серверу (не аутентифицирует).
   Future<void> connect() async {
     if (_client.isConnected) return;
-    _log.info('Подключение к ${Environment.aegisHost}:${Environment.aegisPort}');
+    _log.info(
+        'Подключение к ${Environment.aegisHost}:${Environment.aegisPort}');
     await _client.connect(
       Environment.aegisHost,
       Environment.aegisPort,
@@ -169,9 +170,12 @@ class AegisAuthService {
   }
 
   Future<void> _saveSession() async {
-    if (_token != null) await _secure.write(key: _kAegisTokenKey, value: _token!);
-    if (_username != null) await _secure.write(key: _kAegisUsernameKey, value: _username!);
-    if (_userId != null) await _secure.write(key: _kAegisUserIdKey, value: _userId!.toString());
+    if (_token != null)
+      await _secure.write(key: _kAegisTokenKey, value: _token);
+    if (_username != null)
+      await _secure.write(key: _kAegisUsernameKey, value: _username);
+    if (_userId != null)
+      await _secure.write(key: _kAegisUserIdKey, value: _userId!.toString());
   }
 
   Future<void> clearSession() async {

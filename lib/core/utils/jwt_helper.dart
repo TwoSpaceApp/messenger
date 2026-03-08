@@ -42,10 +42,8 @@ class JwtHelper {
     if (payload == null) return null;
 
     // Try common user ID claim names
-    final userId = payload['sub'] ??
-        payload['user_id'] ??
-        payload['uid'] ??
-        payload['id'];
+    final userId =
+        payload['sub'] ?? payload['user_id'] ?? payload['uid'] ?? payload['id'];
 
     return userId?.toString();
   }
@@ -68,7 +66,7 @@ class JwtHelper {
         expiryTimestamp * 1000,
         isUtc: true,
       );
-      
+
       // Add small buffer (30 seconds) to account for clock skew
       final now = DateTime.now().toUtc().add(const Duration(seconds: 30));
       return now.isAfter(expiryDate);
@@ -125,7 +123,7 @@ class JwtHelper {
 
     // Check expiry
     final expired = isTokenExpired(token);
-    if (expired == true) return false;
+    if (expired ?? false) return false;
 
     return true;
   }
@@ -146,16 +144,14 @@ class JwtHelper {
     try {
       // Normalize base64 string (add padding if needed)
       var normalized = str.replaceAll('-', '+').replaceAll('_', '/');
-      
+
       switch (normalized.length % 4) {
         case 0:
           break;
         case 2:
           normalized += '==';
-          break;
         case 3:
           normalized += '=';
-          break;
         default:
           if (kDebugMode) {
             print('Invalid base64 string length');

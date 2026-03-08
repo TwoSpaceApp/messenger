@@ -1,45 +1,37 @@
 // Enum для ролей в группе
 enum GroupRole {
-  owner,    // Владелец (может делать всё)
-  admin,    // Администратор (может приглашать, исключать, замораживать)
-  member,   // Обычный участник
-  guest,    // Гость (ограниченные права)
+  owner, // Владелец (может делать всё)
+  admin, // Администратор (может приглашать, исключать, замораживать)
+  member, // Обычный участник
+  guest, // Гость (ограниченные права)
 }
 
 // Enum для статуса заморозки
 enum FreezeStatus {
-  active,      // Активен
-  frozen,      // Заморожен
-  banned,      // Забанен
+  active, // Активен
+  frozen, // Заморожен
+  banned, // Забанен
 }
 
 // Enum для видимости группы
 enum GroupVisibility {
-  private,   // Приватная (только по приглашению)
-  public,    // Публичная (видна всем)
+  private, // Приватная (только по приглашению)
+  public, // Публичная (видна всем)
 }
 
 // Модель участника группы
 class GroupMember {
-  final String userId;
-  final String displayName;
-  final String? avatarUrl;
-  final GroupRole role;
-  final FreezeStatus status;
-  final DateTime? frozenUntil;  // null = бесконечно
-  final String? freezeReason;
-  final DateTime joinedAt;
-  final bool canReceiveInvites; // Настройка пользователя: может ли получать приглашения
+  // Настройка пользователя: может ли получать приглашения
 
   GroupMember({
     required this.userId,
     required this.displayName,
-    this.avatarUrl,
     required this.role,
+    required this.joinedAt,
+    this.avatarUrl,
     this.status = FreezeStatus.active,
     this.frozenUntil,
     this.freezeReason,
-    required this.joinedAt,
     this.canReceiveInvites = true,
   });
 
@@ -56,12 +48,23 @@ class GroupMember {
         (e) => e.toString() == 'FreezeStatus.${json['status']}',
         orElse: () => FreezeStatus.active,
       ),
-      frozenUntil: json['frozen_until'] != null ? DateTime.parse(json['frozen_until']) : null,
+      frozenUntil: json['frozen_until'] != null
+          ? DateTime.parse(json['frozen_until'])
+          : null,
       freezeReason: json['freeze_reason'] as String?,
       joinedAt: DateTime.parse(json['joined_at'] as String),
       canReceiveInvites: json['can_receive_invites'] as bool? ?? true,
     );
   }
+  final String userId;
+  final String displayName;
+  final String? avatarUrl;
+  final GroupRole role;
+  final FreezeStatus status;
+  final DateTime? frozenUntil; // null = бесконечно
+  final String? freezeReason;
+  final DateTime joinedAt;
+  final bool canReceiveInvites;
 
   Map<String, dynamic> toJson() {
     return {
@@ -104,15 +107,6 @@ class GroupMember {
 
 // Модель приглашения в группу
 class GroupInvite {
-  final String inviteCode;
-  final String roomId;
-  final String createdBy;  // userId администратора/владельца
-  final DateTime createdAt;
-  final int maxUses;  // -1 = неограниченно
-  final int currentUses;
-  final bool isActive;
-  final DateTime? expiresAt;
-
   GroupInvite({
     required this.inviteCode,
     required this.roomId,
@@ -133,9 +127,19 @@ class GroupInvite {
       maxUses: json['max_uses'] as int? ?? -1,
       currentUses: json['current_uses'] as int? ?? 0,
       isActive: json['is_active'] as bool? ?? true,
-      expiresAt: json['expires_at'] != null ? DateTime.parse(json['expires_at']) : null,
+      expiresAt: json['expires_at'] != null
+          ? DateTime.parse(json['expires_at'])
+          : null,
     );
   }
+  final String inviteCode;
+  final String roomId;
+  final String createdBy; // userId администратора/владельца
+  final DateTime createdAt;
+  final int maxUses; // -1 = неограниченно
+  final int currentUses;
+  final bool isActive;
+  final DateTime? expiresAt;
 
   Map<String, dynamic> toJson() {
     return {
@@ -153,35 +157,19 @@ class GroupInvite {
 
 // Модель группы
 class GroupRoom {
-  final String roomId;
-  final String name;
-  final String? description;
-  final String? avatarUrl;
-  final GroupVisibility visibility;
-  final GroupRole currentUserRole;
-  final int memberCount;
-  final bool showMessageHistory;  // Показывать ли историю сообщений новым пользователям
-  final String? backgroundColor;  // HEX цвет фона чата
-  final String? backgroundImageUrl;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final List<GroupMember> members;  // Для локального кэша
-  final List<GroupMember> bannedMembers;
-  final List<GroupInvite> invites;
-
   GroupRoom({
     required this.roomId,
     required this.name,
+    required this.currentUserRole,
+    required this.createdAt,
+    required this.updatedAt,
     this.description,
     this.avatarUrl,
     this.visibility = GroupVisibility.private,
-    required this.currentUserRole,
     this.memberCount = 0,
     this.showMessageHistory = false,
     this.backgroundColor,
     this.backgroundImageUrl,
-    required this.createdAt,
-    required this.updatedAt,
     this.members = const [],
     this.bannedMembers = const [],
     this.invites = const [],
@@ -207,11 +195,36 @@ class GroupRoom {
       backgroundImageUrl: json['background_image_url'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
-      members: (json['members'] as List<dynamic>?)?.map((m) => GroupMember.fromJson(m as Map<String, dynamic>)).toList() ?? [],
-      bannedMembers: (json['banned_members'] as List<dynamic>?)?.map((m) => GroupMember.fromJson(m as Map<String, dynamic>)).toList() ?? [],
-      invites: (json['invites'] as List<dynamic>?)?.map((i) => GroupInvite.fromJson(i as Map<String, dynamic>)).toList() ?? [],
+      members: (json['members'] as List<dynamic>?)
+              ?.map((m) => GroupMember.fromJson(m as Map<String, dynamic>))
+              .toList() ??
+          [],
+      bannedMembers: (json['banned_members'] as List<dynamic>?)
+              ?.map((m) => GroupMember.fromJson(m as Map<String, dynamic>))
+              .toList() ??
+          [],
+      invites: (json['invites'] as List<dynamic>?)
+              ?.map((i) => GroupInvite.fromJson(i as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
+  final String roomId;
+  final String name;
+  final String? description;
+  final String? avatarUrl;
+  final GroupVisibility visibility;
+  final GroupRole currentUserRole;
+  final int memberCount;
+  final bool
+      showMessageHistory; // Показывать ли историю сообщений новым пользователям
+  final String? backgroundColor; // HEX цвет фона чата
+  final String? backgroundImageUrl;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final List<GroupMember> members; // Для локального кэша
+  final List<GroupMember> bannedMembers;
+  final List<GroupInvite> invites;
 
   Map<String, dynamic> toJson() {
     return {
@@ -270,10 +283,12 @@ class GroupRoom {
   }
 
   // Проверка, может ли текущий пользователь выполнять действие
-  bool canManageMembers() => currentUserRole == GroupRole.owner || currentUserRole == GroupRole.admin;
+  bool canManageMembers() =>
+      currentUserRole == GroupRole.owner || currentUserRole == GroupRole.admin;
   bool canBanMembers() => currentUserRole == GroupRole.owner;
   bool canDeleteRoom() => currentUserRole == GroupRole.owner;
   bool canChangeBackground() => canManageMembers();
   bool canChangeSettings() => canManageMembers();
-  bool canInviteMembers() => currentUserRole == GroupRole.owner || currentUserRole == GroupRole.admin;
+  bool canInviteMembers() =>
+      currentUserRole == GroupRole.owner || currentUserRole == GroupRole.admin;
 }

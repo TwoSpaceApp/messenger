@@ -1,24 +1,23 @@
-import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/features/settings/data/services/settings_service.dart';
-import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'dart:io';
+// import 'package:audioplayers/audioplayers.dart';  // Disabled for Linux
+import 'dart:math' as math;
 
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart' as share;
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
-import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
-import 'package:two_space_app/features/auth/data/services/auth_service.dart';
-import 'package:two_space_app/features/chat/data/services/voice_service.dart';
-import 'package:two_space_app/features/chat/data/services/group_matrix_service.dart';
-import 'package:two_space_app/features/chat/data/services/draft_service.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
-// import 'package:audioplayers/audioplayers.dart';  // Disabled for Linux
-import 'dart:math' as math;
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-
+import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/features/auth/data/services/auth_service.dart';
+import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/draft_service.dart';
+import 'package:two_space_app/features/chat/data/services/group_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/voice_service.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/typing_indicator.dart';
+import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
+import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 // Stub for AudioPlayer when audioplayers is disabled
 class AudioPlayer {
@@ -41,7 +40,8 @@ class ReleaseMode {
 }
 
 class DeviceFileSource {
-  DeviceFileSource(String path);
+  final String path;
+  DeviceFileSource(this.path);
 }
 
 class ChatScreen extends StatefulWidget {
@@ -50,7 +50,7 @@ class ChatScreen extends StatefulWidget {
   final String? searchType; // 'all' | 'messages' | 'media' | 'users'
   final String? scrollToEventId;
 
-  const ChatScreen({super.key, required this.chat, this.searchQuery, this.searchType, this.scrollToEventId});
+  const ChatScreen({required this.chat, super.key, this.searchQuery, this.searchType, this.scrollToEventId});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -81,7 +81,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   List<_Msg> get _visibleMessages {
     final q = (widget.searchQuery ?? '').trim().toLowerCase();
-    final type = (widget.searchType ?? 'all');
+    final type = widget.searchType ?? 'all';
     if (q.isEmpty && type == 'all') return _messages;
     return _messages.where((m) {
       if (type == 'messages') return m.text.toLowerCase().contains(q);
@@ -90,11 +90,11 @@ class _ChatScreenState extends State<ChatScreen> {
         final t = m.text.toLowerCase();
         if (t.contains('mxc://') || t.contains('http')) return true;
         final exts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov'];
-        return exts.any((e) => t.endsWith(e));
+        return exts.any(t.endsWith);
       }
       if (type == 'users') return m.text.toLowerCase().contains('@') || m.text.toLowerCase().contains('invite');
       // all
-      return q.isEmpty ? true : m.text.toLowerCase().contains(q);
+      return q.isEmpty || m.text.toLowerCase().contains(q);
     }).toList();
   }
 
@@ -109,9 +109,7 @@ class _ChatScreenState extends State<ChatScreen> {
     // Load draft if exists
     _loadDraft();
     // start sync loop to receive new events
-    _svc.startSync((js) {
-      _handleSync(js);
-    });
+    _svc.startSync(_handleSync);
   }
 
   @override
@@ -140,7 +138,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (join.containsKey(widget.chat.id)) {
         final room = join[widget.chat.id] as Map<String, dynamic>;
         final timeline = room['timeline'] as Map<String, dynamic>?;
-        final events = (timeline?['events'] as List? ?? []);
+        final events = timeline?['events'] as List? ?? [];
         for (final ev in events) {
           final e = ev as Map<String, dynamic>;
           if (e['type'] == 'm.room.message') {
@@ -215,7 +213,7 @@ class _ChatScreenState extends State<ChatScreen> {
           final senderNorm = normalize(m.senderId);
           isOwn = meNorm.isNotEmpty && meNorm == senderNorm;
         } catch (_) { 
-          isOwn = (me != null && me == m.senderId); 
+          isOwn = me != null && me == m.senderId; 
         }
         out.add(_Msg(id: m.id, text: m.content, isOwn: isOwn, time: m.time, senderId: m.senderId, senderName: senderName, senderAvatar: senderAvatar, type: m.type, mediaId: m.mediaId));
       }
@@ -241,7 +239,7 @@ class _ChatScreenState extends State<ChatScreen> {
               if (idx >= 0 && _listController.hasClients) {
                 const approxItemHeight = 84.0;
                 final N = _messages.length;
-                final revIdx = (N - 1 - idx);
+                final revIdx = N - 1 - idx;
                 final offset = revIdx * approxItemHeight;
                 await _listController.animateTo(offset.clamp(0.0, _listController.position.maxScrollExtent), duration: const Duration(milliseconds: 450), curve: Curves.easeInOut);
                 setState(() { _highlighted.clear(); _highlighted.add(targetId); });
@@ -305,7 +303,7 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Text(l10n.replyAction),
         content: TextField(controller: ctl, decoration: InputDecoration(hintText: l10n.replyHint)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, null), child: Text(l10n.cancelButton)),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.cancelButton)),
           ElevatedButton(onPressed: () => Navigator.pop(c, ctl.text.trim()), child: Text(l10n.sendButton)),
         ],
       );
@@ -362,7 +360,7 @@ class _ChatScreenState extends State<ChatScreen> {
           maxLines: null,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, null), child: Text(l10n.cancelButton)),
+          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.cancelButton)),
           ElevatedButton(onPressed: () => Navigator.pop(c, ctl.text.trim()), child: Text(l10n.saveButton)),
         ],
       );
@@ -383,7 +381,7 @@ class _ChatScreenState extends State<ChatScreen> {
     
     burstEntry = OverlayEntry(builder: (ctx) {
       return TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.0, end: 1.0),
+        tween: Tween(begin: 0, end: 1),
         duration: const Duration(milliseconds: 600),
         onEnd: () => burstEntry.remove(),
         builder: (context, val, child) {
@@ -398,7 +396,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 left: dx - 12, // center offset
                 top: dy - 12,
                 child: Transform.scale(
-                  scale: math.max(0.0, 1.0 - val), // shrink
+                  scale: math.max(0, 1.0 - val), // shrink
                   child: Text(
                     emoji,
                     style: const TextStyle(fontSize: 24, decoration: TextDecoration.none),
@@ -420,30 +418,30 @@ class _ChatScreenState extends State<ChatScreen> {
     OverlayEntry? entry;
     entry = OverlayEntry(builder: (ctx) {
       final mq = MediaQuery.of(ctx);
-      final left = math.max(8.0, globalPos.dx - 120);
-      final top = math.max(8.0, globalPos.dy - 80 - mq.viewPadding.top);
+      final left = math.max<double>(8, globalPos.dx - 120.0);
+      final top = math.max<double>(8, globalPos.dy - 80.0 - mq.viewPadding.top);
       return GestureDetector(
         onTap: () { entry?.remove(); },
         behavior: HitTestBehavior.translucent,
         child: Stack(children: [
           Positioned(left: left, top: top, child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.85, end: 1.0),
+            tween: Tween(begin: 0.85, end: 1),
             duration: const Duration(milliseconds: 180),
             builder: (ctx, s, child2) => Transform.scale(scale: s, child: Opacity(opacity: ((s - 0.85) / 0.15).clamp(0.0, 1.0), child: child2)),
             child: Material(
               color: Colors.transparent,
               child: Stack(children: [
                 // triangle pointer
-                Positioned(left: 20, top: -8, child: Transform.rotate(angle: 0.0, child: ClipPath(clipper: _TriangleClipper(), child: Container(width: 18, height: 12, color: Theme.of(context).colorScheme.surface)))),
+                Positioned(left: 20, top: -8, child: Transform.rotate(angle: 0, child: ClipPath(clipper: _TriangleClipper(), child: Container(width: 18, height: 12, color: Theme.of(context).colorScheme.surface)))),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(12), boxShadow: [const BoxShadow(color: Colors.black26, blurRadius: 8)]),
+                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 8)]),
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     // reactions row
                     Row(mainAxisSize: MainAxisSize.min, children: [
                       for (final e in ['👍','❤️','😂','🔥','😮','🎉'])
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: InkWell(
                             onTap: () async {
                               entry?.remove();
@@ -488,8 +486,7 @@ class _ChatScreenState extends State<ChatScreen> {
         onEmojiSelected: (category, emoji) { 
           chosen = emoji.emoji; 
           Navigator.of(c).pop(); 
-        }, 
-        config: const Config()
+        }
       )));
     });
     return chosen;
@@ -515,7 +512,7 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       await _svc.sendMessage(roomId: widget.chat.id, text: text, type: 'm.text');
       setState(() {
-        _messages.insert(0, _Msg(id: DateTime.now().millisecondsSinceEpoch.toString(), text: text, isOwn: true, time: DateTime.now(), senderId: '', senderName: 'You', senderAvatar: null, type: 'm.text'));
+        _messages.insert(0, _Msg(id: DateTime.now().millisecondsSinceEpoch.toString(), text: text, isOwn: true, time: DateTime.now(), senderId: '', senderName: 'You', type: 'm.text'));
         _controller.text = '';
       });
       // Clear draft after successful send
@@ -577,7 +574,6 @@ class _ChatScreenState extends State<ChatScreen> {
             time: DateTime.now(),
             senderId: '',
             senderName: 'You',
-            senderAvatar: null,
             type: 'm.audio',
             mediaId: path,
           ));
@@ -643,7 +639,7 @@ class _ChatScreenState extends State<ChatScreen> {
               onTap: () async {
                 if (roomId.isEmpty) return;
                 final infoRoom = await _svc.getRoomNameAndAvatar(roomId);
-                final chat = Chat(id: roomId, name: infoRoom['name'] ?? roomId, avatarUrl: infoRoom['avatar'], members: [], lastMessage: '');
+                final chat = Chat(id: roomId, name: infoRoom['name'] ?? roomId, avatarUrl: infoRoom['avatar'], members: []);
                 Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(chat: chat, scrollToEventId: ev['event_id']?.toString())));
               },
             );
@@ -658,10 +654,9 @@ class _ChatScreenState extends State<ChatScreen> {
         controller: _listController,
         padding: const EdgeInsets.all(12),
         cacheExtent: 1000, // Увеличиваем кэш для лучшей производительности
-        addRepaintBoundaries: true, // Добавляем репaint boundaries для оптимизации
         itemBuilder: (c, i) {
           final m = _visibleMessages[i];
-          final key = _messageKeys.putIfAbsent(m.id, () => GlobalKey());
+          final key = _messageKeys.putIfAbsent(m.id, GlobalKey.new);
           final bubbleContent = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.white70)),
               const SizedBox(height: 6),
@@ -745,18 +740,17 @@ class _ChatScreenState extends State<ChatScreen> {
               key: key,
               child: Row(
                 mainAxisAlignment: m.isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.max,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (!m.isOwn)
                     GestureDetector(
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: m.senderId ?? ''))),
-                      child: UserAvatar(avatarUrl: m.senderAvatar, name: (m.senderName ?? '?'), radius: 16),
+                      child: UserAvatar(avatarUrl: m.senderAvatar, name: m.senderName ?? '?', radius: 16),
                     ),
                   const SizedBox(width: 8),
                   Flexible(
                     child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: 1.0),
+                      tween: Tween(begin: 0, end: 1),
                       duration: Duration(milliseconds: 300 + (i % 5) * 30),
                       curve: Curves.elasticOut,
                       builder: (context, val, child) => Transform.scale(
@@ -822,7 +816,7 @@ class _ChatScreenState extends State<ChatScreen> {
         Expanded(child: bodyWidget),
         if (_isTyping)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Container(
@@ -836,7 +830,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(8),
           child: Container(
             decoration: BoxDecoration(
               color: const Color(0xFF21262C),
@@ -992,10 +986,10 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Container(
-              width: math.min(MediaQuery.of(context).size.width * 0.35, 260.0),
+              width: math.min(MediaQuery.of(context).size.width * 0.35, 260),
               height: 36,
               color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.08),
-              child: Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8.0), child: bars)),
+              child: Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: bars)),
             ),
           ),
           Positioned.fill(
@@ -1058,11 +1052,9 @@ class _SquishyBubbleState extends State<_SquishyBubble> with SingleTickerProvide
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
-      lowerBound: 0.0,
-      upperBound: 1.0, 
+      duration: const Duration(milliseconds: 100), 
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+    _scaleAnimation = Tween<double>(begin: 1, end: 0.95).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
   }

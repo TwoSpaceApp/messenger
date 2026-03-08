@@ -1,10 +1,6 @@
 /// Результат операции с возможной ошибкой
 class Result<T> {
-  final T? data;
-  final String? error;
-  final bool success;
-
-  Result._({this.data, this.error, required this.success});
+  Result._({required this.success, this.data, this.error});
 
   factory Result.ok(T? data) {
     return Result._(data: data, success: true);
@@ -13,4 +9,7 @@ class Result<T> {
   factory Result.err(String error) {
     return Result._(error: error, success: false);
   }
+  final T? data;
+  final String? error;
+  final bool success;
 }

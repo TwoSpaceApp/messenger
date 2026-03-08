@@ -10,9 +10,10 @@ import 'package:flutter/widgets.dart';
 class Responsive {
   /// Base width we consider "normal" for phone UI. Values will be scaled
   /// relative to this width.
-  static const double baseWidth = 400.0;
+  static const double baseWidth = 400;
+
   /// Base height for vertical calculations.
-  static const double baseHeight = 800.0;
+  static const double baseHeight = 800;
 
   /// Returns a conservative width scale factor based on MediaQuery width.
   /// We clamp the scale to [0.7, 2.0] to avoid extreme scaling.

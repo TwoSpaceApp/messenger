@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/auth/presentation/screens/welcome_screen.dart';
+import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 
 /// Listens to authentication state changes and handles automatic navigation
-/// 
+///
 /// Wrap your app with this widget to enable automatic routing:
 /// - When user logs in → show welcome screen, then navigate to home
 /// - When user logs out → navigate to login
 /// - On auth errors → show error message
-/// 
+///
 /// Usage in main.dart:
 /// ```dart
 /// MaterialApp(
@@ -22,9 +22,8 @@ import 'package:two_space_app/features/chat/data/services/chat_matrix_service.da
 /// )
 /// ```
 class AuthListener extends ConsumerStatefulWidget {
+  const AuthListener({required this.child, super.key});
   final Widget child;
-
-  const AuthListener({super.key, required this.child});
 
   @override
   ConsumerState<AuthListener> createState() => _AuthListenerState();
@@ -46,7 +45,7 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
         if (state.isAuthenticated) {
           // User just logged in - show welcome screen first
           _navigateToWelcome(state.userId);
-        } else if (previousState?.isAuthenticated == true) {
+        } else if (previousState?.isAuthenticated ?? false) {
           // User just logged out
           _navigateToLogin();
         }
@@ -61,22 +60,23 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
   Future<void> _navigateToWelcome(String? userId) async {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Get user info for welcome screen
-    String userName = l10n.userDefault;
+    var userName = l10n.userDefault;
     String? avatarUrl;
-    
+
     if (userId != null) {
       try {
         final matrixService = ChatMatrixService();
         final userInfo = await matrixService.getUserInfo(userId);
-        userName = userInfo['displayName'] as String? ?? userId.split(':').first.replaceAll('@', '');
+        userName = userInfo['displayName'] as String? ??
+            userId.split(':').first.replaceAll('@', '');
         avatarUrl = userInfo['avatarUrl'] as String?;
       } catch (_) {
         userName = userId.split(':').first.replaceAll('@', '');
       }
     }
-    
+
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -90,10 +90,10 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
 
   void _navigateToLogin() {
     if (!mounted) return;
-    
+
     // Get current route
     final currentRoute = ModalRoute.of(context)?.settings.name;
-    
+
     // Only navigate if not already on login
     if (currentRoute != '/login' && currentRoute != null) {
       context.go('/login');
@@ -103,12 +103,11 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
   void _showErrorSnackBar(String message) {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.authorizationError(message)),
         backgroundColor: Theme.of(context).colorScheme.error,
-        duration: const Duration(seconds: 4),
         action: SnackBarAction(
           label: l10n.close,
           textColor: Colors.white,
@@ -125,11 +124,9 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
     // Listen to auth state changes within build method
     ref.listen<AsyncValue<AuthState>>(
       authProvider,
-      (previous, next) {
-        _handleAuthStateChange(previous, next);
-      },
+      _handleAuthStateChange,
     );
-    
+
     return widget.child;
   }
 }

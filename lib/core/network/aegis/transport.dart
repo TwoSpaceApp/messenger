@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:two_space_app/core/network/aegis/exceptions.dart';
+import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_encoder.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
-import 'package:two_space_app/core/network/aegis/exceptions.dart';
-import 'package:two_space_app/core/network/aegis/logger.dart';
 
 /// TCP transport layer for Aegis client communication
 class AegisTransport {
@@ -18,15 +19,17 @@ class AegisTransport {
   /// или часть следующего. Буфер решает эту проблему.
   final List<int> _incomingBuffer = [];
 
-  final StreamController<Message> _messageController = StreamController<Message>.broadcast();
-  final StreamController<void> _disconnectController = StreamController<void>.broadcast();
-  
+  final StreamController<Message> _messageController =
+      StreamController<Message>.broadcast();
+  final StreamController<void> _disconnectController =
+      StreamController<void>.broadcast();
+
   /// Stream of incoming messages
   Stream<Message> get messages => _messageController.stream;
-  
+
   /// Stream of disconnect events
   Stream<void> get disconnects => _disconnectController.stream;
-  
+
   /// Check if client is connected to server
   bool get isConnected => _isConnected;
 
@@ -37,23 +40,23 @@ class AegisTransport {
     }
 
     AegisLogger.info('Connecting to $host:$port');
-    
+
     try {
       // TODO(security): соединение устанавливается по plain TCP без TLS.
       //   Для продакшна необходимо использовать [SecureSocket.connect] или
       //   настроить TLS-терминацию на прокси (nginx/HAProxy).
       //   Без TLS трафик (включая токены аутентификации) виден в сети.
-      _socket = await Socket.connect(host, port, timeout: timeout ?? const Duration(seconds: 10))
+      _socket = await Socket.connect(host, port,
+              timeout: timeout ?? const Duration(seconds: 10))
           .timeout(timeout ?? const Duration(seconds: 10));
-      
+
       _isConnected = true;
       _nextSequenceId = 1;
-      
+
       AegisLogger.info('Connected to $host:$port');
-      
+
       // Start listening for incoming data
       _listenForMessages();
-      
     } catch (e) {
       _isConnected = false;
       AegisLogger.error('Failed to connect to $host:$port', e);
@@ -84,7 +87,8 @@ class AegisTransport {
       throw NotConnectedException();
     }
 
-    AegisLogger.debug('Sending message: ${message.type} (seq: ${message.sequenceId})');
+    AegisLogger.debug(
+        'Sending message: ${message.type} (seq: ${message.sequenceId})');
 
     try {
       // Set sequence ID if not set
@@ -96,9 +100,8 @@ class AegisTransport {
       final data = MessageEncoder.encode(message);
       _socket.add(data);
       await _socket.flush();
-      
+
       AegisLogger.debug('Message sent successfully');
-      
     } catch (e) {
       _isConnected = false;
       _disconnectController.add(null);
@@ -113,9 +116,7 @@ class AegisTransport {
   /// Listen for incoming messages
   void _listenForMessages() {
     _socket.listen(
-      (Uint8List data) {
-        _handleIncomingData(data);
-      },
+      _handleIncomingData,
       onError: (error) {
         _isConnected = false;
         _disconnectController.add(null);
@@ -144,18 +145,16 @@ class AegisTransport {
       if (_incomingBuffer.length < ProtocolConstants.headerSize) return;
 
       // payloadLength — big-endian uint32 по смещению 16 в заголовке.
-      final payloadLength =
-          (_incomingBuffer[16] << 24) |
+      final payloadLength = (_incomingBuffer[16] << 24) |
           (_incomingBuffer[17] << 16) |
-          (_incomingBuffer[18] <<  8) |
-           _incomingBuffer[19];
+          (_incomingBuffer[18] << 8) |
+          _incomingBuffer[19];
 
       // Защита от DoS: слишком большой payload разрывает соединение.
       if (payloadLength > ProtocolConstants.maxPayloadSize) {
         AegisLogger.error(
           'Превышен максимальный размер payload '
           '($payloadLength байт) — очищаем буфер и закрываем соединение.',
-          null,
         );
         _incomingBuffer.clear();
         _isConnected = false;
@@ -163,8 +162,9 @@ class AegisTransport {
         return;
       }
 
-      final totalSize =
-          ProtocolConstants.headerSize + payloadLength + ProtocolConstants.macSize;
+      final totalSize = ProtocolConstants.headerSize +
+          payloadLength +
+          ProtocolConstants.macSize;
 
       // Ждём, пока придут все байты фрейма.
       if (_incomingBuffer.length < totalSize) return;
@@ -174,7 +174,8 @@ class AegisTransport {
         final frame = Uint8List.fromList(_incomingBuffer.sublist(0, totalSize));
         _incomingBuffer.removeRange(0, totalSize);
         final message = MessageEncoder.decode(frame);
-        AegisLogger.debug('Received message: type=${message.type.value} seq=${message.sequenceId}');
+        AegisLogger.debug(
+            'Received message: type=${message.type.value} seq=${message.sequenceId}');
         _messageController.add(message);
       } catch (e) {
         // После ошибки парсинга буфер рассинхронизирован — нельзя

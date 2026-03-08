@@ -14,13 +14,13 @@ class EncryptedContentHelper {
 
   // Pack plain content into a JSON wrapper and add padding so length >= minLength
   static String pack(String content) {
-    final Map<String, dynamic> obj = {'v': content};
+    final obj = <String, dynamic>{'v': content};
     var jsonStr = jsonEncode(obj);
     if (jsonStr.length >= minLength) return jsonStr;
 
     // Compute an initial pad size in bytes (approximate, base64 expands)
-    int need = minLength - jsonStr.length;
-    int bytes = (need * 3 / 4).ceil();
+    final need = minLength - jsonStr.length;
+    final bytes = (need * 3 / 4).ceil();
     obj['p'] = _randomPadding(bytes);
     jsonStr = jsonEncode(obj);
     // Ensure length meets requirement (unlikely to loop many times)

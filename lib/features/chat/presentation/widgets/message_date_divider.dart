@@ -2,15 +2,14 @@
 import 'package:flutter/material.dart';
 
 class MessageDateDivider extends StatelessWidget {
+  const MessageDateDivider({required this.dateLabel, super.key});
   final String dateLabel;
-
-  const MessageDateDivider({super.key, required this.dateLabel});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         children: [
           Expanded(
@@ -19,7 +18,7 @@ class MessageDateDivider extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               dateLabel,
               style: theme.textTheme.labelSmall?.copyWith(
@@ -40,8 +39,6 @@ class MessageDateDivider extends StatelessWidget {
 
 // Helper class for grouping messages by date
 class GroupedMessages<T> {
-  final Map<String, List<T>> groups;
-
   GroupedMessages({required this.groups});
 
   factory GroupedMessages.fromMessages(
@@ -50,12 +47,12 @@ class GroupedMessages<T> {
     String Function(String) getLabel,
   ) {
     final grouped = <String, List<T>>{};
-    
+
     for (final msg in messages) {
       final time = getTime(msg);
       final group = _getGroupKey(time);
       final label = getLabel(group);
-      
+
       if (!grouped.containsKey(label)) {
         grouped[label] = [];
       }
@@ -64,6 +61,7 @@ class GroupedMessages<T> {
 
     return GroupedMessages(groups: grouped);
   }
+  final Map<String, List<T>> groups;
 
   static String _getGroupKey(DateTime date) {
     final now = DateTime.now();

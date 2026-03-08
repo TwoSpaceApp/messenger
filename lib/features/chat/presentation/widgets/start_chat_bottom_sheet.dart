@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 
 class StartChatBottomSheet extends StatelessWidget {
-  final VoidCallback onCreateGroup;
-  final VoidCallback onInviteUser;
-  final VoidCallback onJoinByAddress;
-
   const StartChatBottomSheet({
-    super.key,
     required this.onCreateGroup,
     required this.onInviteUser,
     required this.onJoinByAddress,
+    super.key,
   });
+  final VoidCallback onCreateGroup;
+  final VoidCallback onInviteUser;
+  final VoidCallback onJoinByAddress;
 
   @override
   Widget build(BuildContext context) {

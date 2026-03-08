@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 /// GradientText renders text with a shader applied to the exact glyph bounds.
 /// This avoids ShaderMask issues when fonts or styles change.
 class GradientText extends StatelessWidget {
-  const GradientText(this.text, {super.key, required this.gradient, this.style, this.textAlign});
+  const GradientText(this.text,
+      {required this.gradient, super.key, this.style, this.textAlign});
 
   final String text;
   final Gradient gradient;
@@ -26,9 +27,11 @@ class GradientText extends StatelessWidget {
 
     // If size is empty (rare), fallback to a small rect so shader doesn't crash.
     final w = size.width > 0 ? size.width : 1.0;
-    final h = size.height > 0 ? size.height : (effectiveStyle.fontSize ?? 14) * 1.2;
+    final h =
+        size.height > 0 ? size.height : (effectiveStyle.fontSize ?? 14) * 1.2;
 
-    final paint = Paint()..shader = gradient.createShader(Rect.fromLTWH(0, 0, w, h));
+    final paint = Paint()
+      ..shader = gradient.createShader(Rect.fromLTWH(0, 0, w, h));
 
     return Text(
       text,
