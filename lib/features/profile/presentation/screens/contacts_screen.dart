@@ -3,6 +3,7 @@ import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 
@@ -154,7 +155,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
                             _showTwoSpaceOnly = selected;
                           });
                         },
-                        selectedColor: theme.colorScheme.primary.withValues(alpha: 0.5),
+                        selectedColor:
+                            theme.colorScheme.primary.withValues(alpha: 0.5),
                         checkmarkColor: Colors.white,
                       ),
                   ],
@@ -206,110 +208,39 @@ class _ContactsScreenState extends State<ContactsScreen> {
   Widget _buildBody() {
     final l10n = AppLocalizations.of(context)!;
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingState(label: 'Загружаем контакты…');
     }
 
     if (_permissionDenied) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: GlassCard(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.contacts_outlined,
-                  size: 64,
-                  color: Colors.white.withAlpha(150),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.contactsAccessTitle,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  _permissionPermanentlyDenied
-                      ? l10n.contactsPermDeniedPermanent
-                      : l10n.contactsPermRequired,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withAlpha(180),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _permissionPermanentlyDenied
-                        ? _openAppSettings
-                        : _checkAndRequestPermission,
-                    icon: Icon(
-                      _permissionPermanentlyDenied
-                          ? Icons.settings
-                          : Icons.refresh,
-                    ),
-                    label: Text(
-                      _permissionPermanentlyDenied
-                          ? l10n.openSettingsButton
-                          : l10n.requestPermissionButton,
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      return AppErrorState(
+        title: l10n.contactsAccessTitle,
+        message: _permissionPermanentlyDenied
+            ? l10n.contactsPermDeniedPermanent
+            : l10n.contactsPermRequired,
+        actionLabel: _permissionPermanentlyDenied
+            ? l10n.openSettingsButton
+            : l10n.requestPermissionButton,
+        onAction: _permissionPermanentlyDenied
+            ? _openAppSettings
+            : _checkAndRequestPermission,
       );
     }
 
     if (_contacts == null || _contacts!.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.person_off_outlined,
-              size: 64,
-              color: Colors.white.withAlpha(150),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.noContacts,
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white.withAlpha(180),
-              ),
-            ),
-          ],
-        ),
+      return AppEmptyState(
+        title: l10n.noContacts,
+        message: 'Когда контакты появятся на устройстве, они будут показаны здесь.',
+        icon: Icons.person_off_outlined,
       );
     }
 
     final filteredContacts = _filteredContacts;
 
     if (filteredContacts.isEmpty) {
-      return Center(
-        child: Text(
-          l10n.noResultsFound,
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.white.withAlpha(150),
-          ),
-        ),
+      return AppEmptyState(
+        title: l10n.noResultsFound,
+        message: 'Попробуйте изменить запрос или отключить фильтр TwoSpace.',
+        icon: Icons.search_off_rounded,
       );
     }
 

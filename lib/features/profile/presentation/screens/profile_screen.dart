@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/navigation_service.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 import 'package:two_space_app/features/chat/data/services/chat_service.dart';
@@ -179,7 +180,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppLoadingState(label: 'Загружаем профиль…')
           : SingleChildScrollView(
               padding: const EdgeInsets.all(UITokens.space),
               child: Column(

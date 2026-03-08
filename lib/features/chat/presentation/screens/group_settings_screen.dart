@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/group.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/features/chat/data/services/group_matrix_service.dart';
 
 class GroupSettingsScreen extends StatefulWidget {
@@ -67,7 +68,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
             elevation: 2,
           ),
           body: _isLoading || _currentGroup == null
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppLoadingState(label: 'Загружаем параметры группы…')
               : Row(
                   children: [
                     if (isWideScreen) _buildSidebar(),

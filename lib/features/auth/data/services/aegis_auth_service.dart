@@ -34,6 +34,16 @@ class AegisAuthService {
   String? get username => _username;
   int? get userId => _userId;
 
+  Future<String?> getStoredToken() async {
+    _token ??= await _secure.read(key: _kAegisTokenKey);
+    return _token;
+  }
+
+  Future<String?> getStoredUsername() async {
+    _username ??= await _secure.read(key: _kAegisUsernameKey);
+    return _username;
+  }
+
   // ─── Соединение ───────────────────────────────────────────────────────────
 
   /// Подключиться к Aegis-серверу (не аутентифицирует).

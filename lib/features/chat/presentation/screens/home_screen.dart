@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
@@ -25,6 +26,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ChatMatrixService _chat = ChatMatrixService();
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
+  String? _errorMessage;
 
   final String _searchQuery = '';
 
@@ -44,7 +46,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _loadUserAndRooms() async {
     if (!mounted) return;
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
 
     try {
       final ids = await _chat.getJoinedRooms();
@@ -61,7 +66,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         });
       }
       if (mounted) setState(() => _rooms = out);
-    } catch (_) {
+    } catch (e) {
+      if (mounted) {
+        setState(() => _errorMessage = e.toString());
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -134,7 +142,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               Expanded(
-                child: _loading ? _buildShimmerLoading() : _buildChatList(),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  child: _loading ? _buildShimmerLoading() : _buildChatList(),
+                ),
               ),
             ],
           ),
@@ -200,10 +211,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildChatList() {
     final rooms = _filteredRooms;
-    if (rooms.isEmpty)
-      return Center(
-          child: Text(AppLocalizations.of(context)!.noChats,
-              style: const TextStyle(color: Colors.white70)));
+    if (_errorMessage != null) {
+      return AppErrorState(
+        title: 'Не удалось загрузить чаты',
+        message: _errorMessage!,
+        actionLabel: 'Повторить',
+        onAction: _loadUserAndRooms,
+      );
+    }
+
+    if (rooms.isEmpty) {
+      return AppEmptyState(
+        title: AppLocalizations.of(context)!.noChats,
+        message: 'Создайте новый чат или обновите список комнат.',
+        icon: Icons.chat_bubble_outline_rounded,
+        actionLabel: 'Создать чат',
+        onAction: _openCreateChat,
+      );
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(8),

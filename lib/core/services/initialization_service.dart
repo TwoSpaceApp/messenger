@@ -78,12 +78,20 @@ class InitializationService {
   ];
 
   /// Initialize the app with all required steps
-  static Future<InitializationResult> initialize() async {
+  static Future<InitializationResult> initialize(
+      {void Function(String stepName, double progress)? onProgress}) async {
     final startTime = DateTime.now();
     final results = <InitStepResult>[];
 
     for (final step in _steps) {
+      final index = _steps.indexOf(step);
+      if (onProgress != null) {
+        onProgress(step.name, index / _steps.length);
+      }
       final stepResult = await _executeStep(step);
+      if (onProgress != null) {
+        onProgress(step.name, (index + 1) / _steps.length);
+      }
       results.add(stepResult);
 
       // Stop if critical step failed

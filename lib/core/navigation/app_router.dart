@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/navigation/app_transitions.dart';
 import 'package:two_space_app/core/navigation/title_observer.dart';
 import 'package:two_space_app/features/auth/presentation/screens/change_email_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/change_phone_screen.dart';
@@ -17,12 +18,18 @@ import 'package:two_space_app/features/chat/presentation/screens/main_screen.dar
 import 'package:two_space_app/features/profile/presentation/screens/account_settings_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/customization_screen.dart';
+import 'package:two_space_app/features/settings/presentation/screens/dev_menu_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/feedback_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/notifications_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/privacy_screen.dart';
+import 'package:two_space_app/features/settings/presentation/screens/settings_search_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/storage_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
+CustomTransitionPage<void> _buildPage(GoRouterState state, Widget child) {
+  return buildAppTransitionPage(state: state, child: child);
+}
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
@@ -53,81 +60,106 @@ final routerProvider = Provider<GoRouter>((ref) {
           return null;
         },
         loading: () => AppStrings.routeSplash,
-        error: (_, __) => AppStrings.routeLogin,
+        error: (_, __) {
+          if (FeatureFlags.ignoreServerOffline.value && !isSplashRoute) {
+            return null;
+          }
+          return AppStrings.routeLogin;
+        },
       );
     },
     routes: [
       GoRoute(
         path: AppStrings.routeSplash,
-        builder: (context, state) => const SplashScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const SplashScreen()),
       ),
       GoRoute(
         path: AppStrings.routeLogin,
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => _buildPage(state, const LoginScreen()),
       ),
       GoRoute(
         path: AppStrings.routeRegister,
-        builder: (context, state) => const RegisterScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const RegisterScreen()),
       ),
       GoRoute(
         path: AppStrings.routeForgot,
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const ForgotPasswordScreen()),
       ),
       GoRoute(
         path: AppStrings.routeHome,
-        builder: (context, state) => const MainScreen(),
+        pageBuilder: (context, state) => _buildPage(state, const MainScreen()),
       ),
       GoRoute(
         path: AppStrings.routeCustomization,
-        builder: (context, state) => const CustomizationScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const CustomizationScreen()),
       ),
       GoRoute(
         path: AppStrings.routePrivacy,
-        builder: (context, state) => const PrivacyScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const PrivacyScreen()),
       ),
       GoRoute(
         path: AppStrings.routeAccountSettings,
-        builder: (context, state) => const AccountSettingsScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const AccountSettingsScreen()),
       ),
       GoRoute(
         path: AppStrings.routeFeedback,
-        builder: (context, state) => const FeedbackScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const FeedbackScreen()),
+      ),
+      GoRoute(
+        path: AppStrings.routeSettingsSearch,
+        pageBuilder: (context, state) =>
+            _buildPage(state, const SettingsSearchScreen()),
       ),
       GoRoute(
         path: AppStrings.routeProfile,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = state.extra as String? ?? '';
-          return ProfileScreen(userId: id);
+          return _buildPage(state, ProfileScreen(userId: id));
         },
       ),
       GoRoute(
         path: AppStrings.routeChangeEmail,
-        builder: (context, state) => const ChangeEmailScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const ChangeEmailScreen()),
       ),
       GoRoute(
         path: '/change_phone',
-        builder: (context, state) => const ChangePhoneScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const ChangePhoneScreen()),
       ),
       GoRoute(
         path: '/tfa_setup',
-        builder: (context, state) => const TfaSetupScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const TfaSetupScreen()),
       ),
       GoRoute(
         path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const NotificationsScreen()),
       ),
       GoRoute(
         path: '/storage',
-        builder: (context, state) => const StorageScreen(),
+        pageBuilder: (context, state) =>
+            _buildPage(state, const StorageScreen()),
       ),
       GoRoute(
         path: AppStrings.routeChat,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final chat = state.extra as Chat?;
           if (chat == null) {
-            return const Scaffold(body: Center(child: Text('Chat not found')));
+            return _buildPage(
+              state,
+              const Scaffold(body: Center(child: Text('Chat not found'))),
+            );
           }
-          return ChatScreen(chat: chat);
+          return _buildPage(state, ChatScreen(chat: chat));
         },
       ),
     ],

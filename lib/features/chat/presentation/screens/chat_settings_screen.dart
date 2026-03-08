@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
@@ -92,7 +93,10 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   Widget _buildMembers() {
     final l10n = AppLocalizations.of(context)!;
     if (_loadingMembers)
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingState(
+        label: 'Загружаем участников…',
+        compact: true,
+      );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

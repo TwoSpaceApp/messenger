@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
+import 'package:two_space_app/features/settings/presentation/screens/dev_menu_screen.dart';
 
 part 'auth_notifier.freezed.dart';
 part 'auth_notifier.g.dart';
@@ -64,6 +65,12 @@ class AuthNotifier extends _$AuthNotifier {
       }
       return const AuthState.unauthenticated();
     } catch (e) {
+      if (FeatureFlags.ignoreServerOffline.value) {
+        final previousState = state.asData?.value;
+        if (previousState?.isAuthenticated ?? false) {
+          return previousState!;
+        }
+      }
       return AuthState.error(message: e.toString());
     }
   }

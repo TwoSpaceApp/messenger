@@ -11,26 +11,73 @@ import 'package:two_space_app/core/navigation/app_router.dart';
 import 'package:two_space_app/core/services/initialization_service.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/widgets/dev_fab.dart';
+import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_listener.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize app with structured error handling
-  final initResult = await InitializationService.initialize();
-
-  // Set up global error handlers
   _setupErrorHandlers();
-
-  // Custom error widget
   ErrorWidget.builder = _buildErrorWidget;
 
   runApp(
-    ProviderScope(
-      child: TwoSpaceApp(initializationResult: initResult),
+    const ProviderScope(
+      child: AppBootstrapper(),
     ),
   );
+}
+
+class AppBootstrapper extends StatefulWidget {
+  const AppBootstrapper({super.key});
+
+  @override
+  AppBootstrapperState createState() => AppBootstrapperState();
+}
+
+class AppBootstrapperState extends State<AppBootstrapper> {
+  InitializationResult? _initResult;
+  String _currentStep = 'Starting...';
+  double _progress = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startInit();
+  }
+
+  Future<void> _startInit() async {
+    final result = await InitializationService.initialize(
+      onProgress: (stepName, progress) {
+        setState(() {
+          _currentStep = stepName;
+          _progress = progress;
+        });
+      },
+    );
+    if (mounted) {
+      // Add a small delay so the 100% progress line is visible
+      await Future.delayed(const Duration(milliseconds: 300));
+      setState(() {
+        _initResult = result;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_initResult == null) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        themeMode: ThemeMode.dark,
+        darkTheme: ThemeData.dark(),
+        home: SplashScreen(
+          currentStep: _currentStep,
+          progress: _progress,
+        ),
+      );
+    }
+    return TwoSpaceApp(initializationResult: _initResult!);
+  }
 }
 
 void _setupErrorHandlers() {

@@ -43,7 +43,16 @@ class DevDioInterceptor extends Interceptor {
       latencyMs: latencyMs,
       requestBody: options.data,
       responseBody: responseBody,
-      headers: options.headers,
+      requestHeaders: options.headers,
+      responseHeaders: {
+        if (response != null)
+          for (final entry in response.headers.map.entries)
+            entry.key: entry.value.join(', '),
+        if (error?.response != null)
+          for (final entry in error!.response!.headers.map.entries)
+            entry.key: entry.value.join(', '),
+      },
+      errorMessage: error?.message,
     );
   }
 }

@@ -24,4 +24,5 @@ class AppStrings {
   static const routeChat = '/chat';
   static const routeAccountSettings = '/account-settings';
   static const routeFeedback = '/feedback';
+  static const routeSettingsSearch = '/settings-search';
 }

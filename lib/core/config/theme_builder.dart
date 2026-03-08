@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:two_space_app/core/navigation/app_transitions.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class AppThemeBuilder {
@@ -92,6 +93,16 @@ class AppThemeBuilder {
       ),
       iconTheme: IconThemeData(
         color: onBackgroundColor,
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: AppPageTransitionsBuilder(),
+          TargetPlatform.iOS: AppPageTransitionsBuilder(),
+          TargetPlatform.linux: AppPageTransitionsBuilder(),
+          TargetPlatform.macOS: AppPageTransitionsBuilder(),
+          TargetPlatform.windows: AppPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: AppPageTransitionsBuilder(),
+        },
       ),
     );
   }

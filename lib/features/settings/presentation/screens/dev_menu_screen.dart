@@ -10,18 +10,16 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/services/dev_network_logger.dart';
 import 'package:two_space_app/core/services/update_service.dart';
-import 'package:two_space_app/features/auth/presentation/screens/login_screen.dart';
-import 'package:two_space_app/features/auth/presentation/screens/register_screen.dart';
-import 'package:two_space_app/features/chat/presentation/screens/home_screen.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/core/widgets/highlighted_text.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
-import 'package:two_space_app/features/settings/presentation/screens/customization_screen.dart';
+import 'package:two_space_app/features/settings/presentation/screens/dev_screen_catalog.dart';
 
-// Флаги фичей для локального тестирования
 class FeatureFlags {
   static final ValueNotifier<bool> enableNewChatUI = ValueNotifier(false);
   static final ValueNotifier<bool> forceVideoCompression = ValueNotifier(true);
-  static final ValueNotifier<bool> enableAggressiveCaching =
-      ValueNotifier(false);
+  static final ValueNotifier<bool> enableAggressiveCaching = ValueNotifier(false);
+  static final ValueNotifier<bool> ignoreServerOffline = ValueNotifier(false);
 }
 
 class DevMenuScreen extends StatefulWidget {
@@ -33,7 +31,7 @@ class DevMenuScreen extends StatefulWidget {
 
 class _DevMenuScreenState extends State<DevMenuScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  late final TabController _tabController;
   final DevLogger _logger = DevLogger('DevMenu');
 
   @override
@@ -57,11 +55,11 @@ class _DevMenuScreenState extends State<DevMenuScreen>
           controller: _tabController,
           isScrollable: true,
           tabs: const [
-            Tab(icon: Icon(Icons.build), text: 'Actions'),
-            Tab(icon: Icon(Icons.brush), text: 'UI Inspect'),
+            Tab(icon: Icon(Icons.dashboard_customize_outlined), text: 'Actions'),
+            Tab(icon: Icon(Icons.brush_outlined), text: 'UI Inspect'),
             Tab(icon: Icon(Icons.network_check), text: 'Network'),
-            Tab(icon: Icon(Icons.flag), text: 'Features'),
-            Tab(icon: Icon(Icons.info), text: 'Info'),
+            Tab(icon: Icon(Icons.flag_outlined), text: 'Features'),
+            Tab(icon: Icon(Icons.info_outline), text: 'Info'),
           ],
         ),
       ),
@@ -69,56 +67,158 @@ class _DevMenuScreenState extends State<DevMenuScreen>
         controller: _tabController,
         children: [
           _DevMenuActionsTab(logger: _logger),
-          _DevMenuUIInspectorTab(),
-          _DevMenuNetworkTab(),
-          _DevMenuFeatureFlagsTab(),
-          _DevMenuInfoTab(),
+          const _DevMenuUIInspectorTab(),
+          const _DevMenuNetworkTab(),
+          const _DevMenuFeatureFlagsTab(),
+          const _DevMenuInfoTab(),
         ],
       ),
     );
   }
 }
 
-// ----------------------------------------------------------------------
-// ACTIONS TAB
-// ----------------------------------------------------------------------
-class _DevMenuActionsTab extends StatelessWidget {
+class _DevMenuActionsTab extends StatefulWidget {
   const _DevMenuActionsTab({required this.logger});
+
   final DevLogger logger;
 
   @override
+  State<_DevMenuActionsTab> createState() => _DevMenuActionsTabState();
+}
+
+class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
+  final TextEditingController _searchController = TextEditingController();
+  String? _selectedGroup;
+
+  List<DevScreenEntry> get _allScreens => [
+        DevScreenEntry(
+          title: 'DevMenuScreen',
+          source: 'settings/dev_menu_screen.dart',
+          group: 'Settings',
+          builder: (_) => const DevMenuScreen(),
+        ),
+        ...DevScreenCatalog.entries,
+      ];
+
+  List<String> get _groups =>
+      _allScreens.map((entry) => entry.group).toSet().toList()..sort();
+
+  List<DevScreenEntry> get _filteredScreens {
+    final query = _searchController.text.trim().toLowerCase();
+    return _allScreens.where((entry) {
+      if (_selectedGroup != null && entry.group != _selectedGroup) {
+        return false;
+      }
+      if (query.isEmpty) return true;
+      return entry.searchText.contains(query);
+    }).toList();
+  }
+
+  Map<String, List<DevScreenEntry>> get _groupedScreens {
+    final map = <String, List<DevScreenEntry>>{};
+    for (final entry in _filteredScreens) {
+      map.putIfAbsent(entry.group, () => <DevScreenEntry>[]).add(entry);
+    }
+    final sortedKeys = map.keys.toList()..sort();
+    return {for (final key in sortedKeys) key: map[key]!};
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final groupedScreens = _groupedScreens;
+    final query = _searchController.text.trim();
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildSectionTitle(context, 'Navigation Bypass'),
-        DropdownButtonFormField<Widget>(
-          decoration: const InputDecoration(
-            labelText: 'Выберите экран для перехода',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.screen_share),
+        _buildSectionTitle(context, 'Screen Explorer'),
+        TextField(
+          controller: _searchController,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            hintText: 'Поиск по имени, группе или файлу экрана',
+            prefixIcon: const Icon(Icons.search_rounded),
+            suffixIcon: query.isEmpty
+                ? null
+                : IconButton(
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {});
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  ),
           ),
-          items: const [
-            DropdownMenuItem(
-                value: HomeScreen(), child: Text('🏠 Главный экран (Home)')),
-            DropdownMenuItem(
-                value: LoginScreen(), child: Text('🔑 Вход (Login)')),
-            DropdownMenuItem(
-                value: RegisterScreen(),
-                child: Text('📝 Регистрация (Register)')),
-            DropdownMenuItem(
-                value: CustomizationScreen(),
-                child: Text('🎨 Кастомизация (Customization)')),
-          ],
-          onChanged: (screen) {
-            if (screen != null) {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => screen));
-            }
-          },
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 40,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  label: Text('Все (${_allScreens.length})'),
+                  selected: _selectedGroup == null,
+                  onSelected: (_) => setState(() => _selectedGroup = null),
+                ),
+              ),
+              ..._groups.map(
+                (group) {
+                  final count = _allScreens.where((e) => e.group == group).length;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text('$group ($count)'),
+                      selected: _selectedGroup == group,
+                      onSelected: (_) => setState(() => _selectedGroup = group),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          child: groupedScreens.isEmpty
+              ? const AppEmptyState(
+                  key: ValueKey('empty-dev-screens'),
+                  title: 'Экраны не найдены',
+                  message: 'Измените поисковый запрос или снимите фильтр группы.',
+                  icon: Icons.travel_explore_rounded,
+                )
+              : Container(
+                  key: ValueKey('${query}_${_selectedGroup ?? 'all'}'),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      for (final entry in groupedScreens.entries) ...[
+                        _buildGroupHeader(context, entry.key, entry.value.length),
+                        for (var i = 0; i < entry.value.length; i++) ...[
+                          _buildScreenTile(context, entry.value[i], query),
+                          if (i != entry.value.length - 1)
+                            const Divider(height: 1, indent: 16, endIndent: 16),
+                        ],
+                      ],
+                    ],
+                  ),
+                ),
         ),
         const SizedBox(height: 24),
-        _buildSectionTitle(context, 'Testing & Load Gen'),
+        _buildSectionTitle(context, 'Utilities'),
         Wrap(
           spacing: 10,
           runSpacing: 10,
@@ -126,45 +226,18 @@ class _DevMenuActionsTab extends StatelessWidget {
             _buildAction(
               context,
               '💥 Force Crash',
-              Icons.bug_report,
-              () {
-                throw Exception('Test Crash triggered from Dev Menu');
-              },
+              Icons.bug_report_outlined,
+              () => throw Exception('Test crash triggered from Dev Menu'),
               color: Colors.orange,
             ),
-            _buildAction(
-              context,
-              '🔥 1000 Mock Messages',
-              Icons.data_array,
-              () {
-                // Здесь в будущем можно вызывать сервис добавления моков в базу
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text(
-                        'Load Gen: Added 1000 mock messages (simulated)')));
-              },
-              color: Colors.orange,
-            ),
-            _buildAction(context, 'Обновить OTA', Icons.system_update,
-                () async {
-              logger.info('Обновление...');
-              await UpdateService.checkForUpdate();
-            }),
-          ],
-        ),
-        const SizedBox(height: 24),
-        _buildSectionTitle(context, 'Storage & State'),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
             _buildAction(
               context,
               '🗑️ Clear Secure Storage',
-              Icons.delete_forever,
+              Icons.delete_forever_outlined,
               () async {
                 const storage = FlutterSecureStorage();
                 await storage.deleteAll();
-                logger.info('Secure storage cleared');
+                widget.logger.info('Secure storage cleared');
               },
               color: Colors.red,
             ),
@@ -174,13 +247,110 @@ class _DevMenuActionsTab extends StatelessWidget {
               Icons.layers_clear,
               () async {
                 await SettingsService.clearCachedProfile();
-                logger.info('Profile cache cleared');
+                widget.logger.info('Profile cache cleared');
               },
               color: Colors.red,
+            ),
+            _buildAction(
+              context,
+              'OTA Check',
+              Icons.system_update_alt_rounded,
+              () async {
+                widget.logger.info('Checking OTA update…');
+                await UpdateService.checkForUpdate();
+              },
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildGroupHeader(BuildContext context, String group, int count) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
+      ),
+      child: Row(
+        children: [
+          Text(
+            group,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScreenTile(
+    BuildContext context,
+    DevScreenEntry entry,
+    String query,
+  ) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: CircleAvatar(
+        backgroundColor:
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+        child: Icon(
+          Icons.web_asset_outlined,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+      title: HighlightedText(
+        entry.title,
+        query: query,
+        style: Theme.of(context).textTheme.titleSmall,
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 4),
+          HighlightedText(
+            entry.source,
+            query: query,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.72),
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Открыть экран',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      ),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: entry.builder),
+      ),
     );
   }
 
@@ -198,8 +368,12 @@ class _DevMenuActionsTab extends StatelessWidget {
   }
 
   Widget _buildAction(
-      BuildContext context, String label, IconData icon, VoidCallback onTap,
-      {Color? color}) {
+    BuildContext context,
+    String label,
+    IconData icon,
+    VoidCallback onTap, {
+    Color? color,
+  }) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -213,10 +387,9 @@ class _DevMenuActionsTab extends StatelessWidget {
   }
 }
 
-// ----------------------------------------------------------------------
-// UI INSPECTOR TAB
-// ----------------------------------------------------------------------
 class _DevMenuUIInspectorTab extends StatefulWidget {
+  const _DevMenuUIInspectorTab();
+
   @override
   State<_DevMenuUIInspectorTab> createState() => _DevMenuUIInspectorTabState();
 }
@@ -231,58 +404,36 @@ class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
           title: const Text('Показывать границы (debugPaintSize)'),
           subtitle: const Text('Отображение отступов и границ всех виджетов'),
           value: debugPaintSizeEnabled,
-          onChanged: (val) {
-            setState(() {
-              debugPaintSizeEnabled = val;
-            });
-          },
+          onChanged: (val) => setState(() => debugPaintSizeEnabled = val),
         ),
         SwitchListTile(
           title: const Text('Закрашивать перерисовки (RepaintRainbow)'),
           subtitle:
               const Text('Подсвечивает элементы, которые перерисовываются'),
           value: debugRepaintRainbowEnabled,
-          onChanged: (val) {
-            setState(() {
-              debugRepaintRainbowEnabled = val;
-            });
-          },
+          onChanged: (val) => setState(() => debugRepaintRainbowEnabled = val),
         ),
         SwitchListTile(
           title: const Text('Медленные анимации (timeDilation = 5.0)'),
           subtitle: const Text('Замедляет все анимации в приложении'),
           value: timeDilation != 1.0,
-          onChanged: (val) {
-            setState(() {
-              timeDilation = val ? 5.0 : 1.0;
-            });
-          },
+          onChanged: (val) => setState(() => timeDilation = val ? 5.0 : 1.0),
         ),
         SwitchListTile(
           title: const Text('Профилирование производительности'),
           subtitle: const Text('Отображает Performance Overlay сверху'),
           value: WidgetsApp.showPerformanceOverlayOverride,
-          onChanged: (val) {
-            setState(() {
-              WidgetsApp.showPerformanceOverlayOverride = val;
-            });
-          },
+          onChanged: (val) =>
+              setState(() => WidgetsApp.showPerformanceOverlayOverride = val),
         ),
       ],
     );
   }
 }
 
-// ----------------------------------------------------------------------
-// FEATURE FLAGS TAB
-// ----------------------------------------------------------------------
-class _DevMenuFeatureFlagsTab extends StatefulWidget {
-  @override
-  State<_DevMenuFeatureFlagsTab> createState() =>
-      _DevMenuFeatureFlagsTabState();
-}
+class _DevMenuFeatureFlagsTab extends StatelessWidget {
+  const _DevMenuFeatureFlagsTab();
 
-class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -293,16 +444,27 @@ class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
             'Force Video Compression', FeatureFlags.forceVideoCompression),
         _buildFlagTile(
             'Enable Aggressive Caching', FeatureFlags.enableAggressiveCaching),
+        _buildFlagTile(
+          'Ignore Server Offline (no logout)',
+          FeatureFlags.ignoreServerOffline,
+          subtitle:
+              'Сохраняет текущую сессию и не выбрасывает на экран входа, если сервер недоступен.',
+        ),
       ],
     );
   }
 
-  Widget _buildFlagTile(String title, ValueNotifier<bool> flag) {
+  Widget _buildFlagTile(
+    String title,
+    ValueNotifier<bool> flag, {
+    String? subtitle,
+  }) {
     return ValueListenableBuilder<bool>(
       valueListenable: flag,
-      builder: (context, value, child) {
+      builder: (context, value, _) {
         return SwitchListTile(
           title: Text(title),
+          subtitle: subtitle == null ? null : Text(subtitle),
           value: value,
           onChanged: (val) => flag.value = val,
         );
@@ -311,70 +473,191 @@ class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
   }
 }
 
-// ----------------------------------------------------------------------
-// NETWORK TAB
-// ----------------------------------------------------------------------
-class _DevMenuNetworkTab extends StatelessWidget {
+class _DevMenuNetworkTab extends StatefulWidget {
+  const _DevMenuNetworkTab();
+
+  @override
+  State<_DevMenuNetworkTab> createState() => _DevMenuNetworkTabState();
+}
+
+class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
+  bool _showOnlyErrors = false;
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<DevNetworkLog>>(
       stream: DevNetworkLogger.instance.logsStream,
       initialData: DevNetworkLogger.instance.logs,
       builder: (context, snapshot) {
-        final logs = snapshot.data ?? [];
+        final sourceLogs = snapshot.data ?? [];
+        final logs = _showOnlyErrors
+            ? sourceLogs.where((log) => log.isError).toList()
+            : sourceLogs;
+
         if (logs.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.wifi_off,
-                    size: 64, color: Colors.grey.withAlpha(128)),
-                const SizedBox(height: 16),
-                const Text('No Network Logs',
-                    style: TextStyle(color: Colors.grey)),
-              ],
-            ),
+          return AppEmptyState(
+            title: 'Пока нет сетевых логов',
+            message:
+                'Откройте любой экран, который делает запросы, и логи появятся здесь.',
+            icon: Icons.wifi_find_rounded,
+            actionLabel: sourceLogs.isNotEmpty ? 'Показать всё' : null,
+            onAction: sourceLogs.isNotEmpty
+                ? () => setState(() => _showOnlyErrors = false)
+                : null,
           );
         }
-        return ListView.separated(
-          itemCount: logs.length,
-          separatorBuilder: (c, i) => const Divider(height: 1),
-          itemBuilder: (c, index) {
-            final log = logs[index];
-            final color =
-                (log.statusCode ?? 0) >= 400 ? Colors.red : Colors.green;
-            return ExpansionTile(
-              leading: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                    color: color.withAlpha(50),
-                    borderRadius: BorderRadius.circular(8)),
-                child: Text(log.method,
-                    style: TextStyle(
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12)),
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+              child: Row(
+                children: [
+                  FilterChip(
+                    label: Text(_showOnlyErrors
+                        ? 'Только ошибки'
+                        : 'Все запросы (${sourceLogs.length})'),
+                    selected: _showOnlyErrors,
+                    onSelected: (value) => setState(() => _showOnlyErrors = value),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: DevNetworkLogger.instance.clear,
+                    icon: const Icon(Icons.delete_sweep_outlined),
+                    label: const Text('Очистить'),
+                  ),
+                ],
               ),
-              title: Text(log.url,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 14)),
-              subtitle: Text('${log.statusCode ?? '???'} • ${log.latencyMs}ms',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-              children: [
-                if (log.requestBody != null)
-                  _buildCodeBlock('Request', log.requestBody),
-                if (log.responseBody != null)
-                  _buildCodeBlock('Response', log.responseBody),
-              ],
-            );
-          },
+            ),
+            Expanded(
+              child: ListView.separated(
+                itemCount: logs.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final log = logs[index];
+                  final color = _colorFor(log);
+
+                  return ColoredBox(
+                    color: color.withValues(alpha: 0.035),
+                    child: ExpansionTile(
+                      leading: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: color.withValues(alpha: 0.28),
+                          ),
+                        ),
+                        child: Text(
+                          log.method,
+                          style: TextStyle(
+                            color: color,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        log.url,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      subtitle: Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _buildMetaChip(log.statusLabel, color),
+                          _buildMetaChip(log.kindLabel, color),
+                          _buildMetaChip('${log.latencyMs} ms', Colors.blueGrey),
+                          _buildMetaChip(log.responseTypeLabel, Colors.deepPurple),
+                        ],
+                      ),
+                      children: [
+                        _buildDetailsHeader(log, color),
+                        if (log.requestHeaders.isNotEmpty)
+                          _buildCodeBlock(
+                            'Request headers',
+                            log.requestHeaders,
+                            accent: Colors.lightBlueAccent,
+                          ),
+                        if (log.requestBody != null)
+                          _buildCodeBlock(
+                            'Request body · ${log.requestTypeLabel}',
+                            log.requestBody,
+                            accent: Colors.orangeAccent,
+                          ),
+                        if (log.responseHeaders.isNotEmpty)
+                          _buildCodeBlock(
+                            'Response headers',
+                            log.responseHeaders,
+                            accent: Colors.cyanAccent,
+                          ),
+                        if (log.responseBody != null || log.errorMessage != null)
+                          _buildCodeBlock(
+                            'Response body · ${log.responseTypeLabel}',
+                            log.errorMessage ?? log.responseBody,
+                            accent: log.isError
+                                ? Colors.redAccent
+                                : Colors.greenAccent,
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildCodeBlock(String title, dynamic data) {
+  Widget _buildDetailsHeader(DevNetworkLog log, Color color) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              '${log.timestamp.toLocal()}'.split('.').first,
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
+          ),
+          Text(
+            log.isError ? 'problem detected' : 'completed',
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetaChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCodeBlock(String title, dynamic data, {required Color accent}) {
     var pretty = '';
     try {
       if (data is Map || data is List) {
@@ -385,38 +668,62 @@ class _DevMenuNetworkTab extends StatelessWidget {
     } catch (_) {
       pretty = data.toString();
     }
+
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Colors.grey)),
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: accent,
+            ),
+          ),
           const SizedBox(height: 4),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-                color: Colors.black87, borderRadius: BorderRadius.circular(8)),
-            child: SelectableText(pretty,
-                style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                    color: Colors.greenAccent)),
+              color: Colors.black87,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: accent.withValues(alpha: 0.25)),
+            ),
+            child: SelectableText(
+              pretty,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: accent,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+
+  Color _colorFor(DevNetworkLog log) {
+    switch (log.kind) {
+      case DevNetworkLogKind.success:
+        return Colors.green;
+      case DevNetworkLogKind.redirect:
+        return Colors.amber;
+      case DevNetworkLogKind.clientError:
+        return Colors.orange;
+      case DevNetworkLogKind.serverError:
+        return Colors.red;
+      case DevNetworkLogKind.networkError:
+        return Colors.deepOrangeAccent;
+    }
+  }
 }
 
-// ----------------------------------------------------------------------
-// INFO TAB
-// ----------------------------------------------------------------------
 class _DevMenuInfoTab extends StatefulWidget {
+  const _DevMenuInfoTab();
+
   @override
   State<_DevMenuInfoTab> createState() => _DevMenuInfoTabState();
 }
@@ -445,6 +752,7 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
       devInfo = '${iosInfo.name} (iOS ${iosInfo.systemVersion})';
     }
 
+    if (!mounted) return;
     setState(() {
       _packageInfo = info;
       _deviceInfo = devInfo;
@@ -453,8 +761,9 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
 
   @override
   Widget build(BuildContext context) {
-    if (_packageInfo == null)
-      return const Center(child: CircularProgressIndicator());
+    if (_packageInfo == null) {
+      return const AppLoadingState(label: 'Собираем сведения об устройстве…');
+    }
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -467,8 +776,8 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
         ListTile(
           leading: const Icon(Icons.numbers),
           title: const Text('Version'),
-          subtitle: Text(
-              '${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})'),
+          subtitle:
+              Text('${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})'),
         ),
         ListTile(
           leading: const Icon(Icons.code),

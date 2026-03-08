@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
@@ -18,11 +19,9 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _loggingOut = false;
-  bool _devMenuEnabled = false;
   String _appVersion = '';
   bool _autoDownloadMedia = false;
   bool _sendByEnter = true;
-  double _textScale = 1;
 
   @override
   void initState() {
@@ -33,7 +32,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _loadSettings() {
     setState(() {
-      _textScale = SettingsService.textScaleNotifier.value;
       _autoDownloadMedia = SettingsService.autoDownloadMediaNotifier.value;
       _sendByEnter = SettingsService.sendByEnterNotifier.value;
 
@@ -100,6 +98,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text(l10n.settingsTitle),
         elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.surface,
+        actions: [
+          IconButton(
+            onPressed: () => context.push(AppStrings.routeSettingsSearch),
+            icon: const Icon(Icons.search_rounded),
+            tooltip: 'Search settings',
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -127,7 +132,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         leading: ValueListenableBuilder<ThemeMode>(
                           valueListenable: SettingsService.themeModeNotifier,
                           builder: (context, mode, _) {
-                            return Icon(mode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode);
+                            return Icon(mode == ThemeMode.dark
+                                ? Icons.dark_mode
+                                : Icons.light_mode);
                           },
                         ),
                         title: Text(l10n.themeLabel),
@@ -182,36 +189,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         value: _notificationsEnabled, // Reuse state for now
                         onChanged: (v) =>
                             setState(() => _notificationsEnabled = v),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Data & Storage
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                child: Text(
-                  l10n.settingsStorageManagement,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-              GlassCard(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.storage),
-                        title: Text(l10n.settingsStorageUsage),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/storage'),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
@@ -301,24 +278,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.text_fields),
-                        title: Text(l10n.textSizeLabel),
-                        subtitle: Slider(
-                          min: 0.8,
-                          max: 1.4,
-                          divisions: 6,
-                          value: _textScale,
-                          label: '${(_textScale * 100).toInt()}%',
-                          onChanged: (v) => setState(() => _textScale = v),
-                          onChangeEnd: (v) async =>
-                              SettingsService.setTextScale(v),
-                        ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      const Divider(height: 1),
                       SwitchListTile(
                         secondary: const Icon(Icons.keyboard),
                         title: Text(l10n.sendByEnterLabel),
@@ -367,6 +326,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const Divider(height: 1),
                       ListTile(
+                        leading: const Icon(Icons.memory_rounded),
+                        title: const Text('Память'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => context.push('/storage'),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
                         leading: const Icon(Icons.storage),
                         title: Text(l10n.storageManagementLabel),
                         subtitle: Text(l10n.storageManagementSubtitle),
@@ -402,37 +370,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ),
-
-              // Development
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                child: Text(
-                  l10n.developmentSection,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-              GlassCard(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: ListTile(
-                    leading: const Icon(Icons.bug_report),
-                    title: const Text('Developer Menu'),
-                    subtitle: Text(l10n.devMenuSubtitle),
-                    trailing: Switch(
-                      value: _devMenuEnabled,
-                      onChanged: (value) {
-                        setState(() => _devMenuEnabled = value);
-                      },
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                ),
-              ),
-
               // About
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
@@ -457,15 +394,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _appVersion.isEmpty ? l10n.loading : _appVersion),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      const Divider(height: 1),
-                      Tooltip(
-                        message: l10n.matrixTooltip,
-                        child: ListTile(
-                          subtitle: Text(l10n.clientDescription),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 8),
-                        ),
                       ),
                       const Divider(height: 1),
                       ListTile(

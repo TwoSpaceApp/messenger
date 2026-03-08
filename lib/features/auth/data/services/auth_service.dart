@@ -7,6 +7,7 @@ import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
 import 'package:two_space_app/features/chat/data/services/matrix_service.dart';
+import 'package:two_space_app/features/settings/presentation/screens/dev_menu_screen.dart';
 
 /// Keys used in secure storage for Matrix tokens per-user
 const _kMatrixTokenKeyPrefix = 'matrix_token_';
@@ -246,7 +247,7 @@ class AuthService {
         }
       }
       // On 401 or other client errors, clear refresh to force re-login
-      if (res.statusCode >= 400 && res.statusCode < 500) {
+      if (res.statusCode >= 400 && res.statusCode < 500 && !FeatureFlags.ignoreServerOffline.value) {
         await _secure.delete(key: '$_kMatrixRefreshKeyPrefix$keyId');
         await _secure.delete(key: '$_kMatrixTokenKeyPrefix$keyId');
       }
@@ -260,6 +261,12 @@ class AuthService {
   Future<String?> getMatrixTokenForUser({String? appUserId}) async {
     // Прежде всего ищем Aegis-токен
     if (_aegis.token != null) return _aegis.token;
+    if (FeatureFlags.ignoreServerOffline.value) {
+      final storedAegisToken = await _aegis.getStoredToken();
+      if (storedAegisToken != null && storedAegisToken.isNotEmpty) {
+        return storedAegisToken;
+      }
+    }
 
     // Primary source: ChatMatrixService stores token globally.
     await _matrixService.init();
@@ -349,6 +356,12 @@ class AuthService {
   Future<String?> getCurrentUserId() async {
     // В первую очередь возвращаем Aegis-пользователя
     if (_aegis.username != null) return _aegis.username;
+    if (FeatureFlags.ignoreServerOffline.value) {
+      final storedAegisUsername = await _aegis.getStoredUsername();
+      if (storedAegisUsername != null && storedAegisUsername.isNotEmpty) {
+        return storedAegisUsername;
+      }
+    }
     return _matrixService.getCurrentUserId();
   }
 

@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/services/dev_http_client.dart' as http;
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
+import 'package:two_space_app/features/settings/presentation/screens/dev_menu_screen.dart';
 
 /// RealtimeService: supports both Appwrite Realtime (legacy) and a Matrix-based
 /// /sync long-poll implementation (when Environment.useMatrix==true).
@@ -251,12 +252,19 @@ class RealtimeService {
       'Authorization': 'Bearer $authToken',
       'Content-Type': 'application/json'
     }).timeout(const Duration(seconds: 35));
-    if (res.statusCode == 401 || res.statusCode == 403) {
+    if ((res.statusCode == 401 || res.statusCode == 403) && !FeatureFlags.ignoreServerOffline.value) {
       throw _MatrixAuthException(res.statusCode);
     }
-    if (res.statusCode != 200) {
+    if (res.statusCode != 200 && !FeatureFlags.ignoreServerOffline.value) {
       throw Exception('Matrix /sync failed ${res.statusCode}');
     }
+    
+    if (res.statusCode != 200 && FeatureFlags.ignoreServerOffline.value) {
+      // Return a pseudo-success to keep looping without crashing
+      await Future.delayed(const Duration(seconds: 5));
+      return 0;
+    }
+
     final js = jsonDecode(res.body) as Map<String, dynamic>;
     // update token (next_batch) only if valid
     try {
