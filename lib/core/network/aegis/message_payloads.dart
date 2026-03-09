@@ -418,6 +418,539 @@ class ChannelCreateResponse {
       };
 }
 
+class ChatListRequest {
+  Map<String, dynamic> toJson() => <String, dynamic>{};
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ChatListItem {
+  ChatListItem({
+    required this.chatId,
+    required this.type,
+    required this.title,
+    this.avatarUrl,
+    this.lastMessage,
+    this.lastMessageAt,
+    this.unreadCount = 0,
+    this.peerUserId,
+    this.channelId,
+  });
+
+  factory ChatListItem.fromJson(Map<String, dynamic> json) => ChatListItem(
+        chatId: json['ChatId'] as int,
+        type: json['Type'] as String,
+        title: json['Title'] as String,
+        avatarUrl: json['AvatarUrl'] as String?,
+        lastMessage: json['LastMessage'] as String?,
+        lastMessageAt: json['LastMessageAt'] != null
+            ? DateTime.parse(json['LastMessageAt'] as String)
+            : null,
+        unreadCount: json['UnreadCount'] as int? ?? 0,
+        peerUserId: json['PeerUserId'] as int?,
+        channelId: json['ChannelId'] as int?,
+      );
+
+  final int chatId;
+  final String type;
+  final String title;
+  final String? avatarUrl;
+  final String? lastMessage;
+  final DateTime? lastMessageAt;
+  final int unreadCount;
+  final int? peerUserId;
+  final int? channelId;
+}
+
+class ChatListResponse {
+  ChatListResponse({
+    required this.success,
+    required this.chats,
+    this.message,
+  });
+
+  factory ChatListResponse.fromJson(Map<String, dynamic> json) =>
+      ChatListResponse(
+        success: json['Success'] as bool,
+        chats: (json['Chats'] as List<dynamic>? ?? const <dynamic>[])
+            .map((item) => ChatListItem.fromJson(item as Map<String, dynamic>))
+            .toList(),
+        message: json['Message'] as String?,
+      );
+
+  factory ChatListResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return ChatListResponse.fromJson(json);
+  }
+
+  final bool success;
+  final List<ChatListItem> chats;
+  final String? message;
+}
+
+class PrivateChatHistoryRequest {
+  PrivateChatHistoryRequest({
+    required this.peerUserId,
+    this.limit = 50,
+    this.beforeMessageId,
+  });
+
+  final int peerUserId;
+  final int limit;
+  final int? beforeMessageId;
+
+  Map<String, dynamic> toJson() => {
+        'PeerUserId': peerUserId,
+        'Limit': limit,
+        if (beforeMessageId != null) 'BeforeMessageId': beforeMessageId,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class PrivateChatHistoryItem {
+  PrivateChatHistoryItem({
+    required this.id,
+    required this.fromUserId,
+    required this.toUserId,
+    required this.content,
+    required this.contentType,
+    required this.createdAt,
+    this.fromUsername,
+    this.username,
+  });
+
+  factory PrivateChatHistoryItem.fromJson(Map<String, dynamic> json) =>
+      PrivateChatHistoryItem(
+        id: json['Id'] as int,
+        fromUserId: json['FromUserId'] as int,
+        toUserId: json['ToUserId'] as int,
+        content: json['Content'] as String,
+        contentType:
+            MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
+        createdAt: DateTime.parse(json['CreatedAt'] as String),
+        fromUsername: json['FromUsername'] as String?,
+        username: json['Username'] as String?,
+      );
+
+  final int id;
+  final int fromUserId;
+  final int toUserId;
+  final String content;
+  final MessageContentType contentType;
+  final DateTime createdAt;
+  final String? fromUsername;
+  final String? username;
+}
+
+class PrivateChatHistoryResponse {
+  PrivateChatHistoryResponse({
+    required this.success,
+    required this.peerUserId,
+    required this.messages,
+    this.message,
+  });
+
+  factory PrivateChatHistoryResponse.fromJson(Map<String, dynamic> json) =>
+      PrivateChatHistoryResponse(
+        success: json['Success'] as bool,
+        peerUserId: json['PeerUserId'] as int? ?? 0,
+        messages: (json['Messages'] as List<dynamic>? ?? const <dynamic>[])
+            .map(
+              (item) => PrivateChatHistoryItem.fromJson(
+                item as Map<String, dynamic>,
+              ),
+            )
+            .toList(),
+        message: json['Message'] as String?,
+      );
+
+  factory PrivateChatHistoryResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return PrivateChatHistoryResponse.fromJson(json);
+  }
+
+  final bool success;
+  final int peerUserId;
+  final List<PrivateChatHistoryItem> messages;
+  final String? message;
+}
+
+class ChannelHistoryRequest {
+  ChannelHistoryRequest({
+    required this.channelId,
+    this.limit = 50,
+    this.beforeMessageId,
+  });
+
+  final int channelId;
+  final int limit;
+  final int? beforeMessageId;
+
+  Map<String, dynamic> toJson() => {
+        'ChannelId': channelId,
+        'Limit': limit,
+        if (beforeMessageId != null) 'BeforeMessageId': beforeMessageId,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ChannelHistoryItem {
+  ChannelHistoryItem({
+    required this.id,
+    required this.channelId,
+    required this.fromUserId,
+    required this.content,
+    required this.contentType,
+    required this.createdAt,
+    this.fromUsername,
+    this.channelName,
+  });
+
+  factory ChannelHistoryItem.fromJson(Map<String, dynamic> json) =>
+      ChannelHistoryItem(
+        id: json['Id'] as int,
+        channelId: json['ChannelId'] as int,
+        fromUserId: json['FromUserId'] as int,
+        content: json['Content'] as String,
+        contentType:
+            MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
+        createdAt: DateTime.parse(json['CreatedAt'] as String),
+        fromUsername: json['FromUsername'] as String?,
+        channelName: json['ChannelName'] as String?,
+      );
+
+  final int id;
+  final int channelId;
+  final int fromUserId;
+  final String content;
+  final MessageContentType contentType;
+  final DateTime createdAt;
+  final String? fromUsername;
+  final String? channelName;
+}
+
+class ChannelHistoryResponse {
+  ChannelHistoryResponse({
+    required this.success,
+    required this.channelId,
+    required this.messages,
+    this.channelName,
+    this.message,
+  });
+
+  factory ChannelHistoryResponse.fromJson(Map<String, dynamic> json) =>
+      ChannelHistoryResponse(
+        success: json['Success'] as bool,
+        channelId: json['ChannelId'] as int? ?? 0,
+        channelName: json['ChannelName'] as String?,
+        messages: (json['Messages'] as List<dynamic>? ?? const <dynamic>[])
+            .map(
+              (item) => ChannelHistoryItem.fromJson(
+                item as Map<String, dynamic>,
+              ),
+            )
+            .toList(),
+        message: json['Message'] as String?,
+      );
+
+  factory ChannelHistoryResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return ChannelHistoryResponse.fromJson(json);
+  }
+
+  final bool success;
+  final int channelId;
+  final String? channelName;
+  final List<ChannelHistoryItem> messages;
+  final String? message;
+}
+
+class PrivateChatMessageEvent {
+  PrivateChatMessageEvent({
+    required this.id,
+    required this.fromUserId,
+    required this.toUserId,
+    required this.content,
+    required this.contentType,
+    required this.createdAt,
+    this.fromUsername,
+    this.username,
+  });
+
+  factory PrivateChatMessageEvent.fromJson(Map<String, dynamic> json) =>
+      PrivateChatMessageEvent(
+        id: json['Id'] as int,
+        fromUserId: json['FromUserId'] as int,
+        toUserId: json['ToUserId'] as int,
+        content: json['Content'] as String,
+        contentType:
+            MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
+        createdAt: DateTime.parse(json['CreatedAt'] as String),
+        fromUsername: json['FromUsername'] as String?,
+        username: json['Username'] as String?,
+      );
+
+  factory PrivateChatMessageEvent.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return PrivateChatMessageEvent.fromJson(json);
+  }
+
+  final int id;
+  final int fromUserId;
+  final int toUserId;
+  final String content;
+  final MessageContentType contentType;
+  final DateTime createdAt;
+  final String? fromUsername;
+  final String? username;
+}
+
+class ChannelMessageEvent {
+  ChannelMessageEvent({
+    required this.id,
+    required this.channelId,
+    required this.fromUserId,
+    required this.content,
+    required this.contentType,
+    required this.createdAt,
+    this.fromUsername,
+    this.channelName,
+  });
+
+  factory ChannelMessageEvent.fromJson(Map<String, dynamic> json) =>
+      ChannelMessageEvent(
+        id: json['Id'] as int,
+        channelId: json['ChannelId'] as int,
+        fromUserId: json['FromUserId'] as int,
+        content: json['Content'] as String,
+        contentType:
+            MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
+        createdAt: DateTime.parse(json['CreatedAt'] as String),
+        fromUsername: json['FromUsername'] as String?,
+        channelName: json['ChannelName'] as String?,
+      );
+
+  factory ChannelMessageEvent.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return ChannelMessageEvent.fromJson(json);
+  }
+
+  final int id;
+  final int channelId;
+  final int fromUserId;
+  final String content;
+  final MessageContentType contentType;
+  final DateTime createdAt;
+  final String? fromUsername;
+  final String? channelName;
+}
+
+class MessageEditRequest {
+  MessageEditRequest({
+    required this.messageId,
+    required this.newContent,
+    this.scope = 'private',
+    this.channelId,
+    this.groupId,
+  });
+
+  final int messageId;
+  final String newContent;
+  final String scope;
+  final int? channelId;
+  final int? groupId;
+
+  Map<String, dynamic> toJson() => {
+        'MessageId': messageId,
+        'NewContent': newContent,
+        'Scope': scope,
+        if (channelId != null) 'ChannelId': channelId,
+        if (groupId != null) 'GroupId': groupId,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class MessageEditResponse {
+  MessageEditResponse({
+    required this.success,
+    this.message,
+    this.messageId = 0,
+  });
+
+  factory MessageEditResponse.fromJson(Map<String, dynamic> json) =>
+      MessageEditResponse(
+        success: json['Success'] as bool,
+        message: json['Message'] as String?,
+        messageId: json['MessageId'] as int? ?? 0,
+      );
+
+  factory MessageEditResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return MessageEditResponse.fromJson(json);
+  }
+
+  final bool success;
+  final String? message;
+  final int messageId;
+}
+
+class MessageDeleteRequest {
+  MessageDeleteRequest({
+    required this.messageId,
+    this.scope = 'private',
+    this.channelId,
+    this.groupId,
+  });
+
+  final int messageId;
+  final String scope;
+  final int? channelId;
+  final int? groupId;
+
+  Map<String, dynamic> toJson() => {
+        'MessageId': messageId,
+        'Scope': scope,
+        if (channelId != null) 'ChannelId': channelId,
+        if (groupId != null) 'GroupId': groupId,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class MessageDeleteResponse {
+  MessageDeleteResponse({
+    required this.success,
+    this.message,
+    this.messageId = 0,
+  });
+
+  factory MessageDeleteResponse.fromJson(Map<String, dynamic> json) =>
+      MessageDeleteResponse(
+        success: json['Success'] as bool,
+        message: json['Message'] as String?,
+        messageId: json['MessageId'] as int? ?? 0,
+      );
+
+  factory MessageDeleteResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return MessageDeleteResponse.fromJson(json);
+  }
+
+  final bool success;
+  final String? message;
+  final int messageId;
+}
+
+class MemberRoleUpdateRequest {
+  MemberRoleUpdateRequest({
+    required this.scope,
+    required this.targetId,
+    required this.targetUserId,
+    required this.newRole,
+  });
+
+  final String scope;
+  final int targetId;
+  final int targetUserId;
+  final int newRole;
+
+  Map<String, dynamic> toJson() => {
+        'Scope': scope,
+        'TargetId': targetId,
+        'TargetUserId': targetUserId,
+        'NewRole': newRole,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class MemberRoleUpdateResponse {
+  MemberRoleUpdateResponse({
+    required this.success,
+    this.message,
+  });
+
+  factory MemberRoleUpdateResponse.fromJson(Map<String, dynamic> json) =>
+      MemberRoleUpdateResponse(
+        success: json['Success'] as bool,
+        message: json['Message'] as String?,
+      );
+
+  factory MemberRoleUpdateResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return MemberRoleUpdateResponse.fromJson(json);
+  }
+
+  final bool success;
+  final String? message;
+}
+
+class MemberPermissionUpdateRequest {
+  MemberPermissionUpdateRequest({
+    required this.scope,
+    required this.targetId,
+    required this.targetUserId,
+    this.canSendMessages,
+    this.canDeleteOthersMessages,
+    this.canEditInfo,
+    this.canInviteUsers,
+    this.canRemoveUsers,
+    this.canPinMessages,
+    this.canManageRoles,
+  });
+
+  final String scope;
+  final int targetId;
+  final int targetUserId;
+  final bool? canSendMessages;
+  final bool? canDeleteOthersMessages;
+  final bool? canEditInfo;
+  final bool? canInviteUsers;
+  final bool? canRemoveUsers;
+  final bool? canPinMessages;
+  final bool? canManageRoles;
+
+  Map<String, dynamic> toJson() => {
+        'Scope': scope,
+        'TargetId': targetId,
+        'TargetUserId': targetUserId,
+        if (canSendMessages != null) 'CanSendMessages': canSendMessages,
+        if (canDeleteOthersMessages != null)
+          'CanDeleteOthersMessages': canDeleteOthersMessages,
+        if (canEditInfo != null) 'CanEditInfo': canEditInfo,
+        if (canInviteUsers != null) 'CanInviteUsers': canInviteUsers,
+        if (canRemoveUsers != null) 'CanRemoveUsers': canRemoveUsers,
+        if (canPinMessages != null) 'CanPinMessages': canPinMessages,
+        if (canManageRoles != null) 'CanManageRoles': canManageRoles,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class MemberPermissionUpdateResponse {
+  MemberPermissionUpdateResponse({
+    required this.success,
+    this.message,
+  });
+
+  factory MemberPermissionUpdateResponse.fromJson(Map<String, dynamic> json) =>
+      MemberPermissionUpdateResponse(
+        success: json['Success'] as bool,
+        message: json['Message'] as String?,
+      );
+
+  factory MemberPermissionUpdateResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return MemberPermissionUpdateResponse.fromJson(json);
+  }
+
+  final bool success;
+  final String? message;
+}
+
 /// Channel entity
 class Channel {
   Channel({

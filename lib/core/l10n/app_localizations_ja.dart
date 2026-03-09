@@ -175,7 +175,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get welcomeBack => 'ようこそ';
 
   @override
-  String get emailOrUsernameLabel => 'メールまたはユーザー名';
+  String get emailOrUsernameLabel => 'ユーザー名';
 
   @override
   String get passwordLabel => 'パスワード';
@@ -193,7 +193,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get orDivider => 'または';
 
   @override
-  String get validationEnterEmailOrUsername => 'メールまたはユーザー名を入力してください';
+  String get validationEnterEmailOrUsername => 'ユーザー名を入力してください';
 
   @override
   String get validationEnterPassword => 'パスワードを入力してください';

@@ -177,7 +177,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get welcomeBack => 'Bienvenido';
 
   @override
-  String get emailOrUsernameLabel => 'Correo o nombre de usuario';
+  String get emailOrUsernameLabel => 'Nombre de usuario';
 
   @override
   String get passwordLabel => 'Contraseña';
@@ -195,8 +195,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get orDivider => 'O';
 
   @override
-  String get validationEnterEmailOrUsername =>
-      'Ingrese correo o nombre de usuario';
+  String get validationEnterEmailOrUsername => 'Ingrese nombre de usuario';
 
   @override
   String get validationEnterPassword => 'Ingrese la contraseña';

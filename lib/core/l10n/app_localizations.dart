@@ -417,7 +417,7 @@ abstract class AppLocalizations {
   /// Login email/username field
   ///
   /// In en, this message translates to:
-  /// **'Email or Username'**
+  /// **'Username'**
   String get emailOrUsernameLabel;
 
   /// Password field label
@@ -453,7 +453,7 @@ abstract class AppLocalizations {
   /// Validation: enter email or username
   ///
   /// In en, this message translates to:
-  /// **'Please enter email or username'**
+  /// **'Please enter username'**
   String get validationEnterEmailOrUsername;
 
   /// Validation: enter password

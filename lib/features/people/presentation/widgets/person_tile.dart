@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/utils/responsive.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/people/presentation/widgets/person_avatar.dart';
@@ -30,15 +31,26 @@ class PersonTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final iconSize = 20.s(context);
+    final badgeHorizontal = 8.s(context);
+    final badgeVertical = 4.s(context);
     return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: 8.s(context),
+        vertical: 4.s(context),
+      ),
       onTap: onTap,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        minVerticalPadding: 0,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 8.s(context),
+          vertical: 4.s(context),
+        ),
         leading: PersonAvatar(
           name: person.displayName,
           avatarUrl: person.avatarUrl,
           photoBytes: person.photoBytes,
+          radius: 23.s(context),
           showOnline: person.isOnline,
         ),
         title: Row(
@@ -56,7 +68,10 @@ class PersonTile extends StatelessWidget {
             ),
             if (person.isTwoSpaceUser)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: EdgeInsets.symmetric(
+                  horizontal: badgeHorizontal,
+                  vertical: badgeVertical,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(999),
@@ -72,7 +87,7 @@ class PersonTile extends StatelessWidget {
           ],
         ),
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
+          padding: EdgeInsets.only(top: 4.s(context)),
           child: Text(
             subtitle,
             maxLines: 2,
@@ -81,11 +96,14 @@ class PersonTile extends StatelessWidget {
           ),
         ),
         trailing: SizedBox(
-          width: 132,
+          width: onInviteTap != null ? 92.s(context) : 132.s(context),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
+                visualDensity: VisualDensity.compact,
+                iconSize: iconSize,
+                splashRadius: 20.s(context),
                 onPressed: onFavoriteTap,
                 icon: Icon(
                   person.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
@@ -94,23 +112,35 @@ class PersonTile extends StatelessWidget {
               ),
               if (onInviteTap != null)
                 IconButton(
+                  visualDensity: VisualDensity.compact,
+                  iconSize: iconSize,
+                  splashRadius: 20.s(context),
                   onPressed: onInviteTap,
                   icon: const Icon(Icons.share_rounded, color: Colors.white70),
                 )
               else ...[
                 if (onMessageTap != null)
                   IconButton(
+                    visualDensity: VisualDensity.compact,
+                    iconSize: iconSize,
+                    splashRadius: 20.s(context),
                     onPressed: onMessageTap,
                     icon: const Icon(Icons.chat_bubble_outline_rounded,
                         color: Colors.white70),
                   ),
                 if (onVoiceCallTap != null)
                   IconButton(
+                    visualDensity: VisualDensity.compact,
+                    iconSize: iconSize,
+                    splashRadius: 20.s(context),
                     onPressed: onVoiceCallTap,
                     icon: const Icon(Icons.call_outlined, color: Colors.white70),
                   ),
                 if (onVideoCallTap != null)
                   IconButton(
+                    visualDensity: VisualDensity.compact,
+                    iconSize: iconSize,
+                    splashRadius: 20.s(context),
                     onPressed: onVideoCallTap,
                     icon: const Icon(Icons.videocam_outlined,
                         color: Colors.white70),

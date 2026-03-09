@@ -24,6 +24,9 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen>
     with SingleTickerProviderStateMixin {
+  static final RegExp _aegisUsernamePattern =
+      RegExp(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{2,31}$');
+
   late final _avatarAnimController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 300),
@@ -88,6 +91,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     } else if (_step == 1) {
       if (_nameCtl.text.isEmpty || _nicknameCtl.text.isEmpty) {
         _showError(l10n.fillAllFields);
+        return;
+      }
+      final usernameError = _validateAegisUsername(_nicknameCtl.text.trim());
+      if (usernameError != null) {
+        _showError(usernameError);
         return;
       }
     }
@@ -185,6 +193,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         _nicknameCtl.text.trim(),
         _emailCtl.text.trim(),
         _passCtl.text.trim(),
+        displayName: _nameCtl.text.trim(),
+        avatarBytes: _avatarBytes,
       );
 
       SentryService.addBreadcrumb('Регистрация успешна', category: 'auth');
@@ -240,6 +250,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     final l10n = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) return l10n.validationEnterPassword;
     if (value.length < 6) return l10n.validationPasswordTooShort;
+    return null;
+  }
+
+  String? _validateAegisUsername(String? value) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return 'Choose an Aegis username.';
+    }
+    if (!_aegisUsernamePattern.hasMatch(trimmed)) {
+      return 'Username must be 3-32 chars and use Latin letters, digits, ., _ or -.';
+    }
     return null;
   }
 
@@ -475,8 +496,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         TextFormField(
           controller: _nicknameCtl,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          validator: _validateAegisUsername,
           decoration: _inputDecoration(
               theme, l10n.nicknameAtLabel, Icons.alternate_email, isDark),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Aegis username: 3-32 chars, Latin letters, digits, ., _ or -',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ),
         ),
       ],
     );

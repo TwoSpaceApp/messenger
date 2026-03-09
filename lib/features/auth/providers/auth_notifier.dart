@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
@@ -88,10 +90,22 @@ class AuthNotifier extends _$AuthNotifier {
     });
   }
 
-  Future<void> register(String name, String email, String password) async {
+  Future<void> register(
+    String username,
+    String email,
+    String password, {
+    String? displayName,
+    Uint8List? avatarBytes,
+  }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await _authService.registerUser(name, email, password);
+      await _authService.registerUser(
+        username,
+        email,
+        password,
+        displayName: displayName,
+        avatarBytes: avatarBytes,
+      );
       return _loadAuthState();
     });
   }

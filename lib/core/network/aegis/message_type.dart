@@ -40,7 +40,15 @@ enum MessageType {
   memberPermissionUpdateResponse(37),
   groupMessageSend(38),
   groupMessageResponse(39),
-  groupCreateResponse(40);
+  groupCreateResponse(40),
+  chatListRequest(41),
+  chatListResponse(42),
+  privateChatHistoryRequest(43),
+  privateChatHistoryResponse(44),
+  channelHistoryRequest(45),
+  channelHistoryResponse(46),
+  privateChatMessageEvent(47),
+  channelMessageEvent(48);
 
   const MessageType(this.value);
   final int value;

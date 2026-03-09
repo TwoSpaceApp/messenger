@@ -55,6 +55,14 @@ class ProtocolConstants {
   static const int typeGroupMessageSend = 38;
   static const int typeGroupMessageResponse = 39;
   static const int typeGroupCreateResponse = 40;
+  static const int typeChatListRequest = 41;
+  static const int typeChatListResponse = 42;
+  static const int typePrivateChatHistoryRequest = 43;
+  static const int typePrivateChatHistoryResponse = 44;
+  static const int typeChannelHistoryRequest = 45;
+  static const int typeChannelHistoryResponse = 46;
+  static const int typePrivateChatMessageEvent = 47;
+  static const int typeChannelMessageEvent = 48;
 
   // Message flags
   static const int flagNone = 0x00;

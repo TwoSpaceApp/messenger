@@ -175,7 +175,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get welcomeBack => '환영합니다';
 
   @override
-  String get emailOrUsernameLabel => '이메일 또는 사용자 이름';
+  String get emailOrUsernameLabel => '사용자 이름';
 
   @override
   String get passwordLabel => '비밀번호';
@@ -193,7 +193,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get orDivider => '또는';
 
   @override
-  String get validationEnterEmailOrUsername => '이메일 또는 사용자 이름을 입력하세요';
+  String get validationEnterEmailOrUsername => '사용자 이름을 입력하세요';
 
   @override
   String get validationEnterPassword => '비밀번호를 입력하세요';

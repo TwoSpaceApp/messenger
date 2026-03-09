@@ -102,23 +102,12 @@ class AegisClient {
       throw Exception('Client is not authenticated');
     }
 
-    // Create message payload: fromId(8) + toId(8) + messageType(1) + reserved(3) + text
-    final payload = <int>[];
-
-    // From user ID (placeholder - should be set after authentication)
-    payload.addAll(_int64ToBytes(0));
-
-    // To user ID (0 for broadcast)
-    payload.addAll(_int64ToBytes(toUserId ?? 0));
-
-    // Message type (0 = text)
-    payload.add(0);
-
-    // Reserved bytes
-    payload.addAll([0, 0, 0]);
-
-    // Message text
-    payload.addAll(utf8.encode(text));
+    final payload = utf8.encode(
+      jsonEncode({
+        'RecipientId': toUserId ?? 0,
+        'Content': text,
+      }),
+    );
 
     final message = Message.withType(MessageType.message, payload);
     message.flags = ProtocolConstants.flagRequiresAck;
@@ -420,6 +409,85 @@ class AegisClient {
     return ProfileUpdateResponsePayload.fromJson(response);
   }
 
+  Future<ChatListResponse> getChatList() async {
+    _ensureAuthenticated();
+
+    final request = ChatListRequest();
+    final message = Message.withType(MessageType.chatListRequest, request.toBytes());
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.chatListResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Chat list timeout',
+    );
+
+    return ChatListResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<PrivateChatHistoryResponse> getPrivateHistory(
+    int peerUserId, {
+    int limit = 50,
+    int? beforeMessageId,
+  }) async {
+    _ensureAuthenticated();
+
+    final request = PrivateChatHistoryRequest(
+      peerUserId: peerUserId,
+      limit: limit,
+      beforeMessageId: beforeMessageId,
+    );
+    final message = Message.withType(
+      MessageType.privateChatHistoryRequest,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.privateChatHistoryResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Private history timeout',
+    );
+
+    return PrivateChatHistoryResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<ChannelHistoryResponse> getChannelHistory(
+    int channelId, {
+    int limit = 50,
+    int? beforeMessageId,
+  }) async {
+    _ensureAuthenticated();
+
+    final request = ChannelHistoryRequest(
+      channelId: channelId,
+      limit: limit,
+      beforeMessageId: beforeMessageId,
+    );
+    final message = Message.withType(
+      MessageType.channelHistoryRequest,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.channelHistoryResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Channel history timeout',
+    );
+
+    return ChannelHistoryResponse.fromBytes(responseMessage.payload);
+  }
+
   Future<ChannelEditResponsePayload> editChannel({
     required int channelId,
     String? name,
@@ -442,10 +510,155 @@ class AegisClient {
     return ChannelEditResponsePayload.fromJson(response);
   }
 
+  Future<MessageEditResponse> editMessage({
+    required int messageId,
+    required String newContent,
+    String scope = 'private',
+    int? channelId,
+    int? groupId,
+  }) async {
+    _ensureAuthenticated();
+
+    final request = MessageEditRequest(
+      messageId: messageId,
+      newContent: newContent,
+      scope: scope,
+      channelId: channelId,
+      groupId: groupId,
+    );
+    final message = Message.withType(MessageType.messageEdit, request.toBytes());
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.messageEditResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Message edit timeout',
+    );
+
+    return MessageEditResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<MessageDeleteResponse> deleteMessage({
+    required int messageId,
+    String scope = 'private',
+    int? channelId,
+    int? groupId,
+  }) async {
+    _ensureAuthenticated();
+
+    final request = MessageDeleteRequest(
+      messageId: messageId,
+      scope: scope,
+      channelId: channelId,
+      groupId: groupId,
+    );
+    final message = Message.withType(MessageType.messageDelete, request.toBytes());
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.messageDeleteResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Message delete timeout',
+    );
+
+    return MessageDeleteResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<MemberRoleUpdateResponse> updateMemberRole({
+    required String scope,
+    required int targetId,
+    required int targetUserId,
+    required int newRole,
+  }) async {
+    _ensureAuthenticated();
+
+    final request = MemberRoleUpdateRequest(
+      scope: scope,
+      targetId: targetId,
+      targetUserId: targetUserId,
+      newRole: newRole,
+    );
+    final message = Message.withType(
+      MessageType.memberRoleUpdate,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.memberRoleUpdateResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Role update timeout',
+    );
+
+    return MemberRoleUpdateResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<MemberPermissionUpdateResponse> updateMemberPermissions({
+    required String scope,
+    required int targetId,
+    required int targetUserId,
+    bool? canSendMessages,
+    bool? canDeleteOthersMessages,
+    bool? canEditInfo,
+    bool? canInviteUsers,
+    bool? canRemoveUsers,
+    bool? canPinMessages,
+    bool? canManageRoles,
+  }) async {
+    _ensureAuthenticated();
+
+    final request = MemberPermissionUpdateRequest(
+      scope: scope,
+      targetId: targetId,
+      targetUserId: targetUserId,
+      canSendMessages: canSendMessages,
+      canDeleteOthersMessages: canDeleteOthersMessages,
+      canEditInfo: canEditInfo,
+      canInviteUsers: canInviteUsers,
+      canRemoveUsers: canRemoveUsers,
+      canPinMessages: canPinMessages,
+      canManageRoles: canManageRoles,
+    );
+    final message = Message.withType(
+      MessageType.memberPermissionUpdate,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.memberPermissionUpdateResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Permission update timeout',
+    );
+
+    return MemberPermissionUpdateResponse.fromBytes(responseMessage.payload);
+  }
+
   void _setAuthenticated(AuthResponsePayload response) {
     _isAuthenticated = response.success;
     _authenticatedUserId = response.userId;
     _authenticatedUsername = response.username;
+  }
+
+  void _ensureAuthenticated() {
+    if (!_transport.isConnected) {
+      throw NotConnectedException();
+    }
+    if (!_isAuthenticated) {
+      throw Exception('Client is not authenticated');
+    }
   }
 
   Future<AuthResponsePayload> _authenticateRaw({

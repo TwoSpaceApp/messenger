@@ -175,7 +175,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get welcomeBack => '欢迎';
 
   @override
-  String get emailOrUsernameLabel => '电子邮件或用户名';
+  String get emailOrUsernameLabel => '用户名';
 
   @override
   String get passwordLabel => '密码';
@@ -193,7 +193,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get orDivider => '或';
 
   @override
-  String get validationEnterEmailOrUsername => '请输入电子邮件或用户名';
+  String get validationEnterEmailOrUsername => '请输入用户名';
 
   @override
   String get validationEnterPassword => '请输入密码';

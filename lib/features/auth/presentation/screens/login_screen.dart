@@ -18,6 +18,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  static final RegExp _emailLikePattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
   final _emailCtl = TextEditingController();
   final _passCtl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -52,6 +54,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final identifier = _emailCtl.text.trim();
     final password = _passCtl.text.trim();
     final notifier = ref.read(authProvider.notifier);
+
+    if (_emailLikePattern.hasMatch(identifier)) {
+      setState(() {
+        _loading = false;
+        _errorMessage = 'Use your Aegis username to sign in.';
+      });
+      return;
+    }
 
     // Close keyboard
     FocusScope.of(context).unfocus();
@@ -150,11 +160,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 children: [
                   TextFormField(
                     controller: _emailCtl,
-                    keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [
-                      AutofillHints.email,
-                      AutofillHints.username
-                    ],
+                    keyboardType: TextInputType.text,
+                    autofillHints: const [AutofillHints.username],
                     textInputAction: TextInputAction.next,
                     style: TextStyle(
                       color: isDark ? Colors.white : Colors.black87,
@@ -162,7 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     cursorColor: theme.colorScheme.primary,
                     decoration: InputDecoration(
                       labelText: l10n.emailOrUsernameLabel,
-                      hintText: 'user@example.com',
+                      hintText: 'username',
                       prefixIcon: Icon(Icons.person_outline,
                           color: theme.colorScheme.primary),
                       labelStyle: TextStyle(

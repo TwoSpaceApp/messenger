@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 
@@ -61,14 +63,25 @@ class AuthService {
   }
 
   Future<dynamic> registerUser(
-      String name, String email, String password) async {
-    _logger.info('📝 Регистрация: $name / $email');
+    String username,
+    String email,
+    String password, {
+    String? displayName,
+    Uint8List? avatarBytes,
+  }) async {
+    _logger.info('📝 Регистрация: $username / $email');
     try {
       final user = await _aegis.register(
-        username: name,
+        username: username,
         email: email,
         password: password,
       );
+      if ((displayName?.trim().isNotEmpty ?? false) || avatarBytes != null) {
+        await _aegis.completeProfileSetup(
+          displayName: displayName,
+          avatarBytes: avatarBytes,
+        );
+      }
       _logger.info('✓ Зарегистрирован: ${user.username}');
       return {
         'id': user.id.toString(),

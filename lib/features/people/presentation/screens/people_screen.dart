@@ -3,9 +3,11 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/utils/responsive.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/loading_skeletons.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
@@ -54,6 +56,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final horizontalPadding = 16.s(context);
+    final headerTopPadding = 16.s(context);
+    final headerGap = 8.s(context);
+    final sectionGap = 12.s(context);
+    final chipHeight = 40.s(context).clamp(36.0, 48.0);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -66,11 +73,16 @@ class _PeopleScreenState extends State<PeopleScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      headerTopPadding,
+                      horizontalPadding,
+                      headerGap,
+                    ),
                     child: Row(
                       children: [
                         const AppLogo(large: false),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8.s(context)),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +94,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2.s(context)),
                               Text(
                                 l10n.peopleSubtitle,
                                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -96,7 +108,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                     child: _QuickActionsCard(
                       newChatLabel: l10n.peopleQuickNewChat,
                       inviteLabel: l10n.peopleQuickInvite,
@@ -107,7 +119,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      sectionGap,
+                      horizontalPadding,
+                      0,
+                    ),
                     child: PeopleSearchField(
                       controller: _searchController,
                       focusNode: _searchFocusNode,
@@ -120,11 +137,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: sectionGap),
                   SizedBox(
-                    height: 40,
+                    height: chipHeight,
                     child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                       scrollDirection: Axis.horizontal,
                       children: [
                         _buildSegmentChip(PeopleSegment.all, l10n.peopleSegmentAll),
@@ -143,7 +160,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: sectionGap),
                   Expanded(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 220),
@@ -166,7 +183,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
   Widget _buildSegmentChip(PeopleSegment segment, String label) {
     final selected = _controller.segment == segment;
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: EdgeInsets.only(right: 8.s(context)),
       child: FilterChip(
         label: Text(label),
         selected: selected,
@@ -182,7 +199,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
 
   Widget _buildBody(AppLocalizations l10n) {
     if (_controller.loading && _controller.dashboard == null) {
-      return AppLoadingState(label: l10n.peopleLoading);
+      return const PeopleListSkeleton();
     }
 
     if (_controller.error != null && _controller.dashboard == null) {
@@ -210,7 +227,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final children = <Widget>[
       if (dashboard.permission != DeviceContactsPermission.granted)
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: EdgeInsets.fromLTRB(
+            16.s(context),
+            0,
+            16.s(context),
+            12.s(context),
+          ),
           child: _PermissionCard(
             title: l10n.peoplePermissionCardTitle,
             message: dashboard.permission == DeviceContactsPermission.permanentlyDenied
@@ -249,7 +271,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
 
     return ListView(
       cacheExtent: 1200,
-      padding: const EdgeInsets.only(bottom: 110),
+      padding: EdgeInsets.only(bottom: 110.s(context)),
       children: children,
     );
   }
@@ -267,7 +289,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
       widgets.addAll(
         filtered.map(
           (person) => Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            padding: EdgeInsets.fromLTRB(
+              16.s(context),
+              0,
+              16.s(context),
+              8.s(context),
+            ),
             child: PersonTile(
               person: person,
               trailingLabel: l10n.peopleTwoSpaceBadge,
@@ -305,7 +332,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
       widgets.addAll(
         filtered.map(
           (person) => Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            padding: EdgeInsets.fromLTRB(
+              16.s(context),
+              0,
+              16.s(context),
+              8.s(context),
+            ),
             child: PersonTile(
               person: person,
               trailingLabel: l10n.peopleTwoSpaceBadge,
@@ -323,10 +355,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
     }
 
     if (_controller.searching) {
-      widgets.add(Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: AppLoadingState(label: l10n.peopleSearching, compact: true),
-      ));
+      widgets.add(const PeopleInlineSkeleton());
     }
 
     addSection(l10n.peopleSearchRemoteTitle, data.remoteResults);
@@ -472,17 +501,17 @@ class _PeopleScreenState extends State<PeopleScreen> {
         return Container(
           decoration: BoxDecoration(
             color: Theme.of(sheetContext).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.s(sheetContext))),
           ),
           child: SafeArea(
             top: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 8),
+                SizedBox(height: 8.s(sheetContext)),
                 Container(
-                  width: 42,
-                  height: 4,
+                  width: 42.s(sheetContext),
+                  height: 4.s(sheetContext),
                   decoration: BoxDecoration(
                     color: Colors.grey,
                     borderRadius: BorderRadius.circular(999),
@@ -551,7 +580,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     _controller.toggleFavorite(person);
                   },
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.s(sheetContext)),
               ],
             ),
           ),
@@ -570,7 +599,12 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: EdgeInsets.fromLTRB(
+        16.s(context),
+        8.s(context),
+        16.s(context),
+        8.s(context),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -584,7 +618,10 @@ class _SectionHeader extends StatelessWidget {
           ),
           if (count != null)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(
+                horizontal: 8.s(context),
+                vertical: 4.s(context),
+              ),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(999),
@@ -623,7 +660,10 @@ class _QuickActionsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: 8.s(context),
+        vertical: 8.s(context),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -668,13 +708,16 @@ class _QuickActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16.s(context)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: EdgeInsets.symmetric(
+          horizontal: 8.s(context),
+          vertical: 6.s(context),
+        ),
         child: Column(
           children: [
-            Icon(icon, color: Colors.white),
-            const SizedBox(height: 6),
+            Icon(icon, color: Colors.white, size: 20.s(context)),
+            SizedBox(height: 6.s(context)),
             Text(
               label,
               textAlign: TextAlign.center,
@@ -710,8 +753,12 @@ class _PermissionCard extends StatelessWidget {
     return GlassCard(
       child: Row(
         children: [
-          const Icon(Icons.contact_phone_outlined, color: Colors.white),
-          const SizedBox(width: 12),
+          Icon(
+            Icons.contact_phone_outlined,
+            color: Colors.white,
+            size: 22.s(context),
+          ),
+          SizedBox(width: 12.s(context)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -723,7 +770,7 @@ class _PermissionCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.s(context)),
                 Text(
                   message,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -733,7 +780,7 @@ class _PermissionCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.s(context)),
           FilledButton(
             onPressed: onAction,
             child: Text(actionLabel),

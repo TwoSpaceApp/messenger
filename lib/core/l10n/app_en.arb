@@ -240,7 +240,7 @@
   "@welcomeBack": {
     "description": "Login screen welcome text"
   },
-  "emailOrUsernameLabel": "Email or Username",
+  "emailOrUsernameLabel": "Username",
   "@emailOrUsernameLabel": {
     "description": "Login email/username field"
   },
@@ -264,7 +264,7 @@
   "@orDivider": {
     "description": "Or divider in login"
   },
-  "validationEnterEmailOrUsername": "Please enter email or username",
+  "validationEnterEmailOrUsername": "Please enter username",
   "@validationEnterEmailOrUsername": {
     "description": "Validation: enter email or username"
   },

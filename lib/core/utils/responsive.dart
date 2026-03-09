@@ -54,7 +54,7 @@ class Responsive {
 /// Small extension to allow writing `12.w(context)` or `16.h(context)` to
 /// obtain a scaled value.
 extension ResponsiveNum on num {
-  double w(BuildContext ctx) => (this as double) * Responsive.scaleWidth(ctx);
-  double h(BuildContext ctx) => (this as double) * Responsive.scaleHeight(ctx);
-  double s(BuildContext ctx) => (this as double) * Responsive.scaleFor(ctx);
+  double w(BuildContext ctx) => toDouble() * Responsive.scaleWidth(ctx);
+  double h(BuildContext ctx) => toDouble() * Responsive.scaleHeight(ctx);
+  double s(BuildContext ctx) => toDouble() * Responsive.scaleFor(ctx);
 }

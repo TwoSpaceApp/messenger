@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/utils/responsive.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 
 class PeopleSearchField extends StatelessWidget {
@@ -21,25 +22,39 @@ class PeopleSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = 12.s(context);
+    final iconSize = 20.s(context);
     return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: TextField(
         controller: controller,
         focusNode: focusNode,
         autofocus: autofocus,
-        style: const TextStyle(color: Colors.white),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.white,
+              fontSize: 15.s(context),
+            ),
         onChanged: onChanged,
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.64)),
-          prefixIcon: const Icon(Icons.search_rounded, color: Colors.white70),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: Colors.white70,
+            size: iconSize,
+          ),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
                   onPressed: onClear,
-                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: Colors.white70,
+                    size: iconSize,
+                  ),
                 )
               : null,
           border: InputBorder.none,
+          isDense: true,
         ),
       ),
     );

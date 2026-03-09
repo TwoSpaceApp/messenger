@@ -176,7 +176,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get welcomeBack => 'Добро пожаловать';
 
   @override
-  String get emailOrUsernameLabel => 'Email или Username';
+  String get emailOrUsernameLabel => 'Username';
 
   @override
   String get passwordLabel => 'Пароль';
@@ -194,8 +194,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get orDivider => 'Или';
 
   @override
-  String get validationEnterEmailOrUsername =>
-      'Введите email или имя пользователя';
+  String get validationEnterEmailOrUsername => 'Введите username';
 
   @override
   String get validationEnterPassword => 'Введите пароль';

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/utils/responsive.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/loading_skeletons.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
@@ -43,6 +45,10 @@ class _CallsScreenState extends State<CallsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final horizontalPadding = 16.s(context);
+    final headerTopPadding = 16.s(context);
+    final sectionGap = 12.s(context);
+    final chipHeight = 40.s(context).clamp(36.0, 48.0);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -62,11 +68,16 @@ class _CallsScreenState extends State<CallsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      headerTopPadding,
+                      horizontalPadding,
+                      8.s(context),
+                    ),
                     child: Row(
                       children: [
                         const AppLogo(large: false),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8.s(context)),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +89,7 @@ class _CallsScreenState extends State<CallsScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2.s(context)),
                               Text(
                                 l10n.callsSubtitle,
                                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -90,15 +101,18 @@ class _CallsScreenState extends State<CallsScreen> {
                         ),
                         IconButton(
                           onPressed: _openStartCall,
-                          icon: const Icon(Icons.add_ic_call_outlined,
-                              color: Colors.white),
+                          icon: Icon(
+                            Icons.add_ic_call_outlined,
+                            color: Colors.white,
+                            size: 22.s(context),
+                          ),
                           tooltip: l10n.callsStartCallAction,
                         ),
                       ],
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                     child: _CallsSummaryCard(
                       title: l10n.callsQuickStartTitle,
                       subtitle: l10n.callsQuickStartSubtitle,
@@ -107,7 +121,12 @@ class _CallsScreenState extends State<CallsScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      sectionGap,
+                      horizontalPadding,
+                      0,
+                    ),
                     child: PeopleSearchField(
                       controller: _searchController,
                       hintText: l10n.callsSearchHint,
@@ -118,11 +137,11 @@ class _CallsScreenState extends State<CallsScreen> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: sectionGap),
                   SizedBox(
-                    height: 40,
+                    height: chipHeight,
                     child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                       scrollDirection: Axis.horizontal,
                       children: [
                         _buildFilterChip(CallsFilter.all, l10n.allFilter),
@@ -134,9 +153,9 @@ class _CallsScreenState extends State<CallsScreen> {
                     ),
                   ),
                   if (_controller.topContacts.isNotEmpty) ...[
-                    const SizedBox(height: 14),
+                    SizedBox(height: 14.s(context)),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                       child: Text(
                         l10n.callsTopContactsTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
@@ -145,14 +164,14 @@ class _CallsScreenState extends State<CallsScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10.s(context)),
                     SizedBox(
-                      height: 88,
+                      height: 92.s(context),
                       child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                         scrollDirection: Axis.horizontal,
                         itemCount: _controller.topContacts.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        separatorBuilder: (_, __) => SizedBox(width: 10.s(context)),
                         itemBuilder: (context, index) {
                           final person = _controller.topContacts[index];
                           return _TopContactChip(
@@ -163,7 +182,7 @@ class _CallsScreenState extends State<CallsScreen> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 12),
+                  SizedBox(height: sectionGap),
                   Expanded(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 220),
@@ -188,7 +207,7 @@ class _CallsScreenState extends State<CallsScreen> {
   Widget _buildFilterChip(CallsFilter filter, String label) {
     final selected = _controller.filter == filter;
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: EdgeInsets.only(right: 8.s(context)),
       child: FilterChip(
         label: Text(label),
         selected: selected,
@@ -204,7 +223,7 @@ class _CallsScreenState extends State<CallsScreen> {
 
   Widget _buildBody(List<CallsSection> sections, AppLocalizations l10n) {
     if (_controller.loading) {
-      return AppLoadingState(label: l10n.callsLoadingLabel);
+      return const CallsListSkeleton();
     }
 
     if (sections.isEmpty) {
@@ -225,7 +244,11 @@ class _CallsScreenState extends State<CallsScreen> {
 
     return ListView.builder(
       cacheExtent: 1200,
-      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 110),
+      padding: EdgeInsets.only(
+        left: 16.s(context),
+        right: 16.s(context),
+        bottom: 110.s(context),
+      ),
       itemCount: sections.length,
       itemBuilder: (context, index) {
         final section = sections[index];
@@ -233,7 +256,7 @@ class _CallsScreenState extends State<CallsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 8),
+              padding: EdgeInsets.only(top: 8.s(context), bottom: 8.s(context)),
               child: Row(
                 children: [
                   Expanded(
@@ -246,8 +269,10 @@ class _CallsScreenState extends State<CallsScreen> {
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.s(context),
+                      vertical: 4.s(context),
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(999),
@@ -265,7 +290,7 @@ class _CallsScreenState extends State<CallsScreen> {
             ),
             ...section.items.map(
               (thread) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: EdgeInsets.only(bottom: 8.s(context)),
                 child: Dismissible(
                   key: ValueKey(thread.latest.id),
                   direction: DismissDirection.endToStart,
@@ -275,22 +300,31 @@ class _CallsScreenState extends State<CallsScreen> {
                   },
                   background: Container(
                     alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 20.s(context)),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.error.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(24.s(context)),
                     ),
-                    child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                    child: Icon(
+                      Icons.delete_outline_rounded,
+                      color: Colors.white,
+                      size: 22.s(context),
+                    ),
                   ),
                   child: GlassCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.s(context),
+                      vertical: 6.s(context),
+                    ),
                     onTap: () => _showThreadSheet(thread),
                     child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      minVerticalPadding: 0,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8.s(context)),
                       leading: PersonAvatar(
                         name: thread.person.displayName,
                         avatarUrl: thread.person.avatarUrl,
                         photoBytes: thread.person.photoBytes,
+                        radius: 23.s(context),
                         showOnline: thread.person.isOnline,
                       ),
                       title: Text(
@@ -301,7 +335,7 @@ class _CallsScreenState extends State<CallsScreen> {
                         ),
                       ),
                       subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 4),
+                        padding: EdgeInsets.only(top: 4.s(context)),
                         child: Text(
                           _threadSubtitle(thread, l10n),
                           style: TextStyle(
@@ -310,7 +344,7 @@ class _CallsScreenState extends State<CallsScreen> {
                         ),
                       ),
                       trailing: SizedBox(
-                        width: 92,
+                        width: 92.s(context),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -318,11 +352,11 @@ class _CallsScreenState extends State<CallsScreen> {
                             Text(
                               _formatTime(thread.latest.startedAt, l10n),
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 12.s(context),
                                 color: Colors.white.withValues(alpha: 0.6),
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            SizedBox(height: 6.s(context)),
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -330,16 +364,16 @@ class _CallsScreenState extends State<CallsScreen> {
                                   onTap: () => _startCall(thread.person, false),
                                   child: Icon(
                                     Icons.call_outlined,
-                                    size: 18,
+                                    size: 18.s(context),
                                     color: Colors.green.withValues(alpha: 0.92),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                SizedBox(width: 12.s(context)),
                                 GestureDetector(
                                   onTap: () => _startCall(thread.person, true),
                                   child: Icon(
                                     Icons.videocam_outlined,
-                                    size: 18,
+                                    size: 18.s(context),
                                     color: Colors.blue.withValues(alpha: 0.92),
                                   ),
                                 ),
@@ -437,17 +471,17 @@ class _CallsScreenState extends State<CallsScreen> {
         return Container(
           decoration: BoxDecoration(
             color: Theme.of(sheetContext).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24.s(sheetContext))),
           ),
           child: SafeArea(
             top: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 8),
+                SizedBox(height: 8.s(sheetContext)),
                 Container(
-                  width: 42,
-                  height: 4,
+                  width: 42.s(sheetContext),
+                  height: 4.s(sheetContext),
                   decoration: BoxDecoration(
                     color: Colors.grey,
                     borderRadius: BorderRadius.circular(999),
@@ -495,7 +529,7 @@ class _CallsScreenState extends State<CallsScreen> {
                     await _controller.deleteEntry(thread.latest.id);
                   },
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.s(sheetContext)),
               ],
             ),
           ),
@@ -524,15 +558,19 @@ class _CallsSummaryCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 44.s(context),
+            height: 44.s(context),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(14.s(context)),
             ),
-            child: const Icon(Icons.add_ic_call_outlined, color: Colors.white),
+            child: Icon(
+              Icons.add_ic_call_outlined,
+              color: Colors.white,
+              size: 20.s(context),
+            ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.s(context)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,7 +582,7 @@ class _CallsSummaryCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.s(context)),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -577,21 +615,24 @@ class _TopContactChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(18.s(context)),
       child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: 12.s(context),
+          vertical: 10.s(context),
+        ),
         child: Column(
           children: [
             PersonAvatar(
               name: person.displayName,
               avatarUrl: person.avatarUrl,
               photoBytes: person.photoBytes,
-              radius: 20,
+              radius: 20.s(context),
               showOnline: person.isOnline,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.s(context)),
             SizedBox(
-              width: 64,
+              width: 68.s(context),
               child: Text(
                 person.displayName,
                 maxLines: 1,

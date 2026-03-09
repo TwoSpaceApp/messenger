@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/utils/responsive.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/people/data/models/person_entry.dart';
@@ -88,21 +89,26 @@ class _CallScreenState extends State<CallScreen> {
     final title = _person.displayName.isNotEmpty
       ? _person.displayName
       : l10n.userDefault;
+    final sidePadding = 20.s(context);
+    final controlsGap = 18.s(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: ScreenBackground(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(sidePadding),
             child: Column(
               children: [
                 Row(
                   children: [
                     IconButton(
                       onPressed: _endCall,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                          color: Colors.white),
+                      icon: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: Colors.white,
+                        size: 28.s(context),
+                      ),
                     ),
                     Expanded(
                       child: Column(
@@ -114,20 +120,26 @@ class _CallScreenState extends State<CallScreen> {
                             style: Theme.of(context)
                                 .textTheme
                                 .labelLarge
-                                ?.copyWith(color: Colors.white70),
+                                ?.copyWith(
+                                  color: Colors.white70,
+                                  fontSize: 14.s(context),
+                                ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4.s(context)),
                           Text(
                             _statusLabel(l10n),
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall
-                                ?.copyWith(color: Colors.white60),
+                                ?.copyWith(
+                                  color: Colors.white60,
+                                  fontSize: 12.s(context),
+                                ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 48),
+                    SizedBox(width: 48.s(context)),
                   ],
                 ),
                 const Spacer(),
@@ -142,10 +154,10 @@ class _CallScreenState extends State<CallScreen> {
                     name: title,
                     avatarUrl: _person.avatarUrl,
                     photoBytes: _person.photoBytes,
-                    radius: 56,
+                    radius: 56.s(context),
                     showOnline: _person.isOnline,
                   ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24.s(context)),
                 Text(
                   title,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -153,7 +165,7 @@ class _CallScreenState extends State<CallScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                 ),
-                const SizedBox(height: 10),
+                        SizedBox(height: 10.s(context)),
                 Text(
                   _statusDetail(l10n),
                   textAlign: TextAlign.center,
@@ -163,7 +175,10 @@ class _CallScreenState extends State<CallScreen> {
                 ),
                 const Spacer(),
                 GlassCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.s(context),
+                    vertical: 16.s(context),
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
@@ -197,11 +212,11 @@ class _CallScreenState extends State<CallScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: controlsGap),
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.redAccent,
-                    minimumSize: const Size.fromHeight(56),
+                    minimumSize: Size.fromHeight(56.s(context)),
                   ),
                   onPressed: _endCall,
                   icon: const Icon(Icons.call_end_rounded),
@@ -288,20 +303,20 @@ class _CallActionButton extends StatelessWidget {
       children: [
         InkResponse(
           onTap: onTap,
-          radius: 28,
+          radius: 28.s(context),
           child: Container(
-            width: 52,
-            height: 52,
+            width: 52.s(context),
+            height: 52.s(context),
             decoration: BoxDecoration(
               color: active
                   ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.28)
                   : Colors.white.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: Colors.white),
+            child: Icon(icon, color: Colors.white, size: 22.s(context)),
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6.s(context)),
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -327,13 +342,13 @@ class _VideoPreviewStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 320,
+      height: 320.s(context),
       child: Stack(
         children: [
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(32.s(context)),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -348,20 +363,20 @@ class _VideoPreviewStack extends StatelessWidget {
                   name: person.displayName,
                   avatarUrl: person.avatarUrl,
                   photoBytes: person.photoBytes,
-                  radius: 48,
+                  radius: 48.s(context),
                   showOnline: person.isOnline,
                 ),
               ),
             ),
           ),
           Positioned(
-            right: 16,
-            bottom: 16,
+            right: 16.s(context),
+            bottom: 16.s(context),
             child: Container(
-              width: 120,
-              height: 180,
+              width: 120.s(context),
+              height: 180.s(context),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(24.s(context)),
                 color: Colors.black.withValues(alpha: 0.35),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
@@ -375,13 +390,16 @@ class _VideoPreviewStack extends StatelessWidget {
                                 ? Icons.face_retouching_natural
                                 : Icons.camera_rear_outlined,
                             color: Colors.white,
-                            size: 32,
+                            size: 32.s(context),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8.s(context)),
                         ],
                       )
-                    : const Icon(Icons.videocam_off_outlined,
-                        color: Colors.white70, size: 32),
+                    : Icon(
+                        Icons.videocam_off_outlined,
+                        color: Colors.white70,
+                        size: 32.s(context),
+                      ),
               ),
             ),
           ),

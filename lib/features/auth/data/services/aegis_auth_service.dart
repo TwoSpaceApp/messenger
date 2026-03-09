@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/network/aegis/aegis_client.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
+import 'package:two_space_app/features/auth/data/services/aegis_identity_service.dart';
 
 export 'package:two_space_app/core/network/aegis/message_payloads.dart'
     show User, UserSearchResponse, UserSearchResult;
@@ -30,6 +33,7 @@ class AegisAuthService {
   final DevLogger _log = DevLogger('AegisAuthService');
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
   final AegisClient _client = AegisClient();
+  final AegisIdentityService _identity = AegisIdentityService();
 
   String? _token;
   String? _username;
@@ -151,12 +155,13 @@ class AegisAuthService {
   }) async {
     _log.info('Регистрация: $username / $email');
     await connect();
+    final publicKey = await _identity.getOrCreatePublicKey();
 
     final response = await _client.register(
       username,
       email,
       password,
-      'client_public_key_placeholder', // TODO: X3DH keypair
+      publicKey,
     );
 
     if (!response.success || response.user == null) {
@@ -173,6 +178,32 @@ class AegisAuthService {
     await _loginAfterRegister(username: username, password: password);
 
     return user;
+  }
+
+  Future<void> completeProfileSetup({
+    String? displayName,
+    String? bio,
+    Uint8List? avatarBytes,
+  }) async {
+    await ensureSession();
+
+    final normalizedDisplayName = displayName?.trim();
+    final normalizedBio = bio?.trim();
+    final avatarUrl = avatarBytes == null
+        ? null
+        : 'data:image/png;base64,${base64Encode(avatarBytes)}';
+
+    final response = await _client.updateProfile(
+      displayName: (normalizedDisplayName?.isNotEmpty ?? false)
+          ? normalizedDisplayName
+          : null,
+      bio: (normalizedBio?.isNotEmpty ?? false) ? normalizedBio : null,
+      avatarUrl: avatarUrl,
+    );
+
+    if (!response.success) {
+      throw Exception(response.message ?? 'Не удалось обновить профиль');
+    }
   }
 
   // ─── Вход ─────────────────────────────────────────────────────────────────
