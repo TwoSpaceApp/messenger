@@ -169,7 +169,12 @@ class AegisClient {
       clientPrivateKey: handshake.privateKey,
       serverPublicKeySpki: base64Decode(response.serverPublicKey!),
     );
+    final sessionKey = await AegisHandshakeCrypto.deriveSessionKey(
+      clientPrivateKey: handshake.privateKey,
+      serverPublicKeySpki: base64Decode(response.serverPublicKey!),
+    );
     _transport.setMacKey(macKey);
+    _transport.setSessionKey(sessionKey);
   }
 
   /// Convert int to 8-byte big-endian representation

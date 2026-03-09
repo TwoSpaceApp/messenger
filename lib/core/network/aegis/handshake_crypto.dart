@@ -72,6 +72,69 @@ class AegisHandshakeCrypto {
     required ECPrivateKey clientPrivateKey,
     required List<int> serverPublicKeySpki,
   }) async {
+    final derivedBytes = _deriveKeys(
+      clientPrivateKey: clientPrivateKey,
+      serverPublicKeySpki: serverPublicKeySpki,
+    );
+    return derivedBytes.sublist(32, 64);
+  }
+
+  static Future<List<int>> deriveSessionKey({
+    required ECPrivateKey clientPrivateKey,
+    required List<int> serverPublicKeySpki,
+  }) async {
+    final derivedBytes = _deriveKeys(
+      clientPrivateKey: clientPrivateKey,
+      serverPublicKeySpki: serverPublicKeySpki,
+    );
+    return derivedBytes.sublist(0, 32);
+  }
+
+  static List<int> encryptPayload({
+    required List<int> plaintext,
+    required List<int> sessionKey,
+    required List<int> nonce,
+  }) {
+    final cipher = GCMBlockCipher(AESEngine())
+      ..init(
+        true,
+        AEADParameters(
+          KeyParameter(Uint8List.fromList(sessionKey)),
+          128,
+          Uint8List.fromList(nonce),
+          Uint8List(0),
+        ),
+      );
+    return cipher.process(Uint8List.fromList(plaintext));
+  }
+
+  static List<int> decryptPayload({
+    required List<int> encryptedPayload,
+    required List<int> sessionKey,
+  }) {
+    if (encryptedPayload.length < 12 + 16) {
+      throw const FormatException('Encrypted payload is too short');
+    }
+
+    final nonce = encryptedPayload.sublist(0, 12);
+    final ciphertextWithTag = encryptedPayload.sublist(12);
+    final cipher = GCMBlockCipher(AESEngine())
+      ..init(
+        false,
+        AEADParameters(
+          KeyParameter(Uint8List.fromList(sessionKey)),
+          128,
+          Uint8List.fromList(nonce),
+          Uint8List(0),
+        ),
+      );
+    return cipher.process(Uint8List.fromList(ciphertextWithTag));
+  }
+
+  static List<int> _deriveKeys({
+    required ECPrivateKey clientPrivateKey,
+    required List<int> serverPublicKeySpki,
+  }) {
     final rawServerKey = _decodeSpki(serverPublicKeySpki);
     final point = _domain.curve.decodePoint(Uint8List.fromList(rawServerKey));
     if (point == null) {
@@ -86,7 +149,7 @@ class AegisHandshakeCrypto {
       info: utf8.encode('AegisKeyDerivation'),
       outputLength: 64,
     );
-    return derivedBytes.sublist(32, 64);
+    return derivedBytes;
   }
 
   static Future<List<int>> computeMac(

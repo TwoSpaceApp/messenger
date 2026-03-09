@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
@@ -16,6 +17,7 @@ class AegisTransport {
   bool _isConnected = false;
   int _nextSequenceId = 1;
   List<int>? _macKey;
+  List<int>? _sessionKey;
 
   /// Буфер входящих байт. TCP является потоковым протоколом — одно
   /// событие `data` может содержать неполное сообщение, несколько сообщений
@@ -40,8 +42,16 @@ class AegisTransport {
     _macKey = List<int>.from(macKey);
   }
 
+  void setSessionKey(List<int> sessionKey) {
+    _sessionKey = List<int>.from(sessionKey);
+  }
+
   void clearMacKey() {
     _macKey = null;
+  }
+
+  void clearSessionKey() {
+    _sessionKey = null;
   }
 
   /// Connect to Aegis server
@@ -82,6 +92,7 @@ class AegisTransport {
     _isConnected = false;
     _incomingBuffer.clear();
     _macKey = null;
+    _sessionKey = null;
     AegisLogger.info('Disconnecting from server');
 
     try {
@@ -106,6 +117,17 @@ class AegisTransport {
       // Set sequence ID if not set
       if (message.sequenceId == 0) {
         message.sequenceId = _getNextSequenceId();
+      }
+
+      if (_sessionKey != null && message.type != MessageType.handshake) {
+        final nonce = List<int>.generate(12, (_) => Random.secure().nextInt(256));
+        final encryptedPayload = AegisHandshakeCrypto.encryptPayload(
+          plaintext: message.payload,
+          sessionKey: _sessionKey!,
+          nonce: nonce,
+        );
+        message.payload = <int>[...nonce, ...encryptedPayload];
+        message.flags = message.flags | ProtocolConstants.flagEncrypted;
       }
 
       message.payloadLength = message.payload.length;
@@ -200,6 +222,17 @@ class AegisTransport {
         final frame = Uint8List.fromList(_incomingBuffer.sublist(0, totalSize));
         _incomingBuffer.removeRange(0, totalSize);
         final message = MessageEncoder.decode(frame);
+        if ((message.flags & ProtocolConstants.flagEncrypted) != 0) {
+          if (_sessionKey == null) {
+            throw const FormatException('Encrypted payload received before session key was set');
+          }
+          message.payload = AegisHandshakeCrypto.decryptPayload(
+            encryptedPayload: message.payload,
+            sessionKey: _sessionKey!,
+          );
+          message.payloadLength = message.payload.length;
+          message.flags = message.flags & ~ProtocolConstants.flagEncrypted;
+        }
         AegisLogger.debug(
             'Received message: type=${message.type.value} seq=${message.sequenceId}');
         _messageController.add(message);
