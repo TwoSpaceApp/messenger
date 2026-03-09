@@ -1,14 +1,10 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/environment.dart';
-import 'package:two_space_app/core/services/dev_http_client.dart' as http;
-import 'package:two_space_app/features/auth/data/services/auth_service.dart';
-import 'package:two_space_app/features/chat/data/services/matrix_service.dart';
 
 /// Reusable user avatar widget.
-/// Prefer avatarFileId (fetch bytes via AppwriteService.getFileBytes).
-/// Fallback to avatarUrl (NetworkImage) or initials.
+/// Supports local files, network URLs and initials fallback.
 class UserAvatar extends StatefulWidget {
   const UserAvatar(
       {super.key,
@@ -50,90 +46,21 @@ class _UserAvatarState extends State<UserAvatar> {
   }
 
   Future<void> _loadIfNeeded() async {
-    var fid = widget.avatarFileId;
-    // Avatar URL (if any)
+    final fid = widget.avatarFileId;
     final url = widget.avatarUrl;
-    // If avatarFileId not provided, try to extract file id from avatarUrl if it contains /files/{id}
-    if (fid == null || fid.isEmpty) {
-      if (url != null && url.isNotEmpty) {
-        try {
-          final uri = Uri.parse(url);
-          final segments = uri.pathSegments;
-          // find 'files' segment and take next segment as id
-          final idx = segments.indexOf('files');
-          if (idx >= 0 && idx + 1 < segments.length) {
-            fid = segments[idx + 1];
-          }
-        } catch (_) {}
-      }
-    }
-    // If url looks like a Matrix media download path, try authenticated fetch
-    if ((fid == null || fid.isEmpty) &&
-        Environment.useMatrix &&
-        url != null &&
-        url.contains('/_matrix/media/v3/download')) {
+
+    if (url != null && url.isNotEmpty && !url.startsWith('http')) {
       try {
-        final uri = Uri.parse(url);
-        String? token;
-        try {
-          token = await AuthService().getMatrixTokenForUser();
-        } catch (_) {
-          token = null;
-        }
-        var tokenString = '';
-        if (token != null && token.isNotEmpty) {
-          tokenString = token;
-        } else if (Environment.matrixHomeserverUrl.isNotEmpty)
-          tokenString = Environment.matrixHomeserverUrl;
-        final headers = tokenString.isNotEmpty
-            ? {'Authorization': 'Bearer $tokenString'}
-            : <String, String>{};
-        final res = await http.get(uri, headers: headers);
-        if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
-          final u = Uint8List.fromList(res.bodyBytes);
-          if (mounted) setState(() => _bytes = u);
+        final file = File(url);
+        if (await file.exists()) {
+          final bytes = await file.readAsBytes();
+          if (mounted) setState(() => _bytes = bytes);
           return;
         }
       } catch (_) {}
     }
+
     if (fid == null || fid.isEmpty) {
-      // If using Matrix and avatarUrl is an mxc:// URL, try to fetch it from
-      // the homeserver content repo using the authenticated download endpoint.
-      if (Environment.useMatrix &&
-          widget.avatarUrl != null &&
-          widget.avatarUrl!.startsWith('mxc://')) {
-        try {
-          final parts = widget.avatarUrl!.substring('mxc://'.length).split('/');
-          if (parts.length >= 2) {
-            final server = parts[0];
-            final mediaId = parts.sublist(1).join('/');
-            final homeserver = Environment.matrixHomeserverUrl;
-            final uri = Uri.parse(
-                '$homeserver/_matrix/media/v3/download/$server/$mediaId');
-            // Get auth header (per-user or global)
-            String? token;
-            try {
-              token = await AuthService().getMatrixTokenForUser();
-            } catch (_) {
-              token = null;
-            }
-            var tokenString = '';
-            if (token != null && token.isNotEmpty) {
-              tokenString = token;
-            } else if (Environment.matrixHomeserverUrl.isNotEmpty)
-              tokenString = Environment.matrixHomeserverUrl;
-            final headers = tokenString.isNotEmpty
-                ? {'Authorization': 'Bearer $tokenString'}
-                : <String, String>{};
-            final res = await http.get(uri, headers: headers);
-            if (res.statusCode == 200 && res.bodyBytes.isNotEmpty) {
-              final u = Uint8List.fromList(res.bodyBytes);
-              if (mounted) setState(() => _bytes = u);
-              return;
-            }
-          }
-        } catch (_) {}
-      }
       return;
     }
     if (fid.isNotEmpty && _cache.containsKey(fid)) {
@@ -141,11 +68,11 @@ class _UserAvatarState extends State<UserAvatar> {
       return;
     }
     try {
-      final b = await MatrixService().downloadFile(fid);
-      if (b.isNotEmpty) {
-        final u = Uint8List.fromList(b.codeUnits);
-        _cache[fid] = u;
-        if (mounted) setState(() => _bytes = u);
+      final file = File(fid);
+      if (await file.exists()) {
+        final bytes = await file.readAsBytes();
+        _cache[fid] = bytes;
+        if (mounted) setState(() => _bytes = bytes);
       }
     } catch (_) {}
   }

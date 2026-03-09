@@ -1,11 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/environment.dart';
-import 'package:two_space_app/core/services/dev_http_client.dart' as http;
 
 /// Shows simple network quality indicator (0-3 bars) based on ping RTT to
-/// the configured Matrix homeserver. This is a light-weight heuristic and
+/// the configured Aegis server. This is a light-weight heuristic and
 /// intended for UI feedback only.
 class NetworkQualityIndicator extends StatefulWidget {
   const NetworkQualityIndicator({super.key});
@@ -35,27 +35,25 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
 
   Future<void> _check() async {
     try {
-      final base = Environment.matrixHomeserverUrl;
-      if (base.isEmpty) {
+      final host = Environment.aegisHost;
+      final port = Environment.aegisPort;
+      if (host.isEmpty || port <= 0) {
         if (mounted) setState(() => _bars = 0);
         return;
       }
-      final url = Uri.parse(
-          '${base.replaceAll(RegExp(r'/$'), '')}/_matrix/client/versions');
       final sw = Stopwatch()..start();
-      final res = await http.get(url).timeout(const Duration(seconds: 3));
+      final socket = await Socket.connect(host, port,
+          timeout: const Duration(seconds: 3));
+      await socket.close();
       sw.stop();
       final rtt = sw.elapsedMilliseconds;
       var bars = 0;
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        if (rtt < 120) {
-          bars = 3;
-        } else if (rtt < 400)
-          bars = 2;
-        else if (rtt < 1200)
-          bars = 1;
-        else
-          bars = 0;
+      if (rtt < 120) {
+        bars = 3;
+      } else if (rtt < 400) {
+        bars = 2;
+      } else if (rtt < 1200) {
+        bars = 1;
       } else {
         bars = 0;
       }

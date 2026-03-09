@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
 class ChatSettingsScreen extends StatefulWidget {
@@ -25,7 +25,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   int _selectedIndex = 0;
   List<Map<String, dynamic>> _members = [];
   bool _loadingMembers = false;
-  final _svc = ChatMatrixService();
+  final _svc = AegisChatService();
 
   @override
   void initState() {
@@ -42,7 +42,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     setState(() => _saving = true);
     try {
       final bytes = await File(path).readAsBytes();
-      await ChatMatrixService()
+        await AegisChatService()
           .setRoomAvatar(widget.roomId, bytes, fileName: path.split('/').last);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -62,9 +62,9 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     try {
       final name = _nameController.text.trim();
       if (name.isNotEmpty)
-        await ChatMatrixService().setRoomName(widget.roomId, name);
+        await AegisChatService().setRoomName(widget.roomId, name);
       // set join rule
-      await ChatMatrixService()
+      await AegisChatService()
           .setJoinRule(widget.roomId, _isPublic ? 'public' : 'invite');
       if (!mounted) return;
       ScaffoldMessenger.of(context)
@@ -93,10 +93,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   Widget _buildMembers() {
     final l10n = AppLocalizations.of(context)!;
     if (_loadingMembers)
-      return const AppLoadingState(
-        label: 'Загружаем участников…',
-        compact: true,
-      );
+      return const AppLoadingState(compact: true);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -214,7 +211,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     // Perform the leave action
     setState(() => _saving = true);
     try {
-      await ChatMatrixService().leaveRoom(widget.roomId);
+      await AegisChatService().leaveRoom(widget.roomId);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.leftRoom)));
@@ -293,7 +290,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: FutureBuilder<Map<String, String?>>(
                     future:
-                        ChatMatrixService().getRoomNameAndAvatar(widget.roomId),
+                      AegisChatService().getRoomNameAndAvatar(widget.roomId),
                     builder: (c, s) {
                       final meta = s.data ??
                           {'name': widget.initialName, 'avatar': null};
@@ -318,7 +315,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                                   icon: const Icon(Icons.refresh),
                                   onPressed: () async {
                                     setState(() {});
-                                    await ChatMatrixService()
+                                    await AegisChatService()
                                         .clearRoomCache(widget.roomId);
                                   }),
                               IconButton(

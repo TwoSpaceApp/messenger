@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_encoder.dart';
+import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 
 /// TCP transport layer for Aegis client communication
@@ -13,6 +15,7 @@ class AegisTransport {
   late Socket _socket;
   bool _isConnected = false;
   int _nextSequenceId = 1;
+  List<int>? _macKey;
 
   /// Буфер входящих байт. TCP является потоковым протоколом — одно
   /// событие `data` может содержать неполное сообщение, несколько сообщений
@@ -32,6 +35,14 @@ class AegisTransport {
 
   /// Check if client is connected to server
   bool get isConnected => _isConnected;
+
+  void setMacKey(List<int> macKey) {
+    _macKey = List<int>.from(macKey);
+  }
+
+  void clearMacKey() {
+    _macKey = null;
+  }
 
   /// Connect to Aegis server
   Future<void> connect(String host, int port, {Duration? timeout}) async {
@@ -70,6 +81,7 @@ class AegisTransport {
 
     _isConnected = false;
     _incomingBuffer.clear();
+    _macKey = null;
     AegisLogger.info('Disconnecting from server');
 
     try {
@@ -96,8 +108,21 @@ class AegisTransport {
         message.sequenceId = _getNextSequenceId();
       }
 
+      message.payloadLength = message.payload.length;
+
       // Encode and send message
       final data = MessageEncoder.encode(message);
+      if (_macKey != null && message.type != MessageType.handshake) {
+        final mac = await AegisHandshakeCrypto.computeMac(
+          data.sublist(0, data.length - ProtocolConstants.macSize),
+          _macKey!,
+        );
+        data.setRange(
+          data.length - ProtocolConstants.macSize,
+          data.length,
+          mac,
+        );
+      }
       _socket.add(data);
       await _socket.flush();
 
@@ -144,11 +169,12 @@ class AegisTransport {
       // Нужен хотя бы полный заголовок, чтобы знать размер сообщения.
       if (_incomingBuffer.length < ProtocolConstants.headerSize) return;
 
-      // payloadLength — big-endian uint32 по смещению 16 в заголовке.
-      final payloadLength = (_incomingBuffer[16] << 24) |
-          (_incomingBuffer[17] << 16) |
-          (_incomingBuffer[18] << 8) |
-          _incomingBuffer[19];
+        // payloadLength — big-endian uint32 по смещению 17 в заголовке:
+        // 4 (magic) + 1 + 1 + 1 (version/flags) + 2 (type) + 8 (sequence).
+        final payloadLength = (_incomingBuffer[17] << 24) |
+          (_incomingBuffer[18] << 16) |
+          (_incomingBuffer[19] << 8) |
+          _incomingBuffer[20];
 
       // Защита от DoS: слишком большой payload разрывает соединение.
       if (payloadLength > ProtocolConstants.maxPayloadSize) {

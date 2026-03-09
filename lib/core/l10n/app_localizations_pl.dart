@@ -957,10 +957,10 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get matrixIdDescription =>
-      'Wpisz Matrix ID użytkownika (np. @user:server.com)';
+      'Wpisz nazwę użytkownika lub identyfikator Aegis';
 
   @override
-  String get matrixIdLabel => 'Matrix ID użytkownika';
+  String get matrixIdLabel => 'Nazwa użytkownika lub ID Aegis';
 
   @override
   String get startChatButton => 'Rozpocznij czat';
@@ -969,7 +969,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get hintCardTitle => 'Wskazówka';
 
   @override
-  String get matrixIdExplanation => 'Matrix ID to @użytkownik:server.com';
+  String get matrixIdExplanation =>
+      'Możesz użyć nazwy użytkownika lub numerycznego identyfikatora Aegis';
 
   @override
   String get enterUserIdError => 'Wpisz ID użytkownika';

@@ -56,6 +56,11 @@ class AuthNotifier extends _$AuthNotifier {
 
   Future<AuthState> _loadAuthState() async {
     try {
+      final restored = await _authService.restoreSessionFromToken();
+      if (!restored) {
+        return const AuthState.unauthenticated();
+      }
+
       final token = await _authService.getMatrixTokenForUser();
       if (token != null && token.isNotEmpty) {
         final userId = await _authService.getCurrentUserId();
@@ -87,7 +92,6 @@ class AuthNotifier extends _$AuthNotifier {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await _authService.registerUser(name, email, password);
-      await _authService.login(email, password);
       return _loadAuthState();
     });
   }

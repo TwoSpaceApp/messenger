@@ -10,7 +10,7 @@ part of 'env.dart';
 // ignore_for_file: type=lint
 // generated_from: .env
 final class _Env {
-  static const String matrixEnable = 'true';
+  static const String matrixEnable = 'false';
 
   static const String matrixHomeserverUrl = '';
 
@@ -24,7 +24,7 @@ final class _Env {
 
   static const String sentryDsn = '';
 
-  static const String aegisHost = 'localhost';
+  static const String aegisHost = '95.215.56.43';
 
   static const String aegisPort = '8888';
 

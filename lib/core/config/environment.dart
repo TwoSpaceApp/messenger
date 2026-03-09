@@ -36,6 +36,9 @@ class Environment {
   static void printLoadedVariables() {
     if (!kDebugMode) return;
     print('===== Environment Variables =====');
-    print('USE_MATRIX: $useMatrix');
+    print('AEGIS_HOST: $aegisHost');
+    print('AEGIS_PORT: $aegisPort');
+    print('APP_ENV: $appEnv');
+    print('ENABLE_DEV_TOOLS: $enableDevTools');
   }
 }

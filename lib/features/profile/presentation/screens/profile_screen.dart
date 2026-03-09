@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/services/navigation_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
-import 'package:two_space_app/features/chat/data/services/chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
@@ -23,6 +23,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final AegisChatService _chatService = AegisChatService();
   Map<String, dynamic>? _user;
   bool _loading = true;
   bool _actionLoading = false;
@@ -53,14 +54,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUser() async {
     try {
-      final matrixService = ChatMatrixService();
-      final currentUserId = await matrixService.getCurrentUserId();
+      final currentUserId = await _chatService.getCurrentUserId();
 
       // Determine if this is my profile
       _isMe = widget.userId == currentUserId || currentUserId == null;
 
-      // Load user info from Matrix
-      final userInfo = await matrixService.getUserInfo(widget.userId);
+      final userInfo = await _chatService.getUserInfo(widget.userId);
 
       if (mounted) {
         setState(() {
@@ -180,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: _loading
-          ? const AppLoadingState(label: 'Загружаем профиль…')
+          ? const AppLoadingState()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(UITokens.space),
               child: Column(

@@ -1,187 +1,163 @@
-# План интеграции протокола Aegis
+# План интеграции Aegis
 
-Этот файл — рабочий чеклист по поэтапной замене Matrix/заглушек на реальный Aegis-протокол.
-Работаем последовательно, один пункт за раз.
+Актуальный рабочий план полной миграции клиента с Matrix на Aegis.
 
----
+## Принципы
 
-## ✅ Уже сделано
-
-- [x] Скопированы файлы `AegisDartClient` → `lib/services/aegis/`
-- [x] Создан `AegisAuthService` (`lib/services/aegis_auth_service.dart`)
-- [x] `AuthService.loginUser` → делегирует в `AegisAuthService.login`
-- [x] `AuthService.registerUser` → делегирует в `AegisAuthService.register`
-- [x] `AuthService.signOut` → делегирует в `AegisAuthService.logout`
-- [x] `AuthService.restoreSessionFromToken` → пробует Aegis, затем Matrix
-- [x] `Environment` расширен: `aegisHost`, `aegisPort`, `aegisConnectTimeout`
-- [x] `MaterialApp.locale` подключён к `SettingsService.languageNotifier`
-- [x] Виджет `LanguageSwitcherButton` (`lib/widgets/language_switcher.dart`)
-- [x] Переключатель языка на экране **логина**
-- [x] Переключатель языка на экране **регистрации**
-- [x] Переключатель языка на экране **настроек** (заменён старый Dropdown)
+- Matrix больше не рассматривается как целевой backend.
+- Папка `Aegis-main/` используется только как справка по закрытому протоколу и в итоговую сборку не входит.
+- Если серверная часть ещё не даёт полноценный API для сценария, во Flutter допускается временный локальный кэш/заглушка поверх реального Aegis-транспорта.
+- Любая новая пользовательская строка должна проходить через l10n.
 
 ---
 
-## 🔲 Этап 1 — Auth & сессии (приоритет: высокий)
+## Что уже готово в протоколе Aegis
 
-### 1.1 Доработать flow входа
-- [ ] После успешного Aegis-логина сохранять полноценный `userId` (сейчас username)
-- [ ] Разобраться, возвращает ли сервер токен сессии отдельно от пары user:pass
-- [ ] Если сервер возвращает JWT/session token — хранить его вместо raw-пароля
+По коду из `Aegis-main/` в сервере и протоколе уже есть:
 
-### 1.2 Восстановление сессии при запуске
-- [ ] `AuthNotifier.build()` → вызывать `AegisAuthService.restoreSession()`
-- [ ] При успехе — `AuthState.authenticated(userId, token)`
-- [ ] При неудаче — `AuthState.unauthenticated()`
+- Handshake + TCP transport
+- Auth / Register
+- User search
+- Private chat message
+- Channel create / join / message
+- Profile get / update
+- Channel edit
+- Message edit / delete
+- Group create / edit / send message
+- Role / permission handlers для channel/group
 
-### 1.3 Экран логина
-- [ ] Поле «username или email» уже есть — убедиться что передаётся правильно
-- [ ] Показывать понятные ошибки Aegis (`ConnectionException`, `TimeoutException`)
-- [ ] Добавить индикатор «Подключение к серверу…» пока идёт TCP-handshake
+## Ограничения текущего протокола/сервера
 
-### 1.4 Экран регистрации
-- [ ] Шаг 1 (имя/email/пароль) — уже подключён к `AegisAuthService.register`
-- [ ] Убрать/скрыть неиспользуемые шаги (телефон, аватар) если сервер их не требует
-- [ ] После регистрации автоматически входить в аккаунт (уже реализовано)
+- Сервер создаёт `SessionToken` в БД, но текущий `AuthHandler` возвращает клиенту пустой `SessionToken`
+- Отдельного публичного API списка приватных чатов/каналов для клиента пока нет
+- Пагинированная история сообщений для Flutter-клиента в SDK пока не оформлена отдельным методом
+- Typing indicators в production-flow не готовы
+- Presence тип есть в enum, но клиентский realtime-flow для него не собран
+- Media transfer для Aegis-протокола как полноценный серверный сценарий ещё не доведён до Flutter-интеграции
 
-### 1.5 X3DH keypair (будущее)
-- [ ] Генерировать реальную X25519 keypair при регистрации (сейчас placeholder)
-- [ ] Хранить приватный ключ в `FlutterSecureStorage`
-- [ ] Передавать публичный ключ в `AegisAuthService.register`
+Из-за этого клиент сейчас использует смешанный подход:
 
----
-
-## 🔲 Этап 2 — Поиск пользователей
-
-**Готово в клиенте:** `AegisClient.searchUsers(query)` → `UserSearchResponse`
-
-- [ ] Создать/обновить `AegisUserService` для поиска пользователей
-- [ ] Подключить к `SearchContactsScreen` — заменить Matrix-заглушку
-- [ ] Подключить к `AdvancedSearchScreen` — поиск по username
-- [ ] Отображать результаты: аватар (заглушка), username, онлайн-статус
+- реальный Aegis transport для auth / search / direct send / channel create / channel send / profile update;
+- локальный persisted store во Flutter для списка диалогов, локальной истории и UI-состояния.
 
 ---
 
-## 🔲 Этап 3 — Приватные чаты (1-на-1)
+## Выполнено в приложении
 
-**Готово в клиенте:** `AegisClient.sendPrivateMessage(toUserId, content)`
+### Auth / session
 
-- [ ] Создать `AegisMessageService` как Dart-слой поверх `AegisClient`
-- [ ] Реализовать получение входящих сообщений через `AegisClient.messages` Stream
-- [ ] Подключить `ChatScreen` к Aegis вместо Matrix:
-  - Отправка текстовых сообщений
-  - Получение в реальном времени
-  - История (если сервер поддерживает)
-- [ ] Подключить `HomeScreen` — список чатов (пока заглушка)
+- [x] `AegisClient` переведён на реальный JSON auth-request вместо raw Matrix-style token flow
+- [x] Поддержан auth по username/password
+- [x] Поддержан token auth для будущего корректного server-returned session token
+- [x] `AegisAuthService.login()` сохраняет реальный `userId` и `username`
+- [x] `AegisAuthService.restoreSession()` восстановлен для текущего server-state:
+  - если серверный токен появится — будет использован он;
+  - пока сервер его не возвращает, клиент переавторизуется по сохранённой credential-pair
+- [x] `AuthNotifier.build()` теперь реально вызывает восстановление сессии
+- [x] Регистрация больше не делает лишний повторный логин по email
 
----
+### Chat / profile migration
 
-## 🔲 Этап 4 — Каналы
+- [x] Добавлен `AegisChatService` как основной Flutter-слой над `AegisClient`
+- [x] Добавлен локальный persisted store для:
+  - списка диалогов;
+  - локальной истории сообщений;
+  - профилей пользователей;
+  - метаданных каналов/групп
+- [x] Добавлен `AegisGroupService`-адаптер для экранов групп
+- [x] `HomeScreen` переведён на Aegis-backed список чатов
+- [x] `CreateChatScreen` переведён на Aegis direct chat / channel create
+- [x] `ChatScreen` переведён на Aegis chat service
+- [x] `ChatSettingsScreen` переведён на Aegis room settings
+- [x] `CreateGroupScreen` переведён на Aegis group/channel flow
+- [x] `GroupSettingsScreen` переведён на Aegis group adapter
+- [x] `ProfileScreen` переведён на Aegis profile loading
+- [x] `AuthListener` получает welcome-profile через Aegis
+- [x] `chat_backend_factory.dart` больше создаёт Aegis backend
+- [x] `chat_provider.dart` больше не использует Matrix backend
 
-**Готово в клиенте:**
-- `AegisClient.createChannel(name, description, type)`
-- `AegisClient.joinChannel(channelId)`
-- `AegisClient.sendChannelMessage(channelId, content)`
-- Типы каналов: `ChannelType.public` / `private` / `group`
+### l10n / UX
 
-- [ ] Создать экран «Каналы» (список публичных каналов)
-- [ ] Подключить `CreateGroupScreen` → перенаправить на создание Aegis-канала
-- [ ] `GroupSettingsScreen` → управление участниками через Aegis API
-- [ ] Отправка сообщений в канал из `ChatScreen`
-
----
-
-## 🔲 Этап 5 — Присутствие (UserPresence)
-
-**Доступно в протоколе:** `MessageType.userPresence` (тип 9)
-
-- [ ] Обрабатывать входящие `UserPresence` сообщения в Stream
-- [ ] Обновлять `UserStatusIndicator` в реальном времени
-- [ ] Отправлять своё presence при открытии/закрытии приложения
-
----
-
-## 🔲 Этап 6 — Групповые сообщения
-
-**Доступно в протоколе:** `MessageType.groupMessage/groupCreate/groupLeave`
-
-> ⚠️ Серверные обработчики GroupMessage и т.д. помечены в `todo.md` как незавершённые.
-> Пункты ниже — на будущее, когда сервер поддержит.
-
-- [ ] `AegisClient.sendGroupMessage(groupId, content)` (добавить метод)
-- [ ] Создание групп через протокол
-- [ ] Выход из группы
+- [x] Строки создания чата больше не говорят пользователю про Matrix ID
+- [x] Обновлены переводы `matrixIdDescription`, `matrixIdLabel`, `matrixIdExplanation` на всех поддерживаемых языках под Aegis/generic contact id
 
 ---
 
-## 🔲 Этап 7 — Typing indicators
+## Что ещё осталось сделать
 
-**Описан в `todo.md` протокола:** `MessageType.UserTyping` (планируется)
+### 1. Убрать оставшийся legacy Matrix-код из codebase
 
-- [ ] Отправлять typing event при наборе текста
-- [ ] Отображать «печатает…» в `ChatScreen`
+- [ ] Выпилить неиспользуемые `ChatMatrixService`, `GroupMatrixService`, `MatrixService` и matrix-* adapters
+- [ ] Почистить `AuthService` от Matrix-only веток и комментариев
+- [ ] Удалить matrix-specific provider registration и screen dependencies вне мигрированных сценариев
+
+### 2. Завершить realtime delivery
+
+- [ ] Проверить, как сервер пушит входящие private/channel/group сообщения в живое соединение
+- [ ] Дособрать client-side обработку push-сообщений без локальных допущений
+- [ ] Привязать unread counters и список чатов к реальным inbound событиям
+
+### 3. Нормальный список диалогов и история с сервера
+
+- [ ] Когда сервер даст явные list/history методы — убрать временный local-first индекс чатов
+- [ ] Перевести `HomeScreen` и `ChatScreen` на server-backed history sync
+- [ ] Добавить reconcile локального кэша и серверной истории
+
+### 4. Media
+
+- [ ] Подключить настоящий Aegis file transfer после готовности серверных handlers
+- [ ] Убрать локальный file-path fallback для вложений
+
+### 5. Presence / typing / push
+
+- [ ] Подключить `UserPresence`
+- [ ] Подключить typing indicators, когда серверный поток будет готов
+- [ ] Настроить push-уведомления уже поверх Aegis user/channel events
+
+### 6. Криптография
+
+- [ ] Генерация реальной X25519 keypair на клиенте
+- [ ] Передача реального public key при регистрации
+- [ ] Переход на настоящий session token вместо credential-pair fallback
+- [ ] Дальнейшая E2E интеграция поверх X3DH / ratchet после готовности server/client SDK
 
 ---
 
-## 🔲 Этап 8 — История сообщений
+## Текущий статус миграции
 
-- [ ] Уточнить, поддерживает ли сервер пагинированную историю
-- [ ] Реализовать подгрузку истории при открытии чата
-- [ ] Кешировать сообщения локально (SQLite / Hive)
+### Уже работает на Aegis
+
+- логин
+- регистрация
+- восстановление сессии
+- поиск пользователей
+- открытие direct chat
+- создание channel/group chat
+- отправка private message
+- отправка channel message
+- загрузка и редактирование профиля
+- базовые настройки комнаты/группы на клиентском уровне
+
+### Временно реализовано client-side кэшем
+
+- список диалогов
+- локальная история чата
+- часть group-management UI
+- часть room settings UI
+- media fallback через локальные файлы
+
+### Требует следующего прохода
+
+- полная зачистка legacy Matrix файлов
+- server-backed history / list APIs
+- полноценный inbound realtime
+- presence / typing / media protocol
 
 ---
 
-## 🔲 Этап 9 — Push-уведомления
+## Решения, принятые в этом проходе
 
-- [ ] Отправлять `FCM/APNs` токен на Aegis-сервер при логине
-- [ ] Обрабатывать входящие уведомления когда приложение в фоне
-- [ ] Настроить `notification_provider.dart` для Aegis-уведомлений
-
----
-
-## 🔲 Этап 10 — Шифрование (E2E)
-
-**Описано в README:** X3DH + AES-GCM
-
-- [ ] Реализовать X25519 keypair при регистрации (см. п. 1.5)
-- [ ] Реализовать X3DH handshake для каждого нового чата
-- [ ] Шифровать payload перед отправкой через `AegisCryptoProvider`
-- [ ] Расшифровывать входящие сообщения
-
----
-
-## Технические заметки
-
-### Адрес сервера
-Настраивается через `.env`:
-```
-AEGIS_HOST=localhost
-AEGIS_PORT=8888
-```
-
-### Запуск Aegis-сервера локально
-```bash
-cd Aegis-main
-dotnet run --project src/Aegis.Server
-```
-
-### Структура клиентских файлов
-```
-lib/services/aegis/
-  aegis_client.dart       ← Главный клиент (AegisClient)
-  transport.dart          ← TCP-соединение (AegisTransport)
-  message.dart            ← Структура Message
-  message_encoder.dart    ← Сериализация/десериализация
-  message_payloads.dart   ← Все Request/Response типы
-  message_type.dart       ← Enum MessageType
-  protocol_constants.dart ← Magic, version, sizes
-  exceptions.dart         ← ConnectionException, etc.
-  logger.dart             ← AegisLogger
-
-lib/services/
-  aegis_auth_service.dart ← Обёртка для Flutter (Singleton)
-```
-
-### Что НЕ делать
-- Не редактировать папку `Aegis-main/` — это только справка
-- Не трогать Matrix-код пока — нужен как fallback если Aegis недоступен
+- Не держать Matrix как fallback-путь
+- Где сервер уже готов — ходить в реальный Aegis
+- Где серверного API пока не хватает — закрывать сценарий локальным persisted store, чтобы продукт оставался рабочим
+- Не изменять `Aegis-main/`, а только использовать его как спецификацию

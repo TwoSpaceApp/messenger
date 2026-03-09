@@ -957,11 +957,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get startDirectChatTitle => 'Avvia chat diretta';
 
   @override
-  String get matrixIdDescription =>
-      'Inserisci l\'ID Matrix dell\'utente (es. @user:server.com)';
+  String get matrixIdDescription => 'Inserisci il nome utente o l\'ID Aegis';
 
   @override
-  String get matrixIdLabel => 'ID Matrix utente';
+  String get matrixIdLabel => 'Nome utente o ID Aegis';
 
   @override
   String get startChatButton => 'Avvia chat';
@@ -970,7 +969,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get hintCardTitle => 'Suggerimento';
 
   @override
-  String get matrixIdExplanation => 'L\'ID Matrix è @utente:server.com';
+  String get matrixIdExplanation =>
+      'Puoi usare un nome utente o un ID Aegis numerico';
 
   @override
   String get enterUserIdError => 'Inserisci ID utente';

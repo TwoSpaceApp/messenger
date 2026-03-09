@@ -1307,11 +1307,11 @@
   "@startDirectChatTitle": {
     "description": "Start direct chat title"
   },
-  "matrixIdDescription": "Enter the user's Matrix ID (e.g. @user:server.com)",
+  "matrixIdDescription": "Enter the user's username or Aegis ID",
   "@matrixIdDescription": {
     "description": "Matrix ID description"
   },
-  "matrixIdLabel": "User's Matrix ID",
+  "matrixIdLabel": "Username or Aegis ID",
   "@matrixIdLabel": {
     "description": "Matrix ID label"
   },
@@ -1323,7 +1323,7 @@
   "@hintCardTitle": {
     "description": "Hint card title"
   },
-  "matrixIdExplanation": "Matrix ID consists of @username:server.com",
+  "matrixIdExplanation": "You can use a username or numeric Aegis user ID",
   "@matrixIdExplanation": {
     "description": "Matrix ID explanation"
   },

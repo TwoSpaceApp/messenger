@@ -957,11 +957,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get startDirectChatTitle => 'Direktchat starten';
 
   @override
-  String get matrixIdDescription =>
-      'Matrix-ID des Benutzers eingeben (z.B. @user:server.com)';
+  String get matrixIdDescription => 'Benutzernamen oder Aegis-ID eingeben';
 
   @override
-  String get matrixIdLabel => 'Matrix-ID des Benutzers';
+  String get matrixIdLabel => 'Benutzername oder Aegis-ID';
 
   @override
   String get startChatButton => 'Chat starten';
@@ -971,7 +970,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get matrixIdExplanation =>
-      'Matrix-ID besteht aus @benutzername:server.com';
+      'Sie können einen Benutzernamen oder eine numerische Aegis-ID verwenden';
 
   @override
   String get enterUserIdError => 'Benutzer-ID eingeben';

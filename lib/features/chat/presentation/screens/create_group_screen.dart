@@ -6,7 +6,7 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/models/group.dart';
 import 'package:two_space_app/core/utils/responsive.dart';
-import 'package:two_space_app/features/chat/data/services/group_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 
 class CreateGroupScreen extends StatefulWidget {
@@ -24,12 +24,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   bool _showMessageHistory = false;
   bool _isLoading = false;
 
-  late GroupMatrixService _groupService;
+  late AegisGroupService _groupService;
 
   @override
   void initState() {
     super.initState();
-    _groupService = GroupMatrixService();
+    _groupService = AegisGroupService();
   }
 
   @override

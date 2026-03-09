@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 
 class AdvancedSearchScreen extends StatefulWidget {
   const AdvancedSearchScreen({super.key});
@@ -23,7 +23,7 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
 
     setState(() => _isSearching = true);
     try {
-      final chatService = ChatMatrixService();
+      final chatService = AegisChatService();
       final searchResults = await chatService.searchMessages(
         query: _queryController.text,
         type: _searchType,

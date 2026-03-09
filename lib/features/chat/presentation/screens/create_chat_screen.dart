@@ -4,7 +4,7 @@ import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 
 class CreateChatScreen extends StatefulWidget {
@@ -24,6 +24,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
   bool _loading = false;
   bool _isPrivate = true;
   String? _errorMessage;
+  final AegisChatService _chatService = AegisChatService();
 
   @override
   void initState() {
@@ -48,31 +49,14 @@ class _CreateChatScreenState extends State<CreateChatScreen>
       return;
     }
 
-    // Normalize userId
-    var normalizedUserId = userId;
-    if (!userId.startsWith('@')) {
-      // Assume it's a username, add @ and domain
-      final matrixService = ChatMatrixService();
-      final domain = matrixService.homeserver
-          .replaceAll('https://', '')
-          .replaceAll('http://', '');
-      normalizedUserId = '@$userId:$domain';
-    } else if (!userId.contains(':')) {
-      final matrixService = ChatMatrixService();
-      final domain = matrixService.homeserver
-          .replaceAll('https://', '')
-          .replaceAll('http://', '');
-      normalizedUserId = '$userId:$domain';
-    }
-
     setState(() {
       _loading = true;
       _errorMessage = null;
     });
 
     try {
-      final matrixService = ChatMatrixService();
-      final roomId = await matrixService.createDirectChat(normalizedUserId);
+      final roomId = await _chatService.createDirectChat(userId);
+      final userInfo = await _chatService.getUserInfo(userId);
 
       if (mounted) {
         // Navigate to the chat
@@ -80,7 +64,11 @@ class _CreateChatScreenState extends State<CreateChatScreen>
           context,
           MaterialPageRoute(
             builder: (_) => ChatScreen(
-              chat: Chat(id: roomId, name: userId, members: [normalizedUserId]),
+              chat: Chat(
+                id: roomId,
+                name: userInfo['displayName'] as String? ?? userId,
+                members: [userId],
+              ),
             ),
           ),
         );
@@ -109,8 +97,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
     });
 
     try {
-      final matrixService = ChatMatrixService();
-      final roomId = await matrixService.createRoom(
+      final roomId = await _chatService.createRoom(
         name: roomName,
         topic: _roomTopicController.text.trim(),
         isPublic: !_isPrivate,
@@ -238,7 +225,6 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: l10n.matrixIdLabel,
-                    hintText: '@username:server.com',
                     labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
                     hintStyle: TextStyle(color: Colors.white.withAlpha(100)),
                     prefixIcon: const Icon(Icons.person, color: Colors.white70),

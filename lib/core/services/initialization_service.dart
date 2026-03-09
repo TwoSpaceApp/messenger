@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/config/environment_validator.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
-import 'package:two_space_app/features/chat/data/services/matrix_service.dart';
+import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 /// Result of an initialization step
@@ -74,7 +74,7 @@ class InitializationService {
     _SentryStep(),
     _EnvironmentValidationStep(),
     _SettingsStep(),
-    _MatrixJwtStep(),
+    _AegisSessionStep(),
   ];
 
   /// Initialize the app with all required steps
@@ -272,9 +272,9 @@ class _SettingsStep implements InitializationStep {
   }
 }
 
-class _MatrixJwtStep implements InitializationStep {
+class _AegisSessionStep implements InitializationStep {
   @override
-  String get name => 'Matrix JWT Restoration';
+  String get name => 'Aegis Session Restoration';
 
   @override
   bool get critical => false; // Expected to fail on first launch
@@ -284,7 +284,7 @@ class _MatrixJwtStep implements InitializationStep {
 
   @override
   Future<void> execute() async {
-    MatrixService.restoreJwt();
+    await AuthService().restoreSessionFromToken();
   }
 }
 

@@ -942,10 +942,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get startDirectChatTitle => '开始直接聊天';
 
   @override
-  String get matrixIdDescription => '输入用户的Matrix ID（例如: @user:server.com）';
+  String get matrixIdDescription => '输入用户名或 Aegis ID';
 
   @override
-  String get matrixIdLabel => '用户Matrix ID';
+  String get matrixIdLabel => '用户名或 Aegis ID';
 
   @override
   String get startChatButton => '开始聊天';
@@ -954,7 +954,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get hintCardTitle => '提示';
 
   @override
-  String get matrixIdExplanation => 'Matrix ID格式为@用户名:server.com';
+  String get matrixIdExplanation => '可以使用用户名或数字形式的 Aegis 用户 ID';
 
   @override
   String get enterUserIdError => '请输入用户ID';

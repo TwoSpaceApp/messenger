@@ -197,12 +197,14 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) => User(
         id: json['Id'] as int,
         username: json['Username'] as String,
-        email: json['Email'] as String,
-        publicKey: json['PublicKey'] as String,
+        email: json['Email'] as String? ?? '',
+        publicKey: json['PublicKey'] as String? ?? '',
         identityKeyFingerprint: json['IdentityKeyFingerprint'] as String?,
-        isActive: json['IsActive'] as bool,
-        createdAt: DateTime.parse(json['CreatedAt'] as String),
-        updatedAt: DateTime.parse(json['UpdatedAt'] as String),
+        isActive: json['IsActive'] as bool? ?? true,
+        createdAt: DateTime.tryParse(json['CreatedAt'] as String? ?? '') ??
+            DateTime.fromMillisecondsSinceEpoch(0),
+        updatedAt: DateTime.tryParse(json['UpdatedAt'] as String? ?? '') ??
+            DateTime.fromMillisecondsSinceEpoch(0),
         lastSeenAt: json['LastSeenAt'] != null
             ? DateTime.parse(json['LastSeenAt'] as String)
             : null,
@@ -267,6 +269,7 @@ class ChannelMessageRequest {
 class ChannelMessageResponse {
   ChannelMessageResponse({
     required this.success,
+    this.messageId,
     this.message,
     this.messageText,
   });
@@ -274,6 +277,7 @@ class ChannelMessageResponse {
   factory ChannelMessageResponse.fromJson(Map<String, dynamic> json) =>
       ChannelMessageResponse(
         success: json['Success'] as bool,
+        messageId: json['MessageId'] as int?,
         message: json['Message'] != null
             ? ChannelMessage.fromJson(json['Message'] as Map<String, dynamic>)
             : null,
@@ -285,11 +289,13 @@ class ChannelMessageResponse {
     return ChannelMessageResponse.fromJson(json);
   }
   final bool success;
+    final int? messageId;
   final ChannelMessage? message;
   final String? messageText;
 
   Map<String, dynamic> toJson() => {
         'Success': success,
+      if (messageId != null) 'MessageId': messageId,
         if (message != null) 'Message': message!.toJson(),
         if (messageText != null) 'MessageText': messageText,
       };
@@ -381,6 +387,7 @@ class ChannelCreateResponse {
   ChannelCreateResponse({
     required this.success,
     this.channel,
+    this.channelId,
     this.message,
   });
 
@@ -390,6 +397,7 @@ class ChannelCreateResponse {
         channel: json['Channel'] != null
             ? Channel.fromJson(json['Channel'] as Map<String, dynamic>)
             : null,
+        channelId: json['ChannelId'] as int?,
         message: json['Message'] as String?,
       );
 
@@ -399,11 +407,13 @@ class ChannelCreateResponse {
   }
   final bool success;
   final Channel? channel;
+    final int? channelId;
   final String? message;
 
   Map<String, dynamic> toJson() => {
         'Success': success,
         if (channel != null) 'Channel': channel!.toJson(),
+      if (channelId != null) 'ChannelId': channelId,
         if (message != null) 'Message': message,
       };
 }
@@ -543,6 +553,7 @@ class PrivateChatMessageRequest {
 class PrivateChatMessageResponse {
   PrivateChatMessageResponse({
     required this.success,
+    this.messageId,
     this.message,
     this.privateChat,
     this.messageText,
@@ -551,6 +562,7 @@ class PrivateChatMessageResponse {
   factory PrivateChatMessageResponse.fromJson(Map<String, dynamic> json) =>
       PrivateChatMessageResponse(
         success: json['Success'] as bool,
+        messageId: json['MessageId'] as int?,
         message: json['Message'] != null
             ? AegisChatMessage.fromJson(json['Message'] as Map<String, dynamic>)
             : null,
@@ -565,12 +577,14 @@ class PrivateChatMessageResponse {
     return PrivateChatMessageResponse.fromJson(json);
   }
   final bool success;
+    final int? messageId;
   final AegisChatMessage? message;
   final PrivateChat? privateChat;
   final String? messageText;
 
   Map<String, dynamic> toJson() => {
         'Success': success,
+      if (messageId != null) 'MessageId': messageId,
         if (message != null) 'Message': message!.toJson(),
         if (privateChat != null) 'PrivateChat': privateChat!.toJson(),
         if (messageText != null) 'MessageText': messageText,

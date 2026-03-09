@@ -958,10 +958,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get matrixIdDescription =>
-      'Ingrese el Matrix ID del usuario (ej. @user:server.com)';
+      'Ingrese el nombre de usuario o el ID de Aegis';
 
   @override
-  String get matrixIdLabel => 'Matrix ID del usuario';
+  String get matrixIdLabel => 'Nombre de usuario o ID de Aegis';
 
   @override
   String get startChatButton => 'Iniciar chat';
@@ -970,7 +970,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get hintCardTitle => 'Sugerencia';
 
   @override
-  String get matrixIdExplanation => 'Matrix ID consiste en @usuario:server.com';
+  String get matrixIdExplanation =>
+      'Puede usar un nombre de usuario o un ID numérico de Aegis';
 
   @override
   String get enterUserIdError => 'Ingrese ID de usuario';

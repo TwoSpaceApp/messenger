@@ -45,11 +45,7 @@ class UserProfileCache {
 final userCacheProvider = Provider<UserProfileCache>((ref) {
   final cache = UserProfileCache();
 
-  // Clear cache when profile service is disposed (e.g., on logout)
-  ref.onDispose(() {
-    ref.read(matrixProfileServiceProvider).clearCache();
-    cache.clear();
-  });
+  ref.onDispose(cache.clear);
 
   return cache;
 });
@@ -59,19 +55,16 @@ final cachedUserProfileProvider =
     FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
   (ref, userId) async {
     final cache = ref.watch(userCacheProvider);
-    final profileService = ref.watch(matrixProfileServiceProvider);
+    final profileService = ref.watch(aegisChatServiceProvider);
 
-    // Try to get from cache first
     final cachedProfile = cache.get(userId);
     if (cachedProfile != null) {
       return cachedProfile;
     }
 
-    // Otherwise, fetch from the service
-    final profile = await profileService.getUserProfile(userId);
+    final profile = await profileService.getUserInfo(userId);
     cache.set(userId, profile);
 
-    // Keep alive for 5 minutes
     final link = ref.keepAlive();
     final timer = Timer(const Duration(minutes: 5), link.close);
     ref.onDispose(timer.cancel);
@@ -85,7 +78,7 @@ final batchUserProfilesProvider =
     FutureProvider.autoDispose.family<List<Map<String, dynamic>>, List<String>>(
   (ref, userIds) async {
     final cache = ref.watch(userCacheProvider);
-    final profileService = ref.watch(matrixProfileServiceProvider);
+    final profileService = ref.watch(aegisChatServiceProvider);
 
     final uniqueIds = userIds.toSet().toList();
     final cachedProfiles = <Map<String, dynamic>>[];
@@ -104,12 +97,16 @@ final batchUserProfilesProvider =
       return cachedProfiles;
     }
 
-    final fetchedProfiles = await profileService.getUsersByIds(idsToFetch);
+    final fetchedProfiles = await Future.wait(
+      idsToFetch.map(profileService.getUserInfo),
+    );
     for (final profile in fetchedProfiles) {
-      cache.set(profile['id'], profile);
+      final id = profile['id']?.toString();
+      if (id != null && id.isNotEmpty) {
+        cache.set(id, profile);
+      }
     }
 
-    // Keep alive for 5 minutes
     final link = ref.keepAlive();
     final timer = Timer(const Duration(minutes: 5), link.close);
     ref.onDispose(timer.cancel);

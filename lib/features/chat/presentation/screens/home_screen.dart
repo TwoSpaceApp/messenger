@@ -8,7 +8,7 @@ import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
@@ -23,7 +23,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final ChatMatrixService _chat = ChatMatrixService();
+  final AegisChatService _chat = AegisChatService();
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
   String? _errorMessage;
@@ -213,9 +213,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final rooms = _filteredRooms;
     if (_errorMessage != null) {
       return AppErrorState(
-        title: 'Не удалось загрузить чаты',
+        title: AppLocalizations.of(context)!.errorGeneric,
         message: _errorMessage!,
-        actionLabel: 'Повторить',
+        actionLabel: AppLocalizations.of(context)!.retry,
         onAction: _loadUserAndRooms,
       );
     }
@@ -223,9 +223,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (rooms.isEmpty) {
       return AppEmptyState(
         title: AppLocalizations.of(context)!.noChats,
-        message: 'Создайте новый чат или обновите список комнат.',
+        message: AppLocalizations.of(context)!.createRoomTitle,
         icon: Icons.chat_bubble_outline_rounded,
-        actionLabel: 'Создать чат',
+        actionLabel: AppLocalizations.of(context)!.newChatTitle,
         onAction: _openCreateChat,
       );
     }
@@ -313,7 +313,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => ChatScreen(
-          chat: Chat(id: id, name: id, members: []),
+          chat: Chat(
+            id: id,
+            name: (_rooms.firstWhere((e) => e['id'] == id,
+                    orElse: () => {'name': id})['name'] as String?) ??
+                id,
+            members: const [],
+          ),
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SharedAxisTransition(

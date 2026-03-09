@@ -1875,13 +1875,13 @@ abstract class AppLocalizations {
   /// Matrix ID description
   ///
   /// In en, this message translates to:
-  /// **'Enter the user\'s Matrix ID (e.g. @user:server.com)'**
+  /// **'Enter the user\'s username or Aegis ID'**
   String get matrixIdDescription;
 
   /// Matrix ID label
   ///
   /// In en, this message translates to:
-  /// **'User\'s Matrix ID'**
+  /// **'Username or Aegis ID'**
   String get matrixIdLabel;
 
   /// Start chat button
@@ -1899,7 +1899,7 @@ abstract class AppLocalizations {
   /// Matrix ID explanation
   ///
   /// In en, this message translates to:
-  /// **'Matrix ID consists of @username:server.com'**
+  /// **'You can use a username or numeric Aegis user ID'**
   String get matrixIdExplanation;
 
   /// Enter user ID validation

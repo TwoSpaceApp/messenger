@@ -21,7 +21,26 @@ enum MessageType {
   userSearch(18),
   userSearchResult(19),
   register(20),
-  registerResponse(21);
+  registerResponse(21),
+  profileUpdate(22),
+  profileUpdateResponse(23),
+  profileGet(24),
+  profileGetResponse(25),
+  messageEdit(26),
+  messageEditResponse(27),
+  messageDelete(28),
+  messageDeleteResponse(29),
+  channelEdit(30),
+  channelEditResponse(31),
+  groupEdit(32),
+  groupEditResponse(33),
+  memberRoleUpdate(34),
+  memberRoleUpdateResponse(35),
+  memberPermissionUpdate(36),
+  memberPermissionUpdateResponse(37),
+  groupMessageSend(38),
+  groupMessageResponse(39),
+  groupCreateResponse(40);
 
   const MessageType(this.value);
   final int value;

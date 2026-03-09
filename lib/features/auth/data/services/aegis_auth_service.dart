@@ -71,7 +71,28 @@ class AegisAuthService {
       if (_token == null) return false;
 
       await connect();
-      await _client.authenticate(_token!);
+      if (_token!.contains(':')) {
+        final separatorIndex = _token!.indexOf(':');
+        final identifier = _token!.substring(0, separatorIndex);
+        final password = _token!.substring(separatorIndex + 1);
+        final response = await _client.authenticateWithPassword(
+          username: identifier,
+          password: password,
+        );
+        _username = response.username;
+        _userId = response.userId;
+        if (response.sessionToken.isNotEmpty) {
+          _token = response.sessionToken;
+        }
+      } else {
+        final response = await _client.authenticateWithToken(_token!);
+        _username = response.username;
+        _userId = response.userId;
+        if (response.sessionToken.isNotEmpty) {
+          _token = response.sessionToken;
+        }
+      }
+      await _saveSession();
       _log.info('Сессия восстановлена для $_username');
       return true;
     } catch (e) {
@@ -136,14 +157,19 @@ class AegisAuthService {
     //   токен (UUID / JWT), который и нужно сохранять вместо пароля.
     //   До этого момента plain-текст пароля попадает в FlutterSecureStorage
     //   (шифруется Keystore/Keychain) и в память клиента.
-    final rawToken = '$identifier:$password';
-    await _client.authenticate(rawToken);
+    final response = await _client.authenticateWithPassword(
+      username: identifier,
+      password: password,
+    );
 
-    _token = rawToken;
-    _username = identifier;
+    _token = response.sessionToken.isNotEmpty
+        ? response.sessionToken
+        : '$identifier:$password';
+    _username = response.username.isNotEmpty ? response.username : identifier;
+    _userId = response.userId > 0 ? response.userId : null;
 
     await _saveSession();
-    _log.info('Вход выполнен: $identifier');
+    _log.info('Вход выполнен: $_username');
   }
 
   // ─── Выход ────────────────────────────────────────────────────────────────

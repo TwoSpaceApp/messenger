@@ -181,10 +181,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         fontFamily: _selectedFont,
       );
 
-      // TODO: Implement actual registration in AuthNotifier with all fields
-
-      // Fallback: Login for now
-      await notifier.login(
+      await notifier.register(
+        _nicknameCtl.text.trim(),
         _emailCtl.text.trim(),
         _passCtl.text.trim(),
       );

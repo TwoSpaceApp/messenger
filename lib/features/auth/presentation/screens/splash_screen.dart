@@ -7,7 +7,7 @@ class SplashScreen extends StatelessWidget {
     'Sentry Error Tracking',
     'Environment Validation',
     'Settings Service',
-    'Matrix JWT Restoration',
+    'Aegis Session Restoration',
   ];
 
   final String? currentStep;
@@ -149,7 +149,7 @@ class SplashScreen extends StatelessWidget {
         return 'Проверка конфигурации';
       case 'Settings Service':
         return 'Загрузка настроек';
-      case 'Matrix JWT Restoration':
+      case 'Aegis Session Restoration':
         return 'Восстановление сессии';
       default:
         return 'Запуск приложения';

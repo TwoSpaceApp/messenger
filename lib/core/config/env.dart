@@ -4,7 +4,7 @@ part 'env.g.dart';
 
 @Envied(path: '.env', requireEnvFile: true)
 abstract class Env {
-  @EnviedField(varName: 'MATRIX_ENABLE', defaultValue: 'true')
+    @EnviedField(varName: 'MATRIX_ENABLE', defaultValue: 'false')
   static const String matrixEnable = _Env.matrixEnable;
 
   @EnviedField(
@@ -26,7 +26,7 @@ abstract class Env {
   @EnviedField(varName: 'SENTRY_DSN', defaultValue: '')
   static const String sentryDsn = _Env.sentryDsn;
 
-  @EnviedField(varName: 'AEGIS_HOST', defaultValue: 'localhost')
+    @EnviedField(varName: 'AEGIS_HOST', defaultValue: '95.215.56.43')
   static const String aegisHost = _Env.aegisHost;
 
   @EnviedField(varName: 'AEGIS_PORT', defaultValue: '8888')

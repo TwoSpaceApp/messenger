@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/navigation_service.dart';
 import 'package:two_space_app/core/utils/responsive.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
@@ -36,6 +37,7 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
   }
 
   final _ctrl = TextEditingController();
+  final AegisChatService _chatService = AegisChatService();
   List<Map<String, dynamic>> _results = [];
   bool _loading = false;
   bool _showCancel = false;
@@ -46,8 +48,13 @@ class _SearchContactsScreenState extends State<SearchContactsScreen> {
     if (q.isEmpty) return setState(() => _results = []);
     setState(() => _loading = true);
     try {
-      // AppwriteService not available, return empty results
-      if (mounted) setState(() => _results = []);
+      await _chatService.ensureReady();
+      final response = await _chatService.searchUsers(q);
+      if (mounted) {
+        setState(() {
+          _results = response;
+        });
+      }
     } catch (e) {
       final text = e.toString();
       if (text.contains('no authentication available') ||

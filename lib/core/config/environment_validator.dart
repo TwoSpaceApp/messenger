@@ -13,19 +13,20 @@ class EnvironmentValidator {
       final errors = <String>[];
       final warnings = <String>[];
 
-      if (Environment.useMatrix) {
-        if (Environment.matrixHomeserverUrl.isEmpty) {
-          warnings.add('⚠️  Matrix включён, но не задан homeserver URL');
-        }
+      if (Environment.aegisHost.isEmpty) {
+        errors.add('❌ AEGIS_HOST не задан');
+      }
+
+      if (Environment.aegisPort <= 0 || Environment.aegisPort > 65535) {
+        errors.add('❌ AEGIS_PORT должен быть в диапазоне 1..65535');
       }
 
       if (Environment.sentryDsn.isEmpty) {
         warnings.add('⚠️  Опциональная переменная не установлена: SENTRY_DSN');
       }
 
-      if (Environment.matrixHomeserverUrl.isNotEmpty &&
-          !_isValidUrl(Environment.matrixHomeserverUrl)) {
-        errors.add('❌ MATRIX_HOMESERVER_URL содержит невалидный URL');
+      if (Environment.aegisConnectTimeout <= Duration.zero) {
+        errors.add('❌ AEGIS_CONNECT_TIMEOUT_SECONDS должен быть больше 0');
       }
 
       final validEnvironments = ['development', 'staging', 'production'];
@@ -57,24 +58,15 @@ class EnvironmentValidator {
     }
   }
 
-  static bool _isValidUrl(String url) {
-    try {
-      Uri.parse(url);
-      return url.startsWith('http://') || url.startsWith('https://');
-    } catch (e) {
-      return false;
-    }
-  }
-
   static bool isProduction() => Environment.appEnv == 'production';
   static bool isDevelopment() => Environment.appEnv == 'development';
 
   static Map<String, String> getEnvironmentInfo() {
     return {
       'APP_ENV': Environment.appEnv.isEmpty ? 'unknown' : Environment.appEnv,
-      'MATRIX_SERVER': Environment.matrixHomeserverUrl.isEmpty
+      'AEGIS_SERVER': Environment.aegisHost.isEmpty
           ? 'not set'
-          : Environment.matrixHomeserverUrl,
+          : '${Environment.aegisHost}:${Environment.aegisPort}',
       'VERSION': AppConstants.appVersion,
       'BUILD': AppConstants.buildNumber.toString(),
     };

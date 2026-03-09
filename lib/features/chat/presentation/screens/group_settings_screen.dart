@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/group.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
-import 'package:two_space_app/features/chat/data/services/group_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
 
 class GroupSettingsScreen extends StatefulWidget {
   const GroupSettingsScreen({
@@ -18,7 +18,7 @@ class GroupSettingsScreen extends StatefulWidget {
 }
 
 class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
-  late GroupMatrixService _groupService;
+  late AegisGroupService _groupService;
   int _selectedTabIndex = 0;
   bool _isLoading = false;
   GroupRoom? _currentGroup;
@@ -26,7 +26,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _groupService = GroupMatrixService();
+    _groupService = AegisGroupService();
     _loadGroupData();
   }
 
@@ -68,7 +68,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
             elevation: 2,
           ),
           body: _isLoading || _currentGroup == null
-              ? const AppLoadingState(label: 'Загружаем параметры группы…')
+              ? const AppLoadingState()
               : Row(
                   children: [
                     if (isWideScreen) _buildSidebar(),

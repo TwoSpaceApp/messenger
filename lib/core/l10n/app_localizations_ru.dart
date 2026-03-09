@@ -955,10 +955,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get matrixIdDescription =>
-      'Введите Matrix ID пользователя (например @user:server.com)';
+      'Введите username или Aegis ID пользователя';
 
   @override
-  String get matrixIdLabel => 'Matrix ID пользователя';
+  String get matrixIdLabel => 'Username или Aegis ID';
 
   @override
   String get startChatButton => 'Начать чат';
@@ -967,7 +967,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get hintCardTitle => 'Подсказка';
 
   @override
-  String get matrixIdExplanation => 'Matrix ID состоит из @username:server.com';
+  String get matrixIdExplanation =>
+      'Можно использовать username или числовой Aegis ID пользователя';
 
   @override
   String get enterUserIdError => 'Введите ID пользователя';

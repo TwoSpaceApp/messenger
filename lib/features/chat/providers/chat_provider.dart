@@ -1,8 +1,8 @@
 import 'package:riverpod/riverpod.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 
-final chatService = Provider((ref) => ChatMatrixService());
+final chatService = Provider((ref) => AegisChatService());
 
 // Get all joined rooms/chats
 final joinedChatsProvider = FutureProvider<List<Chat>>((ref) async {

@@ -52,13 +52,20 @@ TwoSpace использует **Aegis** — собственный бинарн�
 
 ## 🔧 Переменные окружения (.env)
 
-В проекте используется `flutter_dotenv`.
+В проекте используется `envied`.
 
-По умолчанию приложение грузит `.env.example` (встроен в билд). Если рядом с приложением есть `.env`, он переопределит значения (актуально для desktop).
+- Шаблон хранится в [.env.example](.env.example)
+- Секреты и приватные значения должны лежать только в локальном `.env`
+- `.env` не коммитится
+- После любого изменения `.env` нужно пересобрать файл [lib/core/config/env.g.dart](lib/core/config/env.g.dart)
 
-- Для локальной разработки можно создать `.env` рядом с `pubspec.yaml`:
-	- `cp .env.example .env`
-	- затем отредактировать значения при необходимости
+Базовый поток:
+
+1. `cp .env.example .env`
+2. Отредактировать `.env`
+3. Выполнить `dart run build_runner build -d`
+
+Не храните в `.env.example` реальные секреты вроде `SENTRY_DSN`, токенов или приватных endpoint credentials.
 
 ---
 
@@ -67,8 +74,9 @@ TwoSpace использует **Aegis** — собственный бинарн�
 Коротко:
 
 1) `cp .env.example .env`
-2) `flutter pub get`
-3) `flutter run`
+2) `dart run build_runner build -d`
+3) `flutter pub get`
+4) `flutter run`
 
 Полный гайд для разработки (зависимости для Linux/Windows, команды сборки, pre-commit checks) — в [CONTRIBUTING.md](CONTRIBUTING.md).
 

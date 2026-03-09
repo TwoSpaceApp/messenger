@@ -10,9 +10,9 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
 import 'package:two_space_app/features/chat/data/services/draft_service.dart';
-import 'package:two_space_app/features/chat/data/services/group_matrix_service.dart';
 import 'package:two_space_app/features/chat/data/services/voice_service.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/typing_indicator.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
@@ -57,7 +57,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final ChatMatrixService _svc = ChatMatrixService();
+  final AegisChatService _svc = AegisChatService();
   final TextEditingController _controller = TextEditingController();
   final DraftService _draftService = DraftService();
   List<Map<String, dynamic>> _searchResults = [];
@@ -172,7 +172,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _loading = true);
     try {
-      final msgs = await _svc.loadMessages(roomId: widget.chat.id, limit: 100);
+      final msgs = await _svc.loadMessages(roomId: widget.chat.id);
       final auth = AuthService();
       final me = await auth.getCurrentUserId();
       
@@ -267,7 +267,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadGroupSettings() async {
     try {
-      final groupService = GroupMatrixService();
+      final groupService = AegisGroupService();
       final groupRoom = await groupService.getGroupRoom(widget.chat.id);
       if (mounted && groupRoom != null) {
         setState(() {
@@ -510,7 +510,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _sending = true);
     try {
-      await _svc.sendMessage(roomId: widget.chat.id, text: text, type: 'm.text');
+      await _svc.sendMessage(roomId: widget.chat.id, text: text);
       setState(() {
         _messages.insert(0, _Msg(id: DateTime.now().millisecondsSinceEpoch.toString(), text: text, isOwn: true, time: DateTime.now(), senderId: '', senderName: 'You', type: 'm.text'));
         _controller.text = '';
@@ -891,7 +891,7 @@ class _Msg {
 
 class _AudioMessageWidget extends StatefulWidget {
   final _Msg message;
-  final ChatMatrixService svc;
+  final AegisChatService svc;
   final Map<String, AudioPlayer> audioPlayers;
   const _AudioMessageWidget({required this.message, required this.svc, required this.audioPlayers});
   @override
@@ -917,12 +917,15 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
   Future<void> _init() async {
     try {
       final m = widget.message.mediaId ?? widget.message.text;
-        final path = await widget.svc.downloadMediaToTempFile(m);
+      final path = await widget.svc.downloadMediaToTempFile(m);
       if (!mounted) return;
       setState(() => _localPath = path);
-      // request waveform (cached by service)
       try {
-        final wf = await widget.svc.getWaveformForMedia(widget.message.mediaId ?? '', path, samples: 24);
+        final wf = await widget.svc.getWaveformForMedia(
+          widget.message.mediaId ?? '',
+          path,
+          samples: 24,
+        );
         if (mounted) setState(() => _waveform = wf);
       } catch (_) {}
       _player = widget.audioPlayers[widget.message.id] ?? AudioPlayer();
@@ -931,7 +934,10 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
       await _player!.setReleaseMode(ReleaseMode.stop);
       _player!.onDurationChanged.listen((d) => setState(() => _duration = d));
       _player!.onPositionChanged.listen((p) => setState(() => _position = p));
-      _player!.onPlayerComplete.listen((_) => setState(() { _playing = false; _position = Duration.zero; }));
+      _player!.onPlayerComplete.listen((_) => setState(() {
+        _playing = false;
+        _position = Duration.zero;
+          }));
     } catch (_) {}
   }
 

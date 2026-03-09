@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
-import 'package:two_space_app/features/chat/data/services/chat_matrix_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 
 /// Listens to authentication state changes and handles automatic navigation
 ///
@@ -67,13 +67,14 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
 
     if (userId != null) {
       try {
-        final matrixService = ChatMatrixService();
-        final userInfo = await matrixService.getUserInfo(userId);
+        final chatService = AegisChatService();
+        final userInfo = await chatService.getUserInfo(userId);
         userName = userInfo['displayName'] as String? ??
-            userId.split(':').first.replaceAll('@', '');
+            userInfo['username'] as String? ??
+            userId.replaceAll('@', '');
         avatarUrl = userInfo['avatarUrl'] as String?;
       } catch (_) {
-        userName = userId.split(':').first.replaceAll('@', '');
+        userName = userId.replaceAll('@', '');
       }
     }
 

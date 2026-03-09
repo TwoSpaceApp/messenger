@@ -13,7 +13,7 @@
 - **Java**: 17 (для Android; в CI используется Java 17)
 - **Xcode**: 13+ (для iOS)
 
-> Примечание: приложение загружает `.env.example` (встроен в билд). Файл `.env` опционален и может переопределять значения (удобно для разработки/desktop).
+> Примечание: проект использует `envied`. Рабочие значения берутся из локального `.env`, а [.env.example](.env.example) служит только шаблоном без секретов.
 
 ### Установка
 
@@ -28,11 +28,19 @@
    flutter pub get
    ```
 
-3. **(Опционально) Подготовьте `.env` файл:**
+3. **Подготовьте `.env` файл:**
    ```bash
    cp .env.example .env
-   # Отредактируйте .env с правильными значениями
+   # Отредактируйте .env с нужными значениями
+   dart run build_runner build -d
    ```
+
+   Правила работы с env:
+
+   - редактируйте только `.env`
+   - не кладите секреты в `.env.example`
+   - не коммитьте `.env`
+   - после любого изменения `.env` обязательно перегенерируйте [lib/core/config/env.g.dart](lib/core/config/env.g.dart)
 
 4. **Запустите приложение:**
    ```bash
@@ -82,7 +90,7 @@ sudo apt-get install -y --no-install-recommends \
 ```text
 lib/
 ├── core/                     # Ядро: общие элементы для всего приложения
-│   ├── config/               # Настройки окружения (dotenv), темы, UI-токены
+│   ├── config/               # Настройки окружения (Envied), темы, UI-токены
 │   ├── constants/            # Цветовые палитры, строки, константы
 │   ├── l10n/                 # Переводы и файлы локализации (.arb)
 │   ├── models/               # Базовые доменные модели (User, Chat)
@@ -118,3 +126,5 @@ lib/
    ```bash
    dart run build_runner build -d
    ```
+
+6. **Изменения env**: После правки `.env` тоже запускайте `dart run build_runner build -d`, потому что `Envied` генерирует compile-time файл [lib/core/config/env.g.dart](lib/core/config/env.g.dart).

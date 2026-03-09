@@ -36,6 +36,25 @@ class ProtocolConstants {
   static const int typeUserSearchResult = 19;
   static const int typeRegister = 20;
   static const int typeRegisterResponse = 21;
+  static const int typeProfileUpdate = 22;
+  static const int typeProfileUpdateResponse = 23;
+  static const int typeProfileGet = 24;
+  static const int typeProfileGetResponse = 25;
+  static const int typeMessageEdit = 26;
+  static const int typeMessageEditResponse = 27;
+  static const int typeMessageDelete = 28;
+  static const int typeMessageDeleteResponse = 29;
+  static const int typeChannelEdit = 30;
+  static const int typeChannelEditResponse = 31;
+  static const int typeGroupEdit = 32;
+  static const int typeGroupEditResponse = 33;
+  static const int typeMemberRoleUpdate = 34;
+  static const int typeMemberRoleUpdateResponse = 35;
+  static const int typeMemberPermissionUpdate = 36;
+  static const int typeMemberPermissionUpdateResponse = 37;
+  static const int typeGroupMessageSend = 38;
+  static const int typeGroupMessageResponse = 39;
+  static const int typeGroupCreateResponse = 40;
 
   // Message flags
   static const int flagNone = 0x00;
