@@ -2312,5 +2312,264 @@
   "contactsTwoSpaceNo": "Not in TwoSpace",
   "@contactsTwoSpaceNo": {
     "description": "Auto added setting"
+  },
+  "peopleTitle": "People",
+  "@peopleTitle": {
+    "description": "Unified people tab title"
+  },
+  "peopleSubtitle": "Contacts, favorites, search and invites in one place",
+  "@peopleSubtitle": {
+    "description": "People tab subtitle"
+  },
+  "peopleQuickNewChat": "New chat",
+  "@peopleQuickNewChat": {
+    "description": "Quick action to start a new chat"
+  },
+  "peopleQuickInvite": "Invite",
+  "@peopleQuickInvite": {
+    "description": "Quick action to invite friends"
+  },
+  "peopleQuickSync": "Sync",
+  "@peopleQuickSync": {
+    "description": "Quick action to refresh people data"
+  },
+  "peopleSearchHint": "Search by name, nickname or phone",
+  "@peopleSearchHint": {
+    "description": "Hint for the people search field"
+  },
+  "peopleSegmentAll": "All",
+  "@peopleSegmentAll": {
+    "description": "All people segment"
+  },
+  "peopleSegmentTwoSpace": "TwoSpace",
+  "@peopleSegmentTwoSpace": {
+    "description": "TwoSpace users segment"
+  },
+  "peopleSegmentPhonebook": "Phonebook",
+  "@peopleSegmentPhonebook": {
+    "description": "Phonebook segment"
+  },
+  "peopleSegmentRecent": "Recent",
+  "@peopleSegmentRecent": {
+    "description": "Recent people segment"
+  },
+  "peopleLoading": "Loading people…",
+  "@peopleLoading": {
+    "description": "Loading label for people screen"
+  },
+  "peopleNoPeopleTitle": "No people yet",
+  "@peopleNoPeopleTitle": {
+    "description": "Empty title for people screen"
+  },
+  "peopleNoPeopleMessage": "Your favorites, recent conversations and contacts will appear here.",
+  "@peopleNoPeopleMessage": {
+    "description": "Empty message for people screen"
+  },
+  "peoplePermissionCardTitle": "Phonebook access is limited",
+  "@peoplePermissionCardTitle": {
+    "description": "Title for people permission card"
+  },
+  "peoplePermissionCardMessage": "Allow contacts access to show your phonebook and invite people faster.",
+  "@peoplePermissionCardMessage": {
+    "description": "Message for contacts permission request"
+  },
+  "peoplePermissionCardMessageSettings": "Enable contacts access in system settings to restore your phonebook section.",
+  "@peoplePermissionCardMessageSettings": {
+    "description": "Message for permanently denied contacts permission"
+  },
+  "peopleFavoritesFrequentTitle": "Favorites & frequent",
+  "@peopleFavoritesFrequentTitle": {
+    "description": "Section title for favorite and frequent people"
+  },
+  "peopleRecentTitle": "Recent people",
+  "@peopleRecentTitle": {
+    "description": "Section title for recent people"
+  },
+  "peopleTwoSpaceTitle": "TwoSpace people",
+  "@peopleTwoSpaceTitle": {
+    "description": "Section title for TwoSpace users"
+  },
+  "peopleInviteTitle": "Invite to TwoSpace",
+  "@peopleInviteTitle": {
+    "description": "Section title for invite candidates"
+  },
+  "peopleInviteSubtitle": "Invite this contact to TwoSpace",
+  "@peopleInviteSubtitle": {
+    "description": "Subtitle for invite-only contacts"
+  },
+  "peopleSearching": "Searching people…",
+  "@peopleSearching": {
+    "description": "Loading label while searching people"
+  },
+  "peopleSearchRemoteTitle": "TwoSpace results",
+  "@peopleSearchRemoteTitle": {
+    "description": "Search results section for remote users"
+  },
+  "peopleSearchLocalTitle": "Recent and saved",
+  "@peopleSearchLocalTitle": {
+    "description": "Search results section for local people"
+  },
+  "peopleSearchInviteTitle": "Invite from phonebook",
+  "@peopleSearchInviteTitle": {
+    "description": "Search results section for invite candidates"
+  },
+  "peopleSearchEmptyTitle": "No matching people",
+  "@peopleSearchEmptyTitle": {
+    "description": "Empty title for people search"
+  },
+  "peopleSearchEmptyMessage": "Try another name, nickname or phone number.",
+  "@peopleSearchEmptyMessage": {
+    "description": "Empty message for people search"
+  },
+  "peopleTwoSpaceBadge": "TwoSpace",
+  "@peopleTwoSpaceBadge": {
+    "description": "Badge for TwoSpace users"
+  },
+  "peopleNoDetails": "No extra details yet",
+  "@peopleNoDetails": {
+    "description": "Fallback subtitle for a person"
+  },
+  "peopleInviteShareText": "Join me on TwoSpace — a secure messenger for chats and calls.",
+  "@peopleInviteShareText": {
+    "description": "Generic invite share text"
+  },
+  "peopleInviteSpecificShareText": "Join me on TwoSpace, {personName} — let’s chat and call securely.",
+  "@peopleInviteSpecificShareText": {
+    "description": "Specific invite share text",
+    "placeholders": {
+      "personName": {
+        "type": "String"
+      }
+    }
+  },
+  "peopleViewProfileAction": "View profile",
+  "@peopleViewProfileAction": {
+    "description": "Action to open a person's profile"
+  },
+  "peopleRemoveFavoriteAction": "Remove from favorites",
+  "@peopleRemoveFavoriteAction": {
+    "description": "Action to remove favorite person"
+  },
+  "peopleAddFavoriteAction": "Add to favorites",
+  "@peopleAddFavoriteAction": {
+    "description": "Action to add favorite person"
+  },
+  "callsSubtitle": "Recent calls, quick redial and people-first history",
+  "@callsSubtitle": {
+    "description": "Calls screen subtitle"
+  },
+  "callsStartCallAction": "Start call",
+  "@callsStartCallAction": {
+    "description": "Action to start a call"
+  },
+  "callsQuickStartTitle": "Call someone now",
+  "@callsQuickStartTitle": {
+    "description": "Quick start card title on calls screen"
+  },
+  "callsQuickStartSubtitle": "Open People, search for someone and start a secure voice or video call.",
+  "@callsQuickStartSubtitle": {
+    "description": "Quick start card subtitle on calls screen"
+  },
+  "callsSearchHint": "Search call history",
+  "@callsSearchHint": {
+    "description": "Hint for calls search field"
+  },
+  "callsVideoFilter": "Video",
+  "@callsVideoFilter": {
+    "description": "Filter label for video calls"
+  },
+  "callsTopContactsTitle": "Top contacts",
+  "@callsTopContactsTitle": {
+    "description": "Section title for top call contacts"
+  },
+  "callsLoadingLabel": "Loading calls…",
+  "@callsLoadingLabel": {
+    "description": "Loading label for calls screen"
+  },
+  "callsEmptyTitle": "No calls yet",
+  "@callsEmptyTitle": {
+    "description": "Empty title for calls screen"
+  },
+  "callsEmptyMessage": "Your call history will appear here after your first voice or video call.",
+  "@callsEmptyMessage": {
+    "description": "Empty message for calls screen"
+  },
+  "callsEmptySearchMessage": "No calls match the current search or filter.",
+  "@callsEmptySearchMessage": {
+    "description": "Empty message for filtered call history"
+  },
+  "callsTodaySection": "Today",
+  "@callsTodaySection": {
+    "description": "Section title for today's calls"
+  },
+  "callsThisWeekSection": "This week",
+  "@callsThisWeekSection": {
+    "description": "Section title for current week calls"
+  },
+  "callsEarlierSection": "Earlier",
+  "@callsEarlierSection": {
+    "description": "Section title for older calls"
+  },
+  "callsThreadCount": "{count} calls",
+  "@callsThreadCount": {
+    "description": "Summary count for grouped calls",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "callsMissedSummary": "{count} missed",
+  "@callsMissedSummary": {
+    "description": "Summary for missed calls in a thread",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "callsMuteAction": "Mute",
+  "@callsMuteAction": {
+    "description": "Call action label to mute microphone"
+  },
+  "callsSpeakerAction": "Speaker",
+  "@callsSpeakerAction": {
+    "description": "Call action label to toggle speaker"
+  },
+  "callsCameraAction": "Camera",
+  "@callsCameraAction": {
+    "description": "Call action label to toggle camera"
+  },
+  "callsSwitchCameraAction": "Switch",
+  "@callsSwitchCameraAction": {
+    "description": "Call action label to switch camera"
+  },
+  "callsEndAction": "End call",
+  "@callsEndAction": {
+    "description": "Call action label to end a call"
+  },
+  "callsConnectingLabel": "Connecting…",
+  "@callsConnectingLabel": {
+    "description": "Status while connecting a call"
+  },
+  "callsRingingLabel": "Ringing…",
+  "@callsRingingLabel": {
+    "description": "Status while ringing a call"
+  },
+  "callsConnectingDetail": "Creating a secure call session.",
+  "@callsConnectingDetail": {
+    "description": "Detailed call connection status"
+  },
+  "callsRingingDetail": "Waiting for the other person to answer.",
+  "@callsRingingDetail": {
+    "description": "Detailed ringing status"
+  },
+  "callsVideoSecureDetail": "Video is protected and routed through the current secure session.",
+  "@callsVideoSecureDetail": {
+    "description": "Detailed secure video call description"
+  },
+  "callsVoiceSecureDetail": "Voice is protected and routed through the current secure session.",
+  "@callsVoiceSecureDetail": {
+    "description": "Detailed secure voice call description"
   }
 }

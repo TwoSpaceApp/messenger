@@ -13,7 +13,7 @@ class PrivacyScreen extends StatefulWidget {
 }
 
 class _PrivacyScreenState extends State<PrivacyScreen> {
-  bool _loading = false;
+  final bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -130,22 +130,6 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
               );
             },
           ),
-          Material(
-            color: Theme.of(context).colorScheme.surface,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            child: ListTile(
-              leading: const Icon(Icons.email),
-              title: Text(l10n.changeEmailLabel),
-              subtitle: Text(l10n.changeEmailSubtitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const ChangeEmailScreen()));
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
           Material(
             color: Theme.of(context).colorScheme.surface,
             shape:

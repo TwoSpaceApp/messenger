@@ -1653,4 +1653,196 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get contactsTwoSpaceNo => 'Not in TwoSpace';
+
+  @override
+  String get peopleTitle => '사람들';
+
+  @override
+  String get peopleSubtitle => '연락처, 즐겨찾기, 검색, 초대를 한곳에서';
+
+  @override
+  String get peopleQuickNewChat => '새 채팅';
+
+  @override
+  String get peopleQuickInvite => '초대';
+
+  @override
+  String get peopleQuickSync => '동기화';
+
+  @override
+  String get peopleSearchHint => '이름, 닉네임 또는 전화번호로 검색';
+
+  @override
+  String get peopleSegmentAll => '전체';
+
+  @override
+  String get peopleSegmentTwoSpace => 'TwoSpace';
+
+  @override
+  String get peopleSegmentPhonebook => '주소록';
+
+  @override
+  String get peopleSegmentRecent => '최근';
+
+  @override
+  String get peopleLoading => '사람을 불러오는 중…';
+
+  @override
+  String get peopleNoPeopleTitle => '아직 사람이 없습니다';
+
+  @override
+  String get peopleNoPeopleMessage => '즐겨찾기, 최근 대화, 연락처가 여기에 표시됩니다.';
+
+  @override
+  String get peoplePermissionCardTitle => '연락처 접근이 제한됨';
+
+  @override
+  String get peoplePermissionCardMessage =>
+      '주소록을 표시하고 더 빠르게 초대하려면 연락처 접근을 허용하세요.';
+
+  @override
+  String get peoplePermissionCardMessageSettings =>
+      '주소록 섹션을 복원하려면 시스템 설정에서 연락처 접근을 활성화하세요.';
+
+  @override
+  String get peopleFavoritesFrequentTitle => '즐겨찾기 및 자주 연락하는 사람';
+
+  @override
+  String get peopleRecentTitle => '최근 사람';
+
+  @override
+  String get peopleTwoSpaceTitle => 'TwoSpace 사용자';
+
+  @override
+  String get peopleInviteTitle => 'TwoSpace로 초대';
+
+  @override
+  String get peopleInviteSubtitle => '이 연락처를 TwoSpace로 초대';
+
+  @override
+  String get peopleSearching => '사람 검색 중…';
+
+  @override
+  String get peopleSearchRemoteTitle => 'TwoSpace 결과';
+
+  @override
+  String get peopleSearchLocalTitle => '최근 및 저장됨';
+
+  @override
+  String get peopleSearchInviteTitle => '주소록에서 초대';
+
+  @override
+  String get peopleSearchEmptyTitle => '일치하는 사람이 없습니다';
+
+  @override
+  String get peopleSearchEmptyMessage => '다른 이름, 닉네임 또는 전화번호를 시도해 보세요.';
+
+  @override
+  String get peopleTwoSpaceBadge => 'TwoSpace';
+
+  @override
+  String get peopleNoDetails => '추가 정보가 아직 없습니다';
+
+  @override
+  String get peopleInviteShareText => 'TwoSpace에 함께해요. 채팅과 통화를 위한 안전한 메신저입니다.';
+
+  @override
+  String peopleInviteSpecificShareText(String personName) {
+    return '$personName님, TwoSpace에 함께해요. 안전하게 채팅하고 통화할 수 있어요.';
+  }
+
+  @override
+  String get peopleViewProfileAction => '프로필 보기';
+
+  @override
+  String get peopleRemoveFavoriteAction => '즐겨찾기에서 제거';
+
+  @override
+  String get peopleAddFavoriteAction => '즐겨찾기에 추가';
+
+  @override
+  String get callsSubtitle => '최근 통화, 빠른 재통화, 사람 중심의 기록';
+
+  @override
+  String get callsStartCallAction => '통화 시작';
+
+  @override
+  String get callsQuickStartTitle => '지금 통화';
+
+  @override
+  String get callsQuickStartSubtitle =>
+      '사람 탭을 열고 상대를 찾아 안전한 음성 또는 영상 통화를 시작하세요.';
+
+  @override
+  String get callsSearchHint => '통화 기록 검색';
+
+  @override
+  String get callsVideoFilter => '영상';
+
+  @override
+  String get callsTopContactsTitle => '자주 연락하는 사람';
+
+  @override
+  String get callsLoadingLabel => '통화 불러오는 중…';
+
+  @override
+  String get callsEmptyTitle => '아직 통화가 없습니다';
+
+  @override
+  String get callsEmptyMessage => '첫 음성 또는 영상 통화 후 통화 기록이 여기에 표시됩니다.';
+
+  @override
+  String get callsEmptySearchMessage => '현재 검색어나 필터와 일치하는 통화가 없습니다.';
+
+  @override
+  String get callsTodaySection => '오늘';
+
+  @override
+  String get callsThisWeekSection => '이번 주';
+
+  @override
+  String get callsEarlierSection => '이전';
+
+  @override
+  String callsThreadCount(int count) {
+    return '통화 $count회';
+  }
+
+  @override
+  String callsMissedSummary(int count) {
+    return '부재중 $count회';
+  }
+
+  @override
+  String get callsMuteAction => '음소거';
+
+  @override
+  String get callsSpeakerAction => '스피커';
+
+  @override
+  String get callsCameraAction => '카메라';
+
+  @override
+  String get callsSwitchCameraAction => '전환';
+
+  @override
+  String get callsEndAction => '통화 종료';
+
+  @override
+  String get callsConnectingLabel => '연결 중…';
+
+  @override
+  String get callsRingingLabel => '벨 울리는 중…';
+
+  @override
+  String get callsConnectingDetail => '보안 통화 세션을 생성하는 중입니다.';
+
+  @override
+  String get callsRingingDetail => '상대방이 응답하기를 기다리는 중입니다.';
+
+  @override
+  String get callsVideoSecureDetail => '영상은 보호되며 현재 보안 세션을 통해 전송됩니다.';
+
+  @override
+  String get callsVoiceSecureDetail => '음성은 보호되며 현재 보안 세션을 통해 전송됩니다.';
 }

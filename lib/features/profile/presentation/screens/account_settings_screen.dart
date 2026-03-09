@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 
@@ -215,7 +215,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       ListTile(
                         leading: const Icon(Icons.email),
                         title: Text(l10n.emailLabel),
-                        const subtitle: Text('—'),
+                        subtitle: const Text('—'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.push(AppStrings.routeChangeEmail),
                         contentPadding:
@@ -225,7 +225,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       ListTile(
                         leading: const Icon(Icons.phone),
                         title: Text(l10n.phoneLabel),
-                        const subtitle: Text('—'),
+                        subtitle: const Text('—'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () => context.push(AppStrings.routeChangePhone),
                         contentPadding:

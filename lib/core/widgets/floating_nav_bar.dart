@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class FloatingNavBar extends StatefulWidget {
@@ -24,7 +26,7 @@ class _FloatingNavBarState extends State<FloatingNavBar>
   bool _initialized = false;
 
   // To handle drag limits
-  final double _widthExpanded = 280;
+  final double _widthExpanded = 344;
   final double _widthCollapsed = 60;
   final double _height = 70;
 
@@ -57,6 +59,7 @@ class _FloatingNavBarState extends State<FloatingNavBar>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final size = MediaQuery.of(context).size;
 
     // Initial centered position at bottom
@@ -121,21 +124,25 @@ class _FloatingNavBarState extends State<FloatingNavBar>
                               children: [
                                 _NavItem(
                                     icon: Icons.chat_bubble_outline,
+                                  label: l10n.chatsTitle,
                                     index: 0,
                                     selected: widget.selectedIndex == 0,
                                     onTap: () => widget.onItemSelected(0)),
                                 _NavItem(
                                     icon: Icons.call_outlined,
+                                  label: l10n.callsTitle,
                                     index: 1,
                                     selected: widget.selectedIndex == 1,
                                     onTap: () => widget.onItemSelected(1)),
                                 _NavItem(
-                                    icon: Icons.contacts_outlined,
+                                  icon: Icons.groups_2_outlined,
+                                  label: l10n.peopleTitle,
                                     index: 2,
                                     selected: widget.selectedIndex == 2,
                                     onTap: () => widget.onItemSelected(2)),
                                 _NavItem(
                                     icon: Icons.settings_outlined,
+                                  label: l10n.settingsTitle,
                                     index: 3,
                                     selected: widget.selectedIndex == 3,
                                     onTap: () => widget.onItemSelected(3)),
@@ -159,10 +166,12 @@ class _FloatingNavBarState extends State<FloatingNavBar>
 class _NavItem extends StatelessWidget {
   const _NavItem(
       {required this.icon,
+      required this.label,
       required this.index,
       required this.selected,
       required this.onTap});
   final IconData icon;
+    final String label;
   final int index;
   final bool selected;
   final VoidCallback onTap;
@@ -173,19 +182,36 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         decoration: BoxDecoration(
           color: selected
               ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
               : Colors.transparent,
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: Icon(
-          icon,
-          color: selected
-              ? Theme.of(context).primaryColor
-              : Theme.of(context).iconTheme.color,
-          size: 26,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: selected
+                  ? Theme.of(context).primaryColor
+                  : Theme.of(context).iconTheme.color,
+              size: 24,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: selected
+                        ? Theme.of(context).primaryColor
+                        : Theme.of(context).iconTheme.color,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  ),
+            ),
+          ],
         ),
       ),
     );

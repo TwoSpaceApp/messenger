@@ -513,5 +513,87 @@
   "biometricsEnable": "Блокировка приложения",
   "biometricsSetup": "Настроить блокировку",
   "contactsTwoSpaceYes": "Есть в TwoSpace",
-  "contactsTwoSpaceNo": "Нету в TwoSpace"
+  "contactsTwoSpaceNo": "Нету в TwoSpace",
+  "peopleTitle": "Люди",
+  "peopleSubtitle": "Контакты, избранные, поиск и приглашения в одном месте",
+  "peopleQuickNewChat": "Новый чат",
+  "peopleQuickInvite": "Пригласить",
+  "peopleQuickSync": "Синхронизировать",
+  "peopleSearchHint": "Поиск по имени, нику или номеру",
+  "peopleSegmentAll": "Все",
+  "peopleSegmentTwoSpace": "TwoSpace",
+  "peopleSegmentPhonebook": "Телефонная книга",
+  "peopleSegmentRecent": "Недавние",
+  "peopleLoading": "Загружаем людей…",
+  "peopleNoPeopleTitle": "Пока никого нет",
+  "peopleNoPeopleMessage": "Здесь появятся избранные, недавние диалоги и контакты.",
+  "peoplePermissionCardTitle": "Доступ к контактам ограничен",
+  "peoplePermissionCardMessage": "Разрешите доступ к контактам, чтобы видеть телефонную книгу и быстрее приглашать людей.",
+  "peoplePermissionCardMessageSettings": "Включите доступ к контактам в системных настройках, чтобы вернуть раздел телефонной книги.",
+  "peopleFavoritesFrequentTitle": "Избранные и частые",
+  "peopleRecentTitle": "Недавние люди",
+  "peopleTwoSpaceTitle": "Люди в TwoSpace",
+  "peopleInviteTitle": "Пригласить в TwoSpace",
+  "peopleInviteSubtitle": "Пригласить этот контакт в TwoSpace",
+  "peopleSearching": "Ищем людей…",
+  "peopleSearchRemoteTitle": "Результаты TwoSpace",
+  "peopleSearchLocalTitle": "Недавние и сохранённые",
+  "peopleSearchInviteTitle": "Пригласить из телефонной книги",
+  "peopleSearchEmptyTitle": "Люди не найдены",
+  "peopleSearchEmptyMessage": "Попробуйте другой запрос, ник или номер телефона.",
+  "peopleTwoSpaceBadge": "TwoSpace",
+  "peopleNoDetails": "Пока без дополнительных данных",
+  "peopleInviteShareText": "Присоединяйся ко мне в TwoSpace — это защищённый мессенджер для чатов и звонков.",
+  "peopleInviteSpecificShareText": "Присоединяйся ко мне в TwoSpace, {personName} — будем безопасно общаться и созваниваться.",
+  "@peopleInviteSpecificShareText": {
+    "placeholders": {
+      "personName": {
+        "type": "String"
+      }
+    }
+  },
+  "peopleViewProfileAction": "Открыть профиль",
+  "peopleRemoveFavoriteAction": "Убрать из избранного",
+  "peopleAddFavoriteAction": "Добавить в избранное",
+  "callsSubtitle": "Недавние звонки, быстрый перезвон и история вокруг людей",
+  "callsStartCallAction": "Начать звонок",
+  "callsQuickStartTitle": "Позвонить сейчас",
+  "callsQuickStartSubtitle": "Откройте раздел людей, найдите человека и начните защищённый голосовой или видеозвонок.",
+  "callsSearchHint": "Поиск по истории звонков",
+  "callsVideoFilter": "Видео",
+  "callsTopContactsTitle": "Частые контакты",
+  "callsLoadingLabel": "Загружаем звонки…",
+  "callsEmptyTitle": "Звонков пока нет",
+  "callsEmptyMessage": "История звонков появится здесь после первого голосового или видеозвонка.",
+  "callsEmptySearchMessage": "По текущему поиску или фильтру звонков ничего не найдено.",
+  "callsTodaySection": "Сегодня",
+  "callsThisWeekSection": "На этой неделе",
+  "callsEarlierSection": "Раньше",
+  "callsThreadCount": "{count} звонков",
+  "@callsThreadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "callsMissedSummary": "{count} пропущенных",
+  "@callsMissedSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "callsMuteAction": "Микрофон",
+  "callsSpeakerAction": "Динамик",
+  "callsCameraAction": "Камера",
+  "callsSwitchCameraAction": "Сменить",
+  "callsEndAction": "Завершить звонок",
+  "callsConnectingLabel": "Подключение…",
+  "callsRingingLabel": "Гудки…",
+  "callsConnectingDetail": "Создаём защищённую сессию звонка.",
+  "callsRingingDetail": "Ждём, пока собеседник ответит.",
+  "callsVideoSecureDetail": "Видео защищено и проходит через текущую безопасную сессию.",
+  "callsVoiceSecureDetail": "Голос защищён и проходит через текущую безопасную сессию."
 }

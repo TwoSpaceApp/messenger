@@ -1684,4 +1684,205 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactsTwoSpaceNo => 'Not in TwoSpace';
+
+  @override
+  String get peopleTitle => 'People';
+
+  @override
+  String get peopleSubtitle =>
+      'Contacts, favorites, search and invites in one place';
+
+  @override
+  String get peopleQuickNewChat => 'New chat';
+
+  @override
+  String get peopleQuickInvite => 'Invite';
+
+  @override
+  String get peopleQuickSync => 'Sync';
+
+  @override
+  String get peopleSearchHint => 'Search by name, nickname or phone';
+
+  @override
+  String get peopleSegmentAll => 'All';
+
+  @override
+  String get peopleSegmentTwoSpace => 'TwoSpace';
+
+  @override
+  String get peopleSegmentPhonebook => 'Phonebook';
+
+  @override
+  String get peopleSegmentRecent => 'Recent';
+
+  @override
+  String get peopleLoading => 'Loading people…';
+
+  @override
+  String get peopleNoPeopleTitle => 'No people yet';
+
+  @override
+  String get peopleNoPeopleMessage =>
+      'Your favorites, recent conversations and contacts will appear here.';
+
+  @override
+  String get peoplePermissionCardTitle => 'Phonebook access is limited';
+
+  @override
+  String get peoplePermissionCardMessage =>
+      'Allow contacts access to show your phonebook and invite people faster.';
+
+  @override
+  String get peoplePermissionCardMessageSettings =>
+      'Enable contacts access in system settings to restore your phonebook section.';
+
+  @override
+  String get peopleFavoritesFrequentTitle => 'Favorites & frequent';
+
+  @override
+  String get peopleRecentTitle => 'Recent people';
+
+  @override
+  String get peopleTwoSpaceTitle => 'TwoSpace people';
+
+  @override
+  String get peopleInviteTitle => 'Invite to TwoSpace';
+
+  @override
+  String get peopleInviteSubtitle => 'Invite this contact to TwoSpace';
+
+  @override
+  String get peopleSearching => 'Searching people…';
+
+  @override
+  String get peopleSearchRemoteTitle => 'TwoSpace results';
+
+  @override
+  String get peopleSearchLocalTitle => 'Recent and saved';
+
+  @override
+  String get peopleSearchInviteTitle => 'Invite from phonebook';
+
+  @override
+  String get peopleSearchEmptyTitle => 'No matching people';
+
+  @override
+  String get peopleSearchEmptyMessage =>
+      'Try another name, nickname or phone number.';
+
+  @override
+  String get peopleTwoSpaceBadge => 'TwoSpace';
+
+  @override
+  String get peopleNoDetails => 'No extra details yet';
+
+  @override
+  String get peopleInviteShareText =>
+      'Join me on TwoSpace — a secure messenger for chats and calls.';
+
+  @override
+  String peopleInviteSpecificShareText(String personName) {
+    return 'Join me on TwoSpace, $personName — let’s chat and call securely.';
+  }
+
+  @override
+  String get peopleViewProfileAction => 'View profile';
+
+  @override
+  String get peopleRemoveFavoriteAction => 'Remove from favorites';
+
+  @override
+  String get peopleAddFavoriteAction => 'Add to favorites';
+
+  @override
+  String get callsSubtitle =>
+      'Recent calls, quick redial and people-first history';
+
+  @override
+  String get callsStartCallAction => 'Start call';
+
+  @override
+  String get callsQuickStartTitle => 'Call someone now';
+
+  @override
+  String get callsQuickStartSubtitle =>
+      'Open People, search for someone and start a secure voice or video call.';
+
+  @override
+  String get callsSearchHint => 'Search call history';
+
+  @override
+  String get callsVideoFilter => 'Video';
+
+  @override
+  String get callsTopContactsTitle => 'Top contacts';
+
+  @override
+  String get callsLoadingLabel => 'Loading calls…';
+
+  @override
+  String get callsEmptyTitle => 'No calls yet';
+
+  @override
+  String get callsEmptyMessage =>
+      'Your call history will appear here after your first voice or video call.';
+
+  @override
+  String get callsEmptySearchMessage =>
+      'No calls match the current search or filter.';
+
+  @override
+  String get callsTodaySection => 'Today';
+
+  @override
+  String get callsThisWeekSection => 'This week';
+
+  @override
+  String get callsEarlierSection => 'Earlier';
+
+  @override
+  String callsThreadCount(int count) {
+    return '$count calls';
+  }
+
+  @override
+  String callsMissedSummary(int count) {
+    return '$count missed';
+  }
+
+  @override
+  String get callsMuteAction => 'Mute';
+
+  @override
+  String get callsSpeakerAction => 'Speaker';
+
+  @override
+  String get callsCameraAction => 'Camera';
+
+  @override
+  String get callsSwitchCameraAction => 'Switch';
+
+  @override
+  String get callsEndAction => 'End call';
+
+  @override
+  String get callsConnectingLabel => 'Connecting…';
+
+  @override
+  String get callsRingingLabel => 'Ringing…';
+
+  @override
+  String get callsConnectingDetail => 'Creating a secure call session.';
+
+  @override
+  String get callsRingingDetail => 'Waiting for the other person to answer.';
+
+  @override
+  String get callsVideoSecureDetail =>
+      'Video is protected and routed through the current secure session.';
+
+  @override
+  String get callsVoiceSecureDetail =>
+      'Voice is protected and routed through the current secure session.';
 }

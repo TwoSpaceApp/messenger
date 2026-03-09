@@ -299,7 +299,7 @@ class _StorageSelectionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       child: CheckboxListTile(
-        value: enabled ? selected : false,
+        value: enabled && selected,
         onChanged: enabled ? onChanged : null,
         secondary: CircleAvatar(
           backgroundColor: color.withValues(alpha: 0.14),

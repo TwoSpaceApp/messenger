@@ -1,32 +1,18 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
-
-enum CallType { incoming, outgoing, missed, video }
-
-class CallRecord {
-  const CallRecord({
-    required this.id,
-    required this.name,
-    required this.type,
-    required this.time,
-    this.avatarUrl,
-    this.duration,
-    this.isVideo = false,
-  });
-  final String id;
-  final String name;
-  final String? avatarUrl;
-  final CallType type;
-  final DateTime time;
-  final Duration? duration;
-  final bool isVideo;
-}
+import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
+import 'package:two_space_app/features/people/data/models/person_entry.dart';
+import 'package:two_space_app/features/people/presentation/controllers/calls_controller.dart';
+import 'package:two_space_app/features/people/presentation/widgets/people_search_field.dart';
+import 'package:two_space_app/features/people/presentation/widgets/person_avatar.dart';
+import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
 
 class CallsScreen extends StatefulWidget {
   const CallsScreen({super.key});
@@ -36,602 +22,587 @@ class CallsScreen extends StatefulWidget {
 }
 
 class _CallsScreenState extends State<CallsScreen> {
-  String _searchQuery = '';
-  CallType? _filterType;
-  final _searchController = TextEditingController();
-  List<CallRecord> _cachedFilteredCalls = const [];
-  Timer? _searchDebounce;
-
-  // Fake call records
-  final List<CallRecord> _calls = [
-    CallRecord(
-      id: '1',
-      name: 'Александр Петров',
-      type: CallType.incoming,
-      time: DateTime.now().subtract(const Duration(minutes: 15)),
-      duration: const Duration(minutes: 5, seconds: 32),
-    ),
-    CallRecord(
-      id: '2',
-      name: 'Мария Иванова',
-      type: CallType.outgoing,
-      time: DateTime.now().subtract(const Duration(hours: 1)),
-      duration: const Duration(minutes: 12, seconds: 45),
-      isVideo: true,
-    ),
-    CallRecord(
-      id: '3',
-      name: 'Дмитрий Сидоров',
-      type: CallType.missed,
-      time: DateTime.now().subtract(const Duration(hours: 2)),
-    ),
-    CallRecord(
-      id: '4',
-      name: 'Илон Маск',
-      type: CallType.incoming,
-      time: DateTime.now().subtract(const Duration(hours: 3)),
-      duration: const Duration(minutes: 8, seconds: 15),
-      isVideo: true,
-    ),
-    CallRecord(
-      id: '5',
-      name: 'Сергей Николаев',
-      type: CallType.outgoing,
-      time: DateTime.now().subtract(const Duration(hours: 5)),
-      duration: const Duration(minutes: 2, seconds: 10),
-    ),
-    CallRecord(
-      id: '6',
-      name: 'Анна Федорова',
-      type: CallType.missed,
-      time: DateTime.now().subtract(const Duration(hours: 8)),
-    ),
-    CallRecord(
-      id: '7',
-      name: 'Павел Морозов',
-      type: CallType.incoming,
-      time: DateTime.now().subtract(const Duration(days: 1)),
-      duration: const Duration(minutes: 25),
-    ),
-    CallRecord(
-      id: '8',
-      name: 'Ольга Волкова',
-      type: CallType.outgoing,
-      time: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
-      duration: const Duration(minutes: 45, seconds: 20),
-      isVideo: true,
-    ),
-    CallRecord(
-      id: '9',
-      name: 'Игорь Соколов',
-      type: CallType.missed,
-      time: DateTime.now().subtract(const Duration(days: 1, hours: 6)),
-    ),
-    CallRecord(
-      id: '10',
-      name: 'Наталья Попова',
-      type: CallType.incoming,
-      time: DateTime.now().subtract(const Duration(days: 2)),
-      duration: const Duration(minutes: 3, seconds: 55),
-    ),
-    CallRecord(
-      id: '11',
-      name: 'Артемий Лебедев',
-      type: CallType.outgoing,
-      time: DateTime.now().subtract(const Duration(days: 2, hours: 5)),
-      duration: const Duration(hours: 1, minutes: 15),
-      isVideo: true,
-    ),
-    CallRecord(
-      id: '12',
-      name: 'Виктория Козлова',
-      type: CallType.missed,
-      time: DateTime.now().subtract(const Duration(days: 3)),
-    ),
-    CallRecord(
-      id: '13',
-      name: 'Роман Новиков',
-      type: CallType.incoming,
-      time: DateTime.now().subtract(const Duration(days: 3, hours: 10)),
-      duration: const Duration(minutes: 18, seconds: 30),
-    ),
-    CallRecord(
-      id: '14',
-      name: 'Екатерина Смирнова',
-      type: CallType.outgoing,
-      time: DateTime.now().subtract(const Duration(days: 4)),
-      duration: const Duration(minutes: 7, seconds: 12),
-      isVideo: true,
-    ),
-    CallRecord(
-      id: '15',
-      name: 'Роман Кузнецов',
-      type: CallType.missed,
-      time: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-    CallRecord(
-      id: '16',
-      name: 'Татьяна Орлова',
-      type: CallType.incoming,
-      time: DateTime.now().subtract(const Duration(days: 6)),
-      duration: const Duration(minutes: 35, seconds: 8),
-    ),
-    CallRecord(
-      id: '17',
-      name: 'Владимир Белов',
-      type: CallType.outgoing,
-      time: DateTime.now().subtract(const Duration(days: 7)),
-      duration: const Duration(minutes: 22, seconds: 45),
-    ),
-    CallRecord(
-      id: '18',
-      name: 'Светлана Медведева',
-      type: CallType.missed,
-      time: DateTime.now().subtract(const Duration(days: 7, hours: 12)),
-    ),
-    CallRecord(
-      id: '19',
-      name: 'Алексей Гусев',
-      type: CallType.incoming,
-      time: DateTime.now().subtract(const Duration(days: 10)),
-      duration: const Duration(minutes: 55),
-      isVideo: true,
-    ),
-    CallRecord(
-      id: '20',
-      name: 'Юлия Титова',
-      type: CallType.outgoing,
-      time: DateTime.now().subtract(const Duration(days: 14)),
-      duration: const Duration(minutes: 10, seconds: 30),
-    ),
-  ];
-
-  List<CallRecord> get _filteredCalls {
-    return _calls.where((call) {
-      // Filter by type
-      if (_filterType != null && call.type != _filterType) {
-        return false;
-      }
-      // Filter by search
-      if (_searchQuery.isNotEmpty) {
-        return call.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      }
-      return true;
-    }).toList();
-  }
+  late final CallsController _controller;
+  late final TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
-    _cachedFilteredCalls = _filteredCalls;
-    _searchController.addListener(_onSearchChanged);
-  }
-
-  void _onSearchChanged() {
-    // Debounce to avoid rebuilding list on every keystroke.
-    _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 150), () {
-      if (!mounted) return;
-      final next = _searchController.text;
-      if (next == _searchQuery) return;
-      setState(() {
-        _searchQuery = next;
-        _cachedFilteredCalls = _filteredCalls;
-      });
-    });
+    _controller = CallsController()..load();
+    _searchController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _searchDebounce?.cancel();
-    _searchController.removeListener(_onSearchChanged);
+    _controller.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  String _formatTime(DateTime time) {
-    final l10n = AppLocalizations.of(context)!;
-    final now = DateTime.now();
-    final diff = now.difference(time);
-
-    if (diff.inMinutes < 60) {
-      return l10n.minutesAgo(diff.inMinutes);
-    } else if (diff.inHours < 24) {
-      return l10n.hoursAgo(diff.inHours);
-    } else if (diff.inDays == 1) {
-      return l10n.yesterdayLabel;
-    } else if (diff.inDays < 7) {
-      return l10n.daysAgo(diff.inDays);
-    } else {
-      return '${time.day}.${time.month.toString().padLeft(2, '0')}';
-    }
-  }
-
-  String _formatDuration(Duration? duration) {
-    if (duration == null) return '';
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-
-    if (hours > 0) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    }
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  IconData _getCallIcon(CallType type) {
-    switch (type) {
-      case CallType.incoming:
-        return Icons.call_received;
-      case CallType.outgoing:
-        return Icons.call_made;
-      case CallType.missed:
-        return Icons.call_missed;
-      case CallType.video:
-        return Icons.videocam;
-    }
-  }
-
-  Color _getCallColor(CallType type) {
-    switch (type) {
-      case CallType.incoming:
-        return Colors.green;
-      case CallType.outgoing:
-        return Colors.blue;
-      case CallType.missed:
-        return Colors.red;
-      case CallType.video:
-        return Colors.purple;
-    }
-  }
-
-  String _getCallTypeLabel(CallType type) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (type) {
-      case CallType.incoming:
-        return l10n.incomingCall;
-      case CallType.outgoing:
-        return l10n.outgoingCall;
-      case CallType.missed:
-        return l10n.missedCall;
-      case CallType.video:
-        return l10n.videoCallLabel;
-    }
-  }
-
-  void _makeCall(CallRecord call, bool isVideo) {
-    final roomName = 'call_${call.id}_${DateTime.now().millisecondsSinceEpoch}';
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CallScreen(
-          room: roomName,
-          isVideo: isVideo,
-          displayName: call.name,
-          avatarUrl: call.avatarUrl,
-        ),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final filteredCalls = _cachedFilteredCalls;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: ScreenBackground(
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header with TwoSpace logo
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const AppLogo(large: false),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.callsTitle,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final sections = _controller.buildSections(
+          todayLabel: l10n.callsTodaySection,
+          yesterdayLabel: l10n.yesterdayLabel,
+          thisWeekLabel: l10n.callsThisWeekSection,
+          earlierLabel: l10n.callsEarlierSection,
+        );
+
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: ScreenBackground(
+            child: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Row(
+                      children: [
+                        const AppLogo(large: false),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.callsTitle,
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                l10n.callsSubtitle,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.72),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _openStartCall,
+                          icon: const Icon(Icons.add_ic_call_outlined,
+                              color: Colors.white),
+                          tooltip: l10n.callsStartCallAction,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _CallsSummaryCard(
+                      title: l10n.callsQuickStartTitle,
+                      subtitle: l10n.callsQuickStartSubtitle,
+                      onTap: _openStartCall,
+                      actionLabel: l10n.callsStartCallAction,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: PeopleSearchField(
+                      controller: _searchController,
+                      hintText: l10n.callsSearchHint,
+                      onChanged: _controller.updateQuery,
+                      onClear: () {
+                        _searchController.clear();
+                        _controller.updateQuery('');
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 40,
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        _buildFilterChip(CallsFilter.all, l10n.allFilter),
+                        _buildFilterChip(CallsFilter.missed, l10n.missedFilter),
+                        _buildFilterChip(CallsFilter.incoming, l10n.incomingFilter),
+                        _buildFilterChip(CallsFilter.outgoing, l10n.outgoingFilter),
+                        _buildFilterChip(CallsFilter.video, l10n.callsVideoFilter),
+                      ],
+                    ),
+                  ),
+                  if (_controller.topContacts.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        l10n.callsTopContactsTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 88,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _controller.topContacts.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (context, index) {
+                          final person = _controller.topContacts[index];
+                          return _TopContactChip(
+                            person: person,
+                            onTap: () => _startCall(person, false),
+                          );
+                        },
                       ),
                     ),
                   ],
-                ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      child: RefreshIndicator(
+                        key: ValueKey<int>(
+                          sections.length + _controller.topContacts.length,
+                        ),
+                        onRefresh: _controller.load,
+                        child: _buildBody(sections, l10n),
+                      ),
+                    ),
+                  ),
+                ],
               ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-              // Search bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GlassCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: TextField(
-                    controller: _searchController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: l10n.searchByNameHint,
-                      hintStyle: TextStyle(color: Colors.white.withAlpha(120)),
-                      prefixIcon:
-                          const Icon(Icons.search, color: Colors.white70),
-                      border: InputBorder.none,
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear,
-                                  color: Colors.white70),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _searchQuery = '';
-                                  _cachedFilteredCalls = _filteredCalls;
-                                });
-                              },
-                            )
-                          : null,
+  Widget _buildFilterChip(CallsFilter filter, String label) {
+    final selected = _controller.filter == filter;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => _controller.setFilter(filter),
+        backgroundColor: Colors.white.withValues(alpha: 0.12),
+        selectedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+        labelStyle: const TextStyle(color: Colors.white),
+        checkmarkColor: Colors.white,
+        side: BorderSide.none,
+      ),
+    );
+  }
+
+  Widget _buildBody(List<CallsSection> sections, AppLocalizations l10n) {
+    if (_controller.loading) {
+      return AppLoadingState(label: l10n.callsLoadingLabel);
+    }
+
+    if (sections.isEmpty) {
+      return ListView(
+        children: [
+          AppEmptyState(
+            title: l10n.callsEmptyTitle,
+            message: _controller.query.trim().isNotEmpty
+                ? l10n.callsEmptySearchMessage
+                : l10n.callsEmptyMessage,
+            icon: Icons.call_outlined,
+            actionLabel: l10n.callsStartCallAction,
+            onAction: _openStartCall,
+          ),
+        ],
+      );
+    }
+
+    return ListView.builder(
+      cacheExtent: 1200,
+      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 110),
+      itemCount: sections.length,
+      itemBuilder: (context, index) {
+        final section = sections[index];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      section.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '${section.items.length}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ...section.items.map(
+              (thread) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Dismissible(
+                  key: ValueKey(thread.latest.id),
+                  direction: DismissDirection.endToStart,
+                  confirmDismiss: (_) async {
+                    await _controller.deleteEntry(thread.latest.id);
+                    return false;
+                  },
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.error.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                  ),
+                  child: GlassCard(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    onTap: () => _showThreadSheet(thread),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      leading: PersonAvatar(
+                        name: thread.person.displayName,
+                        avatarUrl: thread.person.avatarUrl,
+                        photoBytes: thread.person.photoBytes,
+                        showOnline: thread.person.isOnline,
+                      ),
+                      title: Text(
+                        thread.person.displayName,
+                        style: TextStyle(
+                          color: thread.missedCount > 0 ? Colors.redAccent : Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          _threadSubtitle(thread, l10n),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.72),
+                          ),
+                        ),
+                      ),
+                      trailing: SizedBox(
+                        width: 92,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              _formatTime(thread.latest.startedAt, l10n),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () => _startCall(thread.person, false),
+                                  child: Icon(
+                                    Icons.call_outlined,
+                                    size: 18,
+                                    color: Colors.green.withValues(alpha: 0.92),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                GestureDetector(
+                                  onTap: () => _startCall(thread.person, true),
+                                  child: Icon(
+                                    Icons.videocam_outlined,
+                                    size: 18,
+                                    color: Colors.blue.withValues(alpha: 0.92),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-              const SizedBox(height: 12),
+  String _threadSubtitle(CallThreadSummary thread, AppLocalizations l10n) {
+    final type = thread.latest.isVideo ? l10n.videoCallLabel : l10n.voiceCallLabel;
+    final count = thread.totalCount > 1
+        ? l10n.callsThreadCount(thread.totalCount)
+        : _directionLabel(thread.latest.direction, l10n);
+    final duration = thread.totalDuration > Duration.zero
+        ? ' • ${_formatDuration(thread.totalDuration)}'
+        : '';
+    if (thread.missedCount > 0) {
+      return '${l10n.callsMissedSummary(thread.missedCount)} • $type$duration';
+    }
+    return '$count • $type$duration';
+  }
 
-              // Filter chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    _buildFilterChip(null, l10n.allFilter),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(CallType.incoming, l10n.incomingFilter),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(CallType.outgoing, l10n.outgoingFilter),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(CallType.missed, l10n.missedFilter),
-                  ],
-                ),
-              ),
+  String _directionLabel(dynamic direction, AppLocalizations l10n) {
+    return direction.name == 'incoming' ? l10n.incomingCall : l10n.outgoingCall;
+  }
 
-              const SizedBox(height: 12),
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${duration.inMinutes}:${seconds.toString().padLeft(2, '0')}';
+  }
 
-              // Calls list
-              Expanded(
-                child: filteredCalls.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.call_outlined,
-                              size: 64,
-                              color: Colors.white.withAlpha(100),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _searchQuery.isNotEmpty || _filterType != null
-                                  ? l10n.nothingFound
-                                  : l10n.noCallsFound,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white.withAlpha(150),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(
-                            left: 16, right: 16, bottom: 100),
-                        itemCount: filteredCalls.length,
-                        itemBuilder: (c, i) {
-                          final call = filteredCalls[i];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: GlassCard(
-                              onTap: () => _showCallOptions(call),
-                              child: ListTile(
-                                leading: Stack(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 24,
-                                      backgroundColor: theme.colorScheme.primary
-                                          .withAlpha(100),
-                                      child: Text(
-                                        call.name.isNotEmpty
-                                            ? call.name[0].toUpperCase()
-                                            : '?',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                    ),
-                                    if (call.isVideo)
-                                      Positioned(
-                                        bottom: 0,
-                                        right: 0,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(2),
-                                          decoration: BoxDecoration(
-                                            color: Colors.purple,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                                color: Colors.white,
-                                                width: 1.5),
-                                          ),
-                                          child: const Icon(
-                                            Icons.videocam,
-                                            color: Colors.white,
-                                            size: 12,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                title: Text(
-                                  call.name,
-                                  style: TextStyle(
-                                    color: call.type == CallType.missed
-                                        ? Colors.redAccent
-                                        : Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                subtitle: Row(
-                                  children: [
-                                    Icon(
-                                      _getCallIcon(call.type),
-                                      size: 14,
-                                      color: _getCallColor(call.type),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      call.duration != null
-                                          ? '${_getCallTypeLabel(call.type)} • ${_formatDuration(call.duration)}'
-                                          : _getCallTypeLabel(call.type),
-                                      style: TextStyle(
-                                        color: Colors.white.withAlpha(150),
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                trailing: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      _formatTime(call.time),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white.withAlpha(120),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () => _makeCall(call, false),
-                                          child: Icon(
-                                            Icons.call,
-                                            color: Colors.green.withAlpha(200),
-                                            size: 20,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        GestureDetector(
-                                          onTap: () => _makeCall(call, true),
-                                          child: Icon(
-                                            Icons.videocam,
-                                            color: Colors.blue.withAlpha(200),
-                                            size: 20,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
+  String _formatTime(DateTime date, AppLocalizations l10n) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    if (diff.inMinutes < 60) return l10n.minutesAgo(diff.inMinutes.clamp(1, 59));
+    if (diff.inHours < 24) return l10n.hoursAgo(diff.inHours);
+    if (diff.inDays == 1) return l10n.yesterdayLabel;
+    return '${date.day}.${date.month.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _openStartCall() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SearchContactsScreen()),
+    );
+    await _controller.load();
+  }
+
+  Future<void> _openChat(PersonEntry person) async {
+    if (person.remoteUserId == null) return;
+    final backend = createChatBackend();
+    final map = await backend.getOrCreateDirectChat(person.remoteUserId!);
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ChatScreen(chat: Chat.fromMap(map))),
+    );
+  }
+
+  Future<void> _startCall(PersonEntry person, bool isVideo) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CallScreen(
+          room: 'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
+          person: person,
+          displayName: person.displayName,
+          avatarUrl: person.avatarUrl,
+          isVideo: isVideo,
         ),
       ),
     );
+    await _controller.load();
   }
 
-  Widget _buildFilterChip(CallType? type, String label) {
-    final isSelected = _filterType == type;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        setState(() {
-          _filterType = selected ? type : null;
-          _cachedFilteredCalls = _filteredCalls;
-        });
-      },
-      backgroundColor: Colors.white.withAlpha(20),
-      selectedColor: Theme.of(context).colorScheme.primary.withAlpha(150),
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.white.withAlpha(180),
-      ),
-      checkmarkColor: Colors.white,
-      side: BorderSide.none,
-    );
-  }
-
-  void _showCallOptions(CallRecord call) {
+  Future<void> _showThreadSheet(CallThreadSummary thread) async {
     final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
+    await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
+      builder: (sheetContext) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(sheetContext).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                ListTile(
+                  leading: PersonAvatar(
+                    name: thread.person.displayName,
+                    avatarUrl: thread.person.avatarUrl,
+                    photoBytes: thread.person.photoBytes,
+                  ),
+                  title: Text(thread.person.displayName),
+                  subtitle: Text(_threadSubtitle(thread, l10n)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.call_outlined),
+                  title: Text(l10n.voiceCallLabel),
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    _startCall(thread.person, false);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.videocam_outlined),
+                  title: Text(l10n.videoCallLabel),
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    _startCall(thread.person, true);
+                  },
+                ),
+                if (thread.person.remoteUserId != null)
+                  ListTile(
+                    leading: const Icon(Icons.chat_bubble_outline_rounded),
+                    title: Text(l10n.sendMessageCallAction),
+                    onTap: () {
+                      Navigator.of(sheetContext).pop();
+                      _openChat(thread.person);
+                    },
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline_rounded),
+                  title: Text(l10n.delete),
+                  onTap: () async {
+                    Navigator.of(sheetContext).pop();
+                    await _controller.deleteEntry(thread.latest.id);
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CallsSummaryCard extends StatelessWidget {
+  const _CallsSummaryCard({
+    required this.title,
+    required this.subtitle,
+    required this.actionLabel,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final String actionLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.add_ic_call_outlined, color: Colors.white),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.72),
+                      ),
+                ),
+              ],
+            ),
+          ),
+          FilledButton(
+            onPressed: onTap,
+            child: Text(actionLabel),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TopContactChip extends StatelessWidget {
+  const _TopContactChip({
+    required this.person,
+    required this.onTap,
+  });
+
+  final PersonEntry person;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: GlassCard(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
+            PersonAvatar(
+              name: person.displayName,
+              avatarUrl: person.avatarUrl,
+              photoBytes: person.photoBytes,
+              radius: 20,
+              showOnline: person.isOnline,
+            ),
             const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey,
-                borderRadius: BorderRadius.circular(2),
+            SizedBox(
+              width: 64,
+              child: Text(
+                person.displayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: CircleAvatar(
-                backgroundColor:
-                    Theme.of(context).colorScheme.primary.withAlpha(100),
-                child: Text(call.name[0]),
-              ),
-              title: Text(call.name),
-              subtitle: Text(
-                  '${_getCallTypeLabel(call.type)} • ${_formatTime(call.time)}'),
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.call, color: Colors.green),
-              title: Text(l10n.voiceCallLabel),
-              onTap: () {
-                Navigator.pop(context);
-                _makeCall(call, false);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.videocam, color: Colors.blue),
-              title: Text(l10n.videoCallLabel),
-              onTap: () {
-                Navigator.pop(context);
-                _makeCall(call, true);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.chat),
-              title: Text(l10n.sendMessageCallAction),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.messageNotification(call.name))),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
           ],
         ),
       ),

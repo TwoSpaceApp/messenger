@@ -3197,6 +3197,372 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not in TwoSpace'**
   String get contactsTwoSpaceNo;
+
+  /// Unified people tab title
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get peopleTitle;
+
+  /// People tab subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts, favorites, search and invites in one place'**
+  String get peopleSubtitle;
+
+  /// Quick action to start a new chat
+  ///
+  /// In en, this message translates to:
+  /// **'New chat'**
+  String get peopleQuickNewChat;
+
+  /// Quick action to invite friends
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get peopleQuickInvite;
+
+  /// Quick action to refresh people data
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get peopleQuickSync;
+
+  /// Hint for the people search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, nickname or phone'**
+  String get peopleSearchHint;
+
+  /// All people segment
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get peopleSegmentAll;
+
+  /// TwoSpace users segment
+  ///
+  /// In en, this message translates to:
+  /// **'TwoSpace'**
+  String get peopleSegmentTwoSpace;
+
+  /// Phonebook segment
+  ///
+  /// In en, this message translates to:
+  /// **'Phonebook'**
+  String get peopleSegmentPhonebook;
+
+  /// Recent people segment
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get peopleSegmentRecent;
+
+  /// Loading label for people screen
+  ///
+  /// In en, this message translates to:
+  /// **'Loading people…'**
+  String get peopleLoading;
+
+  /// Empty title for people screen
+  ///
+  /// In en, this message translates to:
+  /// **'No people yet'**
+  String get peopleNoPeopleTitle;
+
+  /// Empty message for people screen
+  ///
+  /// In en, this message translates to:
+  /// **'Your favorites, recent conversations and contacts will appear here.'**
+  String get peopleNoPeopleMessage;
+
+  /// Title for people permission card
+  ///
+  /// In en, this message translates to:
+  /// **'Phonebook access is limited'**
+  String get peoplePermissionCardTitle;
+
+  /// Message for contacts permission request
+  ///
+  /// In en, this message translates to:
+  /// **'Allow contacts access to show your phonebook and invite people faster.'**
+  String get peoplePermissionCardMessage;
+
+  /// Message for permanently denied contacts permission
+  ///
+  /// In en, this message translates to:
+  /// **'Enable contacts access in system settings to restore your phonebook section.'**
+  String get peoplePermissionCardMessageSettings;
+
+  /// Section title for favorite and frequent people
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites & frequent'**
+  String get peopleFavoritesFrequentTitle;
+
+  /// Section title for recent people
+  ///
+  /// In en, this message translates to:
+  /// **'Recent people'**
+  String get peopleRecentTitle;
+
+  /// Section title for TwoSpace users
+  ///
+  /// In en, this message translates to:
+  /// **'TwoSpace people'**
+  String get peopleTwoSpaceTitle;
+
+  /// Section title for invite candidates
+  ///
+  /// In en, this message translates to:
+  /// **'Invite to TwoSpace'**
+  String get peopleInviteTitle;
+
+  /// Subtitle for invite-only contacts
+  ///
+  /// In en, this message translates to:
+  /// **'Invite this contact to TwoSpace'**
+  String get peopleInviteSubtitle;
+
+  /// Loading label while searching people
+  ///
+  /// In en, this message translates to:
+  /// **'Searching people…'**
+  String get peopleSearching;
+
+  /// Search results section for remote users
+  ///
+  /// In en, this message translates to:
+  /// **'TwoSpace results'**
+  String get peopleSearchRemoteTitle;
+
+  /// Search results section for local people
+  ///
+  /// In en, this message translates to:
+  /// **'Recent and saved'**
+  String get peopleSearchLocalTitle;
+
+  /// Search results section for invite candidates
+  ///
+  /// In en, this message translates to:
+  /// **'Invite from phonebook'**
+  String get peopleSearchInviteTitle;
+
+  /// Empty title for people search
+  ///
+  /// In en, this message translates to:
+  /// **'No matching people'**
+  String get peopleSearchEmptyTitle;
+
+  /// Empty message for people search
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name, nickname or phone number.'**
+  String get peopleSearchEmptyMessage;
+
+  /// Badge for TwoSpace users
+  ///
+  /// In en, this message translates to:
+  /// **'TwoSpace'**
+  String get peopleTwoSpaceBadge;
+
+  /// Fallback subtitle for a person
+  ///
+  /// In en, this message translates to:
+  /// **'No extra details yet'**
+  String get peopleNoDetails;
+
+  /// Generic invite share text
+  ///
+  /// In en, this message translates to:
+  /// **'Join me on TwoSpace — a secure messenger for chats and calls.'**
+  String get peopleInviteShareText;
+
+  /// Specific invite share text
+  ///
+  /// In en, this message translates to:
+  /// **'Join me on TwoSpace, {personName} — let’s chat and call securely.'**
+  String peopleInviteSpecificShareText(String personName);
+
+  /// Action to open a person's profile
+  ///
+  /// In en, this message translates to:
+  /// **'View profile'**
+  String get peopleViewProfileAction;
+
+  /// Action to remove favorite person
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get peopleRemoveFavoriteAction;
+
+  /// Action to add favorite person
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get peopleAddFavoriteAction;
+
+  /// Calls screen subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Recent calls, quick redial and people-first history'**
+  String get callsSubtitle;
+
+  /// Action to start a call
+  ///
+  /// In en, this message translates to:
+  /// **'Start call'**
+  String get callsStartCallAction;
+
+  /// Quick start card title on calls screen
+  ///
+  /// In en, this message translates to:
+  /// **'Call someone now'**
+  String get callsQuickStartTitle;
+
+  /// Quick start card subtitle on calls screen
+  ///
+  /// In en, this message translates to:
+  /// **'Open People, search for someone and start a secure voice or video call.'**
+  String get callsQuickStartSubtitle;
+
+  /// Hint for calls search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search call history'**
+  String get callsSearchHint;
+
+  /// Filter label for video calls
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get callsVideoFilter;
+
+  /// Section title for top call contacts
+  ///
+  /// In en, this message translates to:
+  /// **'Top contacts'**
+  String get callsTopContactsTitle;
+
+  /// Loading label for calls screen
+  ///
+  /// In en, this message translates to:
+  /// **'Loading calls…'**
+  String get callsLoadingLabel;
+
+  /// Empty title for calls screen
+  ///
+  /// In en, this message translates to:
+  /// **'No calls yet'**
+  String get callsEmptyTitle;
+
+  /// Empty message for calls screen
+  ///
+  /// In en, this message translates to:
+  /// **'Your call history will appear here after your first voice or video call.'**
+  String get callsEmptyMessage;
+
+  /// Empty message for filtered call history
+  ///
+  /// In en, this message translates to:
+  /// **'No calls match the current search or filter.'**
+  String get callsEmptySearchMessage;
+
+  /// Section title for today's calls
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get callsTodaySection;
+
+  /// Section title for current week calls
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get callsThisWeekSection;
+
+  /// Section title for older calls
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get callsEarlierSection;
+
+  /// Summary count for grouped calls
+  ///
+  /// In en, this message translates to:
+  /// **'{count} calls'**
+  String callsThreadCount(int count);
+
+  /// Summary for missed calls in a thread
+  ///
+  /// In en, this message translates to:
+  /// **'{count} missed'**
+  String callsMissedSummary(int count);
+
+  /// Call action label to mute microphone
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get callsMuteAction;
+
+  /// Call action label to toggle speaker
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker'**
+  String get callsSpeakerAction;
+
+  /// Call action label to toggle camera
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get callsCameraAction;
+
+  /// Call action label to switch camera
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get callsSwitchCameraAction;
+
+  /// Call action label to end a call
+  ///
+  /// In en, this message translates to:
+  /// **'End call'**
+  String get callsEndAction;
+
+  /// Status while connecting a call
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get callsConnectingLabel;
+
+  /// Status while ringing a call
+  ///
+  /// In en, this message translates to:
+  /// **'Ringing…'**
+  String get callsRingingLabel;
+
+  /// Detailed call connection status
+  ///
+  /// In en, this message translates to:
+  /// **'Creating a secure call session.'**
+  String get callsConnectingDetail;
+
+  /// Detailed ringing status
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the other person to answer.'**
+  String get callsRingingDetail;
+
+  /// Detailed secure video call description
+  ///
+  /// In en, this message translates to:
+  /// **'Video is protected and routed through the current secure session.'**
+  String get callsVideoSecureDetail;
+
+  /// Detailed secure voice call description
+  ///
+  /// In en, this message translates to:
+  /// **'Voice is protected and routed through the current secure session.'**
+  String get callsVoiceSecureDetail;
 }
 
 class _AppLocalizationsDelegate

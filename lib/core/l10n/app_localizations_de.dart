@@ -1693,4 +1693,206 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactsTwoSpaceNo => 'Not in TwoSpace';
+
+  @override
+  String get peopleTitle => 'Personen';
+
+  @override
+  String get peopleSubtitle =>
+      'Kontakte, Favoriten, Suche und Einladungen an einem Ort';
+
+  @override
+  String get peopleQuickNewChat => 'Neuer Chat';
+
+  @override
+  String get peopleQuickInvite => 'Einladen';
+
+  @override
+  String get peopleQuickSync => 'Synchronisieren';
+
+  @override
+  String get peopleSearchHint =>
+      'Nach Name, Nickname oder Telefonnummer suchen';
+
+  @override
+  String get peopleSegmentAll => 'Alle';
+
+  @override
+  String get peopleSegmentTwoSpace => 'TwoSpace';
+
+  @override
+  String get peopleSegmentPhonebook => 'Telefonbuch';
+
+  @override
+  String get peopleSegmentRecent => 'Zuletzt';
+
+  @override
+  String get peopleLoading => 'Personen werden geladen…';
+
+  @override
+  String get peopleNoPeopleTitle => 'Noch keine Personen';
+
+  @override
+  String get peopleNoPeopleMessage =>
+      'Hier erscheinen Ihre Favoriten, letzten Unterhaltungen und Kontakte.';
+
+  @override
+  String get peoplePermissionCardTitle => 'Zugriff auf Kontakte eingeschränkt';
+
+  @override
+  String get peoplePermissionCardMessage =>
+      'Erlauben Sie den Zugriff auf Kontakte, um Ihr Telefonbuch anzuzeigen und Personen schneller einzuladen.';
+
+  @override
+  String get peoplePermissionCardMessageSettings =>
+      'Aktivieren Sie den Zugriff auf Kontakte in den Systemeinstellungen, um den Telefonbuchbereich wiederherzustellen.';
+
+  @override
+  String get peopleFavoritesFrequentTitle => 'Favoriten & häufig';
+
+  @override
+  String get peopleRecentTitle => 'Zuletzt verwendete Personen';
+
+  @override
+  String get peopleTwoSpaceTitle => 'Personen in TwoSpace';
+
+  @override
+  String get peopleInviteTitle => 'Zu TwoSpace einladen';
+
+  @override
+  String get peopleInviteSubtitle => 'Diesen Kontakt zu TwoSpace einladen';
+
+  @override
+  String get peopleSearching => 'Suche nach Personen…';
+
+  @override
+  String get peopleSearchRemoteTitle => 'TwoSpace-Ergebnisse';
+
+  @override
+  String get peopleSearchLocalTitle => 'Zuletzt und gespeichert';
+
+  @override
+  String get peopleSearchInviteTitle => 'Aus dem Telefonbuch einladen';
+
+  @override
+  String get peopleSearchEmptyTitle => 'Keine passenden Personen';
+
+  @override
+  String get peopleSearchEmptyMessage =>
+      'Versuchen Sie einen anderen Namen, Nickname oder eine andere Telefonnummer.';
+
+  @override
+  String get peopleTwoSpaceBadge => 'TwoSpace';
+
+  @override
+  String get peopleNoDetails => 'Noch keine zusätzlichen Details';
+
+  @override
+  String get peopleInviteShareText =>
+      'Komm zu mir auf TwoSpace — ein sicherer Messenger für Chats und Anrufe.';
+
+  @override
+  String peopleInviteSpecificShareText(String personName) {
+    return 'Komm zu mir auf TwoSpace, $personName — lass uns sicher chatten und telefonieren.';
+  }
+
+  @override
+  String get peopleViewProfileAction => 'Profil anzeigen';
+
+  @override
+  String get peopleRemoveFavoriteAction => 'Aus Favoriten entfernen';
+
+  @override
+  String get peopleAddFavoriteAction => 'Zu Favoriten hinzufügen';
+
+  @override
+  String get callsSubtitle =>
+      'Letzte Anrufe, schnelles Rückrufen und verlaufsbasierte Personenansicht';
+
+  @override
+  String get callsStartCallAction => 'Anruf starten';
+
+  @override
+  String get callsQuickStartTitle => 'Jetzt jemanden anrufen';
+
+  @override
+  String get callsQuickStartSubtitle =>
+      'Öffnen Sie Personen, suchen Sie jemanden und starten Sie einen sicheren Sprach- oder Videoanruf.';
+
+  @override
+  String get callsSearchHint => 'Anrufverlauf durchsuchen';
+
+  @override
+  String get callsVideoFilter => 'Video';
+
+  @override
+  String get callsTopContactsTitle => 'Häufige Kontakte';
+
+  @override
+  String get callsLoadingLabel => 'Anrufe werden geladen…';
+
+  @override
+  String get callsEmptyTitle => 'Noch keine Anrufe';
+
+  @override
+  String get callsEmptyMessage =>
+      'Ihr Anrufverlauf erscheint hier nach Ihrem ersten Sprach- oder Videoanruf.';
+
+  @override
+  String get callsEmptySearchMessage =>
+      'Keine Anrufe passen zur aktuellen Suche oder zum Filter.';
+
+  @override
+  String get callsTodaySection => 'Heute';
+
+  @override
+  String get callsThisWeekSection => 'Diese Woche';
+
+  @override
+  String get callsEarlierSection => 'Früher';
+
+  @override
+  String callsThreadCount(int count) {
+    return '$count Anrufe';
+  }
+
+  @override
+  String callsMissedSummary(int count) {
+    return '$count verpasst';
+  }
+
+  @override
+  String get callsMuteAction => 'Stumm';
+
+  @override
+  String get callsSpeakerAction => 'Lautsprecher';
+
+  @override
+  String get callsCameraAction => 'Kamera';
+
+  @override
+  String get callsSwitchCameraAction => 'Wechseln';
+
+  @override
+  String get callsEndAction => 'Anruf beenden';
+
+  @override
+  String get callsConnectingLabel => 'Verbinden…';
+
+  @override
+  String get callsRingingLabel => 'Klingelt…';
+
+  @override
+  String get callsConnectingDetail => 'Sichere Anrufsitzung wird erstellt.';
+
+  @override
+  String get callsRingingDetail => 'Warten auf Antwort der anderen Person.';
+
+  @override
+  String get callsVideoSecureDetail =>
+      'Video ist geschützt und wird über die aktuelle sichere Sitzung übertragen.';
+
+  @override
+  String get callsVoiceSecureDetail =>
+      'Audio ist geschützt und wird über die aktuelle sichere Sitzung übertragen.';
 }

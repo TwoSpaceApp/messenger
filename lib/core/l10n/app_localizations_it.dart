@@ -1692,4 +1692,206 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get contactsTwoSpaceNo => 'Not in TwoSpace';
+
+  @override
+  String get peopleTitle => 'Persone';
+
+  @override
+  String get peopleSubtitle =>
+      'Contatti, preferiti, ricerca e inviti in un unico posto';
+
+  @override
+  String get peopleQuickNewChat => 'Nuova chat';
+
+  @override
+  String get peopleQuickInvite => 'Invita';
+
+  @override
+  String get peopleQuickSync => 'Sincronizza';
+
+  @override
+  String get peopleSearchHint => 'Cerca per nome, nickname o telefono';
+
+  @override
+  String get peopleSegmentAll => 'Tutti';
+
+  @override
+  String get peopleSegmentTwoSpace => 'TwoSpace';
+
+  @override
+  String get peopleSegmentPhonebook => 'Rubrica';
+
+  @override
+  String get peopleSegmentRecent => 'Recenti';
+
+  @override
+  String get peopleLoading => 'Caricamento persone…';
+
+  @override
+  String get peopleNoPeopleTitle => 'Ancora nessuna persona';
+
+  @override
+  String get peopleNoPeopleMessage =>
+      'Qui appariranno i tuoi preferiti, le conversazioni recenti e i contatti.';
+
+  @override
+  String get peoplePermissionCardTitle => 'Accesso ai contatti limitato';
+
+  @override
+  String get peoplePermissionCardMessage =>
+      'Consenti l’accesso ai contatti per mostrare la rubrica e invitare le persone più velocemente.';
+
+  @override
+  String get peoplePermissionCardMessageSettings =>
+      'Abilita l’accesso ai contatti nelle impostazioni di sistema per ripristinare la sezione rubrica.';
+
+  @override
+  String get peopleFavoritesFrequentTitle => 'Preferiti e frequenti';
+
+  @override
+  String get peopleRecentTitle => 'Persone recenti';
+
+  @override
+  String get peopleTwoSpaceTitle => 'Persone su TwoSpace';
+
+  @override
+  String get peopleInviteTitle => 'Invita su TwoSpace';
+
+  @override
+  String get peopleInviteSubtitle => 'Invita questo contatto su TwoSpace';
+
+  @override
+  String get peopleSearching => 'Ricerca persone…';
+
+  @override
+  String get peopleSearchRemoteTitle => 'Risultati TwoSpace';
+
+  @override
+  String get peopleSearchLocalTitle => 'Recenti e salvati';
+
+  @override
+  String get peopleSearchInviteTitle => 'Invita dalla rubrica';
+
+  @override
+  String get peopleSearchEmptyTitle => 'Nessuna persona trovata';
+
+  @override
+  String get peopleSearchEmptyMessage =>
+      'Prova un altro nome, nickname o numero di telefono.';
+
+  @override
+  String get peopleTwoSpaceBadge => 'TwoSpace';
+
+  @override
+  String get peopleNoDetails => 'Nessun dettaglio aggiuntivo per ora';
+
+  @override
+  String get peopleInviteShareText =>
+      'Unisciti a me su TwoSpace, un messenger sicuro per chat e chiamate.';
+
+  @override
+  String peopleInviteSpecificShareText(String personName) {
+    return 'Unisciti a me su TwoSpace, $personName: chattiamo e chiamiamoci in modo sicuro.';
+  }
+
+  @override
+  String get peopleViewProfileAction => 'Apri profilo';
+
+  @override
+  String get peopleRemoveFavoriteAction => 'Rimuovi dai preferiti';
+
+  @override
+  String get peopleAddFavoriteAction => 'Aggiungi ai preferiti';
+
+  @override
+  String get callsSubtitle =>
+      'Chiamate recenti, richiamo rapido e cronologia centrata sulle persone';
+
+  @override
+  String get callsStartCallAction => 'Avvia chiamata';
+
+  @override
+  String get callsQuickStartTitle => 'Chiama ora';
+
+  @override
+  String get callsQuickStartSubtitle =>
+      'Apri Persone, cerca qualcuno e avvia una chiamata vocale o video sicura.';
+
+  @override
+  String get callsSearchHint => 'Cerca nella cronologia chiamate';
+
+  @override
+  String get callsVideoFilter => 'Video';
+
+  @override
+  String get callsTopContactsTitle => 'Contatti frequenti';
+
+  @override
+  String get callsLoadingLabel => 'Caricamento chiamate…';
+
+  @override
+  String get callsEmptyTitle => 'Nessuna chiamata per ora';
+
+  @override
+  String get callsEmptyMessage =>
+      'La cronologia chiamate apparirà qui dopo la tua prima chiamata vocale o video.';
+
+  @override
+  String get callsEmptySearchMessage =>
+      'Nessuna chiamata corrisponde alla ricerca o al filtro corrente.';
+
+  @override
+  String get callsTodaySection => 'Oggi';
+
+  @override
+  String get callsThisWeekSection => 'Questa settimana';
+
+  @override
+  String get callsEarlierSection => 'Prima';
+
+  @override
+  String callsThreadCount(int count) {
+    return '$count chiamate';
+  }
+
+  @override
+  String callsMissedSummary(int count) {
+    return '$count perse';
+  }
+
+  @override
+  String get callsMuteAction => 'Muto';
+
+  @override
+  String get callsSpeakerAction => 'Altoparlante';
+
+  @override
+  String get callsCameraAction => 'Fotocamera';
+
+  @override
+  String get callsSwitchCameraAction => 'Cambia';
+
+  @override
+  String get callsEndAction => 'Termina chiamata';
+
+  @override
+  String get callsConnectingLabel => 'Connessione…';
+
+  @override
+  String get callsRingingLabel => 'Sta squillando…';
+
+  @override
+  String get callsConnectingDetail =>
+      'Creazione di una sessione di chiamata sicura.';
+
+  @override
+  String get callsRingingDetail => 'In attesa che l’altra persona risponda.';
+
+  @override
+  String get callsVideoSecureDetail =>
+      'Il video è protetto e instradato tramite la sessione sicura corrente.';
+
+  @override
+  String get callsVoiceSecureDetail =>
+      'La voce è protetta e instradata tramite la sessione sicura corrente.';
 }

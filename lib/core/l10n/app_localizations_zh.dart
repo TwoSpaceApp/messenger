@@ -1653,4 +1653,193 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get contactsTwoSpaceNo => 'Not in TwoSpace';
+
+  @override
+  String get peopleTitle => '联系人';
+
+  @override
+  String get peopleSubtitle => '联系人、收藏、搜索和邀请都在一个地方';
+
+  @override
+  String get peopleQuickNewChat => '新聊天';
+
+  @override
+  String get peopleQuickInvite => '邀请';
+
+  @override
+  String get peopleQuickSync => '同步';
+
+  @override
+  String get peopleSearchHint => '按姓名、昵称或电话号码搜索';
+
+  @override
+  String get peopleSegmentAll => '全部';
+
+  @override
+  String get peopleSegmentTwoSpace => 'TwoSpace';
+
+  @override
+  String get peopleSegmentPhonebook => '通讯录';
+
+  @override
+  String get peopleSegmentRecent => '最近';
+
+  @override
+  String get peopleLoading => '正在加载联系人…';
+
+  @override
+  String get peopleNoPeopleTitle => '还没有联系人';
+
+  @override
+  String get peopleNoPeopleMessage => '你的收藏、最近会话和联系人会显示在这里。';
+
+  @override
+  String get peoplePermissionCardTitle => '联系人访问受限';
+
+  @override
+  String get peoplePermissionCardMessage => '允许访问联系人，以显示通讯录并更快邀请他人。';
+
+  @override
+  String get peoplePermissionCardMessageSettings => '请在系统设置中开启联系人权限，以恢复通讯录分区。';
+
+  @override
+  String get peopleFavoritesFrequentTitle => '收藏与常用';
+
+  @override
+  String get peopleRecentTitle => '最近联系人';
+
+  @override
+  String get peopleTwoSpaceTitle => 'TwoSpace 用户';
+
+  @override
+  String get peopleInviteTitle => '邀请加入 TwoSpace';
+
+  @override
+  String get peopleInviteSubtitle => '邀请此联系人加入 TwoSpace';
+
+  @override
+  String get peopleSearching => '正在搜索联系人…';
+
+  @override
+  String get peopleSearchRemoteTitle => 'TwoSpace 结果';
+
+  @override
+  String get peopleSearchLocalTitle => '最近与已保存';
+
+  @override
+  String get peopleSearchInviteTitle => '从通讯录邀请';
+
+  @override
+  String get peopleSearchEmptyTitle => '没有匹配的联系人';
+
+  @override
+  String get peopleSearchEmptyMessage => '请尝试其他姓名、昵称或电话号码。';
+
+  @override
+  String get peopleTwoSpaceBadge => 'TwoSpace';
+
+  @override
+  String get peopleNoDetails => '暂无更多信息';
+
+  @override
+  String get peopleInviteShareText => '加入 TwoSpace 吧，这是一个安全的聊天和通话应用。';
+
+  @override
+  String peopleInviteSpecificShareText(String personName) {
+    return '$personName，来加入 TwoSpace 吧，我们可以安全聊天和通话。';
+  }
+
+  @override
+  String get peopleViewProfileAction => '查看资料';
+
+  @override
+  String get peopleRemoveFavoriteAction => '从收藏中移除';
+
+  @override
+  String get peopleAddFavoriteAction => '加入收藏';
+
+  @override
+  String get callsSubtitle => '最近通话、快速回拨以及以联系人为中心的记录';
+
+  @override
+  String get callsStartCallAction => '开始通话';
+
+  @override
+  String get callsQuickStartTitle => '立即通话';
+
+  @override
+  String get callsQuickStartSubtitle => '打开联系人，找到某人并开始安全的语音或视频通话。';
+
+  @override
+  String get callsSearchHint => '搜索通话记录';
+
+  @override
+  String get callsVideoFilter => '视频';
+
+  @override
+  String get callsTopContactsTitle => '常用联系人';
+
+  @override
+  String get callsLoadingLabel => '正在加载通话…';
+
+  @override
+  String get callsEmptyTitle => '还没有通话';
+
+  @override
+  String get callsEmptyMessage => '首次语音或视频通话后，通话记录会显示在这里。';
+
+  @override
+  String get callsEmptySearchMessage => '没有符合当前搜索或筛选条件的通话。';
+
+  @override
+  String get callsTodaySection => '今天';
+
+  @override
+  String get callsThisWeekSection => '本周';
+
+  @override
+  String get callsEarlierSection => '更早';
+
+  @override
+  String callsThreadCount(int count) {
+    return '$count 次通话';
+  }
+
+  @override
+  String callsMissedSummary(int count) {
+    return '$count 次未接';
+  }
+
+  @override
+  String get callsMuteAction => '静音';
+
+  @override
+  String get callsSpeakerAction => '扬声器';
+
+  @override
+  String get callsCameraAction => '摄像头';
+
+  @override
+  String get callsSwitchCameraAction => '切换';
+
+  @override
+  String get callsEndAction => '结束通话';
+
+  @override
+  String get callsConnectingLabel => '连接中…';
+
+  @override
+  String get callsRingingLabel => '响铃中…';
+
+  @override
+  String get callsConnectingDetail => '正在创建安全通话会话。';
+
+  @override
+  String get callsRingingDetail => '正在等待对方接听。';
+
+  @override
+  String get callsVideoSecureDetail => '视频受到保护，并通过当前安全会话传输。';
+
+  @override
+  String get callsVoiceSecureDetail => '语音受到保护，并通过当前安全会话传输。';
 }

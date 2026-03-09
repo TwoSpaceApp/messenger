@@ -1690,4 +1690,205 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get contactsTwoSpaceNo => 'Нету в TwoSpace';
+
+  @override
+  String get peopleTitle => 'Люди';
+
+  @override
+  String get peopleSubtitle =>
+      'Контакты, избранные, поиск и приглашения в одном месте';
+
+  @override
+  String get peopleQuickNewChat => 'Новый чат';
+
+  @override
+  String get peopleQuickInvite => 'Пригласить';
+
+  @override
+  String get peopleQuickSync => 'Синхронизировать';
+
+  @override
+  String get peopleSearchHint => 'Поиск по имени, нику или номеру';
+
+  @override
+  String get peopleSegmentAll => 'Все';
+
+  @override
+  String get peopleSegmentTwoSpace => 'TwoSpace';
+
+  @override
+  String get peopleSegmentPhonebook => 'Телефонная книга';
+
+  @override
+  String get peopleSegmentRecent => 'Недавние';
+
+  @override
+  String get peopleLoading => 'Загружаем людей…';
+
+  @override
+  String get peopleNoPeopleTitle => 'Пока никого нет';
+
+  @override
+  String get peopleNoPeopleMessage =>
+      'Здесь появятся избранные, недавние диалоги и контакты.';
+
+  @override
+  String get peoplePermissionCardTitle => 'Доступ к контактам ограничен';
+
+  @override
+  String get peoplePermissionCardMessage =>
+      'Разрешите доступ к контактам, чтобы видеть телефонную книгу и быстрее приглашать людей.';
+
+  @override
+  String get peoplePermissionCardMessageSettings =>
+      'Включите доступ к контактам в системных настройках, чтобы вернуть раздел телефонной книги.';
+
+  @override
+  String get peopleFavoritesFrequentTitle => 'Избранные и частые';
+
+  @override
+  String get peopleRecentTitle => 'Недавние люди';
+
+  @override
+  String get peopleTwoSpaceTitle => 'Люди в TwoSpace';
+
+  @override
+  String get peopleInviteTitle => 'Пригласить в TwoSpace';
+
+  @override
+  String get peopleInviteSubtitle => 'Пригласить этот контакт в TwoSpace';
+
+  @override
+  String get peopleSearching => 'Ищем людей…';
+
+  @override
+  String get peopleSearchRemoteTitle => 'Результаты TwoSpace';
+
+  @override
+  String get peopleSearchLocalTitle => 'Недавние и сохранённые';
+
+  @override
+  String get peopleSearchInviteTitle => 'Пригласить из телефонной книги';
+
+  @override
+  String get peopleSearchEmptyTitle => 'Люди не найдены';
+
+  @override
+  String get peopleSearchEmptyMessage =>
+      'Попробуйте другой запрос, ник или номер телефона.';
+
+  @override
+  String get peopleTwoSpaceBadge => 'TwoSpace';
+
+  @override
+  String get peopleNoDetails => 'Пока без дополнительных данных';
+
+  @override
+  String get peopleInviteShareText =>
+      'Присоединяйся ко мне в TwoSpace — это защищённый мессенджер для чатов и звонков.';
+
+  @override
+  String peopleInviteSpecificShareText(String personName) {
+    return 'Присоединяйся ко мне в TwoSpace, $personName — будем безопасно общаться и созваниваться.';
+  }
+
+  @override
+  String get peopleViewProfileAction => 'Открыть профиль';
+
+  @override
+  String get peopleRemoveFavoriteAction => 'Убрать из избранного';
+
+  @override
+  String get peopleAddFavoriteAction => 'Добавить в избранное';
+
+  @override
+  String get callsSubtitle =>
+      'Недавние звонки, быстрый перезвон и история вокруг людей';
+
+  @override
+  String get callsStartCallAction => 'Начать звонок';
+
+  @override
+  String get callsQuickStartTitle => 'Позвонить сейчас';
+
+  @override
+  String get callsQuickStartSubtitle =>
+      'Откройте раздел людей, найдите человека и начните защищённый голосовой или видеозвонок.';
+
+  @override
+  String get callsSearchHint => 'Поиск по истории звонков';
+
+  @override
+  String get callsVideoFilter => 'Видео';
+
+  @override
+  String get callsTopContactsTitle => 'Частые контакты';
+
+  @override
+  String get callsLoadingLabel => 'Загружаем звонки…';
+
+  @override
+  String get callsEmptyTitle => 'Звонков пока нет';
+
+  @override
+  String get callsEmptyMessage =>
+      'История звонков появится здесь после первого голосового или видеозвонка.';
+
+  @override
+  String get callsEmptySearchMessage =>
+      'По текущему поиску или фильтру звонков ничего не найдено.';
+
+  @override
+  String get callsTodaySection => 'Сегодня';
+
+  @override
+  String get callsThisWeekSection => 'На этой неделе';
+
+  @override
+  String get callsEarlierSection => 'Раньше';
+
+  @override
+  String callsThreadCount(int count) {
+    return '$count звонков';
+  }
+
+  @override
+  String callsMissedSummary(int count) {
+    return '$count пропущенных';
+  }
+
+  @override
+  String get callsMuteAction => 'Микрофон';
+
+  @override
+  String get callsSpeakerAction => 'Динамик';
+
+  @override
+  String get callsCameraAction => 'Камера';
+
+  @override
+  String get callsSwitchCameraAction => 'Сменить';
+
+  @override
+  String get callsEndAction => 'Завершить звонок';
+
+  @override
+  String get callsConnectingLabel => 'Подключение…';
+
+  @override
+  String get callsRingingLabel => 'Гудки…';
+
+  @override
+  String get callsConnectingDetail => 'Создаём защищённую сессию звонка.';
+
+  @override
+  String get callsRingingDetail => 'Ждём, пока собеседник ответит.';
+
+  @override
+  String get callsVideoSecureDetail =>
+      'Видео защищено и проходит через текущую безопасную сессию.';
+
+  @override
+  String get callsVoiceSecureDetail =>
+      'Голос защищён и проходит через текущую безопасную сессию.';
 }

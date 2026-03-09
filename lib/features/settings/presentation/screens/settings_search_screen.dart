@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/highlighted_text.dart';
-import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/features/settings/presentation/models/settings_catalog.dart';
 
 class SettingsSearchScreen extends StatefulWidget {
@@ -102,10 +102,10 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 220),
                 child: entries.isEmpty
-                  ? AppEmptyState(
+                    ? const AppEmptyState(
                         key: ValueKey('empty-settings-search'),
-                    title: l10n.nothingFound,
-                    message: l10n.noResultsFound,
+                        title: '',
+                        message: '',
                         icon: Icons.manage_search_rounded,
                       )
                     : ListView.separated(

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
+import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_encoder.dart';
