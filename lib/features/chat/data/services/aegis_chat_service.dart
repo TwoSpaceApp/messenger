@@ -171,6 +171,7 @@ class AegisChatService {
   final Map<String, _StoredConversation> _conversations = {};
   final Map<String, List<AegisRoomMessage>> _messages = {};
   final Map<int, Map<String, dynamic>> _profileCache = {};
+  StreamSubscription<List<Chat>>? _syncSub;
 
   String get homeserver => 'aegis://${_auth.username ?? 'server'}';
 
@@ -211,12 +212,7 @@ class AegisChatService {
 
   Future<void> ensureReady() async {
     await _init();
-    if (!_auth.isAuthenticated) {
-      final restored = await _auth.restoreSession();
-      if (!restored) {
-        throw Exception('Not authenticated');
-      }
-    }
+    await _auth.ensureSession();
     if (!_attached) {
       _attached = true;
       _incomingSub = _auth.rawClient.messages.listen(_handleIncomingMessage);
@@ -229,7 +225,7 @@ class AegisChatService {
   }
 
   Stream<List<Chat>> watchChats() async* {
-    await _init();
+    await ensureReady();
     yield await getChats();
     await for (final _ in _changes.stream) {
       yield await getChats();
@@ -237,7 +233,7 @@ class AegisChatService {
   }
 
   Stream<List<AegisRoomMessage>> watchRoomMessages(String roomId) async* {
-    await _init();
+    await ensureReady();
     yield await loadMessages(roomId: roomId);
     await for (final _ in _changes.stream) {
       yield await loadMessages(roomId: roomId);
@@ -245,7 +241,7 @@ class AegisChatService {
   }
 
   Future<List<Chat>> getChats() async {
-    await _init();
+    await ensureReady();
     final items = _conversations.values.toList()
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return items
@@ -561,7 +557,8 @@ class AegisChatService {
 
   void startSync([Function(Map<String, dynamic>)? onEvent]) {
     if (onEvent == null) return;
-    watchChats().listen((_) {
+    _syncSub?.cancel();
+    _syncSub = watchChats().listen((_) {
       onEvent(<String, dynamic>{
         'rooms': {
           'join': {
@@ -579,7 +576,10 @@ class AegisChatService {
     });
   }
 
-  void stopSync() {}
+  void stopSync() {
+    _syncSub?.cancel();
+    _syncSub = null;
+  }
 
   Future<List<Map<String, dynamic>>> searchMessages({
     required String query,

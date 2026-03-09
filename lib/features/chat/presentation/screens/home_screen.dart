@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +29,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
   String? _errorMessage;
+  StreamSubscription<List<Chat>>? _roomsSub;
 
   final String _searchQuery = '';
 
@@ -42,6 +45,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _loadUserAndRooms();
+    _subscribeToRooms();
+  }
+
+  @override
+  void dispose() {
+    _roomsSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserAndRooms() async {
@@ -52,19 +62,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     try {
-      final ids = await _chat.getJoinedRooms();
-      final out = <Map<String, dynamic>>[];
-
-      for (final id in ids) {
-        final meta = await _chat.getRoomNameAndAvatar(id);
-        out.add({
-          'id': id,
-          'name': meta['name'] ?? id,
-          'avatar': meta['avatar'],
-          'lastMessage': '...',
-          'time': DateTime.now(),
-        });
-      }
+      final chats = await _chat.getChats();
+      final out = chats.map(_roomFromChat).toList();
       if (mounted) setState(() => _rooms = out);
     } catch (e) {
       if (mounted) {
@@ -73,6 +72,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _subscribeToRooms() {
+    _roomsSub?.cancel();
+    _roomsSub = _chat.watchChats().listen(
+      (chats) {
+        if (!mounted) return;
+        setState(() {
+          _rooms = chats.map(_roomFromChat).toList();
+          _loading = false;
+          _errorMessage = null;
+        });
+      },
+      onError: (Object error) {
+        if (!mounted) return;
+        setState(() {
+          _errorMessage = error.toString();
+          _loading = false;
+        });
+      },
+    );
+  }
+
+  Map<String, dynamic> _roomFromChat(Chat chat) {
+    return {
+      'id': chat.id,
+      'name': chat.name.isNotEmpty ? chat.name : chat.id,
+      'avatar': chat.avatarUrl,
+      'lastMessage': chat.lastMessage,
+      'time': chat.lastMessageTime,
+      'roomType': chat.roomType,
+    };
+  }
+
+  String _formatRoomTime(DateTime? time) {
+    if (time == null) return '';
+    final hh = time.hour.toString().padLeft(2, '0');
+    final mm = time.minute.toString().padLeft(2, '0');
+    return '$hh:$mm';
   }
 
   void _openSearch() {
@@ -267,7 +305,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        r['lastMessage'],
+                        ((r['lastMessage'] as String?)?.isNotEmpty ?? false)
+                          ? r['lastMessage'] as String
+                            : AppLocalizations.of(context)!.noMessages,
                         style: const TextStyle(
                             fontSize: 14, color: Colors.white70),
                         maxLines: 1,
@@ -276,11 +316,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                 ),
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('12:00',
-                        style: TextStyle(fontSize: 12, color: Colors.white54)),
+                    Text(
+                      _formatRoomTime(r['time'] as DateTime?),
+                      style:
+                          const TextStyle(fontSize: 12, color: Colors.white54),
+                    ),
                   ],
                 ),
               ],
@@ -309,15 +352,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _openChat(String id) {
+    final room = _rooms.firstWhere(
+      (e) => e['id'] == id,
+      orElse: () => {'id': id, 'name': id},
+    );
     Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => ChatScreen(
           chat: Chat(
             id: id,
-            name: (_rooms.firstWhere((e) => e['id'] == id,
-                    orElse: () => {'name': id})['name'] as String?) ??
-                id,
+            name: (room['name'] as String?) ?? id,
+            avatarUrl: room['avatar'] as String?,
+            roomType: room['roomType'] as String?,
             members: const [],
           ),
         ),
@@ -330,6 +377,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           );
         },
       ),
-    );
+    ).then((_) => _loadUserAndRooms());
   }
 }

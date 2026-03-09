@@ -56,6 +56,8 @@ class AppThemeBuilder {
     return baseTheme.copyWith(
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,
+      visualDensity:
+          settings.compactMode ? VisualDensity.compact : VisualDensity.standard,
       colorScheme: baseTheme.colorScheme.copyWith(
         primary: primaryColor,
         surface: surfaceColor,
@@ -93,6 +95,16 @@ class AppThemeBuilder {
       ),
       iconTheme: IconThemeData(
         color: onBackgroundColor,
+      ),
+      listTileTheme: ListTileThemeData(
+        dense: settings.compactMode,
+        visualDensity:
+            settings.compactMode ? VisualDensity.compact : VisualDensity.standard,
+      ),
+      cardTheme: CardThemeData(
+        margin: settings.compactMode
+            ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+            : const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {

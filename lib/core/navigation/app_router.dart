@@ -10,6 +10,7 @@ import 'package:two_space_app/features/auth/presentation/screens/change_phone_sc
 import 'package:two_space_app/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/register_screen.dart';
+import 'package:two_space_app/features/auth/presentation/screens/biometric_setup_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/tfa_setup_screen.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
@@ -130,22 +131,27 @@ final routerProvider = Provider<GoRouter>((ref) {
             _buildPage(state, const ChangeEmailScreen()),
       ),
       GoRoute(
-        path: '/change_phone',
+        path: AppStrings.routeChangePhone,
         pageBuilder: (context, state) =>
             _buildPage(state, const ChangePhoneScreen()),
       ),
       GoRoute(
-        path: '/tfa_setup',
+        path: AppStrings.routeTfaSetup,
         pageBuilder: (context, state) =>
             _buildPage(state, const TfaSetupScreen()),
       ),
       GoRoute(
-        path: '/notifications',
+        path: AppStrings.routeBiometricSetup,
+        pageBuilder: (context, state) =>
+            _buildPage(state, const BiometricSetupScreen()),
+      ),
+      GoRoute(
+        path: AppStrings.routeNotifications,
         pageBuilder: (context, state) =>
             _buildPage(state, const NotificationsScreen()),
       ),
       GoRoute(
-        path: '/storage',
+        path: AppStrings.routeStorage,
         pageBuilder: (context, state) =>
             _buildPage(state, const StorageScreen()),
       ),

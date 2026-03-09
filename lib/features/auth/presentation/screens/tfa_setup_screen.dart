@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 
 class TfaSetupScreen extends StatefulWidget {
@@ -12,6 +14,7 @@ class TfaSetupScreen extends StatefulWidget {
 class _TfaSetupScreenState extends State<TfaSetupScreen> {
   String? _secret;
   String? _otpAuthUri;
+  String? _error;
   bool _loading = true;
   final _codeController = TextEditingController();
 
@@ -29,13 +32,14 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
       setState(() {
         _secret = result['secret'];
         _otpAuthUri = result['otpauth_uri'];
+        _error = null;
         _loading = false;
       });
     } catch (e) {
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to get TFA setup: $e')),
-      );
+      setState(() {
+        _loading = false;
+        _error = e.toString();
+      });
     }
   }
 
@@ -66,10 +70,17 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Set up Two-Factor Auth')),
+      appBar: AppBar(title: Text(l10n.twoFactorLabel)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? AppEmptyState(
+                  title: l10n.twoFactorLabel,
+                  message: _error!,
+                  icon: Icons.security,
+                )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(

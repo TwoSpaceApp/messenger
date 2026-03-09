@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/biometric_service.dart';
-import 'package:two_space_app/features/auth/presentation/screens/change_email_screen.dart';
-import 'package:two_space_app/features/auth/presentation/screens/change_phone_screen.dart';
-import 'package:two_space_app/features/auth/presentation/screens/tfa_setup_screen.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class PrivacyScreen extends StatefulWidget {
@@ -14,59 +13,7 @@ class PrivacyScreen extends StatefulWidget {
 }
 
 class _PrivacyScreenState extends State<PrivacyScreen> {
-  bool _hideFromSearch = false;
-  bool _hideLastSeen = false;
   bool _loading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPref();
-  }
-
-  Future<void> _loadPref() async {
-    try {
-      // AppwriteService not available, skip loading prefs
-      if (mounted) {
-        setState(() {
-          _hideFromSearch = false;
-          _hideLastSeen = false;
-        });
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _toggle(bool v) async {
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _loading = true);
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      // AppwriteService not available, skip server update
-      if (!mounted) return;
-      setState(() => _hideFromSearch = v);
-    } catch (e) {
-      messenger.showSnackBar(
-          SnackBar(content: Text(l10n.updatePrivacyError(e.toString()))));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _toggleLastSeen(bool v) async {
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _loading = true);
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      // AppwriteService not available, skip server update
-      if (!mounted) return;
-      setState(() => _hideLastSeen = v);
-    } catch (e) {
-      messenger.showSnackBar(
-          SnackBar(content: Text(l10n.updateSettingError(e.toString()))));
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,20 +23,6 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          SwitchListTile(
-              title: Text(l10n.hideFromSearch),
-              subtitle: Text(l10n.hideFromSearchSubtitle),
-              value: _hideFromSearch,
-              onChanged: _loading ? null : _toggle),
-          const SizedBox(height: 6),
-          SwitchListTile(
-              title: Text(l10n.hideLastSeen),
-              subtitle: Text(l10n.hideLastSeenSubtitle),
-              value: _hideLastSeen,
-              onChanged: _loading ? null : _toggleLastSeen),
-          const SizedBox(height: 12),
-
-          const SizedBox(height: 12),
           ValueListenableBuilder<bool>(
             valueListenable: SettingsService.biometricsNotifier,
             builder: (context, isEnabled, child) {
@@ -222,27 +155,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
               title: Text(l10n.twoFactorLabel),
               subtitle: Text(l10n.twoFactorPrivacySubtitle),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () async {
-                // Navigate to TFA setup screen
-                await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const TfaSetupScreen()));
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-          Material(
-            color: Theme.of(context).colorScheme.surface,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            child: ListTile(
-              leading: const Icon(Icons.phone),
-              title: Text(l10n.changePhoneLabel),
-              subtitle: Text(l10n.changePhoneSubtitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const ChangePhoneScreen()));
-              },
+              onTap: () => context.push(AppStrings.routeTfaSetup),
             ),
           ),
         ],

@@ -57,19 +57,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final currentUserId = await _chatService.getCurrentUserId();
 
       // Determine if this is my profile
-      _isMe = widget.userId == currentUserId || currentUserId == null;
+      _isMe = currentUserId != null && widget.userId == currentUserId;
 
       final userInfo = await _chatService.getUserInfo(widget.userId);
 
       if (mounted) {
         setState(() {
           _user = {
-            'name':
-                userInfo['displayName'] ?? widget.initialName ?? widget.userId,
+            'id': userInfo['id']?.toString() ?? widget.userId,
+            'name': userInfo['displayName'] ??
+                widget.initialName ??
+                userInfo['username'] ??
+                widget.userId,
+            'username': userInfo['username'] ?? '',
             'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
+            'bio': userInfo['bio'] ?? '',
+            'email': userInfo['email'],
             'prefs': {
-              'nickname': widget.userId.replaceAll('@', '').split(':').first,
-              'about': '',
+              'nickname': userInfo['username'] ?? '',
+              'about': userInfo['bio'] ?? '',
             },
           };
           _loading = false;
@@ -81,12 +87,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _loading = false;
           _user = {
+            'id': widget.userId,
             'name': widget.initialName ?? widget.userId,
+            'username': widget.userId.replaceAll('@', '').split(':').first,
             'prefs': {
-              'nickname': widget.userId.replaceAll('@', '').split(':').first
+              'nickname': widget.userId.replaceAll('@', '').split(':').first,
+              'about': '',
             },
           };
-          _isMe = true;
         });
         _initializeControllers();
       }
@@ -121,12 +129,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    // TODO: Save profile changes to server
     final l10n = AppLocalizations.of(context)!;
-    setState(() => _isEditing = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.profileSaved)),
-    );
+    try {
+      final displayName = _nameController.text.trim();
+      final username = _nicknameController.text.trim();
+      final bio = _aboutController.text.trim();
+
+      await _chatService.updateMyProfile(
+        displayName: displayName.isEmpty ? null : displayName,
+        username: username.isEmpty ? null : username,
+        bio: bio.isEmpty ? null : bio,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _isEditing = false;
+        _user = {
+          ...?_user,
+          'name': displayName.isEmpty ? (_user?['name'] ?? '') : displayName,
+          'username':
+              username.isEmpty ? (_user?['username'] ?? '') : username,
+          'bio': bio,
+          'prefs': {
+            if (_user?['prefs'] is Map)
+              ...Map<String, dynamic>.from(_user!['prefs'] as Map),
+            'nickname': username,
+            'about': bio,
+          },
+          'location': _locationController.text.trim(),
+          'birthday': _birthdayController.text.trim(),
+        };
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.profileSaved)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+      );
+    }
   }
 
   String _displayName() {
@@ -157,11 +200,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return widget.initialAvatar;
   }
 
+  String _username() {
+    final usernameValue = (_user?['username'] as String?)?.trim();
+    if (usernameValue != null && usernameValue.isNotEmpty) {
+      return usernameValue;
+    }
+    final prefs = (_user?['prefs'] is Map)
+        ? Map<String, dynamic>.from(_user!['prefs'] as Map)
+        : <String, dynamic>{};
+    return (prefs['nickname'] as String?)?.trim() ??
+        widget.userId.replaceAll('@', '').split(':').first;
+  }
+
+  String _profileId() {
+    return ((_user?['id'] as String?)?.trim().isNotEmpty ?? false)
+        ? _user!['id'] as String
+        : widget.userId;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final name = _displayName();
     final avatar = _avatarUrl();
+    final username = _username();
+    final profileId = _profileId();
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
@@ -261,12 +324,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (_user != null) ...[
                     Center(
                       child: Text(
-                        '@${_user!['prefs']?['nickname'] ?? _user!['name'] ?? ''}',
+                        '@$username',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurface
                                   .withAlpha((0.7 * 255).round()),
+                            ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Center(
+                      child: Text(
+                        'ID: $profileId',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withAlpha((0.55 * 255).round()),
                             ),
                       ),
                     ),
@@ -416,9 +491,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             _buildInfoRow(
                                 l10n.nicknameField,
-                                (_user != null)
-                                    ? (_user!['prefs']?['nickname'] ?? '')
-                                    : ''),
+                              username),
+                            const Divider(),
+                            _buildInfoRow(l10n.matrixIdLabel, profileId),
                             const Divider(),
                             _buildInfoRow(
                                 l10n.locationField,

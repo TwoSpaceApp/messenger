@@ -8,6 +8,7 @@ class ThemeSettings {
   final int fontWeight;
   final double bubbleRounding;
   final bool dynamicBubbles;
+  final bool compactMode;
   final int navBarHideTimeoutSeconds;
   final bool enableParallax;
   final bool enableFloatingCircles;
@@ -20,6 +21,7 @@ class ThemeSettings {
     this.fontWeight = 4,
     this.bubbleRounding = 16.0,
     this.dynamicBubbles = true,
+    this.compactMode = false,
     this.navBarHideTimeoutSeconds = 3,
     this.enableParallax = true,
     this.enableFloatingCircles = true,
@@ -33,6 +35,7 @@ class ThemeSettings {
     int? fontWeight,
     double? bubbleRounding,
     bool? dynamicBubbles,
+    bool? compactMode,
     int? navBarHideTimeoutSeconds,
     bool? enableParallax,
     bool? enableFloatingCircles,
@@ -45,6 +48,7 @@ class ThemeSettings {
       fontWeight: fontWeight ?? this.fontWeight,
       bubbleRounding: bubbleRounding ?? this.bubbleRounding,
       dynamicBubbles: dynamicBubbles ?? this.dynamicBubbles,
+      compactMode: compactMode ?? this.compactMode,
       navBarHideTimeoutSeconds: navBarHideTimeoutSeconds ?? this.navBarHideTimeoutSeconds,
       enableParallax: enableParallax ?? this.enableParallax,
       enableFloatingCircles: enableFloatingCircles ?? this.enableFloatingCircles,
@@ -62,6 +66,7 @@ class SettingsService {
   static const _weightKey = 'theme_font_weight';
   static const _bubbleRoundingKey = 'ui_bubble_rounding';
   static const _dynamicBubblesKey = 'ui_dynamic_bubbles';
+  static const _compactModeKey = 'ui_compact_mode';
   static const _navBarTimeoutKey = 'ui_nav_hide_timeout';
   static const _parallaxKey = 'ui_enable_parallax';
   static const _floatingCirclesKey = 'ui_floating_circles';
@@ -78,6 +83,10 @@ class SettingsService {
   static const _autoDownloadKey = 'app_auto_download';
   static const _sendByEnterKey = 'app_send_enter';
   static const _themeModeKey = 'app_theme_mode';
+  static const _notificationsEnabledKey = 'notifications_enabled';
+  static const _soundEnabledKey = 'notifications_sound_enabled';
+  static const _doNotDisturbKey = 'notifications_do_not_disturb';
+  static const _biometricsKey = 'biometric_enabled';
 
   // Theme Notifier
   static final ValueNotifier<ThemeSettings> themeNotifier = 
@@ -94,6 +103,9 @@ class SettingsService {
   static final ValueNotifier<bool> sendByEnterNotifier = ValueNotifier(true);
   static final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
   static final ValueNotifier<bool> biometricsNotifier = ValueNotifier(false);
+  static final ValueNotifier<bool> notificationsEnabledNotifier = ValueNotifier(true);
+  static final ValueNotifier<bool> soundEnabledNotifier = ValueNotifier(true);
+  static final ValueNotifier<bool> doNotDisturbNotifier = ValueNotifier(false);
 
   static Future<void> loadSettings() async {
     // Load Theme
@@ -102,6 +114,7 @@ class SettingsService {
     final weightStr = await SecureStore.read(_weightKey);
     final roundingStr = await SecureStore.read(_bubbleRoundingKey);
     final dynBubblesStr = await SecureStore.read(_dynamicBubblesKey);
+    final compactModeStr = await SecureStore.read(_compactModeKey);
     final navTimeoutStr = await SecureStore.read(_navBarTimeoutKey);
     final parallaxStr = await SecureStore.read(_parallaxKey);
     final floatingCirclesStr = await SecureStore.read(_floatingCirclesKey);
@@ -114,6 +127,7 @@ class SettingsService {
       fontWeight: int.tryParse(weightStr ?? '') ?? 4,
       bubbleRounding: double.tryParse(roundingStr ?? '') ?? 16.0,
       dynamicBubbles: dynBubblesStr != 'false',
+      compactMode: compactModeStr == 'true',
       navBarHideTimeoutSeconds: int.tryParse(navTimeoutStr ?? '') ?? 3,
       enableParallax: parallaxStr != 'false',
       enableFloatingCircles: floatingCirclesStr != 'false',
@@ -134,13 +148,42 @@ class SettingsService {
     // Theme mode (system/light/dark)
     themeModeNotifier.value = _themeModeFromString(await SecureStore.read(_themeModeKey));
 
-    final bioStr = await SecureStore.read('biometrics_enabled');
+    final bioStr = await SecureStore.read(_biometricsKey) ??
+        await SecureStore.read('biometrics_enabled');
     biometricsNotifier.value = (bioStr == 'true');
+    notificationsEnabledNotifier.value =
+        (await SecureStore.read(_notificationsEnabledKey)) != 'false';
+    soundEnabledNotifier.value =
+        (await SecureStore.read(_soundEnabledKey)) != 'false';
+    doNotDisturbNotifier.value =
+        (await SecureStore.read(_doNotDisturbKey)) == 'true';
   }
 
   static Future<void> setBiometricsEnabled(bool value) async {
+    await SecureStore.write(_biometricsKey, value.toString());
     await SecureStore.write('biometrics_enabled', value.toString());
     biometricsNotifier.value = value;
+  }
+
+  static Future<void> setNotificationsEnabled(bool value) async {
+    notificationsEnabledNotifier.value = value;
+    await SecureStore.write(_notificationsEnabledKey, value.toString());
+    if (!value && soundEnabledNotifier.value) {
+      await setSoundEnabled(false);
+    }
+  }
+
+  static Future<void> setSoundEnabled(bool value) async {
+    soundEnabledNotifier.value = value;
+    await SecureStore.write(_soundEnabledKey, value.toString());
+    if (value && !notificationsEnabledNotifier.value) {
+      await setNotificationsEnabled(true);
+    }
+  }
+
+  static Future<void> setDoNotDisturb(bool value) async {
+    doNotDisturbNotifier.value = value;
+    await SecureStore.write(_doNotDisturbKey, value.toString());
   }
 
   static ThemeMode _themeModeFromString(String? v) {
@@ -176,6 +219,7 @@ class SettingsService {
     int? primaryColorValue,
     double? bubbleRounding,
     bool? dynamicBubbles,
+    bool? compactMode,
     int? navBarHideTimeoutSeconds,
     bool? enableParallax,
     int? fontWeight,
@@ -189,6 +233,7 @@ class SettingsService {
       primaryColorValue: primaryColorValue,
       bubbleRounding: bubbleRounding,
       dynamicBubbles: dynamicBubbles,
+      compactMode: compactMode,
       navBarHideTimeoutSeconds: navBarHideTimeoutSeconds,
       enableParallax: enableParallax,
       fontWeight: fontWeight,
@@ -204,6 +249,7 @@ class SettingsService {
     if (fontWeight != null) await SecureStore.write(_weightKey, fontWeight.toString());
     if (bubbleRounding != null) await SecureStore.write(_bubbleRoundingKey, bubbleRounding.toString());
     if (dynamicBubbles != null) await SecureStore.write(_dynamicBubblesKey, dynamicBubbles.toString());
+    if (compactMode != null) await SecureStore.write(_compactModeKey, compactMode.toString());
     if (navBarHideTimeoutSeconds != null) await SecureStore.write(_navBarTimeoutKey, navBarHideTimeoutSeconds.toString());
     if (enableParallax != null) await SecureStore.write(_parallaxKey, enableParallax.toString());
     if (enableFloatingCircles != null) await SecureStore.write(_floatingCirclesKey, enableFloatingCircles.toString());
@@ -262,6 +308,10 @@ class SettingsService {
   static Future<void> setTextScale(double scale) async {
     textScaleNotifier.value = scale;
     await SecureStore.write(_textScaleKey, scale.toString());
+  }
+
+  static Future<void> setCompactMode(bool value) async {
+    await updateTheme(compactMode: value);
   }
   
   static Future<void> setAutoDownloadMedia(bool val) async {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
@@ -12,9 +13,6 @@ class AccountSettingsScreen extends StatefulWidget {
 }
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
-  bool _twoFactorEnabled = false;
-  bool _biometricEnabled = false;
-  // bool _sessionManagementEnabled = true;
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -101,91 +99,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Security
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                child: Text(
-                  l10n.securitySection,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-              GlassCard(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        secondary: const Icon(Icons.security),
-                        title: Text(l10n.twoFactorLabel),
-                        subtitle: Text(l10n.twoFactorSubtitle),
-                        value: _twoFactorEnabled,
-                        onChanged: (v) {
-                          setState(() => _twoFactorEnabled = v);
-                          if (v) {
-                            context.push('/tfa-setup');
-                          }
-                        },
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      const Divider(height: 1),
-                      SwitchListTile(
-                        secondary: const Icon(Icons.fingerprint),
-                        title: Text(l10n.biometricLabel),
-                        subtitle: Text(l10n.biometricSubtitle),
-                        value: _biometricEnabled,
-                        onChanged: (v) {
-                          setState(() => _biometricEnabled = v);
-                          if (v) {
-                            context.push('/biometric-setup');
-                          }
-                        },
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.devices),
-                        title: Text(l10n.activeSessionsLabel),
-                        subtitle: Text(l10n.activeSessionsSubtitle),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: Text(l10n.activeSessionsLabel),
-                              content: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ListTile(
-                                    leading: const Icon(Icons.phone_android),
-                                    title: Text(l10n.currentDevice),
-                                    subtitle: Text(l10n.activeDeviceInfo),
-                                    dense: true,
-                                  ),
-                                ],
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(l10n.closeButton),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
               // Change password
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
@@ -302,9 +215,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       ListTile(
                         leading: const Icon(Icons.email),
                         title: Text(l10n.emailLabel),
-                        subtitle: const Text('user@example.com'),
+                        const subtitle: Text('—'),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/change_email'),
+                        onTap: () => context.push(AppStrings.routeChangeEmail),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
@@ -312,9 +225,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       ListTile(
                         leading: const Icon(Icons.phone),
                         title: Text(l10n.phoneLabel),
-                        subtitle: const Text('+7 (XXX) XXX-XX-XX'),
+                        const subtitle: Text('—'),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/change_phone'),
+                        onTap: () => context.push(AppStrings.routeChangePhone),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),

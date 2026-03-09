@@ -14,6 +14,8 @@ import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dar
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
 import 'package:two_space_app/features/chat/data/services/draft_service.dart';
 import 'package:two_space_app/features/chat/data/services/voice_service.dart';
+import 'package:two_space_app/features/chat/presentation/screens/chat_settings_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/group_settings_screen.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/typing_indicator.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
@@ -278,6 +280,23 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (_) {
       // Not a group room or error loading settings
     }
+  }
+
+  Future<void> _openChatSettings() async {
+    final isGroupRoom = widget.chat.roomType == 'group';
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => isGroupRoom
+            ? GroupSettingsScreen(roomId: widget.chat.id)
+            : ChatSettingsScreen(
+                roomId: widget.chat.id,
+                initialName: widget.chat.name,
+              ),
+      ),
+    );
+    if (!mounted) return;
+    await _loadMessages();
   }
 
   /// Load draft message for this chat
@@ -789,25 +808,35 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFF21262C).withValues(alpha: 0.7),
-        title: Row(
-          children: [
-            Hero(
-              tag: 'avatar_${widget.chat.id}',
-              child: UserAvatar(
-                avatarUrl: widget.chat.avatarUrl,
-                name: widget.chat.name,
-                radius: 18,
+        title: InkWell(
+          onTap: _openChatSettings,
+          borderRadius: BorderRadius.circular(12),
+          child: Row(
+            children: [
+              Hero(
+                tag: 'avatar_${widget.chat.id}',
+                child: UserAvatar(
+                  avatarUrl: widget.chat.avatarUrl,
+                  name: widget.chat.name,
+                  radius: 18,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                widget.chat.name,
-                overflow: TextOverflow.ellipsis,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.chat.name,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: _openChatSettings,
+          ),
+        ],
       ),
       body: ScreenBackground(
         child: SafeArea(

@@ -40,6 +40,8 @@ class _CustomizationScreenState extends State<CustomizationScreen>
     _floatingCirclesSpeed = settings.floatingCirclesSpeed;
     _floatingCirclesOpacity = settings.floatingCirclesOpacity;
     _enableParallax = settings.enableParallax;
+    _compactMode = settings.compactMode;
+    _fontSize = (SettingsService.textScaleNotifier.value * 14).clamp(12, 20);
   }
 
   @override
@@ -736,6 +738,9 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                       divisions: 8,
                       value: _fontSize,
                       onChanged: (v) => setState(() => _fontSize = v),
+                      onChangeEnd: (v) async {
+                        await SettingsService.setTextScale(v / 14);
+                      },
                     ),
                   ),
                 ),
@@ -749,7 +754,10 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                     style: TextStyle(color: Colors.white.withAlpha(150)),
                   ),
                   value: _compactMode,
-                  onChanged: (v) => setState(() => _compactMode = v),
+                  onChanged: (v) async {
+                    setState(() => _compactMode = v);
+                    await SettingsService.setCompactMode(v);
+                  },
                 ),
               ],
             ),

@@ -17,30 +17,13 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
   bool _loggingOut = false;
   String _appVersion = '';
-  bool _autoDownloadMedia = false;
-  bool _sendByEnter = true;
 
   @override
   void initState() {
     super.initState();
     _loadAppVersion();
-    _loadSettings();
-  }
-
-  void _loadSettings() {
-    setState(() {
-      _autoDownloadMedia = SettingsService.autoDownloadMediaNotifier.value;
-      _sendByEnter = SettingsService.sendByEnterNotifier.value;
-
-      // Load notifications/sound if they exist in service, otherwise default
-      // Assuming existing service has notification settings (checked previously, didn't see explicit pub methods but maybe notifiers?)
-      // Actually checking previous read of SettingsService...
-      // It has showEmail, showPhone, paleViolet, etc. but not generic notifications/sound.
-      // Keeping local state for those for now as they might be system level or unimplemented.
-    });
   }
 
   Future<void> _loadAppVersion() async {
@@ -102,7 +85,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           IconButton(
             onPressed: () => context.push(AppStrings.routeSettingsSearch),
             icon: const Icon(Icons.search_rounded),
-            tooltip: 'Search settings',
           ),
         ],
       ),
@@ -148,7 +130,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: Text(l10n.customizationLabel),
                         subtitle: Text(l10n.customizationSubtitle),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/customization'),
+                        onTap: () =>
+                            context.push(AppStrings.routeCustomization),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
@@ -178,19 +161,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         leading: const Icon(Icons.notifications),
                         title: Text(l10n.settingsNotificationNew),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/notifications'),
+                        onTap: () =>
+                            context.push(AppStrings.routeNotifications),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
                       const Divider(height: 1),
-                      SwitchListTile(
-                        secondary: const Icon(Icons.do_not_disturb),
-                        title: Text(l10n.settingsDoNotDisturb),
-                        value: _notificationsEnabled, // Reuse state for now
-                        onChanged: (v) =>
-                            setState(() => _notificationsEnabled = v),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: SettingsService.doNotDisturbNotifier,
+                        builder: (context, enabled, _) {
+                          return SwitchListTile(
+                            secondary: const Icon(Icons.do_not_disturb),
+                            title: Text(l10n.settingsDoNotDisturb),
+                            value: enabled,
+                            onChanged: SettingsService.setDoNotDisturb,
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -235,7 +223,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: Text(l10n.accountSettingsLabel),
                         subtitle: Text(l10n.accountSettingsSubtitle),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/account-settings'),
+                        onTap: () =>
+                            context.push(AppStrings.routeAccountSettings),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
@@ -245,7 +234,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: Text(l10n.privacyLabel),
                         subtitle: Text(l10n.privacySubtitle),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/privacy'),
+                        onTap: () => context.push(AppStrings.routePrivacy),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
@@ -278,17 +267,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
-                      SwitchListTile(
-                        secondary: const Icon(Icons.keyboard),
-                        title: Text(l10n.sendByEnterLabel),
-                        subtitle: Text(l10n.sendByEnterSubtitle),
-                        value: _sendByEnter,
-                        onChanged: (v) async {
-                          setState(() => _sendByEnter = v);
-                          await SettingsService.setSendByEnter(v);
+                      ValueListenableBuilder<bool>(
+                        valueListenable: SettingsService.sendByEnterNotifier,
+                        builder: (context, sendByEnter, _) {
+                          return SwitchListTile(
+                            secondary: const Icon(Icons.keyboard),
+                            title: Text(l10n.sendByEnterLabel),
+                            subtitle: Text(l10n.sendByEnterSubtitle),
+                            value: sendByEnter,
+                            onChanged: SettingsService.setSendByEnter,
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                          );
                         },
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
                       ),
                     ],
                   ),
@@ -312,24 +303,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Column(
                     children: [
-                      SwitchListTile(
-                        secondary: const Icon(Icons.download),
-                        title: Text(l10n.autoDownloadLabel),
-                        subtitle: Text(l10n.autoDownloadSubtitle),
-                        value: _autoDownloadMedia,
-                        onChanged: (v) async {
-                          setState(() => _autoDownloadMedia = v);
-                          await SettingsService.setAutoDownloadMedia(v);
+                      ValueListenableBuilder<bool>(
+                        valueListenable:
+                            SettingsService.autoDownloadMediaNotifier,
+                        builder: (context, autoDownloadMedia, _) {
+                          return SwitchListTile(
+                            secondary: const Icon(Icons.download),
+                            title: Text(l10n.autoDownloadLabel),
+                            subtitle: Text(l10n.autoDownloadSubtitle),
+                            value: autoDownloadMedia,
+                            onChanged: SettingsService.setAutoDownloadMedia,
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                          );
                         },
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
                       ),
                       const Divider(height: 1),
                       ListTile(
                         leading: const Icon(Icons.memory_rounded),
-                        title: const Text('Память'),
+                        title: Text(l10n.settingsStorageUsage),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/storage'),
+                        onTap: () => context.push(AppStrings.routeStorage),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
@@ -339,30 +333,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: Text(l10n.storageManagementLabel),
                         subtitle: Text(l10n.storageManagementSubtitle),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: Text(l10n.clearCacheTitle),
-                              content: Text(l10n.clearCacheContent),
-                              actions: [
-                                TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text(l10n.cancel)),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text(l10n.cacheCleared)),
-                                    );
-                                  },
-                                  child: Text(l10n.delete),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                        onTap: () => context.push(AppStrings.routeStorage),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),
@@ -389,7 +360,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       ListTile(
                         leading: const Icon(Icons.info),
-                        title: const Text('TwoSpace'),
+                        title: Text(l10n.appTitle),
                         subtitle: Text(
                             _appVersion.isEmpty ? l10n.loading : _appVersion),
                         contentPadding:
@@ -401,7 +372,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         title: Text(l10n.suggestImprovementLabel),
                         subtitle: Text(l10n.suggestImprovementSubtitle),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push('/feedback'),
+                        onTap: () => context.push(AppStrings.routeFeedback),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
                       ),

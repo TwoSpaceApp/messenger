@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/highlighted_text.dart';
-import 'package:two_space_app/features/auth/data/services/auth_service.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/features/settings/presentation/models/settings_catalog.dart';
 
 class SettingsSearchScreen extends StatefulWidget {
   const SettingsSearchScreen({super.key});
@@ -16,136 +16,17 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
   String _query = '';
   String? _sectionFilter;
 
-  static final List<_SettingsSearchEntry> _entries = [
-    _SettingsSearchEntry(
-      title: 'Оформление',
-      subtitle: 'Тема приложения',
-      section: 'Внешний вид',
-      keywords: ['dark', 'light', 'theme', 'appearance', 'цвет'],
-      onTap: (context) async {
-        context.pop();
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Кастомизация',
-      subtitle: 'Шрифты, цвета, анимации интерфейса',
-      section: 'Внешний вид',
-      keywords: ['font', 'color', 'ui', 'customization', 'bubble'],
-      onTap: (context) async {
-        context.push('/customization');
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Уведомления',
-      subtitle: 'Новые сообщения и режим не беспокоить',
-      section: 'Уведомления',
-      keywords: ['notification', 'mute', 'dnd', 'sound'],
-      onTap: (context) async {
-        context.push('/notifications');
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Профиль',
-      subtitle: 'Открыть ваш профиль',
-      section: 'Аккаунт',
-      keywords: ['profile', 'user', 'avatar', 'name'],
-      onTap: (context) async {
-        final userId = await AuthService().getCurrentUserId();
-        if (context.mounted && userId != null) {
-          context.push('/profile', extra: userId);
-        }
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Настройки аккаунта',
-      subtitle: 'Управление данными аккаунта',
-      section: 'Аккаунт',
-      keywords: ['account', 'email', 'phone'],
-      onTap: (context) async {
-        context.push('/account-settings');
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Приватность',
-      subtitle: 'Видимость данных и защита аккаунта',
-      section: 'Аккаунт',
-      keywords: ['privacy', 'security', '2fa', 'visibility'],
-      onTap: (context) async {
-        context.push('/privacy');
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Язык',
-      subtitle: 'Переключение языка интерфейса',
-      section: 'Общие',
-      keywords: ['language', 'locale', 'translation'],
-      onTap: (context) async {
-        context.pop();
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Отправка по Enter',
-      subtitle: 'Быстрая отправка сообщений клавишей Enter',
-      section: 'Общие',
-      keywords: ['enter', 'keyboard', 'send'],
-      onTap: (context) async {
-        context.pop();
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Автозагрузка медиа',
-      subtitle: 'Автоматическая загрузка медиафайлов',
-      section: 'Хранение',
-      keywords: ['media', 'download', 'auto', 'files'],
-      onTap: (context) async {
-        context.pop();
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Память',
-      subtitle: 'Использование памяти и размер данных',
-      section: 'Хранение',
-      keywords: ['storage', 'memory', 'cache', 'space'],
-      onTap: (context) async {
-        context.push('/storage');
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Управление хранилищем',
-      subtitle: 'Очистка кеша и локальных данных',
-      section: 'Хранение',
-      keywords: ['clear', 'cache', 'storage'],
-      onTap: (context) async {
-        context.pop();
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'О приложении',
-      subtitle: 'Версия клиента и обратная связь',
-      section: 'О приложении',
-      keywords: ['about', 'version', 'feedback'],
-      onTap: (context) async {
-        context.pop();
-      },
-    ),
-    _SettingsSearchEntry(
-      title: 'Предложить улучшение',
-      subtitle: 'Отправить отзыв о приложении',
-      section: 'О приложении',
-      keywords: ['feedback', 'improve', 'suggestion'],
-      onTap: (context) async {
-        context.push('/feedback');
-      },
-    ),
-  ];
+  List<SettingsSearchEntry> _entries(AppLocalizations l10n) =>
+      buildSettingsSearchEntries(l10n);
 
-  List<String> get _sections =>
-      _entries.map((entry) => entry.section).toSet().toList()..sort();
+  List<String> _sections(AppLocalizations l10n) =>
+      _entries(l10n).map((entry) => entry.section).toSet().toList()..sort();
 
-  List<_SettingsSearchEntry> get _filteredEntries {
+  List<SettingsSearchEntry> _filteredEntries(AppLocalizations l10n) {
     final query = _query.trim().toLowerCase();
-    return _entries.where((entry) {
-      final matchesSection = _sectionFilter == null || entry.section == _sectionFilter;
+    return _entries(l10n).where((entry) {
+      final matchesSection =
+          _sectionFilter == null || entry.section == _sectionFilter;
       if (!matchesSection) return false;
       if (query.isEmpty) return true;
       return entry.searchText.contains(query);
@@ -160,10 +41,12 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final entries = _filteredEntries;
+    final l10n = AppLocalizations.of(context)!;
+    final entries = _filteredEntries(l10n);
+    final sections = _sections(l10n);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Поиск по настройкам')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: SafeArea(
         child: Column(
           children: [
@@ -174,7 +57,7 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
                 autofocus: true,
                 onChanged: (value) => setState(() => _query = value),
                 decoration: InputDecoration(
-                  hintText: 'Искать раздел, настройку или действие',
+                  labelText: l10n.searchTypeLabel,
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _query.isEmpty
                       ? null
@@ -194,24 +77,23 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 scrollDirection: Axis.horizontal,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: const Text('Все'),
-                      selected: _sectionFilter == null,
-                      onSelected: (_) => setState(() => _sectionFilter = null),
-                    ),
-                  ),
-                  ..._sections.map(
+                  ...sections.map(
                     (section) => Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ChoiceChip(
                         label: Text(section),
                         selected: _sectionFilter == section,
-                        onSelected: (_) => setState(() => _sectionFilter = section),
+                        onSelected: (selected) => setState(
+                          () => _sectionFilter = selected ? section : null,
+                        ),
                       ),
                     ),
                   ),
+                  if (_sectionFilter != null)
+                    IconButton(
+                      onPressed: () => setState(() => _sectionFilter = null),
+                      icon: const Icon(Icons.filter_alt_off_rounded),
+                    ),
                 ],
               ),
             ),
@@ -220,11 +102,10 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 220),
                 child: entries.isEmpty
-                    ? const AppEmptyState(
-                      key: ValueKey('empty-settings-search'),
-                        title: 'Ничего не найдено',
-                        message:
-                            'Попробуйте другой запрос или снимите фильтр по разделу.',
+                  ? AppEmptyState(
+                        key: ValueKey('empty-settings-search'),
+                    title: l10n.nothingFound,
+                    message: l10n.noResultsFound,
                         icon: Icons.manage_search_rounded,
                       )
                     : ListView.separated(
@@ -234,6 +115,7 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final entry = entries[index];
+                          final theme = Theme.of(context);
                           return Card(
                             elevation: 0,
                             shape: RoundedRectangleBorder(
@@ -243,13 +125,11 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 8),
                               leading: CircleAvatar(
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .primary
+                                backgroundColor: theme.colorScheme.primary
                                     .withValues(alpha: 0.12),
                                 child: Icon(
-                                  Icons.tune_rounded,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  entry.icon,
+                                  color: theme.colorScheme.primary,
                                 ),
                               ),
                               title: HighlightedText(
@@ -264,12 +144,9 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
                                   HighlightedText(
                                     entry.subtitle,
                                     query: _query,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
+                                    style: theme.textTheme.bodyMedium
                                         ?.copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
+                                      color: theme.colorScheme
                                               .onSurface
                                               .withValues(alpha: 0.72),
                                         ),
@@ -279,18 +156,14 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary
+                                      color: theme.colorScheme.primary
                                           .withValues(alpha: 0.09),
                                       borderRadius: BorderRadius.circular(999),
                                     ),
                                     child: Text(
                                       entry.section,
                                       style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
+                                        color: theme.colorScheme.primary,
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -311,22 +184,4 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
       ),
     );
   }
-}
-
-class _SettingsSearchEntry {
-  const _SettingsSearchEntry({
-    required this.title,
-    required this.subtitle,
-    required this.section,
-    required this.keywords,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final String section;
-  final List<String> keywords;
-  final Future<void> Function(BuildContext context) onTap;
-
-  String get searchText => '$title $subtitle $section ${keywords.join(' ')}'.toLowerCase();
 }

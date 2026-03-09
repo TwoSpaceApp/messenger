@@ -19,6 +19,11 @@ class AegisClient {
       _pendingMessages.add(message);
       _messageController.add(message);
     });
+    _transport.disconnects.listen((_) {
+      _isAuthenticated = false;
+      _authenticatedUserId = null;
+      _authenticatedUsername = null;
+    });
   }
   late AegisTransport _transport;
   // ignore: unused_field
@@ -266,14 +271,12 @@ class AegisClient {
 
     await _transport.sendMessage(message);
 
-    // Wait for response (simplified - in real implementation should handle different response types)
-    final responseMessage = await messages
-        .firstWhere(
-          (msg) => msg.type == MessageType.channelMessage,
-          orElse: () => throw TimeoutException(
-              'Channel message timeout', const Duration(seconds: 10)),
-        )
-        .timeout(const Duration(seconds: 10));
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.ack, MessageType.channelMessage],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Channel message timeout',
+    );
 
     return ChannelMessageResponse.fromBytes(responseMessage.payload);
   }

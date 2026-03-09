@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/network/aegis/aegis_client.dart';
@@ -17,7 +19,12 @@ const _kAegisUserIdKey = 'aegis_user_id';
 /// и предоставляет простой Flutter-friendly API.
 class AegisAuthService {
   factory AegisAuthService() => _instance;
-  AegisAuthService._internal();
+  AegisAuthService._internal() {
+    _client.disconnects.listen((_) {
+      _stopKeepAlive();
+      _log.warning('Соединение с Aegis-сервером разорвано');
+    });
+  }
   static final AegisAuthService _instance = AegisAuthService._internal();
 
   final DevLogger _log = DevLogger('AegisAuthService');
@@ -27,6 +34,8 @@ class AegisAuthService {
   String? _token;
   String? _username;
   int? _userId;
+  Timer? _keepAliveTimer;
+  Future<bool>? _restoreSessionFuture;
 
   bool get isConnected => _client.isConnected;
   bool get isAuthenticated => _client.isAuthenticated;
@@ -48,7 +57,10 @@ class AegisAuthService {
 
   /// Подключиться к Aegis-серверу (не аутентифицирует).
   Future<void> connect() async {
-    if (_client.isConnected) return;
+    if (_client.isConnected) {
+      _ensureKeepAlive();
+      return;
+    }
     _log.info(
         'Подключение к ${Environment.aegisHost}:${Environment.aegisPort}');
     await _client.connect(
@@ -56,12 +68,35 @@ class AegisAuthService {
       Environment.aegisPort,
       timeout: Environment.aegisConnectTimeout,
     );
+    _ensureKeepAlive();
     _log.info('TCP-соединение установлено');
+  }
+
+  Future<void> ensureSession() async {
+    if (_client.isConnected && _client.isAuthenticated) {
+      _ensureKeepAlive();
+      return;
+    }
+
+    final restored = await restoreSession();
+    if (!restored) {
+      throw NotAuthenticatedException();
+    }
   }
 
   /// Подключиться (если не подключён) и аутентифицировать по сохранённому токену.
   /// Возвращает `true` если сессия восстановлена успешно.
   Future<bool> restoreSession() async {
+    final inFlight = _restoreSessionFuture;
+    if (inFlight != null) return inFlight;
+
+    final future = _restoreSessionInternal();
+    _restoreSessionFuture = future;
+    future.whenComplete(() => _restoreSessionFuture = null);
+    return future;
+  }
+
+  Future<bool> _restoreSessionInternal() async {
     try {
       _token = await _secure.read(key: _kAegisTokenKey);
       _username = await _secure.read(key: _kAegisUsernameKey);
@@ -93,6 +128,7 @@ class AegisAuthService {
         }
       }
       await _saveSession();
+      _ensureKeepAlive();
       _log.info('Сессия восстановлена для $_username');
       return true;
     } catch (e) {
@@ -169,6 +205,7 @@ class AegisAuthService {
     _userId = response.userId > 0 ? response.userId : null;
 
     await _saveSession();
+    _ensureKeepAlive();
     _log.info('Вход выполнен: $_username');
   }
 
@@ -176,6 +213,7 @@ class AegisAuthService {
 
   Future<void> logout() async {
     _log.info('Выход...');
+    _stopKeepAlive();
     await clearSession();
     try {
       await _client.disconnect();
@@ -215,12 +253,31 @@ class AegisAuthService {
   }
 
   Future<void> clearSession() async {
+    _stopKeepAlive();
     _token = null;
     _username = null;
     _userId = null;
     await _secure.delete(key: _kAegisTokenKey);
     await _secure.delete(key: _kAegisUsernameKey);
     await _secure.delete(key: _kAegisUserIdKey);
+  }
+
+  void _ensureKeepAlive() {
+    _keepAliveTimer ??= Timer.periodic(const Duration(seconds: 90), (_) async {
+      if (!_client.isConnected || !_client.isAuthenticated) {
+        return;
+      }
+      try {
+        await _client.ping();
+      } catch (e) {
+        _log.debug('Ping keep-alive не удался: $e');
+      }
+    });
+  }
+
+  void _stopKeepAlive() {
+    _keepAliveTimer?.cancel();
+    _keepAliveTimer = null;
   }
 
   void _ensureAuthenticated() {

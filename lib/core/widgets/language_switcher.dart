@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 /// Данные о языке: код, родное название, код страны для флага
@@ -43,7 +44,7 @@ class LanguageSwitcherButton extends StatelessWidget {
       builder: (context, lang, _) {
         final info = _languages.firstWhere(
           (l) => l.code == lang,
-          orElse: () => const _LangInfo('en', 'English', '🇬🇧'),
+          orElse: () => const _LangInfo('en', 'English', 'gb'),
         );
         return _LanguageButton(info: info, showLabel: showLabel);
       },
@@ -131,6 +132,7 @@ class _LanguagePickerSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final size = MediaQuery.of(context).size;
 
     return Container(
@@ -169,7 +171,7 @@ class _LanguagePickerSheet extends StatelessWidget {
                   ),
                   const SizedBox(width: 16),
                   Text(
-                    'Select Language\nВыберите язык',
+                    l10n.languageLabel,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       height: 1.2,

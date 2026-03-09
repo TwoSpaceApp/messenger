@@ -21,8 +21,13 @@ class AppStrings {
   static const routePrivacy = '/privacy';
   static const routeProfile = '/profile';
   static const routeChangeEmail = '/change_email';
+  static const routeChangePhone = '/change_phone';
   static const routeChat = '/chat';
   static const routeAccountSettings = '/account-settings';
   static const routeFeedback = '/feedback';
   static const routeSettingsSearch = '/settings-search';
+  static const routeNotifications = '/notifications';
+  static const routeStorage = '/storage';
+  static const routeTfaSetup = '/tfa_setup';
+  static const routeBiometricSetup = '/biometric-setup';
 }
