@@ -89,6 +89,7 @@ class _CallScreenState extends State<CallScreen> {
     final title = _person.displayName.isNotEmpty
       ? _person.displayName
       : l10n.userDefault;
+    final isCompact = MediaQuery.sizeOf(context).width < 390;
     final sidePadding = 20.s(context);
     final controlsGap = 18.s(context);
 
@@ -160,12 +161,15 @@ class _CallScreenState extends State<CallScreen> {
                 SizedBox(height: 24.s(context)),
                 Text(
                   title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
                 ),
-                        SizedBox(height: 10.s(context)),
+                SizedBox(height: 10.s(context)),
                 Text(
                   _statusDetail(l10n),
                   textAlign: TextAlign.center,
@@ -179,19 +183,23 @@ class _CallScreenState extends State<CallScreen> {
                     horizontal: 12.s(context),
                     vertical: 16.s(context),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: isCompact ? 10.s(context) : 18.s(context),
+                    runSpacing: 14.s(context),
                     children: [
                       _CallActionButton(
                         icon: _muted ? Icons.mic_off_rounded : Icons.mic_none_rounded,
                         active: _muted,
                         label: l10n.callsMuteAction,
+                        compact: isCompact,
                         onTap: () => setState(() => _muted = !_muted),
                       ),
                       _CallActionButton(
                         icon: _speaker ? Icons.volume_up_rounded : Icons.hearing_rounded,
                         active: _speaker,
                         label: l10n.callsSpeakerAction,
+                        compact: isCompact,
                         onTap: () => setState(() => _speaker = !_speaker),
                       ),
                       if (widget.isVideo)
@@ -201,12 +209,14 @@ class _CallScreenState extends State<CallScreen> {
                               : Icons.videocam_off_outlined,
                           active: _cameraEnabled,
                           label: l10n.callsCameraAction,
+                          compact: isCompact,
                           onTap: () => setState(() => _cameraEnabled = !_cameraEnabled),
                         ),
                       if (widget.isVideo)
                         _CallActionButton(
                           icon: Icons.cameraswitch_outlined,
                           label: l10n.callsSwitchCameraAction,
+                          compact: isCompact,
                           onTap: () => setState(() => _frontCamera = !_frontCamera),
                         ),
                     ],
@@ -289,12 +299,14 @@ class _CallActionButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.active = false,
+    this.compact = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final bool active;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -319,6 +331,9 @@ class _CallActionButton extends StatelessWidget {
         SizedBox(height: 6.s(context)),
         Text(
           label,
+          textAlign: TextAlign.center,
+          maxLines: compact ? 2 : 1,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: Colors.white70,
               ),
@@ -341,8 +356,13 @@ class _VideoPreviewStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isCompact = MediaQuery.sizeOf(context).width < 390;
+    final previewHeight = MediaQuery.sizeOf(context).height < 760
+        ? 260.s(context)
+        : 320.s(context);
+
     return SizedBox(
-      height: 320.s(context),
+      height: previewHeight,
       child: Stack(
         children: [
           Positioned.fill(
@@ -373,8 +393,8 @@ class _VideoPreviewStack extends StatelessWidget {
             right: 16.s(context),
             bottom: 16.s(context),
             child: Container(
-              width: 120.s(context),
-              height: 180.s(context),
+              width: isCompact ? 96.s(context) : 120.s(context),
+              height: isCompact ? 144.s(context) : 180.s(context),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24.s(context)),
                 color: Colors.black.withValues(alpha: 0.35),

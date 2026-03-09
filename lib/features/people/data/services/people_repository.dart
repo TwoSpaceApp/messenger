@@ -234,7 +234,10 @@ class PeopleRepository {
   Future<DeviceContactsResult> loadDeviceContacts({
     bool requestPermission = true,
   }) async {
-    if (_deviceContactsCache != null) {
+    if (_deviceContactsCache != null &&
+        (!requestPermission ||
+            _deviceContactsCache!.permission ==
+                DeviceContactsPermission.granted)) {
       return _deviceContactsCache!;
     }
 

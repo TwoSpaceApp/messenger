@@ -494,9 +494,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get languageUkrainian => '우크라이나어';
 
   @override
-  String get matrixTooltip => 'Matrix는 연합 메시징을 위한 개방형 프로토콜입니다';
-
-  @override
   String get clientDescription => 'Flutter/Dart로 만든 TwoSpace 클라이언트';
 
   @override
@@ -942,10 +939,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get startDirectChatTitle => '직접 채팅 시작';
 
   @override
-  String get matrixIdDescription => '사용자 이름 또는 Aegis ID를 입력하세요';
+  String get contactIdDescription => '사용자 이름 또는 Aegis ID를 입력하세요';
 
   @override
-  String get matrixIdLabel => '사용자 이름 또는 Aegis ID';
+  String get contactIdLabel => '사용자 이름 또는 Aegis ID';
 
   @override
   String get startChatButton => '채팅 시작';
@@ -954,7 +951,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get hintCardTitle => '힌트';
 
   @override
-  String get matrixIdExplanation => '사용자 이름 또는 숫자형 Aegis 사용자 ID를 사용할 수 있습니다';
+  String get contactIdExplanation => '사용자 이름 또는 숫자형 Aegis 사용자 ID를 사용할 수 있습니다';
 
   @override
   String get enterUserIdError => '사용자 ID를 입력하세요';

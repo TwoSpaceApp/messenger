@@ -213,7 +213,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  l10n.matrixIdDescription,
+                  l10n.contactIdDescription,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.white.withAlpha(180),
@@ -224,7 +224,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   controller: _userIdController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: l10n.matrixIdLabel,
+                    labelText: l10n.contactIdLabel,
                     labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
                     hintStyle: TextStyle(color: Colors.white.withAlpha(100)),
                     prefixIcon: const Icon(Icons.person, color: Colors.white70),
@@ -290,7 +290,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  l10n.matrixIdExplanation,
+                  l10n.contactIdExplanation,
                   style: TextStyle(
                     color: Colors.white.withAlpha(180),
                     fontSize: 13,

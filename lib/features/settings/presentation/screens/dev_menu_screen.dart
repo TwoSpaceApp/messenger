@@ -37,7 +37,7 @@ class _DevMenuScreenState extends State<DevMenuScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -57,6 +57,7 @@ class _DevMenuScreenState extends State<DevMenuScreen>
           tabs: const [
             Tab(icon: Icon(Icons.dashboard_customize_outlined), text: 'Actions'),
             Tab(icon: Icon(Icons.brush_outlined), text: 'UI Inspect'),
+            Tab(icon: Icon(Icons.article_outlined), text: 'Logs'),
             Tab(icon: Icon(Icons.network_check), text: 'Network'),
             Tab(icon: Icon(Icons.flag_outlined), text: 'Features'),
             Tab(icon: Icon(Icons.info_outline), text: 'Info'),
@@ -68,12 +69,116 @@ class _DevMenuScreenState extends State<DevMenuScreen>
         children: [
           _DevMenuActionsTab(logger: _logger),
           const _DevMenuUIInspectorTab(),
+          const _DevMenuLogsTab(),
           const _DevMenuNetworkTab(),
           const _DevMenuFeatureFlagsTab(),
           const _DevMenuInfoTab(),
         ],
       ),
     );
+  }
+}
+
+class _DevMenuLogsTab extends StatefulWidget {
+  const _DevMenuLogsTab();
+
+  @override
+  State<_DevMenuLogsTab> createState() => _DevMenuLogsTabState();
+}
+
+class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
+  bool _showOnlyErrors = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<String>>(
+      stream: DevLogger.stream,
+      initialData: DevLogger.all,
+      builder: (context, snapshot) {
+        final rawLogs = snapshot.data ?? const <String>[];
+        final sourceLogs = List<String>.from(rawLogs.reversed);
+        final logs = _showOnlyErrors
+            ? sourceLogs.where((line) => line.contains(LogLevel.error.emoji)).toList()
+            : sourceLogs;
+
+        if (logs.isEmpty) {
+          return AppEmptyState(
+            title: 'Пока нет логов приложения',
+            message:
+                'Откройте проблемный экран или повторите действие — новые записи появятся здесь.',
+            icon: Icons.receipt_long_outlined,
+            actionLabel: sourceLogs.isNotEmpty ? 'Показать всё' : null,
+            onAction: sourceLogs.isNotEmpty
+                ? () => setState(() => _showOnlyErrors = false)
+                : null,
+          );
+        }
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+              child: Row(
+                children: [
+                  FilterChip(
+                    label: Text(
+                      _showOnlyErrors
+                          ? 'Только ошибки'
+                          : 'Все записи (${sourceLogs.length})',
+                    ),
+                    selected: _showOnlyErrors,
+                    onSelected: (value) => setState(() => _showOnlyErrors = value),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: DevLogger.clear,
+                    icon: const Icon(Icons.delete_sweep_outlined),
+                    label: const Text('Очистить'),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                itemCount: logs.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final line = logs[index];
+                  final color = _appLogColor(line);
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: color.withValues(alpha: 0.18)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: SelectableText(
+                        line,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Color _appLogColor(String line) {
+    if (line.contains(LogLevel.error.emoji)) return Colors.redAccent;
+    if (line.contains(LogLevel.warning.emoji)) return Colors.orangeAccent;
+    if (line.contains(LogLevel.info.emoji)) return Colors.blueAccent;
+    return Colors.white70;
   }
 }
 

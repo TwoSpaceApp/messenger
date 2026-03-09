@@ -494,9 +494,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageUkrainian => '乌克兰语';
 
   @override
-  String get matrixTooltip => 'Matrix是联合消息传递的开放协议';
-
-  @override
   String get clientDescription => '使用Flutter/Dart构建的TwoSpace客户端';
 
   @override
@@ -942,10 +939,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get startDirectChatTitle => '开始直接聊天';
 
   @override
-  String get matrixIdDescription => '输入用户名或 Aegis ID';
+  String get contactIdDescription => '输入用户名或 Aegis ID';
 
   @override
-  String get matrixIdLabel => '用户名或 Aegis ID';
+  String get contactIdLabel => '用户名或 Aegis ID';
 
   @override
   String get startChatButton => '开始聊天';
@@ -954,7 +951,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get hintCardTitle => '提示';
 
   @override
-  String get matrixIdExplanation => '可以使用用户名或数字形式的 Aegis 用户 ID';
+  String get contactIdExplanation => '可以使用用户名或数字形式的 Aegis 用户 ID';
 
   @override
   String get enterUserIdError => '请输入用户ID';

@@ -45,6 +45,7 @@ class _CallsScreenState extends State<CallsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isCompact = MediaQuery.sizeOf(context).width < 390;
     final horizontalPadding = 16.s(context);
     final headerTopPadding = 16.s(context);
     final sectionGap = 12.s(context);
@@ -114,6 +115,7 @@ class _CallsScreenState extends State<CallsScreen> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                     child: _CallsSummaryCard(
+                      compact: isCompact,
                       title: l10n.callsQuickStartTitle,
                       subtitle: l10n.callsQuickStartSubtitle,
                       onTap: _openStartCall,
@@ -541,12 +543,14 @@ class _CallsScreenState extends State<CallsScreen> {
 
 class _CallsSummaryCard extends StatelessWidget {
   const _CallsSummaryCard({
+    required this.compact,
     required this.title,
     required this.subtitle,
     required this.actionLabel,
     required this.onTap,
   });
 
+  final bool compact;
   final String title;
   final String subtitle;
   final String actionLabel;
@@ -554,50 +558,86 @@ class _CallsSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      child: Row(
+    final details = Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44.s(context),
-            height: 44.s(context),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(14.s(context)),
-            ),
-            child: Icon(
-              Icons.add_ic_call_outlined,
-              color: Colors.white,
-              size: 20.s(context),
-            ),
-          ),
-          SizedBox(width: 12.s(context)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
                 ),
-                SizedBox(height: 4.s(context)),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.72),
-                      ),
-                ),
-              ],
-            ),
           ),
-          FilledButton(
-            onPressed: onTap,
-            child: Text(actionLabel),
+          SizedBox(height: 4.s(context)),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.72),
+                ),
           ),
         ],
       ),
+    );
+
+    return GlassCard(
+      child: compact
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 44.s(context),
+                      height: 44.s(context),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(14.s(context)),
+                      ),
+                      child: Icon(
+                        Icons.add_ic_call_outlined,
+                        color: Colors.white,
+                        size: 20.s(context),
+                      ),
+                    ),
+                    SizedBox(width: 12.s(context)),
+                    details,
+                  ],
+                ),
+                SizedBox(height: 12.s(context)),
+                FilledButton(
+                  onPressed: onTap,
+                  child: Text(actionLabel),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Container(
+                  width: 44.s(context),
+                  height: 44.s(context),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(14.s(context)),
+                  ),
+                  child: Icon(
+                    Icons.add_ic_call_outlined,
+                    color: Colors.white,
+                    size: 20.s(context),
+                  ),
+                ),
+                SizedBox(width: 12.s(context)),
+                details,
+                FilledButton(
+                  onPressed: onTap,
+                  child: Text(actionLabel),
+                ),
+              ],
+            ),
     );
   }
 }

@@ -31,124 +31,196 @@ class PersonTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isCompact = MediaQuery.sizeOf(context).width < 390;
     final iconSize = 20.s(context);
     final badgeHorizontal = 8.s(context);
     final badgeVertical = 4.s(context);
+
+    Widget buildBadge() {
+      return Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: badgeHorizontal,
+          vertical: badgeVertical,
+        ),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          trailingLabel ?? 'TwoSpace',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    }
+
+    final actionButtons = <Widget>[
+      IconButton(
+        visualDensity: VisualDensity.compact,
+        iconSize: iconSize,
+        splashRadius: 20.s(context),
+        onPressed: onFavoriteTap,
+        icon: Icon(
+          person.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+          color: person.isFavorite ? Colors.amberAccent : Colors.white70,
+        ),
+      ),
+      if (onInviteTap != null)
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          iconSize: iconSize,
+          splashRadius: 20.s(context),
+          onPressed: onInviteTap,
+          icon: const Icon(Icons.share_rounded, color: Colors.white70),
+        )
+      else ...[
+        if (onMessageTap != null)
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            iconSize: iconSize,
+            splashRadius: 20.s(context),
+            onPressed: onMessageTap,
+            icon: const Icon(
+              Icons.chat_bubble_outline_rounded,
+              color: Colors.white70,
+            ),
+          ),
+        if (onVoiceCallTap != null)
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            iconSize: iconSize,
+            splashRadius: 20.s(context),
+            onPressed: onVoiceCallTap,
+            icon: const Icon(Icons.call_outlined, color: Colors.white70),
+          ),
+        if (onVideoCallTap != null)
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            iconSize: iconSize,
+            splashRadius: 20.s(context),
+            onPressed: onVideoCallTap,
+            icon: const Icon(Icons.videocam_outlined, color: Colors.white70),
+          ),
+      ],
+    ];
+
     return GlassCard(
       padding: EdgeInsets.symmetric(
         horizontal: 8.s(context),
         vertical: 4.s(context),
       ),
       onTap: onTap,
-      child: ListTile(
-        minVerticalPadding: 0,
-        contentPadding: EdgeInsets.symmetric(
+      child: Padding(
+        padding: EdgeInsets.symmetric(
           horizontal: 8.s(context),
-          vertical: 4.s(context),
+          vertical: 6.s(context),
         ),
-        leading: PersonAvatar(
-          name: person.displayName,
-          avatarUrl: person.avatarUrl,
-          photoBytes: person.photoBytes,
-          radius: 23.s(context),
-          showOnline: person.isOnline,
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                person.displayName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+        child: isCompact
+            ? Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      PersonAvatar(
+                        name: person.displayName,
+                        avatarUrl: person.avatarUrl,
+                        photoBytes: person.photoBytes,
+                        radius: 23.s(context),
+                        showOnline: person.isOnline,
+                      ),
+                      SizedBox(width: 12.s(context)),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    person.displayName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                if (person.isTwoSpaceUser) buildBadge(),
+                              ],
+                            ),
+                            SizedBox(height: 4.s(context)),
+                            Text(
+                              subtitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.72),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 6.s(context)),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Wrap(
+                      spacing: 2.s(context),
+                      children: actionButtons,
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  PersonAvatar(
+                    name: person.displayName,
+                    avatarUrl: person.avatarUrl,
+                    photoBytes: person.photoBytes,
+                    radius: 23.s(context),
+                    showOnline: person.isOnline,
+                  ),
+                  SizedBox(width: 12.s(context)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                person.displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            if (person.isTwoSpaceUser) buildBadge(),
+                          ],
+                        ),
+                        SizedBox(height: 4.s(context)),
+                        Text(
+                          subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.72),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 6.s(context)),
+                  Wrap(children: actionButtons),
+                ],
               ),
-            ),
-            if (person.isTwoSpaceUser)
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: badgeHorizontal,
-                  vertical: badgeVertical,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  trailingLabel ?? 'TwoSpace',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        subtitle: Padding(
-          padding: EdgeInsets.only(top: 4.s(context)),
-          child: Text(
-            subtitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.72)),
-          ),
-        ),
-        trailing: SizedBox(
-          width: onInviteTap != null ? 92.s(context) : 132.s(context),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                iconSize: iconSize,
-                splashRadius: 20.s(context),
-                onPressed: onFavoriteTap,
-                icon: Icon(
-                  person.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
-                  color: person.isFavorite ? Colors.amberAccent : Colors.white70,
-                ),
-              ),
-              if (onInviteTap != null)
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  iconSize: iconSize,
-                  splashRadius: 20.s(context),
-                  onPressed: onInviteTap,
-                  icon: const Icon(Icons.share_rounded, color: Colors.white70),
-                )
-              else ...[
-                if (onMessageTap != null)
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    iconSize: iconSize,
-                    splashRadius: 20.s(context),
-                    onPressed: onMessageTap,
-                    icon: const Icon(Icons.chat_bubble_outline_rounded,
-                        color: Colors.white70),
-                  ),
-                if (onVoiceCallTap != null)
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    iconSize: iconSize,
-                    splashRadius: 20.s(context),
-                    onPressed: onVoiceCallTap,
-                    icon: const Icon(Icons.call_outlined, color: Colors.white70),
-                  ),
-                if (onVideoCallTap != null)
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    iconSize: iconSize,
-                    splashRadius: 20.s(context),
-                    onPressed: onVideoCallTap,
-                    icon: const Icon(Icons.videocam_outlined,
-                        color: Colors.white70),
-                  ),
-              ],
-            ],
-          ),
-        ),
       ),
     );
   }

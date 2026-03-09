@@ -8,7 +8,7 @@ class AudioRecorderService {
     if (await _recorder.hasPermission()) {
       final directory = await getTemporaryDirectory();
       final path =
-          '${directory.path}/matrix_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+          '${directory.path}/twospace_audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
       await _recorder.start(const RecordConfig(), path: path);
     }

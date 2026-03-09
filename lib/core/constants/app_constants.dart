@@ -9,8 +9,6 @@ class AppConstants {
   static const String appPublisher = 'Synapse Corp';
   static const String appUrl = 'https://twospace.ru';
 
-  // Matrix/Synapse
-  static const String matrixServerUrl = 'https://matrix.example.com';
   static const String appDisplayName = 'TwoSpace';
 
   // Timeouts и retry

@@ -493,7 +493,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 l10n.nicknameField,
                               username),
                             const Divider(),
-                            _buildInfoRow(l10n.matrixIdLabel, profileId),
+                            _buildInfoRow(l10n.contactIdLabel, profileId),
                             const Divider(),
                             _buildInfoRow(
                                 l10n.locationField,

@@ -496,10 +496,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageUkrainian => 'Ukrainian';
 
   @override
-  String get matrixTooltip =>
-      'Matrix is an open protocol for federated messaging';
-
-  @override
   String get clientDescription => 'TwoSpace client built with Flutter/Dart';
 
   @override
@@ -953,10 +949,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startDirectChatTitle => 'Start a direct chat';
 
   @override
-  String get matrixIdDescription => 'Enter the user\'s username or Aegis ID';
+  String get contactIdDescription => 'Enter the user\'s username or Aegis ID';
 
   @override
-  String get matrixIdLabel => 'Username or Aegis ID';
+  String get contactIdLabel => 'Username or Aegis ID';
 
   @override
   String get startChatButton => 'Start chat';
@@ -965,7 +961,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hintCardTitle => 'Hint';
 
   @override
-  String get matrixIdExplanation =>
+  String get contactIdExplanation =>
       'You can use a username or numeric Aegis user ID';
 
   @override

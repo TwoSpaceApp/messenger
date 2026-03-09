@@ -10,14 +10,6 @@ part of 'env.dart';
 // ignore_for_file: type=lint
 // generated_from: .env
 final class _Env {
-  static const String matrixEnable = 'false';
-
-  static const String matrixHomeserverUrl = '';
-
-  static const String matrixServerName = '';
-
-  static const String matrixAccessToken = '';
-
   static const String enableDevTools = 'false';
 
   static const String appEnv = 'development';

@@ -25,11 +25,16 @@ class AuthService {
     return loginUser(email, password);
   }
 
-  Future<String?> getJwt() async {
-    return getMatrixTokenForUser();
+  Future<String?> getAuthToken() async {
+    if (_aegis.token != null) return _aegis.token;
+    final storedToken = await _aegis.getStoredToken();
+    if (storedToken != null && storedToken.isNotEmpty) {
+      return storedToken;
+    }
+    return null;
   }
 
-  Future<bool> ensureJwt() async {
+  Future<bool> ensureStoredSession() async {
     return restoreSessionFromToken();
   }
 
@@ -42,7 +47,7 @@ class AuthService {
       _logger.debug('⚠️ Aegis logout ошибка: $e');
     }
     try {
-      await clearMatrixTokenForCurrentUser();
+      await clearStoredSession();
       _logger.info('✓ Токены очищены');
     } catch (e) {
       _logger.debug('❌ Ошибка очистки: $e');
@@ -94,25 +99,8 @@ class AuthService {
     }
   }
 
-  Future<void> signInMatrix(String username, String password) async {
-    return loginUser(username, password);
-  }
-
-  Future<String?> refreshMatrixTokenForUser({String? appUserId}) async {
-    return getMatrixTokenForUser(appUserId: appUserId);
-  }
-
-  Future<String?> getMatrixTokenForUser({String? appUserId}) async {
-    if (_aegis.token != null) return _aegis.token;
-    final storedAegisToken = await _aegis.getStoredToken();
-    if (storedAegisToken != null && storedAegisToken.isNotEmpty) {
-      return storedAegisToken;
-    }
-    return null;
-  }
-
-  Future<String?> tryRefreshMatrixToken({String? appUserId}) async {
-    return getMatrixTokenForUser(appUserId: appUserId);
+  Future<String?> refreshAuthToken({String? appUserId}) async {
+    return getAuthToken();
   }
 
   Future<void> loginWithSsoToken(String token) async {
@@ -129,7 +117,11 @@ class AuthService {
     return null;
   }
 
-  Future<void> clearMatrixTokenForCurrentUser() async {
+  Future<String?> tryRefreshAuthToken({String? appUserId}) async {
+    return getAuthToken();
+  }
+
+  Future<void> clearStoredSession() async {
     try {
       final token = await _aegis.getStoredToken();
       if (token != null && token.isNotEmpty) {

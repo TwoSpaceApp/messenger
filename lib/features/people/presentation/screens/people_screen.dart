@@ -56,6 +56,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isCompact = MediaQuery.sizeOf(context).width < 390;
     final horizontalPadding = 16.s(context);
     final headerTopPadding = 16.s(context);
     final headerGap = 8.s(context);
@@ -110,6 +111,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                     child: _QuickActionsCard(
+                      compact: isCompact,
                       newChatLabel: l10n.peopleQuickNewChat,
                       inviteLabel: l10n.peopleQuickInvite,
                       syncLabel: l10n.peopleQuickSync,
@@ -234,6 +236,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
             12.s(context),
           ),
           child: _PermissionCard(
+            compact: MediaQuery.sizeOf(context).width < 390,
             title: l10n.peoplePermissionCardTitle,
             message: dashboard.permission == DeviceContactsPermission.permanentlyDenied
                 ? l10n.peoplePermissionCardMessageSettings
@@ -244,10 +247,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
             onAction: () async {
               if (dashboard.permission == DeviceContactsPermission.permanentlyDenied) {
                 await openAppSettings();
-                await _controller.refresh();
-              } else {
-                await _controller.load();
               }
+              await _controller.refresh();
             },
           ),
         ),
@@ -642,6 +643,7 @@ class _SectionHeader extends StatelessWidget {
 
 class _QuickActionsCard extends StatelessWidget {
   const _QuickActionsCard({
+    required this.compact,
     required this.newChatLabel,
     required this.inviteLabel,
     required this.syncLabel,
@@ -650,6 +652,7 @@ class _QuickActionsCard extends StatelessWidget {
     required this.onSync,
   });
 
+  final bool compact;
   final String newChatLabel;
   final String inviteLabel;
   final String syncLabel;
@@ -659,36 +662,52 @@ class _QuickActionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final actions = <Widget>[
+      _QuickActionButton(
+        icon: Icons.edit_square,
+        label: newChatLabel,
+        onTap: onNewChat,
+      ),
+      _QuickActionButton(
+        icon: Icons.share_outlined,
+        label: inviteLabel,
+        onTap: onInvite,
+      ),
+      _QuickActionButton(
+        icon: Icons.sync_rounded,
+        label: syncLabel,
+        onTap: onSync,
+      ),
+    ];
+
     return GlassCard(
       padding: EdgeInsets.symmetric(
         horizontal: 8.s(context),
         vertical: 8.s(context),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _QuickActionButton(
-              icon: Icons.edit_square,
-              label: newChatLabel,
-              onTap: onNewChat,
+      child: compact
+          ? Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: actions[0]),
+                    Expanded(child: actions[1]),
+                  ],
+                ),
+                SizedBox(height: 6.s(context)),
+                Row(
+                  children: [
+                    Expanded(child: actions[2]),
+                    const Spacer(),
+                  ],
+                ),
+              ],
+            )
+          : Row(
+              children: actions
+                  .map((action) => Expanded(child: action))
+                  .toList(growable: false),
             ),
-          ),
-          Expanded(
-            child: _QuickActionButton(
-              icon: Icons.share_outlined,
-              label: inviteLabel,
-              onTap: onInvite,
-            ),
-          ),
-          Expanded(
-            child: _QuickActionButton(
-              icon: Icons.sync_rounded,
-              label: syncLabel,
-              onTap: onSync,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -737,12 +756,14 @@ class _QuickActionButton extends StatelessWidget {
 
 class _PermissionCard extends StatelessWidget {
   const _PermissionCard({
+    required this.compact,
     required this.title,
     required this.message,
     required this.actionLabel,
     required this.onAction,
   });
 
+  final bool compact;
   final String title;
   final String message;
   final String actionLabel;
@@ -750,43 +771,71 @@ class _PermissionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      child: Row(
+    final details = Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.contact_phone_outlined,
-            color: Colors.white,
-            size: 22.s(context),
-          ),
-          SizedBox(width: 12.s(context)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
                 ),
-                SizedBox(height: 4.s(context)),
-                Text(
-                  message,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.72),
-                      ),
-                ),
-              ],
-            ),
           ),
-          SizedBox(width: 12.s(context)),
-          FilledButton(
-            onPressed: onAction,
-            child: Text(actionLabel),
+          SizedBox(height: 4.s(context)),
+          Text(
+            message,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.72),
+                ),
           ),
         ],
       ),
+    );
+
+    return GlassCard(
+      child: compact
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.contact_phone_outlined,
+                      color: Colors.white,
+                      size: 22.s(context),
+                    ),
+                    SizedBox(width: 12.s(context)),
+                    details,
+                  ],
+                ),
+                SizedBox(height: 12.s(context)),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: FilledButton(
+                    onPressed: onAction,
+                    child: Text(actionLabel),
+                  ),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Icon(
+                  Icons.contact_phone_outlined,
+                  color: Colors.white,
+                  size: 22.s(context),
+                ),
+                SizedBox(width: 12.s(context)),
+                details,
+                SizedBox(width: 12.s(context)),
+                FilledButton(
+                  onPressed: onAction,
+                  child: Text(actionLabel),
+                ),
+              ],
+            ),
     );
   }
 }

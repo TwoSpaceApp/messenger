@@ -23,7 +23,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
 
   Future<void> _loadCurrent() async {
     try {
-      // AppwriteService not available, skip loading current email
+      // Backend email management is not available yet.
       if (!mounted) return;
       setState(() => _currentEmail = null);
     } catch (_) {}
@@ -45,7 +45,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context);
     try {
-      // AppwriteService not available, skip server update
+      // Backend email management is not available yet.
       if (!mounted) return;
       messenger
           .showSnackBar(SnackBar(content: Text(l10n.emailCannotBeChanged)));

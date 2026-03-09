@@ -684,10 +684,6 @@
   "@languageUkrainian": {
     "description": "Ukrainian language option"
   },
-  "matrixTooltip": "Matrix is an open protocol for federated messaging",
-  "@matrixTooltip": {
-    "description": "Matrix protocol tooltip"
-  },
   "clientDescription": "TwoSpace client built with Flutter/Dart",
   "@clientDescription": {
     "description": "Client description"
@@ -1307,13 +1303,13 @@
   "@startDirectChatTitle": {
     "description": "Start direct chat title"
   },
-  "matrixIdDescription": "Enter the user's username or Aegis ID",
-  "@matrixIdDescription": {
-    "description": "Matrix ID description"
+  "contactIdDescription": "Enter the user's username or Aegis ID",
+  "@contactIdDescription": {
+    "description": "Contact identifier description"
   },
-  "matrixIdLabel": "Username or Aegis ID",
-  "@matrixIdLabel": {
-    "description": "Matrix ID label"
+  "contactIdLabel": "Username or Aegis ID",
+  "@contactIdLabel": {
+    "description": "Contact identifier label"
   },
   "startChatButton": "Start chat",
   "@startChatButton": {
@@ -1323,9 +1319,9 @@
   "@hintCardTitle": {
     "description": "Hint card title"
   },
-  "matrixIdExplanation": "You can use a username or numeric Aegis user ID",
-  "@matrixIdExplanation": {
-    "description": "Matrix ID explanation"
+  "contactIdExplanation": "You can use a username or numeric Aegis user ID",
+  "@contactIdExplanation": {
+    "description": "Contact identifier explanation"
   },
   "enterUserIdError": "Enter user ID",
   "@enterUserIdError": {

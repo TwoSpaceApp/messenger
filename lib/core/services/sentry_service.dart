@@ -23,7 +23,7 @@ import 'package:two_space_app/core/config/environment.dart';
 /// }
 ///
 /// // Set user context
-/// SentryService.setUser(userId: '@user:matrix.org', email: 'user@example.com');
+/// SentryService.setUser(userId: '42', email: 'user@example.com');
 class SentryService {
   static bool _initialized = false;
 

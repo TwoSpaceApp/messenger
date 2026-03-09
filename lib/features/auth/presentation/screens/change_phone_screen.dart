@@ -23,7 +23,7 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
 
   Future<void> _loadCurrentPhone() async {
     try {
-      // AppwriteService not available, skip loading current phone
+      // Backend phone management is not available yet.
       if (!mounted) return;
       setState(() => _currentPhone = null);
     } catch (_) {}
@@ -45,7 +45,7 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context);
     try {
-      // AppwriteService not available, skip server update
+      // Backend phone management is not available yet.
       if (!mounted) return;
       messenger
           .showSnackBar(SnackBar(content: Text(l10n.phoneCannotBeChanged)));

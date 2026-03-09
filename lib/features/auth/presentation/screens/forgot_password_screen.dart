@@ -26,7 +26,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
     setState(() => _loading = true);
     try {
-      // AppwriteService not available
+      // Password reset flow is not connected to the backend yet.
       if (!mounted) return;
       final navCtx = appNavigatorKey.currentContext;
       if (navCtx != null)

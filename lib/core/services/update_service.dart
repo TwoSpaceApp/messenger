@@ -34,7 +34,7 @@ class UpdateInfo {
       );
   final String latestVersion;
   final String updateUrl; // direct URL to APK
-  final String? apkFileId; // AppWrite file id
+  final String? apkFileId; // optional release artifact identifier
   final String? apkBucketId; // optional bucket id
   final String notes;
   final String? sha256;
@@ -67,7 +67,7 @@ class UpdateService {
 
   // Returns UpdateInfo if available and newer than current app, otherwise null
   static Future<UpdateInfo?> checkForUpdate() async {
-    // Appwrite updates not supported, return null
+    // Remote update feed is not configured yet.
     return null;
   }
 

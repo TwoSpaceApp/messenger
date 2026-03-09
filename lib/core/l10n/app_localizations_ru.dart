@@ -496,10 +496,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get languageUkrainian => 'Українська';
 
   @override
-  String get matrixTooltip =>
-      'Matrix — это открытый протокол для федеративного обмена сообщениями';
-
-  @override
   String get clientDescription => 'Клиент TwoSpace написан на Flutter/Dart';
 
   @override
@@ -953,11 +949,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get startDirectChatTitle => 'Начать личный чат';
 
   @override
-  String get matrixIdDescription =>
+  String get contactIdDescription =>
       'Введите username или Aegis ID пользователя';
 
   @override
-  String get matrixIdLabel => 'Username или Aegis ID';
+  String get contactIdLabel => 'Username или Aegis ID';
 
   @override
   String get startChatButton => 'Начать чат';
@@ -966,7 +962,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get hintCardTitle => 'Подсказка';
 
   @override
-  String get matrixIdExplanation =>
+  String get contactIdExplanation =>
       'Можно использовать username или числовой Aegis ID пользователя';
 
   @override

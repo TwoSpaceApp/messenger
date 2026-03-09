@@ -63,7 +63,7 @@ class AuthNotifier extends _$AuthNotifier {
         return const AuthState.unauthenticated();
       }
 
-      final token = await _authService.getMatrixTokenForUser();
+      final token = await _authService.getAuthToken();
       if (token != null && token.isNotEmpty) {
         final userId = await _authService.getCurrentUserId();
         if (userId != null && userId.isNotEmpty) {

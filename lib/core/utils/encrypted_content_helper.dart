@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 class EncryptedContentHelper {
-  // Appwrite requirement: encrypted string columns require minimum length
+  // Some persisted encrypted payloads benefit from a fixed minimum length.
   static const int minLength = 150;
 
   static final _rnd = Random.secure();

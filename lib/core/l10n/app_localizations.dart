@@ -1020,12 +1020,6 @@ abstract class AppLocalizations {
   /// **'Ukrainian'**
   String get languageUkrainian;
 
-  /// Matrix protocol tooltip
-  ///
-  /// In en, this message translates to:
-  /// **'Matrix is an open protocol for federated messaging'**
-  String get matrixTooltip;
-
   /// Client description
   ///
   /// In en, this message translates to:
@@ -1872,17 +1866,17 @@ abstract class AppLocalizations {
   /// **'Start a direct chat'**
   String get startDirectChatTitle;
 
-  /// Matrix ID description
+  /// Contact identifier description
   ///
   /// In en, this message translates to:
   /// **'Enter the user\'s username or Aegis ID'**
-  String get matrixIdDescription;
+  String get contactIdDescription;
 
-  /// Matrix ID label
+  /// Contact identifier label
   ///
   /// In en, this message translates to:
   /// **'Username or Aegis ID'**
-  String get matrixIdLabel;
+  String get contactIdLabel;
 
   /// Start chat button
   ///
@@ -1896,11 +1890,11 @@ abstract class AppLocalizations {
   /// **'Hint'**
   String get hintCardTitle;
 
-  /// Matrix ID explanation
+  /// Contact identifier explanation
   ///
   /// In en, this message translates to:
   /// **'You can use a username or numeric Aegis user ID'**
-  String get matrixIdExplanation;
+  String get contactIdExplanation;
 
   /// Enter user ID validation
   ///
