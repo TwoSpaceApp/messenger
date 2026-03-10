@@ -285,7 +285,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadReactionsBatched(List<_Msg> msgs) async {
-    final batch = <String, Map<String, int>>{};
+    final batch = <String, Map<String, dynamic>>{};
     await Future.wait(
       msgs.map((m) async {
         try {
