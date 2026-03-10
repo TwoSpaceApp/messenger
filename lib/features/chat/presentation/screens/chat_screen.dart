@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 // import 'package:audioplayers/audioplayers.dart';  // Disabled for Linux
 import 'dart:math' as math;
@@ -60,6 +61,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  static const int _historyPageSize = 80;
   final AegisChatService _svc = AegisChatService();
   final TextEditingController _controller = TextEditingController();
   final DraftService _draftService = DraftService();
@@ -69,14 +71,19 @@ class _ChatScreenState extends State<ChatScreen> {
   final Map<String, Map<String, dynamic>> _reactions = {};
   final ScrollController _listController = ScrollController();
   final Map<String, GlobalKey> _messageKeys = {};
+  final Map<String, Future<String>> _mediaDownloads = {};
   String? _scrollToEventId;
   final Set<String> _highlighted = {};
   bool _loading = true;
+  bool _loadingMoreHistory = false;
+  bool _hasMoreHistory = true;
   bool _sending = false;
   final bool _isTyping = false;
   final Map<String, AudioPlayer> _audioPlayers = {};
   final Map<String, Map<String, dynamic>> _userInfoCache = {};
   late final VoiceService _voiceService;
+  StreamSubscription<List<AegisRoomMessage>>? _messagesSub;
+  int _historyLimit = _historyPageSize;
   
   // Group-related state
   // String? _groupBackgroundColor;
@@ -106,19 +113,23 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _voiceService = VoiceService();
     _voiceService.init();
-    _loadMessages();
+    _listController.addListener(_handleListScroll);
+    _subscribeToMessages();
     _loadGroupSettings();
     _scrollToEventId = widget.scrollToEventId;
     // Load draft if exists
     _loadDraft();
-    // start sync loop to receive new events
-    _svc.startSync(_handleSync);
   }
 
   @override
   void dispose() {
-    _svc.stopSync();
+    _messagesSub?.cancel();
+    _listController.removeListener(_handleListScroll);
     _listController.dispose();
+    _controller.dispose();
+    for (final player in _audioPlayers.values) {
+      unawaited(player.dispose());
+    }
     _voiceService.dispose();
     super.dispose();
   }
@@ -134,24 +145,53 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _handleSync(Map<String, dynamic> js) {
-    try {
-      final rooms = js['rooms'] as Map<String, dynamic>? ?? {};
-      final join = rooms['join'] as Map<String, dynamic>? ?? {};
-      if (join.containsKey(widget.chat.id)) {
-        final room = join[widget.chat.id] as Map<String, dynamic>;
-        final timeline = room['timeline'] as Map<String, dynamic>?;
-        final events = timeline?['events'] as List? ?? [];
-        for (final ev in events) {
-          final e = ev as Map<String, dynamic>;
-          if (e['type'] == 'm.room.message') {
-            // reload messages for simplicity
-            if (mounted) _loadMessages();
-            break;
-          }
+  void _subscribeToMessages() {
+    _messagesSub?.cancel();
+    _messagesSub = _svc.watchRoomMessages(
+      widget.chat.id,
+      limit: _historyLimit,
+    ).listen(
+      (messages) => unawaited(_applyMessages(messages)),
+      onError: (_) {
+        if (mounted) {
+          setState(() => _loading = false);
         }
+      },
+    );
+  }
+
+  void _handleListScroll() {
+    if (!_listController.hasClients || _loadingMoreHistory || !_hasMoreHistory) {
+      return;
+    }
+    if (_listController.position.pixels <= 180) {
+      unawaited(_loadOlderMessages());
+    }
+  }
+
+  Future<void> _loadOlderMessages() async {
+    if (_loadingMoreHistory || !_hasMoreHistory || !mounted) return;
+    final previousMaxExtent = _listController.hasClients
+        ? _listController.position.maxScrollExtent
+        : 0.0;
+
+    setState(() => _loadingMoreHistory = true);
+    _historyLimit += _historyPageSize;
+    await _loadMessages(forceRefresh: true);
+    _subscribeToMessages();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_listController.hasClients) return;
+      final nextMaxExtent = _listController.position.maxScrollExtent;
+      final delta = nextMaxExtent - previousMaxExtent;
+      if (delta > 0) {
+        _listController.jumpTo(_listController.position.pixels + delta);
       }
-    } catch (_) {}
+    });
+
+    if (mounted) {
+      setState(() => _loadingMoreHistory = false);
+    }
   }
 
   Future<void> _performServerSearch(String q, String type) async {
@@ -193,28 +233,36 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
 
-  Future<void> _loadMessages() async {
+  Future<void> _loadMessages({bool forceRefresh = false}) async {
+    final msgs = await _svc.loadMessages(
+      roomId: widget.chat.id,
+      limit: _historyLimit,
+      forceRefresh: forceRefresh,
+    );
+    await _applyMessages(msgs);
+  }
+
+  Future<void> _applyMessages(List<AegisRoomMessage> msgs) async {
     final l10n = AppLocalizations.of(context)!;
     final shouldStickToLatest = _shouldStickToLatest();
-    setState(() => _loading = true);
     try {
-      final msgs = await _svc.loadMessages(roomId: widget.chat.id);
+      if (mounted && _loading) {
+        setState(() => _loading = true);
+      }
       final auth = AuthService();
       final me = await auth.getCurrentUserId();
       
       // Собираем уникальные ID отправителей для параллельной загрузки
-      final senderIds = msgs.map((m) => m.senderId).toSet();
+      final senderIds = msgs.map((m) => m.senderId).where((id) => !_userInfoCache.containsKey(id)).toSet();
       
       // Параллельно загружаем информацию о всех отправителях
       await Future.wait(
         senderIds.map((id) async {
-          if (!_userInfoCache.containsKey(id)) {
-            try {
-              final info = await _svc.getUserInfo(id);
-              _userInfoCache[id] = info;
-            } catch (_) {
-              _userInfoCache[id] = {};
-            }
+          try {
+            final info = await _svc.getUserInfo(id);
+            _userInfoCache[id] = info;
+          } catch (_) {
+            _userInfoCache[id] = {};
           }
         }),
       );
@@ -247,6 +295,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       setState(() {
         _messages = out;
+        _hasMoreHistory = msgs.length >= _historyLimit;
         _loading = false;
       });
       
@@ -275,8 +324,7 @@ class _ChatScreenState extends State<ChatScreen> {
       } else if (shouldStickToLatest) {
         _scrollToLatest();
       }
-      // fetch reactions for messages in background — batched to avoid N separate setStates
-      _loadReactionsBatched(out);
+      unawaited(_loadReactionsBatched(out));
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.loadMessagesError(e.toString()))));
     } finally {
@@ -286,14 +334,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadReactionsBatched(List<_Msg> msgs) async {
     final batch = <String, Map<String, dynamic>>{};
-    await Future.wait(
-      msgs.map((m) async {
-        try {
-          final r = await _svc.getReactions(widget.chat.id, m.id);
-          if (r.isNotEmpty) batch[m.id] = r;
-        } catch (_) {}
-      }),
-    );
+    final missing = msgs.where((m) => !_reactions.containsKey(m.id)).toList();
+    final target = missing.length > 30
+        ? missing.sublist(missing.length - 30)
+        : missing;
+
+    for (var index = 0; index < target.length; index += 8) {
+      final chunk = target.sublist(
+        index,
+        math.min(index + 8, target.length),
+      );
+      await Future.wait(
+        chunk.map((m) async {
+          try {
+            final r = await _svc.getReactions(widget.chat.id, m.id);
+            if (r.isNotEmpty) batch[m.id] = r;
+          } catch (_) {}
+        }),
+      );
+    }
     if (mounted && batch.isNotEmpty) {
       setState(() => _reactions.addAll(batch));
     }
@@ -302,13 +361,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _loadGroupSettings() async {
     try {
       final groupService = AegisGroupService();
-      final groupRoom = await groupService.getGroupRoom(widget.chat.id);
-      if (mounted && groupRoom != null) {
-        setState(() {
-          // _groupBackgroundColor = groupRoom.backgroundColor;
-          // _groupBackgroundImageUrl = groupRoom.backgroundImageUrl;
-        });
-      }
+      await groupService.getGroupRoom(widget.chat.id);
     } catch (_) {
       // Not a group room or error loading settings
     }
@@ -329,7 +382,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
     if (!mounted) return;
-    await _loadMessages();
+    await _loadMessages(forceRefresh: true);
   }
 
   /// Load draft message for this chat
@@ -703,13 +756,30 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     } else {
+      final visibleMessages = _visibleMessages;
       bodyWidget = ListView.separated(
         controller: _listController,
         padding: const EdgeInsets.all(12),
         cacheExtent: 1000, // Увеличиваем кэш для лучшей производительности
         itemBuilder: (c, i) {
-          final m = _visibleMessages[i];
-          final key = _messageKeys.putIfAbsent(m.id, GlobalKey.new);
+          if (_loadingMoreHistory && i == 0) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            );
+          }
+          final messageIndex = _loadingMoreHistory ? i - 1 : i;
+          final m = visibleMessages[messageIndex];
+          final shouldTrackKey = _scrollToEventId == m.id || _highlighted.contains(m.id);
+          final key = shouldTrackKey
+              ? _messageKeys.putIfAbsent(m.id, GlobalKey.new)
+              : null;
           final bubbleContent = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.white70)),
               const SizedBox(height: 6),
@@ -719,11 +789,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 300, maxHeight: 240),
                     child: FutureBuilder<String>(
-                      future: _svc.downloadMediaToTempFile(m.mediaId!),
+                      future: _mediaDownloads.putIfAbsent(
+                        m.mediaId!,
+                        () => _svc.downloadMediaToTempFile(m.mediaId!),
+                      ),
                       builder: (ctx, snap) {
                         if (snap.connectionState != ConnectionState.done) return Container(width: 280, height: 180, color: const Color(0xFF21262C));
                         if (snap.hasError || snap.data == null) return Container(width: 120, height: 80, color: const Color(0xFF21262C), child: const Center(child: Icon(Icons.broken_image, color: Colors.white54)));
-                        return Image.file(File(snap.data!), fit: BoxFit.cover, width: 280, height: 180);
+                        return Image.file(File(snap.data!), fit: BoxFit.cover, width: 280, height: 180, cacheWidth: 560, cacheHeight: 360);
                       },
                     ),
                   ),
@@ -812,25 +885,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   const SizedBox(width: 8),
                   Flexible(
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: 1),
-                      duration: Duration(milliseconds: 300 + (i % 5) * 30),
-                      curve: Curves.elasticOut,
-                      builder: (context, val, child) => Transform.scale(
-                        scale: 0.7 + (0.3 * val),
-                        alignment: m.isOwn ? Alignment.bottomRight : Alignment.bottomLeft,
-                        child: Opacity(
-                          opacity: val.clamp(0.0, 1.0),
-                          child: child,
-                        ),
-                      ),
-                      child: GestureDetector(
-                        onLongPressStart: (details) => _showMessageActions(m, details.globalPosition),
-                        child: _SquishyBubble(
-                          isOwn: m.isOwn,
-                          highlighted: _highlighted.contains(m.id),
-                          child: bubbleContent,
-                        ),
+                    child: GestureDetector(
+                      onLongPressStart: (details) => _showMessageActions(m, details.globalPosition),
+                      child: _SquishyBubble(
+                        isOwn: m.isOwn,
+                        highlighted: _highlighted.contains(m.id),
+                        child: bubbleContent,
                       ),
                     ),
                   ),
@@ -842,7 +902,7 @@ class _ChatScreenState extends State<ChatScreen> {
           );
         },
         separatorBuilder: (_, __) => const SizedBox(height: 2),
-        itemCount: _visibleMessages.length,
+        itemCount: visibleMessages.length + (_loadingMoreHistory ? 1 : 0),
       );
     }
 
@@ -976,51 +1036,93 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   bool _playing = false;
+  bool _preparing = false;
   AudioPlayer? _player;
   List<double> _waveform = [];
+  StreamSubscription<Duration>? _durationSub;
+  StreamSubscription<Duration>? _positionSub;
+  StreamSubscription<void>? _completeSub;
+  Future<void>? _prepareFuture;
 
   // No fake controller needed; removed unused variable
 
   @override
   void initState() {
     super.initState();
-    _init();
   }
 
-  Future<void> _init() async {
-    try {
-      final m = widget.message.mediaId ?? widget.message.text;
-      final path = await widget.svc.downloadMediaToTempFile(m);
-      if (!mounted) return;
-      setState(() => _localPath = path);
+  Future<void> _ensurePrepared() async {
+    if (_player != null && _localPath != null) return;
+    final inFlight = _prepareFuture;
+    if (inFlight != null) return inFlight;
+
+    final future = () async {
+      if (mounted) {
+        setState(() => _preparing = true);
+      }
       try {
-        final wf = await widget.svc.getWaveformForMedia(
-          widget.message.mediaId ?? '',
-          path,
-          samples: 24,
-        );
-        if (mounted) setState(() => _waveform = wf);
-      } catch (_) {}
-      _player = widget.audioPlayers[widget.message.id] ?? AudioPlayer();
-      widget.audioPlayers[widget.message.id] = _player!;
-      // ensure player is in low-latency mode for small clips
-      await _player!.setReleaseMode(ReleaseMode.stop);
-      _player!.onDurationChanged.listen((d) => setState(() => _duration = d));
-      _player!.onPositionChanged.listen((p) => setState(() => _position = p));
-      _player!.onPlayerComplete.listen((_) => setState(() {
-        _playing = false;
-        _position = Duration.zero;
-          }));
-    } catch (_) {}
+        final mediaRef = widget.message.mediaId ?? widget.message.text;
+        final path = await widget.svc.downloadMediaToTempFile(mediaRef);
+        if (!mounted) return;
+        _localPath = path;
+
+        if (_waveform.isEmpty) {
+          try {
+            final waveform = await widget.svc.getWaveformForMedia(
+              widget.message.mediaId ?? '',
+              path,
+              samples: 24,
+            );
+            if (mounted && waveform.isNotEmpty) {
+              _waveform = waveform;
+            }
+          } catch (_) {}
+        }
+
+        _player = widget.audioPlayers[widget.message.id] ?? AudioPlayer();
+        widget.audioPlayers[widget.message.id] = _player!;
+        await _player!.setReleaseMode(ReleaseMode.stop);
+        _durationSub ??= _player!.onDurationChanged.listen((duration) {
+          if (mounted) {
+            setState(() => _duration = duration);
+          }
+        });
+        _positionSub ??= _player!.onPositionChanged.listen((position) {
+          if (mounted) {
+            setState(() => _position = position);
+          }
+        });
+        _completeSub ??= _player!.onPlayerComplete.listen((_) {
+          if (mounted) {
+            setState(() {
+              _playing = false;
+              _position = Duration.zero;
+            });
+          }
+        });
+      } catch (_) {
+      } finally {
+        _prepareFuture = null;
+        if (mounted) {
+          setState(() => _preparing = false);
+        }
+      }
+    }();
+
+    _prepareFuture = future;
+    return future;
   }
 
   @override
   void dispose() {
-    // Do not dispose shared players here
+    _durationSub?.cancel();
+    _positionSub?.cancel();
+    _completeSub?.cancel();
     super.dispose();
   }
 
   Future<void> _togglePlay() async {
+    await _ensurePrepared();
     if (_player == null || _localPath == null) return;
     if (_playing) {
       await _player!.pause();
@@ -1040,6 +1142,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
   }
 
   Future<void> _seekTo(double rel) async {
+    await _ensurePrepared();
     if (_player == null || _duration == Duration.zero) return;
     final ms = (_duration.inMilliseconds * rel).round();
     await _player!.seek(Duration(milliseconds: ms));
@@ -1060,7 +1163,18 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
         }
       },
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        IconButton(icon: _playing ? const Icon(Icons.pause_circle) : const Icon(Icons.play_circle), onPressed: _togglePlay),
+        IconButton(
+          icon: _preparing
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : (_playing
+                  ? const Icon(Icons.pause_circle)
+                  : const Icon(Icons.play_circle)),
+          onPressed: _preparing ? null : _togglePlay,
+        ),
         Stack(children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),

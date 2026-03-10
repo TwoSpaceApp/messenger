@@ -34,6 +34,35 @@ class _ScreenBackgroundState extends State<ScreenBackground>
   static const double _blob1Size = 350;
   static const double _blob2Size = 400;
 
+  void _syncMotionState() {
+    final settings = SettingsService.themeNotifier.value;
+    final shouldAnimate = settings.enableFloatingCircles;
+
+    if (shouldAnimate) {
+      if (!_controller.isAnimating) {
+        _controller.repeat();
+      }
+    } else if (_controller.isAnimating) {
+      _controller.stop();
+    }
+
+    final shouldListenToAccel =
+        settings.enableParallax && settings.enableFloatingCircles;
+    if (!shouldListenToAccel) {
+      _accelSub?.cancel();
+      _accelSub = null;
+      _tiltX = 0;
+      _tiltY = 0;
+      return;
+    }
+
+    _accelSub ??= accelerometerEventStream().listen((AccelerometerEvent event) {
+      if (!mounted) return;
+      _tiltX = (event.x / 9.8).clamp(-1.0, 1.0);
+      _tiltY = (event.y / 9.8).clamp(-1.0, 1.0);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -42,20 +71,10 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     // Important: don't call setState per frame; AnimatedBuilder will repaint the background.
     _controller =
         AnimationController(vsync: this, duration: const Duration(seconds: 1))
-          ..addListener(_updateBlobPositions)
-          ..repeat();
+          ..addListener(_updateBlobPositions);
 
-    // Listen to accelerometer for tilt direction
-    final settings = SettingsService.themeNotifier.value;
-    if (settings.enableParallax && settings.enableFloatingCircles) {
-      _accelSub = accelerometerEventStream().listen((AccelerometerEvent event) {
-        if (!mounted) return;
-        // X: tilt left/right, Y: tilt forward/backward
-        // Normalize to -1..1 range (gravity is ~9.8)
-        _tiltX = (event.x / 9.8).clamp(-1.0, 1.0);
-        _tiltY = (event.y / 9.8).clamp(-1.0, 1.0);
-      });
-    }
+    SettingsService.themeNotifier.addListener(_syncMotionState);
+    _syncMotionState();
   }
 
   void _updateBlobPositions() {
@@ -97,6 +116,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
 
   @override
   void dispose() {
+    SettingsService.themeNotifier.removeListener(_syncMotionState);
     _controller.dispose();
     _accelSub?.cancel();
     super.dispose();
@@ -109,12 +129,11 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     final primary = theme.primaryColor;
     final isDark = theme.brightness == Brightness.dark;
 
-    return AnimatedBuilder(
-      animation: _controller,
+    return ValueListenableBuilder(
+      valueListenable: SettingsService.themeNotifier,
       child: RepaintBoundary(child: widget.child),
-      builder: (context, child) {
-        final settings = SettingsService.themeNotifier.value;
-        final size = MediaQuery.of(context).size;
+      builder: (context, settings, child) {
+        final size = MediaQuery.sizeOf(context);
         _lastScreenSize = size;
 
         if (!_positionsInitialized) {
@@ -129,14 +148,21 @@ class _ScreenBackgroundState extends State<ScreenBackground>
         // Opacity from settings
         final opacity = settings.floatingCirclesOpacity.clamp(0.1, 1.0);
 
-        return Stack(
-          children: [
-            // Background Color
-            Container(color: bgColor),
+        if (!settings.enableFloatingCircles) {
+          return Stack(
+            children: [
+              ColoredBox(color: bgColor),
+              if (child != null) child,
+            ],
+          );
+        }
 
-            // Floating circles (if enabled)
-            if (settings.enableFloatingCircles) ...[
-              // Blob 1 (Primary color)
+        return AnimatedBuilder(
+          animation: _controller,
+          child: child,
+          builder: (context, animatedChild) => Stack(
+            children: [
+              ColoredBox(color: bgColor),
               Positioned(
                 left: _blob1X,
                 top: _blob1Y,
@@ -158,8 +184,6 @@ class _ScreenBackgroundState extends State<ScreenBackground>
                   ),
                 ),
               ),
-
-              // Blob 2 (Secondary color)
               Positioned(
                 left: _blob2X,
                 top: _blob2Y,
@@ -181,11 +205,9 @@ class _ScreenBackgroundState extends State<ScreenBackground>
                   ),
                 ),
               ),
+              if (animatedChild != null) animatedChild,
             ],
-
-            // Main Content (does not rebuild every frame)
-            if (child != null) child,
-          ],
+          ),
         );
       },
     );

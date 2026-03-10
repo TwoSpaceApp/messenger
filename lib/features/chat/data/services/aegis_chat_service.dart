@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -180,7 +181,16 @@ class AegisChatService {
   bool _attached = false;
   Future<void>? _bootstrapFuture;
   StreamSubscription<Message>? _incomingSub;
-  late File _storeFile;
+  late Directory _storeDir;
+  late Directory _messagesDir;
+  late File _legacyStoreFile;
+  late File _conversationsFile;
+  late File _profilesFile;
+  Timer? _persistTimer;
+  Future<void>? _persistInFlight;
+  bool _changeQueued = false;
+  final Set<String> _dirtyRoomIds = <String>{};
+  final Set<String> _deletedRoomIds = <String>{};
 
   final Map<String, _StoredConversation> _conversations = {};
   final Map<String, List<AegisRoomMessage>> _messages = {};
@@ -192,25 +202,75 @@ class AegisChatService {
   Future<void> _init() async {
     if (_initialized) return;
     final dir = await getApplicationDocumentsDirectory();
-    _storeFile = File(p.join(dir.path, 'aegis_chat_store.json'));
-    if (await _storeFile.exists()) {
-      final raw = await _storeFile.readAsString();
-      if (raw.trim().isNotEmpty) {
-        final json = jsonDecode(raw) as Map<String, dynamic>;
-        final conversations = json['conversations'] as List<dynamic>? ?? [];
-        final messages = json['messages'] as Map<String, dynamic>? ?? {};
-        final profiles = json['profiles'] as Map<String, dynamic>? ?? {};
+    _legacyStoreFile = File(p.join(dir.path, 'aegis_chat_store.json'));
+    _storeDir = Directory(p.join(dir.path, 'aegis_chat_store'));
+    _messagesDir = Directory(p.join(_storeDir.path, 'messages'));
+    _conversationsFile = File(p.join(_storeDir.path, 'conversations.json'));
+    _profilesFile = File(p.join(_storeDir.path, 'profiles.json'));
 
+    if (!await _storeDir.exists()) {
+      await _storeDir.create(recursive: true);
+    }
+    if (!await _messagesDir.exists()) {
+      await _messagesDir.create(recursive: true);
+    }
+
+    if (await _conversationsFile.exists() || await _profilesFile.exists()) {
+      await _loadSplitStore();
+    } else if (await _legacyStoreFile.exists()) {
+      await _loadLegacyStore();
+      _dirtyRoomIds.addAll(_messages.keys);
+      await _flushPersistNow();
+    }
+    _initialized = true;
+  }
+
+  Future<void> _loadLegacyStore() async {
+    final raw = await _legacyStoreFile.readAsString();
+    if (raw.trim().isEmpty) return;
+
+    final json = jsonDecode(raw) as Map<String, dynamic>;
+    final conversations = json['conversations'] as List<dynamic>? ?? [];
+    final messages = json['messages'] as Map<String, dynamic>? ?? {};
+    final profiles = json['profiles'] as Map<String, dynamic>? ?? {};
+
+    for (final item in conversations) {
+      final conversation =
+          _StoredConversation.fromJson(item as Map<String, dynamic>);
+      _conversations[conversation.id] = conversation;
+    }
+    for (final entry in messages.entries) {
+      _messages[entry.key] = (entry.value as List<dynamic>)
+          .map((e) => AegisRoomMessage.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    for (final entry in profiles.entries) {
+      final id = int.tryParse(entry.key);
+      if (id != null && entry.value is Map<String, dynamic>) {
+        _profileCache[id] = Map<String, dynamic>.from(
+          entry.value as Map<String, dynamic>,
+        );
+      }
+    }
+  }
+
+  Future<void> _loadSplitStore() async {
+    if (await _conversationsFile.exists()) {
+      final raw = await _conversationsFile.readAsString();
+      if (raw.trim().isNotEmpty) {
+        final conversations = jsonDecode(raw) as List<dynamic>;
         for (final item in conversations) {
           final conversation =
               _StoredConversation.fromJson(item as Map<String, dynamic>);
           _conversations[conversation.id] = conversation;
         }
-        for (final entry in messages.entries) {
-          _messages[entry.key] = (entry.value as List<dynamic>)
-              .map((e) => AegisRoomMessage.fromJson(e as Map<String, dynamic>))
-              .toList();
-        }
+      }
+    }
+
+    if (await _profilesFile.exists()) {
+      final raw = await _profilesFile.readAsString();
+      if (raw.trim().isNotEmpty) {
+        final profiles = jsonDecode(raw) as Map<String, dynamic>;
         for (final entry in profiles.entries) {
           final id = int.tryParse(entry.key);
           if (id != null && entry.value is Map<String, dynamic>) {
@@ -221,16 +281,45 @@ class AegisChatService {
         }
       }
     }
-    _initialized = true;
+
+    final files = await _messagesDir
+        .list()
+        .where((entity) => entity is File)
+        .cast<File>()
+        .toList();
+    for (final file in files) {
+      final roomId = _roomIdFromFileName(p.basenameWithoutExtension(file.path));
+      final raw = await file.readAsString();
+      if (raw.trim().isEmpty) continue;
+      final list = jsonDecode(raw) as List<dynamic>;
+      _messages[roomId] = list
+          .map((e) => AegisRoomMessage.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
   }
+
+  String _messageFileKey(String roomId) =>
+      base64Url.encode(utf8.encode(roomId));
+
+  String _roomIdFromFileName(String fileName) =>
+      utf8.decode(base64Url.decode(fileName));
+
+  File _messageFileForRoom(String roomId) =>
+      File(p.join(_messagesDir.path, '${_messageFileKey(roomId)}.json'));
 
   Future<void> ensureReady() async {
     await _init();
     await _auth.ensureSession();
-    if (!_attached) {
-      _attached = true;
-      _incomingSub = _auth.rawClient.messages.listen(_handleIncomingMessage);
-    }
+    _ensureIncomingAttached();
+  }
+
+  void _ensureIncomingAttached() {
+    if (_attached) return;
+    _attached = true;
+    _incomingSub = _auth.rawClient.messages.listen(_handleIncomingMessage);
+  }
+
+  Future<void> _ensureChatBootstrap() async {
     final inFlight = _bootstrapFuture;
     if (inFlight != null) {
       await inFlight;
@@ -248,28 +337,40 @@ class AegisChatService {
   }
 
   Future<void> dispose() async {
+    await _flushPersistNow();
     await _incomingSub?.cancel();
     _attached = false;
   }
 
   Stream<List<Chat>> watchChats() async* {
     await ensureReady();
-    yield await getChats();
+    await _ensureChatBootstrap();
+    yield _currentChatsSnapshot();
     await for (final _ in _changes.stream) {
-      yield await getChats();
+      yield _currentChatsSnapshot();
     }
   }
 
-  Stream<List<AegisRoomMessage>> watchRoomMessages(String roomId) async* {
+  Stream<List<AegisRoomMessage>> watchRoomMessages(String roomId,
+      {int limit = 100}) async* {
     await ensureReady();
-    yield await loadMessages(roomId: roomId);
+    if ((_messages[roomId] ?? const <AegisRoomMessage>[]).length < limit) {
+      try {
+        await loadMessages(roomId: roomId, limit: limit, forceRefresh: true);
+      } catch (_) {}
+    }
+    yield _roomMessagesSnapshot(roomId, limit: limit);
     await for (final _ in _changes.stream) {
-      yield await loadMessages(roomId: roomId);
+      yield _roomMessagesSnapshot(roomId, limit: limit);
     }
   }
 
   Future<List<Chat>> getChats() async {
-    await ensureReady();
+    await _init();
+    return _currentChatsSnapshot();
+  }
+
+  List<Chat> _currentChatsSnapshot() {
     final items = _conversations.values.toList()
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return items
@@ -294,13 +395,37 @@ class AegisChatService {
   Future<List<AegisRoomMessage>> loadMessages({
     required String roomId,
     int limit = 100,
+    bool forceRefresh = false,
   }) async {
     await ensureReady();
-    try {
-      await _refreshRoomMessages(roomId, limit: limit);
-    } catch (_) {
-      // Fallback to the local cache if the server request fails.
+    if (!_conversations.containsKey(roomId)) {
+      try {
+        await _ensureChatBootstrap();
+      } catch (_) {}
     }
+
+    final cached = _roomMessagesSnapshot(roomId, limit: limit);
+    if (!forceRefresh && cached.isNotEmpty) {
+      unawaited(
+        _refreshRoomMessages(roomId, limit: limit).then((changed) {
+          if (changed) _emitChanged();
+        }).catchError((_) {}),
+      );
+      return cached;
+    }
+
+    try {
+      final changed = await _refreshRoomMessages(roomId, limit: limit);
+      if (changed) {
+        _emitChanged();
+      }
+    } catch (_) {
+      if (cached.isNotEmpty) return cached;
+    }
+    return _roomMessagesSnapshot(roomId, limit: limit);
+  }
+
+  List<AegisRoomMessage> _roomMessagesSnapshot(String roomId, {int limit = 100}) {
     final messages = List<AegisRoomMessage>.from(_messages[roomId] ?? const []);
     messages.sort((a, b) => a.time.compareTo(b.time));
     if (messages.length <= limit) {
@@ -497,6 +622,7 @@ class AegisChatService {
       type: previous.type,
       mediaId: previous.mediaId,
     );
+    _dirtyRoomIds.add(roomId);
     await _persist();
     _emitChanged();
   }
@@ -516,6 +642,7 @@ class AegisChatService {
       }
     }
     _messages[roomId]?.removeWhere((element) => element.id == eventId);
+    _dirtyRoomIds.add(roomId);
     await _persist();
     _emitChanged();
   }
@@ -538,6 +665,8 @@ class AegisChatService {
     await _init();
     _conversations.remove(roomId);
     _messages.remove(roomId);
+    _dirtyRoomIds.remove(roomId);
+    _deletedRoomIds.add(roomId);
     await _persist();
     _emitChanged();
   }
@@ -703,16 +832,25 @@ class AegisChatService {
     await _init();
     final room = _conversations[roomId];
     if (room == null) return const <Map<String, dynamic>>[];
-    final members = <Map<String, dynamic>>[];
-    for (final id in room.memberUserIds) {
-      final info = await getUserInfo(id);
-      members.add({
-        'userId': id,
-        'displayName': info['displayName'] ?? info['username'] ?? id,
-        'avatarUrl': info['avatarUrl'],
-      });
+    return Future.wait(
+      room.memberUserIds.map((id) async {
+        final info = await getUserInfo(id);
+        return {
+          'userId': id,
+          'displayName': info['displayName'] ?? info['username'] ?? id,
+          'avatarUrl': info['avatarUrl'],
+        };
+      }),
+    );
+  }
+
+  Future<void> refreshChats() async {
+    await ensureReady();
+    await _ensureChatBootstrap();
+    final changed = await _refreshChatsFromServer();
+    if (changed) {
+      _emitChanged();
     }
-    return members;
   }
 
   Future<void> setJoinRule(String roomId, String rule) async {
@@ -978,6 +1116,7 @@ class AegisChatService {
         lastMessage: message.content,
       );
     }
+    _dirtyRoomIds.add(roomId);
     await _persist();
     _emitChanged();
   }
@@ -1061,7 +1200,7 @@ class AegisChatService {
     return list.last.content;
   }
 
-  Future<void> _refreshChatsFromServer() async {
+  Future<bool> _refreshChatsFromServer() async {
     final response = await _auth.rawClient.getChatList();
     if (!response.success) {
       throw Exception(response.message ?? 'Unable to load chat list');
@@ -1105,13 +1244,13 @@ class AegisChatService {
 
     if (changed) {
       await _persist();
-      _emitChanged();
     }
+    return changed;
   }
 
-  Future<void> _refreshRoomMessages(String roomId, {int limit = 100}) async {
+  Future<bool> _refreshRoomMessages(String roomId, {int limit = 100}) async {
     final conversation = _conversations[roomId];
-    if (conversation == null) return;
+    if (conversation == null) return false;
 
     List<AegisRoomMessage> nextMessages;
     if (conversation.kind == 'direct' && conversation.peerUserId != null) {
@@ -1153,12 +1292,39 @@ class AegisChatService {
           )
           .toList();
     } else {
-      return;
+      return false;
     }
 
     nextMessages.sort((a, b) => a.time.compareTo(b.time));
+    final currentMessages = _messages[roomId] ?? const <AegisRoomMessage>[];
+    if (_sameMessages(currentMessages, nextMessages)) {
+      return false;
+    }
     _messages[roomId] = nextMessages;
+    _dirtyRoomIds.add(roomId);
     await _persist();
+    return true;
+  }
+
+  bool _sameMessages(
+    List<AegisRoomMessage> current,
+    List<AegisRoomMessage> next,
+  ) {
+    if (identical(current, next)) return true;
+    if (current.length != next.length) return false;
+    for (var index = 0; index < current.length; index++) {
+      final left = current[index];
+      final right = next[index];
+      if (left.id != right.id ||
+          left.content != right.content ||
+          left.time != right.time ||
+          left.type != right.type ||
+          left.mediaId != right.mediaId ||
+          left.senderId != right.senderId) {
+        return false;
+      }
+    }
+    return true;
   }
 
   String _mapMessageType(MessageContentType type) {
@@ -1192,23 +1358,88 @@ class AegisChatService {
   }
 
   Future<void> _persist() async {
+    _persistTimer?.cancel();
+    _persistTimer = Timer(
+      const Duration(milliseconds: 700),
+      () => unawaited(_flushPersistNow()),
+    );
+  }
+
+  Future<void> _flushPersistNow() async {
+    _persistTimer?.cancel();
+    _persistTimer = null;
+    final inFlight = _persistInFlight;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final dirtyRoomIds = Set<String>.from(_dirtyRoomIds);
+    final deletedRoomIds = Set<String>.from(_deletedRoomIds);
+
+    final future = () async {
     await _init();
-    final data = <String, dynamic>{
-      'conversations': _conversations.values.map((e) => e.toJson()).toList(),
-      'messages': _messages.map(
-        (key, value) => MapEntry(key, value.map((e) => e.toJson()).toList()),
-      ),
-      'profiles': _profileCache.map(
-        (key, value) => MapEntry(key.toString(), value),
-      ),
-    };
-    await _storeFile.writeAsString(jsonEncode(data));
+    final conversationsPayload =
+        _conversations.values.map((e) => e.toJson()).toList(growable: false);
+    final profilesPayload = _profileCache.map(
+      (key, value) => MapEntry(key.toString(), value),
+    );
+
+    final conversationsJson =
+        await Isolate.run<String>(() => jsonEncode(conversationsPayload));
+    final profilesJson =
+        await Isolate.run<String>(() => jsonEncode(profilesPayload));
+
+    await Future.wait([
+      _conversationsFile.writeAsString(conversationsJson),
+      _profilesFile.writeAsString(profilesJson),
+    ]);
+
+    await Future.wait(
+      dirtyRoomIds.map((roomId) async {
+        final payload = (_messages[roomId] ?? const <AegisRoomMessage>[])
+            .map((e) => e.toJson())
+            .toList(growable: false);
+        final encoded = await Isolate.run<String>(() => jsonEncode(payload));
+        await _messageFileForRoom(roomId).writeAsString(encoded);
+      }),
+    );
+
+    await Future.wait(
+      deletedRoomIds.map((roomId) async {
+        final file = _messageFileForRoom(roomId);
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }),
+    );
+
+    if (await _legacyStoreFile.exists()) {
+      await _legacyStoreFile.delete();
+    }
+    }();
+
+    _persistInFlight = future;
+    try {
+      await future;
+      _dirtyRoomIds.removeAll(dirtyRoomIds);
+      _deletedRoomIds.removeAll(deletedRoomIds);
+    } finally {
+      if (identical(_persistInFlight, future)) {
+        _persistInFlight = null;
+      }
+    }
   }
 
   void _emitChanged() {
-    if (!_changes.isClosed) {
-      _changes.add(null);
-    }
+    if (_changes.isClosed || _changeQueued) return;
+    _changeQueued = true;
+    scheduleMicrotask(() {
+      _changeQueued = false;
+      if (!_changes.isClosed) {
+        _changes.add(null);
+      }
+    });
   }
 }
 

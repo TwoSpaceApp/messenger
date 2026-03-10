@@ -28,18 +28,26 @@ import 'package:two_space_app/features/settings/presentation/screens/storage_scr
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
+class _RouterRefreshNotifier extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
+
 CustomTransitionPage<void> _buildPage(GoRouterState state, Widget child) {
   return buildAppTransitionPage(state: state, child: child);
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final refreshNotifier = _RouterRefreshNotifier();
+  ref.onDispose(refreshNotifier.dispose);
+  ref.listen(authProvider, (_, __) => refreshNotifier.refresh());
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: AppStrings.routeSplash,
     observers: [TitleObserver()],
+    refreshListenable: refreshNotifier,
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       final isAuthRoute = state.matchedLocation == AppStrings.routeLogin ||
           state.matchedLocation == AppStrings.routeRegister ||
           state.matchedLocation == AppStrings.routeForgot;

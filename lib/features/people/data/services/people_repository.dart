@@ -78,13 +78,20 @@ class PeopleRepository {
   Future<PeopleDashboardData> loadDashboard({
     bool requestPermission = true,
   }) async {
-    final favorites = await _readFavorites();
-    final cachedRemote = await _readCachedPeople();
-    final recentPeople = await _readRecentPeople();
-    final callHistory = await _callHistoryService.loadHistory();
-    final contactsResult = await loadDeviceContacts(
-      requestPermission: requestPermission,
-    );
+    final results = await Future.wait<dynamic>([
+      _readFavorites(),
+      _readCachedPeople(),
+      _readRecentPeople(),
+      _callHistoryService.loadHistory(),
+      loadDeviceContacts(
+        requestPermission: requestPermission,
+      ),
+    ]);
+    final favorites = results[0] as List<String>;
+    final cachedRemote = results[1] as List<PersonEntry>;
+    final recentPeople = results[2] as List<PersonEntry>;
+    final callHistory = results[3] as List<CallHistoryEntry>;
+    final contactsResult = results[4] as DeviceContactsResult;
 
     final mergedRemote = _applyFavoriteIds(
       _mergePeople(<PersonEntry>[
@@ -139,12 +146,18 @@ class PeopleRepository {
       );
     }
 
-    final favorites = await _readFavorites();
-    final recentPeople = await _readRecentPeople();
-    final cachedPeople = await _readCachedPeople();
-    final contactsResult = await loadDeviceContacts(
-      requestPermission: requestPermission,
-    );
+    final results = await Future.wait<dynamic>([
+      _readFavorites(),
+      _readRecentPeople(),
+      _readCachedPeople(),
+      loadDeviceContacts(
+        requestPermission: requestPermission,
+      ),
+    ]);
+    final favorites = results[0] as List<String>;
+    final recentPeople = results[1] as List<PersonEntry>;
+    final cachedPeople = results[2] as List<PersonEntry>;
+    final contactsResult = results[3] as DeviceContactsResult;
 
     final localMatches = _sortPeople(
       _applyFavoriteIds(

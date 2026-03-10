@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/config/environment_validator.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
-import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 /// Result of an initialization step
@@ -69,12 +68,15 @@ abstract class InitializationStep {
 class InitializationService {
   InitializationService._();
 
-  static final List<InitializationStep> _steps = [
-    _EnvironmentStep(),
-    _SentryStep(),
-    _EnvironmentValidationStep(),
-    _SettingsStep(),
-    _AegisSessionStep(),
+  static final List<List<InitializationStep>> _stepPhases = [
+    <InitializationStep>[
+      _EnvironmentStep(),
+    ],
+    <InitializationStep>[
+      _SentryStep(),
+      _EnvironmentValidationStep(),
+      _SettingsStep(),
+    ],
   ];
 
   /// Initialize the app with all required steps
@@ -82,25 +84,62 @@ class InitializationService {
       {void Function(String stepName, double progress)? onProgress}) async {
     final startTime = DateTime.now();
     final results = <InitStepResult>[];
+    final totalSteps = _stepPhases.fold<int>(0, (sum, phase) => sum + phase.length);
+    var completedSteps = 0;
 
-    for (final step in _steps) {
-      final index = _steps.indexOf(step);
-      if (onProgress != null) {
-        onProgress(step.name, index / _steps.length);
-      }
-      final stepResult = await _executeStep(step);
-      if (onProgress != null) {
-        onProgress(step.name, (index + 1) / _steps.length);
-      }
-      results.add(stepResult);
-
-      // Stop if critical step failed
-      if (stepResult.failed && step.critical) {
-        if (kDebugMode) {
-          print(
-              '❌ Critical step "${step.name}" failed. Stopping initialization.');
+    for (final phase in _stepPhases) {
+      if (phase.length == 1) {
+        final step = phase.first;
+        if (onProgress != null) {
+          onProgress(step.name, completedSteps / totalSteps);
         }
-        break;
+        final stepResult = await _executeStep(step);
+        results.add(stepResult);
+        completedSteps += 1;
+        if (onProgress != null) {
+          onProgress(step.name, completedSteps / totalSteps);
+        }
+        if (stepResult.failed && step.critical) {
+          if (kDebugMode) {
+            print(
+                '❌ Critical step "${step.name}" failed. Stopping initialization.');
+          }
+          break;
+        }
+        continue;
+      }
+
+      for (final step in phase) {
+        if (onProgress != null) {
+          onProgress(step.name, completedSteps / totalSteps);
+        }
+      }
+
+      final phaseResults = await Future.wait(
+        phase.map(_executeStep),
+      );
+
+      for (final stepResult in phaseResults) {
+        results.add(stepResult);
+        completedSteps += 1;
+        if (onProgress != null) {
+          onProgress(stepResult.stepName, completedSteps / totalSteps);
+        }
+        if (stepResult.failed) {
+          final step = phase.firstWhere((candidate) => candidate.name == stepResult.stepName);
+          if (step.critical) {
+            if (kDebugMode) {
+              print(
+                  '❌ Critical step "${step.name}" failed. Stopping initialization.');
+            }
+            final result = InitializationResult(
+              steps: results,
+              totalDuration: DateTime.now().difference(startTime),
+            );
+            _logInitializationResult(result);
+            return result;
+          }
+        }
       }
     }
 
@@ -269,22 +308,6 @@ class _SettingsStep implements InitializationStep {
   @override
   Future<void> execute() async {
     await SettingsService.loadSettings();
-  }
-}
-
-class _AegisSessionStep implements InitializationStep {
-  @override
-  String get name => 'Aegis Session Restoration';
-
-  @override
-  bool get critical => false; // Expected to fail on first launch
-
-  @override
-  Duration get timeout => const Duration(seconds: 3);
-
-  @override
-  Future<void> execute() async {
-    await AuthService().restoreSessionFromToken();
   }
 }
 

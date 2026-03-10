@@ -45,7 +45,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserAndRooms();
     _subscribeToRooms();
   }
 
@@ -63,6 +62,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     try {
+      await _chat.refreshChats();
       final chats = await _chat.getChats();
       final out = chats.map(_roomFromChat).toList();
       if (mounted) setState(() => _rooms = out);
