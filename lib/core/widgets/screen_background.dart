@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
@@ -143,7 +142,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
                 top: _blob1Y,
                 width: _blob1Size,
                 height: _blob1Size,
-                child: Container(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
@@ -157,10 +156,6 @@ class _ScreenBackgroundState extends State<ScreenBackground>
                       stops: const [0.0, 0.5, 1.0],
                     ),
                   ),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                    child: Container(color: Colors.transparent),
-                  ),
                 ),
               ),
 
@@ -170,7 +165,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
                 top: _blob2Y,
                 width: _blob2Size,
                 height: _blob2Size,
-                child: Container(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
@@ -183,10 +178,6 @@ class _ScreenBackgroundState extends State<ScreenBackground>
                       ],
                       stops: const [0.0, 0.5, 1.0],
                     ),
-                  ),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-                    child: Container(color: Colors.transparent),
                   ),
                 ),
               ),

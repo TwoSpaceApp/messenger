@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/core/utils/responsive.dart';
-import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/loading_skeletons.dart';
@@ -41,18 +39,13 @@ class _CallsScreenState extends State<CallsScreen> {
     super.dispose();
   }
 
+  // ──────────────────────────── UI ────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final isCompact = MediaQuery.sizeOf(context).width < 390;
-    final maxContentWidth = MediaQuery.sizeOf(context).width >= 900
-        ? 860.0
-        : double.infinity;
-    final horizontalPadding = 16.s(context);
-    final headerTopPadding = 16.s(context);
-    final sectionGap = 12.s(context);
-    final chipHeight = 40.s(context).clamp(36.0, 48.0);
+    const pad = EdgeInsets.symmetric(horizontal: 16);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -70,109 +63,37 @@ class _CallsScreenState extends State<CallsScreen> {
             child: SafeArea(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxContentWidth),
+                  constraints: const BoxConstraints(maxWidth: 860),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // ── Header row ──
                       Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          headerTopPadding,
-                          horizontalPadding,
-                          8.s(context),
-                        ),
+                        padding: pad.copyWith(top: 14, bottom: 4),
                         child: Row(
                           children: [
-                            const AppLogo(large: false),
-                            SizedBox(width: 8.s(context)),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.callsTitle,
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2.s(context)),
-                                  Text(
-                                    l10n.callsSubtitle,
-                                    style: theme.textTheme.bodyMedium
-                                        ?.copyWith(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.72,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              child: Text(
+                                l10n.callsTitle,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                             IconButton(
                               onPressed: _openStartCall,
-                              icon: Icon(
-                                Icons.add_ic_call_outlined,
-                                color: Colors.white,
-                                size: 22.s(context),
-                              ),
+                              icon: const Icon(Icons.add_ic_call_outlined,
+                                  color: Colors.white, size: 22),
                               tooltip: l10n.callsStartCallAction,
+                              visualDensity: VisualDensity.compact,
                             ),
                           ],
                         ),
                       ),
+                      // ── Search ──
                       Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPadding,
-                        ),
-                        child: _CallsSummaryCard(
-                          compact: isCompact,
-                          title: l10n.callsQuickStartTitle,
-                          subtitle: l10n.callsQuickStartSubtitle,
-                          actionLabel: l10n.callsStartCallAction,
-                          onTap: _openStartCall,
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          sectionGap,
-                          horizontalPadding,
-                          0,
-                        ),
-                        child: _CallsHighlights(
-                          compact: isCompact,
-                          items: [
-                            _OverviewItem(
-                              label: l10n.allFilter,
-                              count: _controller.history.length,
-                              icon: Icons.call_outlined,
-                            ),
-                            _OverviewItem(
-                              label: l10n.missedFilter,
-                              count: _controller.history
-                                  .where((item) => item.isMissed)
-                                  .length,
-                              icon: Icons.call_missed_outgoing,
-                            ),
-                            _OverviewItem(
-                              label: l10n.callsVideoFilter,
-                              count: _controller.history
-                                  .where((item) => item.isVideo)
-                                  .length,
-                              icon: Icons.videocam_outlined,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          sectionGap,
-                          horizontalPadding,
-                          0,
-                        ),
+                        padding: pad.copyWith(top: 6, bottom: 6),
                         child: PeopleSearchField(
                           controller: _searchController,
                           hintText: l10n.callsSearchHint,
@@ -183,70 +104,52 @@ class _CallsScreenState extends State<CallsScreen> {
                           },
                         ),
                       ),
-                      SizedBox(height: sectionGap),
+                      // ── Filter chips ──
                       SizedBox(
-                        height: chipHeight,
+                        height: 40,
                         child: ListView(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: horizontalPadding,
-                          ),
+                          padding: pad,
                           scrollDirection: Axis.horizontal,
                           children: [
-                            _buildFilterChip(CallsFilter.all, l10n.allFilter),
-                            _buildFilterChip(
-                              CallsFilter.missed,
-                              l10n.missedFilter,
-                            ),
-                            _buildFilterChip(
-                              CallsFilter.incoming,
-                              l10n.incomingFilter,
-                            ),
-                            _buildFilterChip(
-                              CallsFilter.outgoing,
-                              l10n.outgoingFilter,
-                            ),
-                            _buildFilterChip(
-                              CallsFilter.video,
-                              l10n.callsVideoFilter,
-                            ),
+                            _chip(CallsFilter.all, l10n.allFilter),
+                            _chip(CallsFilter.missed, l10n.missedFilter),
+                            _chip(CallsFilter.incoming, l10n.incomingFilter),
+                            _chip(CallsFilter.outgoing, l10n.outgoingFilter),
+                            _chip(CallsFilter.video, l10n.callsVideoFilter),
                           ],
                         ),
                       ),
+                      // ── Top contacts strip ──
                       if (_controller.topContacts.isNotEmpty)
                         Padding(
-                          padding: EdgeInsets.only(top: 14.s(context)),
+                          padding: const EdgeInsets.only(top: 10),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: horizontalPadding,
-                                ),
+                                padding: pad,
                                 child: Text(
                                   l10n.callsTopContactsTitle,
-                                  style: theme.textTheme.titleMedium
-                                      ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 10.s(context)),
+                              const SizedBox(height: 8),
                               SizedBox(
-                                height: 92.s(context),
+                                height: 88,
                                 child: ListView.separated(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: horizontalPadding,
-                                  ),
+                                  padding: pad,
                                   scrollDirection: Axis.horizontal,
                                   itemCount: _controller.topContacts.length,
                                   separatorBuilder: (_, __) =>
-                                      SizedBox(width: 10.s(context)),
-                                  itemBuilder: (context, index) {
-                                    final person = _controller.topContacts[index];
+                                      const SizedBox(width: 10),
+                                  itemBuilder: (_, i) {
+                                    final p = _controller.topContacts[i];
                                     return _TopContactChip(
-                                      person: person,
-                                      onTap: () => _startCall(person, false),
+                                      person: p,
+                                      onTap: () => _startCall(p, false),
                                     );
                                   },
                                 ),
@@ -254,17 +157,12 @@ class _CallsScreenState extends State<CallsScreen> {
                             ],
                           ),
                         ),
-                      SizedBox(height: sectionGap),
+                      const SizedBox(height: 8),
+                      // ── History list ──
                       Expanded(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 220),
-                          child: RefreshIndicator(
-                            key: ValueKey<int>(
-                              sections.length + _controller.topContacts.length,
-                            ),
-                            onRefresh: _controller.load,
-                            child: _buildBody(sections, l10n),
-                          ),
+                        child: RefreshIndicator(
+                          onRefresh: _controller.load,
+                          child: _buildBody(sections, l10n),
                         ),
                       ),
                     ],
@@ -278,204 +176,179 @@ class _CallsScreenState extends State<CallsScreen> {
     );
   }
 
-  Widget _buildFilterChip(CallsFilter filter, String label) {
+  Widget _chip(CallsFilter filter, String label) {
     final selected = _controller.filter == filter;
     return Padding(
-      padding: EdgeInsets.only(right: 8.s(context)),
+      padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
         label: Text(label),
         selected: selected,
         onSelected: (_) => _controller.setFilter(filter),
-        backgroundColor: Colors.white.withValues(alpha: 0.12),
+        backgroundColor: Colors.white.withValues(alpha: 0.10),
         selectedColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
-        labelStyle: const TextStyle(color: Colors.white),
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
+        labelStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+        ),
         checkmarkColor: Colors.white,
         side: BorderSide.none,
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
 
+  // ──────────────────────── Body ──────────────────────────
+
   Widget _buildBody(List<CallsSection> sections, AppLocalizations l10n) {
-    if (_controller.loading) {
-      return const CallsListSkeleton();
-    }
+    if (_controller.loading) return const CallsListSkeleton();
 
     if (sections.isEmpty) {
-      return ListView(
-        children: [
-          AppEmptyState(
-            title: l10n.callsEmptyTitle,
-            message: _controller.query.trim().isNotEmpty
-                ? l10n.callsEmptySearchMessage
-                : l10n.callsEmptyMessage,
-            icon: Icons.call_outlined,
-            actionLabel: l10n.callsStartCallAction,
-            onAction: _openStartCall,
-          ),
-        ],
-      );
+      return ListView(children: [
+        AppEmptyState(
+          title: l10n.callsEmptyTitle,
+          message: _controller.query.trim().isNotEmpty
+              ? l10n.callsEmptySearchMessage
+              : l10n.callsEmptyMessage,
+          icon: Icons.call_outlined,
+          actionLabel: l10n.callsStartCallAction,
+          onAction: _openStartCall,
+        ),
+      ]);
     }
 
     return ListView.builder(
-      cacheExtent: 1200,
-      padding: EdgeInsets.only(
-        left: 16.s(context),
-        right: 16.s(context),
-        bottom: 110.s(context),
-      ),
+      cacheExtent: 800,
+      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
       itemCount: sections.length,
       itemBuilder: (context, index) {
         final section = sections[index];
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Section header
             Padding(
-              padding: EdgeInsets.only(top: 8.s(context), bottom: 8.s(context)),
+              padding: const EdgeInsets.only(top: 8, bottom: 6),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       section.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
                           ),
                     ),
                   ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.s(context),
-                      vertical: 4.s(context),
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      '${section.items.length}',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
+                  Text(
+                    '${section.items.length}',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white38,
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                 ],
               ),
             ),
-            ...section.items.map(
-              (thread) => Padding(
-                padding: EdgeInsets.only(bottom: 8.s(context)),
-                child: Dismissible(
-                  key: ValueKey(thread.latest.id),
-                  direction: DismissDirection.endToStart,
-                  confirmDismiss: (_) async {
-                    await _controller.deleteEntry(thread.latest.id);
-                    return false;
-                  },
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: EdgeInsets.symmetric(horizontal: 20.s(context)),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .error
-                          .withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(24.s(context)),
-                    ),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      color: Colors.white,
-                      size: 22.s(context),
-                    ),
-                  ),
-                  child: GlassCard(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.s(context),
-                      vertical: 6.s(context),
-                    ),
-                    onTap: () => _showThreadSheet(thread),
-                    child: ListTile(
-                      minVerticalPadding: 0,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 8.s(context),
-                      ),
-                      leading: PersonAvatar(
-                        name: thread.person.displayName,
-                        avatarUrl: thread.person.avatarUrl,
-                        photoBytes: thread.person.photoBytes,
-                        radius: 23.s(context),
-                        showOnline: thread.person.isOnline,
-                      ),
-                      title: Text(
-                        thread.person.displayName,
-                        style: TextStyle(
-                          color: thread.missedCount > 0
-                              ? Colors.redAccent
-                              : Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      subtitle: Padding(
-                        padding: EdgeInsets.only(top: 4.s(context)),
-                        child: Text(
-                          _threadSubtitle(thread, l10n),
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.72),
-                          ),
-                        ),
-                      ),
-                      trailing: SizedBox(
-                        width: MediaQuery.sizeOf(context).width < 390
-                            ? 80.s(context)
-                            : 92.s(context),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              _formatTime(thread.latest.startedAt, l10n),
-                              style: TextStyle(
-                                fontSize: 12.s(context),
-                                color: Colors.white.withValues(alpha: 0.6),
-                              ),
-                            ),
-                            SizedBox(height: 6.s(context)),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                GestureDetector(
-                                  onTap: () => _startCall(thread.person, false),
-                                  child: Icon(
-                                    Icons.call_outlined,
-                                    size: 18.s(context),
-                                    color: Colors.green.withValues(alpha: 0.92),
-                                  ),
-                                ),
-                                SizedBox(width: 12.s(context)),
-                                GestureDetector(
-                                  onTap: () => _startCall(thread.person, true),
-                                  child: Icon(
-                                    Icons.videocam_outlined,
-                                    size: 18.s(context),
-                                    color: Colors.blue.withValues(alpha: 0.92),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            ...section.items.map((thread) => _callTile(thread, l10n)),
           ],
         );
       },
     );
   }
+
+  Widget _callTile(CallThreadSummary thread, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Dismissible(
+        key: ValueKey(thread.latest.id),
+        direction: DismissDirection.endToStart,
+        confirmDismiss: (_) async {
+          await _controller.deleteEntry(thread.latest.id);
+          return false;
+        },
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.error.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(Icons.delete_outline_rounded,
+              color: Colors.white, size: 22),
+        ),
+        child: GlassCard(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          onTap: () => _showThreadSheet(thread),
+          child: ListTile(
+            minVerticalPadding: 0,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            leading: PersonAvatar(
+              name: thread.person.displayName,
+              avatarUrl: thread.person.avatarUrl,
+              photoBytes: thread.person.photoBytes,
+              radius: 22,
+              showOnline: thread.person.isOnline,
+            ),
+            title: Text(
+              thread.person.displayName,
+              style: TextStyle(
+                color: thread.missedCount > 0 ? Colors.redAccent : Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                _threadSubtitle(thread, l10n),
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.72), fontSize: 13),
+              ),
+            ),
+            trailing: SizedBox(
+              width: 90,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _formatTime(thread.latest.startedAt, l10n),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.6)),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _startCall(thread.person, false),
+                        child: Icon(Icons.call_outlined,
+                            size: 18,
+                            color: Colors.green.withValues(alpha: 0.92)),
+                      ),
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: () => _startCall(thread.person, true),
+                        child: Icon(Icons.videocam_outlined,
+                            size: 18,
+                            color: Colors.blue.withValues(alpha: 0.92)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ──────────────────────── Helpers ──────────────────────────
 
   String _threadSubtitle(CallThreadSummary thread, AppLocalizations l10n) {
     final type =
@@ -493,31 +366,26 @@ class _CallsScreenState extends State<CallsScreen> {
   }
 
   String _directionLabel(dynamic direction, AppLocalizations l10n) {
-    return direction.name == 'incoming'
-        ? l10n.incomingCall
-        : l10n.outgoingCall;
+    return direction.name == 'incoming' ? l10n.incomingCall : l10n.outgoingCall;
   }
 
   String _formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-    if (hours > 0) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    }
-    return '${duration.inMinutes}:${seconds.toString().padLeft(2, '0')}';
+    final h = duration.inHours;
+    final m = duration.inMinutes.remainder(60);
+    final s = duration.inSeconds.remainder(60);
+    if (h > 0) return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    return '${duration.inMinutes}:${s.toString().padLeft(2, '0')}';
   }
 
   String _formatTime(DateTime date, AppLocalizations l10n) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
-    if (diff.inMinutes < 60) {
-      return l10n.minutesAgo(diff.inMinutes.clamp(1, 59));
-    }
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return l10n.minutesAgo(diff.inMinutes.clamp(1, 59));
     if (diff.inHours < 24) return l10n.hoursAgo(diff.inHours);
     if (diff.inDays == 1) return l10n.yesterdayLabel;
     return '${date.day}.${date.month.toString().padLeft(2, '0')}';
   }
+
+  // ──────────────────────── Actions ──────────────────────────
 
   Future<void> _openStartCall() async {
     await Navigator.of(context).push(
@@ -540,8 +408,7 @@ class _CallsScreenState extends State<CallsScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CallScreen(
-          room:
-              'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
+          room: 'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
           person: person,
           displayName: person.displayName,
           avatarUrl: person.avatarUrl,
@@ -557,267 +424,78 @@ class _CallsScreenState extends State<CallsScreen> {
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(sheetContext).colorScheme.surface,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(24.s(sheetContext)),
-            ),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: 8.s(sheetContext)),
-                Container(
-                  width: 42.s(sheetContext),
-                  height: 4.s(sheetContext),
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(ctx).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: Colors.grey, borderRadius: BorderRadius.circular(99)),
+              ),
+              ListTile(
+                leading: PersonAvatar(
+                  name: thread.person.displayName,
+                  avatarUrl: thread.person.avatarUrl,
+                  photoBytes: thread.person.photoBytes,
                 ),
+                title: Text(thread.person.displayName),
+                subtitle: Text(_threadSubtitle(thread, l10n)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.call_outlined),
+                title: Text(l10n.voiceCallLabel),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _startCall(thread.person, false);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.videocam_outlined),
+                title: Text(l10n.videoCallLabel),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _startCall(thread.person, true);
+                },
+              ),
+              if (thread.person.remoteUserId != null)
                 ListTile(
-                  leading: PersonAvatar(
-                    name: thread.person.displayName,
-                    avatarUrl: thread.person.avatarUrl,
-                    photoBytes: thread.person.photoBytes,
-                  ),
-                  title: Text(thread.person.displayName),
-                  subtitle: Text(_threadSubtitle(thread, l10n)),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.call_outlined),
-                  title: Text(l10n.voiceCallLabel),
+                  leading: const Icon(Icons.chat_bubble_outline_rounded),
+                  title: Text(l10n.sendMessageCallAction),
                   onTap: () {
-                    Navigator.of(sheetContext).pop();
-                    _startCall(thread.person, false);
+                    Navigator.of(ctx).pop();
+                    _openChat(thread.person);
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.videocam_outlined),
-                  title: Text(l10n.videoCallLabel),
-                  onTap: () {
-                    Navigator.of(sheetContext).pop();
-                    _startCall(thread.person, true);
-                  },
-                ),
-                if (thread.person.remoteUserId != null)
-                  ListTile(
-                    leading: const Icon(Icons.chat_bubble_outline_rounded),
-                    title: Text(l10n.sendMessageCallAction),
-                    onTap: () {
-                      Navigator.of(sheetContext).pop();
-                      _openChat(thread.person);
-                    },
-                  ),
-                ListTile(
-                  leading: const Icon(Icons.delete_outline_rounded),
-                  title: Text(l10n.delete),
-                  onTap: () async {
-                    Navigator.of(sheetContext).pop();
-                    await _controller.deleteEntry(thread.latest.id);
-                  },
-                ),
-                SizedBox(height: 12.s(sheetContext)),
-              ],
-            ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline_rounded),
+                title: Text(l10n.delete),
+                onTap: () async {
+                  Navigator.of(ctx).pop();
+                  await _controller.deleteEntry(thread.latest.id);
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
           ),
-        );
-      },
-    );
-  }
-}
-
-class _OverviewItem {
-  const _OverviewItem({
-    required this.label,
-    required this.count,
-    required this.icon,
-  });
-
-  final String label;
-  final int count;
-  final IconData icon;
-}
-
-class _CallsSummaryCard extends StatelessWidget {
-  const _CallsSummaryCard({
-    required this.compact,
-    required this.title,
-    required this.subtitle,
-    required this.actionLabel,
-    required this.onTap,
-  });
-
-  final bool compact;
-  final String title;
-  final String subtitle;
-  final String actionLabel;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final details = Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          SizedBox(height: 4.s(context)),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.72),
-                ),
-          ),
-        ],
+        ),
       ),
     );
-
-    return GlassCard(
-      child: compact
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 44.s(context),
-                      height: 44.s(context),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(14.s(context)),
-                      ),
-                      child: Icon(
-                        Icons.add_ic_call_outlined,
-                        color: Colors.white,
-                        size: 20.s(context),
-                      ),
-                    ),
-                    SizedBox(width: 12.s(context)),
-                    details,
-                  ],
-                ),
-                SizedBox(height: 12.s(context)),
-                FilledButton(onPressed: onTap, child: Text(actionLabel)),
-              ],
-            )
-          : Row(
-              children: [
-                Container(
-                  width: 44.s(context),
-                  height: 44.s(context),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(14.s(context)),
-                  ),
-                  child: Icon(
-                    Icons.add_ic_call_outlined,
-                    color: Colors.white,
-                    size: 20.s(context),
-                  ),
-                ),
-                SizedBox(width: 12.s(context)),
-                details,
-                FilledButton(onPressed: onTap, child: Text(actionLabel)),
-              ],
-            ),
-    );
   }
 }
 
-class _CallsHighlights extends StatelessWidget {
-  const _CallsHighlights({
-    required this.compact,
-    required this.items,
-  });
-
-  final bool compact;
-  final List<_OverviewItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8.s(context),
-      runSpacing: 8.s(context),
-      children: items
-          .map(
-            (item) => SizedBox(
-              width: compact ? double.infinity : 220.s(context),
-              child: GlassCard(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 14.s(context),
-                  vertical: 12.s(context),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 38.s(context),
-                      height: 38.s(context),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12.s(context)),
-                      ),
-                      child: Icon(item.icon, color: Colors.white),
-                    ),
-                    SizedBox(width: 12.s(context)),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${item.count}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                          ),
-                          Text(
-                            item.label,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: Colors.white70),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-          .toList(growable: false),
-    );
-  }
-}
+// ══════════════════════ Private widgets ══════════════════════
 
 class _TopContactChip extends StatelessWidget {
-  const _TopContactChip({
-    required this.person,
-    required this.onTap,
-  });
-
+  const _TopContactChip({required this.person, required this.onTap});
   final PersonEntry person;
   final VoidCallback onTap;
 
@@ -825,24 +503,21 @@ class _TopContactChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18.s(context)),
+      borderRadius: BorderRadius.circular(16),
       child: GlassCard(
-        padding: EdgeInsets.symmetric(
-          horizontal: 12.s(context),
-          vertical: 10.s(context),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           children: [
             PersonAvatar(
               name: person.displayName,
               avatarUrl: person.avatarUrl,
               photoBytes: person.photoBytes,
-              radius: 20.s(context),
+              radius: 20,
               showOnline: person.isOnline,
             ),
-            SizedBox(height: 8.s(context)),
+            const SizedBox(height: 6),
             SizedBox(
-              width: 68.s(context),
+              width: 64,
               child: Text(
                 person.displayName,
                 maxLines: 1,

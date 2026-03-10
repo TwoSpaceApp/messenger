@@ -1,5 +1,7 @@
+import 'dart:io' show Platform;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -234,6 +236,14 @@ class PeopleRepository {
   Future<DeviceContactsResult> loadDeviceContacts({
     bool requestPermission = true,
   }) async {
+    // permission_handler and flutter_contacts only work on Android/iOS
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) {
+      return const DeviceContactsResult(
+        permission: DeviceContactsPermission.denied,
+        contacts: <PersonEntry>[],
+      );
+    }
+
     if (_deviceContactsCache != null &&
         (!requestPermission ||
             _deviceContactsCache!.permission ==

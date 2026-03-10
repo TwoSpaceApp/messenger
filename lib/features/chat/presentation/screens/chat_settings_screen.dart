@@ -10,9 +10,10 @@ import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.
 
 class ChatSettingsScreen extends StatefulWidget {
   const ChatSettingsScreen(
-      {required this.roomId, required this.initialName, super.key});
+      {required this.roomId, required this.initialName, this.roomType, super.key});
   final String roomId;
   final String initialName;
+  final String? roomType;
 
   @override
   State<ChatSettingsScreen> createState() => _ChatSettingsScreenState();
@@ -239,9 +240,21 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     }
   }
 
+  String _chatTypeLabel(AppLocalizations l10n) {
+    switch (widget.roomType) {
+      case 'direct':
+        return l10n.directChatTab;
+      case 'group':
+        return l10n.groupChatTab;
+      default:
+        return l10n.directChatTab;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final typeLabel = _chatTypeLabel(l10n);
     final sections = [
       {'key': 'invite', 'title': l10n.inviteAction, 'icon': Icons.person_add},
       {'key': 'members', 'title': l10n.membersLabel, 'icon': Icons.group},
@@ -273,7 +286,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.roomTitle(widget.initialName))),
+      appBar: AppBar(title: Text('$typeLabel — ${widget.initialName}')),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final maxW = constraints.maxWidth;
@@ -307,7 +320,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                                       : '?')),
                           title: Text(meta['name'] ?? widget.initialName,
                               style: Theme.of(context).textTheme.titleMedium),
-                          subtitle: Text(l10n.roomSettingsLabel),
+                          subtitle: Text(typeLabel),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

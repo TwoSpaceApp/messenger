@@ -268,6 +268,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return ListView.builder(
       padding: const EdgeInsets.all(8),
+      cacheExtent: 500,
       itemCount: rooms.length,
       itemBuilder: (c, i) {
         final r = rooms[i];
@@ -329,22 +330,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         );
 
-        // Use staggered entry animation
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: 1),
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOutCubic,
-          builder: (context, value, child) {
-            return Transform.translate(
-              offset: Offset(0, 50 * (1 - value)),
-              child: Opacity(
-                opacity: value,
-                child: child,
-              ),
-            );
-          },
-          child: item,
-        );
+        return item;
       },
     );
   }

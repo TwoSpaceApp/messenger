@@ -2,7 +2,7 @@ import 'package:envied/envied.dart';
 
 part 'env.g.dart';
 
-@Envied(path: '.env', requireEnvFile: true)
+@Envied(path: '.env', requireEnvFile: false)
 abstract class Env {
   @EnviedField(varName: 'ENABLE_DEV_TOOLS', defaultValue: 'false')
   static const String enableDevTools = _Env.enableDevTools;

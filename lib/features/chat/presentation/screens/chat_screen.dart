@@ -275,19 +275,27 @@ class _ChatScreenState extends State<ChatScreen> {
       } else if (shouldStickToLatest) {
         _scrollToLatest();
       }
-      // fetch reactions for messages in background
-      for (final m in out) {
-        () async {
-          try {
-            final r = await _svc.getReactions(widget.chat.id, m.id);
-            if (mounted) setState(() => _reactions[m.id] = r);
-          } catch (_) {}
-        }();
-      }
+      // fetch reactions for messages in background — batched to avoid N separate setStates
+      _loadReactionsBatched(out);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.loadMessagesError(e.toString()))));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadReactionsBatched(List<_Msg> msgs) async {
+    final batch = <String, Map<String, int>>{};
+    await Future.wait(
+      msgs.map((m) async {
+        try {
+          final r = await _svc.getReactions(widget.chat.id, m.id);
+          if (r.isNotEmpty) batch[m.id] = r;
+        } catch (_) {}
+      }),
+    );
+    if (mounted && batch.isNotEmpty) {
+      setState(() => _reactions.addAll(batch));
     }
   }
 
@@ -316,6 +324,7 @@ class _ChatScreenState extends State<ChatScreen> {
             : ChatSettingsScreen(
                 roomId: widget.chat.id,
                 initialName: widget.chat.name,
+                roomType: widget.chat.roomType,
               ),
       ),
     );
@@ -701,7 +710,7 @@ class _ChatScreenState extends State<ChatScreen> {
         itemBuilder: (c, i) {
           final m = _visibleMessages[i];
           final key = _messageKeys.putIfAbsent(m.id, GlobalKey.new);
-          final bubbleContent = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          final bubbleContent = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.white70)),
               const SizedBox(height: 6),
               if (m.type == 'm.image' && (m.mediaId != null && m.mediaId!.isNotEmpty))
@@ -725,26 +734,25 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: _AudioMessageWidget(message: m, svc: _svc, audioPlayers: _audioPlayers),
                 )
               else
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
-                  child: Text(
-                    m.text,
-                    softWrap: true,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
+                Text(
+                  m.text,
+                  softWrap: true,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    MessageTimeFormatter.formatTime(m.time),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.68),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  MessageTimeFormatter.formatTime(m.time),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.68),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                ],
               ),
               // reactions row
               if ((_reactions[m.id] ?? {}).isNotEmpty) ...[
