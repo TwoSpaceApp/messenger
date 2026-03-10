@@ -1890,4 +1890,93 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get callsVoiceSecureDetail =>
       'La voce è protetta e instradata tramite la sessione sicura corrente.';
+
+  @override
+  String get timestampPrecisionLabel => 'Precisione orario dei messaggi';
+
+  @override
+  String get timestampPrecisionSubtitle =>
+      'Scegli quanto dettaglio mostrare nell\'orario dentro i chat e nell\'elenco chat.';
+
+  @override
+  String get timestampPrecisionMinutes => 'Ore e minuti';
+
+  @override
+  String get timestampPrecisionSeconds => 'Ore, minuti e secondi';
+
+  @override
+  String get timestampPrecisionMilliseconds =>
+      'Ore, minuti, secondi e millisecondi';
+
+  @override
+  String get startupTitle => 'Preparazione di TwoSpace';
+
+  @override
+  String get startupSubtitle =>
+      'Controllo della sessione protetta e apertura delle tue chat.';
+
+  @override
+  String get startupFooter =>
+      'Questa schermata viene mostrata solo durante l\'avvio dell\'app.';
+
+  @override
+  String get startupStepEnvironment => 'Caricamento configurazione';
+
+  @override
+  String get startupStepDiagnostics => 'Avvio diagnostica';
+
+  @override
+  String get startupStepValidation => 'Verifica ambiente';
+
+  @override
+  String get startupStepSettings => 'Caricamento impostazioni';
+
+  @override
+  String get startupStepSession => 'Ripristino sessione protetta';
+
+  @override
+  String get startupStepLaunch => 'Avvio applicazione';
+
+  @override
+  String get callsDemoBannerTitle => 'Esempio, funzionalità non operativa';
+
+  @override
+  String get callsDemoBannerVoiceMessage =>
+      'Le chiamate vocali sono mostrate solo come prototipo visivo. Il trasporto audio non è ancora collegato.';
+
+  @override
+  String get callsDemoBannerVideoMessage =>
+      'Le videochiamate sono mostrate solo come prototipo visivo. Il flusso remoto non è disponibile, ma l\'anteprima locale della fotocamera funziona.';
+
+  @override
+  String get callsCameraPermissionMessage =>
+      'Consenti l\'accesso alla fotocamera per mostrare l\'anteprima locale durante una videochiamata.';
+
+  @override
+  String get callsCameraPermissionSettingsMessage =>
+      'L\'accesso alla fotocamera è bloccato. Apri le impostazioni di sistema per attivare l\'anteprima video locale.';
+
+  @override
+  String get callsCameraPermissionAction => 'Consenti fotocamera';
+
+  @override
+  String get callsCameraUnavailableTitle => 'Fotocamera non disponibile';
+
+  @override
+  String get callsCameraUnavailableMessage =>
+      'Non è stato possibile avviare l\'anteprima locale della fotocamera su questo dispositivo.';
+
+  @override
+  String get callsCameraUnsupportedMessage =>
+      'Questa piattaforma non supporta l\'anteprima video locale.';
+
+  @override
+  String get callsCameraOffMessage =>
+      'L\'anteprima della fotocamera è disattivata per questa chiamata dimostrativa.';
+
+  @override
+  String get callsFrontCameraLabel => 'Fotocamera anteriore';
+
+  @override
+  String get callsRearCameraLabel => 'Fotocamera posteriore';
 }

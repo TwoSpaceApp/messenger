@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
 import 'package:two_space_app/core/widgets/theme_switcher.dart';
@@ -70,6 +71,130 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SnackBar(content: Text(l10n.errorLogout(e.toString()))));
       setState(() => _loggingOut = false);
     }
+  }
+
+  String _timestampPrecisionLabel(
+    AppLocalizations l10n,
+    MessageTimestampPrecision precision,
+  ) {
+    switch (precision) {
+      case MessageTimestampPrecision.minutes:
+        return l10n.timestampPrecisionMinutes;
+      case MessageTimestampPrecision.seconds:
+        return l10n.timestampPrecisionSeconds;
+      case MessageTimestampPrecision.milliseconds:
+        return l10n.timestampPrecisionMilliseconds;
+    }
+  }
+
+  Future<void> _openTimestampPrecisionPicker() async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return ValueListenableBuilder<MessageTimestampPrecision>(
+          valueListenable: SettingsService.messageTimestampPrecisionNotifier,
+          builder: (context, current, _) {
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer
+                                  .withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.schedule_rounded,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.timestampPrecisionLabel,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  l10n.timestampPrecisionSubtitle,
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ...MessageTimestampPrecision.values.map((precision) {
+                      final selected = precision == current;
+                      final sample = MessageTimeFormatter.formatTime(
+                        DateTime(2026, 1, 1, 9, 41, 27, 128),
+                        precision: precision,
+                      );
+                      return ListTile(
+                        leading: Icon(
+                          selected
+                              ? Icons.radio_button_checked_rounded
+                              : Icons.radio_button_off_rounded,
+                          color: selected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.outline,
+                        ),
+                        title: Text(
+                          _timestampPrecisionLabel(l10n, precision),
+                        ),
+                        subtitle: Text(sample),
+                        onTap: () async {
+                          await SettingsService.setMessageTimestampPrecision(
+                            precision,
+                          );
+                          if (sheetContext.mounted) {
+                            Navigator.of(sheetContext).pop();
+                          }
+                        },
+                      );
+                    }),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -266,6 +391,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         trailing: const LanguageSwitcherButton(),
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      const Divider(height: 1),
+                      ValueListenableBuilder<MessageTimestampPrecision>(
+                        valueListenable:
+                            SettingsService.messageTimestampPrecisionNotifier,
+                        builder: (context, precision, _) {
+                          return ListTile(
+                            leading: const Icon(Icons.schedule_rounded),
+                            title: Text(l10n.timestampPrecisionLabel),
+                            subtitle: Text(l10n.timestampPrecisionSubtitle),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _timestampPrecisionLabel(l10n, precision),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall,
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.chevron_right),
+                              ],
+                            ),
+                            onTap: _openTimestampPrecisionPicker,
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                          );
+                        },
                       ),
                       ValueListenableBuilder<bool>(
                         valueListenable: SettingsService.sendByEnterNotifier,

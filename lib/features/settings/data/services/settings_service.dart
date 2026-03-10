@@ -1,6 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/utils/secure_store.dart';
 
+enum MessageTimestampPrecision { minutes, seconds, milliseconds }
+
+extension MessageTimestampPrecisionX on MessageTimestampPrecision {
+  String get storageValue {
+    switch (this) {
+      case MessageTimestampPrecision.minutes:
+        return 'minutes';
+      case MessageTimestampPrecision.seconds:
+        return 'seconds';
+      case MessageTimestampPrecision.milliseconds:
+        return 'milliseconds';
+    }
+  }
+
+  static MessageTimestampPrecision fromStorage(String? value) {
+    switch ((value ?? '').trim().toLowerCase()) {
+      case 'seconds':
+        return MessageTimestampPrecision.seconds;
+      case 'milliseconds':
+        return MessageTimestampPrecision.milliseconds;
+      case 'minutes':
+      default:
+        return MessageTimestampPrecision.minutes;
+    }
+  }
+}
+
 /// Data class for theme settings
 class ThemeSettings {
   final String fontFamily;
@@ -83,6 +110,7 @@ class SettingsService {
   static const _autoDownloadKey = 'app_auto_download';
   static const _sendByEnterKey = 'app_send_enter';
   static const _themeModeKey = 'app_theme_mode';
+  static const _messageTimestampPrecisionKey = 'chat_message_timestamp_precision';
   static const _notificationsEnabledKey = 'notifications_enabled';
   static const _soundEnabledKey = 'notifications_sound_enabled';
   static const _doNotDisturbKey = 'notifications_do_not_disturb';
@@ -101,6 +129,9 @@ class SettingsService {
   static final ValueNotifier<double> textScaleNotifier = ValueNotifier(1);
   static final ValueNotifier<bool> autoDownloadMediaNotifier = ValueNotifier(true);
   static final ValueNotifier<bool> sendByEnterNotifier = ValueNotifier(true);
+  static final ValueNotifier<MessageTimestampPrecision>
+      messageTimestampPrecisionNotifier =
+      ValueNotifier(MessageTimestampPrecision.minutes);
   static final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
   static final ValueNotifier<bool> biometricsNotifier = ValueNotifier(false);
   static final ValueNotifier<bool> notificationsEnabledNotifier = ValueNotifier(true);
@@ -144,6 +175,10 @@ class SettingsService {
     textScaleNotifier.value = double.tryParse(await SecureStore.read(_textScaleKey) ?? '') ?? 1.0;
     autoDownloadMediaNotifier.value = (await SecureStore.read(_autoDownloadKey)) != 'false';
     sendByEnterNotifier.value = (await SecureStore.read(_sendByEnterKey)) != 'false';
+    messageTimestampPrecisionNotifier.value =
+        MessageTimestampPrecisionX.fromStorage(
+      await SecureStore.read(_messageTimestampPrecisionKey),
+    );
 
     // Theme mode (system/light/dark)
     themeModeNotifier.value = _themeModeFromString(await SecureStore.read(_themeModeKey));
@@ -322,6 +357,16 @@ class SettingsService {
   static Future<void> setSendByEnter(bool val) async {
     sendByEnterNotifier.value = val;
     await SecureStore.write(_sendByEnterKey, val.toString());
+  }
+
+  static Future<void> setMessageTimestampPrecision(
+    MessageTimestampPrecision precision,
+  ) async {
+    messageTimestampPrecisionNotifier.value = precision;
+    await SecureStore.write(
+      _messageTimestampPrecisionKey,
+      precision.storageValue,
+    );
   }
 
   static Future<void> clearCachedProfile() async {

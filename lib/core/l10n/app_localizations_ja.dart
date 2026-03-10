@@ -1842,4 +1842,87 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get callsVoiceSecureDetail => '音声は保護され、現在の安全なセッションを通して送られます。';
+
+  @override
+  String get timestampPrecisionLabel => 'メッセージ時刻の精度';
+
+  @override
+  String get timestampPrecisionSubtitle => 'チャット内とチャット一覧で時刻をどこまで細かく表示するか選択します。';
+
+  @override
+  String get timestampPrecisionMinutes => '時と分';
+
+  @override
+  String get timestampPrecisionSeconds => '時・分・秒';
+
+  @override
+  String get timestampPrecisionMilliseconds => '時・分・秒・ミリ秒';
+
+  @override
+  String get startupTitle => 'TwoSpace を準備しています';
+
+  @override
+  String get startupSubtitle => '安全なセッションを確認し、チャットを開いています。';
+
+  @override
+  String get startupFooter => 'この画面はアプリ起動時にのみ表示されます。';
+
+  @override
+  String get startupStepEnvironment => '設定を読み込んでいます';
+
+  @override
+  String get startupStepDiagnostics => '診断を開始しています';
+
+  @override
+  String get startupStepValidation => '環境を検証しています';
+
+  @override
+  String get startupStepSettings => '設定を読み込んでいます';
+
+  @override
+  String get startupStepSession => '安全なセッションを復元しています';
+
+  @override
+  String get startupStepLaunch => 'アプリを起動しています';
+
+  @override
+  String get callsDemoBannerTitle => '例示用、未実装の機能です';
+
+  @override
+  String get callsDemoBannerVoiceMessage =>
+      '音声通話は現在、見た目のプロトタイプとしてのみ表示されています。音声通信はまだ接続されていません。';
+
+  @override
+  String get callsDemoBannerVideoMessage =>
+      'ビデオ通話は現在、見た目のプロトタイプとしてのみ表示されています。相手側の映像は利用できませんが、自分のローカルカメラプレビューは動作します。';
+
+  @override
+  String get callsCameraPermissionMessage =>
+      'ビデオ通話中にローカルプレビューを表示するため、カメラへのアクセスを許可してください。';
+
+  @override
+  String get callsCameraPermissionSettingsMessage =>
+      'カメラへのアクセスがブロックされています。システム設定を開いてローカルプレビューを有効にしてください。';
+
+  @override
+  String get callsCameraPermissionAction => 'カメラを許可';
+
+  @override
+  String get callsCameraUnavailableTitle => 'カメラを利用できません';
+
+  @override
+  String get callsCameraUnavailableMessage => 'この端末ではローカルカメラプレビューを開始できませんでした。';
+
+  @override
+  String get callsCameraUnsupportedMessage =>
+      'このプラットフォームではローカルビデオプレビューをサポートしていません。';
+
+  @override
+  String get callsCameraOffMessage => 'このデモ通話ではカメラプレビューがオフになっています。';
+
+  @override
+  String get callsFrontCameraLabel => '前面カメラ';
+
+  @override
+  String get callsRearCameraLabel => '背面カメラ';
 }

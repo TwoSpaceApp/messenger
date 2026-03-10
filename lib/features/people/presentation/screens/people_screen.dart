@@ -57,6 +57,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isCompact = MediaQuery.sizeOf(context).width < 390;
+    final maxContentWidth = MediaQuery.sizeOf(context).width >= 900 ? 860.0 : double.infinity;
     final horizontalPadding = 16.s(context);
     final headerTopPadding = 16.s(context);
     final headerGap = 8.s(context);
@@ -70,110 +71,147 @@ class _PeopleScreenState extends State<PeopleScreen> {
           backgroundColor: Colors.transparent,
           body: ScreenBackground(
             child: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      headerTopPadding,
-                      horizontalPadding,
-                      headerGap,
-                    ),
-                    child: Row(
-                      children: [
-                        const AppLogo(large: false),
-                        SizedBox(width: 8.s(context)),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.peopleTitle,
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxContentWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          headerTopPadding,
+                          horizontalPadding,
+                          headerGap,
+                        ),
+                        child: Row(
+                          children: [
+                            const AppLogo(large: false),
+                            SizedBox(width: 8.s(context)),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.peopleTitle,
+                                    style: theme.textTheme.headlineSmall?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2.s(context)),
+                                  Text(
+                                    l10n.peopleSubtitle,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.72),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 2.s(context)),
-                              Text(
-                                l10n.peopleSubtitle,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.72),
-                                ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                        child: _QuickActionsCard(
+                          compact: isCompact,
+                          newChatLabel: l10n.peopleQuickNewChat,
+                          inviteLabel: l10n.peopleQuickInvite,
+                          syncLabel: l10n.peopleQuickSync,
+                          onNewChat: _focusSearch,
+                          onInvite: _shareInviteText,
+                          onSync: _controller.refresh,
+                        ),
+                      ),
+                      if (_controller.dashboard != null)
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            horizontalPadding,
+                            sectionGap,
+                            horizontalPadding,
+                            0,
+                          ),
+                          child: _PeopleHighlights(
+                            compact: isCompact,
+                            items: [
+                              _OverviewItem(
+                                label: l10n.peopleSegmentTwoSpace,
+                                count: _controller.dashboard!.twoSpacePeople.length,
+                                icon: Icons.verified_user_outlined,
+                              ),
+                              _OverviewItem(
+                                label: l10n.peopleSegmentPhonebook,
+                                count: _controller.dashboard!.twoSpacePeople
+                                        .where((person) => person.isDeviceContact)
+                                        .length +
+                                    _controller.dashboard!.invitePeople.length,
+                                icon: Icons.contact_page_outlined,
+                              ),
+                              _OverviewItem(
+                                label: l10n.peopleInviteTitle,
+                                count: _controller.dashboard!.invitePeople.length,
+                                icon: Icons.share_outlined,
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                    child: _QuickActionsCard(
-                      compact: isCompact,
-                      newChatLabel: l10n.peopleQuickNewChat,
-                      inviteLabel: l10n.peopleQuickInvite,
-                      syncLabel: l10n.peopleQuickSync,
-                      onNewChat: _focusSearch,
-                      onInvite: _shareInviteText,
-                      onSync: _controller.refresh,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      sectionGap,
-                      horizontalPadding,
-                      0,
-                    ),
-                    child: PeopleSearchField(
-                      controller: _searchController,
-                      focusNode: _searchFocusNode,
-                      autofocus: widget.autofocusSearch,
-                      hintText: l10n.peopleSearchHint,
-                      onChanged: _controller.updateQuery,
-                      onClear: () {
-                        _searchController.clear();
-                        _controller.clearSearch();
-                      },
-                    ),
-                  ),
-                  SizedBox(height: sectionGap),
-                  SizedBox(
-                    height: chipHeight,
-                    child: ListView(
-                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        _buildSegmentChip(PeopleSegment.all, l10n.peopleSegmentAll),
-                        _buildSegmentChip(
-                          PeopleSegment.twospace,
-                          l10n.peopleSegmentTwoSpace,
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          sectionGap,
+                          horizontalPadding,
+                          0,
                         ),
-                        _buildSegmentChip(
-                          PeopleSegment.phonebook,
-                          l10n.peopleSegmentPhonebook,
+                        child: PeopleSearchField(
+                          controller: _searchController,
+                          focusNode: _searchFocusNode,
+                          autofocus: widget.autofocusSearch,
+                          hintText: l10n.peopleSearchHint,
+                          onChanged: _controller.updateQuery,
+                          onClear: () {
+                            _searchController.clear();
+                            _controller.clearSearch();
+                          },
                         ),
-                        _buildSegmentChip(
-                          PeopleSegment.recent,
-                          l10n.peopleSegmentRecent,
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: sectionGap),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
-                      child: RefreshIndicator(
-                        key: ValueKey<bool>(_controller.isSearchingMode),
-                        onRefresh: _controller.refresh,
-                        child: _buildBody(l10n),
                       ),
-                    ),
+                      SizedBox(height: sectionGap),
+                      SizedBox(
+                        height: chipHeight,
+                        child: ListView(
+                          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            _buildSegmentChip(PeopleSegment.all, l10n.peopleSegmentAll),
+                            _buildSegmentChip(
+                              PeopleSegment.twospace,
+                              l10n.peopleSegmentTwoSpace,
+                            ),
+                            _buildSegmentChip(
+                              PeopleSegment.phonebook,
+                              l10n.peopleSegmentPhonebook,
+                            ),
+                            _buildSegmentChip(
+                              PeopleSegment.recent,
+                              l10n.peopleSegmentRecent,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: sectionGap),
+                      Expanded(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          child: RefreshIndicator(
+                            key: ValueKey<bool>(_controller.isSearchingMode),
+                            onRefresh: _controller.refresh,
+                            child: _buildBody(l10n),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -750,6 +788,89 @@ class _QuickActionButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _OverviewItem {
+  const _OverviewItem({
+    required this.label,
+    required this.count,
+    required this.icon,
+  });
+
+  final String label;
+  final int count;
+  final IconData icon;
+}
+
+class _PeopleHighlights extends StatelessWidget {
+  const _PeopleHighlights({
+    required this.compact,
+    required this.items,
+  });
+
+  final bool compact;
+  final List<_OverviewItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8.s(context),
+      runSpacing: 8.s(context),
+      children: items
+          .map(
+            (item) => SizedBox(
+              width: compact ? double.infinity : 220.s(context),
+              child: GlassCard(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 14.s(context),
+                  vertical: 12.s(context),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38.s(context),
+                      height: 38.s(context),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12.s(context)),
+                      ),
+                      child: Icon(item.icon, color: Colors.white),
+                    ),
+                    SizedBox(width: 12.s(context)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${item.count}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                          Text(
+                            item.label,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+          .toList(growable: false),
     );
   }
 }

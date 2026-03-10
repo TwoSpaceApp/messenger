@@ -1842,4 +1842,87 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get callsVoiceSecureDetail => '음성은 보호되며 현재 보안 세션을 통해 전송됩니다.';
+
+  @override
+  String get timestampPrecisionLabel => '메시지 시간 정밀도';
+
+  @override
+  String get timestampPrecisionSubtitle =>
+      '채팅 내부와 채팅 목록에서 시간을 얼마나 자세히 표시할지 선택하세요.';
+
+  @override
+  String get timestampPrecisionMinutes => '시와 분';
+
+  @override
+  String get timestampPrecisionSeconds => '시, 분, 초';
+
+  @override
+  String get timestampPrecisionMilliseconds => '시, 분, 초, 밀리초';
+
+  @override
+  String get startupTitle => 'TwoSpace 준비 중';
+
+  @override
+  String get startupSubtitle => '보안 세션을 확인하고 채팅을 열고 있습니다.';
+
+  @override
+  String get startupFooter => '이 화면은 앱 시작 중에만 표시됩니다.';
+
+  @override
+  String get startupStepEnvironment => '구성을 불러오는 중';
+
+  @override
+  String get startupStepDiagnostics => '진단을 시작하는 중';
+
+  @override
+  String get startupStepValidation => '환경을 확인하는 중';
+
+  @override
+  String get startupStepSettings => '설정을 불러오는 중';
+
+  @override
+  String get startupStepSession => '보안 세션을 복원하는 중';
+
+  @override
+  String get startupStepLaunch => '앱을 시작하는 중';
+
+  @override
+  String get callsDemoBannerTitle => '예시, 동작하지 않는 기능';
+
+  @override
+  String get callsDemoBannerVoiceMessage =>
+      '음성 통화는 현재 시각적 프로토타입으로만 표시됩니다. 오디오 전송은 아직 연결되지 않았습니다.';
+
+  @override
+  String get callsDemoBannerVideoMessage =>
+      '영상 통화는 현재 시각적 프로토타입으로만 표시됩니다. 원격 영상은 아직 사용할 수 없지만, 내 로컬 카메라 미리보기는 동작합니다.';
+
+  @override
+  String get callsCameraPermissionMessage =>
+      '영상 통화 중 내 로컬 미리보기를 표시하려면 카메라 접근을 허용하세요.';
+
+  @override
+  String get callsCameraPermissionSettingsMessage =>
+      '카메라 접근이 차단되었습니다. 시스템 설정을 열어 로컬 영상 미리보기를 활성화하세요.';
+
+  @override
+  String get callsCameraPermissionAction => '카메라 허용';
+
+  @override
+  String get callsCameraUnavailableTitle => '카메라를 사용할 수 없음';
+
+  @override
+  String get callsCameraUnavailableMessage => '이 기기에서 로컬 카메라 미리보기를 시작할 수 없습니다.';
+
+  @override
+  String get callsCameraUnsupportedMessage => '이 플랫폼은 로컬 영상 미리보기를 지원하지 않습니다.';
+
+  @override
+  String get callsCameraOffMessage => '이 데모 통화에서는 카메라 미리보기가 꺼져 있습니다.';
+
+  @override
+  String get callsFrontCameraLabel => '전면 카메라';
+
+  @override
+  String get callsRearCameraLabel => '후면 카메라';
 }

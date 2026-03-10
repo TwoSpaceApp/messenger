@@ -1900,4 +1900,94 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get callsVoiceSecureDetail =>
       'La voix est protégée et transite par la session sécurisée actuelle.';
+
+  @override
+  String get timestampPrecisionLabel => 'Précision de l\'heure des messages';
+
+  @override
+  String get timestampPrecisionSubtitle =>
+      'Choisissez le niveau de détail des horodatages dans les chats et dans la liste des chats.';
+
+  @override
+  String get timestampPrecisionMinutes => 'Heures et minutes';
+
+  @override
+  String get timestampPrecisionSeconds => 'Heures, minutes et secondes';
+
+  @override
+  String get timestampPrecisionMilliseconds =>
+      'Heures, minutes, secondes et millisecondes';
+
+  @override
+  String get startupTitle => 'Préparation de TwoSpace';
+
+  @override
+  String get startupSubtitle =>
+      'Vérification de la session sécurisée et ouverture de vos chats.';
+
+  @override
+  String get startupFooter =>
+      'Cet écran s\'affiche uniquement au démarrage de l\'application.';
+
+  @override
+  String get startupStepEnvironment => 'Chargement de la configuration';
+
+  @override
+  String get startupStepDiagnostics => 'Démarrage du diagnostic';
+
+  @override
+  String get startupStepValidation => 'Validation de l\'environnement';
+
+  @override
+  String get startupStepSettings => 'Chargement des réglages';
+
+  @override
+  String get startupStepSession => 'Restauration de la session sécurisée';
+
+  @override
+  String get startupStepLaunch => 'Démarrage de l\'application';
+
+  @override
+  String get callsDemoBannerTitle =>
+      'Exemple, fonctionnalité non opérationnelle';
+
+  @override
+  String get callsDemoBannerVoiceMessage =>
+      'Les appels vocaux sont pour l\'instant affichés uniquement comme un prototype visuel. Le transport audio n\'est pas encore connecté.';
+
+  @override
+  String get callsDemoBannerVideoMessage =>
+      'Les appels vidéo sont pour l\'instant affichés uniquement comme un prototype visuel. Le flux vidéo distant n\'est pas disponible, mais l\'aperçu local de votre caméra fonctionne.';
+
+  @override
+  String get callsCameraPermissionMessage =>
+      'Autorisez l\'accès à la caméra pour afficher votre aperçu local pendant un appel vidéo.';
+
+  @override
+  String get callsCameraPermissionSettingsMessage =>
+      'L\'accès à la caméra est bloqué. Ouvrez les réglages système pour activer l\'aperçu vidéo local.';
+
+  @override
+  String get callsCameraPermissionAction => 'Autoriser la caméra';
+
+  @override
+  String get callsCameraUnavailableTitle => 'Caméra indisponible';
+
+  @override
+  String get callsCameraUnavailableMessage =>
+      'Impossible de démarrer l\'aperçu local de la caméra sur cet appareil.';
+
+  @override
+  String get callsCameraUnsupportedMessage =>
+      'Cette plateforme ne prend pas en charge l\'aperçu vidéo local.';
+
+  @override
+  String get callsCameraOffMessage =>
+      'L\'aperçu caméra est désactivé pour cet appel de démonstration.';
+
+  @override
+  String get callsFrontCameraLabel => 'Caméra avant';
+
+  @override
+  String get callsRearCameraLabel => 'Caméra arrière';
 }

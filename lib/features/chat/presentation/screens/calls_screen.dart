@@ -46,6 +46,9 @@ class _CallsScreenState extends State<CallsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isCompact = MediaQuery.sizeOf(context).width < 390;
+    final maxContentWidth = MediaQuery.sizeOf(context).width >= 900
+        ? 860.0
+        : double.infinity;
     final horizontalPadding = 16.s(context);
     final headerTopPadding = 16.s(context);
     final sectionGap = 12.s(context);
@@ -65,139 +68,208 @@ class _CallsScreenState extends State<CallsScreen> {
           backgroundColor: Colors.transparent,
           body: ScreenBackground(
             child: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      headerTopPadding,
-                      horizontalPadding,
-                      8.s(context),
-                    ),
-                    child: Row(
-                      children: [
-                        const AppLogo(large: false),
-                        SizedBox(width: 8.s(context)),
-                        Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxContentWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          headerTopPadding,
+                          horizontalPadding,
+                          8.s(context),
+                        ),
+                        child: Row(
+                          children: [
+                            const AppLogo(large: false),
+                            SizedBox(width: 8.s(context)),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.callsTitle,
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2.s(context)),
+                                  Text(
+                                    l10n.callsSubtitle,
+                                    style: theme.textTheme.bodyMedium
+                                        ?.copyWith(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.72,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _openStartCall,
+                              icon: Icon(
+                                Icons.add_ic_call_outlined,
+                                color: Colors.white,
+                                size: 22.s(context),
+                              ),
+                              tooltip: l10n.callsStartCallAction,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        child: _CallsSummaryCard(
+                          compact: isCompact,
+                          title: l10n.callsQuickStartTitle,
+                          subtitle: l10n.callsQuickStartSubtitle,
+                          actionLabel: l10n.callsStartCallAction,
+                          onTap: _openStartCall,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          sectionGap,
+                          horizontalPadding,
+                          0,
+                        ),
+                        child: _CallsHighlights(
+                          compact: isCompact,
+                          items: [
+                            _OverviewItem(
+                              label: l10n.allFilter,
+                              count: _controller.history.length,
+                              icon: Icons.call_outlined,
+                            ),
+                            _OverviewItem(
+                              label: l10n.missedFilter,
+                              count: _controller.history
+                                  .where((item) => item.isMissed)
+                                  .length,
+                              icon: Icons.call_missed_outgoing,
+                            ),
+                            _OverviewItem(
+                              label: l10n.callsVideoFilter,
+                              count: _controller.history
+                                  .where((item) => item.isVideo)
+                                  .length,
+                              icon: Icons.videocam_outlined,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          sectionGap,
+                          horizontalPadding,
+                          0,
+                        ),
+                        child: PeopleSearchField(
+                          controller: _searchController,
+                          hintText: l10n.callsSearchHint,
+                          onChanged: _controller.updateQuery,
+                          onClear: () {
+                            _searchController.clear();
+                            _controller.updateQuery('');
+                          },
+                        ),
+                      ),
+                      SizedBox(height: sectionGap),
+                      SizedBox(
+                        height: chipHeight,
+                        child: ListView(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                          ),
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            _buildFilterChip(CallsFilter.all, l10n.allFilter),
+                            _buildFilterChip(
+                              CallsFilter.missed,
+                              l10n.missedFilter,
+                            ),
+                            _buildFilterChip(
+                              CallsFilter.incoming,
+                              l10n.incomingFilter,
+                            ),
+                            _buildFilterChip(
+                              CallsFilter.outgoing,
+                              l10n.outgoingFilter,
+                            ),
+                            _buildFilterChip(
+                              CallsFilter.video,
+                              l10n.callsVideoFilter,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_controller.topContacts.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(top: 14.s(context)),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                l10n.callsTitle,
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: horizontalPadding,
+                                ),
+                                child: Text(
+                                  l10n.callsTopContactsTitle,
+                                  style: theme.textTheme.titleMedium
+                                      ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
-                              SizedBox(height: 2.s(context)),
-                              Text(
-                                l10n.callsSubtitle,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.72),
+                              SizedBox(height: 10.s(context)),
+                              SizedBox(
+                                height: 92.s(context),
+                                child: ListView.separated(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: horizontalPadding,
+                                  ),
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: _controller.topContacts.length,
+                                  separatorBuilder: (_, __) =>
+                                      SizedBox(width: 10.s(context)),
+                                  itemBuilder: (context, index) {
+                                    final person = _controller.topContacts[index];
+                                    return _TopContactChip(
+                                      person: person,
+                                      onTap: () => _startCall(person, false),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        IconButton(
-                          onPressed: _openStartCall,
-                          icon: Icon(
-                            Icons.add_ic_call_outlined,
-                            color: Colors.white,
-                            size: 22.s(context),
+                      SizedBox(height: sectionGap),
+                      Expanded(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          child: RefreshIndicator(
+                            key: ValueKey<int>(
+                              sections.length + _controller.topContacts.length,
+                            ),
+                            onRefresh: _controller.load,
+                            child: _buildBody(sections, l10n),
                           ),
-                          tooltip: l10n.callsStartCallAction,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                    child: _CallsSummaryCard(
-                      compact: isCompact,
-                      title: l10n.callsQuickStartTitle,
-                      subtitle: l10n.callsQuickStartSubtitle,
-                      onTap: _openStartCall,
-                      actionLabel: l10n.callsStartCallAction,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      sectionGap,
-                      horizontalPadding,
-                      0,
-                    ),
-                    child: PeopleSearchField(
-                      controller: _searchController,
-                      hintText: l10n.callsSearchHint,
-                      onChanged: _controller.updateQuery,
-                      onClear: () {
-                        _searchController.clear();
-                        _controller.updateQuery('');
-                      },
-                    ),
-                  ),
-                  SizedBox(height: sectionGap),
-                  SizedBox(
-                    height: chipHeight,
-                    child: ListView(
-                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        _buildFilterChip(CallsFilter.all, l10n.allFilter),
-                        _buildFilterChip(CallsFilter.missed, l10n.missedFilter),
-                        _buildFilterChip(CallsFilter.incoming, l10n.incomingFilter),
-                        _buildFilterChip(CallsFilter.outgoing, l10n.outgoingFilter),
-                        _buildFilterChip(CallsFilter.video, l10n.callsVideoFilter),
-                      ],
-                    ),
-                  ),
-                  if (_controller.topContacts.isNotEmpty) ...[
-                    SizedBox(height: 14.s(context)),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                      child: Text(
-                        l10n.callsTopContactsTitle,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10.s(context)),
-                    SizedBox(
-                      height: 92.s(context),
-                      child: ListView.separated(
-                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _controller.topContacts.length,
-                        separatorBuilder: (_, __) => SizedBox(width: 10.s(context)),
-                        itemBuilder: (context, index) {
-                          final person = _controller.topContacts[index];
-                          return _TopContactChip(
-                            person: person,
-                            onTap: () => _startCall(person, false),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                  SizedBox(height: sectionGap),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
-                      child: RefreshIndicator(
-                        key: ValueKey<int>(
-                          sections.length + _controller.topContacts.length,
-                        ),
-                        onRefresh: _controller.load,
-                        child: _buildBody(sections, l10n),
-                      ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -215,7 +287,8 @@ class _CallsScreenState extends State<CallsScreen> {
         selected: selected,
         onSelected: (_) => _controller.setFilter(filter),
         backgroundColor: Colors.white.withValues(alpha: 0.12),
-        selectedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+        selectedColor:
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
         labelStyle: const TextStyle(color: Colors.white),
         checkmarkColor: Colors.white,
         side: BorderSide.none,
@@ -304,7 +377,10 @@ class _CallsScreenState extends State<CallsScreen> {
                     alignment: Alignment.centerRight,
                     padding: EdgeInsets.symmetric(horizontal: 20.s(context)),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.error.withValues(alpha: 0.85),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .error
+                          .withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(24.s(context)),
                     ),
                     child: Icon(
@@ -321,7 +397,9 @@ class _CallsScreenState extends State<CallsScreen> {
                     onTap: () => _showThreadSheet(thread),
                     child: ListTile(
                       minVerticalPadding: 0,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 8.s(context)),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 8.s(context),
+                      ),
                       leading: PersonAvatar(
                         name: thread.person.displayName,
                         avatarUrl: thread.person.avatarUrl,
@@ -332,7 +410,9 @@ class _CallsScreenState extends State<CallsScreen> {
                       title: Text(
                         thread.person.displayName,
                         style: TextStyle(
-                          color: thread.missedCount > 0 ? Colors.redAccent : Colors.white,
+                          color: thread.missedCount > 0
+                              ? Colors.redAccent
+                              : Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -346,7 +426,9 @@ class _CallsScreenState extends State<CallsScreen> {
                         ),
                       ),
                       trailing: SizedBox(
-                        width: 92.s(context),
+                        width: MediaQuery.sizeOf(context).width < 390
+                            ? 80.s(context)
+                            : 92.s(context),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -396,7 +478,8 @@ class _CallsScreenState extends State<CallsScreen> {
   }
 
   String _threadSubtitle(CallThreadSummary thread, AppLocalizations l10n) {
-    final type = thread.latest.isVideo ? l10n.videoCallLabel : l10n.voiceCallLabel;
+    final type =
+        thread.latest.isVideo ? l10n.videoCallLabel : l10n.voiceCallLabel;
     final count = thread.totalCount > 1
         ? l10n.callsThreadCount(thread.totalCount)
         : _directionLabel(thread.latest.direction, l10n);
@@ -410,7 +493,9 @@ class _CallsScreenState extends State<CallsScreen> {
   }
 
   String _directionLabel(dynamic direction, AppLocalizations l10n) {
-    return direction.name == 'incoming' ? l10n.incomingCall : l10n.outgoingCall;
+    return direction.name == 'incoming'
+        ? l10n.incomingCall
+        : l10n.outgoingCall;
   }
 
   String _formatDuration(Duration duration) {
@@ -426,7 +511,9 @@ class _CallsScreenState extends State<CallsScreen> {
   String _formatTime(DateTime date, AppLocalizations l10n) {
     final now = DateTime.now();
     final diff = now.difference(date);
-    if (diff.inMinutes < 60) return l10n.minutesAgo(diff.inMinutes.clamp(1, 59));
+    if (diff.inMinutes < 60) {
+      return l10n.minutesAgo(diff.inMinutes.clamp(1, 59));
+    }
     if (diff.inHours < 24) return l10n.hoursAgo(diff.inHours);
     if (diff.inDays == 1) return l10n.yesterdayLabel;
     return '${date.day}.${date.month.toString().padLeft(2, '0')}';
@@ -453,7 +540,8 @@ class _CallsScreenState extends State<CallsScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CallScreen(
-          room: 'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
+          room:
+              'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
           person: person,
           displayName: person.displayName,
           avatarUrl: person.avatarUrl,
@@ -473,7 +561,9 @@ class _CallsScreenState extends State<CallsScreen> {
         return Container(
           decoration: BoxDecoration(
             color: Theme.of(sheetContext).colorScheme.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.s(sheetContext))),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(24.s(sheetContext)),
+            ),
           ),
           child: SafeArea(
             top: false,
@@ -539,6 +629,18 @@ class _CallsScreenState extends State<CallsScreen> {
       },
     );
   }
+}
+
+class _OverviewItem {
+  const _OverviewItem({
+    required this.label,
+    required this.count,
+    required this.icon,
+  });
+
+  final String label;
+  final int count;
+  final IconData icon;
 }
 
 class _CallsSummaryCard extends StatelessWidget {
@@ -609,10 +711,7 @@ class _CallsSummaryCard extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 12.s(context)),
-                FilledButton(
-                  onPressed: onTap,
-                  child: Text(actionLabel),
-                ),
+                FilledButton(onPressed: onTap, child: Text(actionLabel)),
               ],
             )
           : Row(
@@ -621,7 +720,10 @@ class _CallsSummaryCard extends StatelessWidget {
                   width: 44.s(context),
                   height: 44.s(context),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(14.s(context)),
                   ),
                   child: Icon(
@@ -632,12 +734,80 @@ class _CallsSummaryCard extends StatelessWidget {
                 ),
                 SizedBox(width: 12.s(context)),
                 details,
-                FilledButton(
-                  onPressed: onTap,
-                  child: Text(actionLabel),
-                ),
+                FilledButton(onPressed: onTap, child: Text(actionLabel)),
               ],
             ),
+    );
+  }
+}
+
+class _CallsHighlights extends StatelessWidget {
+  const _CallsHighlights({
+    required this.compact,
+    required this.items,
+  });
+
+  final bool compact;
+  final List<_OverviewItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8.s(context),
+      runSpacing: 8.s(context),
+      children: items
+          .map(
+            (item) => SizedBox(
+              width: compact ? double.infinity : 220.s(context),
+              child: GlassCard(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 14.s(context),
+                  vertical: 12.s(context),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38.s(context),
+                      height: 38.s(context),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12.s(context)),
+                      ),
+                      child: Icon(item.icon, color: Colors.white),
+                    ),
+                    SizedBox(width: 12.s(context)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${item.count}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                          Text(
+                            item.label,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+          .toList(growable: false),
     );
   }
 }

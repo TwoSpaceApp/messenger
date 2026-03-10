@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 
 class SplashScreen extends StatelessWidget {
-  static const List<String> _orderedSteps = [
-    'Environment Loading',
-    'Sentry Error Tracking',
-    'Environment Validation',
-    'Settings Service',
-    'Aegis Session Restoration',
-  ];
-
   final String? currentStep;
   final double? progress;
 
@@ -21,38 +14,51 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final normalizedProgress = (progress ?? 0).clamp(0.0, 1.0);
-    final activeStep = _presentableStep(currentStep);
-    final activeIndex = _orderedSteps.indexOf(currentStep ?? '');
+    final activeStep = _presentableStep(currentStep, l10n);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF101114),
+      backgroundColor: const Color(0xFF0E1116),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: Column(
             children: [
-              const Spacer(flex: 3),
+              const Spacer(flex: 4),
               const Hero(
                 tag: 'app_logo',
                 child: AppLogo(),
               ),
-              const SizedBox(height: 18),
-              const Text(
-                'Secure messenger startup',
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 13,
-                  letterSpacing: 0.3,
+              const SizedBox(height: 24),
+              Text(
+                l10n?.startupTitle ?? 'Preparing TwoSpace',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
                 ),
               ),
-              const Spacer(flex: 2),
+              const SizedBox(height: 10),
+              Text(
+                l10n?.startupSubtitle ??
+                    'Checking the secure session and opening your chats.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: 14,
+                  height: 1.45,
+                ),
+              ),
+              const Spacer(flex: 3),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.white.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: Colors.white.withValues(alpha: 0.08),
                   ),
@@ -60,23 +66,44 @@ class SplashScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        l10n?.initializing ?? 'Initializing...',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     Text(
                       activeStep,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Text(
-                      'Этап ${activeIndex >= 0 ? activeIndex + 1 : 1}/${_orderedSteps.length}',
+                      l10n?.startupFooter ??
+                          'The launch screen is only shown during app startup.',
                       style: const TextStyle(
                         color: Colors.white54,
-                        fontSize: 12,
+                        fontSize: 13,
+                        height: 1.4,
                       ),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 18),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(999),
                       child: LinearProgressIndicator(
@@ -84,50 +111,22 @@ class SplashScreen extends StatelessWidget {
                         minHeight: 8,
                         backgroundColor: Colors.white.withValues(alpha: 0.08),
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF8A7CFF),
+                          Color(0xFF46B3FF),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    ...List.generate(_orderedSteps.length, (index) {
-                      final label = _presentableStep(_orderedSteps[index]);
-                      final isDone = normalizedProgress >=
-                          ((index + 1) / _orderedSteps.length);
-                      final isCurrent = !isDone && index == activeIndex;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Row(
-                          children: [
-                            Icon(
-                              isDone
-                                  ? Icons.check_circle_rounded
-                                  : isCurrent
-                                      ? Icons.radio_button_checked_rounded
-                                      : Icons.radio_button_unchecked_rounded,
-                              size: 16,
-                              color: isDone
-                                  ? const Color(0xFF7CFFB2)
-                                  : isCurrent
-                                      ? const Color(0xFF8A7CFF)
-                                      : Colors.white24,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                label,
-                                style: TextStyle(
-                                  color: isDone || isCurrent
-                                      ? Colors.white
-                                      : Colors.white38,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '${(normalizedProgress * 100).round()}%',
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
-                      );
-                    }),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -139,20 +138,20 @@ class SplashScreen extends StatelessWidget {
     );
   }
 
-  static String _presentableStep(String? step) {
+  static String _presentableStep(String? step, AppLocalizations? l10n) {
     switch (step) {
       case 'Environment Loading':
-        return 'Подготовка окружения';
+        return l10n?.startupStepEnvironment ?? 'Loading configuration';
       case 'Sentry Error Tracking':
-        return 'Запуск обработки ошибок';
+        return l10n?.startupStepDiagnostics ?? 'Starting diagnostics';
       case 'Environment Validation':
-        return 'Проверка конфигурации';
+        return l10n?.startupStepValidation ?? 'Validating environment';
       case 'Settings Service':
-        return 'Загрузка настроек';
+        return l10n?.startupStepSettings ?? 'Loading settings';
       case 'Aegis Session Restoration':
-        return 'Восстановление сессии';
+        return l10n?.startupStepSession ?? 'Restoring secure session';
       default:
-        return 'Запуск приложения';
+        return l10n?.startupStepLaunch ?? 'Starting app';
     }
   }
 }

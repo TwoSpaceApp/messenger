@@ -1881,4 +1881,92 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get callsVoiceSecureDetail =>
       'Voice is protected and routed through the current secure session.';
+
+  @override
+  String get timestampPrecisionLabel => 'Message time precision';
+
+  @override
+  String get timestampPrecisionSubtitle =>
+      'Choose how detailed timestamps look in chats and chat list.';
+
+  @override
+  String get timestampPrecisionMinutes => 'Hours and minutes';
+
+  @override
+  String get timestampPrecisionSeconds => 'Hours, minutes and seconds';
+
+  @override
+  String get timestampPrecisionMilliseconds =>
+      'Hours, minutes, seconds and milliseconds';
+
+  @override
+  String get startupTitle => 'Preparing TwoSpace';
+
+  @override
+  String get startupSubtitle =>
+      'Checking the secure session and opening your chats.';
+
+  @override
+  String get startupFooter => 'This screen is only shown during app startup.';
+
+  @override
+  String get startupStepEnvironment => 'Loading configuration';
+
+  @override
+  String get startupStepDiagnostics => 'Starting diagnostics';
+
+  @override
+  String get startupStepValidation => 'Validating environment';
+
+  @override
+  String get startupStepSettings => 'Loading settings';
+
+  @override
+  String get startupStepSession => 'Restoring secure session';
+
+  @override
+  String get startupStepLaunch => 'Starting app';
+
+  @override
+  String get callsDemoBannerTitle => 'Demo, not a working call';
+
+  @override
+  String get callsDemoBannerVoiceMessage =>
+      'Voice calls are shown as a visual prototype only. Audio transport is not connected yet.';
+
+  @override
+  String get callsDemoBannerVideoMessage =>
+      'Video calls are shown as a visual prototype only. The remote stream is unavailable, but your local camera preview works.';
+
+  @override
+  String get callsCameraPermissionMessage =>
+      'Allow camera access to show your local preview during a video call.';
+
+  @override
+  String get callsCameraPermissionSettingsMessage =>
+      'Camera access is blocked. Open system settings to enable the local video preview.';
+
+  @override
+  String get callsCameraPermissionAction => 'Allow camera';
+
+  @override
+  String get callsCameraUnavailableTitle => 'Camera unavailable';
+
+  @override
+  String get callsCameraUnavailableMessage =>
+      'The local camera preview could not be started on this device.';
+
+  @override
+  String get callsCameraUnsupportedMessage =>
+      'This platform does not support the local video preview.';
+
+  @override
+  String get callsCameraOffMessage =>
+      'Camera preview is turned off for this demo call.';
+
+  @override
+  String get callsFrontCameraLabel => 'Front camera';
+
+  @override
+  String get callsRearCameraLabel => 'Rear camera';
 }

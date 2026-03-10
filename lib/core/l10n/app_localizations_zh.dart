@@ -1839,4 +1839,84 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get callsVoiceSecureDetail => '语音受到保护，并通过当前安全会话传输。';
+
+  @override
+  String get timestampPrecisionLabel => '消息时间精度';
+
+  @override
+  String get timestampPrecisionSubtitle => '选择在聊天内和聊天列表中显示多精细的时间戳。';
+
+  @override
+  String get timestampPrecisionMinutes => '小时和分钟';
+
+  @override
+  String get timestampPrecisionSeconds => '小时、分钟和秒';
+
+  @override
+  String get timestampPrecisionMilliseconds => '小时、分钟、秒和毫秒';
+
+  @override
+  String get startupTitle => '正在准备 TwoSpace';
+
+  @override
+  String get startupSubtitle => '正在检查安全会话并打开你的聊天。';
+
+  @override
+  String get startupFooter => '此界面只会在应用启动时显示。';
+
+  @override
+  String get startupStepEnvironment => '正在加载配置';
+
+  @override
+  String get startupStepDiagnostics => '正在启动诊断';
+
+  @override
+  String get startupStepValidation => '正在验证环境';
+
+  @override
+  String get startupStepSettings => '正在加载设置';
+
+  @override
+  String get startupStepSession => '正在恢复安全会话';
+
+  @override
+  String get startupStepLaunch => '正在启动应用';
+
+  @override
+  String get callsDemoBannerTitle => '示例，功能暂不可用';
+
+  @override
+  String get callsDemoBannerVoiceMessage => '语音通话目前仅作为界面原型展示，音频传输尚未接入。';
+
+  @override
+  String get callsDemoBannerVideoMessage =>
+      '视频通话目前仅作为界面原型展示，远端视频流暂不可用，但你的本地摄像头预览可以正常工作。';
+
+  @override
+  String get callsCameraPermissionMessage => '请允许访问摄像头，以便在视频通话中显示你的本地预览。';
+
+  @override
+  String get callsCameraPermissionSettingsMessage =>
+      '摄像头权限已被阻止。请打开系统设置以启用本地视频预览。';
+
+  @override
+  String get callsCameraPermissionAction => '允许摄像头';
+
+  @override
+  String get callsCameraUnavailableTitle => '摄像头不可用';
+
+  @override
+  String get callsCameraUnavailableMessage => '无法在此设备上启动本地摄像头预览。';
+
+  @override
+  String get callsCameraUnsupportedMessage => '当前平台不支持本地视频预览。';
+
+  @override
+  String get callsCameraOffMessage => '此演示通话中的摄像头预览已关闭。';
+
+  @override
+  String get callsFrontCameraLabel => '前置摄像头';
+
+  @override
+  String get callsRearCameraLabel => '后置摄像头';
 }

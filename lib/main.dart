@@ -70,6 +70,9 @@ class AppBootstrapperState extends State<AppBootstrapper> {
         debugShowCheckedModeBanner: false,
         themeMode: ThemeMode.dark,
         darkTheme: ThemeData.dark(),
+        locale: Locale(SettingsService.languageNotifier.value),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: SplashScreen(
           currentStep: _currentStep,
           progress: _progress,

@@ -1888,4 +1888,93 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get callsVoiceSecureDetail =>
       'La voz está protegida y se enruta por la sesión segura actual.';
+
+  @override
+  String get timestampPrecisionLabel => 'Precisión de hora en mensajes';
+
+  @override
+  String get timestampPrecisionSubtitle =>
+      'Elige cuánto detalle mostrar en la hora dentro de los chats y en la lista de chats.';
+
+  @override
+  String get timestampPrecisionMinutes => 'Horas y minutos';
+
+  @override
+  String get timestampPrecisionSeconds => 'Horas, minutos y segundos';
+
+  @override
+  String get timestampPrecisionMilliseconds =>
+      'Horas, minutos, segundos y milisegundos';
+
+  @override
+  String get startupTitle => 'Preparando TwoSpace';
+
+  @override
+  String get startupSubtitle =>
+      'Comprobando la sesión segura y abriendo tus chats.';
+
+  @override
+  String get startupFooter =>
+      'Esta pantalla solo se muestra durante el inicio de la aplicación.';
+
+  @override
+  String get startupStepEnvironment => 'Cargando configuración';
+
+  @override
+  String get startupStepDiagnostics => 'Iniciando diagnóstico';
+
+  @override
+  String get startupStepValidation => 'Validando entorno';
+
+  @override
+  String get startupStepSettings => 'Cargando ajustes';
+
+  @override
+  String get startupStepSession => 'Restaurando sesión segura';
+
+  @override
+  String get startupStepLaunch => 'Iniciando aplicación';
+
+  @override
+  String get callsDemoBannerTitle => 'Ejemplo, función no operativa';
+
+  @override
+  String get callsDemoBannerVoiceMessage =>
+      'Las llamadas de voz se muestran solo como un prototipo visual. La transmisión de audio todavía no está conectada.';
+
+  @override
+  String get callsDemoBannerVideoMessage =>
+      'Las videollamadas se muestran solo como un prototipo visual. El video remoto no está disponible todavía, pero tu vista previa local de cámara sí funciona.';
+
+  @override
+  String get callsCameraPermissionMessage =>
+      'Permite el acceso a la cámara para mostrar tu vista previa local durante una videollamada.';
+
+  @override
+  String get callsCameraPermissionSettingsMessage =>
+      'El acceso a la cámara está bloqueado. Abre los ajustes del sistema para activar la vista previa local.';
+
+  @override
+  String get callsCameraPermissionAction => 'Permitir cámara';
+
+  @override
+  String get callsCameraUnavailableTitle => 'Cámara no disponible';
+
+  @override
+  String get callsCameraUnavailableMessage =>
+      'No se pudo iniciar la vista previa local de la cámara en este dispositivo.';
+
+  @override
+  String get callsCameraUnsupportedMessage =>
+      'Esta plataforma no admite la vista previa local de video.';
+
+  @override
+  String get callsCameraOffMessage =>
+      'La vista previa de la cámara está desactivada para esta llamada de demostración.';
+
+  @override
+  String get callsFrontCameraLabel => 'Cámara frontal';
+
+  @override
+  String get callsRearCameraLabel => 'Cámara trasera';
 }

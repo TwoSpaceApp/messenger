@@ -1886,4 +1886,93 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get callsVoiceSecureDetail =>
       'Głos jest chroniony i przesyłany przez bieżącą bezpieczną sesję.';
+
+  @override
+  String get timestampPrecisionLabel => 'Dokładność czasu wiadomości';
+
+  @override
+  String get timestampPrecisionSubtitle =>
+      'Wybierz, jak szczegółowo pokazywać czas w czatach i na liście czatów.';
+
+  @override
+  String get timestampPrecisionMinutes => 'Godziny i minuty';
+
+  @override
+  String get timestampPrecisionSeconds => 'Godziny, minuty i sekundy';
+
+  @override
+  String get timestampPrecisionMilliseconds =>
+      'Godziny, minuty, sekundy i milisekundy';
+
+  @override
+  String get startupTitle => 'Przygotowywanie TwoSpace';
+
+  @override
+  String get startupSubtitle =>
+      'Sprawdzamy bezpieczną sesję i otwieramy Twoje czaty.';
+
+  @override
+  String get startupFooter =>
+      'Ten ekran jest wyświetlany tylko podczas uruchamiania aplikacji.';
+
+  @override
+  String get startupStepEnvironment => 'Ładowanie konfiguracji';
+
+  @override
+  String get startupStepDiagnostics => 'Uruchamianie diagnostyki';
+
+  @override
+  String get startupStepValidation => 'Sprawdzanie środowiska';
+
+  @override
+  String get startupStepSettings => 'Ładowanie ustawień';
+
+  @override
+  String get startupStepSession => 'Przywracanie bezpiecznej sesji';
+
+  @override
+  String get startupStepLaunch => 'Uruchamianie aplikacji';
+
+  @override
+  String get callsDemoBannerTitle => 'Przykład, niedziałająca funkcja';
+
+  @override
+  String get callsDemoBannerVoiceMessage =>
+      'Połączenia głosowe są obecnie pokazane tylko jako wizualny prototyp. Transmisja audio nie jest jeszcze podłączona.';
+
+  @override
+  String get callsDemoBannerVideoMessage =>
+      'Połączenia wideo są obecnie pokazane tylko jako wizualny prototyp. Zdalny obraz nie jest jeszcze dostępny, ale lokalny podgląd kamery działa.';
+
+  @override
+  String get callsCameraPermissionMessage =>
+      'Zezwól na dostęp do kamery, aby wyświetlać lokalny podgląd podczas połączenia wideo.';
+
+  @override
+  String get callsCameraPermissionSettingsMessage =>
+      'Dostęp do kamery jest zablokowany. Otwórz ustawienia systemowe, aby włączyć lokalny podgląd wideo.';
+
+  @override
+  String get callsCameraPermissionAction => 'Zezwól na kamerę';
+
+  @override
+  String get callsCameraUnavailableTitle => 'Kamera niedostępna';
+
+  @override
+  String get callsCameraUnavailableMessage =>
+      'Nie udało się uruchomić lokalnego podglądu kamery na tym urządzeniu.';
+
+  @override
+  String get callsCameraUnsupportedMessage =>
+      'Ta platforma nie obsługuje lokalnego podglądu wideo.';
+
+  @override
+  String get callsCameraOffMessage =>
+      'Podgląd kamery jest wyłączony dla tego połączenia demonstracyjnego.';
+
+  @override
+  String get callsFrontCameraLabel => 'Przednia kamera';
+
+  @override
+  String get callsRearCameraLabel => 'Tylna kamera';
 }

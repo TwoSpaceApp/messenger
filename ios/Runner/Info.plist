@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>TwoSpace uses the camera for local video call preview.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>TwoSpace uses contacts to help you find people you already know.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>TwoSpace uses the microphone for voice messages and call audio.</string>
 </dict>
 </plist>

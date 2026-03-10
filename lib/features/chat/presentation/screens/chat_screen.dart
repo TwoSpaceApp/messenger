@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart' as share;
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -169,9 +170,32 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  bool _shouldStickToLatest() {
+    if (!_listController.hasClients) return true;
+    final position = _listController.position;
+    return position.maxScrollExtent - position.pixels < 160;
+  }
+
+  void _scrollToLatest({bool animated = false}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_listController.hasClients) return;
+      final offset = _listController.position.maxScrollExtent;
+      if (animated) {
+        _listController.animateTo(
+          offset,
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        _listController.jumpTo(offset);
+      }
+    });
+  }
+
 
   Future<void> _loadMessages() async {
     final l10n = AppLocalizations.of(context)!;
+    final shouldStickToLatest = _shouldStickToLatest();
     setState(() => _loading = true);
     try {
       final msgs = await _svc.loadMessages(roomId: widget.chat.id);
@@ -240,9 +264,7 @@ class _ChatScreenState extends State<ChatScreen> {
               final idx = _messages.indexWhere((m) => m.id == targetId);
               if (idx >= 0 && _listController.hasClients) {
                 const approxItemHeight = 84.0;
-                final N = _messages.length;
-                final revIdx = N - 1 - idx;
-                final offset = revIdx * approxItemHeight;
+                final offset = idx * approxItemHeight;
                 await _listController.animateTo(offset.clamp(0.0, _listController.position.maxScrollExtent), duration: const Duration(milliseconds: 450), curve: Curves.easeInOut);
                 setState(() { _highlighted.clear(); _highlighted.add(targetId); });
               }
@@ -250,6 +272,8 @@ class _ChatScreenState extends State<ChatScreen> {
           } catch (_) {}
           _scrollToEventId = null;
         });
+      } else if (shouldStickToLatest) {
+        _scrollToLatest();
       }
       // fetch reactions for messages in background
       for (final m in out) {
@@ -531,9 +555,10 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       await _svc.sendMessage(roomId: widget.chat.id, text: text);
       setState(() {
-        _messages.insert(0, _Msg(id: DateTime.now().millisecondsSinceEpoch.toString(), text: text, isOwn: true, time: DateTime.now(), senderId: '', senderName: 'You', type: 'm.text'));
+        _messages.add(_Msg(id: DateTime.now().millisecondsSinceEpoch.toString(), text: text, isOwn: true, time: DateTime.now(), senderId: '', senderName: 'You', type: 'm.text'));
         _controller.text = '';
       });
+      _scrollToLatest(animated: true);
       // Clear draft after successful send
       await _draftService.deleteDraft(widget.chat.id);
     } catch (e) {
@@ -586,7 +611,7 @@ class _ChatScreenState extends State<ChatScreen> {
       
       if (mounted) {
         setState(() {
-          _messages.insert(0, _Msg(
+          _messages.add(_Msg(
             id: DateTime.now().millisecondsSinceEpoch.toString(),
             text: path,
             isOwn: true,
@@ -597,6 +622,7 @@ class _ChatScreenState extends State<ChatScreen> {
             mediaId: path,
           ));
         });
+        _scrollToLatest(animated: true);
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.genericError(e.toString()))));
@@ -654,7 +680,7 @@ class _ChatScreenState extends State<ChatScreen> {
             return ListTile(
               leading: avatar != null ? UserAvatar(avatarUrl: avatar, radius: 18) : CircleAvatar(radius: 18, child: Text(displayName.isNotEmpty ? displayName[0] : '?')),
               title: Text(body, maxLines: 2, overflow: TextOverflow.ellipsis),
-              subtitle: Text('$displayName${roomId.isNotEmpty ? ' • $roomId' : ''}${ts != null ? ' • ${ts.hour.toString().padLeft(2,'0')}:${ts.minute.toString().padLeft(2,'0')}' : ''}'),
+              subtitle: Text('$displayName${roomId.isNotEmpty ? ' • $roomId' : ''}${ts != null ? ' • ${MessageTimeFormatter.formatTime(ts)}' : ''}'),
               onTap: () async {
                 if (roomId.isEmpty) return;
                 final infoRoom = await _svc.getRoomNameAndAvatar(roomId);
@@ -669,7 +695,6 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } else {
       bodyWidget = ListView.separated(
-        reverse: true,
         controller: _listController,
         padding: const EdgeInsets.all(12),
         cacheExtent: 1000, // Увеличиваем кэш для лучшей производительности
@@ -710,6 +735,17 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  MessageTimeFormatter.formatTime(m.time),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.68),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
               // reactions row
               if ((_reactions[m.id] ?? {}).isNotEmpty) ...[
                 const SizedBox(height: 8),
@@ -881,9 +917,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: TextField(
                   controller: _controller,
                   style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    hintText: 'Send a message...',
-                    hintStyle: TextStyle(color: Colors.white54),
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)!.messageInputHint,
+                    hintStyle: const TextStyle(color: Colors.white54),
                     border: InputBorder.none,
                   ),
                   enabled: !_voiceService.isRecording,

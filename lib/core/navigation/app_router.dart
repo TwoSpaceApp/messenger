@@ -60,7 +60,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           }
           return null;
         },
-        loading: () => AppStrings.routeSplash,
+        loading: () => null,
         error: (_, __) {
           if (FeatureFlags.ignoreServerOffline.value && !isSplashRoute) {
             return null;

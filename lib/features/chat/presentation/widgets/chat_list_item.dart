@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/utils/message_time_formatter.dart';
 
 class GradientAvatar extends StatelessWidget {
   const GradientAvatar({
@@ -90,14 +91,7 @@ class ChatListItem extends StatelessWidget {
   }
 
   String _formatTime(DateTime? time) {
-    if (time == null) return '';
-    final now = DateTime.now();
-    if (time.year == now.year &&
-        time.month == now.month &&
-        time.day == now.day) {
-      return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-    }
-    return '${time.day}.${time.month}';
+    return MessageTimeFormatter.formatConversationTime(time);
   }
 
   @override

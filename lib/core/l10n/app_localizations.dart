@@ -3557,6 +3557,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Voice is protected and routed through the current secure session.'**
   String get callsVoiceSecureDetail;
+
+  /// No description provided for @timestampPrecisionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Message time precision'**
+  String get timestampPrecisionLabel;
+
+  /// No description provided for @timestampPrecisionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how detailed timestamps look in chats and chat list.'**
+  String get timestampPrecisionSubtitle;
+
+  /// No description provided for @timestampPrecisionMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours and minutes'**
+  String get timestampPrecisionMinutes;
+
+  /// No description provided for @timestampPrecisionSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours, minutes and seconds'**
+  String get timestampPrecisionSeconds;
+
+  /// No description provided for @timestampPrecisionMilliseconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours, minutes, seconds and milliseconds'**
+  String get timestampPrecisionMilliseconds;
+
+  /// No description provided for @startupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing TwoSpace'**
+  String get startupTitle;
+
+  /// No description provided for @startupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the secure session and opening your chats.'**
+  String get startupSubtitle;
+
+  /// No description provided for @startupFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'This screen is only shown during app startup.'**
+  String get startupFooter;
+
+  /// No description provided for @startupStepEnvironment.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading configuration'**
+  String get startupStepEnvironment;
+
+  /// No description provided for @startupStepDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting diagnostics'**
+  String get startupStepDiagnostics;
+
+  /// No description provided for @startupStepValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Validating environment'**
+  String get startupStepValidation;
+
+  /// No description provided for @startupStepSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading settings'**
+  String get startupStepSettings;
+
+  /// No description provided for @startupStepSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring secure session'**
+  String get startupStepSession;
+
+  /// No description provided for @startupStepLaunch.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting app'**
+  String get startupStepLaunch;
+
+  /// No description provided for @callsDemoBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo, not a working call'**
+  String get callsDemoBannerTitle;
+
+  /// No description provided for @callsDemoBannerVoiceMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice calls are shown as a visual prototype only. Audio transport is not connected yet.'**
+  String get callsDemoBannerVoiceMessage;
+
+  /// No description provided for @callsDemoBannerVideoMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Video calls are shown as a visual prototype only. The remote stream is unavailable, but your local camera preview works.'**
+  String get callsDemoBannerVideoMessage;
+
+  /// No description provided for @callsCameraPermissionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow camera access to show your local preview during a video call.'**
+  String get callsCameraPermissionMessage;
+
+  /// No description provided for @callsCameraPermissionSettingsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access is blocked. Open system settings to enable the local video preview.'**
+  String get callsCameraPermissionSettingsMessage;
+
+  /// No description provided for @callsCameraPermissionAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow camera'**
+  String get callsCameraPermissionAction;
+
+  /// No description provided for @callsCameraUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera unavailable'**
+  String get callsCameraUnavailableTitle;
+
+  /// No description provided for @callsCameraUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The local camera preview could not be started on this device.'**
+  String get callsCameraUnavailableMessage;
+
+  /// No description provided for @callsCameraUnsupportedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This platform does not support the local video preview.'**
+  String get callsCameraUnsupportedMessage;
+
+  /// No description provided for @callsCameraOffMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera preview is turned off for this demo call.'**
+  String get callsCameraOffMessage;
+
+  /// No description provided for @callsFrontCameraLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Front camera'**
+  String get callsFrontCameraLabel;
+
+  /// No description provided for @callsRearCameraLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear camera'**
+  String get callsRearCameraLabel;
 }
 
 class _AppLocalizationsDelegate

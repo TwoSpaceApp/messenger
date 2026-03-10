@@ -1886,4 +1886,93 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get callsVoiceSecureDetail =>
       'Голос защищён и проходит через текущую безопасную сессию.';
+
+  @override
+  String get timestampPrecisionLabel => 'Точность времени сообщений';
+
+  @override
+  String get timestampPrecisionSubtitle =>
+      'Выберите, насколько подробно показывать время в чатах и списке чатов.';
+
+  @override
+  String get timestampPrecisionMinutes => 'Часы и минуты';
+
+  @override
+  String get timestampPrecisionSeconds => 'Часы, минуты и секунды';
+
+  @override
+  String get timestampPrecisionMilliseconds =>
+      'Часы, минуты, секунды и миллисекунды';
+
+  @override
+  String get startupTitle => 'Подготавливаем TwoSpace';
+
+  @override
+  String get startupSubtitle =>
+      'Проверяем защищённую сессию и открываем ваши чаты.';
+
+  @override
+  String get startupFooter =>
+      'Этот экран показывается только во время запуска приложения.';
+
+  @override
+  String get startupStepEnvironment => 'Загружаем конфигурацию';
+
+  @override
+  String get startupStepDiagnostics => 'Запускаем диагностику';
+
+  @override
+  String get startupStepValidation => 'Проверяем окружение';
+
+  @override
+  String get startupStepSettings => 'Загружаем настройки';
+
+  @override
+  String get startupStepSession => 'Восстанавливаем защищённую сессию';
+
+  @override
+  String get startupStepLaunch => 'Запускаем приложение';
+
+  @override
+  String get callsDemoBannerTitle => 'Пример, нерабочий функционал';
+
+  @override
+  String get callsDemoBannerVoiceMessage =>
+      'Голосовые звонки пока показаны только как визуальный прототип. Передача аудио ещё не подключена.';
+
+  @override
+  String get callsDemoBannerVideoMessage =>
+      'Видеозвонки пока показаны только как визуальный прототип. Удалённый видеопоток недоступен, но локальный предпросмотр камеры работает.';
+
+  @override
+  String get callsCameraPermissionMessage =>
+      'Разрешите доступ к камере, чтобы показывать ваш локальный предпросмотр во время видеозвонка.';
+
+  @override
+  String get callsCameraPermissionSettingsMessage =>
+      'Доступ к камере заблокирован. Откройте системные настройки и включите локальный видеопросмотр.';
+
+  @override
+  String get callsCameraPermissionAction => 'Разрешить камеру';
+
+  @override
+  String get callsCameraUnavailableTitle => 'Камера недоступна';
+
+  @override
+  String get callsCameraUnavailableMessage =>
+      'Не удалось запустить локальный предпросмотр камеры на этом устройстве.';
+
+  @override
+  String get callsCameraUnsupportedMessage =>
+      'На этой платформе локальный видеопросмотр не поддерживается.';
+
+  @override
+  String get callsCameraOffMessage =>
+      'Предпросмотр камеры отключён для этого демонстрационного звонка.';
+
+  @override
+  String get callsFrontCameraLabel => 'Фронтальная камера';
+
+  @override
+  String get callsRearCameraLabel => 'Основная камера';
 }

@@ -89,6 +89,14 @@ List<SettingsSearchEntry> buildSettingsSearchEntries(AppLocalizations l10n) {
       onTap: (context) async => context.pop(),
     ),
     SettingsSearchEntry(
+      title: l10n.timestampPrecisionLabel,
+      subtitle: l10n.timestampPrecisionSubtitle,
+      section: l10n.generalSection,
+      icon: Icons.schedule_rounded,
+      keywords: const ['time', 'timestamp', 'seconds', 'milliseconds', 'chat'],
+      onTap: (context) async => context.pop(),
+    ),
+    SettingsSearchEntry(
       title: l10n.sendByEnterLabel,
       subtitle: l10n.sendByEnterSubtitle,
       section: l10n.generalSection,

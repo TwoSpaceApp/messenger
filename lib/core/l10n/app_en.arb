@@ -2567,5 +2567,31 @@
   "callsVoiceSecureDetail": "Voice is protected and routed through the current secure session.",
   "@callsVoiceSecureDetail": {
     "description": "Detailed secure voice call description"
-  }
+  },
+  "timestampPrecisionLabel": "Message time precision",
+  "timestampPrecisionSubtitle": "Choose how detailed timestamps look in chats and chat list.",
+  "timestampPrecisionMinutes": "Hours and minutes",
+  "timestampPrecisionSeconds": "Hours, minutes and seconds",
+  "timestampPrecisionMilliseconds": "Hours, minutes, seconds and milliseconds",
+  "startupTitle": "Preparing TwoSpace",
+  "startupSubtitle": "Checking the secure session and opening your chats.",
+  "startupFooter": "This screen is only shown during app startup.",
+  "startupStepEnvironment": "Loading configuration",
+  "startupStepDiagnostics": "Starting diagnostics",
+  "startupStepValidation": "Validating environment",
+  "startupStepSettings": "Loading settings",
+  "startupStepSession": "Restoring secure session",
+  "startupStepLaunch": "Starting app",
+  "callsDemoBannerTitle": "Demo, not a working call",
+  "callsDemoBannerVoiceMessage": "Voice calls are shown as a visual prototype only. Audio transport is not connected yet.",
+  "callsDemoBannerVideoMessage": "Video calls are shown as a visual prototype only. The remote stream is unavailable, but your local camera preview works.",
+  "callsCameraPermissionMessage": "Allow camera access to show your local preview during a video call.",
+  "callsCameraPermissionSettingsMessage": "Camera access is blocked. Open system settings to enable the local video preview.",
+  "callsCameraPermissionAction": "Allow camera",
+  "callsCameraUnavailableTitle": "Camera unavailable",
+  "callsCameraUnavailableMessage": "The local camera preview could not be started on this device.",
+  "callsCameraUnsupportedMessage": "This platform does not support the local video preview.",
+  "callsCameraOffMessage": "Camera preview is turned off for this demo call.",
+  "callsFrontCameraLabel": "Front camera",
+  "callsRearCameraLabel": "Rear camera"
 }

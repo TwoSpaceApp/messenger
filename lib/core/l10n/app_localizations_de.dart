@@ -1890,4 +1890,94 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get callsVoiceSecureDetail =>
       'Audio ist geschützt und wird über die aktuelle sichere Sitzung übertragen.';
+
+  @override
+  String get timestampPrecisionLabel => 'Genauigkeit der Nachrichtenzeit';
+
+  @override
+  String get timestampPrecisionSubtitle =>
+      'Wählen Sie, wie detailliert Zeitstempel in Chats und in der Chatliste angezeigt werden.';
+
+  @override
+  String get timestampPrecisionMinutes => 'Stunden und Minuten';
+
+  @override
+  String get timestampPrecisionSeconds => 'Stunden, Minuten und Sekunden';
+
+  @override
+  String get timestampPrecisionMilliseconds =>
+      'Stunden, Minuten, Sekunden und Millisekunden';
+
+  @override
+  String get startupTitle => 'TwoSpace wird vorbereitet';
+
+  @override
+  String get startupSubtitle =>
+      'Die sichere Sitzung wird geprüft und Ihre Chats werden geöffnet.';
+
+  @override
+  String get startupFooter =>
+      'Dieser Bildschirm wird nur beim Start der App angezeigt.';
+
+  @override
+  String get startupStepEnvironment => 'Konfiguration wird geladen';
+
+  @override
+  String get startupStepDiagnostics => 'Diagnose wird gestartet';
+
+  @override
+  String get startupStepValidation => 'Umgebung wird geprüft';
+
+  @override
+  String get startupStepSettings => 'Einstellungen werden geladen';
+
+  @override
+  String get startupStepSession => 'Sichere Sitzung wird wiederhergestellt';
+
+  @override
+  String get startupStepLaunch => 'App wird gestartet';
+
+  @override
+  String get callsDemoBannerTitle =>
+      'Beispiel, keine funktionsfähige Anruffunktion';
+
+  @override
+  String get callsDemoBannerVoiceMessage =>
+      'Sprachanrufe werden derzeit nur als visueller Prototyp angezeigt. Die Audioübertragung ist noch nicht verbunden.';
+
+  @override
+  String get callsDemoBannerVideoMessage =>
+      'Videoanrufe werden derzeit nur als visueller Prototyp angezeigt. Der entfernte Videostream ist noch nicht verfügbar, aber Ihre lokale Kameravorschau funktioniert.';
+
+  @override
+  String get callsCameraPermissionMessage =>
+      'Erlauben Sie den Kamerazugriff, damit Ihre lokale Vorschau während eines Videoanrufs angezeigt werden kann.';
+
+  @override
+  String get callsCameraPermissionSettingsMessage =>
+      'Der Kamerazugriff ist blockiert. Öffnen Sie die Systemeinstellungen, um die lokale Videovorschau zu aktivieren.';
+
+  @override
+  String get callsCameraPermissionAction => 'Kamera erlauben';
+
+  @override
+  String get callsCameraUnavailableTitle => 'Kamera nicht verfügbar';
+
+  @override
+  String get callsCameraUnavailableMessage =>
+      'Die lokale Kameravorschau konnte auf diesem Gerät nicht gestartet werden.';
+
+  @override
+  String get callsCameraUnsupportedMessage =>
+      'Diese Plattform unterstützt keine lokale Videovorschau.';
+
+  @override
+  String get callsCameraOffMessage =>
+      'Die Kameravorschau ist für diesen Demo-Anruf ausgeschaltet.';
+
+  @override
+  String get callsFrontCameraLabel => 'Frontkamera';
+
+  @override
+  String get callsRearCameraLabel => 'Rückkamera';
 }
