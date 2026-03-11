@@ -307,10 +307,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
           ? '${person.phones.first} • ${l10n.peopleInviteSubtitle}'
           : l10n.peopleInviteSubtitle;
     }
-    if (person.isOnline) {
+    final presenceLabel = _presenceLabel(person, l10n);
+    if (presenceLabel != null) {
       return person.username != null
-          ? '@${person.username!} • ${l10n.onlineLabel}'
-          : l10n.onlineLabel;
+          ? '@${person.username!} • $presenceLabel'
+          : presenceLabel;
     }
     if (person.lastInteractionAt != null) {
       return person.username != null
@@ -325,6 +326,24 @@ class _PeopleScreenState extends State<PeopleScreen> {
     if (person.username != null && person.username!.isNotEmpty) return '@${person.username!}';
     if (person.phones.isNotEmpty) return person.phones.first;
     return l10n.peopleNoDetails;
+  }
+
+  String? _presenceLabel(PersonEntry person, AppLocalizations l10n) {
+    final status = person.presenceStatus?.toLowerCase();
+    if (person.isOnline || status == 'online') {
+      return l10n.onlineLabel;
+    }
+    if (status == 'recently') {
+      return l10n.statusLastSeenRecently;
+    }
+    if ((status == 'was_online' || status == 'offline') &&
+        person.lastSeenAt != null) {
+      return _rel(person.lastSeenAt!, l10n);
+    }
+    if (status == 'long_ago') {
+      return l10n.offlineLabel;
+    }
+    return null;
   }
 
   String _rel(DateTime t, AppLocalizations l10n) {

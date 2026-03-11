@@ -1331,6 +1331,14 @@ class AppLocalizationsPl extends AppLocalizations {
       'Funkcja zgłaszania nie jest jeszcze zaimplementowana';
 
   @override
+  String get featureInDevelopmentLabel => 'W przygotowaniu';
+
+  @override
+  String featureInDevelopmentMessage(String feature) {
+    return 'Ta funkcja jest nadal rozwijana i będzie dostępna w jednej z kolejnych wersji.';
+  }
+
+  @override
   String get inviteAction => 'Zaproś';
 
   @override
@@ -1343,7 +1351,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get filesLabel => 'Pliki';
 
   @override
+  String get noSharedFiles => 'Brak udostępnionych plików';
+
+  @override
   String get mediaLabel => 'Media';
+
+  @override
+  String get noSharedMedia => 'Brak udostępnionych multimediów';
 
   @override
   String get extensionsLabel => 'Rozszerzenia';
@@ -1482,6 +1496,19 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get joinByCodeSubtitle => 'Dołącz do pokoju używając kodu zaproszenia';
+
+  @override
+  String get chatsSubtitle =>
+      'Wiadomości prywatne, grupy i linki zaproszeń w jednym miejscu';
+
+  @override
+  String get chatsQuickStartTitle => 'Zacznij coś nowego';
+
+  @override
+  String get chatsRecentTitle => 'Ostatnie czaty';
+
+  @override
+  String get joinLinkHint => 'Wklej link zaproszenia, alias lub kod';
 
   @override
   String get fontLabel => 'Czcionka';

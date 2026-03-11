@@ -1308,6 +1308,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reportNotImplemented => '举报功能尚未实现';
 
   @override
+  String get featureInDevelopmentLabel => '开发中';
+
+  @override
+  String featureInDevelopmentMessage(String feature) {
+    return '此功能仍在开发中，将在后续版本中提供。';
+  }
+
+  @override
   String get inviteAction => '邀请';
 
   @override
@@ -1320,7 +1328,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filesLabel => '文件';
 
   @override
+  String get noSharedFiles => '暂无共享文件';
+
+  @override
   String get mediaLabel => '媒体';
+
+  @override
+  String get noSharedMedia => '暂无共享媒体';
 
   @override
   String get extensionsLabel => '扩展';
@@ -1449,6 +1463,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get joinByCodeSubtitle => '使用邀请码加入房间';
+
+  @override
+  String get chatsSubtitle => '私聊、群组和邀请链接集中在一处';
+
+  @override
+  String get chatsQuickStartTitle => '开始新的对话';
+
+  @override
+  String get chatsRecentTitle => '最近聊天';
+
+  @override
+  String get joinLinkHint => '粘贴邀请链接、别名或代码';
 
   @override
   String get fontLabel => '字体';

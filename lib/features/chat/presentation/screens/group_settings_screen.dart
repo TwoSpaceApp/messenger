@@ -1,9 +1,11 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/group.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
 
 class GroupSettingsScreen extends StatefulWidget {
@@ -19,6 +21,7 @@ class GroupSettingsScreen extends StatefulWidget {
 
 class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   late AegisGroupService _groupService;
+  final AegisChatService _chatService = AegisChatService();
   int _selectedTabIndex = 0;
   bool _isLoading = false;
   GroupRoom? _currentGroup;
@@ -54,6 +57,26 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       _currentGroup?.currentUserRole == GroupRole.admin;
 
   bool get _canDeleteGroup => _currentGroup?.currentUserRole == GroupRole.owner;
+
+  Future<void> _copyGroupLink() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final linkInfo = await _chatService.getRoomLinkInfo(widget.roomId);
+      final link = linkInfo['preferredLink'];
+      if (link == null || link.isEmpty) {
+        throw Exception(l10n.errorGeneric);
+      }
+      await Clipboard.setData(ClipboardData(text: link));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.textCopied)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -286,6 +309,14 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     color: theme.colorScheme.outline,
                   ),
                 ),
+                if (_currentGroup?.visibility == GroupVisibility.public) ...[
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: _copyGroupLink,
+                    icon: const Icon(Icons.link_outlined),
+                    label: Text(l10n.copyLinkAction),
+                  ),
+                ],
                 if (_canManageMembers) ...[
                   const SizedBox(height: 24),
                   Text(

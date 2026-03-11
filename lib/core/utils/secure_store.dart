@@ -11,6 +11,10 @@ class SecureStore {
     return _storage.read(key: key);
   }
 
+  static Future<Map<String, String>> readAll() async {
+    return _storage.readAll();
+  }
+
   static Future<void> delete(String key) async {
     await _storage.delete(key: key);
   }

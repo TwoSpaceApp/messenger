@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class FeedbackScreen extends StatefulWidget {
   const FeedbackScreen({super.key});
@@ -22,37 +22,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   bool _sending = false;
 
   String _appVersion = '...';
-
-  final Map<String, bool> _ideas = {
-    'e2e': false,
-    'backup': false,
-    'threads': false,
-    'calls': false,
-    'folders': false,
-    'bots': false,
-    'slow_net': false,
-  };
-
-  String _ideaLabel(String key, AppLocalizations l10n) {
-    switch (key) {
-      case 'e2e':
-        return l10n.feedbackE2E;
-      case 'backup':
-        return l10n.feedbackBackup;
-      case 'threads':
-        return l10n.feedbackThreads;
-      case 'calls':
-        return l10n.feedbackCalls;
-      case 'folders':
-        return l10n.feedbackFolders;
-      case 'bots':
-        return l10n.feedbackBots;
-      case 'slow_net':
-        return l10n.feedbackSlowNet;
-      default:
-        return key;
-    }
-  }
 
   String _categoryLabel(AppLocalizations l10n) {
     switch (_category) {
@@ -96,11 +65,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   }
 
   String _buildMessage(AppLocalizations l10n) {
-    final selected = _ideas.entries
-        .where((e) => e.value)
-        .map((e) => '- ${_ideaLabel(e.key, l10n)}')
-        .join('\n');
-
     final title = _titleController.text.trim();
     final details = _detailsController.text.trim();
 
@@ -109,11 +73,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       l10n.feedbackVersion(_appVersion),
       l10n.feedbackCategoryLine(_categoryLabel(l10n)),
       if (title.isNotEmpty) l10n.feedbackShortTitle(title),
-      if (selected.isNotEmpty) ...[
-        '',
-        l10n.feedbackWishList,
-        selected,
-      ],
       if (details.isNotEmpty) ...[
         '',
         l10n.feedbackDetailsLine,
@@ -133,13 +92,30 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     );
   }
 
-  Future<void> _share() async {
+  Future<void> _send() async {
     if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context)!;
     setState(() => _sending = true);
     try {
       final text = _buildMessage(l10n);
-      await Share.share(text, subject: l10n.feedbackShareSubject);
+      final telegramUri = Uri.parse(
+        'https://t.me/twospace_messenger?direct&text=${Uri.encodeQueryComponent(text)}',
+      );
+      await Clipboard.setData(ClipboardData(text: text));
+      final launched = await launchUrl(
+        telegramUri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!mounted) return;
+      if (!launched) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.shareSheetFailed)),
+        );
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.textCopied)),
+      );
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -203,9 +179,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                           hintText: l10n.shortDescriptionHint,
                         ),
                         validator: (v) {
-                          final anyIdeaSelected = _ideas.values.any((x) => x);
                           final hasTitle = (v ?? '').trim().isNotEmpty;
-                          if (!anyIdeaSelected && !hasTitle) {
+                          final hasDetails =
+                              _detailsController.text.trim().isNotEmpty;
+                          if (!hasTitle && !hasDetails) {
                             return l10n.feedbackValidation;
                           }
                           return null;
@@ -225,29 +202,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  l10n.bigFeaturesTitle,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                GlassCard(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: Column(
-                    children: _ideas.entries.map((e) {
-                      return CheckboxListTile(
-                        value: e.value,
-                        dense: false,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text(_ideaLabel(e.key, l10n)),
-                        onChanged: (v) =>
-                            setState(() => _ideas[e.key] = v ?? false),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -260,7 +214,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: _sending ? null : _share,
+                        onPressed: _sending ? null : _send,
                         icon: _sending
                             ? const SizedBox(
                                 width: 18,
@@ -269,7 +223,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                                     CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.send),
-                        label: Text(l10n.shareButton),
+                        label: Text(l10n.sendButton),
                       ),
                     ),
                   ],

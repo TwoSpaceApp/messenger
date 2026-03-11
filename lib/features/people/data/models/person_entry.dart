@@ -14,6 +14,7 @@ class PersonEntry {
     this.isDeviceContact = false,
     this.isFavorite = false,
     this.isOnline = false,
+    this.presenceStatus,
     this.lastSeenAt,
     this.lastInteractionAt,
     this.note,
@@ -30,6 +31,7 @@ class PersonEntry {
   final bool isDeviceContact;
   final bool isFavorite;
   final bool isOnline;
+  final String? presenceStatus;
   final DateTime? lastSeenAt;
   final DateTime? lastInteractionAt;
   final String? note;
@@ -49,6 +51,7 @@ class PersonEntry {
     bool? isDeviceContact,
     bool? isFavorite,
     bool? isOnline,
+    String? presenceStatus,
     DateTime? lastSeenAt,
     DateTime? lastInteractionAt,
     String? note,
@@ -66,6 +69,7 @@ class PersonEntry {
       isDeviceContact: isDeviceContact ?? this.isDeviceContact,
       isFavorite: isFavorite ?? this.isFavorite,
       isOnline: isOnline ?? this.isOnline,
+      presenceStatus: presenceStatus ?? this.presenceStatus,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       lastInteractionAt: lastInteractionAt ?? this.lastInteractionAt,
       note: note ?? this.note,
@@ -86,6 +90,7 @@ class PersonEntry {
       isDeviceContact: json['isDeviceContact'] == true,
       isFavorite: json['isFavorite'] == true,
       isOnline: json['isOnline'] == true,
+      presenceStatus: json['presenceStatus']?.toString(),
       lastSeenAt: _dateTimeFromJson(json['lastSeenAt']),
       lastInteractionAt: _dateTimeFromJson(json['lastInteractionAt']),
       note: json['note']?.toString(),
@@ -104,6 +109,7 @@ class PersonEntry {
       'isDeviceContact': isDeviceContact,
       'isFavorite': isFavorite,
       'isOnline': isOnline,
+      'presenceStatus': presenceStatus,
       'lastSeenAt': lastSeenAt?.toIso8601String(),
       'lastInteractionAt': lastInteractionAt?.toIso8601String(),
       'note': note,

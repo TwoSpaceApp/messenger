@@ -13,8 +13,8 @@ class ScreenBackground extends StatefulWidget {
 }
 
 class _ScreenBackgroundState extends State<ScreenBackground>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+    with WidgetsBindingObserver {
+  Timer? _animationTimer;
 
   // Accelerometer tilt values (direction of gravity)
   double _tiltX = 0;
@@ -28,26 +28,30 @@ class _ScreenBackgroundState extends State<ScreenBackground>
 
   Size _lastScreenSize = Size.zero;
   bool _positionsInitialized = false;
+  bool _appActive = true;
 
   StreamSubscription? _accelSub;
 
   static const double _blob1Size = 350;
   static const double _blob2Size = 400;
+  static const Duration _animationTick = Duration(milliseconds: 50);
 
   void _syncMotionState() {
     final settings = SettingsService.themeNotifier.value;
-    final shouldAnimate = settings.enableFloatingCircles;
+    final shouldAnimate = settings.enableFloatingCircles && _appActive;
 
     if (shouldAnimate) {
-      if (!_controller.isAnimating) {
-        _controller.repeat();
-      }
-    } else if (_controller.isAnimating) {
-      _controller.stop();
+      _animationTimer ??= Timer.periodic(_animationTick, (_) {
+        if (!mounted) return;
+        _updateBlobPositions();
+      });
+    } else {
+      _animationTimer?.cancel();
+      _animationTimer = null;
     }
 
     final shouldListenToAccel =
-        settings.enableParallax && settings.enableFloatingCircles;
+        settings.enableParallax && settings.enableFloatingCircles && _appActive;
     if (!shouldListenToAccel) {
       _accelSub?.cancel();
       _accelSub = null;
@@ -66,14 +70,14 @@ class _ScreenBackgroundState extends State<ScreenBackground>
   @override
   void initState() {
     super.initState();
-
-    // Animation controller for continuous movement.
-    // Important: don't call setState per frame; AnimatedBuilder will repaint the background.
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1))
-          ..addListener(_updateBlobPositions);
-
+    WidgetsBinding.instance.addObserver(this);
     SettingsService.themeNotifier.addListener(_syncMotionState);
+    _syncMotionState();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appActive = state == AppLifecycleState.resumed;
     _syncMotionState();
   }
 
@@ -91,8 +95,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     // Speed multiplier from settings (default 1.0, now faster with higher base)
     final speedMultiplier = settings.floatingCirclesSpeed * 0.8;
 
-    // Move blobs in the direction of tilt.
-    // No setState: AnimatedBuilder repaints on every controller tick.
+    // Move blobs in the direction of tilt using a reduced refresh rate.
     _blob1X += _tiltX * speedMultiplier * 2.5;
     _blob1Y += _tiltY * speedMultiplier * 2.5;
     _blob2X += _tiltX * speedMultiplier * 2.0;
@@ -112,12 +115,15 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     if (_blob2X > screenW + buffer) _blob2X = -_blob2Size - buffer;
     if (_blob2Y < -_blob2Size - buffer) _blob2Y = screenH + buffer;
     if (_blob2Y > screenH + buffer) _blob2Y = -_blob2Size - buffer;
+
+    setState(() {});
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     SettingsService.themeNotifier.removeListener(_syncMotionState);
-    _controller.dispose();
+    _animationTimer?.cancel();
     _accelSub?.cancel();
     super.dispose();
   }
@@ -157,10 +163,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
           );
         }
 
-        return AnimatedBuilder(
-          animation: _controller,
-          child: child,
-          builder: (context, animatedChild) => Stack(
+          return Stack(
             children: [
               ColoredBox(color: bgColor),
               Positioned(
@@ -205,9 +208,8 @@ class _ScreenBackgroundState extends State<ScreenBackground>
                   ),
                 ),
               ),
-              if (animatedChild != null) animatedChild,
+              if (child != null) child,
             ],
-          ),
         );
       },
     );

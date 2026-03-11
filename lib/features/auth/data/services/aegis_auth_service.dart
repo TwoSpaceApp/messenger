@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -189,20 +188,23 @@ class AegisAuthService {
 
     final normalizedDisplayName = displayName?.trim();
     final normalizedBio = bio?.trim();
-    final avatarUrl = avatarBytes == null
-        ? null
-        : 'data:image/png;base64,${base64Encode(avatarBytes)}';
 
     final response = await _client.updateProfile(
       displayName: (normalizedDisplayName?.isNotEmpty ?? false)
           ? normalizedDisplayName
           : null,
       bio: (normalizedBio?.isNotEmpty ?? false) ? normalizedBio : null,
-      avatarUrl: avatarUrl,
     );
 
     if (!response.success) {
       throw Exception(response.message ?? 'Не удалось обновить профиль');
+    }
+
+    if (avatarBytes != null) {
+      final avatarResponse = await _client.uploadUserAvatar(avatarBytes);
+      if (!avatarResponse.success) {
+        throw Exception(avatarResponse.message ?? 'Не удалось обновить аватар');
+      }
     }
   }
 

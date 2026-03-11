@@ -13,6 +13,7 @@ enum LogLevel {
 
 /// Журнал для разработчиков с поддержкой уровней логирования
 class DevLogger {
+  static const int _maxEntries = 1000;
   DevLogger(this._tag);
   static final List<String> _logs = [];
   static final StreamController<List<String>> _ctrl =
@@ -24,10 +25,11 @@ class DevLogger {
     final timestamp = DateTime.now().toIso8601String();
     final line = '[$timestamp] ${level.emoji} $msg';
     _logs.add(line);
-    // Сохраняем последние 200 записей
-    if (_logs.length > 200) _logs.removeRange(0, _logs.length - 200);
+    if (_logs.length > _maxEntries) {
+      _logs.removeRange(0, _logs.length - _maxEntries);
+    }
     try {
-      _ctrl.add(List<String>.from(_logs));
+      _ctrl.add(DevLogger.all);
     } catch (_) {}
   }
 
@@ -61,7 +63,7 @@ class DevLogger {
   static void clear() {
     _logs.clear();
     try {
-      _ctrl.add(List<String>.from(_logs));
+      _ctrl.add(DevLogger.all);
     } catch (_) {}
   }
 }

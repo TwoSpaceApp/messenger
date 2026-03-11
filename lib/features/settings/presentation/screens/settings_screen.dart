@@ -398,22 +398,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             SettingsService.messageTimestampPrecisionNotifier,
                         builder: (context, precision, _) {
                           return ListTile(
+                            isThreeLine: true,
                             leading: const Icon(Icons.schedule_rounded),
                             title: Text(l10n.timestampPrecisionLabel),
-                            subtitle: Text(l10n.timestampPrecisionSubtitle),
-                            trailing: Row(
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                Text(l10n.timestampPrecisionSubtitle),
+                                const SizedBox(height: 4),
                                 Text(
                                   _timestampPrecisionLabel(l10n, precision),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context)
                                       .textTheme
-                                      .bodySmall,
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color:
+                                            Theme.of(context).colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                 ),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.chevron_right),
                               ],
                             ),
+                            trailing: const Icon(Icons.chevron_right),
                             onTap: _openTimestampPrecisionPicker,
                             contentPadding:
                                 const EdgeInsets.symmetric(horizontal: 8),

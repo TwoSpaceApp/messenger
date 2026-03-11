@@ -161,6 +161,7 @@ class UserSearchResult {
     required this.id,
     required this.username,
     this.email,
+    this.presenceStatus,
   });
 
   factory UserSearchResult.fromJson(Map<String, dynamic> json) =>
@@ -168,16 +169,37 @@ class UserSearchResult {
         id: json['Id'] as int,
         username: json['Username'] as String,
         email: json['Email'] as String?,
+        presenceStatus: json['PresenceStatus'] as String?,
       );
   final int id;
   final String username;
   final String? email;
+  final String? presenceStatus;
 
   Map<String, dynamic> toJson() => {
         'Id': id,
         'Username': username,
         if (email != null) 'Email': email,
+        if (presenceStatus != null) 'PresenceStatus': presenceStatus,
       };
+}
+
+class UserPresenceUpdateRequest {
+  UserPresenceUpdateRequest({
+    required this.isOnline,
+    this.clientTimestamp,
+  });
+
+  final bool isOnline;
+  final DateTime? clientTimestamp;
+
+  Map<String, dynamic> toJson() => {
+        'IsOnline': isOnline,
+        if (clientTimestamp != null)
+          'ClientTimestamp': clientTimestamp!.toUtc().toIso8601String(),
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
 }
 
 /// User entity
@@ -747,6 +769,283 @@ class ChannelMessageEvent {
   final String? channelName;
 }
 
+class ProfileAvatarData {
+  ProfileAvatarData({
+    required this.id,
+    required this.avatarUrl,
+    required this.isPrimary,
+    required this.createdAt,
+  });
+
+  factory ProfileAvatarData.fromJson(Map<String, dynamic> json) =>
+      ProfileAvatarData(
+        id: json['Id'] as int,
+        avatarUrl: json['AvatarUrl'] as String,
+        isPrimary: json['IsPrimary'] as bool? ?? false,
+        createdAt: DateTime.tryParse(json['CreatedAt'] as String? ?? '') ??
+            DateTime.fromMillisecondsSinceEpoch(0),
+      );
+
+  final int id;
+  final String avatarUrl;
+  final bool isPrimary;
+  final DateTime createdAt;
+
+  Map<String, dynamic> toJson() => {
+        'Id': id,
+        'AvatarUrl': avatarUrl,
+        'IsPrimary': isPrimary,
+        'CreatedAt': createdAt.toIso8601String(),
+      };
+}
+
+class ProfileAvatarAddRequest {
+  ProfileAvatarAddRequest({required this.avatarUrl, this.makePrimary = false});
+
+  final String avatarUrl;
+  final bool makePrimary;
+
+  Map<String, dynamic> toJson() => {
+        'AvatarUrl': avatarUrl,
+        'MakePrimary': makePrimary,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ProfileAvatarDeleteRequest {
+  ProfileAvatarDeleteRequest({required this.avatarId});
+
+  final int avatarId;
+
+  Map<String, dynamic> toJson() => {
+        'AvatarId': avatarId,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ProfileAvatarSetPrimaryRequest {
+  ProfileAvatarSetPrimaryRequest({required this.avatarId});
+
+  final int avatarId;
+
+  Map<String, dynamic> toJson() => {
+        'AvatarId': avatarId,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ProfileAvatarMutationResponse {
+  ProfileAvatarMutationResponse({
+    required this.success,
+    this.message,
+    this.avatar,
+  });
+
+  factory ProfileAvatarMutationResponse.fromJson(Map<String, dynamic> json) =>
+      ProfileAvatarMutationResponse(
+        success: json['Success'] as bool? ?? false,
+        message: json['Message'] as String?,
+        avatar: json['Avatar'] is Map<String, dynamic>
+            ? ProfileAvatarData.fromJson(json['Avatar'] as Map<String, dynamic>)
+            : null,
+      );
+
+  factory ProfileAvatarMutationResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return ProfileAvatarMutationResponse.fromJson(json);
+  }
+
+  final bool success;
+  final String? message;
+  final ProfileAvatarData? avatar;
+}
+
+class ProfileAvatarListResponse {
+  ProfileAvatarListResponse({
+    required this.success,
+    required this.avatars,
+    this.message,
+  });
+
+  factory ProfileAvatarListResponse.fromJson(Map<String, dynamic> json) =>
+      ProfileAvatarListResponse(
+        success: json['Success'] as bool? ?? false,
+        avatars: (json['Avatars'] as List<dynamic>? ?? const <dynamic>[])
+            .map((item) => ProfileAvatarData.fromJson(item as Map<String, dynamic>))
+            .toList(),
+        message: json['Message'] as String?,
+      );
+
+  factory ProfileAvatarListResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return ProfileAvatarListResponse.fromJson(json);
+  }
+
+  final bool success;
+  final List<ProfileAvatarData> avatars;
+  final String? message;
+}
+
+class ChannelLinkUpdateRequest {
+  ChannelLinkUpdateRequest({
+    required this.channelId,
+    this.publicAlias,
+    this.regeneratePrivateInvite = false,
+  });
+
+  final int channelId;
+  final String? publicAlias;
+  final bool regeneratePrivateInvite;
+
+  Map<String, dynamic> toJson() => {
+        'ChannelId': channelId,
+        if (publicAlias != null) 'PublicAlias': publicAlias,
+        'RegeneratePrivateInvite': regeneratePrivateInvite,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ChannelLinkRequest {
+  ChannelLinkRequest({required this.channelId});
+
+  final int channelId;
+
+  Map<String, dynamic> toJson() => {
+        'ChannelId': channelId,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ChannelResolveRequest {
+  ChannelResolveRequest({required this.linkOrAlias});
+
+  final String linkOrAlias;
+
+  Map<String, dynamic> toJson() => {
+        'LinkOrAlias': linkOrAlias,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ChannelLinkInfo {
+  ChannelLinkInfo({
+    required this.channelId,
+    required this.privateInviteLink,
+    this.publicAlias,
+    this.publicLink,
+  });
+
+  factory ChannelLinkInfo.fromJson(Map<String, dynamic> json) =>
+      ChannelLinkInfo(
+        channelId: json['ChannelId'] as int,
+        publicAlias: json['PublicAlias'] as String?,
+        publicLink: json['PublicLink'] as String?,
+        privateInviteLink: json['PrivateInviteLink'] as String,
+      );
+
+  final int channelId;
+  final String? publicAlias;
+  final String? publicLink;
+  final String privateInviteLink;
+
+  Map<String, dynamic> toJson() => {
+        'ChannelId': channelId,
+        if (publicAlias != null) 'PublicAlias': publicAlias,
+        if (publicLink != null) 'PublicLink': publicLink,
+        'PrivateInviteLink': privateInviteLink,
+      };
+}
+
+class ChannelLinkResponse {
+  ChannelLinkResponse({
+    required this.success,
+    this.link,
+    this.message,
+  });
+
+  factory ChannelLinkResponse.fromJson(Map<String, dynamic> json) =>
+      ChannelLinkResponse(
+        success: json['Success'] as bool,
+        link: json['Link'] != null
+            ? ChannelLinkInfo.fromJson(json['Link'] as Map<String, dynamic>)
+            : null,
+        message: json['Message'] as String?,
+      );
+
+  factory ChannelLinkResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return ChannelLinkResponse.fromJson(json);
+  }
+
+  final bool success;
+  final ChannelLinkInfo? link;
+  final String? message;
+}
+
+class ChannelSummary {
+  ChannelSummary({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.memberCount,
+    this.description,
+  });
+
+  factory ChannelSummary.fromJson(Map<String, dynamic> json) => ChannelSummary(
+        id: json['Id'] as int,
+        name: json['Name'] as String,
+        description: json['Description'] as String?,
+        type: ChannelType.fromValue(json['Type'] as int? ?? 0),
+        memberCount: json['MemberCount'] as int? ?? 0,
+      );
+
+  final int id;
+  final String name;
+  final String? description;
+  final ChannelType type;
+  final int memberCount;
+
+  Map<String, dynamic> toJson() => {
+        'Id': id,
+        'Name': name,
+        if (description != null) 'Description': description,
+        'Type': type.value,
+        'MemberCount': memberCount,
+      };
+}
+
+class ChannelResolveResponse {
+  ChannelResolveResponse({
+    required this.success,
+    this.channel,
+    this.message,
+  });
+
+  factory ChannelResolveResponse.fromJson(Map<String, dynamic> json) =>
+      ChannelResolveResponse(
+        success: json['Success'] as bool,
+        channel: json['Channel'] != null
+            ? ChannelSummary.fromJson(json['Channel'] as Map<String, dynamic>)
+            : null,
+        message: json['Message'] as String?,
+      );
+
+  factory ChannelResolveResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return ChannelResolveResponse.fromJson(json);
+  }
+
+  final bool success;
+  final ChannelSummary? channel;
+  final String? message;
+}
+
 class MessageEditRequest {
   MessageEditRequest({
     required this.messageId,
@@ -1034,7 +1333,7 @@ class ChannelJoinResponse {
       ChannelJoinResponse(
         success: json['Success'] as bool,
         channel: json['Channel'] != null
-            ? Channel.fromJson(json['Channel'] as Map<String, dynamic>)
+            ? ChannelSummary.fromJson(json['Channel'] as Map<String, dynamic>)
             : null,
         message: json['Message'] as String?,
       );
@@ -1044,7 +1343,7 @@ class ChannelJoinResponse {
     return ChannelJoinResponse.fromJson(json);
   }
   final bool success;
-  final Channel? channel;
+  final ChannelSummary? channel;
   final String? message;
 
   Map<String, dynamic> toJson() => {

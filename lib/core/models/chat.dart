@@ -8,6 +8,9 @@ class Chat {
     this.roomType,
     this.lastMessageTime,
     this.unreadCount = 0,
+    this.isOnline = false,
+    this.presenceStatus,
+    this.lastSeenAt,
   });
 
   factory Chat.fromMap(Map<String, dynamic> m) {
@@ -42,6 +45,13 @@ class Chat {
         return null;
       })(),
       unreadCount: (m['unreadCount'] ?? m['unread_count'] ?? 0) as int,
+      isOnline: m['isOnline'] == true,
+      presenceStatus: (m['presenceStatus'] ?? m['presence_status'])?.toString(),
+      lastSeenAt: (() {
+        final raw = m['lastSeenAt'] ?? m['last_seen_at'];
+        if (raw is String) return DateTime.tryParse(raw);
+        return null;
+      })(),
     );
   }
   final String id;
@@ -52,6 +62,9 @@ class Chat {
   final String? roomType;
   final DateTime? lastMessageTime;
   final int unreadCount;
+  final bool isOnline;
+  final String? presenceStatus;
+  final DateTime? lastSeenAt;
 
   Map<String, dynamic> toMap() => {
         '\u0024id': id,
@@ -62,5 +75,9 @@ class Chat {
         'lastMessage': lastMessage,
         'roomType': roomType,
         'lastMessageTime': lastMessageTime?.toIso8601String(),
+        'unreadCount': unreadCount,
+        'isOnline': isOnline,
+        'presenceStatus': presenceStatus,
+        'lastSeenAt': lastSeenAt?.toIso8601String(),
       };
 }

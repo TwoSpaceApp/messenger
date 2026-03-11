@@ -1330,6 +1330,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get reportNotImplemented => 'Функция жалобы ещё не реализована';
 
   @override
+  String get featureInDevelopmentLabel => 'В разработке';
+
+  @override
+  String featureInDevelopmentMessage(String feature) {
+    return 'Раздел «$feature» ещё в разработке и появится в одном из следующих обновлений.';
+  }
+
+  @override
   String get inviteAction => 'Пригласить';
 
   @override
@@ -1342,7 +1350,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get filesLabel => 'Файлы';
 
   @override
+  String get noSharedFiles => 'Общих файлов пока нет';
+
+  @override
   String get mediaLabel => 'Медиа';
+
+  @override
+  String get noSharedMedia => 'Общих медиа пока нет';
 
   @override
   String get extensionsLabel => 'Расширения';
@@ -1482,6 +1496,19 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get joinByCodeSubtitle =>
       'Присоединиться к комнате по пригласительному коду';
+
+  @override
+  String get chatsSubtitle =>
+      'Личные чаты, группы и пригласительные ссылки в одном месте';
+
+  @override
+  String get chatsQuickStartTitle => 'Начните новый диалог';
+
+  @override
+  String get chatsRecentTitle => 'Недавние чаты';
+
+  @override
+  String get joinLinkHint => 'Вставьте пригласительную ссылку, алиас или код';
 
   @override
   String get fontLabel => 'Шрифт';

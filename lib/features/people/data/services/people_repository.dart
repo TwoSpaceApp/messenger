@@ -409,9 +409,17 @@ class PeopleRepository {
       phones: phone == null || phone.isEmpty ? const <String>[] : <String>[phone],
       remoteUserId: remoteId,
       isTwoSpaceUser: true,
-      isOnline: prefs['online'] == true,
+      isOnline: (data['presenceStatus'] ?? prefs['presenceStatus']) == 'online' ||
+          prefs['online'] == true,
+      presenceStatus:
+          (data['presenceStatus'] ?? prefs['presenceStatus'])?.toString(),
       lastSeenAt: DateTime.tryParse(
-        (data['lastSeen'] ?? prefs['lastSeen'] ?? '').toString(),
+        (data['lastSeenAt'] ??
+                data['lastSeen'] ??
+                prefs['lastSeenAt'] ??
+                prefs['lastSeen'] ??
+                '')
+            .toString(),
       ),
     );
   }
@@ -450,6 +458,7 @@ class PeopleRepository {
         isDeviceContact: current.isDeviceContact || person.isDeviceContact,
         isFavorite: current.isFavorite || person.isFavorite,
         isOnline: current.isOnline || person.isOnline,
+        presenceStatus: person.presenceStatus ?? current.presenceStatus,
         lastSeenAt: _latestDate(current.lastSeenAt, person.lastSeenAt),
         lastInteractionAt:
             _latestDate(current.lastInteractionAt, person.lastInteractionAt),

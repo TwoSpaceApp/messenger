@@ -8,6 +8,7 @@ import 'package:two_space_app/core/config/theme_builder.dart';
 import 'package:two_space_app/core/constants/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/navigation/app_router.dart';
+import 'package:two_space_app/core/services/dev_tools_service.dart';
 import 'package:two_space_app/core/services/initialization_service.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/widgets/dev_fab.dart';
@@ -55,8 +56,6 @@ class AppBootstrapperState extends State<AppBootstrapper> {
       },
     );
     if (mounted) {
-      // Add a small delay so the 100% progress line is visible
-      await Future.delayed(const Duration(milliseconds: 300));
       setState(() {
         _initResult = result;
       });
@@ -183,51 +182,59 @@ class TwoSpaceApp extends ConsumerWidget {
                     return ValueListenableBuilder<double>(
                       valueListenable: SettingsService.textScaleNotifier,
                       builder: (context, textScale, ____) {
-                        final lightTheme = AppThemeBuilder.build(
-                          settings,
-                          paleVioletEnabled,
-                          brightnessOverride: Brightness.light,
-                        );
-                        final darkTheme = AppThemeBuilder.build(
-                          settings,
-                          paleVioletEnabled,
-                          brightnessOverride: Brightness.dark,
-                        );
-
-                        final app = MaterialApp.router(
-                          title: 'TwoSpace',
-                          onGenerateTitle: (context) =>
-                              AppLocalizations.of(context)?.appTitle ??
-                              'TwoSpace',
-                          debugShowCheckedModeBanner: false,
-                          theme: lightTheme,
-                          darkTheme: darkTheme,
-                          themeMode: themeMode,
-                          locale: Locale(languageCode),
-                          localizationsDelegates:
-                              AppLocalizations.localizationsDelegates,
-                          supportedLocales: AppLocalizations.supportedLocales,
-                          routerConfig: goRouter,
-                          builder: (context, child) {
-                            final mediaQuery = MediaQuery.of(context);
-                            return MediaQuery(
-                              data: mediaQuery.copyWith(
-                                textScaler: TextScaler.linear(textScale),
-                              ),
-                              child: AuthListener(
-                                child: child ?? const SizedBox(),
-                              ),
+                        return ValueListenableBuilder<bool>(
+                          valueListenable:
+                              DevToolsService.performanceOverlayEnabled,
+                          builder: (context, showPerformanceOverlay, __) {
+                            final lightTheme = AppThemeBuilder.build(
+                              settings,
+                              paleVioletEnabled,
+                              brightnessOverride: Brightness.light,
                             );
+                            final darkTheme = AppThemeBuilder.build(
+                              settings,
+                              paleVioletEnabled,
+                              brightnessOverride: Brightness.dark,
+                            );
+
+                            final app = MaterialApp.router(
+                              title: 'TwoSpace',
+                              onGenerateTitle: (context) =>
+                                  AppLocalizations.of(context)?.appTitle ??
+                                  'TwoSpace',
+                              debugShowCheckedModeBanner: false,
+                              showPerformanceOverlay: showPerformanceOverlay,
+                              theme: lightTheme,
+                              darkTheme: darkTheme,
+                              themeMode: themeMode,
+                              locale: Locale(languageCode),
+                              localizationsDelegates:
+                                  AppLocalizations.localizationsDelegates,
+                              supportedLocales:
+                                  AppLocalizations.supportedLocales,
+                              routerConfig: goRouter,
+                              builder: (context, child) {
+                                final mediaQuery = MediaQuery.of(context);
+                                return MediaQuery(
+                                  data: mediaQuery.copyWith(
+                                    textScaler: TextScaler.linear(textScale),
+                                  ),
+                                  child: AuthListener(
+                                    child: child ?? const SizedBox(),
+                                  ),
+                                );
+                              },
+                            );
+
+                            if (kDebugMode || Environment.enableDevTools) {
+                              return Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: Stack(children: [app, const DevFab()]),
+                              );
+                            }
+                            return app;
                           },
                         );
-
-                        if (kDebugMode || Environment.enableDevTools) {
-                          return Directionality(
-                            textDirection: TextDirection.ltr,
-                            child: Stack(children: [app, const DevFab()]),
-                          );
-                        }
-                        return app;
                       },
                     );
                   },

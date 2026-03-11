@@ -2556,6 +2556,18 @@ abstract class AppLocalizations {
   /// **'Report feature not yet implemented'**
   String get reportNotImplemented;
 
+  /// Badge label for features that are not ready yet
+  ///
+  /// In en, this message translates to:
+  /// **'In development'**
+  String get featureInDevelopmentLabel;
+
+  /// Explanation for a settings feature that is still in development
+  ///
+  /// In en, this message translates to:
+  /// **'{feature} is in development and will appear here in a future update.'**
+  String featureInDevelopmentMessage(String feature);
+
   /// Invite action
   ///
   /// In en, this message translates to:
@@ -2580,11 +2592,23 @@ abstract class AppLocalizations {
   /// **'Files'**
   String get filesLabel;
 
+  /// Empty state for shared files section
+  ///
+  /// In en, this message translates to:
+  /// **'No shared files yet'**
+  String get noSharedFiles;
+
   /// Media label
   ///
   /// In en, this message translates to:
   /// **'Media'**
   String get mediaLabel;
+
+  /// Empty state for shared media section
+  ///
+  /// In en, this message translates to:
+  /// **'No shared media yet'**
+  String get noSharedMedia;
 
   /// Extensions label
   ///
@@ -2825,6 +2849,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join a room using an invite code'**
   String get joinByCodeSubtitle;
+
+  /// Subtitle for chats home screen
+  ///
+  /// In en, this message translates to:
+  /// **'Private messages, groups and invite links in one place'**
+  String get chatsSubtitle;
+
+  /// Quick actions section title on chats screen
+  ///
+  /// In en, this message translates to:
+  /// **'Start something new'**
+  String get chatsQuickStartTitle;
+
+  /// Recent chats section title
+  ///
+  /// In en, this message translates to:
+  /// **'Recent chats'**
+  String get chatsRecentTitle;
+
+  /// Hint for joining a room via invite link or alias
+  ///
+  /// In en, this message translates to:
+  /// **'Paste an invite link, alias or code'**
+  String get joinLinkHint;
 
   /// Font label
   ///

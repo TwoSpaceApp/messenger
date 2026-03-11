@@ -1820,6 +1820,19 @@
   "@reportNotImplemented": {
     "description": "Report not implemented notice"
   },
+  "featureInDevelopmentLabel": "In development",
+  "@featureInDevelopmentLabel": {
+    "description": "Badge label for features that are not ready yet"
+  },
+  "featureInDevelopmentMessage": "{feature} is in development and will appear here in a future update.",
+  "@featureInDevelopmentMessage": {
+    "description": "Explanation for a settings feature that is still in development",
+    "placeholders": {
+      "feature": {
+        "type": "String"
+      }
+    }
+  },
   "inviteAction": "Invite",
   "@inviteAction": {
     "description": "Invite action"
@@ -1836,9 +1849,17 @@
   "@filesLabel": {
     "description": "Files label"
   },
+  "noSharedFiles": "No shared files yet",
+  "@noSharedFiles": {
+    "description": "Empty state for shared files section"
+  },
   "mediaLabel": "Media",
   "@mediaLabel": {
     "description": "Media label"
+  },
+  "noSharedMedia": "No shared media yet",
+  "@noSharedMedia": {
+    "description": "Empty state for shared media section"
   },
   "extensionsLabel": "Extensions",
   "@extensionsLabel": {
@@ -2019,6 +2040,22 @@
   "joinByCodeSubtitle": "Join a room using an invite code",
   "@joinByCodeSubtitle": {
     "description": "Join by code option subtitle"
+  },
+  "chatsSubtitle": "Private messages, groups and invite links in one place",
+  "@chatsSubtitle": {
+    "description": "Subtitle for chats home screen"
+  },
+  "chatsQuickStartTitle": "Start something new",
+  "@chatsQuickStartTitle": {
+    "description": "Quick actions section title on chats screen"
+  },
+  "chatsRecentTitle": "Recent chats",
+  "@chatsRecentTitle": {
+    "description": "Recent chats section title"
+  },
+  "joinLinkHint": "Paste an invite link, alias or code",
+  "@joinLinkHint": {
+    "description": "Hint for joining a room via invite link or alias"
   },
   "fontLabel": "Font",
   "@fontLabel": {

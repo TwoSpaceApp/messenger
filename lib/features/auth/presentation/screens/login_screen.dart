@@ -351,7 +351,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextButton(
                   onPressed: () async {
                     setState(() => _isCovering = true);
-                    await Future.delayed(const Duration(milliseconds: 400));
                     if (mounted) context.go('/register');
                   },
                   child: Text(

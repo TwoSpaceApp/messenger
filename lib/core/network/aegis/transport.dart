@@ -10,6 +10,7 @@ import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_encoder.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
+import 'package:two_space_app/core/services/dev_network_logger.dart';
 
 /// TCP transport layer for Aegis client communication
 class AegisTransport {
@@ -18,6 +19,8 @@ class AegisTransport {
   int _nextSequenceId = 1;
   List<int>? _macKey;
   List<int>? _sessionKey;
+  String? _connectedHost;
+  int? _connectedPort;
 
   /// Буфер входящих байт. TCP является потоковым протоколом — одно
   /// событие `data` может содержать неполное сообщение, несколько сообщений
@@ -72,14 +75,29 @@ class AegisTransport {
           .timeout(timeout ?? const Duration(seconds: 10));
 
       _isConnected = true;
+      _connectedHost = host;
+      _connectedPort = port;
       _nextSequenceId = 1;
 
       AegisLogger.info('Connected to $host:$port');
+      _logNetworkEvent(
+        method: 'CONNECT',
+        statusCode: 200,
+        requestBody: {'timeoutMs': (timeout ?? const Duration(seconds: 10)).inMilliseconds},
+        responseBody: {'connected': true},
+      );
 
       // Start listening for incoming data
       _listenForMessages();
     } catch (e) {
       _isConnected = false;
+      _connectedHost = host;
+      _connectedPort = port;
+      _logNetworkEvent(
+        method: 'CONNECT',
+        errorMessage: e.toString(),
+        requestBody: {'timeoutMs': (timeout ?? const Duration(seconds: 10)).inMilliseconds},
+      );
       AegisLogger.error('Failed to connect to $host:$port', e);
       throw ConnectionException('Failed to connect to $host:$port', e);
     }
@@ -97,9 +115,17 @@ class AegisTransport {
 
     try {
       await _socket.close();
+      _logNetworkEvent(
+        method: 'DISCONNECT',
+        statusCode: 200,
+        responseBody: {'connected': false},
+      );
     } catch (e) {
       // Ignore errors during disconnect
     }
+
+    _connectedHost = null;
+    _connectedPort = null;
 
     _disconnectController.add(null);
   }
@@ -148,9 +174,20 @@ class AegisTransport {
       _socket.add(data);
       await _socket.flush();
 
+      _logNetworkEvent(
+        method: 'SEND',
+        statusCode: 200,
+        requestBody: _messageMetadata(message),
+      );
+
       AegisLogger.debug('Message sent successfully');
     } catch (e) {
       _isConnected = false;
+      _logNetworkEvent(
+        method: 'SEND',
+        errorMessage: e.toString(),
+        requestBody: _messageMetadata(message),
+      );
       _disconnectController.add(null);
       AegisLogger.error('Failed to send message', e);
       throw ConnectionException('Failed to send message', e);
@@ -235,11 +272,21 @@ class AegisTransport {
         }
         AegisLogger.debug(
             'Received message: type=${message.type.value} seq=${message.sequenceId}');
+        _logNetworkEvent(
+          method: 'RECV',
+          statusCode: 200,
+          responseBody: _messageMetadata(message),
+        );
         _messageController.add(message);
       } catch (e) {
         // После ошибки парсинга буфер рассинхронизирован — нельзя
         // продолжать безопасно; закрываем соединение.
         AegisLogger.error('Не удалось распарсить фрейм — буфер очищен', e);
+        _logNetworkEvent(
+          method: 'RECV',
+          errorMessage: e.toString(),
+          responseBody: {'bufferBytes': _incomingBuffer.length},
+        );
         _incomingBuffer.clear();
         _isConnected = false;
         _disconnectController.add(null);
@@ -256,5 +303,36 @@ class AegisTransport {
     _incomingBuffer.clear();
     _messageController.close();
     _disconnectController.close();
+  }
+
+  Map<String, dynamic> _messageMetadata(Message message) {
+    return {
+      'type': message.type.name,
+      'typeCode': message.type.value,
+      'sequenceId': message.sequenceId,
+      'payloadLength': message.payloadLength,
+      'encrypted': (message.flags & ProtocolConstants.flagEncrypted) != 0,
+      'requiresAck':
+          (message.flags & ProtocolConstants.flagRequiresAck) != 0,
+    };
+  }
+
+  void _logNetworkEvent({
+    required String method,
+    int? statusCode,
+    dynamic requestBody,
+    dynamic responseBody,
+    String? errorMessage,
+  }) {
+    final host = _connectedHost ?? 'disconnected';
+    final port = _connectedPort?.toString() ?? '-';
+    DevNetworkLogger.instance.logRequest(
+      method: method,
+      url: 'aegis://$host:$port',
+      statusCode: statusCode,
+      requestBody: requestBody,
+      responseBody: responseBody,
+      errorMessage: errorMessage,
+    );
   }
 }

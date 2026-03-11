@@ -1308,6 +1308,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get reportNotImplemented => '신고 기능이 아직 구현되지 않았습니다';
 
   @override
+  String get featureInDevelopmentLabel => '개발 중';
+
+  @override
+  String featureInDevelopmentMessage(String feature) {
+    return '이 기능은 아직 개발 중이며 다음 버전 중 하나에서 사용할 수 있습니다.';
+  }
+
+  @override
   String get inviteAction => '초대';
 
   @override
@@ -1320,7 +1328,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get filesLabel => '파일';
 
   @override
+  String get noSharedFiles => '아직 공유된 파일이 없습니다';
+
+  @override
   String get mediaLabel => '미디어';
+
+  @override
+  String get noSharedMedia => '아직 공유된 미디어가 없습니다';
 
   @override
   String get extensionsLabel => '확장';
@@ -1449,6 +1463,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get joinByCodeSubtitle => '초대 코드로 방에 참가';
+
+  @override
+  String get chatsSubtitle => '개인 메시지, 그룹, 초대 링크를 한곳에서 관리';
+
+  @override
+  String get chatsQuickStartTitle => '새 대화 시작';
+
+  @override
+  String get chatsRecentTitle => '최근 채팅';
+
+  @override
+  String get joinLinkHint => '초대 링크, 별칭 또는 코드를 붙여넣으세요';
 
   @override
   String get fontLabel => '폰트';

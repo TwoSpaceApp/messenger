@@ -9,6 +9,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/services/dev_network_logger.dart';
+import 'package:two_space_app/core/services/dev_tools_service.dart';
 import 'package:two_space_app/core/services/update_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/highlighted_text.dart';
@@ -95,8 +96,7 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
       stream: DevLogger.stream,
       initialData: DevLogger.all,
       builder: (context, snapshot) {
-        final rawLogs = snapshot.data ?? const <String>[];
-        final sourceLogs = List<String>.from(rawLogs.reversed);
+        final sourceLogs = snapshot.data ?? const <String>[];
         final logs = _showOnlyErrors
             ? sourceLogs.where((line) => line.contains(LogLevel.error.emoji)).toList()
             : sourceLogs;
@@ -527,9 +527,10 @@ class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
         SwitchListTile(
           title: const Text('Профилирование производительности'),
           subtitle: const Text('Отображает Performance Overlay сверху'),
-          value: WidgetsApp.showPerformanceOverlayOverride,
-          onChanged: (val) =>
-              setState(() => WidgetsApp.showPerformanceOverlayOverride = val),
+          value: DevToolsService.performanceOverlayEnabled.value,
+          onChanged: (val) => setState(
+            () => DevToolsService.performanceOverlayEnabled.value = val,
+          ),
         ),
       ],
     );

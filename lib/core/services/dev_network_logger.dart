@@ -121,6 +121,7 @@ class DevNetworkLog {
 class DevNetworkLogger {
   DevNetworkLogger._internal();
   static final DevNetworkLogger instance = DevNetworkLogger._internal();
+  static const int _maxEntries = 1000;
 
   final List<DevNetworkLog> _logs = [];
   final _controller = StreamController<List<DevNetworkLog>>.broadcast();
@@ -154,14 +155,14 @@ class DevNetworkLogger {
     );
 
     _logs.insert(0, log);
-    if (_logs.length > 200) {
+    if (_logs.length > _maxEntries) {
       _logs.removeLast();
     }
-    _controller.add(_logs);
+    _controller.add(List<DevNetworkLog>.unmodifiable(_logs));
   }
 
   void clear() {
     _logs.clear();
-    _controller.add(_logs);
+    _controller.add(List<DevNetworkLog>.unmodifiable(_logs));
   }
 }

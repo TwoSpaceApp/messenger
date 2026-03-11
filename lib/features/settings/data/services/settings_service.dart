@@ -139,59 +139,49 @@ class SettingsService {
   static final ValueNotifier<bool> doNotDisturbNotifier = ValueNotifier(false);
 
   static Future<void> loadSettings() async {
-    // Load Theme
-    final font = await SecureStore.read(_fontKey) ?? 'Inter';
-    final colorStr = await SecureStore.read(_colorKey);
-    final weightStr = await SecureStore.read(_weightKey);
-    final roundingStr = await SecureStore.read(_bubbleRoundingKey);
-    final dynBubblesStr = await SecureStore.read(_dynamicBubblesKey);
-    final compactModeStr = await SecureStore.read(_compactModeKey);
-    final navTimeoutStr = await SecureStore.read(_navBarTimeoutKey);
-    final parallaxStr = await SecureStore.read(_parallaxKey);
-    final floatingCirclesStr = await SecureStore.read(_floatingCirclesKey);
-    final floatingSpeedStr = await SecureStore.read(_floatingCirclesSpeedKey);
-    final floatingOpacityStr = await SecureStore.read(_floatingCirclesOpacityKey);
+    final stored = await SecureStore.readAll();
+
+    String? valueOf(String key) => stored[key];
 
     themeNotifier.value = ThemeSettings(
-      fontFamily: font,
-      primaryColorValue: int.tryParse(colorStr ?? '') ?? 0xFF651FFF,
-      fontWeight: int.tryParse(weightStr ?? '') ?? 4,
-      bubbleRounding: double.tryParse(roundingStr ?? '') ?? 16.0,
-      dynamicBubbles: dynBubblesStr != 'false',
-      compactMode: compactModeStr == 'true',
-      navBarHideTimeoutSeconds: int.tryParse(navTimeoutStr ?? '') ?? 3,
-      enableParallax: parallaxStr != 'false',
-      enableFloatingCircles: floatingCirclesStr != 'false',
-      floatingCirclesSpeed: double.tryParse(floatingSpeedStr ?? '') ?? 1.0,
-      floatingCirclesOpacity: double.tryParse(floatingOpacityStr ?? '') ?? 0.5,
+      fontFamily: valueOf(_fontKey) ?? 'Inter',
+      primaryColorValue: int.tryParse(valueOf(_colorKey) ?? '') ?? 0xFF651FFF,
+      fontWeight: int.tryParse(valueOf(_weightKey) ?? '') ?? 4,
+      bubbleRounding: double.tryParse(valueOf(_bubbleRoundingKey) ?? '') ?? 16.0,
+      dynamicBubbles: valueOf(_dynamicBubblesKey) != 'false',
+      compactMode: valueOf(_compactModeKey) == 'true',
+      navBarHideTimeoutSeconds: int.tryParse(valueOf(_navBarTimeoutKey) ?? '') ?? 3,
+      enableParallax: valueOf(_parallaxKey) != 'false',
+      enableFloatingCircles: valueOf(_floatingCirclesKey) != 'false',
+      floatingCirclesSpeed: double.tryParse(valueOf(_floatingCirclesSpeedKey) ?? '') ?? 1.0,
+      floatingCirclesOpacity: double.tryParse(valueOf(_floatingCirclesOpacityKey) ?? '') ?? 0.5,
     );
     
     // Load Others
-    paleVioletNotifier.value = (await SecureStore.read(_paleVioletKey)) == 'true';
-    sessionTimeoutDaysNotifier.value = int.tryParse(await SecureStore.read(_sessionTimeoutKey) ?? '') ?? 30;
-    showEmailNotifier.value = (await SecureStore.read(_showEmailKey)) == 'true';
-    showPhoneNotifier.value = (await SecureStore.read(_showPhoneKey)) == 'true';
-    languageNotifier.value = await SecureStore.read(_languageKey) ?? 'en';
-    textScaleNotifier.value = double.tryParse(await SecureStore.read(_textScaleKey) ?? '') ?? 1.0;
-    autoDownloadMediaNotifier.value = (await SecureStore.read(_autoDownloadKey)) != 'false';
-    sendByEnterNotifier.value = (await SecureStore.read(_sendByEnterKey)) != 'false';
+    paleVioletNotifier.value = valueOf(_paleVioletKey) == 'true';
+    sessionTimeoutDaysNotifier.value = int.tryParse(valueOf(_sessionTimeoutKey) ?? '') ?? 30;
+    showEmailNotifier.value = valueOf(_showEmailKey) == 'true';
+    showPhoneNotifier.value = valueOf(_showPhoneKey) == 'true';
+    languageNotifier.value = valueOf(_languageKey) ?? 'en';
+    textScaleNotifier.value = double.tryParse(valueOf(_textScaleKey) ?? '') ?? 1.0;
+    autoDownloadMediaNotifier.value = valueOf(_autoDownloadKey) != 'false';
+    sendByEnterNotifier.value = valueOf(_sendByEnterKey) != 'false';
     messageTimestampPrecisionNotifier.value =
         MessageTimestampPrecisionX.fromStorage(
-      await SecureStore.read(_messageTimestampPrecisionKey),
+      valueOf(_messageTimestampPrecisionKey),
     );
 
     // Theme mode (system/light/dark)
-    themeModeNotifier.value = _themeModeFromString(await SecureStore.read(_themeModeKey));
+    themeModeNotifier.value = _themeModeFromString(valueOf(_themeModeKey));
 
-    final bioStr = await SecureStore.read(_biometricsKey) ??
-        await SecureStore.read('biometrics_enabled');
+    final bioStr = valueOf(_biometricsKey) ?? valueOf('biometrics_enabled');
     biometricsNotifier.value = (bioStr == 'true');
     notificationsEnabledNotifier.value =
-        (await SecureStore.read(_notificationsEnabledKey)) != 'false';
+        valueOf(_notificationsEnabledKey) != 'false';
     soundEnabledNotifier.value =
-        (await SecureStore.read(_soundEnabledKey)) != 'false';
+        valueOf(_soundEnabledKey) != 'false';
     doNotDisturbNotifier.value =
-        (await SecureStore.read(_doNotDisturbKey)) == 'true';
+        valueOf(_doNotDisturbKey) == 'true';
   }
 
   static Future<void> setBiometricsEnabled(bool value) async {

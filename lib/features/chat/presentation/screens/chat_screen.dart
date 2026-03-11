@@ -11,7 +11,6 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
 import 'package:two_space_app/features/chat/data/services/draft_service.dart';
@@ -62,6 +61,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   static const int _historyPageSize = 80;
+  static const int _userInfoBatchSize = 6;
   final AegisChatService _svc = AegisChatService();
   final TextEditingController _controller = TextEditingController();
   final DraftService _draftService = DraftService();
@@ -71,7 +71,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final Map<String, Map<String, dynamic>> _reactions = {};
   final ScrollController _listController = ScrollController();
   final Map<String, GlobalKey> _messageKeys = {};
-  final Map<String, Future<String>> _mediaDownloads = {};
+  final Map<String, String> _mediaDownloads = {};
   String? _scrollToEventId;
   final Set<String> _highlighted = {};
   bool _loading = true;
@@ -84,6 +84,13 @@ class _ChatScreenState extends State<ChatScreen> {
   late final VoiceService _voiceService;
   StreamSubscription<List<AegisRoomMessage>>? _messagesSub;
   int _historyLimit = _historyPageSize;
+  String? _currentUserId;
+  List<AegisRoomMessage>? _pendingMessageBatch;
+  bool _drainingMessageBatch = false;
+  String? _headerName;
+  String? _headerAvatarUrl;
+  String? _headerPresenceStatus;
+  DateTime? _headerLastSeenAt;
   
   // Group-related state
   // String? _groupBackgroundColor;
@@ -114,9 +121,11 @@ class _ChatScreenState extends State<ChatScreen> {
     _voiceService = VoiceService();
     _voiceService.init();
     _listController.addListener(_handleListScroll);
+    unawaited(_loadCurrentUserId());
     _subscribeToMessages();
     _loadGroupSettings();
     _scrollToEventId = widget.scrollToEventId;
+    _primeChatHeader();
     // Load draft if exists
     _loadDraft();
   }
@@ -151,13 +160,107 @@ class _ChatScreenState extends State<ChatScreen> {
       widget.chat.id,
       limit: _historyLimit,
     ).listen(
-      (messages) => unawaited(_applyMessages(messages)),
+      _scheduleMessagesApply,
       onError: (_) {
         if (mounted) {
           setState(() => _loading = false);
         }
       },
     );
+  }
+
+  String? get _directPeerUserId {
+    if (!widget.chat.id.startsWith('dm:')) return null;
+    final peerId = widget.chat.id.substring(3);
+    return peerId.isEmpty ? null : peerId;
+  }
+
+  void _primeChatHeader() {
+    _headerName = widget.chat.name;
+    _headerAvatarUrl = widget.chat.avatarUrl;
+    _headerPresenceStatus = widget.chat.presenceStatus;
+    _headerLastSeenAt = widget.chat.lastSeenAt;
+
+    final peerUserId = _directPeerUserId;
+    if (peerUserId == null) return;
+
+    final cached = _svc.peekUserInfo(peerUserId);
+    if (cached != null) {
+      _applyHeaderUserInfo(cached, notify: false);
+    }
+    unawaited(_loadHeaderUserInfo(peerUserId));
+  }
+
+  Future<void> _loadHeaderUserInfo(String peerUserId) async {
+    try {
+      final info = await _svc.getUserInfo(peerUserId);
+      _applyHeaderUserInfo(info);
+    } catch (_) {}
+  }
+
+  void _applyHeaderUserInfo(
+    Map<String, dynamic> info, {
+    bool notify = true,
+  }) {
+    if (!mounted && notify) return;
+
+    final displayName = info['displayName']?.toString();
+    final username = info['username']?.toString();
+    final avatarUrl = info['avatarUrl']?.toString();
+    final presenceStatus = info['presenceStatus']?.toString();
+    final lastSeenAt = info['lastSeenAt'] is String
+        ? DateTime.tryParse(info['lastSeenAt'] as String)
+        : null;
+
+    void update() {
+      _headerName = (displayName?.isNotEmpty ?? false)
+          ? displayName
+          : ((username?.isNotEmpty ?? false) ? username : _headerName);
+      _headerAvatarUrl = (avatarUrl?.isNotEmpty ?? false)
+          ? avatarUrl
+          : _headerAvatarUrl;
+      _headerPresenceStatus = presenceStatus;
+      _headerLastSeenAt = lastSeenAt;
+    }
+
+    if (notify) {
+      setState(update);
+    } else {
+      update();
+    }
+  }
+
+  String? _headerPresenceLabel(AppLocalizations l10n) {
+    switch (_headerPresenceStatus) {
+      case 'online':
+        return l10n.onlineLabel;
+      case 'recently':
+        return l10n.statusLastSeenRecently;
+      case 'long_ago':
+        return l10n.offlineLabel;
+      case 'was_online':
+      case 'offline':
+        if (_headerLastSeenAt != null) {
+          return MessageTimeFormatter.formatConversationTime(_headerLastSeenAt);
+        }
+        return l10n.offlineLabel;
+      default:
+        if (widget.chat.isOnline) {
+          return l10n.onlineLabel;
+        }
+        return null;
+    }
+  }
+
+  Color _headerPresenceColor() {
+    switch (_headerPresenceStatus) {
+      case 'online':
+        return const Color(0xFF4CD964);
+      case 'recently':
+        return Colors.amberAccent;
+      default:
+        return Colors.white60;
+    }
   }
 
   void _handleListScroll() {
@@ -167,6 +270,73 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_listController.position.pixels <= 180) {
       unawaited(_loadOlderMessages());
     }
+  }
+
+  Future<void> _loadCurrentUserId() async {
+    _currentUserId ??= await _svc.getCurrentUserId();
+  }
+
+  void _scheduleMessagesApply(List<AegisRoomMessage> messages) {
+    _pendingMessageBatch = messages;
+    if (_drainingMessageBatch) return;
+    unawaited(_drainPendingMessages());
+  }
+
+  Future<void> _drainPendingMessages() async {
+    _drainingMessageBatch = true;
+    try {
+      while (_pendingMessageBatch != null) {
+        final batch = _pendingMessageBatch!;
+        _pendingMessageBatch = null;
+        await _applyMessages(batch);
+      }
+    } finally {
+      _drainingMessageBatch = false;
+    }
+  }
+
+  Future<void> _prefetchUserInfo(Set<String> senderIds) async {
+    final ids = senderIds
+        .where((id) => id.isNotEmpty && !_userInfoCache.containsKey(id))
+        .toList(growable: false);
+    if (ids.isEmpty) return;
+
+    final fetched = <String, Map<String, dynamic>>{};
+    for (var index = 0; index < ids.length; index += _userInfoBatchSize) {
+      final chunk = ids.sublist(
+        index,
+        math.min(index + _userInfoBatchSize, ids.length),
+      );
+      final results = await Future.wait(
+        chunk.map((id) async {
+          final info = await _svc.getUserInfo(id);
+          return MapEntry(id, info);
+        }),
+      );
+      for (final entry in results) {
+        fetched[entry.key] = entry.value;
+      }
+    }
+
+    if (!mounted || fetched.isEmpty) return;
+    setState(() {
+      _userInfoCache.addAll(fetched);
+      _messages = _messages.map((message) {
+        final info = fetched[message.senderId];
+        if (info == null) return message;
+        return _Msg(
+          id: message.id,
+          text: message.text,
+          isOwn: message.isOwn,
+          time: message.time,
+          senderId: message.senderId,
+          senderName: info['displayName']?.toString() ?? message.senderName,
+          senderAvatar: info['avatarUrl']?.toString() ?? message.senderAvatar,
+          type: message.type,
+          mediaId: message.mediaId,
+        );
+      }).toList(growable: false);
+    });
   }
 
   Future<void> _loadOlderMessages() async {
@@ -246,33 +416,22 @@ class _ChatScreenState extends State<ChatScreen> {
     final l10n = AppLocalizations.of(context)!;
     final shouldStickToLatest = _shouldStickToLatest();
     try {
-      if (mounted && _loading) {
-        setState(() => _loading = true);
-      }
-      final auth = AuthService();
-      final me = await auth.getCurrentUserId();
-      
-      // Собираем уникальные ID отправителей для параллельной загрузки
-      final senderIds = msgs.map((m) => m.senderId).where((id) => !_userInfoCache.containsKey(id)).toSet();
-      
-      // Параллельно загружаем информацию о всех отправителях
-      await Future.wait(
-        senderIds.map((id) async {
-          try {
-            final info = await _svc.getUserInfo(id);
-            _userInfoCache[id] = info;
-          } catch (_) {
-            _userInfoCache[id] = {};
-          }
-        }),
-      );
-      
+      await _loadCurrentUserId();
+      final me = _currentUserId;
+      final missingSenderIds = <String>{};
       final out = <_Msg>[];
       for (final m in msgs) {
-        final cached = _userInfoCache[m.senderId] ?? {};
+        final cached = _userInfoCache[m.senderId] ??
+            _svc.peekUserInfo(m.senderId) ??
+            const <String, dynamic>{};
+        if (cached.isNotEmpty) {
+          _userInfoCache[m.senderId] = cached;
+        } else if (m.senderId.isNotEmpty) {
+          missingSenderIds.add(m.senderId);
+        }
         final senderName = cached['displayName'] ?? m.senderId;
         final senderAvatar = cached['avatarUrl'];
-        
+
         // Determine isOwn in a tolerant way
         bool isOwn = false;
         try {
@@ -298,6 +457,9 @@ class _ChatScreenState extends State<ChatScreen> {
         _hasMoreHistory = msgs.length >= _historyLimit;
         _loading = false;
       });
+      if (missingSenderIds.isNotEmpty) {
+        unawaited(_prefetchUserInfo(missingSenderIds));
+      }
       
       // If we have an initial scroll target, try to scroll to it
       if (_scrollToEventId != null && _scrollToEventId!.isNotEmpty) {
@@ -324,37 +486,10 @@ class _ChatScreenState extends State<ChatScreen> {
       } else if (shouldStickToLatest) {
         _scrollToLatest();
       }
-      unawaited(_loadReactionsBatched(out));
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.loadMessagesError(e.toString()))));
     } finally {
       if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _loadReactionsBatched(List<_Msg> msgs) async {
-    final batch = <String, Map<String, dynamic>>{};
-    final missing = msgs.where((m) => !_reactions.containsKey(m.id)).toList();
-    final target = missing.length > 30
-        ? missing.sublist(missing.length - 30)
-        : missing;
-
-    for (var index = 0; index < target.length; index += 8) {
-      final chunk = target.sublist(
-        index,
-        math.min(index + 8, target.length),
-      );
-      await Future.wait(
-        chunk.map((m) async {
-          try {
-            final r = await _svc.getReactions(widget.chat.id, m.id);
-            if (r.isNotEmpty) batch[m.id] = r;
-          } catch (_) {}
-        }),
-      );
-    }
-    if (mounted && batch.isNotEmpty) {
-      setState(() => _reactions.addAll(batch));
     }
   }
 
@@ -417,7 +552,6 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final formatted = '<mx-reply><blockquote>${text.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</blockquote></mx-reply>';
       await _svc.sendReply(widget.chat.id, eventId, body: text, formattedBody: formatted);
-      await _loadMessages();
     } catch (e) {
       if (mounted) _showErrorMessage(l10n.replyError(e.toString()));
     }
@@ -447,7 +581,6 @@ class _ChatScreenState extends State<ChatScreen> {
     if (ok != true) return;
     try {
       await _svc.redactEvent(widget.chat.id, eventId);
-      await _loadMessages();
     } catch (e) {
       if (mounted) _showErrorMessage(l10n.deleteError(e.toString()));
     }
@@ -473,11 +606,49 @@ class _ChatScreenState extends State<ChatScreen> {
     if (newText == null || newText.isEmpty) return;
     try {
       await _svc.editMessage(widget.chat.id, eventId, newText);
-      await _loadMessages();
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.messageEdited), duration: const Duration(seconds: 2)));
     } catch (e) {
       if (mounted) _showErrorMessage(l10n.editError(e.toString()));
     }
+  }
+
+  void _toggleReactionLocally(String messageId, String reaction) {
+    if (!mounted) return;
+    setState(() {
+      final current = Map<String, dynamic>.from(
+        _reactions[messageId] ?? const <String, dynamic>{},
+      );
+      final existing = Map<String, dynamic>.from(
+        current[reaction] as Map<String, dynamic>? ?? const <String, dynamic>{},
+      );
+      final hasMine = (existing['myEventId'] as String?)?.isNotEmpty ?? false;
+      final count = (existing['count'] as int?) ?? 0;
+
+      if (hasMine) {
+        final nextCount = count - 1;
+        if (nextCount <= 0) {
+          current.remove(reaction);
+        } else {
+          current[reaction] = {
+            ...existing,
+            'count': nextCount,
+            'myEventId': null,
+          };
+        }
+      } else {
+        current[reaction] = {
+          ...existing,
+          'count': count + 1,
+          'myEventId': 'local',
+        };
+      }
+
+      if (current.isEmpty) {
+        _reactions.remove(messageId);
+      } else {
+        _reactions[messageId] = current;
+      }
+    });
   }
 
   void _showEmojiBurst(BuildContext context, String emoji, Offset position) {
@@ -553,7 +724,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               _showEmojiBurst(context, e, globalPos);
                               try {
                                 await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: e);
-                                await _loadMessages();
+                                _toggleReactionLocally(m.id, e);
                               } catch (_) {}
                             },
                             child: Container(
@@ -571,7 +742,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       TextButton.icon(onPressed: () { entry?.remove(); _pinUnpinEvent(m.id); }, icon: const Icon(Icons.push_pin), label: Text(l10n.pinAction)), 
                       if (m.isOwn) TextButton.icon(onPressed: () { entry?.remove(); _redactEvent(m.id); }, icon: const Icon(Icons.delete), label: Text(l10n.deleteButton)),
                       TextButton.icon(onPressed: () { entry?.remove(); _shareMessage(m); }, icon: const Icon(Icons.share), label: Text(l10n.shareAction)),
-                      TextButton.icon(onPressed: () async { entry?.remove(); final picked = await _showEmojiPickerDialog(); if (picked != null) { try { _showEmojiBurst(context, picked, globalPos); await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: picked); await _loadMessages(); } catch (_) {} } }, icon: const Icon(Icons.emoji_emotions), label: Text(l10n.moreButton)),
+                      TextButton.icon(onPressed: () async { entry?.remove(); final picked = await _showEmojiPickerDialog(); if (picked != null) { try { _showEmojiBurst(context, picked, globalPos); await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: picked); _toggleReactionLocally(m.id, picked); } catch (_) {} } }, icon: const Icon(Icons.emoji_emotions), label: Text(l10n.moreButton)),
                     ]),
                   ]),
                 ),
@@ -715,6 +886,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final headerName = _headerName ?? widget.chat.name;
+    final headerAvatarUrl = _headerAvatarUrl ?? widget.chat.avatarUrl;
+    final presenceLabel = _directPeerUserId != null ? _headerPresenceLabel(l10n) : null;
     final Widget bodyWidget;
     if (_loading) {
       bodyWidget = const Center(child: CircularProgressIndicator());
@@ -757,11 +932,12 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } else {
       final visibleMessages = _visibleMessages;
-      bodyWidget = ListView.separated(
+      bodyWidget = ListView.custom(
         controller: _listController,
         padding: const EdgeInsets.all(12),
         cacheExtent: 1000, // Увеличиваем кэш для лучшей производительности
-        itemBuilder: (c, i) {
+        childrenDelegate: SliverChildBuilderDelegate(
+          (c, i) {
           if (_loadingMoreHistory && i == 0) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
@@ -774,7 +950,11 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             );
           }
-          final messageIndex = _loadingMoreHistory ? i - 1 : i;
+          final contentIndex = i - (_loadingMoreHistory ? 1 : 0);
+          if (contentIndex.isOdd) {
+            return const SizedBox(height: 2);
+          }
+          final messageIndex = contentIndex ~/ 2;
           final m = visibleMessages[messageIndex];
           final shouldTrackKey = _scrollToEventId == m.id || _highlighted.contains(m.id);
           final key = shouldTrackKey
@@ -788,16 +968,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   borderRadius: BorderRadius.circular(10),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 300, maxHeight: 240),
-                    child: FutureBuilder<String>(
-                      future: _mediaDownloads.putIfAbsent(
-                        m.mediaId!,
-                        () => _svc.downloadMediaToTempFile(m.mediaId!),
-                      ),
-                      builder: (ctx, snap) {
-                        if (snap.connectionState != ConnectionState.done) return Container(width: 280, height: 180, color: const Color(0xFF21262C));
-                        if (snap.hasError || snap.data == null) return Container(width: 120, height: 80, color: const Color(0xFF21262C), child: const Center(child: Icon(Icons.broken_image, color: Colors.white54)));
-                        return Image.file(File(snap.data!), fit: BoxFit.cover, width: 280, height: 180, cacheWidth: 560, cacheHeight: 360);
-                      },
+                    child: _ImageMessageWidget(
+                      mediaId: m.mediaId!,
+                      svc: _svc,
+                      mediaDownloads: _mediaDownloads,
                     ),
                   ),
                 )
@@ -838,13 +1012,15 @@ class _ChatScreenState extends State<ChatScreen> {
                         final data = entry.value as Map<String, dynamic>;
                         final myEvent = data['myEventId'] as String?;
                         try {
-                          if (myEvent != null && myEvent.isNotEmpty) {
+                          if (myEvent == 'local') {
+                            _toggleReactionLocally(m.id, entry.key);
+                          } else if (myEvent != null && myEvent.isNotEmpty) {
                             await _svc.redactEvent(widget.chat.id, myEvent);
+                            _toggleReactionLocally(m.id, entry.key);
                           } else {
                             await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: entry.key);
+                            _toggleReactionLocally(m.id, entry.key);
                           }
-                          final r = await _svc.getReactions(widget.chat.id, m.id);
-                          if (mounted) setState(() => _reactions[m.id] = r);
                         } catch (_) {}
                       },
                       child: Container(
@@ -860,7 +1036,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 ]),
               ]
             ]);
-          return Dismissible(
+          return RepaintBoundary(
+            child: Dismissible(
             key: Key('dismiss_${m.id}'),
             direction: DismissDirection.startToEnd,
             confirmDismiss: (direction) async {
@@ -899,10 +1076,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
               ),
             ),
-          );
+          ));
         },
-        separatorBuilder: (_, __) => const SizedBox(height: 2),
-        itemCount: visibleMessages.length + (_loadingMoreHistory ? 1 : 0),
+          childCount: (visibleMessages.isEmpty ? 0 : visibleMessages.length * 2 - 1) + (_loadingMoreHistory ? 1 : 0),
+          addAutomaticKeepAlives: false,
+          addSemanticIndexes: false,
+        ),
       );
     }
 
@@ -920,16 +1099,31 @@ class _ChatScreenState extends State<ChatScreen> {
               Hero(
                 tag: 'avatar_${widget.chat.id}',
                 child: UserAvatar(
-                  avatarUrl: widget.chat.avatarUrl,
-                  name: widget.chat.name,
+                  avatarUrl: headerAvatarUrl,
+                  name: headerName,
                   radius: 18,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  widget.chat.name,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      headerName,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (presenceLabel != null)
+                      Text(
+                        presenceLabel,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _headerPresenceColor(),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -1020,6 +1214,107 @@ class _Msg {
   final String? mediaId;
 
   _Msg({required this.id, required this.text, required this.isOwn, required this.time, this.senderId, this.senderName, this.senderAvatar, this.type, this.mediaId});
+}
+
+class _ImageMessageWidget extends StatefulWidget {
+  const _ImageMessageWidget({
+    required this.mediaId,
+    required this.svc,
+    required this.mediaDownloads,
+  });
+
+  final String mediaId;
+  final AegisChatService svc;
+  final Map<String, String> mediaDownloads;
+
+  @override
+  State<_ImageMessageWidget> createState() => _ImageMessageWidgetState();
+}
+
+class _ImageMessageWidgetState extends State<_ImageMessageWidget>
+    with AutomaticKeepAliveClientMixin {
+  String? _localPath;
+  Object? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadImage());
+  }
+
+  @override
+  void didUpdateWidget(covariant _ImageMessageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.mediaId != widget.mediaId) {
+      _localPath = null;
+      _error = null;
+      _loading = true;
+      unawaited(_loadImage());
+    }
+  }
+
+  Future<void> _loadImage() async {
+    final cachedPath = widget.mediaDownloads[widget.mediaId];
+    if (cachedPath != null && File(cachedPath).existsSync()) {
+      if (mounted) {
+        setState(() {
+          _localPath = cachedPath;
+          _loading = false;
+        });
+      }
+      return;
+    }
+
+    try {
+      final path = await widget.svc.downloadMediaToTempFile(widget.mediaId);
+      widget.mediaDownloads[widget.mediaId] = path;
+      if (!mounted) return;
+      setState(() {
+        _localPath = path;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error;
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    if (_loading) {
+      return Container(
+        width: 280,
+        height: 180,
+        color: const Color(0xFF21262C),
+      );
+    }
+    if (_error != null || _localPath == null) {
+      return Container(
+        width: 120,
+        height: 80,
+        color: const Color(0xFF21262C),
+        child: const Center(
+          child: Icon(Icons.broken_image, color: Colors.white54),
+        ),
+      );
+    }
+    return Image.file(
+      File(_localPath!),
+      fit: BoxFit.cover,
+      width: 280,
+      height: 180,
+      cacheWidth: 560,
+      cacheHeight: 360,
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class _AudioMessageWidget extends StatefulWidget {

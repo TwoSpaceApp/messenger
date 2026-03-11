@@ -1334,6 +1334,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get reportNotImplemented => 'Meldefunktion noch nicht implementiert';
 
   @override
+  String get featureInDevelopmentLabel => 'In Entwicklung';
+
+  @override
+  String featureInDevelopmentMessage(String feature) {
+    return 'Diese Funktion wird noch entwickelt und wird in einer der nächsten Versionen verfügbar sein.';
+  }
+
+  @override
   String get inviteAction => 'Einladen';
 
   @override
@@ -1346,7 +1354,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get filesLabel => 'Dateien';
 
   @override
+  String get noSharedFiles => 'Noch keine geteilten Dateien';
+
+  @override
   String get mediaLabel => 'Medien';
+
+  @override
+  String get noSharedMedia => 'Noch keine geteilten Medien';
 
   @override
   String get extensionsLabel => 'Erweiterungen';
@@ -1485,6 +1499,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get joinByCodeSubtitle => 'Einem Raum mit Einladungscode beitreten';
+
+  @override
+  String get chatsSubtitle =>
+      'Private Nachrichten, Gruppen und Einladungslinks an einem Ort';
+
+  @override
+  String get chatsQuickStartTitle => 'Etwas Neues starten';
+
+  @override
+  String get chatsRecentTitle => 'Letzte Chats';
+
+  @override
+  String get joinLinkHint => 'Einladungslink, Alias oder Code einfügen';
 
   @override
   String get fontLabel => 'Schrift';

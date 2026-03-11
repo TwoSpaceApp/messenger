@@ -71,11 +71,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 widget.userId,
             'username': userInfo['username'] ?? '',
             'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
+            'avatars': userInfo['avatars'] ?? const <Map<String, dynamic>>[],
             'bio': userInfo['bio'] ?? '',
             'email': userInfo['email'],
+            'presenceStatus': userInfo['presenceStatus'],
+            'lastSeenAt': userInfo['lastSeenAt'],
             'prefs': {
               'nickname': userInfo['username'] ?? '',
               'about': userInfo['bio'] ?? '',
+              'avatarUrl': userInfo['avatarUrl'] ?? widget.initialAvatar,
             },
           };
           _loading = false;
@@ -121,10 +125,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final l10n = AppLocalizations.of(context)!;
     final image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      // TODO: Upload avatar to server
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.avatarUploadLater)),
-      );
+      try {
+        setState(() => _actionLoading = true);
+        final uploaded = await _chatService.uploadMyAvatar(
+          await image.readAsBytes(),
+          mimeType: _mimeTypeForPath(image.path),
+        );
+        if (!mounted) return;
+        setState(() {
+          _user = {
+            ...?_user,
+            'avatar': uploaded['avatarUrl'] ?? _user?['avatar'],
+            'avatars': uploaded['avatars'] ?? _user?['avatars'],
+            'presenceStatus':
+                uploaded['presenceStatus'] ?? _user?['presenceStatus'],
+            'lastSeenAt': uploaded['lastSeenAt'] ?? _user?['lastSeenAt'],
+            'prefs': {
+              if (_user?['prefs'] is Map)
+                ...Map<String, dynamic>.from(_user!['prefs'] as Map),
+              'avatarUrl': uploaded['avatarUrl'] ?? _user?['avatar'],
+            },
+          };
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.profileSaved)),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        );
+      } finally {
+        if (mounted) {
+          setState(() => _actionLoading = false);
+        }
+      }
     }
   }
 
@@ -150,11 +185,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'username':
               username.isEmpty ? (_user?['username'] ?? '') : username,
           'bio': bio,
+          'presenceStatus': _user?['presenceStatus'],
+          'lastSeenAt': _user?['lastSeenAt'],
           'prefs': {
             if (_user?['prefs'] is Map)
               ...Map<String, dynamic>.from(_user!['prefs'] as Map),
             'nickname': username,
             'about': bio,
+            'avatarUrl': _avatarUrl(),
           },
           'location': _locationController.text.trim(),
           'birthday': _birthdayController.text.trim(),
@@ -218,6 +256,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
         : widget.userId;
   }
 
+  String _mimeTypeForPath(String path) {
+    final normalized = path.toLowerCase();
+    if (normalized.endsWith('.png')) return 'image/png';
+    if (normalized.endsWith('.webp')) return 'image/webp';
+    if (normalized.endsWith('.gif')) return 'image/gif';
+    return 'image/jpeg';
+  }
+
+  DateTime? _lastSeenAt() {
+    final raw = _user?['lastSeenAt'];
+    if (raw is DateTime) return raw;
+    if (raw is String && raw.isNotEmpty) return DateTime.tryParse(raw);
+    return null;
+  }
+
+  String? _presenceLabel(AppLocalizations l10n) {
+    final status = (_user?['presenceStatus'] as String?)?.toLowerCase();
+    final lastSeenAt = _lastSeenAt();
+    if (status == 'online') {
+      return l10n.statusOnline;
+    }
+    if (status == 'recently') {
+      return l10n.statusLastSeenRecently;
+    }
+    if ((status == 'was_online' || status == 'offline') &&
+        lastSeenAt != null) {
+      return _relativeTime(lastSeenAt, l10n);
+    }
+    if (status == 'long_ago') {
+      return l10n.offlineLabel;
+    }
+    if (lastSeenAt != null) {
+      return _relativeTime(lastSeenAt, l10n);
+    }
+    return null;
+  }
+
+  Color _presenceColor(BuildContext context) {
+    final status = (_user?['presenceStatus'] as String?)?.toLowerCase();
+    if (status == 'online') {
+      return Colors.green;
+    }
+    return Theme.of(context).colorScheme.outline;
+  }
+
+  String _relativeTime(DateTime value, AppLocalizations l10n) {
+    final delta = DateTime.now().difference(value);
+    if (delta.inSeconds < 60) return l10n.lessThanMinuteAgo;
+    if (delta.inMinutes < 60) return l10n.minutesAgo(delta.inMinutes);
+    if (delta.inHours < 24) return l10n.hoursAgo(delta.inHours);
+    if (delta.inDays < 7) return l10n.daysAgo(delta.inDays);
+    return '${value.day}.${value.month.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -225,6 +317,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final avatar = _avatarUrl();
     final username = _username();
     final profileId = _profileId();
+    final presenceLabel = _presenceLabel(l10n);
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
@@ -333,6 +426,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                       ),
                     ),
+                    if (presenceLabel != null) ...[
+                      const SizedBox(height: 6),
+                      Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 8,
+                              color: _presenceColor(context),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              presenceLabel,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: _presenceColor(context),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Center(
                       child: Text(

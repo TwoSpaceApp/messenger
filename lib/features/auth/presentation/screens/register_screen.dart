@@ -103,9 +103,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     // Start Transition Animation
     setState(() => _isCovering = true);
 
-    // Wait for "Cover" animation (circles move to center)
-    await Future.delayed(const Duration(milliseconds: 600));
-
     // Change Content
     if (_step < 3) {
       setState(() {
@@ -116,7 +113,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     } else {
       // Final step, proceed to registration
       setState(() => _isCovering = false);
-      await Future.delayed(const Duration(milliseconds: 400));
       await _handleRegistration();
     }
   }
@@ -124,7 +120,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   Future<void> _prevStep() async {
     if (_step > 0) {
       setState(() => _isCovering = true);
-      await Future.delayed(const Duration(milliseconds: 600));
       setState(() {
         _step--;
         _swapBlobs = !_swapBlobs;
@@ -133,7 +128,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     } else {
       // Navigate back to Login with animation
       setState(() => _isCovering = true);
-      await Future.delayed(const Duration(milliseconds: 400));
       if (mounted) context.go('/login');
     }
   }

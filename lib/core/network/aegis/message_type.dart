@@ -48,7 +48,23 @@ enum MessageType {
   channelHistoryRequest(45),
   channelHistoryResponse(46),
   privateChatMessageEvent(47),
-  channelMessageEvent(48);
+  channelMessageEvent(48),
+  profileAvatarAdd(49),
+  profileAvatarAddResponse(50),
+  profileAvatarList(51),
+  profileAvatarListResponse(52),
+  profileAvatarDelete(53),
+  profileAvatarDeleteResponse(54),
+  profileAvatarSetPrimary(55),
+  profileAvatarSetPrimaryResponse(56),
+  channelLinkUpdate(57),
+  channelLinkUpdateResponse(58),
+  channelLinkGet(59),
+  channelLinkGetResponse(60),
+  channelResolve(61),
+  channelResolveResponse(62),
+  channelJoinByLink(63),
+  channelJoinByLinkResponse(64);
 
   const MessageType(this.value);
   final int value;

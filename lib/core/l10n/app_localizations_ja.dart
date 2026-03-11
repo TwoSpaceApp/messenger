@@ -1308,6 +1308,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get reportNotImplemented => '報告機能はまだ実装されていません';
 
   @override
+  String get featureInDevelopmentLabel => '開発中';
+
+  @override
+  String featureInDevelopmentMessage(String feature) {
+    return 'この機能は現在開発中で、今後のバージョンで利用できるようになります。';
+  }
+
+  @override
   String get inviteAction => '招待';
 
   @override
@@ -1320,7 +1328,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get filesLabel => 'ファイル';
 
   @override
+  String get noSharedFiles => '共有ファイルはまだありません';
+
+  @override
   String get mediaLabel => 'メディア';
+
+  @override
+  String get noSharedMedia => '共有メディアはまだありません';
 
   @override
   String get extensionsLabel => '拡張機能';
@@ -1449,6 +1463,18 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get joinByCodeSubtitle => '招待コードを使ってルームに参加';
+
+  @override
+  String get chatsSubtitle => '個人チャット、グループ、招待リンクをひとつの場所に';
+
+  @override
+  String get chatsQuickStartTitle => '新しく始める';
+
+  @override
+  String get chatsRecentTitle => '最近のチャット';
+
+  @override
+  String get joinLinkHint => '招待リンク、エイリアス、またはコードを貼り付け';
 
   @override
   String get fontLabel => 'フォント';

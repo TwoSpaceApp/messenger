@@ -16,7 +16,15 @@ class AegisClient {
   AegisClient() {
     _transport = AegisTransport();
     _transport.messages.listen((message) {
-      _pendingMessages.add(message);
+      final waiter = _pendingResponseWaiters[message.sequenceId];
+      if (waiter != null &&
+          waiter.acceptedTypes.contains(message.type) &&
+          !waiter.completer.isCompleted) {
+        _pendingResponseWaiters.remove(message.sequenceId);
+        waiter.completer.complete(message);
+      } else {
+        _pendingMessages.add(message);
+      }
       _messageController.add(message);
     });
     _transport.disconnects.listen((_) {
@@ -32,6 +40,8 @@ class AegisClient {
   int? _authenticatedUserId;
   String? _authenticatedUsername;
   final List<Message> _pendingMessages = <Message>[];
+    final Map<int, _PendingResponseWaiter> _pendingResponseWaiters =
+      <int, _PendingResponseWaiter>{};
   final StreamController<Message> _messageController =
       StreamController<Message>.broadcast();
 
@@ -68,6 +78,7 @@ class AegisClient {
     final response = await _authenticateRaw(token: authToken);
     _authToken = response.sessionToken.isNotEmpty ? response.sessionToken : authToken;
     _setAuthenticated(response);
+    await _publishPresence(isOnline: true);
     return response;
   }
 
@@ -89,6 +100,7 @@ class AegisClient {
         ? response.sessionToken
         : '$username:$password';
     _setAuthenticated(response);
+    await _publishPresence(isOnline: true);
     return response;
   }
 
@@ -130,11 +142,19 @@ class AegisClient {
 
   /// Disconnect from server
   Future<void> disconnect() async {
+    if (_transport.isConnected && _isAuthenticated) {
+      await _publishPresence(isOnline: false);
+    }
     await _transport.disconnect();
     _isAuthenticated = false;
     _authToken = null;
     _authenticatedUserId = null;
     _authenticatedUsername = null;
+  }
+
+  Future<void> setPresence({required bool isOnline}) async {
+    _ensureAuthenticated();
+    await _publishPresence(isOnline: isOnline);
   }
 
   Future<void> _performHandshake() async {
@@ -412,6 +432,207 @@ class AegisClient {
     );
 
     return ProfileUpdateResponsePayload.fromJson(response);
+  }
+
+  Future<ProfileUpdateResponsePayload> uploadUserAvatar(
+    Uint8List imageBytes, {
+    String mimeType = 'image/jpeg',
+  }) async {
+    final dataUrl = 'data:$mimeType;base64,${base64Encode(imageBytes)}';
+    final result = await addProfileAvatar(dataUrl, makePrimary: true);
+    if (!result.success) {
+      return ProfileUpdateResponsePayload(
+        success: false,
+        message: result.message,
+      );
+    }
+    final refreshed = await getProfile();
+    return ProfileUpdateResponsePayload(
+      success: refreshed.success,
+      message: refreshed.message,
+      profile: refreshed.profile,
+    );
+  }
+
+  Future<ProfileAvatarMutationResponse> addProfileAvatar(
+    String avatarUrl, {
+    bool makePrimary = false,
+  }) async {
+    _ensureAuthenticated();
+    final request = ProfileAvatarAddRequest(
+      avatarUrl: avatarUrl,
+      makePrimary: makePrimary,
+    );
+    final message = Message.withType(
+      MessageType.profileAvatarAdd,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.profileAvatarAddResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Profile avatar add timeout',
+    );
+
+    return ProfileAvatarMutationResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<ProfileAvatarListResponse> listProfileAvatars() async {
+    _ensureAuthenticated();
+    final message = Message.withType(
+      MessageType.profileAvatarList,
+      utf8.encode('{}'),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.profileAvatarListResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Profile avatar list timeout',
+    );
+
+    return ProfileAvatarListResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<ProfileAvatarMutationResponse> deleteProfileAvatar(int avatarId) async {
+    _ensureAuthenticated();
+    final request = ProfileAvatarDeleteRequest(avatarId: avatarId);
+    final message = Message.withType(
+      MessageType.profileAvatarDelete,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.profileAvatarDeleteResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Profile avatar delete timeout',
+    );
+
+    return ProfileAvatarMutationResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<ProfileAvatarMutationResponse> setPrimaryProfileAvatar(int avatarId) async {
+    _ensureAuthenticated();
+    final request = ProfileAvatarSetPrimaryRequest(avatarId: avatarId);
+    final message = Message.withType(
+      MessageType.profileAvatarSetPrimary,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.profileAvatarSetPrimaryResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Profile avatar set primary timeout',
+    );
+
+    return ProfileAvatarMutationResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<ChannelLinkResponse> updateChannelLinks(
+    int channelId, {
+    String? publicAlias,
+    bool regeneratePrivateInvite = false,
+  }) async {
+    _ensureAuthenticated();
+    final request = ChannelLinkUpdateRequest(
+      channelId: channelId,
+      publicAlias: publicAlias,
+      regeneratePrivateInvite: regeneratePrivateInvite,
+    );
+    final message = Message.withType(
+      MessageType.channelLinkUpdate,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.channelLinkUpdateResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Channel link update timeout',
+    );
+
+    return ChannelLinkResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<ChannelLinkResponse> getChannelLinks(int channelId) async {
+    _ensureAuthenticated();
+    final request = ChannelLinkRequest(channelId: channelId);
+    final message = Message.withType(
+      MessageType.channelLinkGet,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.channelLinkGetResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Channel link get timeout',
+    );
+
+    return ChannelLinkResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<ChannelResolveResponse> resolveChannelLink(String linkOrAlias) async {
+    _ensureAuthenticated();
+    final request = ChannelResolveRequest(linkOrAlias: linkOrAlias);
+    final message = Message.withType(
+      MessageType.channelResolve,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.channelResolveResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Channel resolve timeout',
+    );
+
+    return ChannelResolveResponse.fromBytes(responseMessage.payload);
+  }
+
+  Future<ChannelJoinResponse> joinChannelByLink(String linkOrAlias) async {
+    _ensureAuthenticated();
+    final request = ChannelResolveRequest(linkOrAlias: linkOrAlias);
+    final message = Message.withType(
+      MessageType.channelJoinByLink,
+      request.toBytes(),
+    );
+    message.flags = ProtocolConstants.flagRequiresAck;
+
+    await _transport.sendMessage(message);
+
+    final responseMessage = await _waitForResponse(
+      sequenceId: message.sequenceId,
+      acceptedTypes: const [MessageType.channelJoinByLinkResponse],
+      timeout: const Duration(seconds: 10),
+      errorMessage: 'Channel join by link timeout',
+    );
+
+    return ChannelJoinResponse.fromBytes(responseMessage.payload);
   }
 
   Future<ChatListResponse> getChatList() async {
@@ -731,18 +952,15 @@ class AegisClient {
     }
 
     final completer = Completer<Message>();
-    late final StreamSubscription<Message> subscription;
-    subscription = messages.listen((msg) {
-      if (msg.sequenceId == sequenceId && acceptedTypes.contains(msg.type)) {
-        if (!completer.isCompleted) {
-          completer.complete(msg);
-        }
-      }
-    });
+    _pendingResponseWaiters[sequenceId] = _PendingResponseWaiter(
+      acceptedTypes: acceptedTypes.toSet(),
+      completer: completer,
+    );
 
     try {
       final pendingAfterSubscribe = _takePendingMatch(sequenceId, acceptedTypes);
       if (pendingAfterSubscribe != null) {
+        _pendingResponseWaiters.remove(sequenceId);
         return pendingAfterSubscribe;
       }
 
@@ -753,7 +971,10 @@ class AegisClient {
       _removePending(response);
       return response;
     } finally {
-      await subscription.cancel();
+      final waiter = _pendingResponseWaiters[sequenceId];
+      if (waiter != null && identical(waiter.completer, completer)) {
+        _pendingResponseWaiters.remove(sequenceId);
+      }
     }
   }
 
@@ -772,9 +993,27 @@ class AegisClient {
 
   /// Cleanup resources
   void dispose() {
+    for (final waiter in _pendingResponseWaiters.values) {
+      if (!waiter.completer.isCompleted) {
+        waiter.completer.completeError(
+          StateError('AegisClient disposed before response was received'),
+        );
+      }
+    }
+    _pendingResponseWaiters.clear();
     _messageController.close();
     _transport.dispose();
   }
+}
+
+class _PendingResponseWaiter {
+  _PendingResponseWaiter({
+    required this.acceptedTypes,
+    required this.completer,
+  });
+
+  final Set<MessageType> acceptedTypes;
+  final Completer<Message> completer;
 }
 
 class AuthResponsePayload {
@@ -829,6 +1068,8 @@ class ProfilePayload {
     required this.username,
     this.displayName,
     this.avatarUrl,
+    this.avatars = const <ProfileAvatarData>[],
+    this.presenceStatus,
     this.bio,
     this.email,
     this.createdAt,
@@ -841,6 +1082,10 @@ class ProfilePayload {
       username: json['Username'] as String? ?? '',
       displayName: json['DisplayName'] as String?,
       avatarUrl: json['AvatarUrl'] as String?,
+        avatars: (json['Avatars'] as List<dynamic>? ?? const <dynamic>[])
+          .map((item) => ProfileAvatarData.fromJson(item as Map<String, dynamic>))
+          .toList(),
+        presenceStatus: json['PresenceStatus'] as String?,
       bio: json['Bio'] as String?,
       email: json['Email'] as String?,
       createdAt: DateTime.tryParse(json['CreatedAt'] as String? ?? ''),
@@ -852,6 +1097,8 @@ class ProfilePayload {
   final String username;
   final String? displayName;
   final String? avatarUrl;
+  final List<ProfileAvatarData> avatars;
+  final String? presenceStatus;
   final String? bio;
   final String? email;
   final DateTime? createdAt;
@@ -895,6 +1142,24 @@ class ProfileUpdateResponsePayload extends ProfileGetResponsePayload {
           : null,
       message: json['Message'] as String?,
     );
+  }
+}
+
+extension on AegisClient {
+  Future<void> _publishPresence({required bool isOnline}) async {
+    if (!_transport.isConnected || !_isAuthenticated) {
+      return;
+    }
+    try {
+      final request = UserPresenceUpdateRequest(
+        isOnline: isOnline,
+        clientTimestamp: DateTime.now(),
+      );
+      final message = Message.withType(MessageType.userPresence, request.toBytes());
+      await _transport.sendMessage(message);
+    } catch (_) {
+      // Presence updates are best-effort and must not break auth or disconnect.
+    }
   }
 }
 
