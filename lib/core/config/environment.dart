@@ -12,6 +12,10 @@ class Environment {
   static int get aegisPort => int.tryParse(Env.aegisPort) ?? 8888;
   static Duration get aegisConnectTimeout =>
       Duration(seconds: int.tryParse(Env.aegisConnectTimeoutSeconds) ?? 10);
+  static String? get aegisTransportMaskingKey {
+    final value = Env.aegisTransportMaskingKey.trim();
+    return value.isEmpty ? null : value;
+  }
 
   static String get sentryDsn => Env.sentryDsn;
   static String get appEnv => Env.appEnv;
@@ -22,6 +26,7 @@ class Environment {
     print('===== Environment Variables =====');
     print('AEGIS_HOST: $aegisHost');
     print('AEGIS_PORT: $aegisPort');
+    print('AEGIS_TRANSPORT_MASKING_KEY: ${aegisTransportMaskingKey == null ? '(empty)' : '(set)'}');
     print('APP_ENV: $appEnv');
     print('ENABLE_DEV_TOOLS: $enableDevTools');
   }

@@ -37,6 +37,152 @@ enum ChannelType {
   }
 }
 
+enum ChatTargetType {
+  private,
+  channel,
+  group,
+}
+
+enum MediaKind {
+  photo,
+  video,
+  gif,
+  file,
+  voice,
+}
+
+enum ParseMode {
+  markdown('markdown'),
+  markdownV2('markdownv2'),
+  html('html');
+
+  const ParseMode(this.value);
+  final String value;
+}
+
+class ParsedRichText {
+  ParsedRichText({
+    required this.text,
+    this.parseMode,
+  });
+
+  final String text;
+  final String? parseMode;
+}
+
+ParsedRichText parseRichTextContent(String content) {
+  try {
+    final decoded = jsonDecode(content);
+    if (decoded is Map<String, dynamic>) {
+      final kind = (decoded['Kind'] as String?)?.toLowerCase();
+      if (kind == 'rich-text' || kind == 'bot-rich-text') {
+        return ParsedRichText(
+          text: decoded['Text'] as String? ?? '',
+          parseMode: decoded['ParseMode'] as String?,
+        );
+      }
+    }
+  } catch (_) {
+  }
+
+  return ParsedRichText(text: content);
+}
+
+class MediaSendResponse {
+  MediaSendResponse({
+    required this.success,
+    this.messageId = 0,
+    this.messageText,
+  });
+
+  final bool success;
+  final int messageId;
+  final String? messageText;
+}
+
+class MediaAttachmentPayload {
+  MediaAttachmentPayload({
+    required this.fileName,
+    required this.mimeType,
+    required this.base64Data,
+    this.sizeBytes,
+  });
+
+  final String fileName;
+  final String mimeType;
+  final String base64Data;
+  final int? sizeBytes;
+
+  Map<String, dynamic> toJson() => {
+        'FileName': fileName,
+        'MimeType': mimeType,
+        'Base64Data': base64Data,
+        if (sizeBytes != null) 'SizeBytes': sizeBytes,
+      };
+
+  factory MediaAttachmentPayload.fromJson(Map<String, dynamic> json) =>
+      MediaAttachmentPayload(
+        fileName: json['FileName'] as String,
+        mimeType: json['MimeType'] as String,
+        base64Data: json['Base64Data'] as String,
+        sizeBytes: json['SizeBytes'] as int?,
+      );
+}
+
+class ParsedMediaAttachment {
+  ParsedMediaAttachment({
+    required this.fileName,
+    required this.mimeType,
+    required this.base64Data,
+    this.text,
+    this.sizeBytes,
+  });
+
+  final String? text;
+  final String fileName;
+  final String mimeType;
+  final String base64Data;
+  final int? sizeBytes;
+
+  List<int> decodeBytes() => base64Decode(base64Data);
+}
+
+ParsedMediaAttachment? tryParseMediaAttachment(
+  String content,
+  MessageContentType contentType,
+) {
+  if (contentType != MessageContentType.image &&
+      contentType != MessageContentType.file &&
+      contentType != MessageContentType.audio) {
+    return null;
+  }
+
+  try {
+    final decoded = jsonDecode(content);
+    if (decoded is! Map<String, dynamic>) {
+      return null;
+    }
+
+    final fileName = decoded['FileName'] ?? decoded['fileName'];
+    final mimeType = decoded['MimeType'] ?? decoded['mimeType'];
+    final base64Data = decoded['Base64Data'] ?? decoded['base64Data'];
+    if (fileName is! String || mimeType is! String || base64Data is! String) {
+      return null;
+    }
+
+    final size = decoded['SizeBytes'] ?? decoded['sizeBytes'];
+    return ParsedMediaAttachment(
+      text: (decoded['Text'] ?? decoded['text']) as String?,
+      fileName: fileName,
+      mimeType: mimeType,
+      base64Data: base64Data,
+      sizeBytes: size is int ? size : int.tryParse('${size ?? ''}'),
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
 /// Registration request payload
 class RegistrationRequest {
   RegistrationRequest({
@@ -48,10 +194,12 @@ class RegistrationRequest {
 
   factory RegistrationRequest.fromJson(Map<String, dynamic> json) =>
       RegistrationRequest(
-        username: json['Username'] as String,
-        email: json['Email'] as String,
-        password: json['Password'] as String,
-        publicKey: json['PublicKey'] as String,
+        username: (json['username'] ?? json['Username']) as String,
+        email: (json['email'] ?? json['Email'] ?? json['mail']) as String,
+        password: (json['password'] ?? json['Password']) as String,
+        publicKey: (json['publicKey'] ??
+            json['PublicKey'] ??
+            json['public_key']) as String,
       );
   final String username;
   final String email;
@@ -59,10 +207,10 @@ class RegistrationRequest {
   final String publicKey;
 
   Map<String, dynamic> toJson() => {
-        'Username': username,
-        'Email': email,
-        'Password': password,
-        'PublicKey': publicKey,
+      'username': username,
+      'email': email,
+      'password': password,
+      'publicKey': publicKey,
       };
 
   List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
@@ -98,6 +246,27 @@ class RegistrationResponse {
         if (message != null) 'Message': message,
         if (user != null) 'User': user!.toJson(),
       };
+}
+
+class RegisteredUserInfo {
+  RegisteredUserInfo({
+    required this.id,
+    required this.username,
+  });
+
+  final int id;
+  final String username;
+
+  Map<String, dynamic> toJson() => {
+        'Id': id,
+        'Username': username,
+      };
+
+  factory RegisteredUserInfo.fromJson(Map<String, dynamic> json) =>
+      RegisteredUserInfo(
+        id: json['Id'] as int,
+        username: json['Username'] as String,
+      );
 }
 
 /// User search request payload
@@ -262,6 +431,8 @@ class ChannelMessageRequest {
     required this.content,
     this.contentType = MessageContentType.text,
     this.replyToMessageId,
+    this.attachment,
+    this.parseMode,
   });
 
   factory ChannelMessageRequest.fromJson(Map<String, dynamic> json) =>
@@ -271,17 +442,27 @@ class ChannelMessageRequest {
         contentType:
             MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
         replyToMessageId: json['ReplyToMessageId'] as int?,
+        attachment: json['Attachment'] is Map<String, dynamic>
+            ? MediaAttachmentPayload.fromJson(
+                json['Attachment'] as Map<String, dynamic>,
+              )
+            : null,
+        parseMode: json['ParseMode'] as String?,
       );
   final int channelId;
   final String content;
   final MessageContentType contentType;
   final int? replyToMessageId;
+  final MediaAttachmentPayload? attachment;
+  final String? parseMode;
 
   Map<String, dynamic> toJson() => {
         'ChannelId': channelId,
         'Content': content,
         'ContentType': contentType.value,
         if (replyToMessageId != null) 'ReplyToMessageId': replyToMessageId,
+        if (attachment != null) 'Attachment': attachment!.toJson(),
+        if (parseMode != null) 'ParseMode': parseMode,
       };
 
   List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
@@ -889,6 +1070,271 @@ class ProfileAvatarListResponse {
   final String? message;
 }
 
+class ProfileData {
+  ProfileData({
+    required this.id,
+    required this.username,
+    this.displayName,
+    this.avatarUrl,
+    this.avatars = const <ProfileAvatarData>[],
+    this.presenceStatus,
+    this.bio,
+    this.email,
+    this.createdAt,
+    this.lastSeenAt,
+  });
+
+  final int id;
+  final String username;
+  final String? displayName;
+  final String? avatarUrl;
+  final List<ProfileAvatarData> avatars;
+  final String? presenceStatus;
+  final String? bio;
+  final String? email;
+  final DateTime? createdAt;
+  final DateTime? lastSeenAt;
+
+  factory ProfileData.fromJson(Map<String, dynamic> json) => ProfileData(
+        id: json['Id'] as int? ?? 0,
+        username: json['Username'] as String? ?? '',
+        displayName: json['DisplayName'] as String?,
+        avatarUrl: json['AvatarUrl'] as String?,
+        avatars: (json['Avatars'] as List<dynamic>? ?? const <dynamic>[])
+            .map((item) => ProfileAvatarData.fromJson(item as Map<String, dynamic>))
+            .toList(),
+        presenceStatus: json['PresenceStatus'] as String?,
+        bio: json['Bio'] as String?,
+        email: json['Email'] as String?,
+        createdAt: DateTime.tryParse(json['CreatedAt'] as String? ?? ''),
+        lastSeenAt: DateTime.tryParse(json['LastSeenAt'] as String? ?? ''),
+      );
+}
+
+class ProfileUpdateRequest {
+  ProfileUpdateRequest({
+    this.displayName,
+    this.avatarUrl,
+    this.bio,
+    this.username,
+  });
+
+  final String? displayName;
+  final String? avatarUrl;
+  final String? bio;
+  final String? username;
+
+  Map<String, dynamic> toJson() => {
+        if (displayName != null) 'DisplayName': displayName,
+        if (avatarUrl != null) 'AvatarUrl': avatarUrl,
+        if (bio != null) 'Bio': bio,
+        if (username != null) 'Username': username,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ProfileUpdateResponse {
+  ProfileUpdateResponse({
+    required this.success,
+    this.message,
+    this.profile,
+  });
+
+  final bool success;
+  final String? message;
+  final ProfileData? profile;
+
+  factory ProfileUpdateResponse.fromJson(Map<String, dynamic> json) =>
+      ProfileUpdateResponse(
+        success: json['Success'] as bool? ?? false,
+        message: json['Message'] as String?,
+        profile: json['Profile'] is Map<String, dynamic>
+            ? ProfileData.fromJson(json['Profile'] as Map<String, dynamic>)
+            : null,
+      );
+
+  factory ProfileUpdateResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return ProfileUpdateResponse.fromJson(json);
+  }
+}
+
+class ProfileGetRequest {
+  ProfileGetRequest({this.userId, this.username});
+
+  final int? userId;
+  final String? username;
+
+  Map<String, dynamic> toJson() => {
+        if (userId != null) 'UserId': userId,
+        if (username != null) 'Username': username,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ProfileGetResponse {
+  ProfileGetResponse({
+    required this.success,
+    this.profile,
+    this.message,
+  });
+
+  final bool success;
+  final ProfileData? profile;
+  final String? message;
+
+  factory ProfileGetResponse.fromJson(Map<String, dynamic> json) =>
+      ProfileGetResponse(
+        success: json['Success'] as bool? ?? false,
+        profile: json['Profile'] is Map<String, dynamic>
+            ? ProfileData.fromJson(json['Profile'] as Map<String, dynamic>)
+            : null,
+        message: json['Message'] as String?,
+      );
+
+  factory ProfileGetResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return ProfileGetResponse.fromJson(json);
+  }
+}
+
+class ChannelEditRequest {
+  ChannelEditRequest({
+    required this.channelId,
+    this.name,
+    this.description,
+    this.avatarUrl,
+  });
+
+  final int channelId;
+  final String? name;
+  final String? description;
+  final String? avatarUrl;
+
+  Map<String, dynamic> toJson() => {
+        'ChannelId': channelId,
+        if (name != null) 'Name': name,
+        if (description != null) 'Description': description,
+        if (avatarUrl != null) 'AvatarUrl': avatarUrl,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class ChannelEditResponse {
+  ChannelEditResponse({required this.success, this.message});
+
+  final bool success;
+  final String? message;
+
+  factory ChannelEditResponse.fromJson(Map<String, dynamic> json) =>
+      ChannelEditResponse(
+        success: json['Success'] as bool? ?? false,
+        message: json['Message'] as String?,
+      );
+
+  factory ChannelEditResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return ChannelEditResponse.fromJson(json);
+  }
+}
+
+class GroupEditRequest {
+  GroupEditRequest({
+    required this.groupId,
+    this.name,
+    this.description,
+    this.avatarUrl,
+  });
+
+  final int groupId;
+  final String? name;
+  final String? description;
+  final String? avatarUrl;
+
+  Map<String, dynamic> toJson() => {
+        'GroupId': groupId,
+        if (name != null) 'Name': name,
+        if (description != null) 'Description': description,
+        if (avatarUrl != null) 'AvatarUrl': avatarUrl,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class GroupEditResponse {
+  GroupEditResponse({required this.success, this.message});
+
+  final bool success;
+  final String? message;
+
+  factory GroupEditResponse.fromJson(Map<String, dynamic> json) =>
+      GroupEditResponse(
+        success: json['Success'] as bool? ?? false,
+        message: json['Message'] as String?,
+      );
+
+  factory GroupEditResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return GroupEditResponse.fromJson(json);
+  }
+}
+
+class GroupMessageSendRequest {
+  GroupMessageSendRequest({
+    required this.groupId,
+    required this.content,
+    this.contentType = MessageContentType.text,
+    this.replyToMessageId,
+    this.attachment,
+    this.parseMode,
+  });
+
+  final int groupId;
+  final String? content;
+  final MessageContentType contentType;
+  final int? replyToMessageId;
+  final MediaAttachmentPayload? attachment;
+  final String? parseMode;
+
+  Map<String, dynamic> toJson() => {
+        'GroupId': groupId,
+        'Content': content,
+        'ContentType': contentType.value,
+        if (replyToMessageId != null) 'ReplyToMessageId': replyToMessageId,
+        if (attachment != null) 'Attachment': attachment!.toJson(),
+        if (parseMode != null) 'ParseMode': parseMode,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class GroupMessageSendResponse {
+  GroupMessageSendResponse({
+    required this.success,
+    this.messageId,
+    this.message,
+  });
+
+  final bool success;
+  final int? messageId;
+  final String? message;
+
+  factory GroupMessageSendResponse.fromJson(Map<String, dynamic> json) =>
+      GroupMessageSendResponse(
+        success: json['Success'] as bool? ?? false,
+        messageId: json['MessageId'] as int?,
+        message: json['Message'] as String?,
+      );
+
+  factory GroupMessageSendResponse.fromBytes(List<int> bytes) {
+    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return GroupMessageSendResponse.fromJson(json);
+  }
+}
+
 class ChannelLinkUpdateRequest {
   ChannelLinkUpdateRequest({
     required this.channelId,
@@ -1359,6 +1805,8 @@ class PrivateChatMessageRequest {
     required this.toUserId,
     required this.content,
     this.contentType = MessageContentType.text,
+    this.attachment,
+    this.parseMode,
   });
 
   factory PrivateChatMessageRequest.fromJson(Map<String, dynamic> json) =>
@@ -1367,15 +1815,25 @@ class PrivateChatMessageRequest {
         content: json['Content'] as String,
         contentType:
             MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
+        attachment: json['Attachment'] is Map<String, dynamic>
+          ? MediaAttachmentPayload.fromJson(
+            json['Attachment'] as Map<String, dynamic>,
+            )
+          : null,
+        parseMode: json['ParseMode'] as String?,
       );
   final int toUserId;
   final String content;
   final MessageContentType contentType;
+      final MediaAttachmentPayload? attachment;
+      final String? parseMode;
 
   Map<String, dynamic> toJson() => {
         'ToUserId': toUserId,
         'Content': content,
         'ContentType': contentType.value,
+        if (attachment != null) 'Attachment': attachment!.toJson(),
+        if (parseMode != null) 'ParseMode': parseMode,
       };
 
   List<int> toBytes() => utf8.encode(jsonEncode(toJson()));

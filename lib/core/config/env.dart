@@ -22,4 +22,8 @@ abstract class Env {
   @EnviedField(varName: 'AEGIS_CONNECT_TIMEOUT_SECONDS', defaultValue: '10')
   static const String aegisConnectTimeoutSeconds =
       _Env.aegisConnectTimeoutSeconds;
+
+    @EnviedField(varName: 'AEGIS_TRANSPORT_MASKING_KEY', defaultValue: '')
+    static const String aegisTransportMaskingKey =
+      _Env.aegisTransportMaskingKey;
 }

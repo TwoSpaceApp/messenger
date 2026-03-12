@@ -101,7 +101,7 @@ class MessageEncoder {
         message.payloadLength +
         ProtocolConstants.macSize;
 
-    if (data.length < expectedSize) {
+    if (data.length != expectedSize) {
       throw ProtocolError(
           'Incomplete message: expected $expectedSize, got ${data.length}');
     }

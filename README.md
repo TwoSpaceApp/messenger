@@ -57,7 +57,8 @@ TwoSpace использует **Aegis** — собственный бинарн�
 - Шаблон хранится в [.env.example](.env.example)
 - Секреты и приватные значения должны лежать только в локальном `.env`
 - `.env` не коммитится
-- После любого изменения `.env` нужно пересобрать файл [lib/core/config/env.g.dart](lib/core/config/env.g.dart)
+- После любого изменения `.env` нужно локально пересобрать `lib/core/config/env.g.dart`
+- `lib/core/config/env.g.dart` не должен попадать в git
 
 Базовый поток:
 

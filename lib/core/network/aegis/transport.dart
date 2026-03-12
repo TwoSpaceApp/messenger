@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -19,6 +20,9 @@ class AegisTransport {
   int _nextSequenceId = 1;
   List<int>? _macKey;
   List<int>? _sessionKey;
+  Uint8List _transportMaskingKey = Uint8List(0);
+  int _inboundMaskOffset = 0;
+  int _outboundMaskOffset = 0;
   String? _connectedHost;
   int? _connectedPort;
 
@@ -58,7 +62,12 @@ class AegisTransport {
   }
 
   /// Connect to Aegis server
-  Future<void> connect(String host, int port, {Duration? timeout}) async {
+  Future<void> connect(
+    String host,
+    int port, {
+    Duration? timeout,
+    String? transportMaskingKey,
+  }) async {
     if (_isConnected) {
       throw ConnectionException('Already connected to server');
     }
@@ -78,6 +87,13 @@ class AegisTransport {
       _connectedHost = host;
       _connectedPort = port;
       _nextSequenceId = 1;
+        _transportMaskingKey =
+          transportMaskingKey != null && transportMaskingKey.trim().isNotEmpty
+            ? Uint8List.fromList(utf8.encode(transportMaskingKey))
+            : Uint8List(0);
+        _inboundMaskOffset = 0;
+        _outboundMaskOffset = 0;
+        _incomingBuffer.clear();
 
       AegisLogger.info('Connected to $host:$port');
       _logNetworkEvent(
@@ -111,6 +127,9 @@ class AegisTransport {
     _incomingBuffer.clear();
     _macKey = null;
     _sessionKey = null;
+    _transportMaskingKey = Uint8List(0);
+    _inboundMaskOffset = 0;
+    _outboundMaskOffset = 0;
     AegisLogger.info('Disconnecting from server');
 
     try {
@@ -171,7 +190,8 @@ class AegisTransport {
           mac,
         );
       }
-      _socket.add(data);
+      final outgoing = _applyOutboundMask(data);
+      _socket.add(outgoing);
       await _socket.flush();
 
       _logNetworkEvent(
@@ -214,8 +234,36 @@ class AegisTransport {
 
   /// Handle incoming data: accumulate in buffer and emit complete frames.
   void _handleIncomingData(Uint8List data) {
-    _incomingBuffer.addAll(data);
+    _incomingBuffer.addAll(_applyInboundMask(data));
     _processBuffer();
+  }
+
+  Uint8List _applyInboundMask(Uint8List data) {
+    if (_transportMaskingKey.isEmpty) {
+      return data;
+    }
+
+    final masked = Uint8List.fromList(data);
+    for (var i = 0; i < masked.length; i++) {
+      final keyIndex = (_inboundMaskOffset + i) % _transportMaskingKey.length;
+      masked[i] = masked[i] ^ _transportMaskingKey[keyIndex];
+    }
+    _inboundMaskOffset += masked.length;
+    return masked;
+  }
+
+  Uint8List _applyOutboundMask(Uint8List data) {
+    if (_transportMaskingKey.isEmpty) {
+      return data;
+    }
+
+    final masked = Uint8List.fromList(data);
+    for (var i = 0; i < masked.length; i++) {
+      final keyIndex = (_outboundMaskOffset + i) % _transportMaskingKey.length;
+      masked[i] = masked[i] ^ _transportMaskingKey[keyIndex];
+    }
+    _outboundMaskOffset += masked.length;
+    return masked;
   }
 
   /// Pull complete protocol frames out of [_incomingBuffer].

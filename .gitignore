@@ -50,6 +50,7 @@ app.*.map.json
 .env
 .env.*
 !.env.example
+/lib/core/config/env.g.dart
 
 # Copilot Instructions
 /.github/instructions/messenger_base.instructions.md

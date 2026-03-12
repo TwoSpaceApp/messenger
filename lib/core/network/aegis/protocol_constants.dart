@@ -63,6 +63,22 @@ class ProtocolConstants {
   static const int typeChannelHistoryResponse = 46;
   static const int typePrivateChatMessageEvent = 47;
   static const int typeChannelMessageEvent = 48;
+  static const int typeProfileAvatarAdd = 49;
+  static const int typeProfileAvatarAddResponse = 50;
+  static const int typeProfileAvatarList = 51;
+  static const int typeProfileAvatarListResponse = 52;
+  static const int typeProfileAvatarDelete = 53;
+  static const int typeProfileAvatarDeleteResponse = 54;
+  static const int typeProfileAvatarSetPrimary = 55;
+  static const int typeProfileAvatarSetPrimaryResponse = 56;
+  static const int typeChannelLinkUpdate = 57;
+  static const int typeChannelLinkUpdateResponse = 58;
+  static const int typeChannelLinkGet = 59;
+  static const int typeChannelLinkGetResponse = 60;
+  static const int typeChannelResolve = 61;
+  static const int typeChannelResolveResponse = 62;
+  static const int typeChannelJoinByLink = 63;
+  static const int typeChannelJoinByLinkResponse = 64;
 
   // Message flags
   static const int flagNone = 0x00;

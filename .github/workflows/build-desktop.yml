@@ -98,6 +98,21 @@ jobs:
       - name: Get dependencies
         run: flutter pub get --enforce-lockfile
 
+      - name: Prepare env for CI
+        run: |
+          cat > .env <<EOF
+          ENABLE_DEV_TOOLS=false
+          APP_ENV=development
+          SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+          AEGIS_HOST=${{ secrets.AEGIS_HOST }}
+          AEGIS_PORT=8888
+          AEGIS_CONNECT_TIMEOUT_SECONDS=10
+          AEGIS_TRANSPORT_MASKING_KEY=${{ secrets.AEGIS_TRANSPORT_MASKING_KEY }}
+          EOF
+
+      - name: Codegen (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Build Linux (debug)
         if: env.BUILD_MODE == 'debug' && matrix.platform == 'linux'
         run: flutter build linux --debug

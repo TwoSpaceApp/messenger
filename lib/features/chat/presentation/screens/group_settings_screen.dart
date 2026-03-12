@@ -2,17 +2,34 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/group.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
+import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
+
+class _GroupSettingsSection {
+  const _GroupSettingsSection({
+    required this.title,
+    required this.icon,
+    required this.content,
+    this.destructive = false,
+  });
+
+  final String title;
+  final IconData icon;
+  final Widget content;
+  final bool destructive;
+}
 
 class GroupSettingsScreen extends StatefulWidget {
   const GroupSettingsScreen({
     required this.roomId,
     super.key,
   });
+
   final String roomId;
 
   @override
@@ -22,6 +39,7 @@ class GroupSettingsScreen extends StatefulWidget {
 class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   late AegisGroupService _groupService;
   final AegisChatService _chatService = AegisChatService();
+
   int _selectedTabIndex = 0;
   bool _isLoading = false;
   GroupRoom? _currentGroup;
@@ -33,30 +51,30 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     _loadGroupData();
   }
 
-  Future<void> _loadGroupData() async {
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _isLoading = true);
-    try {
-      final group = await _groupService.getGroupRoom(widget.roomId);
-      if (mounted) {
-        setState(() => _currentGroup = group);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.loadError(e.toString()))),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   bool get _canManageMembers =>
       _currentGroup?.currentUserRole == GroupRole.owner ||
       _currentGroup?.currentUserRole == GroupRole.admin;
 
   bool get _canDeleteGroup => _currentGroup?.currentUserRole == GroupRole.owner;
+
+  Future<void> _loadGroupData() async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _isLoading = true);
+    try {
+      final group = await _groupService.getGroupRoom(widget.roomId);
+      if (!mounted) return;
+      setState(() => _currentGroup = group);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.loadError(e.toString()))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   Future<void> _copyGroupLink() async {
     final l10n = AppLocalizations.of(context)!;
@@ -78,162 +96,427 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     }
   }
 
+  List<_GroupSettingsSection> _sections(AppLocalizations l10n) {
+    return [
+      _GroupSettingsSection(
+        title: l10n.groupInfoTab,
+        icon: Icons.info_outline,
+        content: _buildInfoTab(),
+      ),
+      _GroupSettingsSection(
+        title: l10n.groupMembersTab,
+        icon: Icons.people_outline,
+        content: _buildMembersTab(),
+      ),
+      _GroupSettingsSection(
+        title: l10n.groupRolesTab,
+        icon: Icons.admin_panel_settings_outlined,
+        content: _buildRolesTab(),
+      ),
+      if (_canManageMembers)
+        _GroupSettingsSection(
+          title: l10n.groupBansTab,
+          icon: Icons.block_outlined,
+          content: _buildBanListTab(),
+        ),
+      if (_canDeleteGroup)
+        _GroupSettingsSection(
+          title: l10n.groupDeleteTab,
+          icon: Icons.delete_outline,
+          content: _buildDeleteTab(),
+          destructive: true,
+        ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWideScreen = constraints.maxWidth > 800;
+        final isWideScreen = constraints.maxWidth >= 980;
+        final isTablet = constraints.maxWidth >= 680;
+
+        if (_isLoading || _currentGroup == null) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(_currentGroup?.name ?? l10n.groupInfoTab),
+              centerTitle: !isWideScreen,
+              elevation: 2,
+            ),
+            body: const AppLoadingState(),
+          );
+        }
+
+        final sections = _sections(l10n);
+        final selectedIndex = _selectedTabIndex.clamp(0, sections.length - 1);
+        if (selectedIndex != _selectedTabIndex) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() => _selectedTabIndex = selectedIndex);
+            }
+          });
+        }
+
+        final horizontalPadding = isWideScreen
+            ? 28.0
+            : isTablet
+                ? 20.0
+                : 12.0;
+
         return Scaffold(
           appBar: AppBar(
-            title: Text(_currentGroup?.name ?? l10n.groupInfoTab),
+            title: Text(_currentGroup!.name),
             centerTitle: !isWideScreen,
             elevation: 2,
           ),
-          body: _isLoading || _currentGroup == null
-              ? const AppLoadingState()
-              : Row(
-                  children: [
-                    if (isWideScreen) _buildSidebar(),
-                    Expanded(child: _buildSettingsContent()),
-                  ],
+          body: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1320),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  16,
+                  horizontalPadding,
+                  24,
                 ),
+                child: isWideScreen
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 300,
+                            child: _buildNavigationPane(
+                              sections: sections,
+                              compact: false,
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: _buildContentPane(
+                              sections: sections,
+                              compact: false,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildTopSummaryCard(),
+                          const SizedBox(height: 16),
+                          _buildNavigationPane(
+                            sections: sections,
+                            compact: true,
+                          ),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: _buildContentPane(
+                              sections: sections,
+                              compact: true,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
         );
       },
     );
   }
 
-  Widget _buildSidebar() {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildNavigationPane({
+    required List<_GroupSettingsSection> sections,
+    required bool compact,
+  }) {
     final theme = Theme.of(context);
-    return Container(
-      width: 250,
-      color: theme.colorScheme.surface,
-      child: Column(
-        children: [
-          // Tabs
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                  ),
+    final l10n = AppLocalizations.of(context)!;
+
+    return Card(
+      elevation: compact ? 0 : UITokens.cardElevation,
+      color: compact ? theme.colorScheme.surfaceContainerLow : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(compact ? 12 : 20),
+        child: compact
+            ? SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (var i = 0; i < sections.length; i++)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          right: i == sections.length - 1 ? 0 : 10,
+                        ),
+                        child: _buildSectionChip(i, sections[i]),
+                      ),
+                  ],
                 ),
-              ),
-              child: Row(
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildTab(0, l10n.groupInfoTab, Icons.info),
-                  _buildTab(1, l10n.groupMembersTab, Icons.people),
-                  _buildTab(2, l10n.groupRolesTab, Icons.admin_panel_settings),
-                  if (_canManageMembers)
-                    _buildTab(3, l10n.groupBansTab, Icons.block),
-                  if (_canDeleteGroup)
-                    _buildTab(4, l10n.groupDeleteTab, Icons.delete),
+                  _buildGroupIdentity(
+                    theme,
+                    _currentGroup!,
+                    dense: false,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.roomSettingsLabel,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  for (var i = 0; i < sections.length; i++) ...[
+                    _buildSectionTile(i, sections[i]),
+                    if (i != sections.length - 1) const SizedBox(height: 6),
+                  ],
                 ],
               ),
-            ),
-          ),
-          const Divider(height: 1),
-          // Content
-          Expanded(
-            child: IndexedStack(
-              index: _selectedTabIndex,
-              children: [
-                _buildInfoTab(),
-                _buildMembersTab(),
-                _buildRolesTab(),
-                if (_canManageMembers) _buildBanListTab(),
-                if (_canDeleteGroup) _buildDeleteTab(),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildSettingsContent() {
+  Widget _buildTopSummaryCard() {
+    return Card(
+      elevation: UITokens.cardElevation,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: _buildGroupIdentity(
+          Theme.of(context),
+          _currentGroup!,
+          dense: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupIdentity(
+    ThemeData theme,
+    GroupRoom group, {
+    required bool dense,
+  }) {
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Tabs
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildTab(0, l10n.groupInfoTab, Icons.info),
-                _buildTab(1, l10n.groupMembersTab, Icons.people),
-                _buildTab(2, l10n.groupRolesTab, Icons.admin_panel_settings),
-                if (_canManageMembers)
-                  _buildTab(3, l10n.groupBansTab, Icons.block),
-                if (_canDeleteGroup)
-                  _buildTab(4, l10n.groupDeleteTab, Icons.delete),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Content
-          Expanded(
-            child: IndexedStack(
-              index: _selectedTabIndex,
-              children: [
-                _buildInfoTab(),
-                _buildMembersTab(),
-                _buildRolesTab(),
-                if (_canManageMembers) _buildBanListTab(),
-                if (_canDeleteGroup) _buildDeleteTab(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTab(int index, String label, IconData icon) {
-    final theme = Theme.of(context);
-    final isSelected = _selectedTabIndex == index;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => setState(() => _selectedTabIndex = index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color:
-                    isSelected ? theme.colorScheme.primary : Colors.transparent,
-                width: 3,
-              ),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 20,
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.outline,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? theme.colorScheme.primary : null,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                ),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment:
+          dense ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      children: [
+        UserAvatar(
+          avatarUrl: group.avatarUrl,
+          name: group.name,
+          radius: dense ? 28 : 42,
+        ),
+        SizedBox(height: dense ? 12 : 16),
+        Text(
+          group.name,
+          textAlign: dense ? TextAlign.start : TextAlign.center,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
           ),
         ),
+        if ((group.description ?? '').trim().isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            group.description!.trim(),
+            textAlign: dense ? TextAlign.start : TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            maxLines: dense ? 2 : 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+        const SizedBox(height: 14),
+        Wrap(
+          alignment: dense ? WrapAlignment.start : WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _buildMetaBadge(
+              icon: group.visibility == GroupVisibility.public
+                  ? Icons.public
+                  : Icons.lock_outline,
+              label: group.visibility == GroupVisibility.public
+                  ? l10n.publicLabel
+                  : l10n.privateLabel,
+            ),
+            _buildMetaBadge(
+              icon: Icons.group_outlined,
+              label: l10n.membersCount(group.memberCount),
+            ),
+            _buildMetaBadge(
+              icon: Icons.shield_outlined,
+              label: _roleLabel(group.currentUserRole, l10n),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetaBadge({
+    required IconData icon,
+    required String label,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Text(label, style: theme.textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionChip(int index, _GroupSettingsSection section) {
+    final theme = Theme.of(context);
+    final isSelected = _selectedTabIndex == index;
+    return ChoiceChip(
+      selected: isSelected,
+      onSelected: (_) => setState(() => _selectedTabIndex = index),
+      avatar: Icon(
+        section.icon,
+        size: 18,
+        color: isSelected
+            ? theme.colorScheme.onPrimaryContainer
+            : section.destructive
+                ? theme.colorScheme.error
+                : theme.colorScheme.onSurfaceVariant,
+      ),
+      label: Text(section.title),
+      labelStyle: TextStyle(
+        color: isSelected
+            ? theme.colorScheme.onPrimaryContainer
+            : section.destructive
+                ? theme.colorScheme.error
+                : theme.colorScheme.onSurface,
+        fontWeight: FontWeight.w600,
+      ),
+      selectedColor: section.destructive
+          ? theme.colorScheme.errorContainer
+          : theme.colorScheme.primaryContainer,
+    );
+  }
+
+  Widget _buildSectionTile(int index, _GroupSettingsSection section) {
+    final theme = Theme.of(context);
+    final isSelected = _selectedTabIndex == index;
+    return InkWell(
+      onTap: () => setState(() => _selectedTabIndex = index),
+      borderRadius: BorderRadius.circular(UITokens.corner),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? section.destructive
+                  ? theme.colorScheme.errorContainer.withValues(alpha: 0.7)
+                  : theme.colorScheme.primaryContainer.withValues(alpha: 0.78)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(UITokens.corner),
+          border: Border.all(
+            color: isSelected
+                ? Colors.transparent
+                : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              section.icon,
+              color: isSelected
+                  ? section.destructive
+                      ? theme.colorScheme.onErrorContainer
+                      : theme.colorScheme.onPrimaryContainer
+                  : section.destructive
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                section.title,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isSelected
+                      ? section.destructive
+                          ? theme.colorScheme.onErrorContainer
+                          : theme.colorScheme.onPrimaryContainer
+                      : section.destructive
+                          ? theme.colorScheme.error
+                          : null,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContentPane({
+    required List<_GroupSettingsSection> sections,
+    required bool compact,
+  }) {
+    final theme = Theme.of(context);
+    final section = sections[_selectedTabIndex.clamp(0, sections.length - 1)];
+    return Card(
+      elevation: UITokens.cardElevation,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: EdgeInsets.all(compact ? 16 : 20),
+            decoration: BoxDecoration(
+              color: section.destructive
+                  ? theme.colorScheme.errorContainer.withValues(alpha: 0.55)
+                  : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  section.icon,
+                  color: section.destructive
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    section.title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(child: section.content),
+        ],
       ),
     );
   }
@@ -241,75 +524,75 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   Widget _buildInfoTab() {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final group = _currentGroup!;
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Card(
-          elevation: 1,
+          elevation: 0,
+          color: theme.colorScheme.surfaceContainerLow,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.nameField,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.outline,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: [
+                    SizedBox(
+                      width: 260,
+                      child: _buildInfoBlock(
+                        label: l10n.nameField,
+                        value: group.name,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 260,
+                      child: _buildInfoBlock(
+                        label: l10n.roomVisibilityLabel,
+                        value: group.visibility == GroupVisibility.public
+                            ? l10n.publicLabel
+                            : l10n.privateLabel,
+                        trailing: Chip(
+                          label: Text(
+                            group.visibility == GroupVisibility.public
+                                ? l10n.publicLabel
+                                : l10n.privateLabel,
+                          ),
+                          avatar: Icon(
+                            group.visibility == GroupVisibility.public
+                                ? Icons.public
+                                : Icons.lock_outline,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 260,
+                      child: _buildInfoBlock(
+                        label: l10n.membersLabel,
+                        value: l10n.membersCount(group.memberCount),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 260,
+                      child: _buildInfoBlock(
+                        label: l10n.groupRolesTab,
+                        value: _roleLabel(group.currentUserRole, l10n),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  _currentGroup?.name ?? l10n.noDescription,
-                  style: theme.textTheme.titleMedium,
+                const SizedBox(height: 20),
+                _buildInfoBlock(
+                  label: l10n.descriptionOptionalLabel,
+                  value: group.description ?? l10n.noDescription,
+                  fullWidth: true,
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.descriptionOptionalLabel,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.outline,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _currentGroup?.description ?? l10n.noDescription,
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.roomVisibilityLabel,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.outline,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Chip(
-                  label: Text(
-                    _currentGroup?.visibility == GroupVisibility.public
-                        ? l10n.publicLabel
-                        : l10n.privateLabel,
-                  ),
-                  backgroundColor:
-                      _currentGroup?.visibility == GroupVisibility.public
-                          ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                          : theme.colorScheme.tertiary.withValues(alpha: 0.2),
-                  avatar: Icon(
-                    _currentGroup?.visibility == GroupVisibility.public
-                        ? Icons.public
-                        : Icons.lock,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.membersCount(_currentGroup?.memberCount ?? 0),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.outline,
-                  ),
-                ),
-                if (_currentGroup?.visibility == GroupVisibility.public) ...[
+                if (group.visibility == GroupVisibility.public) ...[
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: _copyGroupLink,
@@ -319,59 +602,55 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 ],
                 if (_canManageMembers) ...[
                   const SizedBox(height: 24),
-                  Text(
-                    l10n.messageHistoryToggle,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.outline,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.showHistoryToggleLabel),
-                    subtitle: Text(l10n.showHistorySubtitle),
-                    value: _currentGroup?.showMessageHistory ?? false,
-                    onChanged: (value) async {
-                      try {
-                        await _groupService.setShowMessageHistory(
-                            widget.roomId, value);
-                        await _loadGroupData();
-                        if (mounted) {
+                  _buildInfoBlock(
+                    label: l10n.messageHistoryToggle,
+                    value: l10n.showHistorySubtitle,
+                    trailing: SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.showHistoryToggleLabel),
+                      subtitle: Text(l10n.showHistorySubtitle),
+                      value: group.showMessageHistory,
+                      onChanged: (value) async {
+                        try {
+                          await _groupService.setShowMessageHistory(
+                            widget.roomId,
+                            value,
+                          );
+                          await _loadGroupData();
+                          if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(l10n.settingSaved)),
                           );
-                        }
-                      } catch (e) {
-                        if (mounted) {
+                        } catch (e) {
+                          if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text(l10n.genericError(e.toString()))),
+                              content: Text(l10n.genericError(e.toString())),
+                            ),
                           );
                         }
-                      }
-                    },
+                      },
+                    ),
+                    fullWidth: true,
                   ),
                 ],
-                if (_currentGroup?.backgroundColor != null) ...[
+                if (group.backgroundColor != null) ...[
                   const SizedBox(height: 24),
-                  Text(
-                    l10n.backgroundColorLabel,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.outline,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 100,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: _parseColor(_currentGroup?.backgroundColor),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                  _buildInfoBlock(
+                    label: l10n.backgroundColorLabel,
+                    value: group.backgroundColor,
+                    trailing: Container(
+                      width: 96,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: _parseColor(group.backgroundColor),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                        ),
                       ),
                     ),
+                    fullWidth: true,
                   ),
                 ],
               ],
@@ -399,85 +678,102 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
       itemCount: members.length,
       itemBuilder: (context, index) {
         final member = members[index];
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          margin: const EdgeInsets.symmetric(vertical: 6),
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor:
                   theme.colorScheme.primary.withValues(alpha: 0.08),
-              backgroundImage: member.avatarUrl != null
-                  ? NetworkImage(member.avatarUrl!)
-                  : null,
+              backgroundImage:
+                  member.avatarUrl != null ? NetworkImage(member.avatarUrl!) : null,
               child: member.avatarUrl == null
-                  ? Text(member.displayName.isNotEmpty
-                      ? member.displayName[0]
-                      : '?')
+                  ? Text(
+                      member.displayName.isNotEmpty ? member.displayName[0] : '?',
+                    )
                   : null,
             ),
             title: Text(
               member.displayName,
-              style: theme.textTheme.bodyLarge
-                  ?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            subtitle: Chip(
-              label: Text(
-                member.role.toString().split('.').last.toUpperCase(),
-                style: const TextStyle(fontSize: 10),
-              ),
-              backgroundColor:
-                  _getRoleColor(member.role, theme).withValues(alpha: 0.2),
-              side: BorderSide(
-                color: _getRoleColor(member.role, theme).withValues(alpha: 0.5),
-              ),
+            subtitle: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                Chip(
+                  label: Text(
+                    member.role.toString().split('.').last.toUpperCase(),
+                    style: const TextStyle(fontSize: 10),
+                  ),
+                  backgroundColor:
+                      _getRoleColor(member.role, theme).withValues(alpha: 0.2),
+                  side: BorderSide(
+                    color:
+                        _getRoleColor(member.role, theme).withValues(alpha: 0.5),
+                  ),
+                ),
+                if (member.userId.isNotEmpty)
+                  Text(
+                    member.userId,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
             ),
             trailing: _canManageMembers
-                ? PopupMenuButton(
-                    icon:
-                        Icon(Icons.more_vert, color: theme.colorScheme.outline),
+                ? PopupMenuButton<void>(
+                    icon: Icon(
+                      Icons.more_vert,
+                      color: theme.colorScheme.outline,
+                    ),
                     itemBuilder: (context) => [
-                      PopupMenuItem(
+                      PopupMenuItem<void>(
+                        onTap: () => _showRoleDialog(member),
                         child: Row(
                           children: [
                             const Icon(Icons.admin_panel_settings, size: 18),
                             const SizedBox(width: 8),
-                            Text(l10n.roleAction)
+                            Text(l10n.roleAction),
                           ],
                         ),
-                        onTap: () => _showRoleDialog(member),
                       ),
-                      PopupMenuItem(
+                      PopupMenuItem<void>(
+                        onTap: () => _showFreezeDialog(member),
                         child: Row(
                           children: [
                             const Icon(Icons.lock, size: 18),
                             const SizedBox(width: 8),
-                            Text(l10n.freezeAction)
+                            Text(l10n.freezeAction),
                           ],
                         ),
-                        onTap: () => _showFreezeDialog(member),
                       ),
-                      PopupMenuItem(
+                      PopupMenuItem<void>(
+                        onTap: () => _banUser(member),
                         child: Row(
                           children: [
                             const Icon(Icons.block, size: 18),
                             const SizedBox(width: 8),
-                            Text(l10n.banAction)
+                            Text(l10n.banAction),
                           ],
                         ),
-                        onTap: () => _banUser(member),
                       ),
-                      PopupMenuItem(
+                      PopupMenuItem<void>(
+                        onTap: () => _kickUser(member),
                         child: Row(
                           children: [
                             const Icon(Icons.exit_to_app, size: 18),
                             const SizedBox(width: 8),
-                            Text(l10n.kickAction)
+                            Text(l10n.kickAction),
                           ],
                         ),
-                        onTap: () => _kickUser(member),
                       ),
                     ],
                   )
@@ -502,20 +798,32 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildRoleSection(
-              l10n.ownersLabel, owners, _getRoleColor(GroupRole.owner, theme)),
+            l10n.ownersLabel,
+            owners,
+            _getRoleColor(GroupRole.owner, theme),
+          ),
           const SizedBox(height: 16),
-          _buildRoleSection(l10n.administratorsLabel, admins,
-              _getRoleColor(GroupRole.admin, theme)),
+          _buildRoleSection(
+            l10n.administratorsLabel,
+            admins,
+            _getRoleColor(GroupRole.admin, theme),
+          ),
           const SizedBox(height: 16),
-          _buildRoleSection('👤 ${l10n.membersLabel}', regular,
-              _getRoleColor(GroupRole.member, theme)),
+          _buildRoleSection(
+            '👤 ${l10n.membersLabel}',
+            regular,
+            _getRoleColor(GroupRole.member, theme),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildRoleSection(
-      String title, List<GroupMember> members, Color roleColor) {
+    String title,
+    List<GroupMember> members,
+    Color roleColor,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
@@ -537,10 +845,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  '$title (${members.length})',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    '$title (${members.length})',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -560,20 +870,20 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               )
             else
               ...members.map(
-                (m) => Padding(
+                (member) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
                     children: [
                       CircleAvatar(
                         backgroundColor: roleColor.withValues(alpha: 0.2),
-                        backgroundImage: m.avatarUrl != null
-                            ? NetworkImage(m.avatarUrl!)
+                        backgroundImage: member.avatarUrl != null
+                            ? NetworkImage(member.avatarUrl!)
                             : null,
                         radius: 16,
-                        child: m.avatarUrl == null
+                        child: member.avatarUrl == null
                             ? Text(
-                                m.displayName.isNotEmpty
-                                    ? m.displayName[0]
+                                member.displayName.isNotEmpty
+                                    ? member.displayName[0]
                                     : '?',
                                 style: TextStyle(color: roleColor),
                               )
@@ -585,14 +895,14 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              m.displayName,
+                              member.displayName,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            if (m.userId.isNotEmpty)
+                            if (member.userId.isNotEmpty)
                               Text(
-                                m.userId,
+                                member.userId,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.outline,
                                 ),
@@ -606,8 +916,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   ),
                 ),
               ),
-          ],
-        ),
+        ],
+      ),
       ),
     );
   }
@@ -629,23 +939,20 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
       child: Column(
         children: List.generate(banned.length, (index) {
           final member = banned[index];
           return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            margin: const EdgeInsets.symmetric(vertical: 6),
             color: Colors.red.withValues(alpha: 0.05),
             child: ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.red.withValues(alpha: 0.2),
-                backgroundImage: member.avatarUrl != null
-                    ? NetworkImage(member.avatarUrl!)
-                    : null,
+                backgroundImage:
+                    member.avatarUrl != null ? NetworkImage(member.avatarUrl!) : null,
                 child: member.avatarUrl == null
-                    ? Text(member.displayName.isNotEmpty
-                        ? member.displayName[0]
-                        : '?')
+                    ? Text(member.displayName.isNotEmpty ? member.displayName[0] : '?')
                     : null,
               ),
               title: Text(
@@ -662,12 +969,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   try {
                     await _groupService.unbanUser(widget.roomId, member.userId);
                     await _loadGroupData();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.userUnbanned)),
-                      );
-                    }
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.userUnbanned)),
+                    );
                   } catch (e) {
+                    if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(l10n.genericError(e.toString()))),
                     );
@@ -702,8 +1009,11 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       color: Colors.red.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.warning_rounded,
-                        color: Colors.red, size: 40),
+                    child: const Icon(
+                      Icons.warning_rounded,
+                      color: Colors.red,
+                      size: 40,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -735,9 +1045,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       label: Text(
                         l10n.deleteGroupLabel,
                         style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600),
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -752,7 +1063,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
 
   void _showRoleDialog(GroupMember member) {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.changeRoleTitle),
@@ -774,12 +1085,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     );
                     await _loadGroupData();
                   } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(l10n.genericError(e.toString()))),
-                      );
-                    }
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.genericError(e.toString()))),
+                    );
                   }
                 }
               },
@@ -799,12 +1108,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     );
                     await _loadGroupData();
                   } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(l10n.genericError(e.toString()))),
-                      );
-                    }
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.genericError(e.toString()))),
+                    );
                   }
                 }
               },
@@ -817,7 +1124,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
 
   void _showFreezeDialog(GroupMember member) {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.freezeUserTitle),
@@ -841,12 +1148,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     );
                     await _loadGroupData();
                   } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(l10n.genericError(e.toString()))),
-                      );
-                    }
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.genericError(e.toString()))),
+                    );
                   }
                 },
               ),
@@ -861,17 +1166,15 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     try {
       await _groupService.banUser(widget.roomId, member.userId);
       await _loadGroupData();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.userBanned)),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.userBanned)),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.genericError(e.toString()))),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
     }
   }
 
@@ -880,23 +1183,21 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     try {
       await _groupService.kickUser(widget.roomId, member.userId);
       await _loadGroupData();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.userKicked)),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.userKicked)),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.genericError(e.toString()))),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
     }
   }
 
   void _showDeleteConfirmation() {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.confirmDeleteTitle),
@@ -912,26 +1213,80 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               Navigator.pop(context);
               try {
                 await _groupService.deleteGroup(widget.roomId);
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.groupDeleted)),
-                  );
-                }
+                if (!mounted) return;
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.groupDeleted)),
+                );
               } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.genericError(e.toString()))),
-                  );
-                }
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.genericError(e.toString()))),
+                );
               }
             },
-            child:
-                Text(l10n.delete, style: const TextStyle(color: Colors.white)),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildInfoBlock({
+    required String label,
+    required String? value,
+    Widget? trailing,
+    bool fullWidth = false,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      width: fullWidth ? double.infinity : null,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(UITokens.corner),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            (value?.trim().isNotEmpty ?? false) ? value!.trim() : '-',
+            style: theme.textTheme.bodyLarge,
+          ),
+          if (trailing != null) ...[
+            const SizedBox(height: 12),
+            trailing,
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _roleLabel(GroupRole role, AppLocalizations l10n) {
+    switch (role) {
+      case GroupRole.owner:
+        return l10n.ownersLabel;
+      case GroupRole.admin:
+        return l10n.adminRole;
+      case GroupRole.member:
+        return l10n.memberRole;
+      case GroupRole.guest:
+        return 'guest';
+    }
   }
 
   Color _parseColor(String? hexColor) {

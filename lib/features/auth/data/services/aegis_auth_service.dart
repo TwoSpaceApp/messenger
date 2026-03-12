@@ -70,6 +70,7 @@ class AegisAuthService {
       Environment.aegisHost,
       Environment.aegisPort,
       timeout: Environment.aegisConnectTimeout,
+      transportMaskingKey: Environment.aegisTransportMaskingKey,
     );
     _ensureKeepAlive();
     _log.info('TCP-соединение установлено');
