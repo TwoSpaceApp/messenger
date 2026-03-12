@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 
 class GradientAvatar extends StatelessWidget {
@@ -31,10 +32,11 @@ class GradientAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (avatarUrl != null && avatarUrl!.isNotEmpty) {
+    final normalizedAvatarUrl = normalizeAegisAvatarUrl(avatarUrl);
+    if (normalizedAvatarUrl != null && normalizedAvatarUrl.isNotEmpty) {
       return CircleAvatar(
         radius: radius,
-        backgroundImage: NetworkImage(avatarUrl!),
+        backgroundImage: NetworkImage(normalizedAvatarUrl),
       );
     }
 

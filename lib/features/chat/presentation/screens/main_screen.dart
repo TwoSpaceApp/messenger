@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/services/biometric_service.dart';
 import 'package:two_space_app/core/widgets/floating_nav_bar.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/calls_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/home_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/contacts_screen.dart';
@@ -36,6 +37,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkBiometrics();
+      return;
+    }
+
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.inactive) {
+      AegisChatService().flushNow();
     }
   }
 

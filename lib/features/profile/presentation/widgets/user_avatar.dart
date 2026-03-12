@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
 
 /// Reusable user avatar widget.
 /// Supports local files, network URLs and initials fallback.
@@ -25,6 +26,19 @@ class _UserAvatarState extends State<UserAvatar> {
   Uint8List? _bytes;
   static final Map<String, Uint8List> _cache = {};
 
+  Uint8List? _decodeDataUri(String? rawUrl) {
+    final value = rawUrl?.trim();
+    if (value == null || !value.startsWith('data:')) {
+      return null;
+    }
+
+    try {
+      return UriData.parse(value).contentAsBytes();
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -47,11 +61,17 @@ class _UserAvatarState extends State<UserAvatar> {
 
   Future<void> _loadIfNeeded() async {
     final fid = widget.avatarFileId;
-    final url = widget.avatarUrl;
+    final url = widget.avatarUrl?.trim();
 
-    if (url != null && url.isNotEmpty && !url.startsWith('http')) {
+    final inlineBytes = _decodeDataUri(url);
+    if (inlineBytes != null) {
+      if (mounted) setState(() => _bytes = inlineBytes);
+      return;
+    }
+
+    if (isLocalAvatarFilePath(url)) {
       try {
-        final file = File(url);
+        final file = File(url!);
         if (await file.exists()) {
           final bytes = await file.readAsBytes();
           if (mounted) setState(() => _bytes = bytes);
@@ -80,6 +100,7 @@ class _UserAvatarState extends State<UserAvatar> {
   @override
   Widget build(BuildContext context) {
     final r = widget.radius;
+    final normalizedUrl = normalizeAegisAvatarUrl(widget.avatarUrl);
     if (_bytes != null) {
       return CircleAvatar(
           radius: r,
@@ -88,12 +109,15 @@ class _UserAvatarState extends State<UserAvatar> {
               child: Image.memory(_bytes!,
                   width: r * 2, height: r * 2, fit: BoxFit.cover)));
     }
-    if (widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty) {
+    if (normalizedUrl != null &&
+        normalizedUrl.isNotEmpty &&
+        !normalizedUrl.startsWith('data:') &&
+        !isLocalAvatarFilePath(normalizedUrl)) {
       return CircleAvatar(
-        key: ValueKey(widget.avatarUrl),
+        key: ValueKey(normalizedUrl),
         radius: r,
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        backgroundImage: NetworkImage(widget.avatarUrl!),
+        backgroundImage: NetworkImage(normalizedUrl),
         onBackgroundImageError: (exception, stackTrace) {
           // Fallback on network image load error
         },

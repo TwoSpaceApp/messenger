@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
 
 class PersonAvatar extends StatelessWidget {
   const PersonAvatar({
@@ -21,10 +22,11 @@ class PersonAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final normalizedAvatarUrl = normalizeAegisAvatarUrl(avatarUrl);
     final imageProvider = photoBytes != null
         ? MemoryImage(photoBytes!) as ImageProvider<Object>
-        : (avatarUrl != null && avatarUrl!.isNotEmpty)
-            ? NetworkImage(avatarUrl!)
+      : (normalizedAvatarUrl != null && normalizedAvatarUrl.isNotEmpty)
+        ? NetworkImage(normalizedAvatarUrl)
             : null;
 
     return Stack(

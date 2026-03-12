@@ -1,5 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
@@ -8,6 +11,7 @@ import 'package:two_space_app/core/models/group.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
+import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
 class _GroupSettingsSection {
@@ -39,9 +43,12 @@ class GroupSettingsScreen extends StatefulWidget {
 class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   late AegisGroupService _groupService;
   final AegisChatService _chatService = AegisChatService();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
 
   int _selectedTabIndex = 0;
   bool _isLoading = false;
+  bool _isSavingGroupInfo = false;
   GroupRoom? _currentGroup;
 
   @override
@@ -51,11 +58,35 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     _loadGroupData();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
   bool get _canManageMembers =>
       _currentGroup?.currentUserRole == GroupRole.owner ||
       _currentGroup?.currentUserRole == GroupRole.admin;
 
   bool get _canDeleteGroup => _currentGroup?.currentUserRole == GroupRole.owner;
+
+  void _openMemberProfile(GroupMember member) {
+    if (member.userId.trim().isEmpty) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(
+          userId: member.userId,
+          initialName: member.displayName,
+          initialAvatar: member.avatarUrl,
+        ),
+      ),
+    );
+  }
 
   Future<void> _loadGroupData() async {
     final l10n = AppLocalizations.of(context)!;
@@ -63,7 +94,11 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     try {
       final group = await _groupService.getGroupRoom(widget.roomId);
       if (!mounted) return;
-      setState(() => _currentGroup = group);
+      setState(() {
+        _currentGroup = group;
+        _nameController.text = group?.name ?? '';
+        _descriptionController.text = group?.description ?? '';
+      });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,6 +107,85 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final l10n = AppLocalizations.of(context)!;
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    final file = result.files.single;
+    var bytes = file.bytes;
+    if (bytes == null && file.path != null) {
+      bytes = await File(file.path!).readAsBytes();
+    }
+    if (bytes == null) return;
+
+    setState(() => _isSavingGroupInfo = true);
+    try {
+      await _chatService.setRoomAvatar(
+        widget.roomId,
+        bytes,
+        fileName: file.name,
+      );
+      await _loadGroupData();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.roomAvatarUpdated)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingGroupInfo = false);
+      }
+    }
+  }
+
+  Future<void> _saveGroupInfo() async {
+    final l10n = AppLocalizations.of(context)!;
+    final group = _currentGroup;
+    if (group == null) return;
+
+    final nextName = _nameController.text.trim();
+    final nextDescription = _descriptionController.text.trim();
+    if (nextName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.roomNameLabel)),
+      );
+      return;
+    }
+
+    setState(() => _isSavingGroupInfo = true);
+    try {
+      await _chatService.updateRoomDetails(
+        widget.roomId,
+        name: nextName == group.name ? null : nextName,
+        description: nextDescription == (group.description ?? '')
+            ? group.description
+            : nextDescription,
+      );
+      await _loadGroupData();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settingSaved)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingGroupInfo = false);
       }
     }
   }
@@ -592,6 +706,47 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   value: group.description ?? l10n.noDescription,
                   fullWidth: true,
                 ),
+                if (_canManageMembers) ...[
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.roomNameLabel,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _descriptionController,
+                    minLines: 3,
+                    maxLines: 5,
+                    decoration: InputDecoration(
+                      labelText: l10n.descriptionOptionalLabel,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: _isSavingGroupInfo ? null : _pickAndUploadAvatar,
+                        icon: const Icon(Icons.image_outlined),
+                        label: Text(l10n.uploadAvatarButton),
+                      ),
+                      FilledButton.icon(
+                        onPressed: _isSavingGroupInfo ? null : _saveGroupInfo,
+                        icon: _isSavingGroupInfo
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.save_outlined),
+                        label: Text(l10n.saveButton),
+                      ),
+                    ],
+                  ),
+                ],
                 if (group.visibility == GroupVisibility.public) ...[
                   const SizedBox(height: 24),
                   FilledButton.icon(
@@ -679,22 +834,33 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
 
     return ListView.builder(
       padding: const EdgeInsets.all(12),
-      itemCount: members.length,
+      itemCount: members.length + (_canManageMembers ? 1 : 0),
       itemBuilder: (context, index) {
-        final member = members[index];
+        if (_canManageMembers && index == 0) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Card(
+              margin: EdgeInsets.zero,
+              child: ListTile(
+                leading: const Icon(Icons.person_add_alt_1_outlined),
+                title: Text(l10n.inviteAction),
+                subtitle: Text(l10n.copyLinkAction),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _copyGroupLink,
+              ),
+            ),
+          );
+        }
+
+        final member = members[index - (_canManageMembers ? 1 : 0)];
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 6),
           child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor:
-                  theme.colorScheme.primary.withValues(alpha: 0.08),
-              backgroundImage:
-                  member.avatarUrl != null ? NetworkImage(member.avatarUrl!) : null,
-              child: member.avatarUrl == null
-                  ? Text(
-                      member.displayName.isNotEmpty ? member.displayName[0] : '?',
-                    )
-                  : null,
+            onTap: () => _openMemberProfile(member),
+            leading: UserAvatar(
+              avatarUrl: member.avatarUrl,
+              name: member.displayName,
+              radius: 20,
             ),
             title: Text(
               member.displayName,
@@ -762,16 +928,6 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                             const Icon(Icons.block, size: 18),
                             const SizedBox(width: 8),
                             Text(l10n.banAction),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem<void>(
-                        onTap: () => _kickUser(member),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.exit_to_app, size: 18),
-                            const SizedBox(width: 8),
-                            Text(l10n.kickAction),
                           ],
                         ),
                       ),
@@ -870,24 +1026,17 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               )
             else
               ...members.map(
-                (member) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
+                (member) => InkWell(
+                  onTap: () => _openMemberProfile(member),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
                     children: [
-                      CircleAvatar(
-                        backgroundColor: roleColor.withValues(alpha: 0.2),
-                        backgroundImage: member.avatarUrl != null
-                            ? NetworkImage(member.avatarUrl!)
-                            : null,
+                      UserAvatar(
+                        avatarUrl: member.avatarUrl,
+                        name: member.displayName,
                         radius: 16,
-                        child: member.avatarUrl == null
-                            ? Text(
-                                member.displayName.isNotEmpty
-                                    ? member.displayName[0]
-                                    : '?',
-                                style: TextStyle(color: roleColor),
-                              )
-                            : null,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -913,6 +1062,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                         ),
                       ),
                     ],
+                    ),
                   ),
                 ),
               ),
@@ -947,13 +1097,11 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
             margin: const EdgeInsets.symmetric(vertical: 6),
             color: Colors.red.withValues(alpha: 0.05),
             child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.red.withValues(alpha: 0.2),
-                backgroundImage:
-                    member.avatarUrl != null ? NetworkImage(member.avatarUrl!) : null,
-                child: member.avatarUrl == null
-                    ? Text(member.displayName.isNotEmpty ? member.displayName[0] : '?')
-                    : null,
+              onTap: () => _openMemberProfile(member),
+              leading: UserAvatar(
+                avatarUrl: member.avatarUrl,
+                name: member.displayName,
+                radius: 20,
               ),
               title: Text(
                 member.displayName,
@@ -1169,23 +1317,6 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.userBanned)),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.genericError(e.toString()))),
-      );
-    }
-  }
-
-  Future<void> _kickUser(GroupMember member) async {
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      await _groupService.kickUser(widget.roomId, member.userId);
-      await _loadGroupData();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.userKicked)),
       );
     } catch (e) {
       if (!mounted) return;

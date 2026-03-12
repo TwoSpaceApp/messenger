@@ -276,7 +276,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
         person: person,
         trailingLabel: l10n.peopleTwoSpaceBadge,
         subtitle: _subtitle(person, l10n),
-        onTap: () => _showPersonSheet(person),
+        onTap: person.remoteUserId != null
+            ? () => _openProfile(person)
+            : () => _showPersonSheet(person),
         onFavoriteTap: () => _controller.toggleFavorite(person),
         onMessageTap: person.remoteUserId != null ? () => _openChat(person) : null,
         onVoiceCallTap: person.remoteUserId != null ? () => _startCall(person, false) : null,

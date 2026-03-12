@@ -54,12 +54,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUser() async {
     try {
-      final currentUserId = await _chatService.getCurrentUserId();
+      final results = await Future.wait<dynamic>([
+        _chatService.getCurrentUserId(),
+        _chatService.getUserInfo(widget.userId),
+      ]);
+      final currentUserId = results[0] as String?;
+      final userInfo = Map<String, dynamic>.from(results[1] as Map<String, dynamic>);
 
       // Determine if this is my profile
       _isMe = currentUserId != null && widget.userId == currentUserId;
-
-      final userInfo = await _chatService.getUserInfo(widget.userId);
 
       if (mounted) {
         setState(() {

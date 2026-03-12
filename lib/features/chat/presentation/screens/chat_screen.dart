@@ -520,6 +520,27 @@ class _ChatScreenState extends State<ChatScreen> {
     await _loadMessages(forceRefresh: true);
   }
 
+  void _openUserProfile(
+    String userId, {
+    String? initialName,
+    String? initialAvatar,
+  }) {
+    if (userId.trim().isEmpty) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(
+          userId: userId,
+          initialName: initialName,
+          initialAvatar: initialAvatar,
+        ),
+      ),
+    );
+  }
+
   /// Load draft message for this chat
   Future<void> _loadDraft() async {
     try {
@@ -788,7 +809,6 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       await _svc.sendMessage(roomId: widget.chat.id, text: text);
       setState(() {
-        _messages.add(_Msg(id: DateTime.now().millisecondsSinceEpoch.toString(), text: text, isOwn: true, time: DateTime.now(), senderId: '', senderName: 'You', type: 'm.text'));
         _controller.text = '';
       });
       _scrollToLatest(animated: true);
@@ -840,21 +860,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
     setState(() => _sending = true);
     try {
-      await _svc.sendMessage(roomId: widget.chat.id, text: path, type: 'm.audio', mediaFileId: path);
-      
+      await _svc.sendMessage(
+        roomId: widget.chat.id,
+        text: '',
+        type: 'm.audio',
+        mediaFileId: path,
+      );
       if (mounted) {
-        setState(() {
-          _messages.add(_Msg(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            text: path,
-            isOwn: true,
-            time: DateTime.now(),
-            senderId: '',
-            senderName: 'You',
-            type: 'm.audio',
-            mediaId: path,
-          ));
-        });
         _scrollToLatest(animated: true);
       }
     } catch (e) {
@@ -862,6 +874,24 @@ class _ChatScreenState extends State<ChatScreen> {
     } finally {
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  String _attachmentMessageType(String fileName) {
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.gif') ||
+        lower.endsWith('.webp')) {
+      return 'm.image';
+    }
+    if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
+      return 'm.video';
+    }
+    if (lower.endsWith('.ogg') || lower.endsWith('.m4a') || lower.endsWith('.mp3') || lower.endsWith('.wav')) {
+      return 'm.audio';
+    }
+    return 'm.file';
   }
 
   Future<void> _sendAttachment() async {
@@ -872,9 +902,12 @@ class _ChatScreenState extends State<ChatScreen> {
     if (path == null) return;
     setState(() => _sending = true);
     try {
-      final bytes = await File(path).readAsBytes();
-      final mxc = await _svc.uploadMedia(bytes, 'application/octet-stream', res.files.single.name);
-      await _svc.sendMessage(roomId: widget.chat.id, text: '', type: 'm.image', mediaFileId: mxc);
+      await _svc.sendMessage(
+        roomId: widget.chat.id,
+        text: res.files.single.name,
+        type: _attachmentMessageType(res.files.single.name),
+        mediaFileId: path,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.fileSent), duration: const Duration(seconds: 2)));
     } catch (e) {
@@ -980,6 +1013,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.6),
                   child: _AudioMessageWidget(message: m, svc: _svc, audioPlayers: _audioPlayers),
                 )
+              else if (m.type == 'm.file' || m.type == 'm.video')
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+                  child: _FileMessageWidget(message: m, svc: _svc),
+                )
               else
                 Text(
                   m.text,
@@ -1057,7 +1095,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   if (!m.isOwn)
                     GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: m.senderId ?? ''))),
+                      onTap: () => _openUserProfile(
+                        m.senderId ?? '',
+                        initialName: m.senderName,
+                        initialAvatar: m.senderAvatar,
+                      ),
                       child: UserAvatar(avatarUrl: m.senderAvatar, name: m.senderName ?? '?', radius: 16),
                     ),
                   const SizedBox(width: 8),
@@ -1092,7 +1134,13 @@ class _ChatScreenState extends State<ChatScreen> {
         elevation: 0,
         backgroundColor: const Color(0xFF21262C).withValues(alpha: 0.7),
         title: InkWell(
-          onTap: _openChatSettings,
+          onTap: _directPeerUserId != null
+              ? () => _openUserProfile(
+                    _directPeerUserId!,
+                    initialName: headerName,
+                    initialAvatar: headerAvatarUrl,
+                  )
+              : _openChatSettings,
           borderRadius: BorderRadius.circular(12),
           child: Row(
             children: [
@@ -1324,6 +1372,74 @@ class _AudioMessageWidget extends StatefulWidget {
   const _AudioMessageWidget({required this.message, required this.svc, required this.audioPlayers});
   @override
   State<_AudioMessageWidget> createState() => _AudioMessageWidgetState();
+}
+
+class _FileMessageWidget extends StatelessWidget {
+  const _FileMessageWidget({
+    required this.message,
+    required this.svc,
+  });
+
+  final _Msg message;
+  final AegisChatService svc;
+
+  String _fileLabel() {
+    final raw = (message.text.trim().isNotEmpty ? message.text : message.mediaId) ?? 'file';
+    return raw.split('/').last;
+  }
+
+  IconData _icon() {
+    if (message.type == 'm.video') {
+      return Icons.movie_outlined;
+    }
+    return Icons.insert_drive_file_outlined;
+  }
+
+  Future<void> _openFile(BuildContext context) async {
+    final mediaRef = message.mediaId;
+    if (mediaRef == null || mediaRef.isEmpty) {
+      return;
+    }
+
+    final path = await svc.downloadMediaToTempFile(mediaRef);
+    await share.Share.shareXFiles([share.XFile(path)], subject: _fileLabel());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _openFile(context),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(_icon(), color: Colors.white70),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  _fileLabel(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white,
+                      ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _AudioMessageWidgetState extends State<_AudioMessageWidget> {

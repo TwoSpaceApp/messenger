@@ -11,6 +11,7 @@ import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
+import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
 enum _RoomSettingsStatus { ready, inDevelopment, destructive, action }
@@ -70,6 +71,24 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   String? get _directPeerUserId {
     if (!_isDirectChat || !widget.roomId.startsWith('dm:')) return null;
     return widget.roomId.substring(3);
+  }
+
+  void _openDirectProfile(Map<String, dynamic> data) {
+    final userId = data['userId']?.toString() ?? (_directPeerUserId ?? '');
+    if (userId.isEmpty) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(
+          userId: userId,
+          initialName: data['name']?.toString() ?? widget.initialName,
+          initialAvatar: data['avatar']?.toString(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -450,6 +469,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GlassCard(
+                onTap: _isDirectChat ? () => _openDirectProfile(data) : null,
                 child: Row(
                   children: [
                     UserAvatar(
@@ -546,6 +566,22 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
         return GlassCard(
           child: ListTile(
             contentPadding: EdgeInsets.zero,
+            onTap: () {
+              final userId = member['userId']?.toString() ?? '';
+              if (userId.isEmpty) {
+                return;
+              }
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProfileScreen(
+                    userId: userId,
+                    initialName: title,
+                    initialAvatar: member['avatarUrl']?.toString(),
+                  ),
+                ),
+              );
+            },
             leading: UserAvatar(
               avatarUrl: member['avatarUrl']?.toString(),
               name: title,
@@ -754,6 +790,9 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                       final name = data?['name']?.toString() ?? widget.initialName;
                       final avatar = data?['avatar']?.toString();
                       return GlassCard(
+                        onTap: _isDirectChat && data != null
+                            ? () => _openDirectProfile(data)
+                            : null,
                         child: ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: UserAvatar(
