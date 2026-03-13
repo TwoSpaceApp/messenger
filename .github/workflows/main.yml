@@ -35,6 +35,9 @@ jobs:
           flutter-version: '3.38.8'
 
       - name: Get dependencies
+        run: flutter pub get
+
+      - name: Get dependencies V2
         run: flutter pub get --enforce-lockfile
 
       - name: Ensure public env.g.dart is sanitized
