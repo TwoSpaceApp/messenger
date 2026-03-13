@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:io';
 // import 'package:audioplayers/audioplayers.dart';  // Disabled for Linux
 import 'dart:math' as math;
+import 'dart:typed_data';
 
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +13,7 @@ import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
+import 'package:two_space_app/core/utils/storage_service.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
@@ -23,6 +26,7 @@ import 'package:two_space_app/features/chat/presentation/widgets/typing_indicato
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 // Stub for AudioPlayer when audioplayers is disabled
 class AudioPlayer {
@@ -145,6 +149,10 @@ class _ChatScreenState extends State<ChatScreen> {
   DateTime? _headerLastSeenAt;
   Timer? _searchDebounceTimer;
   int _searchRequestId = 0;
+  double? _uploadProgress;
+  String? _uploadLabel;
+  final List<_ComposerAttachment> _pendingAttachments = <_ComposerAttachment>[];
+  bool _desktopDropActive = false;
   
   // Group-related state
   // String? _groupBackgroundColor;
@@ -1068,7 +1076,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _sendText() async {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty && _pendingAttachments.isEmpty) return;
+    if (_pendingAttachments.isNotEmpty) {
+      await _sendComposerPayload();
+      return;
+    }
     final l10n = AppLocalizations.of(context)!;
     setState(() => _sending = true);
     try {
@@ -1115,6 +1127,26 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _setUploadProgress(String label, double progress) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _uploadLabel = label;
+      _uploadProgress = progress.clamp(0.0, 1.0);
+    });
+  }
+
+  void _clearUploadProgress() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _uploadLabel = null;
+      _uploadProgress = null;
+    });
+  }
+
   Future<void> _stopVoiceAndSend() async {
     final l10n = AppLocalizations.of(context)!;
     final path = await _voiceService.stopRecording();
@@ -1123,6 +1155,8 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
 
+    final fileName = path.split(Platform.pathSeparator).last;
+
     setState(() => _sending = true);
     try {
       await _svc.sendMessage(
@@ -1130,6 +1164,7 @@ class _ChatScreenState extends State<ChatScreen> {
         text: '',
         type: 'm.audio',
         mediaFileId: path,
+        onMediaSendProgress: (progress) => _setUploadProgress(fileName, progress),
       );
       if (mounted) {
         _scrollToLatest(animated: true);
@@ -1137,7 +1172,10 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.genericError(e.toString()))));
     } finally {
-      if (mounted) setState(() => _sending = false);
+      if (mounted) {
+        _clearUploadProgress();
+        setState(() => _sending = false);
+      }
     }
   }
 
@@ -1159,27 +1197,310 @@ class _ChatScreenState extends State<ChatScreen> {
     return 'm.file';
   }
 
-  Future<void> _sendAttachment() async {
-    final l10n = AppLocalizations.of(context)!;
-    final res = await FilePicker.platform.pickFiles();
+  bool _supportsInlineCaption(String type) =>
+      type == 'm.image' || type == 'm.video';
+
+  Future<void> _enqueuePickerSelection(FilePickerResult result) async {
+    final additions = <_ComposerAttachment>[];
+    for (final file in result.files) {
+      final path = file.path;
+      if (path == null) {
+        continue;
+      }
+      if (_pendingAttachments.any((attachment) => attachment.path == path) ||
+          additions.any((attachment) => attachment.path == path)) {
+        continue;
+      }
+      additions.add(
+        _ComposerAttachment(
+          path: path,
+          name: file.name,
+          sizeBytes: file.size,
+          type: _attachmentMessageType(file.name),
+        ),
+      );
+    }
+
+    if (additions.isEmpty || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _pendingAttachments.addAll(additions);
+    });
+  }
+
+  Future<void> _enqueueDroppedFiles(List<String> paths) async {
+    final additions = <_ComposerAttachment>[];
+    for (final path in paths) {
+      if (path.isEmpty ||
+          _pendingAttachments.any((attachment) => attachment.path == path) ||
+          additions.any((attachment) => attachment.path == path)) {
+        continue;
+      }
+      try {
+        final file = File(path);
+        if (!await file.exists()) {
+          continue;
+        }
+        final stat = await file.stat();
+        if (stat.type != FileSystemEntityType.file) {
+          continue;
+        }
+        final name = path.split(Platform.pathSeparator).last;
+        additions.add(
+          _ComposerAttachment(
+            path: path,
+            name: name,
+            sizeBytes: stat.size,
+            type: _attachmentMessageType(name),
+          ),
+        );
+      } catch (_) {}
+    }
+
+    if (additions.isEmpty || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _pendingAttachments.addAll(additions);
+      _desktopDropActive = false;
+    });
+  }
+
+  Future<void> _pickAttachments() async {
+    final res = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (res == null || res.files.isEmpty) return;
-    final path = res.files.single.path;
-    if (path == null) return;
+    await _enqueuePickerSelection(res);
+  }
+
+  Future<void> _sendComposerPayload() async {
+    final l10n = AppLocalizations.of(context)!;
+    final text = _controller.text.trim();
+    final attachments = List<_ComposerAttachment>.from(_pendingAttachments);
+
+    if (text.isEmpty && attachments.isEmpty) {
+      return;
+    }
+
     setState(() => _sending = true);
     try {
-      await _svc.sendMessage(
-        roomId: widget.chat.id,
-        text: res.files.single.name,
-        type: _attachmentMessageType(res.files.single.name),
-        mediaFileId: path,
-      );
+      final shouldInlineCaption = text.isNotEmpty &&
+          attachments.isNotEmpty &&
+          _supportsInlineCaption(attachments.first.type);
+
+      if (text.isNotEmpty && attachments.isNotEmpty && !shouldInlineCaption) {
+        await _svc.sendMessage(roomId: widget.chat.id, text: text);
+      }
+
+      for (var index = 0; index < attachments.length; index++) {
+        final attachment = attachments[index];
+        await _svc.sendMessage(
+          roomId: widget.chat.id,
+          text: index == 0 && shouldInlineCaption
+              ? text
+              : attachment.defaultMessageText,
+          type: attachment.type,
+          mediaFileId: attachment.path,
+          onMediaSendProgress: (progress) =>
+              _setUploadProgress(attachment.name, progress),
+        );
+      }
+
+      if (text.isNotEmpty && attachments.isEmpty) {
+        await _svc.sendMessage(roomId: widget.chat.id, text: text);
+      }
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.fileSent), duration: const Duration(seconds: 2)));
+      setState(() {
+        _controller.clear();
+        _pendingAttachments.clear();
+      });
+      _scrollToLatest(animated: true);
+      await _draftService.deleteDraft(widget.chat.id);
+      if (attachments.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.fileSent),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
-      if (mounted) _showErrorMessage(l10n.attachmentSendError(e.toString()));
+      if (mounted) {
+        _showErrorMessage(
+          attachments.isNotEmpty
+              ? l10n.attachmentSendError(e.toString())
+              : l10n.sendError(e.toString()),
+        );
+      }
     } finally {
-      if (mounted) setState(() => _sending = false);
+      if (mounted) {
+        _clearUploadProgress();
+        setState(() => _sending = false);
+      }
     }
+  }
+
+  void _removePendingAttachment(_ComposerAttachment attachment) {
+    setState(() {
+      _pendingAttachments.removeWhere((item) => item.path == attachment.path);
+    });
+  }
+
+  Widget _buildUploadProgressCard(ColorScheme colorScheme) {
+    final progress = _uploadProgress;
+    final label = _uploadLabel;
+    if (progress == null || label == null) {
+      return const SizedBox.shrink();
+    }
+
+    final percent = (progress * 100).clamp(0, 100).round();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colorScheme.surface.withValues(alpha: 0.96),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.6)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.upload_rounded, color: colorScheme.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 6,
+                        backgroundColor: colorScheme.surfaceContainerHighest,
+                        valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '$percent%',
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAttachmentPreviewTray(ColorScheme colorScheme) {
+    if (_pendingAttachments.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      child: SizedBox(
+        height: 138,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: _pendingAttachments.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          itemBuilder: (context, index) {
+            final attachment = _pendingAttachments[index];
+            return _ComposerAttachmentCard(
+              attachment: attachment,
+              colorScheme: colorScheme,
+              sending: _sending,
+              onRemove: () => _removePendingAttachment(attachment),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopDropOverlay(ColorScheme colorScheme) {
+    if (!_desktopDropActive) {
+      return const SizedBox.shrink();
+    }
+
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Container(
+          margin: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: colorScheme.primary.withValues(alpha: 0.72),
+              width: 2,
+            ),
+          ),
+          child: Center(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colorScheme.surface.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.file_upload_outlined, color: colorScheme.primary, size: 34),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Drop files to attach',
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'They will appear above the message field.',
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -1284,6 +1605,7 @@ class _ChatScreenState extends State<ChatScreen> {
           final key = shouldTrackKey
               ? _messageKeys.putIfAbsent(m.id, GlobalKey.new)
               : null;
+            final caption = _messageCaption(m);
           final bubbleContent = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.white70)),
               const SizedBox(height: 6),
@@ -1333,6 +1655,16 @@ class _ChatScreenState extends State<ChatScreen> {
                     color: Colors.white,
                   ),
                 ),
+              if (caption != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  caption,
+                  softWrap: true,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              ],
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -1512,76 +1844,108 @@ class _ChatScreenState extends State<ChatScreen> {
               return Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: maxWidth),
-                  child: Column(children: [
-                    Expanded(child: bodyWidget),
-                    if (_isTyping)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const TypingIndicator(dotColor: Colors.white70),
-                          ),
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Row(children: [
-                          IconButton(
-                            icon: Icon(Icons.attach_file, color: colorScheme.onSurfaceVariant),
-                            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                            onPressed: _sending ? null : _sendAttachment,
-                          ),
-                          if (!_voiceService.isRecording)
-                            IconButton(
-                              icon: Icon(Icons.mic, color: colorScheme.onSurfaceVariant),
-                              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                              onPressed: _sending ? null : _recordVoiceMessage,
-                            )
-                          else
-                            IconButton(
-                              icon: const Icon(Icons.mic, color: Colors.red),
-                              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                              onPressed: _voiceService.isRecording ? _stopVoiceAndSend : null,
-                            ),
-                          Expanded(
-                            child: TextField(
-                              controller: _controller,
-                              style: TextStyle(color: colorScheme.onSurface),
-                              decoration: InputDecoration(
-                                hintText: AppLocalizations.of(context)!.messageInputHint,
-                                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-                                border: InputBorder.none,
+                  child: DropTarget(
+                    onDragEntered: (_) {
+                      if (!mounted) return;
+                      setState(() => _desktopDropActive = true);
+                    },
+                    onDragExited: (_) {
+                      if (!mounted) return;
+                      setState(() => _desktopDropActive = false);
+                    },
+                    onDragDone: (detail) {
+                      final paths = detail.files
+                          .map((file) => file.path)
+                          .where((path) => path.isNotEmpty)
+                          .toList(growable: false);
+                      unawaited(_enqueueDroppedFiles(paths));
+                    },
+                    child: Stack(
+                      children: [
+                        Column(children: [
+                          Expanded(child: bodyWidget),
+                          if (_isTyping)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const TypingIndicator(dotColor: Colors.white70),
+                                ),
                               ),
-                              enabled: !_voiceService.isRecording,
-                              maxLines: null,
                             ),
-                          ),
-                          IconButton(
-                            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                            icon: _sending
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                          if (_pendingAttachments.isNotEmpty)
+                            _buildAttachmentPreviewTray(colorScheme),
+                          if (_uploadProgress != null)
+                            _buildUploadProgressCard(colorScheme),
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: colorScheme.surface,
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(children: [
+                                IconButton(
+                                  icon: Icon(Icons.attach_file, color: colorScheme.onSurfaceVariant),
+                                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                                  onPressed: _sending ? null : _pickAttachments,
+                                ),
+                                if (!_voiceService.isRecording && _pendingAttachments.isEmpty)
+                                  IconButton(
+                                    icon: Icon(Icons.mic, color: colorScheme.onSurfaceVariant),
+                                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                                    onPressed: _sending ? null : _recordVoiceMessage,
                                   )
-                                : Icon(Icons.send, color: colorScheme.primary),
-                            onPressed: (_sending || _voiceService.isRecording) ? null : _sendText,
+                                else if (_voiceService.isRecording)
+                                  IconButton(
+                                    icon: const Icon(Icons.mic, color: Colors.red),
+                                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                                    onPressed: _voiceService.isRecording ? _stopVoiceAndSend : null,
+                                  )
+                                else
+                                  const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _controller,
+                                    style: TextStyle(color: colorScheme.onSurface),
+                                    decoration: InputDecoration(
+                                      hintText: _pendingAttachments.isNotEmpty
+                                          ? 'Add a caption or message'
+                                          : AppLocalizations.of(context)!.messageInputHint,
+                                      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                                      border: InputBorder.none,
+                                    ),
+                                    enabled: !_voiceService.isRecording,
+                                    maxLines: null,
+                                  ),
+                                ),
+                                IconButton(
+                                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                                  icon: _sending
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      : Icon(Icons.send, color: colorScheme.primary),
+                                  onPressed: (_sending || _voiceService.isRecording)
+                                      ? null
+                                      : _sendText,
+                                ),
+                              ]),
+                            ),
                           ),
                         ]),
-                      ),
-                    )
-                  ]),
+                        _buildDesktopDropOverlay(colorScheme),
+                      ],
+                    ),
+                  ),
                 ),
               );
             },
@@ -1604,6 +1968,276 @@ class _Msg {
   final String? mediaId;
 
   _Msg({required this.id, required this.text, required this.isOwn, required this.time, this.senderId, this.senderName, this.senderAvatar, this.type, this.mediaId});
+}
+
+class _ComposerAttachment {
+  const _ComposerAttachment({
+    required this.path,
+    required this.name,
+    required this.sizeBytes,
+    required this.type,
+  });
+
+  final String path;
+  final String name;
+  final int sizeBytes;
+  final String type;
+
+  bool get isVisual => type == 'm.image' || type == 'm.video';
+
+  String get defaultMessageText => isVisual ? '' : name;
+
+  IconData get icon {
+    switch (type) {
+      case 'm.image':
+        return Icons.image_outlined;
+      case 'm.video':
+        return Icons.videocam_outlined;
+      case 'm.audio':
+        return Icons.audio_file_outlined;
+      default:
+        return Icons.insert_drive_file_outlined;
+    }
+  }
+}
+
+class _ComposerAttachmentCard extends StatelessWidget {
+  const _ComposerAttachmentCard({
+    required this.attachment,
+    required this.colorScheme,
+    required this.sending,
+    required this.onRemove,
+  });
+
+  final _ComposerAttachment attachment;
+  final ColorScheme colorScheme;
+  final bool sending;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 156,
+      decoration: BoxDecoration(
+        color: colorScheme.surface.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                    child: _ComposerAttachmentVisual(
+                      attachment: attachment,
+                      colorScheme: colorScheme,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.58),
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+                      padding: EdgeInsets.zero,
+                      tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+                      onPressed: sending ? null : onRemove,
+                      icon: const Icon(Icons.close_rounded, size: 18, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  attachment.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  StorageService.formatBytes(attachment.sizeBytes),
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ComposerAttachmentVisual extends StatefulWidget {
+  const _ComposerAttachmentVisual({
+    required this.attachment,
+    required this.colorScheme,
+  });
+
+  final _ComposerAttachment attachment;
+  final ColorScheme colorScheme;
+
+  @override
+  State<_ComposerAttachmentVisual> createState() =>
+      _ComposerAttachmentVisualState();
+}
+
+class _ComposerAttachmentVisualState extends State<_ComposerAttachmentVisual> {
+  Future<Uint8List?>? _thumbnailFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _resetThumbnailFuture();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ComposerAttachmentVisual oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.attachment.path != widget.attachment.path ||
+        oldWidget.attachment.type != widget.attachment.type) {
+      _resetThumbnailFuture();
+    }
+  }
+
+  void _resetThumbnailFuture() {
+    _thumbnailFuture = widget.attachment.type == 'm.video'
+        ? VideoThumbnail.thumbnailData(
+            video: widget.attachment.path,
+            imageFormat: ImageFormat.JPEG,
+            maxWidth: 320,
+            quality: 56,
+          )
+        : null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.attachment.type == 'm.image') {
+      return Image.file(
+        File(widget.attachment.path),
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildFallback(),
+      );
+    }
+
+    if (widget.attachment.type == 'm.video') {
+      return FutureBuilder<Uint8List?>(
+        future: _thumbnailFuture,
+        builder: (context, snapshot) {
+          final bytes = snapshot.data;
+          if (bytes == null || bytes.isEmpty) {
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                _buildFallback(),
+                const Center(
+                  child: Icon(Icons.play_circle_fill_rounded, color: Colors.white70, size: 34),
+                ),
+              ],
+            );
+          }
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.memory(bytes, fit: BoxFit.cover),
+              Container(color: Colors.black.withValues(alpha: 0.18)),
+              const Center(
+                child: Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 34),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
+    return _buildFallback();
+  }
+
+  Widget _buildFallback() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            widget.colorScheme.primary.withValues(alpha: 0.24),
+            widget.colorScheme.surfaceContainerHighest,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          widget.attachment.icon,
+          color: widget.colorScheme.primary,
+          size: 34,
+        ),
+      ),
+    );
+  }
+}
+
+bool _looksLikeFileName(String value) {
+  final lower = value.trim().toLowerCase();
+  if (lower.isEmpty) {
+    return false;
+  }
+  const fileExtensions = <String>[
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.webp',
+    '.mp4',
+    '.mov',
+    '.webm',
+    '.ogg',
+    '.m4a',
+    '.mp3',
+    '.wav',
+    '.pdf',
+    '.doc',
+    '.docx',
+    '.xls',
+    '.xlsx',
+    '.zip',
+    '.rar',
+    '.txt',
+  ];
+  return fileExtensions.any(lower.endsWith);
+}
+
+String? _messageCaption(_Msg message) {
+  final text = message.text.trim();
+  if (text.isEmpty || _looksLikeFileName(text)) {
+    return null;
+  }
+  return text;
 }
 
 bool _sameStringList(List<String> left, List<String> right) {

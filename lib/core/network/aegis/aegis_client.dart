@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/network/aegis/event_dispatcher.dart';
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
 import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
@@ -10,6 +10,9 @@ import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/transport.dart';
+
+String _encodeMediaAttachmentBase64(Uint8List mediaBytes) =>
+  base64Encode(mediaBytes);
 
 /// Main Aegis client class
 class AegisClient {
@@ -625,6 +628,7 @@ class AegisClient {
     String? fileName,
     String? mimeType,
     int? replyToMessageId,
+    void Function(double progress)? onProgress,
   }) async {
     _ensureAuthenticated();
 
@@ -671,10 +675,17 @@ class AegisClient {
       MediaKind.voice => MessageContentType.audio,
     };
 
+    onProgress?.call(0.86);
+    final encodedBytes = await compute(
+      _encodeMediaAttachmentBase64,
+      mediaBytes,
+    );
+    onProgress?.call(0.96);
+
     final attachment = MediaAttachmentPayload(
       fileName: resolvedFileName,
       mimeType: resolvedMime,
-      base64Data: base64Encode(mediaBytes),
+      base64Data: encodedBytes,
       sizeBytes: mediaBytes.length,
     );
 

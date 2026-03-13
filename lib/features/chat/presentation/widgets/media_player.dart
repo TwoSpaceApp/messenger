@@ -24,7 +24,6 @@ class _MediaPlayerState extends State<MediaPlayer> {
   bool _initialized = false;
   String? _error;
   bool _isBuffering = false;
-  bool _openedExternally = false;
   bool _controlsVisible = true;
   bool _muted = false;
   BoxFit _videoFit = BoxFit.contain;
@@ -55,31 +54,6 @@ class _MediaPlayerState extends State<MediaPlayer> {
 
   Future<void> _initializePlayer() async {
     try {
-      if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
-        final target = widget.localPath ?? widget.networkUrl;
-        if (target == null || target.trim().isEmpty) {
-          throw Exception('Video path is empty');
-        }
-
-        final opened = await _openInSystemPlayer(target);
-        if (!mounted) return;
-
-        if (opened) {
-          setState(() {
-            _openedExternally = true;
-            _error = null;
-          });
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              Navigator.of(context).maybePop();
-            }
-          });
-          return;
-        }
-
-        throw Exception('Unable to open system video player');
-      }
-
       if (widget.networkUrl != null) {
         _controller = VideoPlayerController.networkUrl(
           Uri.parse(widget.networkUrl!),
@@ -111,24 +85,6 @@ class _MediaPlayerState extends State<MediaPlayer> {
           _initialized = false;
         });
       }
-    }
-  }
-
-  Future<bool> _openInSystemPlayer(String target) async {
-    try {
-      ProcessResult result;
-      if (Platform.isLinux) {
-        result = await Process.run('xdg-open', [target]);
-      } else if (Platform.isMacOS) {
-        result = await Process.run('open', [target]);
-      } else if (Platform.isWindows) {
-        result = await Process.run('cmd', ['/c', 'start', '', target], runInShell: true);
-      } else {
-        return false;
-      }
-      return result.exitCode == 0;
-    } catch (_) {
-      return false;
     }
   }
 
@@ -816,33 +772,31 @@ class _MediaPlayerState extends State<MediaPlayer> {
         child: _error != null
             ? Text(l10n.videoLoadError(_error!),
                 style: TextStyle(color: theme.colorScheme.error))
-            : _openedExternally
-                ? const SizedBox.shrink()
-                : GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: _toggleControlsVisibility,
-                    onVerticalDragStart: _onVerticalDragStart,
-                    onVerticalDragUpdate: _onVerticalDragUpdate,
-                    onVerticalDragEnd: _onVerticalDragEnd,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        ColoredBox(
-                          color: Colors.black,
-                          child: Center(child: _buildVideoSurface()),
-                        ),
-                        _buildBrightnessLayer(),
-                        if (!_initialized || _isBuffering)
-                          const Center(child: CircularProgressIndicator()),
-                        _buildScrubPreview(
-                          theme,
-                          _controller?.value.duration ?? Duration.zero,
-                        ),
-                        _buildGestureHud(),
-                        _buildControlsOverlay(theme),
-                      ],
+            : GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _toggleControlsVisibility,
+                onVerticalDragStart: _onVerticalDragStart,
+                onVerticalDragUpdate: _onVerticalDragUpdate,
+                onVerticalDragEnd: _onVerticalDragEnd,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ColoredBox(
+                      color: Colors.black,
+                      child: Center(child: _buildVideoSurface()),
                     ),
-                  ),
+                    _buildBrightnessLayer(),
+                    if (!_initialized || _isBuffering)
+                      const Center(child: CircularProgressIndicator()),
+                    _buildScrubPreview(
+                      theme,
+                      _controller?.value.duration ?? Duration.zero,
+                    ),
+                    _buildGestureHud(),
+                    _buildControlsOverlay(theme),
+                  ],
+                ),
+              ),
       ),
     );
   }

@@ -659,6 +659,7 @@ class AegisChatService {
     required String text,
     String type = 'm.text',
     String? mediaFileId,
+    void Function(double progress)? onMediaSendProgress,
   }) async {
     await ensureReady();
     final conversation = _conversations[roomId];
@@ -680,7 +681,11 @@ class AegisChatService {
         );
       }
 
-      final bytes = await mediaFile.readAsBytes();
+      onMediaSendProgress?.call(0.02);
+      final bytes = await _readMediaFileWithProgress(
+        mediaFile,
+        onProgress: onMediaSendProgress,
+      );
       final fileName = p.basename(mediaFile.path);
       final mimeType = _inferMimeType(fileName, type: type);
       final sentMessage = await _sendMediaMessage(
@@ -690,7 +695,9 @@ class AegisChatService {
         mimeType: mimeType,
         caption: text,
         messageType: type,
+        onProgress: onMediaSendProgress,
       );
+      onMediaSendProgress?.call(1);
       return sentMessage.id;
     }
 
@@ -739,6 +746,7 @@ class AegisChatService {
     required String mimeType,
     required String messageType,
     String? caption,
+    void Function(double progress)? onProgress,
   }) async {
     final conversation = _conversations[roomId];
     if (conversation == null) {
@@ -765,11 +773,13 @@ class AegisChatService {
       caption: caption,
       fileName: fileName,
       mimeType: mimeType,
+      onProgress: onProgress,
     );
     if (!response.success) {
       throw Exception(response.messageText ?? 'Unable to send media');
     }
 
+    onProgress?.call(0.98);
     final storedPath = await _storeMediaBytes(
       bytes,
       preferredFileName: '${response.messageId}_${_sanitizeFileName(fileName)}',
@@ -787,6 +797,39 @@ class AegisChatService {
     );
     await _appendMessage(roomId, message);
     return message;
+  }
+
+  Future<Uint8List> _readMediaFileWithProgress(
+    File mediaFile, {
+    void Function(double progress)? onProgress,
+  }) async {
+    final totalLength = await mediaFile.length();
+    if (totalLength <= 0) {
+      return mediaFile.readAsBytes();
+    }
+
+    const chunkSize = 64 * 1024;
+    final builder = BytesBuilder(copy: false);
+    final handle = await mediaFile.open();
+    var loaded = 0;
+
+    try {
+      while (true) {
+        final chunk = await handle.read(chunkSize);
+        if (chunk.isEmpty) {
+          break;
+        }
+        builder.add(chunk);
+        loaded += chunk.length;
+        final progress = (loaded * 82) / (totalLength * 100);
+        onProgress?.call(progress.clamp(0.02, 0.82));
+        await Future<void>.delayed(Duration.zero);
+      }
+    } finally {
+      await handle.close();
+    }
+
+    return builder.takeBytes();
   }
 
   Future<void> sendReply(
