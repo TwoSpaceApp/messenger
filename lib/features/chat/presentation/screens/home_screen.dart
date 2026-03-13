@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
@@ -341,21 +342,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.transparent,
       body: ScreenBackground(
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeroHeader(theme, l10n),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
-                  child: _loading ? _buildShimmerLoading() : _buildChatList(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth = constraints.maxWidth >= UITokens.desktopBreakpoint
+                  ? 920.0
+                  : double.infinity;
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: Column(
+                    children: [
+                      _buildHeroHeader(theme, l10n),
+                      Expanded(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          child: _loading ? _buildShimmerLoading() : _buildChatList(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 88,
+        ),
         child: FloatingActionButton(
           onPressed: _showStartChatSheet,
           child: const Icon(Icons.add_comment_outlined),
@@ -425,26 +440,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (rooms.isEmpty) {
       final l10n = AppLocalizations.of(context)!;
-      return Padding(
-        padding: const EdgeInsets.all(12),
-        child: GlassCard(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.forum_outlined,
-                size: 56,
-                color: Colors.white70,
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 220),
+            child: GlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.forum_outlined,
+                    size: 36,
+                    color: Colors.white70,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    l10n.noChats,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.noChats,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ],
+            ),
           ),
         ),
       );

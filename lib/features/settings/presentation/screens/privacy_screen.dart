@@ -66,11 +66,18 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                       onTap: _loading
                           ? null
                           : () async {
+                              final width = MediaQuery.of(context).size.width;
+                              final horizontalInset =
+                                  (width * 0.08).clamp(12.0, 28.0);
                               final controller =
                                   TextEditingController(text: days.toString());
                               final ok = await showDialog<bool>(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
+                                  insetPadding: EdgeInsets.symmetric(
+                                    horizontal: horizontalInset,
+                                    vertical: 24,
+                                  ),
                                   title: Text(l10n.sessionExpiryDaysTitle),
                                   content: Column(
                                     mainAxisSize: MainAxisSize.min,

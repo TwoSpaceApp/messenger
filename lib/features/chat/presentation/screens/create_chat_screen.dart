@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
@@ -147,7 +148,8 @@ class _CreateChatScreenState extends State<CreateChatScreen>
   Future<void> _joinRoomByLink() async {
     final linkOrAlias = _joinLinkController.text.trim();
     if (linkOrAlias.isEmpty) {
-      setState(() => _errorMessage = AppLocalizations.of(context)!.joinLinkHint);
+      setState(() =>
+          _errorMessage = AppLocalizations.of(context)!.joinLinkHint);
       return;
     }
 
@@ -178,76 +180,88 @@ class _CreateChatScreenState extends State<CreateChatScreen>
       backgroundColor: Colors.transparent,
       body: ScreenBackground(
         child: SafeArea(
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const AppLogo(large: false),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.newChatTitle,
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth =
+                  constraints.maxWidth >= UITokens.desktopBreakpoint ? 920.0 : double.infinity;
+              final isNarrow = constraints.maxWidth < UITokens.mobileBreakpoint;
+              return Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                              ),
+                              onPressed: () => Navigator.pop(context),
                             ),
-                          ),
-                          Text(
-                            l10n.chatsSubtitle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.white70,
+                            const AppLogo(large: false),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.newChatTitle,
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    l10n.chatsSubtitle,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      GlassCard(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.zero,
+                        child: TabBar(
+                          controller: _tabController,
+                          isScrollable: isNarrow,
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Colors.white60,
+                          indicatorColor: theme.colorScheme.primary,
+                          tabs: [
+                            Tab(text: l10n.directChatTab),
+                            Tab(text: l10n.groupChatTab),
+                            Tab(text: l10n.joinByCodeTitle),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildDirectChatTab(),
+                            _buildGroupChatTab(),
+                            _buildJoinChatTab(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-
-              // Tab bar
-              GlassCard(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: EdgeInsets.zero,
-                child: TabBar(
-                  controller: _tabController,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white60,
-                  indicatorColor: theme.colorScheme.primary,
-                  tabs: [
-                    Tab(text: l10n.directChatTab),
-                    Tab(text: l10n.groupChatTab),
-                    Tab(text: l10n.joinByCodeTitle),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Tab content
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildDirectChatTab(),
-                    _buildGroupChatTab(),
-                    _buildJoinChatTab(),
-                  ],
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),

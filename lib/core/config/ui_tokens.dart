@@ -17,6 +17,11 @@ class UITokens {
   // Common Card elevation
   static const double cardElevation = 2;
 
+  // Responsive breakpoints
+  static const double mobileBreakpoint = 540;
+  static const double tabletBreakpoint = 760;
+  static const double desktopBreakpoint = 1100;
+
   // Helper to create a slightly emphasized text style based on theme
   static TextStyle emphasized(BuildContext context) => Theme.of(context)
       .textTheme

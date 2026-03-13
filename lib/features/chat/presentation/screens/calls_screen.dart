@@ -8,6 +8,7 @@ import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
+import 'package:two_space_app/features/people/data/models/call_history_entry.dart';
 import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/people/presentation/controllers/calls_controller.dart';
 import 'package:two_space_app/features/people/presentation/widgets/people_search_field.dart';
@@ -365,8 +366,10 @@ class _CallsScreenState extends State<CallsScreen> {
     return '$count • $type$duration';
   }
 
-  String _directionLabel(dynamic direction, AppLocalizations l10n) {
-    return direction.name == 'incoming' ? l10n.incomingCall : l10n.outgoingCall;
+  String _directionLabel(CallHistoryDirection direction, AppLocalizations l10n) {
+    return direction == CallHistoryDirection.incoming
+        ? l10n.incomingCall
+        : l10n.outgoingCall;
   }
 
   String _formatDuration(Duration duration) {

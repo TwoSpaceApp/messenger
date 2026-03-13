@@ -62,9 +62,13 @@ class _UpdateScreenState extends State<UpdateScreen> {
       final canInstall = await UpdateService.canRequestInstallPackages();
       if (!canInstall) {
         if (!mounted) return;
+        final width = MediaQuery.of(context).size.width;
+        final horizontalInset = (width * 0.08).clamp(12.0, 28.0);
         final ok = await showDialog<bool>(
           context: context,
           builder: (c) => AlertDialog(
+            insetPadding:
+                EdgeInsets.symmetric(horizontal: horizontalInset, vertical: 24),
             title: Text(l10n.installPermissionTitle),
             content: Text(l10n.installPermissionContent),
             actions: [

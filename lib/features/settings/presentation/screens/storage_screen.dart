@@ -43,10 +43,14 @@ class _StorageScreenState extends State<StorageScreen> {
   Future<void> _clearSelected() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_clearMedia && !_clearFiles) return;
+    final width = MediaQuery.of(context).size.width;
+    final horizontalInset = (width * 0.08).clamp(12.0, 28.0);
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
+        insetPadding:
+            EdgeInsets.symmetric(horizontal: horizontalInset, vertical: 24),
         title: Text(l10n.clearCacheTitle),
         content: Text(l10n.clearCacheContent),
         actions: [

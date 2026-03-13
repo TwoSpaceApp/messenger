@@ -183,7 +183,7 @@ class AegisChatService {
 
   bool _initialized = false;
   bool _attached = false;
-  Future<void>? _bootstrapFuture;
+  Future<bool>? _bootstrapFuture;
   StreamSubscription<Message>? _incomingSub;
   late Directory _storeDir;
   late Directory _messagesDir;
@@ -412,16 +412,15 @@ class AegisChatService {
     _incomingSub = _auth.rawClient.messages.listen(_handleIncomingMessage);
   }
 
-  Future<void> _ensureChatBootstrap() async {
+  Future<bool> _ensureChatBootstrap() async {
     final inFlight = _bootstrapFuture;
     if (inFlight != null) {
-      await inFlight;
-      return;
+      return inFlight;
     }
     final future = _refreshChatsFromServer();
     _bootstrapFuture = future;
     try {
-      await future;
+      return await future;
     } finally {
       if (identical(_bootstrapFuture, future)) {
         _bootstrapFuture = null;
@@ -1220,8 +1219,8 @@ class AegisChatService {
 
   Future<void> refreshChats() async {
     await ensureReady();
-    await _ensureChatBootstrap();
-    final changed = await _refreshChatsFromServer();
+    final bootstrapChanged = await _ensureChatBootstrap();
+    final changed = bootstrapChanged || await _refreshChatsFromServer();
     if (changed) {
       _emitChanged();
     }

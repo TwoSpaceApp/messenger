@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/responsive.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
@@ -212,9 +214,13 @@ class _CallScreenState extends State<CallScreen> {
     final title = _person.displayName.isNotEmpty
       ? _person.displayName
       : l10n.userDefault;
-    final isCompact = MediaQuery.sizeOf(context).width < 390;
+    final width = MediaQuery.sizeOf(context).width;
+    final isCompact = width < 390;
+    final isTablet = width >= UITokens.tabletBreakpoint;
+    final isDesktop = width >= UITokens.desktopBreakpoint;
     final sidePadding = 20.s(context);
     final controlsGap = 18.s(context);
+    final contentMaxWidth = isDesktop ? 880.0 : (isTablet ? 720.0 : double.infinity);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -224,10 +230,14 @@ class _CallScreenState extends State<CallScreen> {
             builder: (context, constraints) {
               return SingleChildScrollView(
                 padding: EdgeInsets.all(sidePadding),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Column(
-                    children: [
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                      maxWidth: contentMaxWidth,
+                    ),
+                    child: Column(
+                      children: [
                       Row(
                         children: [
                           IconButton(
@@ -329,7 +339,7 @@ class _CallScreenState extends State<CallScreen> {
                         ),
                         child: Wrap(
                           alignment: WrapAlignment.center,
-                          spacing: isCompact ? 10.s(context) : 18.s(context),
+                          spacing: (isCompact ? 10 : (isTablet ? 14 : 18)).s(context),
                           runSpacing: 14.s(context),
                           children: [
                             _CallActionButton(
@@ -373,13 +383,14 @@ class _CallScreenState extends State<CallScreen> {
                       FilledButton.icon(
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.redAccent,
-                          minimumSize: Size.fromHeight(56.s(context)),
+                          minimumSize: Size(double.infinity, 56.s(context)),
                         ),
                         onPressed: _endCall,
                         icon: const Icon(Icons.call_end_rounded),
                         label: Text(l10n.callsEndAction),
                       ),
                     ],
+                    ),
                   ),
                 ),
               );
@@ -577,10 +588,16 @@ class _VideoPreviewStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isCompact = MediaQuery.sizeOf(context).width < 390;
-    final previewHeight = MediaQuery.sizeOf(context).height < 760
-        ? 260.s(context)
-        : 320.s(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final height = MediaQuery.sizeOf(context).height;
+    final isCompact = width < 390;
+    final isTablet = width >= UITokens.tabletBreakpoint;
+    final isDesktop = width >= UITokens.desktopBreakpoint;
+    final double previewHeight = isDesktop
+      ? math.min(height * 0.48, 420.0)
+      : isTablet
+        ? math.min(height * 0.44, 380.0)
+        : (height < 760 ? 260.s(context) : 320.s(context));
 
     return SizedBox(
       height: previewHeight,
@@ -611,8 +628,12 @@ class _VideoPreviewStack extends StatelessWidget {
             right: 16.s(context),
             bottom: 16.s(context),
             child: Container(
-              width: isCompact ? 96.s(context) : 120.s(context),
-              height: isCompact ? 144.s(context) : 180.s(context),
+              width: isDesktop
+                ? 150.s(context)
+                : (isTablet ? 132.s(context) : (isCompact ? 96.s(context) : 120.s(context))),
+              height: isDesktop
+                ? 210.s(context)
+                : (isTablet ? 196.s(context) : (isCompact ? 144.s(context) : 180.s(context))),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24.s(context)),
                 color: Colors.black.withValues(alpha: 0.35),

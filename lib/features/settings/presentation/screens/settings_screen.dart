@@ -38,12 +38,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _logout() async {
     final l10n = AppLocalizations.of(context)!;
+    final width = MediaQuery.of(context).size.width;
+    final horizontalInset = (width * 0.08).clamp(12.0, 28.0);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: Text(l10n.logoutDialogTitle),
         content: Text(l10n.logoutDialogContent),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        insetPadding:
+            EdgeInsets.symmetric(horizontal: horizontalInset, vertical: 24),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),

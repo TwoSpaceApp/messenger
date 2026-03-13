@@ -22,8 +22,6 @@ class _FloatingNavBarState extends State<FloatingNavBar>
     with SingleTickerProviderStateMixin {
   late final ValueNotifier<bool> _isExpanded;
   Timer? _hideTimer;
-  Offset _position = const Offset(0, 0); // Relative position
-  bool _initialized = false;
 
   // To handle drag limits
   final double _widthExpanded = 344;
@@ -60,102 +58,86 @@ class _FloatingNavBarState extends State<FloatingNavBar>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final size = MediaQuery.of(context).size;
-
-    // Initial centered position at bottom
-    if (!_initialized) {
-      _position = Offset((size.width - _widthExpanded) / 2, size.height - 100);
-      _initialized = true;
-    }
-
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Positioned(
-      left: _position.dx,
-      top: _position.dy,
-      child: GestureDetector(
-        onPanUpdate: (details) {
-          setState(() {
-            _position += details.delta;
-            // Clamp to screen
-            _position = Offset(
-              _position.dx.clamp(0, size.width - 60),
-              _position.dy.clamp(0, size.height - 80),
-            );
-          });
-          _onInteraction();
-        },
-        onTap: () {
-          if (!_isExpanded.value) {
-            _onInteraction();
-          }
-        },
-        child: Listener(
-          // Catch taps inside
-          onPointerDown: (_) => _onInteraction(),
-          child: ValueListenableBuilder<bool>(
-            valueListenable: _isExpanded,
-            builder: (context, expanded, child) {
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOutBack,
-                width: expanded ? _widthExpanded : _widthCollapsed,
-                height: _height,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(35),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(35),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                    child: ColoredBox(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.7),
-                      child: expanded
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _NavItem(
-                                    icon: Icons.chat_bubble_outline,
-                                  label: l10n.chatsTitle,
-                                    index: 0,
-                                    selected: widget.selectedIndex == 0,
-                                    onTap: () => widget.onItemSelected(0)),
-                                _NavItem(
-                                    icon: Icons.call_outlined,
-                                  label: l10n.callsTitle,
-                                    index: 1,
-                                    selected: widget.selectedIndex == 1,
-                                    onTap: () => widget.onItemSelected(1)),
-                                _NavItem(
-                                  icon: Icons.groups_2_outlined,
-                                  label: l10n.peopleTitle,
-                                    index: 2,
-                                    selected: widget.selectedIndex == 2,
-                                    onTap: () => widget.onItemSelected(2)),
-                                _NavItem(
-                                    icon: Icons.settings_outlined,
-                                  label: l10n.settingsTitle,
-                                    index: 3,
-                                    selected: widget.selectedIndex == 3,
-                                    onTap: () => widget.onItemSelected(3)),
-                              ],
-                            )
-                          : const Center(
-                              child: Icon(Icons.more_horiz, size: 30),
-                            ),
+      left: 0,
+      right: 0,
+      bottom: 10 + bottomInset,
+      child: Center(
+        child: GestureDetector(
+          onTap: () {
+            if (!_isExpanded.value) {
+              _onInteraction();
+            }
+          },
+          child: Listener(
+            onPointerDown: (_) => _onInteraction(),
+            child: ValueListenableBuilder<bool>(
+              valueListenable: _isExpanded,
+              builder: (context, expanded, child) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOutBack,
+                  width: expanded ? _widthExpanded : _widthCollapsed,
+                  height: _height,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(35),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(35),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      child: ColoredBox(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surface
+                            .withValues(alpha: 0.7),
+                        child: expanded
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _NavItem(
+                                      icon: Icons.chat_bubble_outline,
+                                    label: l10n.chatsTitle,
+                                      index: 0,
+                                      selected: widget.selectedIndex == 0,
+                                      onTap: () => widget.onItemSelected(0)),
+                                  _NavItem(
+                                      icon: Icons.call_outlined,
+                                    label: l10n.callsTitle,
+                                      index: 1,
+                                      selected: widget.selectedIndex == 1,
+                                      onTap: () => widget.onItemSelected(1)),
+                                  _NavItem(
+                                    icon: Icons.groups_2_outlined,
+                                    label: l10n.peopleTitle,
+                                      index: 2,
+                                      selected: widget.selectedIndex == 2,
+                                      onTap: () => widget.onItemSelected(2)),
+                                  _NavItem(
+                                      icon: Icons.settings_outlined,
+                                    label: l10n.settingsTitle,
+                                      index: 3,
+                                      selected: widget.selectedIndex == 3,
+                                      onTap: () => widget.onItemSelected(3)),
+                                ],
+                              )
+                            : const Center(
+                                child: Icon(Icons.more_horiz, size: 30),
+                              ),
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),

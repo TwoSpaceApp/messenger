@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart' as share;
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -17,6 +18,7 @@ import 'package:two_space_app/features/chat/data/services/draft_service.dart';
 import 'package:two_space_app/features/chat/data/services/voice_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_settings_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/group_settings_screen.dart';
+import 'package:two_space_app/features/chat/presentation/widgets/media_player.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/typing_indicator.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
@@ -402,6 +404,24 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  void _openImageGallery({
+    required List<String> mediaIds,
+    required int initialIndex,
+  }) {
+    if (mediaIds.isEmpty || initialIndex < 0 || initialIndex >= mediaIds.length) {
+      return;
+    }
+    showDialog<void>(
+      context: context,
+      builder: (_) => _ChatImageGalleryDialog(
+        mediaIds: mediaIds,
+        initialIndex: initialIndex,
+        svc: _svc,
+        mediaDownloads: _mediaDownloads,
+      ),
+    );
+  }
+
 
   Future<void> _loadMessages({bool forceRefresh = false}) async {
     final msgs = await _svc.loadMessages(
@@ -779,12 +799,36 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<String?> _showEmojiPickerDialog() async {
     String? chosen;
     await showDialog(context: context, builder: (c) {
-      return Dialog(child: SizedBox(width: 360, height: 420, child: EmojiPicker(
-        onEmojiSelected: (category, emoji) { 
-          chosen = emoji.emoji; 
-          Navigator.of(c).pop(); 
-        }
-      )));
+      final size = MediaQuery.of(c).size;
+      final width = math.min(size.width * 0.9, 420.0);
+      final height = math.min(size.height * 0.72, 520.0);
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  tooltip: MaterialLocalizations.of(c).closeButtonTooltip,
+                  onPressed: () => Navigator.of(c).pop(),
+                  icon: const Icon(Icons.close),
+                ),
+              ),
+              Expanded(
+                child: EmojiPicker(
+                  onEmojiSelected: (category, emoji) {
+                    chosen = emoji.emoji;
+                    Navigator.of(c).pop();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     });
     return chosen;
   }
@@ -965,6 +1009,17 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     } else {
       final visibleMessages = _visibleMessages;
+      final viewportWidth = MediaQuery.of(context).size.width;
+      final bubbleMaxWidth = math.min(viewportWidth * 0.72, 560.0);
+      final imageMediaIds = <String>[];
+      final imageIndexByMessageId = <String, int>{};
+      for (final msg in visibleMessages) {
+        final mediaId = msg.mediaId;
+        if (msg.type == 'm.image' && mediaId != null && mediaId.isNotEmpty) {
+          imageIndexByMessageId[msg.id] = imageMediaIds.length;
+          imageMediaIds.add(mediaId);
+        }
+      }
       bodyWidget = ListView.custom(
         controller: _listController,
         padding: const EdgeInsets.all(12),
@@ -997,25 +1052,40 @@ class _ChatScreenState extends State<ChatScreen> {
               if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.white70)),
               const SizedBox(height: 6),
               if (m.type == 'm.image' && (m.mediaId != null && m.mediaId!.isNotEmpty))
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 300, maxHeight: 240),
-                    child: _ImageMessageWidget(
-                      mediaId: m.mediaId!,
-                      svc: _svc,
-                      mediaDownloads: _mediaDownloads,
-                    ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
+                  child: _ImageMessageWidget(
+                    mediaId: m.mediaId!,
+                    svc: _svc,
+                    mediaDownloads: _mediaDownloads,
+                    maxWidth: bubbleMaxWidth,
+                    onOpenGallery: () {
+                      final index = imageIndexByMessageId[m.id];
+                      if (index == null) return;
+                      _openImageGallery(
+                        mediaIds: imageMediaIds,
+                        initialIndex: index,
+                      );
+                    },
+                  ),
+                )
+              else if (m.type == 'm.video' && (m.mediaId != null && m.mediaId!.isNotEmpty))
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
+                  child: _VideoMessageWidget(
+                    message: m,
+                    svc: _svc,
+                    maxWidth: bubbleMaxWidth,
                   ),
                 )
               else if (m.type == 'm.audio' || (m.text.toLowerCase().endsWith('.ogg') || (m.mediaId?.toLowerCase().endsWith('.ogg') ?? false)))
                 ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.6),
+                  constraints: BoxConstraints(maxWidth: bubbleMaxWidth * 0.85),
                   child: _AudioMessageWidget(message: m, svc: _svc, audioPlayers: _audioPlayers),
                 )
-              else if (m.type == 'm.file' || m.type == 'm.video')
+              else if (m.type == 'm.file')
                 ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+                  constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
                   child: _FileMessageWidget(message: m, svc: _svc),
                 )
               else
@@ -1113,8 +1183,6 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                   ),
-                  if (m.isOwn) const SizedBox(width: 8),
-                  if (m.isOwn) const CircleAvatar(radius: 16, child: Text('Y')),
                 ],
               ),
             ),
@@ -1186,64 +1254,89 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: ScreenBackground(
         child: SafeArea(
-          child: Column(children: [
-        
-        Expanded(child: bodyWidget),
-        if (_isTyping)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2E3338),
-                  borderRadius: BorderRadius.circular(16),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth = constraints.maxWidth >= (UITokens.desktopBreakpoint + 100)
+                  ? 980.0
+                  : double.infinity;
+              final colorScheme = Theme.of(context).colorScheme;
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: Column(children: [
+                    Expanded(child: bodyWidget),
+                    if (_isTyping)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const TypingIndicator(dotColor: Colors.white70),
+                          ),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Row(children: [
+                          IconButton(
+                            icon: Icon(Icons.attach_file, color: colorScheme.onSurfaceVariant),
+                            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                            onPressed: _sending ? null : _sendAttachment,
+                          ),
+                          if (!_voiceService.isRecording)
+                            IconButton(
+                              icon: Icon(Icons.mic, color: colorScheme.onSurfaceVariant),
+                              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                              onPressed: _sending ? null : _recordVoiceMessage,
+                            )
+                          else
+                            IconButton(
+                              icon: const Icon(Icons.mic, color: Colors.red),
+                              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                              onPressed: _voiceService.isRecording ? _stopVoiceAndSend : null,
+                            ),
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              style: TextStyle(color: colorScheme.onSurface),
+                              decoration: InputDecoration(
+                                hintText: AppLocalizations.of(context)!.messageInputHint,
+                                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                                border: InputBorder.none,
+                              ),
+                              enabled: !_voiceService.isRecording,
+                              maxLines: null,
+                            ),
+                          ),
+                          IconButton(
+                            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                            icon: _sending
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : Icon(Icons.send, color: colorScheme.primary),
+                            onPressed: (_sending || _voiceService.isRecording) ? null : _sendText,
+                          ),
+                        ]),
+                      ),
+                    )
+                  ]),
                 ),
-                child: const TypingIndicator(dotColor: Colors.white70),
-              ),
-            ),
+              );
+            },
           ),
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF21262C),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Row(children: [
-              IconButton(icon: const Icon(Icons.attach_file, color: Colors.white54), onPressed: _sending ? null : _sendAttachment),
-              if (!_voiceService.isRecording)
-                IconButton(
-                  icon: const Icon(Icons.mic, color: Colors.white54),
-                  onPressed: _sending ? null : _recordVoiceMessage,
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.mic, color: Colors.red),
-                  onPressed: _voiceService.isRecording ? _stopVoiceAndSend : null,
-                ),
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)!.messageInputHint,
-                    hintStyle: const TextStyle(color: Colors.white54),
-                    border: InputBorder.none,
-                  ),
-                  enabled: !_voiceService.isRecording,
-                  maxLines: null,
-                ),
-              ),
-              IconButton(
-                icon: _sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send, color: Color(0xFF0077FF)),
-                onPressed: (_sending || _voiceService.isRecording) ? null : _sendText,
-              ),
-            ]),
-          ),
-        )
-      ]),
         ),
       ),
     );
@@ -1269,11 +1362,15 @@ class _ImageMessageWidget extends StatefulWidget {
     required this.mediaId,
     required this.svc,
     required this.mediaDownloads,
+    required this.maxWidth,
+    required this.onOpenGallery,
   });
 
   final String mediaId;
   final AegisChatService svc;
   final Map<String, String> mediaDownloads;
+  final double maxWidth;
+  final VoidCallback onOpenGallery;
 
   @override
   State<_ImageMessageWidget> createState() => _ImageMessageWidgetState();
@@ -1336,28 +1433,40 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
     super.build(context);
     if (_loading) {
       return Container(
-        width: 280,
-        height: 180,
+        width: widget.maxWidth,
+        height: widget.maxWidth * 0.62,
         color: const Color(0xFF21262C),
       );
     }
     if (_error != null || _localPath == null) {
       return Container(
-        width: 120,
-        height: 80,
+        width: widget.maxWidth * 0.68,
+        height: widget.maxWidth * 0.42,
         color: const Color(0xFF21262C),
         child: const Center(
           child: Icon(Icons.broken_image, color: Colors.white54),
         ),
       );
     }
-    return Image.file(
-      File(_localPath!),
-      fit: BoxFit.cover,
-      width: 280,
-      height: 180,
-      cacheWidth: 560,
-      cacheHeight: 360,
+    return GestureDetector(
+      onTap: widget.onOpenGallery,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: widget.maxWidth,
+            maxHeight: widget.maxWidth * 1.35,
+          ),
+          child: Container(
+            color: const Color(0xFF171A1F),
+            child: Image.file(
+              File(_localPath!),
+              fit: BoxFit.contain,
+              cacheWidth: 1200,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1372,6 +1481,262 @@ class _AudioMessageWidget extends StatefulWidget {
   const _AudioMessageWidget({required this.message, required this.svc, required this.audioPlayers});
   @override
   State<_AudioMessageWidget> createState() => _AudioMessageWidgetState();
+}
+
+class _VideoMessageWidget extends StatefulWidget {
+  const _VideoMessageWidget({
+    required this.message,
+    required this.svc,
+    required this.maxWidth,
+  });
+
+  final _Msg message;
+  final AegisChatService svc;
+  final double maxWidth;
+
+  @override
+  State<_VideoMessageWidget> createState() => _VideoMessageWidgetState();
+}
+
+class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
+  String? _localPath;
+  bool _loading = true;
+  Object? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_prepare());
+  }
+
+  Future<void> _prepare() async {
+    try {
+      final mediaRef = widget.message.mediaId ?? widget.message.text;
+      final path = await widget.svc.downloadMediaToTempFile(mediaRef);
+      if (!mounted) return;
+      setState(() {
+        _localPath = path;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error;
+        _loading = false;
+      });
+    }
+  }
+
+  String _label() {
+    final raw = (widget.message.text.trim().isNotEmpty
+            ? widget.message.text
+            : widget.message.mediaId) ??
+        'video';
+    return raw.split('/').last;
+  }
+
+  Future<void> _open() async {
+    final path = _localPath;
+    if (path == null || path.isEmpty) return;
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MediaPlayer(localPath: path),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return Container(
+        width: widget.maxWidth,
+        height: widget.maxWidth * 0.56,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: const Color(0xFF21262C),
+        ),
+      );
+    }
+
+    if (_error != null || _localPath == null) {
+      return Container(
+        width: widget.maxWidth,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: const Color(0xFF21262C),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.broken_image, color: Colors.white54),
+            SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'Video unavailable',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: _open,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: widget.maxWidth,
+            color: const Color(0xFF171A1F),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: widget.maxWidth,
+                  height: widget.maxWidth * 0.56,
+                  color: Colors.black45,
+                  child: const Center(
+                    child: Icon(
+                      Icons.play_circle_fill_rounded,
+                      size: 52,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                  child: Text(
+                    _label(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatImageGalleryDialog extends StatefulWidget {
+  const _ChatImageGalleryDialog({
+    required this.mediaIds,
+    required this.initialIndex,
+    required this.svc,
+    required this.mediaDownloads,
+  });
+
+  final List<String> mediaIds;
+  final int initialIndex;
+  final AegisChatService svc;
+  final Map<String, String> mediaDownloads;
+
+  @override
+  State<_ChatImageGalleryDialog> createState() => _ChatImageGalleryDialogState();
+}
+
+class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
+  late final PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Future<String> _resolvePath(String mediaId) async {
+    final cached = widget.mediaDownloads[mediaId];
+    if (cached != null && File(cached).existsSync()) {
+      return cached;
+    }
+    final path = await widget.svc.downloadMediaToTempFile(mediaId);
+    widget.mediaDownloads[mediaId] = path;
+    return path;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.all(8),
+      backgroundColor: Colors.black,
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            onPageChanged: (value) => setState(() => _currentIndex = value),
+            itemCount: widget.mediaIds.length,
+            itemBuilder: (context, index) {
+              final mediaId = widget.mediaIds[index];
+              return FutureBuilder<String>(
+                future: _resolvePath(mediaId),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  return InteractiveViewer(
+                    minScale: 0.8,
+                    maxScale: 4,
+                    child: Center(
+                      child: Image.file(
+                        File(snapshot.data!),
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          Positioned(
+            top: 10,
+            left: 10,
+            child: IconButton(
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.black54,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close, color: Colors.white),
+            ),
+          ),
+          Positioned(
+            top: 14,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '${_currentIndex + 1}/${widget.mediaIds.length}',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _FileMessageWidget extends StatelessWidget {

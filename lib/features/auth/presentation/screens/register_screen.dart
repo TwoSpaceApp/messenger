@@ -301,6 +301,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     Expanded(
                       child: Text(
                         _errorMessage!,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                             color: theme.colorScheme.error,
                             fontWeight: FontWeight.w500),
@@ -310,8 +312,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       icon: Icon(Icons.close,
                           size: 20, color: theme.colorScheme.error),
                       onPressed: () => setState(() => _errorMessage = null),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                      constraints:
+                          const BoxConstraints(minWidth: 40, minHeight: 40),
                     ),
                   ],
                 ),

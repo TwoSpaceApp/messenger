@@ -12,6 +12,8 @@ on:
   pull_request:
     branches:
       - main
+      - master
+      - develop
     paths:
       - 'lib/**'
       - 'pubspec.yaml'

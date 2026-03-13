@@ -185,7 +185,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth > 600;
+    final isWideScreen = screenWidth > 700;
 
     return Scaffold(
       appBar: AppBar(
@@ -221,14 +221,20 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: isWideScreen ? screenWidth * 0.2 : 16,
-                vertical: 16,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final maxWidth = constraints.maxWidth >= 1100 ? 860.0 : double.infinity;
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxWidth),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                   // Avatar selector
                   Center(
                     child: GestureDetector(
@@ -394,9 +400,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
-                ],
-              ),
+                          const SizedBox(height: 32),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
     );
   }
