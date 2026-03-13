@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
@@ -31,10 +32,12 @@ class _ScreenBackgroundState extends State<ScreenBackground>
   bool _appActive = true;
 
   StreamSubscription? _accelSub;
+  bool _accelerometerUnavailable = false;
 
   static const double _blob1Size = 350;
   static const double _blob2Size = 400;
-  static const Duration _animationTick = Duration(milliseconds: 50);
+  static const Duration _animationTick = Duration(milliseconds: 120);
+  static const double _minVisualDelta = 0.12;
 
   void _syncMotionState() {
     final settings = SettingsService.themeNotifier.value;
@@ -53,18 +56,57 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     final shouldListenToAccel =
         settings.enableParallax && settings.enableFloatingCircles && _appActive;
     if (!shouldListenToAccel) {
-      _accelSub?.cancel();
+      _cancelAccelSub();
       _accelSub = null;
       _tiltX = 0;
       _tiltY = 0;
       return;
     }
 
-    _accelSub ??= accelerometerEventStream().listen((AccelerometerEvent event) {
-      if (!mounted) return;
-      _tiltX = (event.x / 9.8).clamp(-1.0, 1.0);
-      _tiltY = (event.y / 9.8).clamp(-1.0, 1.0);
-    });
+    if (_accelerometerUnavailable) {
+      _tiltX = 0;
+      _tiltY = 0;
+      return;
+    }
+
+    try {
+      _accelSub ??= accelerometerEventStream().listen(
+        (AccelerometerEvent event) {
+          if (!mounted) return;
+          _tiltX = (event.x / 9.8).clamp(-1.0, 1.0);
+          _tiltY = (event.y / 9.8).clamp(-1.0, 1.0);
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (_isMissingPluginError(error)) {
+            _accelerometerUnavailable = true;
+          }
+          _tiltX = 0;
+          _tiltY = 0;
+          _cancelAccelSub();
+          _accelSub = null;
+        },
+        cancelOnError: true,
+      );
+    } catch (error) {
+      if (_isMissingPluginError(error)) {
+        _accelerometerUnavailable = true;
+      }
+      _tiltX = 0;
+      _tiltY = 0;
+      _cancelAccelSub();
+      _accelSub = null;
+    }
+  }
+
+  bool _isMissingPluginError(Object error) {
+    if (error is MissingPluginException) return true;
+    return error.toString().contains('MissingPluginException');
+  }
+
+  void _cancelAccelSub() {
+    final sub = _accelSub;
+    if (sub == null) return;
+    unawaited(sub.cancel().catchError((_) {}));
   }
 
   @override
@@ -96,10 +138,25 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     final speedMultiplier = settings.floatingCirclesSpeed * 0.8;
 
     // Move blobs in the direction of tilt using a reduced refresh rate.
-    _blob1X += _tiltX * speedMultiplier * 2.5;
-    _blob1Y += _tiltY * speedMultiplier * 2.5;
-    _blob2X += _tiltX * speedMultiplier * 2.0;
-    _blob2Y += _tiltY * speedMultiplier * 2.0;
+    final nextBlob1X = _blob1X + _tiltX * speedMultiplier * 2.5;
+    final nextBlob1Y = _blob1Y + _tiltY * speedMultiplier * 2.5;
+    final nextBlob2X = _blob2X + _tiltX * speedMultiplier * 2.0;
+    final nextBlob2Y = _blob2Y + _tiltY * speedMultiplier * 2.0;
+
+    final changedEnough =
+        (nextBlob1X - _blob1X).abs() >= _minVisualDelta ||
+        (nextBlob1Y - _blob1Y).abs() >= _minVisualDelta ||
+        (nextBlob2X - _blob2X).abs() >= _minVisualDelta ||
+        (nextBlob2Y - _blob2Y).abs() >= _minVisualDelta;
+
+    if (!changedEnough) {
+      return;
+    }
+
+    _blob1X = nextBlob1X;
+    _blob1Y = nextBlob1Y;
+    _blob2X = nextBlob2X;
+    _blob2Y = nextBlob2Y;
 
     // Wrap around screen edges with some buffer
     const buffer = 100.0;
@@ -124,7 +181,8 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     WidgetsBinding.instance.removeObserver(this);
     SettingsService.themeNotifier.removeListener(_syncMotionState);
     _animationTimer?.cancel();
-    _accelSub?.cancel();
+    unawaited(_accelSub?.cancel().catchError((_) {}));
+    _accelSub = null;
     super.dispose();
   }
 

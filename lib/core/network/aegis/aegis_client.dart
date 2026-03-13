@@ -13,6 +13,9 @@ import 'package:two_space_app/core/network/aegis/transport.dart';
 
 /// Main Aegis client class
 class AegisClient {
+  static const int maxMediaUploadBytes = 15 * 1024 * 1024;
+  static const int _mediaPayloadSafetyBytes = 2048;
+
   /// Create new Aegis client
   AegisClient() {
     _transport = AegisTransport();
@@ -624,6 +627,25 @@ class AegisClient {
     int? replyToMessageId,
   }) async {
     _ensureAuthenticated();
+
+    if (mediaBytes.isEmpty) {
+      throw Exception('Media file is empty');
+    }
+    if (mediaBytes.length > maxMediaUploadBytes) {
+      throw Exception(
+        'Media file too large: ${mediaBytes.length} bytes. '
+        'Maximum allowed: $maxMediaUploadBytes bytes (15MB).',
+      );
+    }
+
+    final estimatedBase64Length = ((mediaBytes.length + 2) ~/ 3) * 4;
+    final estimatedPayloadLength = estimatedBase64Length + _mediaPayloadSafetyBytes;
+    if (estimatedPayloadLength > ProtocolConstants.maxPayloadSize) {
+      throw Exception(
+        'Media payload exceeds protocol limit '
+        '(${ProtocolConstants.maxPayloadSize} bytes).',
+      );
+    }
 
     final resolvedFileName = fileName ??
         switch (mediaKind) {

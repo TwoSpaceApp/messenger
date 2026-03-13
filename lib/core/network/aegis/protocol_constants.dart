@@ -10,7 +10,7 @@ class ProtocolConstants {
   // Header sizes
   static const int headerSize = 4 + 1 + 1 + 1 + 2 + 8 + 4; // 20 bytes
   static const int macSize = 32; // SHA256 HMAC
-  static const int maxMessageSize = 1024 * 1024; // 1MB
+  static const int maxMessageSize = 24 * 1024 * 1024; // 24MB
   static const int maxPayloadSize = maxMessageSize - headerSize - macSize;
 
   // Message type constants

@@ -17,6 +17,7 @@ class PeopleController extends ChangeNotifier {
     inviteResults: <PersonEntry>[],
   );
   Timer? _searchDebounce;
+  int _searchRequestId = 0;
   String _query = '';
   bool _loading = true;
   bool _searching = false;
@@ -41,6 +42,7 @@ class PeopleController extends ChangeNotifier {
       _dashboard = await _repository.loadDashboard(
         requestPermission: requestPermission,
       );
+      _error = null;
     } catch (error) {
       _error = error.toString();
     } finally {
@@ -98,24 +100,38 @@ class PeopleController extends ChangeNotifier {
   Future<void> _performSearch(String value) async {
     final trimmed = value.trim();
     if (trimmed.isEmpty) {
+      _searchRequestId++;
       _searchData = const PeopleSearchData(
         remoteResults: <PersonEntry>[],
         localResults: <PersonEntry>[],
         inviteResults: <PersonEntry>[],
       );
+      _error = null;
       notifyListeners();
       return;
     }
 
+    final requestId = ++_searchRequestId;
     _searching = true;
+    _searchData = const PeopleSearchData(
+      remoteResults: <PersonEntry>[],
+      localResults: <PersonEntry>[],
+      inviteResults: <PersonEntry>[],
+    );
     notifyListeners();
     try {
-      _searchData = await _repository.searchPeople(trimmed);
+      final result = await _repository.searchPeople(trimmed);
+      if (requestId != _searchRequestId) return;
+      _searchData = result;
+      _error = null;
     } catch (error) {
+      if (requestId != _searchRequestId) return;
       _error = error.toString();
     } finally {
-      _searching = false;
-      notifyListeners();
+      if (requestId == _searchRequestId) {
+        _searching = false;
+        notifyListeners();
+      }
     }
   }
 

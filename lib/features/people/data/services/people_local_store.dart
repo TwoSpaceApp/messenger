@@ -16,6 +16,8 @@ class PeopleLocalStore {
   static const _callHistoryKey = 'call_history';
   static const _schemaVersionKey = 'schema_version';
 
+  Map<String, dynamic>? _cachedData;
+
   Future<List<String>> readFavorites() async {
     final data = await _readData();
     return (data[_favoritesKey] as List<dynamic>? ?? const <dynamic>[])
@@ -86,18 +88,14 @@ class PeopleLocalStore {
 
   Future<List<CallHistoryEntry>> readCallHistory() async {
     final data = await _readData();
-    final values = data[_callHistoryKey] as List<dynamic>? ?? const <dynamic>[];
-    return values
-        .map((item) => CallHistoryEntry.fromJson(
-              Map<String, dynamic>.from(item as Map<dynamic, dynamic>),
-            ))
-        .toList()
+    return _decodeCallHistoryList(data[_callHistoryKey])
       ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
   }
 
   Future<void> appendCallHistory(CallHistoryEntry entry) async {
     final data = await _readData();
-    final items = await readCallHistory();
+    final items = _decodeCallHistoryList(data[_callHistoryKey])
+      ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
     items.insert(0, entry.copyWith(person: entry.person.copyWith(clearPhotoBytes: true)));
     data[_callHistoryKey] =
         items.take(200).map((item) => item.toJson()).toList();
@@ -106,7 +104,7 @@ class PeopleLocalStore {
 
   Future<void> deleteCallHistory(String id) async {
     final data = await _readData();
-    final items = await readCallHistory();
+    final items = _decodeCallHistoryList(data[_callHistoryKey]);
     data[_callHistoryKey] =
         items.where((item) => item.id != id).map((item) => item.toJson()).toList();
     await _writeData(data);
@@ -130,12 +128,17 @@ class PeopleLocalStore {
   }
 
   Future<Map<String, dynamic>> _readData() async {
+    final cachedData = _cachedData;
+    if (cachedData != null) {
+      return Map<String, dynamic>.from(cachedData);
+    }
     try {
       final file = await _resolveFile();
       final content = await file.readAsString();
       final decoded = jsonDecode(content);
       if (decoded is Map<String, dynamic>) {
-        return decoded;
+        _cachedData = Map<String, dynamic>.from(decoded);
+        return Map<String, dynamic>.from(decoded);
       }
       return <String, dynamic>{};
     } catch (_) {
@@ -152,7 +155,17 @@ class PeopleLocalStore {
       _recentPeopleKey: data[_recentPeopleKey] ?? <Map<String, dynamic>>[],
       _callHistoryKey: data[_callHistoryKey] ?? <Map<String, dynamic>>[],
     };
+    _cachedData = Map<String, dynamic>.from(normalized);
     await file.writeAsString(jsonEncode(normalized));
+  }
+
+  List<CallHistoryEntry> _decodeCallHistoryList(dynamic value) {
+    final values = value as List<dynamic>? ?? const <dynamic>[];
+    return values
+        .map((item) => CallHistoryEntry.fromJson(
+              Map<String, dynamic>.from(item as Map<dynamic, dynamic>),
+            ))
+        .toList();
   }
 
   List<PersonEntry> _decodePeopleList(dynamic value) {

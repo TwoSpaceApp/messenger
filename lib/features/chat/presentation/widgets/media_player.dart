@@ -16,10 +16,11 @@ class MediaPlayer extends StatefulWidget {
 }
 
 class _MediaPlayerState extends State<MediaPlayer> {
-  late VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   bool _initialized = false;
   String? _error;
   bool _isBuffering = false;
+  bool _openedExternally = false;
 
   @override
   void initState() {
@@ -29,6 +30,31 @@ class _MediaPlayerState extends State<MediaPlayer> {
 
   Future<void> _initializePlayer() async {
     try {
+      if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+        final target = widget.localPath ?? widget.networkUrl;
+        if (target == null || target.trim().isEmpty) {
+          throw Exception('Video path is empty');
+        }
+
+        final opened = await _openInSystemPlayer(target);
+        if (!mounted) return;
+
+        if (opened) {
+          setState(() {
+            _openedExternally = true;
+            _error = null;
+          });
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.of(context).maybePop();
+            }
+          });
+          return;
+        }
+
+        throw Exception('Unable to open system video player');
+      }
+
       if (widget.networkUrl != null) {
         _controller = VideoPlayerController.networkUrl(
           Uri.parse(widget.networkUrl!),
@@ -41,9 +67,9 @@ class _MediaPlayerState extends State<MediaPlayer> {
         );
       }
 
-      _controller.addListener(_onPlayerChanged);
+      _controller?.addListener(_onPlayerChanged);
 
-      await _controller.initialize();
+      await _controller?.initialize();
       if (mounted) {
         setState(() {
           _initialized = true;
@@ -60,9 +86,29 @@ class _MediaPlayerState extends State<MediaPlayer> {
     }
   }
 
+  Future<bool> _openInSystemPlayer(String target) async {
+    try {
+      ProcessResult result;
+      if (Platform.isLinux) {
+        result = await Process.run('xdg-open', [target]);
+      } else if (Platform.isMacOS) {
+        result = await Process.run('open', [target]);
+      } else if (Platform.isWindows) {
+        result = await Process.run('cmd', ['/c', 'start', '', target], runInShell: true);
+      } else {
+        return false;
+      }
+      return result.exitCode == 0;
+    } catch (_) {
+      return false;
+    }
+  }
+
   void _onPlayerChanged() {
+    final controller = _controller;
+    if (controller == null) return;
     if (!mounted) return;
-    final isBuffering = _controller.value.isBuffering;
+    final isBuffering = controller.value.isBuffering;
     if (isBuffering != _isBuffering) {
       setState(() => _isBuffering = isBuffering);
     }
@@ -70,9 +116,9 @@ class _MediaPlayerState extends State<MediaPlayer> {
 
   @override
   void dispose() {
-    _controller.removeListener(_onPlayerChanged);
-    _controller.pause();
-    _controller.dispose();
+    _controller?.removeListener(_onPlayerChanged);
+    _controller?.pause();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -87,8 +133,10 @@ class _MediaPlayerState extends State<MediaPlayer> {
             IconButton(
               icon: const Icon(Icons.replay),
               onPressed: () {
-                _controller.seekTo(Duration.zero);
-                _controller.play();
+                final controller = _controller;
+                if (controller == null) return;
+                controller.seekTo(Duration.zero);
+                controller.play();
               },
             ),
         ],
@@ -97,13 +145,15 @@ class _MediaPlayerState extends State<MediaPlayer> {
         child: _error != null
             ? Text(l10n.videoLoadError(_error!),
                 style: TextStyle(color: Theme.of(context).colorScheme.error))
+            : _openedExternally
+                ? const SizedBox.shrink()
             : Stack(
                 alignment: Alignment.center,
                 children: [
                   if (_initialized)
                     AspectRatio(
-                      aspectRatio: _controller.value.aspectRatio,
-                      child: VideoPlayer(_controller),
+                      aspectRatio: _controller?.value.aspectRatio ?? (16 / 9),
+                      child: VideoPlayer(_controller!),
                     ),
                   if (!_initialized || _isBuffering)
                     const CircularProgressIndicator(),
@@ -111,16 +161,18 @@ class _MediaPlayerState extends State<MediaPlayer> {
                     GestureDetector(
                       onTap: () {
                         setState(() {
-                          _controller.value.isPlaying
-                              ? _controller.pause()
-                              : _controller.play();
+                          final controller = _controller;
+                          if (controller == null) return;
+                          controller.value.isPlaying
+                              ? controller.pause()
+                              : controller.play();
                         });
                       },
                       child: ColoredBox(
                         color: Colors.transparent,
                         child: Center(
                           child: Icon(
-                            _controller.value.isPlaying
+                            (_controller?.value.isPlaying ?? false)
                                 ? Icons.pause_circle_outline
                                 : Icons.play_circle_outline,
                             size: 64,
@@ -139,21 +191,23 @@ class _MediaPlayerState extends State<MediaPlayer> {
                 children: [
                   IconButton(
                     icon: Icon(
-                      _controller.value.isPlaying
+                      (_controller?.value.isPlaying ?? false)
                           ? Icons.pause
                           : Icons.play_arrow,
                     ),
                     onPressed: () {
                       setState(() {
-                        _controller.value.isPlaying
-                            ? _controller.pause()
-                            : _controller.play();
+                        final controller = _controller;
+                        if (controller == null) return;
+                        controller.value.isPlaying
+                            ? controller.pause()
+                            : controller.play();
                       });
                     },
                   ),
                   Expanded(
                     child: VideoProgressIndicator(
-                      _controller,
+                      _controller!,
                       allowScrubbing: true,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                     ),

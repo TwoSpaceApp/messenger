@@ -36,6 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   StreamSubscription<List<Chat>>? _roomsSub;
   Timer? _refreshTimer;
   DateTime? _lastVisibleRefreshAt;
+  Future<void>? _backgroundRefreshFuture;
 
   final String _searchQuery = '';
 
@@ -114,7 +115,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const Duration(seconds: 20)) {
         return;
       }
-      unawaited(_chat.refreshChatsQuietly());
+      if (_backgroundRefreshFuture != null) {
+        return;
+      }
+      final future = _chat.refreshChatsQuietly();
+      _backgroundRefreshFuture = future;
+      unawaited(
+        future.whenComplete(() {
+          if (identical(_backgroundRefreshFuture, future)) {
+            _backgroundRefreshFuture = null;
+          }
+        }),
+      );
     });
   }
 

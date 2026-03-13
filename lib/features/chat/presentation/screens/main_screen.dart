@@ -19,6 +19,13 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   bool _isLocked = false;
+  bool _biometricCheckInFlight = false;
+  static const List<Widget> _screens = <Widget>[
+    HomeScreen(),
+    CallsScreen(),
+    ContactsScreen(),
+    SettingsScreen(),
+  ];
 
   @override
   void initState() {
@@ -49,12 +56,20 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   Future<void> _checkBiometrics() async {
     if (!SettingsService.biometricsNotifier.value) return;
+
+    if (_biometricCheckInFlight) return;
+    _biometricCheckInFlight = true;
+    if (mounted && !_isLocked) {
+      setState(() => _isLocked = true);
+    }
     
-    setState(() => _isLocked = true);
-    
-    final success = await BiometricService.authenticate('Unlock App');
-    if (success && mounted) {
-      setState(() => _isLocked = false);
+    try {
+      final success = await BiometricService.authenticate('Unlock App');
+      if (success && mounted && _isLocked) {
+        setState(() => _isLocked = false);
+      }
+    } finally {
+      _biometricCheckInFlight = false;
     }
   }
 
@@ -82,13 +97,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       );
     }
 
-    final screens = [
-      const HomeScreen(),
-      const CallsScreen(),
-      const ContactsScreen(),
-      const SettingsScreen(),
-    ];
-
     return Scaffold(
       extendBody: true,
       body: Stack(
@@ -96,7 +104,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         children: [
           IndexedStack(
             index: _currentIndex,
-            children: screens,
+            children: _screens,
           ),
           FloatingNavBar(
             selectedIndex: _currentIndex,

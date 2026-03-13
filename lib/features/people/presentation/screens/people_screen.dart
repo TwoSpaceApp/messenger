@@ -52,6 +52,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final canPop = Navigator.of(context).canPop();
     const pad = EdgeInsets.symmetric(horizontal: 16);
 
     return AnimatedBuilder(
@@ -67,34 +68,55 @@ class _PeopleScreenState extends State<PeopleScreen> {
                   children: [
                     // ── Header row ──
                     Padding(
-                      padding: pad.copyWith(top: 14, bottom: 4),
+                      padding: pad.copyWith(top: 10, bottom: 2),
                       child: Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              l10n.peopleTitle,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
+                          if (canPop)
+                            _HeaderIcon(
+                              icon: Icons.arrow_back_rounded,
+                              tooltip: l10n.back,
+                              onTap: () => Navigator.of(context).maybePop(),
                             ),
+                          if (canPop) const SizedBox(width: 4),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.peopleTitle,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  l10n.peopleSubtitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _HeaderIcon(
+                            icon: Icons.sync_rounded,
+                            tooltip: l10n.peopleQuickSync,
+                            onTap: _controller.loading ? null : _controller.refresh,
                           ),
                           _HeaderIcon(
                             icon: Icons.share_outlined,
                             tooltip: l10n.peopleQuickInvite,
                             onTap: _shareInviteText,
                           ),
-                          _HeaderIcon(
-                            icon: Icons.sync_rounded,
-                            tooltip: l10n.peopleQuickSync,
-                            onTap: _controller.refresh,
-                          ),
                         ],
                       ),
                     ),
                     // ── Search ──
                     Padding(
-                      padding: pad.copyWith(top: 6, bottom: 6),
+                      padding: pad.copyWith(top: 4, bottom: 4),
                       child: PeopleSearchField(
                         controller: _searchController,
                         focusNode: _searchFocusNode,
@@ -109,10 +131,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     ),
                     // ── Filter chips ──
                     SizedBox(
-                      height: 40,
+                      height: 36,
                       child: ListView(
                         padding: pad,
                         scrollDirection: Axis.horizontal,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         children: [
                           _chip(PeopleSegment.all, l10n.peopleSegmentAll),
                           _chip(PeopleSegment.twospace, l10n.peopleSegmentTwoSpace),
@@ -121,7 +145,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     // ── Body ──
                     Expanded(
                       child: RefreshIndicator(
@@ -146,16 +170,25 @@ class _PeopleScreenState extends State<PeopleScreen> {
       child: FilterChip(
         label: Text(label),
         selected: selected,
+        showCheckmark: false,
         onSelected: (_) => _controller.setSegment(segment),
-        backgroundColor: Colors.white.withValues(alpha: 0.10),
-        selectedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        backgroundColor: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withValues(alpha: 0.56),
+        selectedColor:
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.28),
         labelStyle: TextStyle(
-          color: Colors.white,
-          fontSize: 13,
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 12,
           fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
         ),
-        checkmarkColor: Colors.white,
-        side: BorderSide.none,
+        side: BorderSide(
+          color: selected
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.55)
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.25),
+        ),
         visualDensity: VisualDensity.compact,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
@@ -226,6 +259,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
 
     return ListView(
       cacheExtent: 800,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.only(bottom: 100),
       children: items,
     );
@@ -416,6 +450,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final l10n = AppLocalizations.of(context)!;
     await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
@@ -424,30 +459,129 @@ class _PeopleScreenState extends State<PeopleScreen> {
         ),
         child: SafeArea(
           top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(99))),
-              ListTile(
-                title: Text(person.displayName),
-                subtitle: Text(_subtitle(person, l10n)),
-              ),
-              if (person.remoteUserId != null) ...[
-                ListTile(leading: const Icon(Icons.person_outline_rounded), title: Text(l10n.peopleViewProfileAction), onTap: () { Navigator.pop(ctx); _openProfile(person); }),
-                ListTile(leading: const Icon(Icons.chat_bubble_outline_rounded), title: Text(l10n.writeMessageAction), onTap: () { Navigator.pop(ctx); _openChat(person); }),
-                ListTile(leading: const Icon(Icons.call_outlined), title: Text(l10n.voiceCallLabel), onTap: () { Navigator.pop(ctx); _startCall(person, false); }),
-                ListTile(leading: const Icon(Icons.videocam_outlined), title: Text(l10n.videoCallLabel), onTap: () { Navigator.pop(ctx); _startCall(person, true); }),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(ctx).size.height * 0.78,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(ctx).colorScheme.outline.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          person.displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l10n.closeButton,
+                        onPressed: () => Navigator.pop(ctx),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _subtitle(person, l10n),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                ),
+                const Divider(height: 1),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      if (person.remoteUserId != null) ...[
+                        ListTile(
+                          leading: const Icon(Icons.person_outline_rounded),
+                          title: Text(l10n.peopleViewProfileAction),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _openProfile(person);
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.chat_bubble_outline_rounded),
+                          title: Text(l10n.writeMessageAction),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _openChat(person);
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.call_outlined),
+                          title: Text(l10n.voiceCallLabel),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _startCall(person, false);
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.videocam_outlined),
+                          title: Text(l10n.videoCallLabel),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _startCall(person, true);
+                          },
+                        ),
+                      ],
+                      if (person.isInvitable)
+                        ListTile(
+                          leading: const Icon(Icons.share_outlined),
+                          title: Text(l10n.inviteAction),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _invitePerson(person);
+                          },
+                        ),
+                      ListTile(
+                        leading: Icon(
+                          person.isFavorite
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
+                          color: person.isFavorite ? Colors.amber : null,
+                        ),
+                        title: Text(
+                          person.isFavorite
+                              ? l10n.peopleRemoveFavoriteAction
+                              : l10n.peopleAddFavoriteAction,
+                        ),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _controller.toggleFavorite(person);
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
               ],
-              if (person.isInvitable)
-                ListTile(leading: const Icon(Icons.share_outlined), title: Text(l10n.inviteAction), onTap: () { Navigator.pop(ctx); _invitePerson(person); }),
-              ListTile(
-                leading: Icon(person.isFavorite ? Icons.star_rounded : Icons.star_border_rounded),
-                title: Text(person.isFavorite ? l10n.peopleRemoveFavoriteAction : l10n.peopleAddFavoriteAction),
-                onTap: () { Navigator.pop(ctx); _controller.toggleFavorite(person); },
-              ),
-              const SizedBox(height: 12),
-            ],
+            ),
           ),
         ),
       ),
@@ -461,15 +595,32 @@ class _HeaderIcon extends StatelessWidget {
   const _HeaderIcon({required this.icon, required this.tooltip, required this.onTap});
   final IconData icon;
   final String tooltip;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(icon, color: Colors.white, size: 22),
-      tooltip: tooltip,
-      onPressed: onTap,
-      visualDensity: VisualDensity.compact,
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(left: 6),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: colorScheme.outline.withValues(alpha: 0.26),
+        ),
+      ),
+      child: IconButton(
+        icon: Icon(
+          icon,
+          color: onTap == null
+              ? colorScheme.onSurface.withValues(alpha: 0.45)
+              : colorScheme.onSurface,
+          size: 20,
+        ),
+        tooltip: tooltip,
+        onPressed: onTap,
+        visualDensity: VisualDensity.compact,
+      ),
     );
   }
 }
@@ -482,7 +633,7 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Row(
         children: [
           Expanded(
@@ -519,22 +670,55 @@ class _PermissionBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          const Icon(Icons.contact_phone_outlined, color: Colors.white70, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 620;
+          final content = <Widget>[
+            Row(
+              children: [
+                const Icon(
+                  Icons.contact_phone_outlined,
+                  color: Colors.white70,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(color: Colors.white70),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 8),
-          TextButton(
-            onPressed: onAction,
-            child: Text(actionLabel),
-          ),
-        ],
+            if (isNarrow) const SizedBox(height: 10),
+            Align(
+              alignment:
+                  isNarrow ? Alignment.centerRight : Alignment.center,
+              child: TextButton(
+                onPressed: onAction,
+                child: Text(actionLabel),
+              ),
+            ),
+          ];
+
+          if (isNarrow) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: content,
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: content.first),
+              const SizedBox(width: 8),
+              content.last,
+            ],
+          );
+        },
       ),
     );
   }

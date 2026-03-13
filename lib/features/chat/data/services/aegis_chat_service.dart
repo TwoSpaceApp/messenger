@@ -171,6 +171,10 @@ class _StoredConversation {
 }
 
 class AegisChatService {
+  static const int _maxMediaUploadBytes = AegisClient.maxMediaUploadBytes;
+  static const int _mediaCacheMaxBytes = 512 * 1024 * 1024;
+  static const Duration _mediaCacheMaxAge = Duration(days: 14);
+
   factory AegisChatService() => _instance;
   AegisChatService._internal();
 
@@ -208,6 +212,9 @@ class AegisChatService {
   final Map<int, Map<String, dynamic>> _profileCache = {};
   final Map<String, Future<Map<String, dynamic>>> _userInfoRequests =
       <String, Future<Map<String, dynamic>>>{};
+    final Map<String, String> _mediaPathCache = <String, String>{};
+    final Map<String, Future<String>> _mediaResolveInFlight =
+      <String, Future<String>>{};
   final Set<String> _storedRoomIds = <String>{};
   final Set<String> _hydratedRoomIds = <String>{};
   StreamSubscription<List<Chat>>? _syncSub;
@@ -231,6 +238,8 @@ class AegisChatService {
     if (!await _messagesDir.exists()) {
       await _messagesDir.create(recursive: true);
     }
+
+    unawaited(_cleanupMediaCache());
 
     final splitStoreExists = await Future.wait<bool>([
       _conversationsFile.exists(),
@@ -323,8 +332,10 @@ class AegisChatService {
         .cast<File>()
         .toList();
     for (final file in files) {
-      final roomId = _roomIdFromFileName(p.basenameWithoutExtension(file.path));
-      _storedRoomIds.add(roomId);
+      try {
+        final roomId = _roomIdFromFileName(p.basenameWithoutExtension(file.path));
+        _storedRoomIds.add(roomId);
+      } catch (_) {}
     }
   }
 
@@ -390,7 +401,7 @@ class AegisChatService {
 
   void _storeConversation(_StoredConversation conversation) {
     final existing = _conversations[conversation.id];
-    if (existing != null && jsonEncode(existing.toJson()) == jsonEncode(conversation.toJson())) {
+    if (existing != null && _storedConversationEquals(existing, conversation)) {
       return;
     }
     _conversations[conversation.id] = conversation;
@@ -399,7 +410,7 @@ class AegisChatService {
 
   void _storeProfile(int userId, Map<String, dynamic> info) {
     final existing = _profileCache[userId];
-    if (existing != null && jsonEncode(existing) == jsonEncode(info)) {
+    if (existing != null && _dynamicEquals(existing, info)) {
       return;
     }
     _profileCache[userId] = info;
@@ -453,7 +464,7 @@ class AegisChatService {
     await _ensureRoomMessagesLoaded(roomId);
     if ((_messages[roomId] ?? const <AegisRoomMessage>[]).length < limit) {
       try {
-        await loadMessages(roomId: roomId, limit: limit, forceRefresh: true);
+        await loadMessages(roomId: roomId, limit: limit);
       } catch (_) {}
     }
     yield _roomMessagesSnapshot(roomId, limit: limit);
@@ -542,7 +553,7 @@ class AegisChatService {
             ? nextAvatar
             : conversation.avatarUrl,
       );
-      if (jsonEncode(updated.toJson()) == jsonEncode(conversation.toJson())) {
+      if (_storedConversationEquals(updated, conversation)) {
         continue;
       }
       _storeConversation(updated);
@@ -625,8 +636,13 @@ class AegisChatService {
     return _profileCache[parsedId];
   }
 
-  Future<Map<String, dynamic>> getUserInfo(String userId) async {
-    await ensureReady();
+  Future<Map<String, dynamic>> getUserInfo(
+    String userId, {
+    bool skipEnsureReady = false,
+  }) async {
+    if (!skipEnsureReady) {
+      await ensureReady();
+    }
     final parsedId = int.tryParse(userId.replaceFirst('@', '').split(':').first);
     if (parsedId != null && _profileCache.containsKey(parsedId)) {
       return _profileCache[parsedId]!;
@@ -780,6 +796,14 @@ class AegisChatService {
         throw Exception('Media file not found');
       }
 
+      final fileSize = await mediaFile.length();
+      if (fileSize > _maxMediaUploadBytes) {
+        throw Exception(
+          'Media file too large: $fileSize bytes. '
+          'Maximum allowed: $_maxMediaUploadBytes bytes (15MB).',
+        );
+      }
+
       final bytes = await mediaFile.readAsBytes();
       final fileName = p.basename(mediaFile.path);
       final mimeType = _inferMimeType(fileName, type: type);
@@ -874,6 +898,9 @@ class AegisChatService {
       bytes,
       preferredFileName: '${response.messageId}_${_sanitizeFileName(fileName)}',
     );
+    if (storedPath == null || storedPath.isEmpty) {
+      throw Exception('Failed to store media file locally');
+    }
     final message = AegisRoomMessage(
       id: response.messageId.toString(),
       senderId: (_auth.userId ?? 0).toString(),
@@ -1105,23 +1132,50 @@ class AegisChatService {
   }
 
   Future<String> downloadMediaToTempFile(String mediaId) async {
-    if (mediaId.startsWith('data:')) {
-      final inlineBytes = UriData.parse(mediaId).contentAsBytes();
-      final storedPath = await _storeMediaBytes(
-        inlineBytes,
-        preferredFileName:
-            'inline_${DateTime.now().microsecondsSinceEpoch}.bin',
-      );
-      if (storedPath != null) {
-        return storedPath;
-      }
+    final normalizedId = mediaId.trim();
+    if (normalizedId.isEmpty) {
+      throw Exception('Media id is empty');
     }
 
-    final file = File(mediaId);
-    if (await file.exists()) {
-      return file.path;
+    final cachedPath = _mediaPathCache[normalizedId];
+    if (cachedPath != null && await File(cachedPath).exists()) {
+      return cachedPath;
     }
-    throw Exception('File not found');
+
+    final inFlight = _mediaResolveInFlight[normalizedId];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final resolveFuture = () async {
+      if (normalizedId.startsWith('data:')) {
+        final inlineBytes = UriData.parse(normalizedId).contentAsBytes();
+        final stableFileName =
+            'inline_${normalizedId.hashCode.abs()}_${inlineBytes.length}.bin';
+        final storedPath = await _storeMediaBytes(
+          inlineBytes,
+          preferredFileName: stableFileName,
+        );
+        if (storedPath != null && storedPath.isNotEmpty) {
+          _mediaPathCache[normalizedId] = storedPath;
+          return storedPath;
+        }
+      }
+
+      final file = File(normalizedId);
+      if (await file.exists()) {
+        _mediaPathCache[normalizedId] = file.path;
+        return file.path;
+      }
+      throw Exception('Media file not found');
+    }();
+
+    _mediaResolveInFlight[normalizedId] = resolveFuture;
+    try {
+      return await resolveFuture;
+    } finally {
+      _mediaResolveInFlight.remove(normalizedId);
+    }
   }
 
   void startSync([Function(Map<String, dynamic>)? onEvent]) {
@@ -1828,18 +1882,27 @@ class AegisChatService {
               ],
       );
 
-      if (existing == null || jsonEncode(existing.toJson()) != jsonEncode(next.toJson())) {
+      if (existing == null || !_storedConversationEquals(existing, next)) {
         _storeConversation(next);
         changed = true;
       }
     }
 
     if (directPeerIds.isNotEmpty) {
-      await Future.wait(
-        directPeerIds.map(
-          (peerId) => getUserInfo(peerId).catchError((_) => <String, dynamic>{}),
-        ),
-      );
+      final missingProfileIds = directPeerIds
+          .where((peerId) => !_profileCache.containsKey(int.tryParse(peerId) ?? -1))
+          .toList(growable: false);
+      const batchSize = 6;
+      for (var index = 0; index < missingProfileIds.length; index += batchSize) {
+        final end = (index + batchSize).clamp(0, missingProfileIds.length);
+        final chunk = missingProfileIds.sublist(index, end);
+        await Future.wait(
+          chunk.map(
+            (peerId) => getUserInfo(peerId, skipEnsureReady: true)
+                .catchError((_) => <String, dynamic>{}),
+          ),
+        );
+      }
     }
 
     if (changed) {
@@ -1873,16 +1936,17 @@ class AegisChatService {
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to load direct messages');
       }
-      nextMessages = <AegisRoomMessage>[];
-      for (final item in response.messages) {
-        nextMessages.add(await _historyItemToRoomMessage(
-          messageId: item.id.toString(),
-          senderId: item.fromUserId.toString(),
-          content: item.content,
-          contentType: item.contentType,
-          createdAt: item.createdAt,
-        ));
-      }
+      nextMessages = await Future.wait(
+        response.messages.map(
+          (item) => _historyItemToRoomMessage(
+            messageId: item.id.toString(),
+            senderId: item.fromUserId.toString(),
+            content: item.content,
+            contentType: item.contentType,
+            createdAt: item.createdAt,
+          ),
+        ),
+      );
     } else if (conversation.channelId != null) {
       final response = await _auth.rawClient.getChannelHistory(
         conversation.channelId!,
@@ -1891,16 +1955,17 @@ class AegisChatService {
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to load room history');
       }
-      nextMessages = <AegisRoomMessage>[];
-      for (final item in response.messages) {
-        nextMessages.add(await _historyItemToRoomMessage(
-          messageId: item.id.toString(),
-          senderId: item.fromUserId.toString(),
-          content: item.content,
-          contentType: item.contentType,
-          createdAt: item.createdAt,
-        ));
-      }
+      nextMessages = await Future.wait(
+        response.messages.map(
+          (item) => _historyItemToRoomMessage(
+            messageId: item.id.toString(),
+            senderId: item.fromUserId.toString(),
+            content: item.content,
+            contentType: item.contentType,
+            createdAt: item.createdAt,
+          ),
+        ),
+      );
     } else {
       return false;
     }
@@ -1939,6 +2004,54 @@ class AegisChatService {
     return true;
   }
 
+  bool _storedConversationEquals(
+    _StoredConversation left,
+    _StoredConversation right,
+  ) {
+    if (identical(left, right)) return true;
+    return left.id == right.id &&
+        left.title == right.title &&
+        left.kind == right.kind &&
+        left.updatedAt == right.updatedAt &&
+        left.lastMessage == right.lastMessage &&
+        left.unreadCount == right.unreadCount &&
+        left.avatarUrl == right.avatarUrl &&
+        left.description == right.description &&
+        left.peerUserId == right.peerUserId &&
+        left.peerUsername == right.peerUsername &&
+        left.channelId == right.channelId &&
+        left.isPublic == right.isPublic &&
+        left.showMessageHistory == right.showMessageHistory &&
+        _listEquals(left.memberUserIds, right.memberUserIds);
+  }
+
+  bool _listEquals(List<dynamic> left, List<dynamic> right) {
+    if (identical(left, right)) return true;
+    if (left.length != right.length) return false;
+    for (var index = 0; index < left.length; index++) {
+      if (!_dynamicEquals(left[index], right[index])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _dynamicEquals(dynamic left, dynamic right) {
+    if (identical(left, right)) return true;
+    if (left is Map && right is Map) {
+      if (left.length != right.length) return false;
+      for (final key in left.keys) {
+        if (!right.containsKey(key)) return false;
+        if (!_dynamicEquals(left[key], right[key])) return false;
+      }
+      return true;
+    }
+    if (left is List && right is List) {
+      return _listEquals(left, right);
+    }
+    return left == right;
+  }
+
   String _mapMessageType(MessageContentType type) {
     switch (type) {
       case MessageContentType.image:
@@ -1968,14 +2081,18 @@ class AegisChatService {
     var resolvedContent = content;
 
     if (attachment != null) {
-      mediaId = await _storeMediaBytes(
-        attachment.decodeBytes(),
-        preferredFileName:
-            '${messageId}_${_sanitizeFileName(attachment.fileName)}',
-      );
       resolvedContent = (attachment.text?.trim().isNotEmpty ?? false)
           ? attachment.text!.trim()
           : attachment.fileName;
+      try {
+        mediaId = await _storeMediaBytes(
+          attachment.decodeBytes(),
+          preferredFileName:
+              '${messageId}_${_sanitizeFileName(attachment.fileName)}',
+        );
+      } catch (_) {
+        mediaId = null;
+      }
     }
 
     return AegisRoomMessage(
@@ -1993,13 +2110,78 @@ class AegisChatService {
     required String preferredFileName,
   }) async {
     await _init();
+    if (bytes.isEmpty) {
+      throw Exception('Media bytes are empty');
+    }
     final mediaDir = Directory(p.join(_storeDir.path, 'aegis_media'));
     if (!await mediaDir.exists()) {
       await mediaDir.create(recursive: true);
     }
     final target = File(p.join(mediaDir.path, preferredFileName));
+    if (await target.exists()) {
+      final currentLength = await target.length();
+      if (currentLength == bytes.length) {
+        return target.path;
+      }
+    }
     await target.writeAsBytes(bytes, flush: true);
     return target.path;
+  }
+
+  Future<void> _cleanupMediaCache() async {
+    try {
+      await _init();
+      final mediaDir = Directory(p.join(_storeDir.path, 'aegis_media'));
+      if (!await mediaDir.exists()) {
+        return;
+      }
+
+      final entities = await mediaDir
+          .list()
+          .where((entity) => entity is File)
+          .cast<File>()
+          .toList();
+
+      final now = DateTime.now();
+      var totalBytes = 0;
+      final survivors = <_MediaCacheEntry>[];
+
+      for (final file in entities) {
+        try {
+          final stat = await file.stat();
+          final age = now.difference(stat.modified);
+          if (age > _mediaCacheMaxAge) {
+            await file.delete();
+            continue;
+          }
+          totalBytes += stat.size;
+          survivors.add(
+            _MediaCacheEntry(
+              file: file,
+              size: stat.size,
+              modified: stat.modified,
+            ),
+          );
+        } catch (_) {}
+      }
+
+      if (totalBytes > _mediaCacheMaxBytes) {
+        survivors.sort((left, right) => left.modified.compareTo(right.modified));
+        for (final entry in survivors) {
+          if (totalBytes <= _mediaCacheMaxBytes) {
+            break;
+          }
+          try {
+            await entry.file.delete();
+            totalBytes -= entry.size;
+          } catch (_) {}
+        }
+      }
+
+      _mediaPathCache.removeWhere(
+        (_, value) => !File(value).existsSync(),
+      );
+    } catch (_) {}
   }
 
   String _sanitizeFileName(String value) {
@@ -2193,4 +2375,16 @@ class _ResolvedUser {
 
   final int id;
   final String username;
+}
+
+class _MediaCacheEntry {
+  _MediaCacheEntry({
+    required this.file,
+    required this.size,
+    required this.modified,
+  });
+
+  final File file;
+  final int size;
+  final DateTime modified;
 }

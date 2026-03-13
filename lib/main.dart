@@ -39,6 +39,9 @@ class AppBootstrapperState extends State<AppBootstrapper> {
   InitializationResult? _initResult;
   String _currentStep = 'Starting...';
   double _progress = 0;
+  DateTime _lastProgressUiUpdate = DateTime.fromMillisecondsSinceEpoch(0);
+
+  static const Duration _progressUiThrottle = Duration(milliseconds: 140);
 
   @override
   void initState() {
@@ -49,6 +52,15 @@ class AppBootstrapperState extends State<AppBootstrapper> {
   Future<void> _startInit() async {
     final result = await InitializationService.initialize(
       onProgress: (stepName, progress) {
+        final now = DateTime.now();
+        final canUpdateByTime =
+            now.difference(_lastProgressUiUpdate) >= _progressUiThrottle;
+        final shouldForceUpdate = progress >= 1.0 ||
+            (_currentStep != stepName && progress > _progress);
+        if (!canUpdateByTime && !shouldForceUpdate) {
+          return;
+        }
+        _lastProgressUiUpdate = now;
         setState(() {
           _currentStep = stepName;
           _progress = progress;
@@ -166,83 +178,70 @@ class TwoSpaceApp extends ConsumerWidget {
     }
 
     final goRouter = ref.watch(routerProvider);
+    final appSettingsListenable = Listenable.merge(<Listenable>[
+      SettingsService.languageNotifier,
+      SettingsService.themeNotifier,
+      SettingsService.paleVioletNotifier,
+      SettingsService.themeModeNotifier,
+      SettingsService.textScaleNotifier,
+      DevToolsService.performanceOverlayEnabled,
+    ]);
 
-    return ValueListenableBuilder<String>(
-      valueListenable: SettingsService.languageNotifier,
-      builder: (context, languageCode, ____) {
-        return ValueListenableBuilder<ThemeSettings>(
-          valueListenable: SettingsService.themeNotifier,
-          builder: (context, settings, _) {
-            return ValueListenableBuilder<bool>(
-              valueListenable: SettingsService.paleVioletNotifier,
-              builder: (context, paleVioletEnabled, __) {
-                return ValueListenableBuilder<ThemeMode>(
-                  valueListenable: SettingsService.themeModeNotifier,
-                  builder: (context, themeMode, ___) {
-                    return ValueListenableBuilder<double>(
-                      valueListenable: SettingsService.textScaleNotifier,
-                      builder: (context, textScale, ____) {
-                        return ValueListenableBuilder<bool>(
-                          valueListenable:
-                              DevToolsService.performanceOverlayEnabled,
-                          builder: (context, showPerformanceOverlay, __) {
-                            final lightTheme = AppThemeBuilder.build(
-                              settings,
-                              paleVioletEnabled,
-                              brightnessOverride: Brightness.light,
-                            );
-                            final darkTheme = AppThemeBuilder.build(
-                              settings,
-                              paleVioletEnabled,
-                              brightnessOverride: Brightness.dark,
-                            );
+    return AnimatedBuilder(
+      animation: appSettingsListenable,
+      builder: (context, _) {
+        final languageCode = SettingsService.languageNotifier.value;
+        final settings = SettingsService.themeNotifier.value;
+        final paleVioletEnabled = SettingsService.paleVioletNotifier.value;
+        final themeMode = SettingsService.themeModeNotifier.value;
+        final textScale = SettingsService.textScaleNotifier.value;
+        final showPerformanceOverlay =
+            DevToolsService.performanceOverlayEnabled.value;
 
-                            final app = MaterialApp.router(
-                              title: 'TwoSpace',
-                              onGenerateTitle: (context) =>
-                                  AppLocalizations.of(context)?.appTitle ??
-                                  'TwoSpace',
-                              debugShowCheckedModeBanner: false,
-                              showPerformanceOverlay: showPerformanceOverlay,
-                              theme: lightTheme,
-                              darkTheme: darkTheme,
-                              themeMode: themeMode,
-                              locale: Locale(languageCode),
-                              localizationsDelegates:
-                                  AppLocalizations.localizationsDelegates,
-                              supportedLocales:
-                                  AppLocalizations.supportedLocales,
-                              routerConfig: goRouter,
-                              builder: (context, child) {
-                                final mediaQuery = MediaQuery.of(context);
-                                return MediaQuery(
-                                  data: mediaQuery.copyWith(
-                                    textScaler: TextScaler.linear(textScale),
-                                  ),
-                                  child: AuthListener(
-                                    child: child ?? const SizedBox(),
-                                  ),
-                                );
-                              },
-                            );
+        final lightTheme = AppThemeBuilder.build(
+          settings,
+          paleVioletEnabled,
+          brightnessOverride: Brightness.light,
+        );
+        final darkTheme = AppThemeBuilder.build(
+          settings,
+          paleVioletEnabled,
+          brightnessOverride: Brightness.dark,
+        );
 
-                            if (kDebugMode || Environment.enableDevTools) {
-                              return Directionality(
-                                textDirection: TextDirection.ltr,
-                                child: Stack(children: [app, const DevFab()]),
-                              );
-                            }
-                            return app;
-                          },
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+        final app = MaterialApp.router(
+          title: 'TwoSpace',
+          onGenerateTitle: (context) =>
+              AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
+          debugShowCheckedModeBanner: false,
+          showPerformanceOverlay: showPerformanceOverlay,
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeMode,
+          locale: Locale(languageCode),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: goRouter,
+          builder: (context, child) {
+            final mediaQuery = MediaQuery.of(context);
+            return MediaQuery(
+              data: mediaQuery.copyWith(
+                textScaler: TextScaler.linear(textScale),
+              ),
+              child: AuthListener(
+                child: child ?? const SizedBox(),
+              ),
             );
           },
         );
+
+        if (kDebugMode || Environment.enableDevTools) {
+          return Directionality(
+            textDirection: TextDirection.ltr,
+            child: Stack(children: [app, const DevFab()]),
+          );
+        }
+        return app;
       },
     );
   }

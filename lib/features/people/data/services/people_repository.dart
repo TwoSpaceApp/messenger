@@ -138,6 +138,7 @@ class PeopleRepository {
     bool requestPermission = false,
   }) async {
     final normalizedQuery = query.trim().toLowerCase();
+    final shouldRunRemoteSearch = normalizedQuery.length >= 2;
     if (normalizedQuery.isEmpty) {
       return const PeopleSearchData(
         remoteResults: <PersonEntry>[],
@@ -179,29 +180,32 @@ class PeopleRepository {
       ),
     );
 
-    List<PersonEntry> remoteMatches =
-        _remoteSearchCache[normalizedQuery] ?? <PersonEntry>[];
-    try {
-      if (remoteMatches.isEmpty) {
-        await _chatService.ensureReady();
-        final response = await _chatService.searchUsers(query.trim());
-        remoteMatches = _sortPeople(
-          _applyFavoriteIds(
-            _mergePeople(response.map(_personFromSearchMap).toList()),
-            favorites,
-          ),
-        );
-        _remoteSearchCache[normalizedQuery] = remoteMatches;
-        if (remoteMatches.isNotEmpty) {
-          await _localStore.upsertCachedPeople(remoteMatches);
-          _cachedPeopleCache = _mergePeople(<PersonEntry>[
-            ...cachedPeople,
-            ...remoteMatches,
-          ]);
+    var remoteMatches = <PersonEntry>[];
+    if (shouldRunRemoteSearch) {
+      remoteMatches = _remoteSearchCache[normalizedQuery] ?? <PersonEntry>[];
+      try {
+        if (remoteMatches.isEmpty) {
+          await _chatService.ensureReady();
+          final response = await _chatService.searchUsers(query.trim());
+          remoteMatches = _sortPeople(
+            _applyFavoriteIds(
+              _mergePeople(response.map(_personFromSearchMap).toList()),
+              favorites,
+            ),
+          );
+          _remoteSearchCache[normalizedQuery] = remoteMatches;
+          if (remoteMatches.isNotEmpty) {
+            await _localStore.upsertCachedPeople(remoteMatches);
+            _cachedPeopleCache = _mergePeople(<PersonEntry>[
+              ...cachedPeople,
+              ...remoteMatches,
+            ]);
+          }
         }
+      } catch (_) {
+        remoteMatches =
+            localMatches.where((person) => person.isTwoSpaceUser).toList();
       }
-    } catch (_) {
-      remoteMatches = localMatches.where((person) => person.isTwoSpaceUser).toList();
     }
 
     return PeopleSearchData(
@@ -320,7 +324,6 @@ class PeopleRepository {
     try {
       final contacts = await FlutterContacts.getContacts(
         withProperties: true,
-        withPhoto: true,
       );
       final cachedPeople = await _readCachedPeople();
       final cachedByPhone = <String, PersonEntry>{};

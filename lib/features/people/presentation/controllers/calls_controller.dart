@@ -94,7 +94,8 @@ class CallsController extends ChangeNotifier {
     required String thisWeekLabel,
     required String earlierLabel,
   }) {
-    final sections = <String, Map<String, CallThreadSummary>>{};
+    final sections = <String, Map<String, List<CallHistoryEntry>>>{};
+    final personById = <String, PersonEntry>{};
     for (final entry in _filteredHistory) {
       final sectionKey = _sectionTitle(
         entry.startedAt,
@@ -103,45 +104,44 @@ class CallsController extends ChangeNotifier {
         thisWeekLabel: thisWeekLabel,
         earlierLabel: earlierLabel,
       );
-      final bucket = sections.putIfAbsent(sectionKey, () => <String, CallThreadSummary>{});
-      final existing = bucket[entry.person.id];
-      if (existing == null) {
-        bucket[entry.person.id] = CallThreadSummary(
-          person: entry.person,
-          entries: <CallHistoryEntry>[entry],
-        );
-      } else {
-        bucket[entry.person.id] = CallThreadSummary(
-          person: existing.person,
-          entries: <CallHistoryEntry>[...existing.entries, entry],
-        );
-      }
+      final bucket =
+          sections.putIfAbsent(sectionKey, () => <String, List<CallHistoryEntry>>{});
+      personById[entry.person.id] = entry.person;
+      bucket.putIfAbsent(entry.person.id, () => <CallHistoryEntry>[]).add(entry);
     }
 
     return sections.entries.map((section) {
-      final items = section.value.values.toList()
+      final items = section.value.entries
+          .map(
+            (entry) => CallThreadSummary(
+              person: personById[entry.key]!,
+              entries: entry.value,
+            ),
+          )
+          .toList()
         ..sort((a, b) => b.latest.startedAt.compareTo(a.latest.startedAt));
       return CallsSection(title: section.key, items: items);
     }).toList();
   }
 
   Map<String, CallThreadSummary> get _groupedThreads {
-    final grouped = <String, CallThreadSummary>{};
+    final groupedEntries = <String, List<CallHistoryEntry>>{};
+    final personById = <String, PersonEntry>{};
     for (final entry in _filteredHistory) {
-      final existing = grouped[entry.person.id];
-      if (existing == null) {
-        grouped[entry.person.id] = CallThreadSummary(
-          person: entry.person,
-          entries: <CallHistoryEntry>[entry],
-        );
-      } else {
-        grouped[entry.person.id] = CallThreadSummary(
-          person: existing.person,
-          entries: <CallHistoryEntry>[...existing.entries, entry],
-        );
-      }
+      personById[entry.person.id] = entry.person;
+      groupedEntries
+          .putIfAbsent(entry.person.id, () => <CallHistoryEntry>[])
+          .add(entry);
     }
-    return grouped;
+    return groupedEntries.map(
+      (personId, entries) => MapEntry(
+        personId,
+        CallThreadSummary(
+          person: personById[personId]!,
+          entries: entries,
+        ),
+      ),
+    );
   }
 
   List<CallHistoryEntry> get _filteredHistory {

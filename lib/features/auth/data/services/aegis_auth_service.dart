@@ -39,6 +39,9 @@ class AegisAuthService {
   int? _userId;
   Timer? _keepAliveTimer;
   Future<bool>? _restoreSessionFuture;
+  Future<void>? _connectFuture;
+  Future<void>? _ensureSessionFuture;
+  Future<void>? _sessionRecoveryFuture;
 
   bool get isConnected => _client.isConnected;
   bool get isAuthenticated => _client.isAuthenticated;
@@ -64,16 +67,33 @@ class AegisAuthService {
       _ensureKeepAlive();
       return;
     }
-    _log.info(
-        'Подключение к ${Environment.aegisHost}:${Environment.aegisPort}');
-    await _client.connect(
-      Environment.aegisHost,
-      Environment.aegisPort,
-      timeout: Environment.aegisConnectTimeout,
-      transportMaskingKey: Environment.aegisTransportMaskingKey,
-    );
-    _ensureKeepAlive();
-    _log.info('TCP-соединение установлено');
+    final inFlight = _connectFuture;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final future = () async {
+      _log.info(
+          'Подключение к ${Environment.aegisHost}:${Environment.aegisPort}');
+      await _client.connect(
+        Environment.aegisHost,
+        Environment.aegisPort,
+        timeout: Environment.aegisConnectTimeout,
+        transportMaskingKey: Environment.aegisTransportMaskingKey,
+      );
+      _ensureKeepAlive();
+      _log.info('TCP-соединение установлено');
+    }();
+
+    _connectFuture = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_connectFuture, future)) {
+        _connectFuture = null;
+      }
+    }
   }
 
   Future<void> ensureSession() async {
@@ -82,15 +102,50 @@ class AegisAuthService {
       return;
     }
 
-    final restored = await restoreSession();
-    if (!restored) {
-      throw NotAuthenticatedException();
+    final inFlight = _ensureSessionFuture;
+    if (inFlight != null) {
+      await inFlight;
+      return;
     }
+
+    final future = _ensureSessionInternal();
+    _ensureSessionFuture = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_ensureSessionFuture, future)) {
+        _ensureSessionFuture = null;
+      }
+    }
+  }
+
+  Future<void> _ensureSessionInternal() async {
+    var restored = await restoreSession();
+    if (restored) {
+      _ensureKeepAlive();
+      return;
+    }
+
+    final hasStoredToken = (await getStoredToken())?.isNotEmpty == true;
+    if (hasStoredToken) {
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      restored = await restoreSession();
+      if (restored) {
+        _ensureKeepAlive();
+        return;
+      }
+    }
+
+    throw NotAuthenticatedException();
   }
 
   /// Подключиться (если не подключён) и аутентифицировать по сохранённому токену.
   /// Возвращает `true` если сессия восстановлена успешно.
   Future<bool> restoreSession() async {
+    if (_client.isConnected && _client.isAuthenticated) {
+      _ensureKeepAlive();
+      return true;
+    }
     final inFlight = _restoreSessionFuture;
     if (inFlight != null) return inFlight;
 
@@ -137,9 +192,22 @@ class AegisAuthService {
       return true;
     } catch (e) {
       _log.warning('Не удалось восстановить сессию: $e');
-      await clearSession();
+      if (_isAuthRejectionError(e)) {
+        await clearSession();
+      } else {
+        _stopKeepAlive();
+      }
       return false;
     }
+  }
+
+  bool _isAuthRejectionError(Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains('invalid token') ||
+        message.contains('invalid credentials') ||
+        message.contains('unauthorized') ||
+        message.contains('not authenticated') ||
+        message.contains('authentication failed');
   }
 
   // ─── Регистрация ──────────────────────────────────────────────────────────
@@ -305,8 +373,40 @@ class AegisAuthService {
         await _client.ping();
       } catch (e) {
         _log.debug('Ping keep-alive не удался: $e');
+        unawaited(_recoverSessionAfterKeepAliveFailure());
       }
     });
+  }
+
+  Future<void> _recoverSessionAfterKeepAliveFailure() async {
+    final inFlight = _sessionRecoveryFuture;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final future = () async {
+      try {
+        if (_client.isConnected) {
+          await _client.disconnect();
+        }
+      } catch (_) {}
+
+      try {
+        await ensureSession();
+      } catch (e) {
+        _log.debug('Автовосстановление сессии не удалось: $e');
+      }
+    }();
+
+    _sessionRecoveryFuture = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_sessionRecoveryFuture, future)) {
+        _sessionRecoveryFuture = null;
+      }
+    }
   }
 
   void _stopKeepAlive() {

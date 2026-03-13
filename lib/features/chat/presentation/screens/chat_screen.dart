@@ -64,6 +64,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   static const int _historyPageSize = 80;
   static const int _userInfoBatchSize = 6;
+  static const Duration _searchDebounce = Duration(milliseconds: 260);
+  static const Duration _historyLoadThrottle = Duration(milliseconds: 700);
   final AegisChatService _svc = AegisChatService();
   final TextEditingController _controller = TextEditingController();
   final DraftService _draftService = DraftService();
@@ -83,9 +85,13 @@ class _ChatScreenState extends State<ChatScreen> {
   final bool _isTyping = false;
   final Map<String, AudioPlayer> _audioPlayers = {};
   final Map<String, Map<String, dynamic>> _userInfoCache = {};
+  List<String> _imageMediaIds = const <String>[];
+  Map<String, int> _imageIndexByMessageId = const <String, int>{};
   late final VoiceService _voiceService;
   StreamSubscription<List<AegisRoomMessage>>? _messagesSub;
   int _historyLimit = _historyPageSize;
+  DateTime? _lastHistoryLoadAt;
+  Future<void>? _loadOlderMessagesFuture;
   String? _currentUserId;
   List<AegisRoomMessage>? _pendingMessageBatch;
   bool _drainingMessageBatch = false;
@@ -93,6 +99,8 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _headerAvatarUrl;
   String? _headerPresenceStatus;
   DateTime? _headerLastSeenAt;
+  Timer? _searchDebounceTimer;
+  int _searchRequestId = 0;
   
   // Group-related state
   // String? _groupBackgroundColor;
@@ -130,10 +138,15 @@ class _ChatScreenState extends State<ChatScreen> {
     _primeChatHeader();
     // Load draft if exists
     _loadDraft();
+    final initialQuery = (widget.searchQuery ?? '').trim();
+    if (initialQuery.isNotEmpty) {
+      _scheduleServerSearch(initialQuery, widget.searchType ?? 'all');
+    }
   }
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _messagesSub?.cancel();
     _listController.removeListener(_handleListScroll);
     _listController.dispose();
@@ -151,9 +164,24 @@ class _ChatScreenState extends State<ChatScreen> {
     final oldQ = (oldWidget.searchQuery ?? '').trim();
     final newQ = (widget.searchQuery ?? '').trim();
     if (oldWidget.scrollToEventId != widget.scrollToEventId) _scrollToEventId = widget.scrollToEventId;
-    if (oldQ != newQ) {
-      _performServerSearch(newQ, widget.searchType ?? 'all');
+    if (oldQ != newQ || oldWidget.searchType != widget.searchType) {
+      _scheduleServerSearch(newQ, widget.searchType ?? 'all');
     }
+  }
+
+  void _scheduleServerSearch(String query, String type) {
+    _searchDebounceTimer?.cancel();
+    if (query.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _searchResults = [];
+        _searching = false;
+      });
+      return;
+    }
+    _searchDebounceTimer = Timer(_searchDebounce, () {
+      unawaited(_performServerSearch(query, type));
+    });
   }
 
   void _subscribeToMessages() {
@@ -269,6 +297,11 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!_listController.hasClients || _loadingMoreHistory || !_hasMoreHistory) {
       return;
     }
+    final lastHistoryLoadAt = _lastHistoryLoadAt;
+    if (lastHistoryLoadAt != null &&
+        DateTime.now().difference(lastHistoryLoadAt) < _historyLoadThrottle) {
+      return;
+    }
     if (_listController.position.pixels <= 180) {
       unawaited(_loadOlderMessages());
     }
@@ -321,28 +354,58 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     if (!mounted || fetched.isEmpty) return;
+    var hasVisualUpdates = false;
+    final updatedMessages = List<_Msg>.from(_messages);
+    for (var index = 0; index < updatedMessages.length; index++) {
+      final message = updatedMessages[index];
+      final info = fetched[message.senderId];
+      if (info == null) continue;
+      final nextName = info['displayName']?.toString() ?? message.senderName;
+      final nextAvatar = info['avatarUrl']?.toString() ?? message.senderAvatar;
+      if (nextName == message.senderName && nextAvatar == message.senderAvatar) {
+        continue;
+      }
+      hasVisualUpdates = true;
+      updatedMessages[index] = _Msg(
+        id: message.id,
+        text: message.text,
+        isOwn: message.isOwn,
+        time: message.time,
+        senderId: message.senderId,
+        senderName: nextName,
+        senderAvatar: nextAvatar,
+        type: message.type,
+        mediaId: message.mediaId,
+      );
+    }
+
+    if (!hasVisualUpdates) {
+      _userInfoCache.addAll(fetched);
+      return;
+    }
+
     setState(() {
       _userInfoCache.addAll(fetched);
-      _messages = _messages.map((message) {
-        final info = fetched[message.senderId];
-        if (info == null) return message;
-        return _Msg(
-          id: message.id,
-          text: message.text,
-          isOwn: message.isOwn,
-          time: message.time,
-          senderId: message.senderId,
-          senderName: info['displayName']?.toString() ?? message.senderName,
-          senderAvatar: info['avatarUrl']?.toString() ?? message.senderAvatar,
-          type: message.type,
-          mediaId: message.mediaId,
-        );
-      }).toList(growable: false);
+      _messages = updatedMessages;
     });
   }
 
   Future<void> _loadOlderMessages() async {
+    final inFlight = _loadOlderMessagesFuture;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
     if (_loadingMoreHistory || !_hasMoreHistory || !mounted) return;
+    final now = DateTime.now();
+    final lastHistoryLoadAt = _lastHistoryLoadAt;
+    if (lastHistoryLoadAt != null &&
+        now.difference(lastHistoryLoadAt) < _historyLoadThrottle) {
+      return;
+    }
+    _lastHistoryLoadAt = now;
+
+    final future = () async {
     final previousMaxExtent = _listController.hasClients
         ? _listController.position.maxScrollExtent
         : 0.0;
@@ -352,33 +415,55 @@ class _ChatScreenState extends State<ChatScreen> {
     await _loadMessages(forceRefresh: true);
     _subscribeToMessages();
 
+    // Use a double post-frame callback so the extent is read after the
+    // list has fully laid out the newly prepended items.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_listController.hasClients) return;
-      final nextMaxExtent = _listController.position.maxScrollExtent;
-      final delta = nextMaxExtent - previousMaxExtent;
-      if (delta > 0) {
-        _listController.jumpTo(_listController.position.pixels + delta);
-      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_listController.hasClients) return;
+        final nextMaxExtent = _listController.position.maxScrollExtent;
+        final delta = nextMaxExtent - previousMaxExtent;
+        if (delta > 0) {
+          _listController.jumpTo(_listController.position.pixels + delta);
+        }
+      });
     });
 
     if (mounted) {
       setState(() => _loadingMoreHistory = false);
     }
+    }();
+
+    _loadOlderMessagesFuture = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_loadOlderMessagesFuture, future)) {
+        _loadOlderMessagesFuture = null;
+      }
+    }
   }
 
   Future<void> _performServerSearch(String q, String type) async {
-    if (q.isEmpty) {
+    final query = q.trim();
+    if (query.isEmpty) {
+      if (!mounted) return;
       setState(() { _searchResults = []; _searching = false; });
       return;
     }
+    final requestId = ++_searchRequestId;
+    if (!mounted) return;
     setState(() { _searching = true; _searchResults = []; });
     try {
-      final res = await _svc.searchMessages(query: q, type: type);
+      final res = await _svc.searchMessages(query: query, type: type);
+      if (!mounted || requestId != _searchRequestId) return;
       setState(() { _searchResults = res; });
     } catch (_) {
+      if (!mounted || requestId != _searchRequestId) return;
       setState(() { _searchResults = []; });
     } finally {
-      if (mounted) setState(() => _searching = false);
+      if (mounted && requestId == _searchRequestId) {
+        setState(() => _searching = false);
+      }
     }
   }
 
@@ -440,6 +525,8 @@ class _ChatScreenState extends State<ChatScreen> {
       final me = _currentUserId;
       final missingSenderIds = <String>{};
       final out = <_Msg>[];
+      final imageMediaIds = <String>[];
+      final imageIndexByMessageId = <String, int>{};
       for (final m in msgs) {
         final cached = _userInfoCache[m.senderId] ??
             _svc.peekUserInfo(m.senderId) ??
@@ -468,14 +555,25 @@ class _ChatScreenState extends State<ChatScreen> {
         } catch (_) { 
           isOwn = me != null && me == m.senderId; 
         }
-        out.add(_Msg(id: m.id, text: m.content, isOwn: isOwn, time: m.time, senderId: m.senderId, senderName: senderName, senderAvatar: senderAvatar, type: m.type, mediaId: m.mediaId));
+        final nextMessage = _Msg(id: m.id, text: m.content, isOwn: isOwn, time: m.time, senderId: m.senderId, senderName: senderName, senderAvatar: senderAvatar, type: m.type, mediaId: m.mediaId);
+        out.add(nextMessage);
+        final mediaId = nextMessage.mediaId;
+        if (nextMessage.type == 'm.image' && mediaId != null && mediaId.isNotEmpty) {
+          imageIndexByMessageId[nextMessage.id] = imageMediaIds.length;
+          imageMediaIds.add(mediaId);
+        }
       }
       
       if (!mounted) return;
+      final nextMessageIds = out.map((message) => message.id).toSet();
       setState(() {
         _messages = out;
+        _imageMediaIds = imageMediaIds;
+        _imageIndexByMessageId = imageIndexByMessageId;
         _hasMoreHistory = msgs.length >= _historyLimit;
         _loading = false;
+        _messageKeys.removeWhere((messageId, _) => !nextMessageIds.contains(messageId));
+        _highlighted.removeWhere((messageId) => !nextMessageIds.contains(messageId));
       });
       if (missingSenderIds.isNotEmpty) {
         unawaited(_prefetchUserInfo(missingSenderIds));
@@ -491,13 +589,35 @@ class _ChatScreenState extends State<ChatScreen> {
               await Scrollable.ensureVisible(key.currentContext!, duration: const Duration(milliseconds: 450), alignment: 0.4, curve: Curves.easeInOut);
               setState(() { _highlighted.clear(); _highlighted.add(targetId); });
             } else {
-              // Fallback to index-based scroll
+              // Fallback: jump to a ratio-estimated position so the item enters
+              // the viewport, then use ensureVisible for pixel-perfect alignment.
               final idx = _messages.indexWhere((m) => m.id == targetId);
               if (idx >= 0 && _listController.hasClients) {
-                const approxItemHeight = 84.0;
-                final offset = idx * approxItemHeight;
-                await _listController.animateTo(offset.clamp(0.0, _listController.position.maxScrollExtent), duration: const Duration(milliseconds: 450), curve: Curves.easeInOut);
-                setState(() { _highlighted.clear(); _highlighted.add(targetId); });
+                final total = _messages.length;
+                final ratio = total > 1 ? idx / (total - 1) : 1.0;
+                final estimated = (ratio * _listController.position.maxScrollExtent)
+                    .clamp(0.0, _listController.position.maxScrollExtent);
+                _listController.jumpTo(estimated);
+                // After the jump is painted, try ensureVisible for exact alignment.
+                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  try {
+                    final k = _messageKeys[targetId];
+                    if (k?.currentContext != null) {
+                      await Scrollable.ensureVisible(
+                        k!.currentContext!,
+                        duration: const Duration(milliseconds: 350),
+                        alignment: 0.4,
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                    if (mounted) {
+                      setState(() {
+                        _highlighted.clear();
+                        _highlighted.add(targetId);
+                      });
+                    }
+                  } catch (_) {}
+                });
               }
             }
           } catch (_) {}
@@ -509,7 +629,9 @@ class _ChatScreenState extends State<ChatScreen> {
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.loadMessagesError(e.toString()))));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && _loading) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -1011,15 +1133,6 @@ class _ChatScreenState extends State<ChatScreen> {
       final visibleMessages = _visibleMessages;
       final viewportWidth = MediaQuery.of(context).size.width;
       final bubbleMaxWidth = math.min(viewportWidth * 0.72, 560.0);
-      final imageMediaIds = <String>[];
-      final imageIndexByMessageId = <String, int>{};
-      for (final msg in visibleMessages) {
-        final mediaId = msg.mediaId;
-        if (msg.type == 'm.image' && mediaId != null && mediaId.isNotEmpty) {
-          imageIndexByMessageId[msg.id] = imageMediaIds.length;
-          imageMediaIds.add(mediaId);
-        }
-      }
       bodyWidget = ListView.custom(
         controller: _listController,
         padding: const EdgeInsets.all(12),
@@ -1038,11 +1151,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             );
           }
-          final contentIndex = i - (_loadingMoreHistory ? 1 : 0);
-          if (contentIndex.isOdd) {
-            return const SizedBox(height: 2);
-          }
-          final messageIndex = contentIndex ~/ 2;
+          final messageIndex = i - (_loadingMoreHistory ? 1 : 0);
           final m = visibleMessages[messageIndex];
           final shouldTrackKey = _scrollToEventId == m.id || _highlighted.contains(m.id);
           final key = shouldTrackKey
@@ -1060,10 +1169,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     mediaDownloads: _mediaDownloads,
                     maxWidth: bubbleMaxWidth,
                     onOpenGallery: () {
-                      final index = imageIndexByMessageId[m.id];
+                      final index = _imageIndexByMessageId[m.id];
                       if (index == null) return;
                       _openImageGallery(
-                        mediaIds: imageMediaIds,
+                        mediaIds: _imageMediaIds,
                         initialIndex: index,
                       );
                     },
@@ -1075,6 +1184,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: _VideoMessageWidget(
                     message: m,
                     svc: _svc,
+                    mediaDownloads: _mediaDownloads,
                     maxWidth: bubbleMaxWidth,
                   ),
                 )
@@ -1144,51 +1254,61 @@ class _ChatScreenState extends State<ChatScreen> {
                 ]),
               ]
             ]);
-          return RepaintBoundary(
-            child: Dismissible(
-            key: Key('dismiss_${m.id}'),
-            direction: DismissDirection.startToEnd,
-            confirmDismiss: (direction) async {
-              _sendReplyForEvent(m.id);
-              return false; // don't actually dismiss
-            },
-            background: Container(
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.only(left: 16),
-              child: const Icon(Icons.reply, color: Colors.blue),
-            ),
-            child: KeyedSubtree(
-              key: key,
-              child: Row(
-                mainAxisAlignment: m.isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!m.isOwn)
-                    GestureDetector(
-                      onTap: () => _openUserProfile(
-                        m.senderId ?? '',
-                        initialName: m.senderName,
-                        initialAvatar: m.senderAvatar,
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: RepaintBoundary(
+              child: Dismissible(
+                key: Key('dismiss_${m.id}'),
+                direction: DismissDirection.startToEnd,
+                confirmDismiss: (direction) async {
+                  _sendReplyForEvent(m.id);
+                  return false; // don't actually dismiss
+                },
+                background: Container(
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.only(left: 16),
+                  child: const Icon(Icons.reply, color: Colors.blue),
+                ),
+                child: KeyedSubtree(
+                  key: key,
+                  child: Row(
+                    mainAxisAlignment:
+                        m.isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!m.isOwn)
+                        GestureDetector(
+                          onTap: () => _openUserProfile(
+                            m.senderId ?? '',
+                            initialName: m.senderName,
+                            initialAvatar: m.senderAvatar,
+                          ),
+                          child: UserAvatar(
+                            avatarUrl: m.senderAvatar,
+                            name: m.senderName ?? '?',
+                            radius: 16,
+                          ),
+                        ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: GestureDetector(
+                          onLongPressStart: (details) =>
+                              _showMessageActions(m, details.globalPosition),
+                          child: _SquishyBubble(
+                            isOwn: m.isOwn,
+                            highlighted: _highlighted.contains(m.id),
+                            child: bubbleContent,
+                          ),
+                        ),
                       ),
-                      child: UserAvatar(avatarUrl: m.senderAvatar, name: m.senderName ?? '?', radius: 16),
-                    ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: GestureDetector(
-                      onLongPressStart: (details) => _showMessageActions(m, details.globalPosition),
-                      child: _SquishyBubble(
-                        isOwn: m.isOwn,
-                        highlighted: _highlighted.contains(m.id),
-                        child: bubbleContent,
-                      ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ));
+          );
         },
-          childCount: (visibleMessages.isEmpty ? 0 : visibleMessages.length * 2 - 1) + (_loadingMoreHistory ? 1 : 0),
+          childCount: visibleMessages.length + (_loadingMoreHistory ? 1 : 0),
           addAutomaticKeepAlives: false,
           addSemanticIndexes: false,
         ),
@@ -1487,11 +1607,13 @@ class _VideoMessageWidget extends StatefulWidget {
   const _VideoMessageWidget({
     required this.message,
     required this.svc,
+    required this.mediaDownloads,
     required this.maxWidth,
   });
 
   final _Msg message;
   final AegisChatService svc;
+  final Map<String, String> mediaDownloads;
   final double maxWidth;
 
   @override
@@ -1509,10 +1631,39 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
     unawaited(_prepare());
   }
 
+  @override
+  void didUpdateWidget(covariant _VideoMessageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message.mediaId != widget.message.mediaId) {
+      _localPath = null;
+      _error = null;
+      _loading = true;
+      unawaited(_prepare());
+    }
+  }
+
   Future<void> _prepare() async {
     try {
-      final mediaRef = widget.message.mediaId ?? widget.message.text;
+      final mediaRef = widget.message.mediaId;
+      if (mediaRef == null || mediaRef.trim().isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _error = Exception('Video metadata is missing');
+          _loading = false;
+        });
+        return;
+      }
+      final cachedPath = widget.mediaDownloads[mediaRef];
+      if (cachedPath != null && File(cachedPath).existsSync()) {
+        if (!mounted) return;
+        setState(() {
+          _localPath = cachedPath;
+          _loading = false;
+        });
+        return;
+      }
       final path = await widget.svc.downloadMediaToTempFile(mediaRef);
+      widget.mediaDownloads[mediaRef] = path;
       if (!mounted) return;
       setState(() {
         _localPath = path;

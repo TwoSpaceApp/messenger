@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
@@ -125,44 +129,106 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickAvatar() async {
-    final picker = ImagePicker();
     final l10n = AppLocalizations.of(context)!;
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
+    if (_actionLoading) return;
+
+    Uint8List? avatarBytes;
+    String mimePathOrName = '';
+
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        avatarBytes = await image.readAsBytes();
+        mimePathOrName = image.path;
+      }
+    } catch (_) {
+      // Ignore and fallback to FilePicker below.
+    }
+
+    if (avatarBytes == null) {
       try {
-        setState(() => _actionLoading = true);
-        final uploaded = await _chatService.uploadMyAvatar(
-          await image.readAsBytes(),
-          mimeType: _mimeTypeForPath(image.path),
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.image,
+          withData: true,
         );
-        if (!mounted) return;
-        setState(() {
-          _user = {
-            ...?_user,
-            'avatar': uploaded['avatarUrl'] ?? _user?['avatar'],
-            'avatars': uploaded['avatars'] ?? _user?['avatars'],
-            'presenceStatus':
-                uploaded['presenceStatus'] ?? _user?['presenceStatus'],
-            'lastSeenAt': uploaded['lastSeenAt'] ?? _user?['lastSeenAt'],
-            'prefs': {
-              if (_user?['prefs'] is Map)
-                ...Map<String, dynamic>.from(_user!['prefs'] as Map),
-              'avatarUrl': uploaded['avatarUrl'] ?? _user?['avatar'],
-            },
-          };
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.profileSaved)),
-        );
+        if (result == null || result.files.isEmpty) {
+          return;
+        }
+        final file = result.files.single;
+        avatarBytes = file.bytes;
+        mimePathOrName = file.name;
+        if (avatarBytes == null && file.path != null) {
+          avatarBytes = await File(file.path!).readAsBytes();
+          mimePathOrName = file.path!;
+        }
       } catch (e) {
         if (!mounted) return;
+        final raw = e.toString().toLowerCase();
+        final denied = raw.contains('permission') ||
+            raw.contains('denied') ||
+            raw.contains('access') ||
+            raw.contains('operation not permitted');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+          SnackBar(
+            content: Text(
+              denied
+                  ? l10n.filePickError('Нет доступа к выбранному файлу')
+                  : l10n.filePickError(e.toString()),
+            ),
+          ),
         );
-      } finally {
-        if (mounted) {
-          setState(() => _actionLoading = false);
-        }
+        return;
+      }
+    }
+
+    if (avatarBytes == null || avatarBytes.isEmpty) {
+      return;
+    }
+
+    try {
+      setState(() => _actionLoading = true);
+      final uploaded = await _chatService.uploadMyAvatar(
+        avatarBytes,
+        mimeType: _mimeTypeForPath(mimePathOrName),
+      );
+      if (!mounted) return;
+      setState(() {
+        _user = {
+          ...?_user,
+          'avatar': uploaded['avatarUrl'] ?? _user?['avatar'],
+          'avatars': uploaded['avatars'] ?? _user?['avatars'],
+          'presenceStatus': uploaded['presenceStatus'] ?? _user?['presenceStatus'],
+          'lastSeenAt': uploaded['lastSeenAt'] ?? _user?['lastSeenAt'],
+          'prefs': {
+            if (_user?['prefs'] is Map)
+              ...Map<String, dynamic>.from(_user!['prefs'] as Map),
+            'avatarUrl': uploaded['avatarUrl'] ?? _user?['avatar'],
+          },
+        };
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.profileSaved)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final raw = e.toString().toLowerCase();
+      final denied = raw.contains('permission') ||
+          raw.contains('denied') ||
+          raw.contains('access') ||
+          raw.contains('operation not permitted');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            denied
+                ? 'Нет доступа к файлу аватара. Попробуйте выбрать другой файл.'
+                : e.toString().replaceAll('Exception: ', ''),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _actionLoading = false);
       }
     }
   }

@@ -31,7 +31,7 @@ class PersonTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isCompact = MediaQuery.sizeOf(context).width < 390;
+    final isCompact = MediaQuery.sizeOf(context).width < 520;
     final iconSize = 20.s(context);
     final badgeHorizontal = 8.s(context);
     final badgeVertical = 4.s(context);
@@ -56,66 +56,74 @@ class PersonTile extends StatelessWidget {
       );
     }
 
-    final actionButtons = <Widget>[
-      IconButton(
-        visualDensity: VisualDensity.compact,
-        iconSize: iconSize,
-        splashRadius: 20.s(context),
-        onPressed: onFavoriteTap,
-        icon: Icon(
-          person.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
-          color: person.isFavorite ? Colors.amberAccent : Colors.white70,
+    Widget actionIcon({
+      required IconData icon,
+      required VoidCallback? onPressed,
+      String? tooltip,
+      Color? iconColor,
+    }) {
+      return Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.62),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.24),
+          ),
         ),
+        child: IconButton(
+          visualDensity: VisualDensity.compact,
+          iconSize: iconSize - 1,
+          splashRadius: 20.s(context),
+          tooltip: tooltip,
+          onPressed: onPressed,
+          icon: Icon(
+            icon,
+            color: iconColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.82),
+          ),
+        ),
+      );
+    }
+
+    final actionButtons = <Widget>[
+      actionIcon(
+        icon: person.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+        onPressed: onFavoriteTap,
+        iconColor: person.isFavorite ? Colors.amberAccent : Colors.white70,
       ),
       if (onInviteTap != null)
-        IconButton(
-          visualDensity: VisualDensity.compact,
-          iconSize: iconSize,
-          splashRadius: 20.s(context),
+        actionIcon(
+          icon: Icons.share_rounded,
           onPressed: onInviteTap,
-          icon: const Icon(Icons.share_rounded, color: Colors.white70),
         )
       else ...[
         if (onMessageTap != null)
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            iconSize: iconSize,
-            splashRadius: 20.s(context),
+          actionIcon(
+            icon: Icons.chat_bubble_outline_rounded,
             onPressed: onMessageTap,
-            icon: const Icon(
-              Icons.chat_bubble_outline_rounded,
-              color: Colors.white70,
-            ),
           ),
         if (onVoiceCallTap != null)
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            iconSize: iconSize,
-            splashRadius: 20.s(context),
+          actionIcon(
+            icon: Icons.call_outlined,
             onPressed: onVoiceCallTap,
-            icon: const Icon(Icons.call_outlined, color: Colors.white70),
           ),
         if (onVideoCallTap != null)
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            iconSize: iconSize,
-            splashRadius: 20.s(context),
+          actionIcon(
+            icon: Icons.videocam_outlined,
             onPressed: onVideoCallTap,
-            icon: const Icon(Icons.videocam_outlined, color: Colors.white70),
           ),
       ],
     ];
 
     return GlassCard(
       padding: EdgeInsets.symmetric(
-        horizontal: 8.s(context),
-        vertical: 4.s(context),
+        horizontal: 6.s(context),
+        vertical: 3.s(context),
       ),
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: 8.s(context),
-          vertical: 6.s(context),
+          vertical: 4.s(context),
         ),
         child: isCompact
             ? Column(
@@ -127,7 +135,7 @@ class PersonTile extends StatelessWidget {
                         name: person.displayName,
                         avatarUrl: person.avatarUrl,
                         photoBytes: person.photoBytes,
-                        radius: 23.s(context),
+                        radius: 21.s(context),
                         showOnline: person.isOnline,
                       ),
                       SizedBox(width: 12.s(context)),
@@ -142,9 +150,9 @@ class PersonTile extends StatelessWidget {
                                     person.displayName,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color: theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ),
@@ -156,8 +164,8 @@ class PersonTile extends StatelessWidget {
                               subtitle,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.72),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.74),
                               ),
                             ),
                           ],
@@ -169,7 +177,8 @@ class PersonTile extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerRight,
                     child: Wrap(
-                      spacing: 2.s(context),
+                      spacing: 6.s(context),
+                      runSpacing: 6.s(context),
                       children: actionButtons,
                     ),
                   ),
@@ -181,7 +190,7 @@ class PersonTile extends StatelessWidget {
                     name: person.displayName,
                     avatarUrl: person.avatarUrl,
                     photoBytes: person.photoBytes,
-                    radius: 23.s(context),
+                    radius: 21.s(context),
                     showOnline: person.isOnline,
                   ),
                   SizedBox(width: 12.s(context)),
@@ -196,9 +205,9 @@ class PersonTile extends StatelessWidget {
                                 person.displayName,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
@@ -210,15 +219,19 @@ class PersonTile extends StatelessWidget {
                           subtitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.72),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.74),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(width: 6.s(context)),
-                  Wrap(children: actionButtons),
+                  SizedBox(width: 8.s(context)),
+                  Wrap(
+                    spacing: 6.s(context),
+                    runSpacing: 6.s(context),
+                    children: actionButtons,
+                  ),
                 ],
               ),
       ),
