@@ -126,7 +126,7 @@ class AegisAuthService {
       return;
     }
 
-    final hasStoredToken = (await getStoredToken())?.isNotEmpty == true;
+    final hasStoredToken = (await getStoredToken())?.isNotEmpty ?? false;
     if (hasStoredToken) {
       await Future<void>.delayed(const Duration(milliseconds: 350));
       restored = await restoreSession();

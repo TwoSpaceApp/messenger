@@ -628,5 +628,8 @@
   "callsCameraUnsupportedMessage": "На этой платформе локальный видеопросмотр не поддерживается.",
   "callsCameraOffMessage": "Предпросмотр камеры отключён для этого демонстрационного звонка.",
   "callsFrontCameraLabel": "Фронтальная камера",
-  "callsRearCameraLabel": "Основная камера"
+  "callsRearCameraLabel": "Основная камера",
+  "backgroundOptimizationDisabledTitle": "Фоновые эффекты упрощены",
+  "backgroundOptimizationDisabledMessage": "TwoSpace заметил стабильные просадки кадров и отключил тяжёлые фоновые эффекты, чтобы прокрутка и работа с чатами оставались плавными.",
+  "backgroundOptimizationOpenSettings": "Открыть настройки оформления"
 }

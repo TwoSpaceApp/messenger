@@ -2006,4 +2006,16 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Fotocamera posteriore';
+
+  @override
+  String get backgroundOptimizationDisabledTitle =>
+      'Gli effetti di sfondo sono stati semplificati';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace ha rilevato rallentamenti costanti dei frame e ha disattivato gli effetti di sfondo più pesanti per mantenere fluido lo scorrimento e l\'uso delle chat.';
+
+  @override
+  String get backgroundOptimizationOpenSettings =>
+      'Apri le impostazioni dell\'aspetto';
 }

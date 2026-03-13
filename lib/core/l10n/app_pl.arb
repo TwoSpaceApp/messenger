@@ -607,5 +607,8 @@
   "callsCameraUnsupportedMessage": "Ta platforma nie obsługuje lokalnego podglądu wideo.",
   "callsCameraOffMessage": "Podgląd kamery jest wyłączony dla tego połączenia demonstracyjnego.",
   "callsFrontCameraLabel": "Przednia kamera",
-  "callsRearCameraLabel": "Tylna kamera"
+  "callsRearCameraLabel": "Tylna kamera",
+  "backgroundOptimizationDisabledTitle": "Efekty tła zostały uproszczone",
+  "backgroundOptimizationDisabledMessage": "TwoSpace wykrył długotrwałe spadki płynności i wyłączył ciężkie efekty tła, aby przewijanie i obsługa czatów pozostały płynne.",
+  "backgroundOptimizationOpenSettings": "Otwórz ustawienia wyglądu"
 }

@@ -2630,5 +2630,17 @@
   "callsCameraUnsupportedMessage": "This platform does not support the local video preview.",
   "callsCameraOffMessage": "Camera preview is turned off for this demo call.",
   "callsFrontCameraLabel": "Front camera",
-  "callsRearCameraLabel": "Rear camera"
+  "callsRearCameraLabel": "Rear camera",
+  "backgroundOptimizationDisabledTitle": "Background effects were simplified",
+  "@backgroundOptimizationDisabledTitle": {
+    "description": "Title for a notice shown when animated background effects were automatically disabled to reduce jank"
+  },
+  "backgroundOptimizationDisabledMessage": "TwoSpace detected sustained slow frames and turned off heavy background effects to keep scrolling and chat interactions smooth.",
+  "@backgroundOptimizationDisabledMessage": {
+    "description": "Body text for a notice shown when animated background effects were automatically disabled"
+  },
+  "backgroundOptimizationOpenSettings": "Open appearance settings",
+  "@backgroundOptimizationOpenSettings": {
+    "description": "Action label that opens appearance settings after background effects were automatically disabled"
+  }
 }

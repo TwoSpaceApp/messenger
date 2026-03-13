@@ -1951,4 +1951,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => '背面カメラ';
+
+  @override
+  String get backgroundOptimizationDisabledTitle => '背景エフェクトを軽量化しました';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace は継続的なフレーム遅延を検出したため、スクロールやチャット操作を滑らかに保つために重い背景エフェクトを無効にしました。';
+
+  @override
+  String get backgroundOptimizationOpenSettings => '表示設定を開く';
 }

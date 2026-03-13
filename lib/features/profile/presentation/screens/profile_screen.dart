@@ -661,7 +661,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 14),
             Wrap(
-              alignment: WrapAlignment.start,
               spacing: 10,
               runSpacing: 10,
               children: [
@@ -932,71 +931,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Expanded(
             flex: 6,
             child: Text(
-              value?.isNotEmpty == true ? value! : '-',
+              value?.isNotEmpty ?? false ? value! : '-',
               textAlign: TextAlign.right,
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoGrid(List<({String label, String? value})> infoTiles) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final twoColumns = constraints.maxWidth >= 560;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: infoTiles.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: twoColumns ? 2 : 1,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
-            childAspectRatio: twoColumns ? 2.45 : 4.4,
-          ),
-          itemBuilder: (context, index) {
-            final tile = infoTiles[index];
-            return _buildInfoTileCard(tile.label, tile.value);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildInfoTileCard(String title, String? value) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(UITokens.cornerSm),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value?.isNotEmpty == true ? value! : '-',
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyLarge,
           ),
         ],
       ),
@@ -1129,23 +1069,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildInfoRow(String title, String? value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(value?.isNotEmpty ?? false ? value! : '-',
-              style: Theme.of(context).textTheme.bodyLarge),
-          const SizedBox(height: 4),
-          Text(title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withAlpha((0.6 * 255).round()))),
-        ],
-      ),
-    );
-  }
 }

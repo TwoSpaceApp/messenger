@@ -607,5 +607,8 @@
   "callsCameraUnsupportedMessage": "Esta plataforma no admite la vista previa local de video.",
   "callsCameraOffMessage": "La vista previa de la cámara está desactivada para esta llamada de demostración.",
   "callsFrontCameraLabel": "Cámara frontal",
-  "callsRearCameraLabel": "Cámara trasera"
+  "callsRearCameraLabel": "Cámara trasera",
+  "backgroundOptimizationDisabledTitle": "Los efectos de fondo se simplificaron",
+  "backgroundOptimizationDisabledMessage": "TwoSpace detectó fotogramas lentos de forma continua y desactivó los efectos de fondo pesados para mantener fluido el desplazamiento y el uso de los chats.",
+  "backgroundOptimizationOpenSettings": "Abrir ajustes de apariencia"
 }

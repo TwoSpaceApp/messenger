@@ -1951,4 +1951,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => '후면 카메라';
+
+  @override
+  String get backgroundOptimizationDisabledTitle => '배경 효과를 단순화했습니다';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace가 지속적인 프레임 저하를 감지하여 스크롤과 채팅 사용감을 부드럽게 유지하기 위해 무거운 배경 효과를 껐습니다.';
+
+  @override
+  String get backgroundOptimizationOpenSettings => '화면 설정 열기';
 }

@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
@@ -14,6 +12,7 @@ import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
+import 'package:two_space_app/features/chat/data/local/aegis_chat_local_store.dart';
 
 class AegisRoomMessage {
   AegisRoomMessage({
@@ -190,10 +189,7 @@ class AegisChatService {
   Future<bool>? _bootstrapFuture;
   StreamSubscription<Message>? _incomingSub;
   late Directory _storeDir;
-  late Directory _messagesDir;
-  late File _legacyStoreFile;
-  late File _conversationsFile;
-  late File _profilesFile;
+  final AegisChatLocalStore _localStore = AegisChatLocalStore();
   Timer? _persistTimer;
   Future<void>? _persistInFlight;
   Future<bool>? _chatRefreshInFlight;
@@ -204,7 +200,7 @@ class AegisChatService {
   bool _persistQueuedWhileWriting = false;
   DateTime? _lastChatRefreshAt;
 
-  static const Duration _persistDebounce = Duration(milliseconds: 1200);
+  static const Duration _persistDebounce = Duration(seconds: 4);
   static const Duration _chatRefreshCooldown = Duration(seconds: 20);
 
   final Map<String, _StoredConversation> _conversations = {};
@@ -226,117 +222,22 @@ class AegisChatService {
   Future<void> _init() async {
     if (_initialized) return;
     final dir = await getApplicationDocumentsDirectory();
-    _legacyStoreFile = File(p.join(dir.path, 'aegis_chat_store.json'));
     _storeDir = Directory(p.join(dir.path, 'aegis_chat_store'));
-    _messagesDir = Directory(p.join(_storeDir.path, 'messages'));
-    _conversationsFile = File(p.join(_storeDir.path, 'conversations.json'));
-    _profilesFile = File(p.join(_storeDir.path, 'profiles.json'));
 
     if (!await _storeDir.exists()) {
       await _storeDir.create(recursive: true);
     }
-    if (!await _messagesDir.exists()) {
-      await _messagesDir.create(recursive: true);
-    }
 
     unawaited(_cleanupMediaCache());
 
-    final splitStoreExists = await Future.wait<bool>([
-      _conversationsFile.exists(),
-      _profilesFile.exists(),
-    ]);
-
-    if (splitStoreExists.any((exists) => exists)) {
-      await _loadSplitStore();
-    } else if (await _legacyStoreFile.exists()) {
-      await _loadLegacyStore();
-      _dirtyRoomIds.addAll(_messages.keys);
-      _markConversationsDirty();
-      _markProfilesDirty();
-      await _flushPersistNow();
-    }
-    _initialized = true;
-  }
-
-  Future<void> _loadLegacyStore() async {
-    final raw = await _legacyStoreFile.readAsString();
-    if (raw.trim().isEmpty) return;
-
-    final json = await Isolate.run<Map<String, dynamic>>(
-      () => Map<String, dynamic>.from(jsonDecode(raw) as Map),
-    );
-    final conversations = json['conversations'] as List<dynamic>? ?? [];
-    final messages = json['messages'] as Map<String, dynamic>? ?? {};
-    final profiles = json['profiles'] as Map<String, dynamic>? ?? {};
-
-    for (final item in conversations) {
-      final conversation =
-          _StoredConversation.fromJson(item as Map<String, dynamic>);
+    final bootstrap = await _localStore.initialize();
+    for (final item in bootstrap.conversations) {
+      final conversation = _StoredConversation.fromJson(item);
       _conversations[conversation.id] = conversation;
     }
-    for (final entry in messages.entries) {
-      _messages[entry.key] = (entry.value as List<dynamic>)
-          .map((e) => AegisRoomMessage.fromJson(e as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => a.time.compareTo(b.time));
-    }
-    _storedRoomIds.addAll(_messages.keys);
-    _hydratedRoomIds.addAll(_messages.keys);
-    for (final entry in profiles.entries) {
-      final id = int.tryParse(entry.key);
-      if (id != null && entry.value is Map<String, dynamic>) {
-        _profileCache[id] = Map<String, dynamic>.from(
-          entry.value as Map<String, dynamic>,
-        );
-      }
-    }
-  }
-
-  Future<void> _loadSplitStore() async {
-    final rawFiles = await Future.wait<String?>([
-      _readIfExists(_conversationsFile),
-      _readIfExists(_profilesFile),
-    ]);
-
-    final conversationsRaw = rawFiles[0];
-    final profilesRaw = rawFiles[1];
-
-    if (conversationsRaw != null && conversationsRaw.trim().isNotEmpty) {
-      final conversations = await Isolate.run<List<dynamic>>(
-        () => List<dynamic>.from(jsonDecode(conversationsRaw) as List),
-      );
-      for (final item in conversations) {
-        final conversation =
-            _StoredConversation.fromJson(item as Map<String, dynamic>);
-        _conversations[conversation.id] = conversation;
-      }
-    }
-
-    if (profilesRaw != null && profilesRaw.trim().isNotEmpty) {
-      final profiles = await Isolate.run<Map<String, dynamic>>(
-        () => Map<String, dynamic>.from(jsonDecode(profilesRaw) as Map),
-      );
-      for (final entry in profiles.entries) {
-        final id = int.tryParse(entry.key);
-        if (id != null && entry.value is Map<String, dynamic>) {
-          _profileCache[id] = Map<String, dynamic>.from(
-            entry.value as Map<String, dynamic>,
-          );
-        }
-      }
-    }
-
-    final files = await _messagesDir
-        .list()
-        .where((entity) => entity is File)
-        .cast<File>()
-        .toList();
-    for (final file in files) {
-      try {
-        final roomId = _roomIdFromFileName(p.basenameWithoutExtension(file.path));
-        _storedRoomIds.add(roomId);
-      } catch (_) {}
-    }
+    _profileCache.addAll(bootstrap.profiles);
+    _storedRoomIds.addAll(bootstrap.storedRoomIds);
+    _initialized = true;
   }
 
   Future<void> _ensureRoomMessagesLoaded(String roomId) async {
@@ -348,47 +249,22 @@ class AegisChatService {
       return;
     }
 
-    final file = _messageFileForRoom(roomId);
-    if (!await file.exists()) {
-      _messages.putIfAbsent(roomId, () => <AegisRoomMessage>[]);
-      return;
-    }
-
-    final raw = await file.readAsString();
-    if (raw.trim().isEmpty) {
+    final decoded = await _localStore.loadRoomMessagesJson(roomId);
+    if (decoded.isEmpty) {
       _messages[roomId] = <AegisRoomMessage>[];
       return;
     }
-
-    final decoded = await Isolate.run<List<dynamic>>(
-      () => List<dynamic>.from(jsonDecode(raw) as List),
-    );
     _messages[roomId] = decoded
-        .map((e) => AegisRoomMessage.fromJson(e as Map<String, dynamic>))
+        .map(AegisRoomMessage.fromJson)
         .toList()
       ..sort((a, b) => a.time.compareTo(b.time));
+    _storedRoomIds.add(roomId);
   }
-
-  String _messageFileKey(String roomId) =>
-      base64Url.encode(utf8.encode(roomId));
-
-  String _roomIdFromFileName(String fileName) =>
-      utf8.decode(base64Url.decode(fileName));
-
-  File _messageFileForRoom(String roomId) =>
-      File(p.join(_messagesDir.path, '${_messageFileKey(roomId)}.json'));
 
   Future<void> ensureReady() async {
     await _init();
     await _auth.ensureSession();
     _ensureIncomingAttached();
-  }
-
-  Future<String?> _readIfExists(File file) async {
-    if (!await file.exists()) {
-      return null;
-    }
-    return file.readAsString();
   }
 
   void _markConversationsDirty() {
@@ -442,6 +318,7 @@ class AegisChatService {
   Future<void> dispose() async {
     await _flushPersistNow();
     await _incomingSub?.cancel();
+    await _localStore.close();
     _attached = false;
     for (final controller in _roomChanges.values) {
       await controller.close();
@@ -452,7 +329,6 @@ class AegisChatService {
   Stream<List<Chat>> watchChats() async* {
     await _init();
     yield _currentChatsSnapshot();
-    unawaited(_refreshChatsQuietly());
     await for (final _ in _chatChanges.stream) {
       yield _currentChatsSnapshot();
     }
@@ -1113,7 +989,7 @@ class AegisChatService {
         avatarUrl: target.path,
         updatedAt: DateTime.now(),
       ));
-      await _flushPersistNow();
+      await _persist();
       _emitChanged();
     }
     return target.path;
@@ -1271,10 +1147,44 @@ class AegisChatService {
     );
   }
 
-  Future<void> refreshChats() async {
+  Future<void> refreshChats({bool force = false}) async {
     await ensureReady();
     final bootstrapChanged = await _ensureChatBootstrap();
-    final changed = bootstrapChanged || await _refreshChatsFromServer();
+    final changed = bootstrapChanged || await _refreshChatsFromServer(force: force);
+    if (changed) {
+      _emitChanged();
+    }
+  }
+
+  Future<void> refreshChatIndex({
+    int messageLimit = 50,
+    int preloadRooms = 12,
+  }) async {
+    await ensureReady();
+
+    var changed = false;
+    changed = await _refreshChatsFromServer(force: true) || changed;
+
+    final roomsToRefresh = (_conversations.values.toList()
+          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt)))
+        .take(preloadRooms)
+        .map((conversation) => conversation.id)
+        .toList(growable: false);
+
+    const batchSize = 4;
+    for (var index = 0; index < roomsToRefresh.length; index += batchSize) {
+      final batch = roomsToRefresh.skip(index).take(batchSize).toList(growable: false);
+      final batchResults = await Future.wait<bool>(
+        batch.map(
+          (roomId) => _refreshRoomMessages(roomId, limit: messageLimit)
+              .catchError((_) => false),
+        ),
+      );
+      if (batchResults.any((value) => value)) {
+        changed = true;
+      }
+    }
+
     if (changed) {
       _emitChanged();
     }
@@ -1906,7 +1816,7 @@ class AegisChatService {
     }
 
     if (changed) {
-      await _flushPersistNow();
+      await _persist();
     }
     _lastChatRefreshAt = DateTime.now();
     return changed;
@@ -2267,51 +2177,23 @@ class AegisChatService {
 
     final future = () async {
     await _init();
-    final writes = <Future<void>>[];
-
-    if (writeConversations) {
-      final conversationsPayload =
-          _conversations.values.map((e) => e.toJson()).toList(growable: false);
-      final conversationsJson =
-          await Isolate.run<String>(() => jsonEncode(conversationsPayload));
-      writes.add(_conversationsFile.writeAsString(conversationsJson));
+    final roomMessagesJsonById = <String, List<Map<String, dynamic>>>{};
+    for (final roomId in dirtyRoomIds) {
+      roomMessagesJsonById[roomId] = (_messages[roomId] ?? const <AegisRoomMessage>[])
+          .map((message) => message.toJson())
+          .toList(growable: false);
     }
 
-    if (writeProfiles) {
-      final profilesPayload = _profileCache.map(
-        (key, value) => MapEntry(key.toString(), value),
-      );
-      final profilesJson =
-          await Isolate.run<String>(() => jsonEncode(profilesPayload));
-      writes.add(_profilesFile.writeAsString(profilesJson));
-    }
-
-    if (writes.isNotEmpty) {
-      await Future.wait(writes);
-    }
-
-    await Future.wait(
-      dirtyRoomIds.map((roomId) async {
-        final payload = (_messages[roomId] ?? const <AegisRoomMessage>[])
-            .map((e) => e.toJson())
-            .toList(growable: false);
-        final encoded = await Isolate.run<String>(() => jsonEncode(payload));
-        await _messageFileForRoom(roomId).writeAsString(encoded);
-      }),
+    await _localStore.saveChanges(
+      conversationsJson:
+          _conversations.values.map((conversation) => conversation.toJson()),
+      profilesJsonByUserId: Map<int, Map<String, dynamic>>.from(_profileCache),
+      roomMessagesJsonById: roomMessagesJsonById,
+      dirtyRoomIds: dirtyRoomIds,
+      deletedRoomIds: deletedRoomIds,
+      writeConversations: writeConversations,
+      writeProfiles: writeProfiles,
     );
-
-    await Future.wait(
-      deletedRoomIds.map((roomId) async {
-        final file = _messageFileForRoom(roomId);
-        if (await file.exists()) {
-          await file.delete();
-        }
-      }),
-    );
-
-    if (await _legacyStoreFile.exists()) {
-      await _legacyStoreFile.delete();
-    }
     }();
 
     _persistInFlight = future;

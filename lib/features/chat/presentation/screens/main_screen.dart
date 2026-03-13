@@ -20,12 +20,17 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   bool _isLocked = false;
   bool _biometricCheckInFlight = false;
-  static const List<Widget> _screens = <Widget>[
-    HomeScreen(),
-    CallsScreen(),
-    ContactsScreen(),
-    SettingsScreen(),
-  ];
+  final Set<int> _initializedTabs = <int>{0};
+
+  Widget _buildScreen(int index) {
+    return switch (index) {
+      0 => const HomeScreen(),
+      1 => const CallsScreen(),
+      2 => const ContactsScreen(),
+      3 => const SettingsScreen(),
+      _ => const SizedBox.shrink(),
+    };
+  }
 
   @override
   void initState() {
@@ -74,6 +79,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   void _onTabChanged(int index) {
+    if (!_initializedTabs.contains(index)) {
+      _initializedTabs.add(index);
+    }
     setState(() => _currentIndex = index);
   }
 
@@ -104,7 +112,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         children: [
           IndexedStack(
             index: _currentIndex,
-            children: _screens,
+            children: List<Widget>.generate(
+              4,
+              (index) => _initializedTabs.contains(index)
+                  ? _buildScreen(index)
+                  : const SizedBox.shrink(),
+            ),
           ),
           FloatingNavBar(
             selectedIndex: _currentIndex,

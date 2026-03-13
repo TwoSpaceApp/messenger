@@ -10,6 +10,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   gtk
   record_linux
   sentry_flutter
+  sqlite3_flutter_libs
   url_launcher_linux
 )
 

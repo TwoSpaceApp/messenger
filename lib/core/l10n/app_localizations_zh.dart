@@ -1945,4 +1945,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => '后置摄像头';
+
+  @override
+  String get backgroundOptimizationDisabledTitle => '背景效果已精简';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace 检测到持续掉帧，因此关闭了较重的背景效果，以保持滚动和聊天操作流畅。';
+
+  @override
+  String get backgroundOptimizationOpenSettings => '打开外观设置';
 }

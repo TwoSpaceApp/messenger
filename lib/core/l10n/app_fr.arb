@@ -607,5 +607,8 @@
   "callsCameraUnsupportedMessage": "Cette plateforme ne prend pas en charge l'aperçu vidéo local.",
   "callsCameraOffMessage": "L'aperçu caméra est désactivé pour cet appel de démonstration.",
   "callsFrontCameraLabel": "Caméra avant",
-  "callsRearCameraLabel": "Caméra arrière"
+  "callsRearCameraLabel": "Caméra arrière",
+  "backgroundOptimizationDisabledTitle": "Les effets d'arrière-plan ont été allégés",
+  "backgroundOptimizationDisabledMessage": "TwoSpace a détecté des ralentissements persistants et a désactivé les effets d'arrière-plan les plus lourds pour garder le défilement et les chats fluides.",
+  "backgroundOptimizationOpenSettings": "Ouvrir les réglages d'apparence"
 }

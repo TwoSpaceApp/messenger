@@ -594,9 +594,9 @@ class _VideoPreviewStack extends StatelessWidget {
     final isTablet = width >= UITokens.tabletBreakpoint;
     final isDesktop = width >= UITokens.desktopBreakpoint;
     final double previewHeight = isDesktop
-      ? math.min(height * 0.48, 420.0)
+      ? math.min(height * 0.48, 420)
       : isTablet
-        ? math.min(height * 0.44, 380.0)
+        ? math.min(height * 0.44, 380)
         : (height < 760 ? 260.s(context) : 320.s(context));
 
     return SizedBox(

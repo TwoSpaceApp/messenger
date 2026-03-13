@@ -16,10 +16,13 @@ class ScreenBackground extends StatefulWidget {
 class _ScreenBackgroundState extends State<ScreenBackground>
     with WidgetsBindingObserver {
   Timer? _animationTimer;
+  final ValueNotifier<int> _paintTick = ValueNotifier<int>(0);
 
   // Accelerometer tilt values (direction of gravity)
   double _tiltX = 0;
   double _tiltY = 0;
+  double _smoothedTiltX = 0;
+  double _smoothedTiltY = 0;
 
   // Blob absolute positions (wrapping around screen edges)
   double _blob1X = 0;
@@ -33,11 +36,13 @@ class _ScreenBackgroundState extends State<ScreenBackground>
 
   StreamSubscription? _accelSub;
   bool _accelerometerUnavailable = false;
+  DateTime? _lastAnimationAt;
 
   static const double _blob1Size = 350;
   static const double _blob2Size = 400;
-  static const Duration _animationTick = Duration(milliseconds: 120);
+  static const Duration _animationTick = Duration(milliseconds: 33);
   static const double _minVisualDelta = 0.12;
+  static const double _tiltSmoothing = 0.18;
 
   void _syncMotionState() {
     final settings = SettingsService.themeNotifier.value;
@@ -66,6 +71,8 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     if (_accelerometerUnavailable) {
       _tiltX = 0;
       _tiltY = 0;
+      _smoothedTiltX = 0;
+      _smoothedTiltY = 0;
       return;
     }
 
@@ -82,6 +89,8 @@ class _ScreenBackgroundState extends State<ScreenBackground>
           }
           _tiltX = 0;
           _tiltY = 0;
+          _smoothedTiltX = 0;
+          _smoothedTiltY = 0;
           _cancelAccelSub();
           _accelSub = null;
         },
@@ -93,6 +102,8 @@ class _ScreenBackgroundState extends State<ScreenBackground>
       }
       _tiltX = 0;
       _tiltY = 0;
+      _smoothedTiltX = 0;
+      _smoothedTiltY = 0;
       _cancelAccelSub();
       _accelSub = null;
     }
@@ -133,15 +144,23 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     if (size == Size.zero) return;
     final screenW = size.width;
     final screenH = size.height;
+    final now = DateTime.now();
+    final elapsedMs = _lastAnimationAt == null
+      ? _animationTick.inMilliseconds.toDouble()
+      : now.difference(_lastAnimationAt!).inMicroseconds / 1000;
+    _lastAnimationAt = now;
+    final deltaFactor = (elapsedMs / 16.0).clamp(0.6, 2.6);
 
     // Speed multiplier from settings (default 1.0, now faster with higher base)
     final speedMultiplier = settings.floatingCirclesSpeed * 0.8;
+    _smoothedTiltX += (_tiltX - _smoothedTiltX) * _tiltSmoothing;
+    _smoothedTiltY += (_tiltY - _smoothedTiltY) * _tiltSmoothing;
 
     // Move blobs in the direction of tilt using a reduced refresh rate.
-    final nextBlob1X = _blob1X + _tiltX * speedMultiplier * 2.5;
-    final nextBlob1Y = _blob1Y + _tiltY * speedMultiplier * 2.5;
-    final nextBlob2X = _blob2X + _tiltX * speedMultiplier * 2.0;
-    final nextBlob2Y = _blob2Y + _tiltY * speedMultiplier * 2.0;
+    final nextBlob1X = _blob1X + _smoothedTiltX * speedMultiplier * 1.35 * deltaFactor;
+    final nextBlob1Y = _blob1Y + _smoothedTiltY * speedMultiplier * 1.35 * deltaFactor;
+    final nextBlob2X = _blob2X + _smoothedTiltX * speedMultiplier * 1.05 * deltaFactor;
+    final nextBlob2Y = _blob2Y + _smoothedTiltY * speedMultiplier * 1.05 * deltaFactor;
 
     final changedEnough =
         (nextBlob1X - _blob1X).abs() >= _minVisualDelta ||
@@ -173,7 +192,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     if (_blob2Y < -_blob2Size - buffer) _blob2Y = screenH + buffer;
     if (_blob2Y > screenH + buffer) _blob2Y = -_blob2Size - buffer;
 
-    setState(() {});
+    _paintTick.value += 1;
   }
 
   @override
@@ -183,6 +202,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     _animationTimer?.cancel();
     unawaited(_accelSub?.cancel().catchError((_) {}));
     _accelSub = null;
+    _paintTick.dispose();
     super.dispose();
   }
 
@@ -193,10 +213,14 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     final primary = theme.primaryColor;
     final isDark = theme.brightness == Brightness.dark;
 
-    return ValueListenableBuilder(
-      valueListenable: SettingsService.themeNotifier,
+    return AnimatedBuilder(
+      animation: Listenable.merge(<Listenable>[
+        SettingsService.themeNotifier,
+        _paintTick,
+      ]),
       child: RepaintBoundary(child: widget.child),
-      builder: (context, settings, child) {
+      builder: (context, child) {
+        final settings = SettingsService.themeNotifier.value;
         final size = MediaQuery.sizeOf(context);
         _lastScreenSize = size;
 
@@ -221,53 +245,61 @@ class _ScreenBackgroundState extends State<ScreenBackground>
           );
         }
 
-          return Stack(
-            children: [
-              ColoredBox(color: bgColor),
-              Positioned(
-                left: _blob1X,
-                top: _blob1Y,
-                width: _blob1Size,
-                height: _blob1Size,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        primary.withValues(
-                            alpha: isDark ? opacity * 0.7 : opacity * 0.5),
-                        primary.withValues(
-                            alpha: isDark ? opacity * 0.3 : opacity * 0.2),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
+        return Stack(
+          children: [
+            ColoredBox(color: bgColor),
+            Positioned(
+              left: _blob1X,
+              top: _blob1Y,
+              width: _blob1Size,
+              height: _blob1Size,
+              child: IgnorePointer(
+                child: RepaintBoundary(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          primary.withValues(
+                              alpha: isDark ? opacity * 0.7 : opacity * 0.5),
+                          primary.withValues(
+                              alpha: isDark ? opacity * 0.3 : opacity * 0.2),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
                     ),
                   ),
                 ),
               ),
-              Positioned(
-                left: _blob2X,
-                top: _blob2Y,
-                width: _blob2Size,
-                height: _blob2Size,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        theme.colorScheme.secondary.withValues(
-                            alpha: isDark ? opacity * 0.6 : opacity * 0.4),
-                        theme.colorScheme.secondary.withValues(
-                            alpha: isDark ? opacity * 0.25 : opacity * 0.15),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
+            ),
+            Positioned(
+              left: _blob2X,
+              top: _blob2Y,
+              width: _blob2Size,
+              height: _blob2Size,
+              child: IgnorePointer(
+                child: RepaintBoundary(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          theme.colorScheme.secondary.withValues(
+                              alpha: isDark ? opacity * 0.6 : opacity * 0.4),
+                          theme.colorScheme.secondary.withValues(
+                              alpha: isDark ? opacity * 0.25 : opacity * 0.15),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
                     ),
                   ),
                 ),
               ),
-              if (child != null) child,
-            ],
+            ),
+            if (child != null) child,
+          ],
         );
       },
     );

@@ -3761,6 +3761,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rear camera'**
   String get callsRearCameraLabel;
+
+  /// Title for a notice shown when animated background effects were automatically disabled to reduce jank
+  ///
+  /// In en, this message translates to:
+  /// **'Background effects were simplified'**
+  String get backgroundOptimizationDisabledTitle;
+
+  /// Body text for a notice shown when animated background effects were automatically disabled
+  ///
+  /// In en, this message translates to:
+  /// **'TwoSpace detected sustained slow frames and turned off heavy background effects to keep scrolling and chat interactions smooth.'**
+  String get backgroundOptimizationDisabledMessage;
+
+  /// Action label that opens appearance settings after background effects were automatically disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Open appearance settings'**
+  String get backgroundOptimizationOpenSettings;
 }
 
 class _AppLocalizationsDelegate

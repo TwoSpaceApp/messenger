@@ -2018,4 +2018,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Caméra arrière';
+
+  @override
+  String get backgroundOptimizationDisabledTitle =>
+      'Les effets d\'arrière-plan ont été allégés';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace a détecté des ralentissements persistants et a désactivé les effets d\'arrière-plan les plus lourds pour garder le défilement et les chats fluides.';
+
+  @override
+  String get backgroundOptimizationOpenSettings =>
+      'Ouvrir les réglages d\'apparence';
 }

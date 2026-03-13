@@ -2002,4 +2002,15 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Tylna kamera';
+
+  @override
+  String get backgroundOptimizationDisabledTitle =>
+      'Efekty tła zostały uproszczone';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace wykrył długotrwałe spadki płynności i wyłączył ciężkie efekty tła, aby przewijanie i obsługa czatów pozostały płynne.';
+
+  @override
+  String get backgroundOptimizationOpenSettings => 'Otwórz ustawienia wyglądu';
 }

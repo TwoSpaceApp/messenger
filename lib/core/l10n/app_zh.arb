@@ -607,5 +607,8 @@
   "callsCameraUnsupportedMessage": "当前平台不支持本地视频预览。",
   "callsCameraOffMessage": "此演示通话中的摄像头预览已关闭。",
   "callsFrontCameraLabel": "前置摄像头",
-  "callsRearCameraLabel": "后置摄像头"
+  "callsRearCameraLabel": "后置摄像头",
+  "backgroundOptimizationDisabledTitle": "背景效果已精简",
+  "backgroundOptimizationDisabledMessage": "TwoSpace 检测到持续掉帧，因此关闭了较重的背景效果，以保持滚动和聊天操作流畅。",
+  "backgroundOptimizationOpenSettings": "打开外观设置"
 }

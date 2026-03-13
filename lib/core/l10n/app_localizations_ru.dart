@@ -2002,4 +2002,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Основная камера';
+
+  @override
+  String get backgroundOptimizationDisabledTitle => 'Фоновые эффекты упрощены';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace заметил стабильные просадки кадров и отключил тяжёлые фоновые эффекты, чтобы прокрутка и работа с чатами оставались плавными.';
+
+  @override
+  String get backgroundOptimizationOpenSettings =>
+      'Открыть настройки оформления';
 }

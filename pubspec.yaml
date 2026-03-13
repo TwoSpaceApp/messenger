@@ -1,7 +1,7 @@
 name: two_space_app
 description: "A secure and feature-rich messenger for the TwoSpace ecosystem."
 publish_to: 'none'
-version: 2.0.4+1
+version: 2.0.5-beta+1
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
@@ -53,6 +53,7 @@ dependencies:
   # ===== Database =====
   sqflite: ^2.3.3+1
   drift: ^2.31.0
+  sqlite3_flutter_libs: ^0.5.39
 
   # ===== Media =====
   audioplayers: ^6.1.0

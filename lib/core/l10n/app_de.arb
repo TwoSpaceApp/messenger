@@ -607,5 +607,8 @@
   "callsCameraUnsupportedMessage": "Diese Plattform unterstützt keine lokale Videovorschau.",
   "callsCameraOffMessage": "Die Kameravorschau ist für diesen Demo-Anruf ausgeschaltet.",
   "callsFrontCameraLabel": "Frontkamera",
-  "callsRearCameraLabel": "Rückkamera"
+  "callsRearCameraLabel": "Rückkamera",
+  "backgroundOptimizationDisabledTitle": "Hintergrundeffekte wurden vereinfacht",
+  "backgroundOptimizationDisabledMessage": "TwoSpace hat anhaltend langsame Frames erkannt und aufwendige Hintergrundeffekte deaktiviert, damit Scrollen und Chats flüssig bleiben.",
+  "backgroundOptimizationOpenSettings": "Darstellungseinstellungen öffnen"
 }

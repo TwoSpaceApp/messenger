@@ -607,5 +607,8 @@
   "callsCameraUnsupportedMessage": "Questa piattaforma non supporta l'anteprima video locale.",
   "callsCameraOffMessage": "L'anteprima della fotocamera è disattivata per questa chiamata dimostrativa.",
   "callsFrontCameraLabel": "Fotocamera anteriore",
-  "callsRearCameraLabel": "Fotocamera posteriore"
+  "callsRearCameraLabel": "Fotocamera posteriore",
+  "backgroundOptimizationDisabledTitle": "Gli effetti di sfondo sono stati semplificati",
+  "backgroundOptimizationDisabledMessage": "TwoSpace ha rilevato rallentamenti costanti dei frame e ha disattivato gli effetti di sfondo più pesanti per mantenere fluido lo scorrimento e l'uso delle chat.",
+  "backgroundOptimizationOpenSettings": "Apri le impostazioni dell'aspetto"
 }

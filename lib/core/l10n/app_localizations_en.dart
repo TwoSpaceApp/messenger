@@ -1996,4 +1996,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Rear camera';
+
+  @override
+  String get backgroundOptimizationDisabledTitle =>
+      'Background effects were simplified';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace detected sustained slow frames and turned off heavy background effects to keep scrolling and chat interactions smooth.';
+
+  @override
+  String get backgroundOptimizationOpenSettings => 'Open appearance settings';
 }

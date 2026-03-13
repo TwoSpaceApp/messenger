@@ -607,5 +607,8 @@
   "callsCameraUnsupportedMessage": "이 플랫폼은 로컬 영상 미리보기를 지원하지 않습니다.",
   "callsCameraOffMessage": "이 데모 통화에서는 카메라 미리보기가 꺼져 있습니다.",
   "callsFrontCameraLabel": "전면 카메라",
-  "callsRearCameraLabel": "후면 카메라"
+  "callsRearCameraLabel": "후면 카메라",
+  "backgroundOptimizationDisabledTitle": "배경 효과를 단순화했습니다",
+  "backgroundOptimizationDisabledMessage": "TwoSpace가 지속적인 프레임 저하를 감지하여 스크롤과 채팅 사용감을 부드럽게 유지하기 위해 무거운 배경 효과를 껐습니다.",
+  "backgroundOptimizationOpenSettings": "화면 설정 열기"
 }

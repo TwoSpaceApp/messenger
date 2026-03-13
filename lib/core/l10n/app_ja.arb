@@ -607,5 +607,8 @@
   "callsCameraUnsupportedMessage": "このプラットフォームではローカルビデオプレビューをサポートしていません。",
   "callsCameraOffMessage": "このデモ通話ではカメラプレビューがオフになっています。",
   "callsFrontCameraLabel": "前面カメラ",
-  "callsRearCameraLabel": "背面カメラ"
+  "callsRearCameraLabel": "背面カメラ",
+  "backgroundOptimizationDisabledTitle": "背景エフェクトを軽量化しました",
+  "backgroundOptimizationDisabledMessage": "TwoSpace は継続的なフレーム遅延を検出したため、スクロールやチャット操作を滑らかに保つために重い背景エフェクトを無効にしました。",
+  "backgroundOptimizationOpenSettings": "表示設定を開く"
 }

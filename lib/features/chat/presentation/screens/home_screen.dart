@@ -4,9 +4,9 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
@@ -28,15 +28,11 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  static const Duration _refreshInterval = Duration(seconds: 45);
   final AegisChatService _chat = AegisChatService();
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
   String? _errorMessage;
   StreamSubscription<List<Chat>>? _roomsSub;
-  Timer? _refreshTimer;
-  DateTime? _lastVisibleRefreshAt;
-  Future<void>? _backgroundRefreshFuture;
 
   final String _searchQuery = '';
 
@@ -51,34 +47,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    unawaited(_loadCachedRooms());
     _subscribeToRooms();
-    _startBackgroundRefresh();
+    unawaited(_loadUserAndRooms());
   }
 
   @override
   void dispose() {
     _roomsSub?.cancel();
-    _refreshTimer?.cancel();
     super.dispose();
-  }
-
-  Future<void> _loadCachedRooms() async {
-    try {
-      final chats = await _chat.getChats();
-      final nextRooms = chats.map(_roomFromChat).toList(growable: false);
-      if (!mounted) return;
-      if (_roomListsEqual(_rooms, nextRooms) && !_loading) {
-        return;
-      }
-      setState(() {
-        _rooms = nextRooms;
-        _loading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
   }
 
   Future<void> _loadUserAndRooms() async {
@@ -93,7 +69,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     try {
-      await _chat.refreshChats();
+      await _chat.refreshChatIndex();
       final chats = await _chat.getChats();
       final out = chats.map(_roomFromChat).toList();
       if (mounted) setState(() => _rooms = out);
@@ -104,30 +80,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  void _startBackgroundRefresh() {
-    _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(_refreshInterval, (_) {
-      final lastVisibleRefreshAt = _lastVisibleRefreshAt;
-      if (lastVisibleRefreshAt != null &&
-          DateTime.now().difference(lastVisibleRefreshAt) <
-              const Duration(seconds: 20)) {
-        return;
-      }
-      if (_backgroundRefreshFuture != null) {
-        return;
-      }
-      final future = _chat.refreshChatsQuietly();
-      _backgroundRefreshFuture = future;
-      unawaited(
-        future.whenComplete(() {
-          if (identical(_backgroundRefreshFuture, future)) {
-            _backgroundRefreshFuture = null;
-          }
-        }),
-      );
-    });
   }
 
   void _subscribeToRooms() {
@@ -144,7 +96,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _loading = false;
           _errorMessage = null;
         });
-        _lastVisibleRefreshAt = DateTime.now();
       },
       onError: (Object error) {
         if (!mounted) return;
@@ -368,7 +319,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Expanded(
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 260),
-                          child: _loading ? _buildShimmerLoading() : _buildChatList(),
+                          child: _loading
+                              ? _buildShimmerLoading()
+                              : RefreshIndicator.adaptive(
+                                  onRefresh: _loadUserAndRooms,
+                                  child: _buildChatList(),
+                                ),
                         ),
                       ),
                     ],
@@ -442,49 +398,73 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildChatList() {
     final rooms = _filteredRooms;
     if (_errorMessage != null) {
-      return AppErrorState(
-        title: AppLocalizations.of(context)!.errorGeneric,
-        message: _errorMessage!,
-        actionLabel: AppLocalizations.of(context)!.retry,
-        onAction: _loadUserAndRooms,
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.all(12),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.55,
+            child: Center(
+              child: AppErrorState(
+                title: AppLocalizations.of(context)!.errorGeneric,
+                message: _errorMessage!,
+                actionLabel: AppLocalizations.of(context)!.retry,
+                onAction: _loadUserAndRooms,
+              ),
+            ),
+          ),
+        ],
       );
     }
 
     if (rooms.isEmpty) {
       final l10n = AppLocalizations.of(context)!;
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 220),
-            child: GlassCard(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.forum_outlined,
-                    size: 36,
-                    color: Colors.white70,
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.all(12),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 220),
+                child: GlassCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.forum_outlined,
+                        size: 36,
+                        color: Colors.white70,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        l10n.noChats,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    l10n.noChats,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       );
     }
 
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       padding: const EdgeInsets.all(8),
       cacheExtent: 500,
       itemCount: rooms.length,

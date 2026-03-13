@@ -8,12 +8,16 @@ import 'package:two_space_app/core/config/theme_builder.dart';
 import 'package:two_space_app/core/constants/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/navigation/app_router.dart';
+import 'package:two_space_app/core/services/background_effects_performance_service.dart';
 import 'package:two_space_app/core/services/dev_tools_service.dart';
 import 'package:two_space_app/core/services/initialization_service.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
+import 'package:two_space_app/core/widgets/background_optimization_notice.dart';
 import 'package:two_space_app/core/widgets/dev_fab.dart';
+import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_listener.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 Future<void> main() async {
@@ -46,8 +50,14 @@ class AppBootstrapperState extends State<AppBootstrapper> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(_lifecycleObserver);
+    BackgroundEffectsPerformanceService.start();
+    SettingsService.applyDeferredSettingsDefaults();
     _startInit();
   }
+
+  final WidgetsBindingObserver _lifecycleObserver = _AppLifecycleObserver();
+
 
   Future<void> _startInit() async {
     final result = await InitializationService.initialize(
@@ -72,6 +82,12 @@ class AppBootstrapperState extends State<AppBootstrapper> {
         _initResult = result;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+    super.dispose();
   }
 
   @override
@@ -228,8 +244,13 @@ class TwoSpaceApp extends ConsumerWidget {
               data: mediaQuery.copyWith(
                 textScaler: TextScaler.linear(textScale),
               ),
-              child: AuthListener(
-                child: child ?? const SizedBox(),
+              child: Stack(
+                children: [
+                  AuthListener(
+                    child: child ?? const SizedBox(),
+                  ),
+                  const BackgroundOptimizationNotice(),
+                ],
               ),
             );
           },
@@ -287,5 +308,16 @@ class TwoSpaceApp extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+class _AppLifecycleObserver with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      return;
+    }
+    unawaited(AegisAuthService().restoreSession());
+    unawaited(AegisChatService().ensureReady().catchError((_) {}));
   }
 }

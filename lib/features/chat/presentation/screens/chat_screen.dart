@@ -7,9 +7,9 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart' as share;
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -49,6 +49,14 @@ class DeviceFileSource {
   DeviceFileSource(this.path);
 }
 
+Future<bool> _pathExists(String path) async {
+  try {
+    return await File(path).exists();
+  } catch (_) {
+    return false;
+  }
+}
+
 class ChatScreen extends StatefulWidget {
   final Chat chat;
   final String? searchQuery;
@@ -61,6 +69,47 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
+class _ChatTimelineState {
+  const _ChatTimelineState({
+    this.messages = const <_Msg>[],
+    this.loading = true,
+    this.loadingMoreHistory = false,
+    this.hasMoreHistory = true,
+    this.highlighted = const <String>{},
+    this.imageMediaIds = const <String>[],
+    this.imageIndexByMessageId = const <String, int>{},
+  });
+
+  final List<_Msg> messages;
+  final bool loading;
+  final bool loadingMoreHistory;
+  final bool hasMoreHistory;
+  final Set<String> highlighted;
+  final List<String> imageMediaIds;
+  final Map<String, int> imageIndexByMessageId;
+
+  _ChatTimelineState copyWith({
+    List<_Msg>? messages,
+    bool? loading,
+    bool? loadingMoreHistory,
+    bool? hasMoreHistory,
+    Set<String>? highlighted,
+    List<String>? imageMediaIds,
+    Map<String, int>? imageIndexByMessageId,
+  }) {
+    return _ChatTimelineState(
+      messages: messages ?? this.messages,
+      loading: loading ?? this.loading,
+      loadingMoreHistory: loadingMoreHistory ?? this.loadingMoreHistory,
+      hasMoreHistory: hasMoreHistory ?? this.hasMoreHistory,
+      highlighted: highlighted ?? this.highlighted,
+      imageMediaIds: imageMediaIds ?? this.imageMediaIds,
+      imageIndexByMessageId:
+          imageIndexByMessageId ?? this.imageIndexByMessageId,
+    );
+  }
+}
+
 class _ChatScreenState extends State<ChatScreen> {
   static const int _historyPageSize = 80;
   static const int _userInfoBatchSize = 6;
@@ -69,24 +118,19 @@ class _ChatScreenState extends State<ChatScreen> {
   final AegisChatService _svc = AegisChatService();
   final TextEditingController _controller = TextEditingController();
   final DraftService _draftService = DraftService();
+  final ValueNotifier<_ChatTimelineState> _timeline =
+      ValueNotifier(const _ChatTimelineState());
   List<Map<String, dynamic>> _searchResults = [];
   bool _searching = false;
-  List<_Msg> _messages = [];
   final Map<String, Map<String, dynamic>> _reactions = {};
   final ScrollController _listController = ScrollController();
   final Map<String, GlobalKey> _messageKeys = {};
   final Map<String, String> _mediaDownloads = {};
   String? _scrollToEventId;
-  final Set<String> _highlighted = {};
-  bool _loading = true;
-  bool _loadingMoreHistory = false;
-  bool _hasMoreHistory = true;
   bool _sending = false;
   final bool _isTyping = false;
   final Map<String, AudioPlayer> _audioPlayers = {};
   final Map<String, Map<String, dynamic>> _userInfoCache = {};
-  List<String> _imageMediaIds = const <String>[];
-  Map<String, int> _imageIndexByMessageId = const <String, int>{};
   late final VoiceService _voiceService;
   StreamSubscription<List<AegisRoomMessage>>? _messagesSub;
   int _historyLimit = _historyPageSize;
@@ -106,11 +150,31 @@ class _ChatScreenState extends State<ChatScreen> {
   // String? _groupBackgroundColor;
   // String? _groupBackgroundImageUrl;
 
-  List<_Msg> get _visibleMessages {
+  List<_Msg> get _messages => _timeline.value.messages;
+  bool get _loading => _timeline.value.loading;
+  bool get _loadingMoreHistory => _timeline.value.loadingMoreHistory;
+  bool get _hasMoreHistory => _timeline.value.hasMoreHistory;
+  Set<String> get _highlighted => _timeline.value.highlighted;
+  List<String> get _imageMediaIds => _timeline.value.imageMediaIds;
+  Map<String, int> get _imageIndexByMessageId =>
+      _timeline.value.imageIndexByMessageId;
+
+  void _updateTimeline(
+    _ChatTimelineState Function(_ChatTimelineState current) update,
+  ) {
+    final next = update(_timeline.value);
+    _timeline.value = next;
+  }
+
+  void _setHighlighted(Set<String> messageIds) {
+    _updateTimeline((current) => current.copyWith(highlighted: messageIds));
+  }
+
+  List<_Msg> _visibleMessagesFor(List<_Msg> messages) {
     final q = (widget.searchQuery ?? '').trim().toLowerCase();
     final type = widget.searchType ?? 'all';
-    if (q.isEmpty && type == 'all') return _messages;
-    return _messages.where((m) {
+    if (q.isEmpty && type == 'all') return messages;
+    return messages.where((m) {
       if (type == 'messages') return m.text.toLowerCase().contains(q);
       if (type == 'media') {
         // crude media detection: contains mxc:// or http and common extensions
@@ -123,6 +187,27 @@ class _ChatScreenState extends State<ChatScreen> {
       // all
       return q.isEmpty || m.text.toLowerCase().contains(q);
     }).toList();
+  }
+
+  bool _sameVisualMessages(List<_Msg> left, List<_Msg> right) {
+    if (identical(left, right)) return true;
+    if (left.length != right.length) return false;
+    for (var index = 0; index < left.length; index++) {
+      final current = left[index];
+      final next = right[index];
+      if (current.id != next.id ||
+          current.text != next.text ||
+          current.isOwn != next.isOwn ||
+          current.time != next.time ||
+          current.senderId != next.senderId ||
+          current.senderName != next.senderName ||
+          current.senderAvatar != next.senderAvatar ||
+          current.type != next.type ||
+          current.mediaId != next.mediaId) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @override
@@ -148,6 +233,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _searchDebounceTimer?.cancel();
     _messagesSub?.cancel();
+    _timeline.dispose();
     _listController.removeListener(_handleListScroll);
     _listController.dispose();
     _controller.dispose();
@@ -193,7 +279,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _scheduleMessagesApply,
       onError: (_) {
         if (mounted) {
-          setState(() => _loading = false);
+          _updateTimeline((current) => current.copyWith(loading: false));
         }
       },
     );
@@ -384,10 +470,8 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
 
-    setState(() {
-      _userInfoCache.addAll(fetched);
-      _messages = updatedMessages;
-    });
+    _userInfoCache.addAll(fetched);
+    _updateTimeline((current) => current.copyWith(messages: updatedMessages));
   }
 
   Future<void> _loadOlderMessages() async {
@@ -410,7 +494,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ? _listController.position.maxScrollExtent
         : 0.0;
 
-    setState(() => _loadingMoreHistory = true);
+    _updateTimeline((current) => current.copyWith(loadingMoreHistory: true));
     _historyLimit += _historyPageSize;
     await _loadMessages(forceRefresh: true);
     _subscribeToMessages();
@@ -429,7 +513,9 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     if (mounted) {
-      setState(() => _loadingMoreHistory = false);
+      _updateTimeline(
+        (current) => current.copyWith(loadingMoreHistory: false),
+      );
     }
     }();
 
@@ -566,15 +652,31 @@ class _ChatScreenState extends State<ChatScreen> {
       
       if (!mounted) return;
       final nextMessageIds = out.map((message) => message.id).toSet();
-      setState(() {
-        _messages = out;
-        _imageMediaIds = imageMediaIds;
-        _imageIndexByMessageId = imageIndexByMessageId;
-        _hasMoreHistory = msgs.length >= _historyLimit;
-        _loading = false;
-        _messageKeys.removeWhere((messageId, _) => !nextMessageIds.contains(messageId));
-        _highlighted.removeWhere((messageId) => !nextMessageIds.contains(messageId));
-      });
+      final nextHighlighted = _highlighted
+          .where(nextMessageIds.contains)
+          .toSet();
+      _messageKeys.removeWhere(
+        (messageId, _) => !nextMessageIds.contains(messageId),
+      );
+      final shouldUpdateTimeline =
+          !_sameVisualMessages(_messages, out) ||
+          _hasMoreHistory != (msgs.length >= _historyLimit) ||
+          _loading ||
+          !_sameStringList(_imageMediaIds, imageMediaIds) ||
+          !_sameIntMap(_imageIndexByMessageId, imageIndexByMessageId) ||
+          !_sameStringSet(_highlighted, nextHighlighted);
+      if (shouldUpdateTimeline) {
+        _updateTimeline(
+          (current) => current.copyWith(
+            messages: out,
+            imageMediaIds: imageMediaIds,
+            imageIndexByMessageId: imageIndexByMessageId,
+            hasMoreHistory: msgs.length >= _historyLimit,
+            loading: false,
+            highlighted: nextHighlighted,
+          ),
+        );
+      }
       if (missingSenderIds.isNotEmpty) {
         unawaited(_prefetchUserInfo(missingSenderIds));
       }
@@ -587,7 +689,7 @@ class _ChatScreenState extends State<ChatScreen> {
             final key = _messageKeys[targetId];
             if (key != null && key.currentContext != null) {
               await Scrollable.ensureVisible(key.currentContext!, duration: const Duration(milliseconds: 450), alignment: 0.4, curve: Curves.easeInOut);
-              setState(() { _highlighted.clear(); _highlighted.add(targetId); });
+              _setHighlighted(<String>{targetId});
             } else {
               // Fallback: jump to a ratio-estimated position so the item enters
               // the viewport, then use ensureVisible for pixel-perfect alignment.
@@ -611,10 +713,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       );
                     }
                     if (mounted) {
-                      setState(() {
-                        _highlighted.clear();
-                        _highlighted.add(targetId);
-                      });
+                      _setHighlighted(<String>{targetId});
                     }
                   } catch (_) {}
                 });
@@ -630,7 +729,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.loadMessagesError(e.toString()))));
     } finally {
       if (mounted && _loading) {
-        setState(() => _loading = false);
+        _updateTimeline((current) => current.copyWith(loading: false));
       }
     }
   }
@@ -922,8 +1021,8 @@ class _ChatScreenState extends State<ChatScreen> {
     String? chosen;
     await showDialog(context: context, builder: (c) {
       final size = MediaQuery.of(c).size;
-      final width = math.min(size.width * 0.9, 420.0);
-      final height = math.min(size.height * 0.72, 520.0);
+      final width = math.min<double>(size.width * 0.9, 420);
+      final height = math.min<double>(size.height * 0.72, 520);
       return Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
         child: SizedBox(
@@ -1019,7 +1118,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _stopVoiceAndSend() async {
     final l10n = AppLocalizations.of(context)!;
     final path = await _voiceService.stopRecording();
-    if (path == null || !File(path).existsSync()) {
+    if (path == null || !await _pathExists(path)) {
       if (mounted) _showErrorMessage(l10n.recordingError);
       return;
     }
@@ -1089,57 +1188,84 @@ class _ChatScreenState extends State<ChatScreen> {
     final headerName = _headerName ?? widget.chat.name;
     final headerAvatarUrl = _headerAvatarUrl ?? widget.chat.avatarUrl;
     final presenceLabel = _directPeerUserId != null ? _headerPresenceLabel(l10n) : null;
-    final Widget bodyWidget;
-    if (_loading) {
-      bodyWidget = const Center(child: CircularProgressIndicator());
-    } else if ((widget.searchQuery ?? '').trim().isNotEmpty) {
-      if (_searching) {
-        bodyWidget = const Center(child: CircularProgressIndicator());
-      } else {
-        bodyWidget = ListView.separated(
-          padding: const EdgeInsets.all(8),
-          itemBuilder: (c, i) {
-            final item = _searchResults[i];
-            final ev = item['event'] as Map<String, dynamic>? ?? {};
-            final content = ev['content'] as Map<String, dynamic>? ?? {};
-            final body = content['body']?.toString() ?? '';
-            final sender = ev['sender']?.toString() ?? '';
-            final tsNum = ev['origin_server_ts'] as num?;
-            final ts = tsNum != null ? DateTime.fromMillisecondsSinceEpoch(tsNum.toInt()) : null;
-            final roomId = (item['context'] is Map) ? ((item['context'] as Map)['room_id']?.toString() ?? '') : '';
-            
-            // Используем кэшированную информацию вместо отдельного FutureBuilder
-            final info = _userInfoCache[sender] ?? {};
-            final avatar = info['avatarUrl']?.toString();
-            final displayName = info['displayName']?.toString() ?? sender;
-            
-            return ListTile(
-              leading: avatar != null ? UserAvatar(avatarUrl: avatar, radius: 18) : CircleAvatar(radius: 18, child: Text(displayName.isNotEmpty ? displayName[0] : '?')),
-              title: Text(body, maxLines: 2, overflow: TextOverflow.ellipsis),
-              subtitle: Text('$displayName${roomId.isNotEmpty ? ' • $roomId' : ''}${ts != null ? ' • ${MessageTimeFormatter.formatTime(ts)}' : ''}'),
-              onTap: () async {
-                if (roomId.isEmpty) return;
-                final infoRoom = await _svc.getRoomNameAndAvatar(roomId);
-                final chat = Chat(id: roomId, name: infoRoom['name'] ?? roomId, avatarUrl: infoRoom['avatar'], members: []);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => ChatScreen(chat: chat, scrollToEventId: ev['event_id']?.toString())));
-              },
-            );
-          },
-          separatorBuilder: (_, __) => const Divider(),
-          itemCount: _searchResults.length,
-        );
-      }
-    } else {
-      final visibleMessages = _visibleMessages;
-      final viewportWidth = MediaQuery.of(context).size.width;
-      final bubbleMaxWidth = math.min(viewportWidth * 0.72, 560.0);
-      bodyWidget = ListView.custom(
-        controller: _listController,
-        padding: const EdgeInsets.all(12),
-        cacheExtent: 1000, // Увеличиваем кэш для лучшей производительности
-        childrenDelegate: SliverChildBuilderDelegate(
-          (c, i) {
-          if (_loadingMoreHistory && i == 0) {
+    final bodyWidget = ValueListenableBuilder<_ChatTimelineState>(
+      valueListenable: _timeline,
+      builder: (context, timeline, _) {
+        if (timeline.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if ((widget.searchQuery ?? '').trim().isNotEmpty) {
+          if (_searching) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.all(8),
+            itemBuilder: (c, i) {
+              final item = _searchResults[i];
+              final ev = item['event'] as Map<String, dynamic>? ?? {};
+              final content = ev['content'] as Map<String, dynamic>? ?? {};
+              final body = content['body']?.toString() ?? '';
+              final sender = ev['sender']?.toString() ?? '';
+              final tsNum = ev['origin_server_ts'] as num?;
+              final ts = tsNum != null
+                  ? DateTime.fromMillisecondsSinceEpoch(tsNum.toInt())
+                  : null;
+              final roomId = (item['context'] is Map)
+                  ? ((item['context'] as Map)['room_id']?.toString() ?? '')
+                  : '';
+
+              final info = _userInfoCache[sender] ?? {};
+              final avatar = info['avatarUrl']?.toString();
+              final displayName = info['displayName']?.toString() ?? sender;
+
+              return ListTile(
+                leading: avatar != null
+                    ? UserAvatar(avatarUrl: avatar, radius: 18)
+                    : CircleAvatar(
+                        radius: 18,
+                        child: Text(displayName.isNotEmpty ? displayName[0] : '?'),
+                      ),
+                title: Text(body, maxLines: 2, overflow: TextOverflow.ellipsis),
+                subtitle: Text(
+                  '$displayName${roomId.isNotEmpty ? ' • $roomId' : ''}${ts != null ? ' • ${MessageTimeFormatter.formatTime(ts)}' : ''}',
+                ),
+                onTap: () async {
+                  if (roomId.isEmpty) return;
+                  final infoRoom = await _svc.getRoomNameAndAvatar(roomId);
+                  final chat = Chat(
+                    id: roomId,
+                    name: infoRoom['name'] ?? roomId,
+                    avatarUrl: infoRoom['avatar'],
+                    members: [],
+                  );
+                  if (!context.mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        chat: chat,
+                        scrollToEventId: ev['event_id']?.toString(),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+            separatorBuilder: (_, __) => const Divider(),
+            itemCount: _searchResults.length,
+          );
+        }
+
+        final visibleMessages = _visibleMessagesFor(timeline.messages);
+        final viewportWidth = MediaQuery.of(context).size.width;
+        final bubbleMaxWidth = math.min<double>(viewportWidth * 0.72, 560);
+        return ListView.custom(
+          controller: _listController,
+          padding: const EdgeInsets.all(12),
+          cacheExtent: 1000,
+          childrenDelegate: SliverChildBuilderDelegate(
+            (c, i) {
+          if (timeline.loadingMoreHistory && i == 0) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Center(
@@ -1151,9 +1277,10 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             );
           }
-          final messageIndex = i - (_loadingMoreHistory ? 1 : 0);
+          final messageIndex = i - (timeline.loadingMoreHistory ? 1 : 0);
           final m = visibleMessages[messageIndex];
-          final shouldTrackKey = _scrollToEventId == m.id || _highlighted.contains(m.id);
+          final shouldTrackKey =
+              _scrollToEventId == m.id || timeline.highlighted.contains(m.id);
           final key = shouldTrackKey
               ? _messageKeys.putIfAbsent(m.id, GlobalKey.new)
               : null;
@@ -1169,10 +1296,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     mediaDownloads: _mediaDownloads,
                     maxWidth: bubbleMaxWidth,
                     onOpenGallery: () {
-                      final index = _imageIndexByMessageId[m.id];
+                      final index = timeline.imageIndexByMessageId[m.id];
                       if (index == null) return;
                       _openImageGallery(
-                        mediaIds: _imageMediaIds,
+                        mediaIds: timeline.imageMediaIds,
                         initialIndex: index,
                       );
                     },
@@ -1296,7 +1423,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               _showMessageActions(m, details.globalPosition),
                           child: _SquishyBubble(
                             isOwn: m.isOwn,
-                            highlighted: _highlighted.contains(m.id),
+                              highlighted: timeline.highlighted.contains(m.id),
                             child: bubbleContent,
                           ),
                         ),
@@ -1308,12 +1435,14 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           );
         },
-          childCount: visibleMessages.length + (_loadingMoreHistory ? 1 : 0),
+          childCount: visibleMessages.length +
+              (timeline.loadingMoreHistory ? 1 : 0),
           addAutomaticKeepAlives: false,
           addSemanticIndexes: false,
-        ),
-      );
-    }
+          ),
+        );
+      },
+    );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -1477,6 +1606,33 @@ class _Msg {
   _Msg({required this.id, required this.text, required this.isOwn, required this.time, this.senderId, this.senderName, this.senderAvatar, this.type, this.mediaId});
 }
 
+bool _sameStringList(List<String> left, List<String> right) {
+  if (identical(left, right)) return true;
+  if (left.length != right.length) return false;
+  for (var index = 0; index < left.length; index++) {
+    if (left[index] != right[index]) return false;
+  }
+  return true;
+}
+
+bool _sameStringSet(Set<String> left, Set<String> right) {
+  if (identical(left, right)) return true;
+  if (left.length != right.length) return false;
+  for (final value in left) {
+    if (!right.contains(value)) return false;
+  }
+  return true;
+}
+
+bool _sameIntMap(Map<String, int> left, Map<String, int> right) {
+  if (identical(left, right)) return true;
+  if (left.length != right.length) return false;
+  for (final entry in left.entries) {
+    if (right[entry.key] != entry.value) return false;
+  }
+  return true;
+}
+
 class _ImageMessageWidget extends StatefulWidget {
   const _ImageMessageWidget({
     required this.mediaId,
@@ -1521,7 +1677,7 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
 
   Future<void> _loadImage() async {
     final cachedPath = widget.mediaDownloads[widget.mediaId];
-    if (cachedPath != null && File(cachedPath).existsSync()) {
+    if (cachedPath != null && await _pathExists(cachedPath)) {
       if (mounted) {
         setState(() {
           _localPath = cachedPath;
@@ -1577,7 +1733,7 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
             maxWidth: widget.maxWidth,
             maxHeight: widget.maxWidth * 1.35,
           ),
-          child: Container(
+          child: ColoredBox(
             color: const Color(0xFF171A1F),
             child: Image.file(
               File(_localPath!),
@@ -1654,7 +1810,7 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
         return;
       }
       final cachedPath = widget.mediaDownloads[mediaRef];
-      if (cachedPath != null && File(cachedPath).existsSync()) {
+      if (cachedPath != null && await _pathExists(cachedPath)) {
         if (!mounted) return;
         setState(() {
           _localPath = cachedPath;
@@ -1817,7 +1973,7 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
 
   Future<String> _resolvePath(String mediaId) async {
     final cached = widget.mediaDownloads[mediaId];
-    if (cached != null && File(cached).existsSync()) {
+    if (cached != null && await _pathExists(cached)) {
       return cached;
     }
     final path = await widget.svc.downloadMediaToTempFile(mediaId);
@@ -1845,7 +2001,6 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   return InteractiveViewer(
-                    minScale: 0.8,
                     maxScale: 4,
                     child: Center(
                       child: Image.file(
