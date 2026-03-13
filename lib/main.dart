@@ -12,7 +12,6 @@ import 'package:two_space_app/core/services/background_effects_performance_servi
 import 'package:two_space_app/core/services/dev_tools_service.dart';
 import 'package:two_space_app/core/services/initialization_service.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
-import 'package:two_space_app/core/widgets/background_optimization_notice.dart';
 import 'package:two_space_app/core/widgets/dev_fab.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
@@ -244,13 +243,8 @@ class TwoSpaceApp extends ConsumerWidget {
               data: mediaQuery.copyWith(
                 textScaler: TextScaler.linear(textScale),
               ),
-              child: Stack(
-                children: [
-                  AuthListener(
-                    child: child ?? const SizedBox(),
-                  ),
-                  const BackgroundOptimizationNotice(),
-                ],
+              child: AuthListener(
+                child: child ?? const SizedBox(),
               ),
             );
           },
