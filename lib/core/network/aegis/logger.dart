@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 
 /// Simple logger for Aegis client
@@ -12,11 +13,17 @@ class AegisLogger {
   /// Set minimum log level
   static set level(LogLevel value) => _level = value;
 
+  static void _debugPrintIfNeeded(String message) {
+    if (kDebugMode) {
+      debugPrint(message);
+    }
+  }
+
   /// Log debug message
   static void debug(String message) {
     if (_enabled && _level.index <= LogLevel.debug.index) {
       _devLogger.debug(message);
-      print('[DEBUG] Aegis: $message');
+      _debugPrintIfNeeded('[DEBUG] Aegis: $message');
     }
   }
 
@@ -24,7 +31,7 @@ class AegisLogger {
   static void info(String message) {
     if (_enabled && _level.index <= LogLevel.info.index) {
       _devLogger.info(message);
-      print('[INFO] Aegis: $message');
+      _debugPrintIfNeeded('[INFO] Aegis: $message');
     }
   }
 
@@ -32,7 +39,7 @@ class AegisLogger {
   static void warning(String message) {
     if (_enabled && _level.index <= LogLevel.warning.index) {
       _devLogger.warning(message);
-      print('[WARNING] Aegis: $message');
+      _debugPrintIfNeeded('[WARNING] Aegis: $message');
     }
   }
 
@@ -40,9 +47,9 @@ class AegisLogger {
   static void error(String message, [Object? error]) {
     if (_enabled && _level.index <= LogLevel.error.index) {
       _devLogger.error(error == null ? message : '$message: $error');
-      print('[ERROR] Aegis: $message');
+      _debugPrintIfNeeded('[ERROR] Aegis: $message');
       if (error != null) {
-        print('[ERROR] Aegis: $error');
+        _debugPrintIfNeeded('[ERROR] Aegis: $error');
       }
     }
   }
