@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/constants/app_constants.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   final String? currentStep;
   final double? progress;
 
@@ -14,9 +15,40 @@ class SplashScreen extends StatelessWidget {
   });
 
   @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  String? _versionLabel;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersionLabel();
+  }
+
+  Future<void> _loadVersionLabel() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (!mounted) {
+        return;
+      }
+      setState(() => _versionLabel = '${info.version}+${info.buildNumber}');
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(
+        () => _versionLabel = '${AppConstants.appVersion}+${AppConstants.buildNumber}',
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final normalizedProgress = (progress ?? 0).clamp(0.0, 1.0);
+    final normalizedProgress = (widget.progress ?? 0).clamp(0.0, 1.0);
+    final versionLabel = _versionLabel ?? '${AppConstants.appVersion}+${AppConstants.buildNumber}';
 
     return Scaffold(
       backgroundColor: const Color(0xFF0E1116),
@@ -56,10 +88,7 @@ class SplashScreen extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 child: Text(
-                  l10n?.feedbackVersion(
-                        '${AppConstants.appVersion}+${AppConstants.buildNumber}',
-                      ) ??
-                      'Version: ${AppConstants.appVersion}+${AppConstants.buildNumber}',
+                  l10n?.feedbackVersion(versionLabel) ?? 'Version: $versionLabel',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white38,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
@@ -536,6 +537,30 @@ class AegisChatService {
     return _profileCache[parsedId];
   }
 
+  Map<String, dynamic> _profileToInfo(dynamic profile) {
+    return <String, dynamic>{
+      'id': profile.id.toString(),
+      'username': profile.username,
+      'displayName': profile.displayName ?? profile.username,
+      'avatarUrl': normalizeAegisAvatarUrl(profile.avatarUrl),
+      'avatars': profile.avatars
+          .map(
+            (avatar) => <String, dynamic>{
+              'id': avatar.id,
+              'avatarUrl': normalizeAegisAvatarUrl(avatar.avatarUrl),
+              'isPrimary': avatar.isPrimary,
+              'createdAt': avatar.createdAt.toIso8601String(),
+            },
+          )
+          .toList(growable: false),
+      'presenceStatus': profile.presenceStatus,
+      'isOnline': profile.presenceStatus == 'online',
+      'bio': profile.bio,
+      'email': profile.email,
+      'lastSeenAt': profile.lastSeenAt?.toIso8601String(),
+    };
+  }
+
   Future<Map<String, dynamic>> getUserInfo(
     String userId, {
     bool skipEnsureReady = false,
@@ -577,27 +602,7 @@ class AegisChatService {
         };
       }
 
-      final info = <String, dynamic>{
-        'id': profile.id.toString(),
-        'username': profile.username,
-        'displayName': profile.displayName ?? profile.username,
-        'avatarUrl': normalizeAegisAvatarUrl(profile.avatarUrl),
-        'avatars': profile.avatars
-            .map(
-              (avatar) => <String, dynamic>{
-                'id': avatar.id,
-                'avatarUrl': normalizeAegisAvatarUrl(avatar.avatarUrl),
-                'isPrimary': avatar.isPrimary,
-                'createdAt': avatar.createdAt.toIso8601String(),
-              },
-            )
-            .toList(growable: false),
-        'presenceStatus': profile.presenceStatus,
-        'isOnline': profile.presenceStatus == 'online',
-        'bio': profile.bio,
-        'email': profile.email,
-        'lastSeenAt': profile.lastSeenAt?.toIso8601String(),
-      };
+      final info = _profileToInfo(profile);
       _storeProfile(profile.id, info);
       final conversationChanged = _syncProfileIntoConversations(profile.id, info);
       unawaited(_persist());
@@ -620,6 +625,47 @@ class AegisChatService {
     final userId = _auth.userId;
     if (userId == null) return _auth.username;
     return userId.toString();
+  }
+
+  Future<Map<String, dynamic>> getOwnUserInfo({bool forceRefresh = false}) async {
+    await ensureReady();
+    final selfId = _auth.userId;
+    if (!forceRefresh && selfId != null) {
+      final cached = _profileCache[selfId];
+      if (cached != null) {
+        return cached;
+      }
+    }
+
+    final response = await _auth.rawClient.getOwnProfile();
+    final profile = response.profile;
+    if (profile == null) {
+      final userId = await getCurrentUserId();
+      if (userId == null || userId.isEmpty) {
+        return const <String, dynamic>{
+          'id': '',
+          'username': '',
+          'displayName': '',
+          'avatarUrl': null,
+          'avatars': <Map<String, dynamic>>[],
+          'presenceStatus': null,
+          'isOnline': false,
+          'bio': null,
+          'email': null,
+          'lastSeenAt': null,
+        };
+      }
+      return getUserInfo(userId, skipEnsureReady: true);
+    }
+
+    final info = _profileToInfo(profile);
+    _storeProfile(profile.id, info);
+    final conversationChanged = _syncProfileIntoConversations(profile.id, info);
+    unawaited(_persist());
+    if (conversationChanged) {
+      _emitChanged();
+    }
+    return info;
   }
 
   Future<String> createDirectChat(String userId) async {
@@ -1403,8 +1449,67 @@ class AegisChatService {
   Future<void> flushNow() => _flushPersistNow();
 
   Future<List<double>> getWaveformForMedia(String mediaId, String? localPath,
-          {int samples = 50}) async =>
-      const <double>[];
+      {int samples = 50}) async {
+    final targetSamples = samples.clamp(12, 72);
+    var resolvedPath = localPath;
+    if (resolvedPath == null || resolvedPath.isEmpty) {
+      if (mediaId.isEmpty) {
+        return const <double>[];
+      }
+      try {
+        resolvedPath = await downloadMediaToTempFile(mediaId);
+      } catch (_) {
+        return const <double>[];
+      }
+    }
+
+    final file = File(resolvedPath);
+    if (!await file.exists()) {
+      return const <double>[];
+    }
+
+    return Isolate.run(() {
+      final bytes = file.readAsBytesSync();
+      if (bytes.isEmpty) {
+        return const <double>[];
+      }
+
+      final blockSize = math.max(1, bytes.length ~/ targetSamples);
+      final waveform = <double>[];
+      for (var index = 0; index < targetSamples; index++) {
+        final start = index * blockSize;
+        if (start >= bytes.length) {
+          break;
+        }
+        final end = math.min(bytes.length, start + blockSize);
+        var total = 0.0;
+        for (var offset = start; offset < end; offset++) {
+          total += (bytes[offset] - 128).abs() / 128;
+        }
+        final average = total / math.max(1, end - start);
+        waveform.add(average.clamp(0.05, 1.0));
+      }
+
+      if (waveform.isEmpty) {
+        return const <double>[];
+      }
+
+      final peak = waveform.reduce(math.max);
+      if (peak <= 0) {
+        return List<double>.filled(waveform.length, 0.18);
+      }
+
+      final normalized = waveform.map((value) => (value / peak).clamp(0.08, 1.0)).toList(growable: false);
+      final smoothed = <double>[];
+      for (var index = 0; index < normalized.length; index++) {
+        final previous = index > 0 ? normalized[index - 1] : normalized[index];
+        final current = normalized[index];
+        final next = index < normalized.length - 1 ? normalized[index + 1] : normalized[index];
+        smoothed.add(((previous + current + next) / 3).clamp(0.08, 1.0));
+      }
+      return smoothed;
+    });
+  }
 
   Future<Chat> getOrCreateDirectChat(String otherUserId) async {
     final roomId = await createDirectChat(otherUserId);

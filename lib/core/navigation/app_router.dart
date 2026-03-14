@@ -209,13 +209,15 @@ class _WelcomeRouteLoaderState extends State<_WelcomeRouteLoader> {
   Future<void> _loadUserInfo() async {
     try {
       final svc = AegisChatService();
-      final userId = await svc.getCurrentUserId();
-      if (userId == null || !mounted) {
+      final info = await svc.getOwnUserInfo(forceRefresh: true);
+      if (!mounted) {
+        return;
+      }
+      if ((info['id']?.toString().isEmpty ?? true) &&
+          (info['username']?.toString().isEmpty ?? true)) {
         _goHome();
         return;
       }
-      final info = await svc.getUserInfo(userId);
-      if (!mounted) return;
       setState(() => _userInfo = info);
     } catch (_) {
       _goHome();
@@ -238,7 +240,9 @@ class _WelcomeRouteLoaderState extends State<_WelcomeRouteLoader> {
       name: (info['displayName'] as String?) ??
           (info['username'] as String?) ??
           '',
+      username: info['username'] as String?,
       avatarUrl: info['avatarUrl'] as String?,
+      description: info['bio'] as String?,
     );
   }
 }

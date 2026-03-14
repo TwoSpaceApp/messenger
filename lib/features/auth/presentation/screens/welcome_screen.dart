@@ -12,11 +12,13 @@ class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen(
       {required this.name,
       super.key,
+      this.username,
       this.avatarUrl,
       this.avatarFileId,
       this.description,
       this.phone});
   final String name;
+  final String? username;
   final String? avatarUrl;
   final String? avatarFileId;
   final String? description;
@@ -113,6 +115,25 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           .headlineMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
+                    if (widget.username != null && widget.username!.trim().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          '@${widget.username!.trim()}',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.color
+                                    ?.withValues(alpha: 0.78),
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
                     const SizedBox(height: GreetingConstants.spacingSmall),
                     if (widget.description != null &&
                         widget.description!.isNotEmpty)
@@ -130,6 +151,24 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                       .bodyMedium
                                       ?.color
                                       ?.withValues(alpha: 0.7)),
+                        ),
+                      ),
+                    if ((widget.phone ?? '').trim().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          widget.phone!.trim(),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.color
+                                    ?.withValues(alpha: 0.65),
+                              ),
                         ),
                       ),
                   ],

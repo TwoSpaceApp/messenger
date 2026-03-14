@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-// import 'package:audioplayers/audioplayers.dart';  // Disabled for Linux
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:file_picker/file_picker.dart';
@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart' as share;
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/sound/waveform_painter.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/utils/storage_service.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
@@ -27,31 +28,6 @@ import 'package:two_space_app/features/profile/presentation/screens/profile_scre
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
-
-// Stub for AudioPlayer when audioplayers is disabled
-class AudioPlayer {
-  Future<void> setReleaseMode(dynamic mode) async {}
-  Future<void> play(dynamic source) async {}
-  Future<void> setSource(dynamic source) async {}
-  Future<void> pause() async {}
-  Future<void> resume() async {}
-  Future<void> stop() async {}
-  Future<void> seek(Duration position) async {}
-  Future<void> dispose() async {}
-  Stream<dynamic> get onPlayerStateChanged => const Stream.empty();
-  Stream<Duration> get onPositionChanged => const Stream.empty();
-  Stream<Duration> get onDurationChanged => const Stream.empty();
-  Stream<void> get onPlayerComplete => const Stream.empty();
-}
-
-class ReleaseMode {
-  static const stop = null;
-}
-
-class DeviceFileSource {
-  final String path;
-  DeviceFileSource(this.path);
-}
 
 Future<bool> _pathExists(String path) async {
   try {
@@ -2224,6 +2200,9 @@ bool _looksLikeFileName(String value) {
 }
 
 String? _messageCaption(_Msg message) {
+  if (message.type != 'm.image' && message.type != 'm.video') {
+    return null;
+  }
   final text = message.text.trim();
   if (text.isEmpty || _looksLikeFileName(text)) {
     return null;
@@ -2352,18 +2331,45 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
     return GestureDetector(
       onTap: widget.onOpenGallery,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: widget.maxWidth,
-            maxHeight: widget.maxWidth * 1.35,
-          ),
-          child: ColoredBox(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
             color: const Color(0xFF171A1F),
-            child: Image.file(
-              File(_localPath!),
-              fit: BoxFit.contain,
-              cacheWidth: 1200,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: widget.maxWidth,
+              maxHeight: widget.maxWidth * 1.35,
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: const Color(0xFF171A1F),
+                    child: Image.file(
+                      File(_localPath!),
+                      fit: BoxFit.contain,
+                      cacheWidth: 1200,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 10,
+                  bottom: 10,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.48),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Icon(Icons.open_in_full_rounded, color: Colors.white, size: 18),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -2403,6 +2409,7 @@ class _VideoMessageWidget extends StatefulWidget {
 
 class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
   String? _localPath;
+  Uint8List? _thumbnailBytes;
   bool _loading = true;
   Object? _error;
 
@@ -2417,10 +2424,21 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.message.mediaId != widget.message.mediaId) {
       _localPath = null;
+      _thumbnailBytes = null;
       _error = null;
       _loading = true;
       unawaited(_prepare());
     }
+  }
+
+  Future<Uint8List?> _buildThumbnail(String path) {
+    return VideoThumbnail.thumbnailData(
+      video: path,
+      imageFormat: ImageFormat.JPEG,
+      maxWidth: math.min(widget.maxWidth * 2, 1200).round(),
+      quality: 82,
+      timeMs: 300,
+    );
   }
 
   Future<void> _prepare() async {
@@ -2445,9 +2463,11 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
       }
       final path = await widget.svc.downloadMediaToTempFile(mediaRef);
       widget.mediaDownloads[mediaRef] = path;
+      final thumbnail = await _buildThumbnail(path);
       if (!mounted) return;
       setState(() {
         _localPath = path;
+        _thumbnailBytes = thumbnail;
         _loading = false;
       });
     } catch (error) {
@@ -2460,10 +2480,7 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
   }
 
   String _label() {
-    final raw = (widget.message.text.trim().isNotEmpty
-            ? widget.message.text
-            : widget.message.mediaId) ??
-        'video';
+    final raw = widget.message.mediaId ?? 'video';
     return raw.split('/').last;
   }
 
@@ -2522,25 +2539,82 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
         borderRadius: BorderRadius.circular(10),
         onTap: _open,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           child: Container(
             width: widget.maxWidth,
-            color: const Color(0xFF171A1F),
+            decoration: BoxDecoration(
+              color: const Color(0xFF171A1F),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: widget.maxWidth,
-                  height: widget.maxWidth * 0.56,
-                  color: Colors.black45,
-                  child: const Center(
-                    child: Icon(
-                      Icons.play_circle_fill_rounded,
-                      size: 52,
-                      color: Colors.white70,
+                Stack(
+                  children: [
+                    SizedBox(
+                      width: widget.maxWidth,
+                      height: widget.maxWidth * 0.56,
+                      child: _thumbnailBytes != null
+                          ? Image.memory(
+                              _thumbnailBytes!,
+                              fit: BoxFit.cover,
+                              gaplessPlayback: true,
+                            )
+                          : const ColoredBox(
+                              color: Colors.black45,
+                              child: Center(
+                                child: Icon(
+                                  Icons.movie_creation_outlined,
+                                  size: 48,
+                                  color: Colors.white54,
+                                ),
+                              ),
+                            ),
                     ),
-                  ),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.08),
+                              Colors.black.withValues(alpha: 0.32),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Positioned.fill(
+                      child: Center(
+                        child: Icon(
+                          Icons.play_circle_fill_rounded,
+                          size: 56,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 10,
+                      bottom: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.55),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.videocam_rounded, size: 14, color: Colors.white),
+                            SizedBox(width: 6),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
@@ -2738,7 +2812,8 @@ class _FileMessageWidget extends StatelessWidget {
   }
 }
 
-class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
+class _AudioMessageWidgetState extends State<_AudioMessageWidget>
+    with TickerProviderStateMixin {
   String? _localPath;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
@@ -2749,13 +2824,62 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
   StreamSubscription<Duration>? _durationSub;
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<void>? _completeSub;
+  StreamSubscription<PlayerState>? _stateSub;
   Future<void>? _prepareFuture;
-
-  // No fake controller needed; removed unused variable
+  late final AnimationController _waveformPulse;
+  late final AnimationController _interactionPulse;
+  bool _hovering = false;
+  bool _pressing = false;
 
   @override
   void initState() {
     super.initState();
+    _waveformPulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    _interactionPulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+      value: 0,
+    );
+  }
+
+  void _syncInteractionAnimation() {
+    final target = _pressing ? 1.0 : (_hovering ? 0.55 : 0.0);
+    _interactionPulse.animateTo(
+      target,
+      duration: Duration(milliseconds: _pressing ? 110 : 180),
+      curve: _pressing ? Curves.easeOutCubic : Curves.easeOut,
+    );
+  }
+
+  void _setHovering(bool value) {
+    if (_hovering == value) {
+      return;
+    }
+    _hovering = value;
+    _syncInteractionAnimation();
+  }
+
+  void _setPressing(bool value) {
+    if (_pressing == value) {
+      return;
+    }
+    _pressing = value;
+    _syncInteractionAnimation();
+  }
+
+  void _syncWaveformAnimation() {
+    if (_playing) {
+      if (!_waveformPulse.isAnimating) {
+        _waveformPulse.repeat();
+      }
+      return;
+    }
+    if (_waveformPulse.isAnimating) {
+      _waveformPulse.stop();
+    }
   }
 
   Future<void> _ensurePrepared() async {
@@ -2789,6 +2913,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
         _player = widget.audioPlayers[widget.message.id] ?? AudioPlayer();
         widget.audioPlayers[widget.message.id] = _player!;
         await _player!.setReleaseMode(ReleaseMode.stop);
+        await _player!.setSource(DeviceFileSource(_localPath!));
         _durationSub ??= _player!.onDurationChanged.listen((duration) {
           if (mounted) {
             setState(() => _duration = duration);
@@ -2805,7 +2930,17 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
               _playing = false;
               _position = Duration.zero;
             });
+            _syncWaveformAnimation();
           }
+        });
+        _stateSub ??= _player!.onPlayerStateChanged.listen((state) {
+          if (!mounted) {
+            return;
+          }
+          setState(() {
+            _playing = state == PlayerState.playing;
+          });
+          _syncWaveformAnimation();
         });
       } catch (_) {
       } finally {
@@ -2825,6 +2960,9 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
     _durationSub?.cancel();
     _positionSub?.cancel();
     _completeSub?.cancel();
+    _stateSub?.cancel();
+    _waveformPulse.dispose();
+    _interactionPulse.dispose();
     super.dispose();
   }
 
@@ -2834,17 +2972,25 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
     if (_playing) {
       await _player!.pause();
       setState(() => _playing = false);
+      _syncWaveformAnimation();
     } else {
       try {
-        await _player!.play(DeviceFileSource(_localPath!));
+        if (_position > Duration.zero &&
+            (_duration == Duration.zero || _position < _duration)) {
+          await _player!.resume();
+        } else {
+          await _player!.seek(Duration.zero);
+          await _player!.resume();
+        }
       } catch (e) {
-        // fallback: try setting source then resume
         try {
           await _player!.setSource(DeviceFileSource(_localPath!));
+          await _player!.seek(Duration.zero);
           await _player!.resume();
         } catch (_) {}
       }
       setState(() => _playing = true);
+      _syncWaveformAnimation();
     }
   }
 
@@ -2857,52 +3003,241 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final samples = (_waveform.isNotEmpty) ? _waveform : List<double>.generate(24, (i) => 0.2 + (i.isEven ? 0.12 : 0.0));
-    final bars = Row(mainAxisSize: MainAxisSize.min, children: List.generate(samples.length, (i) { final h = 12.0 + (samples[i] * 48.0); return Container(margin: const EdgeInsets.symmetric(horizontal: 2), width: 4, height: h, decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(2))); }));
-    final progress = (_duration.inMilliseconds > 0) ? (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0) : 0.0;
-    return GestureDetector(
-      onTapDown: (ev) {
-        // allow tapping waveform to seek
-        final box = context.findRenderObject() as RenderBox?;
-        if (box != null && _duration.inMilliseconds > 0) {
-          final local = box.globalToLocal(ev.globalPosition);
-          _seekTo((local.dx / box.size.width).clamp(0.0, 1.0));
-        }
+    final theme = Theme.of(context);
+    final samples = _waveform.isNotEmpty
+        ? _waveform
+        : List<double>.generate(36, (i) => 0.22 + ((i % 5) * 0.06));
+    final progress = (_duration.inMilliseconds > 0)
+        ? (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0)
+        : 0.0;
+    final totalLabel =
+        _duration > Duration.zero ? _formatDuration(_duration) : _formatDuration(_position);
+    final currentLabel = _formatDuration(_position);
+    final remaining = _duration > _position ? _duration - _position : Duration.zero;
+    final remainingLabel = '-${_formatDuration(remaining)}';
+
+    return AnimatedBuilder(
+      animation: _interactionPulse,
+      builder: (context, _) {
+        final interactionValue = _interactionPulse.value;
+        final accent = theme.colorScheme.primary;
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => _setHovering(true),
+          onExit: (_) {
+            _setHovering(false);
+            _setPressing(false);
+          },
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTapDown: (_) => _setPressing(true),
+            onTapUp: (_) => _setPressing(false),
+            onTapCancel: () => _setPressing(false),
+            child: Transform.scale(
+              scale: 1 - (interactionValue * 0.012),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.07 + interactionValue * 0.04),
+                        accent.withValues(alpha: (_playing ? 0.12 : 0.05) + interactionValue * 0.05),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: Color.lerp(
+                        Colors.white.withValues(alpha: 0.06),
+                        accent.withValues(alpha: 0.30),
+                        (_playing ? 0.55 : 0.18) + interactionValue * 0.32,
+                      )!,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accent.withValues(alpha: (_playing ? 0.12 : 0.04) + interactionValue * 0.08),
+                        blurRadius: 16 + interactionValue * 10,
+                        offset: Offset(0, 6 + interactionValue * 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      AnimatedScale(
+                        duration: const Duration(milliseconds: 140),
+                        curve: Curves.easeOutBack,
+                        scale: _pressing ? 0.92 : (_hovering ? 1.03 : 1),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: _preparing ? null : _togglePlay,
+                            child: Ink(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: accent.withValues(alpha: _playing ? 0.22 : 0.14),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: _playing ? 0.18 : 0.10),
+                                ),
+                              ),
+                              child: Center(
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 180),
+                                  transitionBuilder: (child, animation) {
+                                    return ScaleTransition(
+                                      scale: CurvedAnimation(
+                                        parent: animation,
+                                        curve: Curves.easeOutBack,
+                                      ),
+                                      child: FadeTransition(opacity: animation, child: child),
+                                    );
+                                  },
+                                  child: _preparing
+                                      ? const SizedBox(
+                                          key: ValueKey('loading'),
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      : Icon(
+                                          _playing
+                                              ? Icons.pause_rounded
+                                              : Icons.play_arrow_rounded,
+                                          key: ValueKey<bool>(_playing),
+                                          size: _playing ? 24 : 28,
+                                          color: Colors.white,
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTapDown: (details) {
+                                if (_duration == Duration.zero || constraints.maxWidth <= 0) {
+                                  return;
+                                }
+                                final rel = (details.localPosition.dx / constraints.maxWidth)
+                                    .clamp(0.0, 1.0);
+                                _seekTo(rel);
+                              },
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.06),
+                                          borderRadius: BorderRadius.circular(999),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 6,
+                                              height: 6,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: _playing
+                                                    ? accent
+                                                    : Colors.white.withValues(alpha: 0.6),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '$currentLabel / $totalLabel',
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: Colors.white.withValues(alpha: 0.84),
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        remainingLabel,
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: Colors.white.withValues(alpha: 0.52),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    height: 46,
+                                    width: double.infinity,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.surface.withValues(
+                                          alpha: 0.08 + interactionValue * 0.04,
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: (_playing ? 0.12 : 0.06) + interactionValue * 0.06,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        child: AnimatedBuilder(
+                                          animation: Listenable.merge([
+                                            _waveformPulse,
+                                            _interactionPulse,
+                                          ]),
+                                          builder: (context, _) {
+                                            return RepaintBoundary(
+                                              child: CustomPaint(
+                                                painter: WaveformPainter(
+                                                  samples,
+                                                  baseColor: Colors.white.withValues(alpha: 0.24),
+                                                  playedColor: accent,
+                                                  progress: progress,
+                                                  pulsePhase: _waveformPulse.value,
+                                                  isPlaying: _playing,
+                                                  strokeWidth: 3,
+                                                ),
+                                                child: const SizedBox.expand(),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
       },
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        IconButton(
-          icon: _preparing
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : (_playing
-                  ? const Icon(Icons.pause_circle)
-                  : const Icon(Icons.play_circle)),
-          onPressed: _preparing ? null : _togglePlay,
-        ),
-        Stack(children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: math.min(MediaQuery.of(context).size.width * 0.35, 260),
-              height: 36,
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.08),
-              child: Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: bars)),
-            ),
-          ),
-          Positioned.fill(
-            child: FractionallySizedBox(
-              widthFactor: progress,
-              alignment: Alignment.centerLeft,
-              child: Container(decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(8))),
-            ),
-          ),
-        ]),
-        const SizedBox(width: 8),
-        Text(_formatDuration(_position)),
-      ]),
     );
   }
 
