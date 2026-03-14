@@ -6,21 +6,31 @@ class RateLimiter {
   RateLimiter({
     required this.maxCallsPerWindow,
     required this.window,
-  });
+  })  : assert(maxCallsPerWindow > 0, 'maxCallsPerWindow must be > 0'),
+        assert(!window.isNegative && window != Duration.zero,
+            'window must be > 0');
   final int maxCallsPerWindow;
   final Duration window;
   final Queue<DateTime> _callTimestamps = Queue<DateTime>();
   final Map<String, DateTime> _keyLastCall = {};
 
-  /// Check if a call is allowed and track it
-  Future<bool> tryAcquire({String? key}) async {
-    final now = DateTime.now();
-
+  void _cleanupExpiredEntries(DateTime now) {
     // Clean up old timestamps outside the window
     while (_callTimestamps.isNotEmpty &&
         now.difference(_callTimestamps.first) > window) {
       _callTimestamps.removeFirst();
     }
+
+    // Prevent unbounded key map growth for stale keys.
+    _keyLastCall.removeWhere(
+      (_, timestamp) => now.difference(timestamp) > window,
+    );
+  }
+
+  /// Check if a call is allowed and track it
+  Future<bool> tryAcquire({String? key}) async {
+    final now = DateTime.now();
+    _cleanupExpiredEntries(now);
 
     // Check per-key throttling
     if (key != null && _keyLastCall.containsKey(key)) {
@@ -55,8 +65,13 @@ class RateLimiter {
         return fn();
       }
 
-      // Wait before retrying
-      await Future.delayed(const Duration(milliseconds: 100));
+      // Wait just long enough for window reset to avoid aggressive polling.
+      final wait = getWaitTime();
+      await Future.delayed(
+        (wait == null || wait <= Duration.zero)
+            ? const Duration(milliseconds: 16)
+            : wait,
+      );
     }
   }
 
@@ -68,6 +83,8 @@ class RateLimiter {
 
   /// Get time until next call is allowed
   Duration? getWaitTime() {
+    _cleanupExpiredEntries(DateTime.now());
+
     if (_callTimestamps.isEmpty) return null;
     if (_callTimestamps.length < maxCallsPerWindow) return Duration.zero;
 
