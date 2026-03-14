@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' as p;
@@ -228,7 +229,7 @@ class AegisChatService {
       await _storeDir.create(recursive: true);
     }
 
-    unawaited(_cleanupMediaCache());
+    Future.delayed(const Duration(seconds: 30), _cleanupMediaCache);
 
     final bootstrap = await _localStore.initialize();
     for (final item in bootstrap.conversations) {
@@ -328,10 +329,33 @@ class AegisChatService {
 
   Stream<List<Chat>> watchChats() async* {
     await _init();
-    yield _currentChatsSnapshot();
+    var lastSnapshot = _currentChatsSnapshot();
+    yield lastSnapshot;
     await for (final _ in _chatChanges.stream) {
-      yield _currentChatsSnapshot();
+      final next = _currentChatsSnapshot();
+      if (!_chatListEquals(lastSnapshot, next)) {
+        lastSnapshot = next;
+        yield next;
+      }
     }
+  }
+
+  bool _chatListEquals(List<Chat> a, List<Chat> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id ||
+          a[i].name != b[i].name ||
+          a[i].lastMessage != b[i].lastMessage ||
+          a[i].avatarUrl != b[i].avatarUrl ||
+          a[i].lastMessageTime != b[i].lastMessageTime ||
+          a[i].unreadCount != b[i].unreadCount ||
+          a[i].isOnline != b[i].isOnline ||
+          a[i].presenceStatus != b[i].presenceStatus) {
+        return false;
+      }
+    }
+    return true;
   }
 
   Stream<List<AegisRoomMessage>> watchRoomMessages(String roomId,
@@ -1178,16 +1202,28 @@ class AegisChatService {
     await _init();
     final room = _conversations[roomId];
     if (room == null) return const <Map<String, dynamic>>[];
-    return Future.wait(
-      room.memberUserIds.map((id) async {
-        final info = await getUserInfo(id);
-        return {
-          'userId': id,
-          'displayName': info['displayName'] ?? info['username'] ?? id,
-          'avatarUrl': info['avatarUrl'],
-        };
-      }),
-    );
+    final results = <Map<String, dynamic>>[];
+    const batchSize = 6;
+    final ids = room.memberUserIds;
+    for (var i = 0; i < ids.length; i += batchSize) {
+      final chunk = ids.sublist(i, (i + batchSize).clamp(0, ids.length));
+      final batch = await Future.wait(
+        chunk.map((id) async {
+          try {
+            final info = await getUserInfo(id);
+            return {
+              'userId': id,
+              'displayName': info['displayName'] ?? info['username'] ?? id,
+              'avatarUrl': info['avatarUrl'],
+            };
+          } catch (_) {
+            return {'userId': id, 'displayName': id, 'avatarUrl': null};
+          }
+        }),
+      );
+      results.addAll(batch);
+    }
+    return results;
   }
 
   Future<void> refreshChats({bool force = false}) async {
@@ -1201,35 +1237,36 @@ class AegisChatService {
 
   Future<void> refreshChatIndex({
     int messageLimit = 50,
-    int preloadRooms = 12,
+    int preloadRooms = 6,
   }) async {
     await ensureReady();
 
     var changed = false;
     changed = await _refreshChatsFromServer(force: true) || changed;
+    if (changed) {
+      _emitChanged();
+    }
 
+    // Lazy background refresh of top rooms — don't block caller
     final roomsToRefresh = (_conversations.values.toList()
           ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt)))
         .take(preloadRooms)
         .map((conversation) => conversation.id)
         .toList(growable: false);
 
-    const batchSize = 4;
-    for (var index = 0; index < roomsToRefresh.length; index += batchSize) {
-      final batch = roomsToRefresh.skip(index).take(batchSize).toList(growable: false);
-      final batchResults = await Future.wait<bool>(
-        batch.map(
-          (roomId) => _refreshRoomMessages(roomId, limit: messageLimit)
-              .catchError((_) => false),
-        ),
-      );
-      if (batchResults.any((value) => value)) {
-        changed = true;
-      }
-    }
+    unawaited(_refreshRoomsBatch(roomsToRefresh, messageLimit));
+  }
 
-    if (changed) {
-      _emitChanged();
+  Future<void> _refreshRoomsBatch(List<String> roomIds, int limit) async {
+    const batchSize = 3;
+    for (var i = 0; i < roomIds.length; i += batchSize) {
+      final batch = roomIds.sublist(i, (i + batchSize).clamp(0, roomIds.length));
+      final results = await Future.wait<bool>(
+        batch.map((id) => _refreshRoomMessages(id, limit: limit).catchError((_) => false)),
+      );
+      if (results.any((v) => v)) {
+        _emitChanged();
+      }
     }
   }
 
@@ -1684,10 +1721,20 @@ class AegisChatService {
 
   Future<void> _appendMessage(String roomId, AegisRoomMessage message) async {
     final list = _messages.putIfAbsent(roomId, () => <AegisRoomMessage>[]);
-    list.removeWhere((element) => element.id == message.id);
-    list.add(message);
-    if (list.length > 1 && list[list.length - 2].time.isAfter(message.time)) {
-      list.sort((a, b) => a.time.compareTo(b.time));
+    // Deduplicate: skip if message with same id already exists
+    final existingIndex = list.indexWhere((e) => e.id == message.id);
+    if (existingIndex >= 0) {
+      // Update existing message content if changed
+      final existing = list[existingIndex];
+      if (existing.content == message.content && existing.type == message.type) {
+        return; // No change, skip
+      }
+      list[existingIndex] = message;
+    } else {
+      list.add(message);
+      if (list.length > 1 && list[list.length - 2].time.isAfter(message.time)) {
+        list.sort((a, b) => a.time.compareTo(b.time));
+      }
     }
     final room = _conversations[roomId];
     if (room != null) {
@@ -2038,10 +2085,12 @@ class AegisChatService {
           ? attachment.text!.trim()
           : attachment.fileName;
       try {
+        final fileName = '${messageId}_${_sanitizeFileName(attachment.fileName)}';
+        // Decode media in isolate to avoid blocking UI thread
+        final decoded = await Isolate.run(attachment.decodeBytes);
         mediaId = await _storeMediaBytes(
-          attachment.decodeBytes(),
-          preferredFileName:
-              '${messageId}_${_sanitizeFileName(attachment.fileName)}',
+          decoded,
+          preferredFileName: fileName,
         );
       } catch (_) {
         mediaId = null;
@@ -2220,17 +2269,23 @@ class AegisChatService {
 
     final future = () async {
     await _init();
+    // Only serialize messages for dirty rooms (incremental persist)
     final roomMessagesJsonById = <String, List<Map<String, dynamic>>>{};
     for (final roomId in dirtyRoomIds) {
-      roomMessagesJsonById[roomId] = (_messages[roomId] ?? const <AegisRoomMessage>[])
-          .map((message) => message.toJson())
-          .toList(growable: false);
+      final messages = _messages[roomId];
+      if (messages == null || messages.isEmpty) continue;
+      roomMessagesJsonById[roomId] = await Isolate.run(() {
+        return messages.map((m) => m.toJson()).toList(growable: false);
+      });
     }
 
     await _localStore.saveChanges(
-      conversationsJson:
-          _conversations.values.map((conversation) => conversation.toJson()),
-      profilesJsonByUserId: Map<int, Map<String, dynamic>>.from(_profileCache),
+      conversationsJson: writeConversations
+          ? _conversations.values.map((c) => c.toJson())
+          : const <Map<String, dynamic>>[],
+      profilesJsonByUserId: writeProfiles
+          ? Map<int, Map<String, dynamic>>.from(_profileCache)
+          : const <int, Map<String, dynamic>>{},
       roomMessagesJsonById: roomMessagesJsonById,
       dirtyRoomIds: dirtyRoomIds,
       deletedRoomIds: deletedRoomIds,

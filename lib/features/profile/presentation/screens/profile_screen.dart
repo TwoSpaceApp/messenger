@@ -33,7 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _actionLoading = false;
   bool _isMe = false;
   bool _isEditing = false;
-  double _avatarStretch = 0;
+  final ValueNotifier<double> _avatarStretch = ValueNotifier(0);
 
   final _nameController = TextEditingController();
   final _nicknameController = TextEditingController();
@@ -54,6 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _aboutController.dispose();
     _locationController.dispose();
     _birthdayController.dispose();
+    _avatarStretch.dispose();
     super.dispose();
   }
 
@@ -382,10 +383,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool _updateAvatarStretch(double next) {
     final normalized = next.clamp(0.0, 72.0);
-    if ((_avatarStretch - normalized).abs() < 0.5) {
+    if ((_avatarStretch.value - normalized).abs() < 0.5) {
       return false;
     }
-    setState(() => _avatarStretch = normalized);
+    _avatarStretch.value = normalized;
     return true;
   }
 
@@ -429,16 +430,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   : 14.0;
               final heroPanelWidth =
                 (constraints.maxWidth * 0.34).clamp(320.0, 420.0);
-                final heroPanel = _buildHeroPanel(
-                  context: context,
-                  l10n: l10n,
-                  name: name,
-                  avatar: avatar,
-                  username: username,
-                  profileId: profileId,
-                  presenceLabel: presenceLabel,
-                  isWide: isWide,
-                  avatarStretch: _avatarStretch,
+                final heroPanel = ValueListenableBuilder<double>(
+                  valueListenable: _avatarStretch,
+                  builder: (context, stretch, _) => _buildHeroPanel(
+                    context: context,
+                    l10n: l10n,
+                    name: name,
+                    avatar: avatar,
+                    username: username,
+                    profileId: profileId,
+                    presenceLabel: presenceLabel,
+                    isWide: isWide,
+                    avatarStretch: stretch,
+                  ),
                 );
                 final detailsPanel = _buildDetailsPanel(
                   context: context,
@@ -462,15 +466,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 notification.metrics.minScrollExtent &&
                             notification.overscroll < 0) {
                           _updateAvatarStretch(
-                            _avatarStretch + (-notification.overscroll * 0.6),
+                            _avatarStretch.value + (-notification.overscroll * 0.6),
                           );
                         } else if (notification is ScrollUpdateNotification &&
                             notification.metrics.pixels >
                                 notification.metrics.minScrollExtent &&
-                            _avatarStretch > 0) {
+                            _avatarStretch.value > 0) {
                           _updateAvatarStretch(0);
                         } else if (notification is ScrollEndNotification &&
-                            _avatarStretch > 0) {
+                            _avatarStretch.value > 0) {
                           _updateAvatarStretch(0);
                         }
                         return false;

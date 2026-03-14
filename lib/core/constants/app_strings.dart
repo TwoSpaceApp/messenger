@@ -30,4 +30,5 @@ class AppStrings {
   static const routeStorage = '/storage';
   static const routeTfaSetup = '/tfa_setup';
   static const routeBiometricSetup = '/biometric-setup';
+  static const routeWelcome = '/welcome';
 }

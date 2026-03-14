@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -24,9 +25,30 @@ class UserAvatar extends StatefulWidget {
 
 class _UserAvatarState extends State<UserAvatar> {
   Uint8List? _bytes;
-  static final Map<String, Uint8List> _cache = <String, Uint8List>{};
+  static const int _maxCacheSize = 50;
+  static final LinkedHashMap<String, Uint8List> _cache =
+      LinkedHashMap<String, Uint8List>();
   static final Map<String, Future<Uint8List?>> _bytesInFlight =
       <String, Future<Uint8List?>>{};
+
+  static void _putCache(String key, Uint8List value) {
+    // Move to end (most recently used)
+    _cache.remove(key);
+    _cache[key] = value;
+    // Evict oldest entries if over limit
+    while (_cache.length > _maxCacheSize) {
+      _cache.remove(_cache.keys.first);
+    }
+  }
+
+  static Uint8List? _getCache(String key) {
+    final value = _cache.remove(key);
+    if (value != null) {
+      // Re-insert at end to mark as recently used
+      _cache[key] = value;
+    }
+    return value;
+  }
 
   Uint8List? _decodeDataUri(String? rawUrl) {
     final value = rawUrl?.trim();
@@ -58,7 +80,7 @@ class _UserAvatarState extends State<UserAvatar> {
   }
 
   Future<Uint8List?> _readCachedBytes(String path) async {
-    final cached = _cache[path];
+    final cached = _getCache(path);
     if (cached != null) {
       return cached;
     }
@@ -75,7 +97,7 @@ class _UserAvatarState extends State<UserAvatar> {
           return null;
         }
         final bytes = await file.readAsBytes();
-        _cache[path] = bytes;
+        _putCache(path, bytes);
         return bytes;
       } catch (_) {
         return null;
@@ -111,8 +133,9 @@ class _UserAvatarState extends State<UserAvatar> {
     if (fid == null || fid.isEmpty) {
       return;
     }
-    if (_cache.containsKey(fid)) {
-      setState(() => _bytes = _cache[fid]);
+    final cachedFid = _getCache(fid);
+    if (cachedFid != null) {
+      setState(() => _bytes = cachedFid);
       return;
     }
     final bytes = await _readCachedBytes(fid);

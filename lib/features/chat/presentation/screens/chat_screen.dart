@@ -134,7 +134,6 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _sending = false;
   final bool _isTyping = false;
   final Map<String, AudioPlayer> _audioPlayers = {};
-  final Map<String, Map<String, dynamic>> _userInfoCache = {};
   late final VoiceService _voiceService;
   StreamSubscription<List<AegisRoomMessage>>? _messagesSub;
   int _historyLimit = _historyPageSize;
@@ -426,7 +425,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _prefetchUserInfo(Set<String> senderIds) async {
     final ids = senderIds
-        .where((id) => id.isNotEmpty && !_userInfoCache.containsKey(id))
+        .where((id) => id.isNotEmpty && _svc.peekUserInfo(id) == null)
         .toList(growable: false);
     if (ids.isEmpty) return;
 
@@ -473,12 +472,7 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
 
-    if (!hasVisualUpdates) {
-      _userInfoCache.addAll(fetched);
-      return;
-    }
-
-    _userInfoCache.addAll(fetched);
+    if (!hasVisualUpdates) return;
     _updateTimeline((current) => current.copyWith(messages: updatedMessages));
   }
 
@@ -622,12 +616,9 @@ class _ChatScreenState extends State<ChatScreen> {
       final imageMediaIds = <String>[];
       final imageIndexByMessageId = <String, int>{};
       for (final m in msgs) {
-        final cached = _userInfoCache[m.senderId] ??
-            _svc.peekUserInfo(m.senderId) ??
+        final cached = _svc.peekUserInfo(m.senderId) ??
             const <String, dynamic>{};
-        if (cached.isNotEmpty) {
-          _userInfoCache[m.senderId] = cached;
-        } else if (m.senderId.isNotEmpty) {
+        if (cached.isEmpty && m.senderId.isNotEmpty) {
           missingSenderIds.add(m.senderId);
         }
         final senderName = cached['displayName'] ?? m.senderId;
@@ -1535,7 +1526,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ? ((item['context'] as Map)['room_id']?.toString() ?? '')
                   : '';
 
-              final info = _userInfoCache[sender] ?? {};
+              final info = _svc.peekUserInfo(sender) ?? {};
               final avatar = info['avatarUrl']?.toString();
               final displayName = info['displayName']?.toString() ?? sender;
 
@@ -1583,7 +1574,7 @@ class _ChatScreenState extends State<ChatScreen> {
         return ListView.custom(
           controller: _listController,
           padding: const EdgeInsets.all(12),
-          cacheExtent: 1000,
+          cacheExtent: 400,
           childrenDelegate: SliverChildBuilderDelegate(
             (c, i) {
           if (timeline.loadingMoreHistory && i == 0) {

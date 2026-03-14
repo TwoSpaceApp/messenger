@@ -311,7 +311,7 @@ class _AppLifecycleObserver with WidgetsBindingObserver {
     if (state != AppLifecycleState.resumed) {
       return;
     }
-    unawaited(AegisAuthService().restoreSession());
-    unawaited(AegisChatService().ensureReady().catchError((_) {}));
+    unawaited(AegisAuthService().restoreSession().catchError((_) => false));
+    unawaited(AegisChatService().ensureReady().catchError((_) => null));
   }
 }
