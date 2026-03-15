@@ -24,6 +24,10 @@ class AegisRoomMessage {
     required this.time,
     this.type = 'm.text',
     this.mediaId,
+    this.isDelivered = false,
+    this.isRead = false,
+    this.deliveredAt,
+    this.readAt,
   });
 
   factory AegisRoomMessage.fromJson(Map<String, dynamic> json) {
@@ -35,6 +39,14 @@ class AegisRoomMessage {
           DateTime.fromMillisecondsSinceEpoch(0),
       type: json['type'] as String? ?? 'm.text',
       mediaId: json['mediaId'] as String?,
+        isDelivered: json['isDelivered'] as bool? ?? false,
+        isRead: json['isRead'] as bool? ?? false,
+        deliveredAt: json['deliveredAt'] != null
+          ? DateTime.tryParse(json['deliveredAt'] as String)
+          : null,
+        readAt: json['readAt'] != null
+          ? DateTime.tryParse(json['readAt'] as String)
+          : null,
     );
   }
 
@@ -44,6 +56,10 @@ class AegisRoomMessage {
   final DateTime time;
   final String type;
   final String? mediaId;
+    final bool isDelivered;
+    final bool isRead;
+    final DateTime? deliveredAt;
+    final DateTime? readAt;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -52,6 +68,10 @@ class AegisRoomMessage {
         'time': time.toIso8601String(),
         'type': type,
         if (mediaId != null) 'mediaId': mediaId,
+      'isDelivered': isDelivered,
+      'isRead': isRead,
+      if (deliveredAt != null) 'deliveredAt': deliveredAt!.toIso8601String(),
+      if (readAt != null) 'readAt': readAt!.toIso8601String(),
       };
 }
 
@@ -856,6 +876,8 @@ class AegisChatService {
       time: DateTime.now(),
       type: type,
       mediaId: mediaFileId,
+      isDelivered: true,
+      deliveredAt: DateTime.now(),
     );
     await _appendMessage(roomId, message);
     unawaited(_refreshChatsFromServer());
@@ -917,6 +939,8 @@ class AegisChatService {
       time: DateTime.now(),
       type: messageType,
       mediaId: storedPath,
+      isDelivered: true,
+      deliveredAt: DateTime.now(),
     );
     await _appendMessage(roomId, message);
     return message;
@@ -992,6 +1016,10 @@ class AegisChatService {
       time: previous.time,
       type: previous.type,
       mediaId: previous.mediaId,
+      isDelivered: previous.isDelivered,
+      isRead: previous.isRead,
+      deliveredAt: previous.deliveredAt,
+      readAt: previous.readAt,
     );
     _dirtyRoomIds.add(roomId);
     await _persist();
@@ -1522,14 +1550,19 @@ class AegisChatService {
         return const <double>[];
       }
 
-      final blockSize = math.max(1, bytes.length ~/ targetSamples);
+        final skipLead = math.min(bytes.length ~/ 12, 4096);
+        final skipTail = math.min(bytes.length ~/ 20, 2048);
+        final startOffset = math.max(0, math.min(skipLead, bytes.length - 1));
+        final endOffset = math.max(startOffset + 1, bytes.length - skipTail);
+        final usableLength = endOffset - startOffset;
+        final blockSize = math.max(1, usableLength ~/ targetSamples);
       final waveform = <double>[];
       for (var index = 0; index < targetSamples; index++) {
-        final start = index * blockSize;
-        if (start >= bytes.length) {
+        final start = startOffset + (index * blockSize);
+        if (start >= endOffset) {
           break;
         }
-        final end = math.min(bytes.length, start + blockSize);
+        final end = math.min(endOffset, start + blockSize);
         var total = 0.0;
         for (var offset = start; offset < end; offset++) {
           total += (bytes[offset] - 128).abs() / 128;
@@ -2090,15 +2123,20 @@ class AegisChatService {
         throw Exception(response.message ?? 'Unable to load direct messages');
       }
       nextMessages = await Future.wait(
-        response.messages.map(
-          (item) => _historyItemToRoomMessage(
+        response.messages.map((item) {
+          final status = _extractHistoryStatus(item);
+          return _historyItemToRoomMessage(
             messageId: item.id.toString(),
             senderId: item.fromUserId.toString(),
             content: item.content,
             contentType: item.contentType,
             createdAt: item.createdAt,
-          ),
-        ),
+            isDelivered: status.$1,
+            isRead: status.$2,
+            deliveredAt: status.$3,
+            readAt: status.$4,
+          );
+        }),
       );
     } else if (conversation.channelId != null) {
       final response = await _auth.rawClient.getChannelHistory(
@@ -2109,15 +2147,20 @@ class AegisChatService {
         throw Exception(response.message ?? 'Unable to load room history');
       }
       nextMessages = await Future.wait(
-        response.messages.map(
-          (item) => _historyItemToRoomMessage(
+        response.messages.map((item) {
+          final status = _extractHistoryStatus(item);
+          return _historyItemToRoomMessage(
             messageId: item.id.toString(),
             senderId: item.fromUserId.toString(),
             content: item.content,
             contentType: item.contentType,
             createdAt: item.createdAt,
-          ),
-        ),
+            isDelivered: status.$1,
+            isRead: status.$2,
+            deliveredAt: status.$3,
+            readAt: status.$4,
+          );
+        }),
       );
     } else {
       return false;
@@ -2150,11 +2193,42 @@ class AegisChatService {
           left.time != right.time ||
           left.type != right.type ||
           left.mediaId != right.mediaId ||
-          left.senderId != right.senderId) {
+          left.senderId != right.senderId ||
+          left.isDelivered != right.isDelivered ||
+          left.isRead != right.isRead ||
+          left.deliveredAt != right.deliveredAt ||
+          left.readAt != right.readAt) {
         return false;
       }
     }
     return true;
+  }
+
+  (bool, bool, DateTime?, DateTime?) _extractHistoryStatus(dynamic item) {
+    Map<String, dynamic> payload;
+    try {
+      payload = Map<String, dynamic>.from((item as dynamic).toJson() as Map);
+    } catch (_) {
+      return (false, false, null, null);
+    }
+
+    bool readBool(String lower, String upper) =>
+        payload[lower] as bool? ?? payload[upper] as bool? ?? false;
+
+    DateTime? readDate(String lower, String upper) {
+      final value = payload[lower] ?? payload[upper];
+      if (value is String) {
+        return DateTime.tryParse(value);
+      }
+      return null;
+    }
+
+    return (
+      readBool('isDelivered', 'IsDelivered'),
+      readBool('isRead', 'IsRead'),
+      readDate('deliveredAt', 'DeliveredAt'),
+      readDate('readAt', 'ReadAt'),
+    );
   }
 
   bool _storedConversationEquals(
@@ -2228,6 +2302,10 @@ class AegisChatService {
     required String content,
     required MessageContentType contentType,
     required DateTime createdAt,
+    bool isDelivered = false,
+    bool isRead = false,
+    DateTime? deliveredAt,
+    DateTime? readAt,
   }) async {
     final attachment = tryParseMediaAttachment(content, contentType);
     String? mediaId;
@@ -2257,6 +2335,10 @@ class AegisChatService {
       time: createdAt,
       type: _mapMessageType(contentType),
       mediaId: mediaId,
+      isDelivered: isDelivered,
+      isRead: isRead,
+      deliveredAt: deliveredAt,
+      readAt: readAt,
     );
   }
 

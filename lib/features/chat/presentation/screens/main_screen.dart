@@ -43,7 +43,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _checkBiometrics();
     _unreadSub = AegisChatService().watchChats().listen((chats) {
-      final total = chats.fold<int>(0, (sum, c) => sum + c.unreadCount);
+      final total = chats.where((chat) => chat.unreadCount > 0).length;
       if (total != _totalUnread && mounted) {
         setState(() => _totalUnread = total);
       }

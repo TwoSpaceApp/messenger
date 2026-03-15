@@ -1708,6 +1708,30 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => 'Pamięć';
+
+  @override
+  String get storageTotalLabel => 'Razem';
+
+  @override
+  String get storagePhotosLabel => 'Zdjęcia';
+
+  @override
+  String get storageVideosLabel => 'Wideo';
+
+  @override
+  String get storageCacheLabel => 'Pamięć podręczna';
+
+  @override
+  String get storageAppDataLabel => 'Dane aplikacji';
+
+  @override
+  String get storageCleanupTitle => 'Do wyczyszczenia';
+
+  @override
+  String get storageCleanupSubtitle => 'Sprawdź, co można bezpiecznie usunąć.';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override

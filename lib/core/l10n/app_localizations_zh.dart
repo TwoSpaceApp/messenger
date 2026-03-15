@@ -1672,6 +1672,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => '内存';
+
+  @override
+  String get storageTotalLabel => '总计';
+
+  @override
+  String get storagePhotosLabel => '照片';
+
+  @override
+  String get storageVideosLabel => '视频';
+
+  @override
+  String get storageCacheLabel => '缓存';
+
+  @override
+  String get storageAppDataLabel => '应用数据';
+
+  @override
+  String get storageCleanupTitle => '将被清理';
+
+  @override
+  String get storageCleanupSubtitle => '检查可安全删除的内容。';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override

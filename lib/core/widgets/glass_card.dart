@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 
 /// Simple glass-style card that applies a backdrop blur and translucent background.
 class GlassCard extends StatelessWidget {
@@ -18,7 +19,7 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = Theme.of(context).colorScheme.surface.withValues(alpha: 0.72);
+    final bg = AppColors.glassSurface(context);
     final Widget card = Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(borderRadius),
@@ -29,9 +30,16 @@ class GlassCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(borderRadius),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.glassShadow(context),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
             border: Border.all(
-                color:
-                    Theme.of(context).dividerColor.withValues(alpha: 0.08)),
+              color: AppColors.glassBorder(context),
+            ),
           ),
           child: Padding(
             padding: padding,

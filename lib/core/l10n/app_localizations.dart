@@ -3228,6 +3228,54 @@ abstract class AppLocalizations {
   /// **'Clear Selected'**
   String get settingsStorageClearBtn;
 
+  /// Storage screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get storageMemoryTitle;
+
+  /// Storage chart center label
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get storageTotalLabel;
+
+  /// Photos section in storage
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get storagePhotosLabel;
+
+  /// Videos section in storage
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get storageVideosLabel;
+
+  /// Cache section in storage
+  ///
+  /// In en, this message translates to:
+  /// **'Cache'**
+  String get storageCacheLabel;
+
+  /// App data section in storage
+  ///
+  /// In en, this message translates to:
+  /// **'App data'**
+  String get storageAppDataLabel;
+
+  /// Selected cleanup total title
+  ///
+  /// In en, this message translates to:
+  /// **'Selected to clear'**
+  String get storageCleanupTitle;
+
+  /// Storage cleanup subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Review what can be safely removed.'**
+  String get storageCleanupSubtitle;
+
   /// Auto added setting
   ///
   /// In en, this message translates to:

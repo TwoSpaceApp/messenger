@@ -449,6 +449,10 @@ class _ChatScreenState extends State<ChatScreen> {
         senderAvatar: nextAvatar,
         type: message.type,
         mediaId: message.mediaId,
+        isDelivered: message.isDelivered,
+        isRead: message.isRead,
+        deliveredAt: message.deliveredAt,
+        readAt: message.readAt,
       );
     }
 
@@ -620,7 +624,21 @@ class _ChatScreenState extends State<ChatScreen> {
         } catch (_) { 
           isOwn = me != null && me == m.senderId; 
         }
-        final nextMessage = _Msg(id: m.id, text: m.content, isOwn: isOwn, time: m.time, senderId: m.senderId, senderName: senderName, senderAvatar: senderAvatar, type: m.type, mediaId: m.mediaId);
+        final nextMessage = _Msg(
+          id: m.id,
+          text: m.content,
+          isOwn: isOwn,
+          time: m.time,
+          senderId: m.senderId,
+          senderName: senderName,
+          senderAvatar: senderAvatar,
+          type: m.type,
+          mediaId: m.mediaId,
+          isDelivered: m.isDelivered,
+          isRead: m.isRead,
+          deliveredAt: m.deliveredAt,
+          readAt: m.readAt,
+        );
         out.add(nextMessage);
         final mediaId = nextMessage.mediaId;
         if (nextMessage.type == 'm.image' && mediaId != null && mediaId.isNotEmpty) {
@@ -1652,6 +1670,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
+                  if (m.isOwn) ...[
+                    const SizedBox(width: 4),
+                    _MessageStatusIcon(message: m),
+                  ],
                 ],
               ),
               // reactions row
@@ -1827,12 +1849,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: _openChatSettings,
-          ),
-        ],
       ),
       body: ScreenBackground(
         child: SafeArea(
@@ -1967,8 +1983,32 @@ class _Msg {
   final String? senderAvatar;
   final String? type;
   final String? mediaId;
+  final bool isDelivered;
+  final bool isRead;
+  final DateTime? deliveredAt;
+  final DateTime? readAt;
 
-  _Msg({required this.id, required this.text, required this.isOwn, required this.time, this.senderId, this.senderName, this.senderAvatar, this.type, this.mediaId});
+  _Msg({required this.id, required this.text, required this.isOwn, required this.time, this.senderId, this.senderName, this.senderAvatar, this.type, this.mediaId, this.isDelivered = false, this.isRead = false, this.deliveredAt, this.readAt});
+}
+
+class _MessageStatusIcon extends StatelessWidget {
+  const _MessageStatusIcon({required this.message});
+
+  final _Msg message;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = message.isRead
+        ? Icons.done_all_rounded
+        : message.isDelivered
+            ? Icons.done_rounded
+            : Icons.schedule_rounded;
+    final color = message.isRead
+        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.88)
+        : AppColors.ownBubbleText(context).withValues(alpha: 0.72);
+
+    return Icon(icon, size: 15, color: color);
+  }
 }
 
 class _ComposerAttachment {
@@ -2819,14 +2859,14 @@ class _FileMessageWidget extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
+            color: AppColors.mediaPlaceholder(context),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color: AppColors.mediaBorder(context)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(_icon(), color: Colors.white70),
+              Icon(_icon(), color: AppColors.iconMuted(context)),
               const SizedBox(width: 10),
               Flexible(
                 child: Text(
@@ -2834,7 +2874,7 @@ class _FileMessageWidget extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                 ),
               ),
@@ -2938,7 +2978,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
             final waveform = await widget.svc.getWaveformForMedia(
               widget.message.mediaId ?? '',
               path,
-              samples: 24,
+              samples: 40,
             );
             if (mounted && waveform.isNotEmpty) {
               _waveform = waveform;
@@ -3064,8 +3104,6 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
     final totalLabel =
         _duration > Duration.zero ? _formatDuration(_duration) : _formatDuration(_position);
     final currentLabel = _formatDuration(_position);
-    final remaining = _duration > _position ? _duration - _position : Duration.zero;
-    final remainingLabel = '-${_formatDuration(remaining)}';
 
     return AnimatedBuilder(
       animation: _interactionPulse,
@@ -3220,14 +3258,6 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                                               ),
                                             ),
                                           ],
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        remainingLabel,
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: Colors.white.withValues(alpha: 0.52),
-                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ],

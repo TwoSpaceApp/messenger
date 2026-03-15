@@ -2338,6 +2338,38 @@
   "@settingsStorageClearBtn": {
     "description": "Auto added setting"
   },
+  "storageMemoryTitle": "Memory",
+  "@storageMemoryTitle": {
+    "description": "Storage screen title"
+  },
+  "storageTotalLabel": "Total",
+  "@storageTotalLabel": {
+    "description": "Storage chart center label"
+  },
+  "storagePhotosLabel": "Photos",
+  "@storagePhotosLabel": {
+    "description": "Photos section in storage"
+  },
+  "storageVideosLabel": "Videos",
+  "@storageVideosLabel": {
+    "description": "Videos section in storage"
+  },
+  "storageCacheLabel": "Cache",
+  "@storageCacheLabel": {
+    "description": "Cache section in storage"
+  },
+  "storageAppDataLabel": "App data",
+  "@storageAppDataLabel": {
+    "description": "App data section in storage"
+  },
+  "storageCleanupTitle": "Selected to clear",
+  "@storageCleanupTitle": {
+    "description": "Selected cleanup total title"
+  },
+  "storageCleanupSubtitle": "Review what can be safely removed.",
+  "@storageCleanupSubtitle": {
+    "description": "Storage cleanup subtitle"
+  },
   "settingsStorageKeepChat": "Keep Chat Data",
   "@settingsStorageKeepChat": {
     "description": "Auto added setting"

@@ -264,13 +264,17 @@ class SettingsService {
 
   static Future<bool> autoDisableBackgroundEffects() async {
     final current = themeNotifier.value;
-    if (!current.enableFloatingCircles && !current.enableParallax) {
+    final targetOpacity = current.floatingCirclesOpacity.clamp(0.16, 0.34);
+    if (!current.enableParallax &&
+        (!current.enableFloatingCircles ||
+            current.floatingCirclesOpacity <= targetOpacity)) {
       return false;
     }
 
     await updateTheme(
-      enableFloatingCircles: false,
       enableParallax: false,
+      enableFloatingCircles: true,
+      floatingCirclesOpacity: targetOpacity,
     );
     return true;
   }

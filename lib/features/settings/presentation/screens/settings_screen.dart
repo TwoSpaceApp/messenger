@@ -210,8 +210,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.settingsTitle),
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         actions: [
           IconButton(
             onPressed: () => context.push(AppStrings.routeSettingsSearch),
@@ -221,10 +222,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ScreenBackground(
         child: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 120,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Appearance
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
@@ -486,15 +490,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 const EdgeInsets.symmetric(horizontal: 8),
                           );
                         },
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.memory_rounded),
-                        title: Text(l10n.settingsStorageUsage),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push(AppStrings.routeStorage),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
                       ),
                       const Divider(height: 1),
                       ListTile(

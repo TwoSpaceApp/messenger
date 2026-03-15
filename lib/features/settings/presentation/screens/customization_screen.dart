@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
@@ -83,6 +85,14 @@ class _CustomizationScreenState extends State<CustomizationScreen>
     await SettingsService.setFont(font);
   }
 
+  void _closeScreen() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+    context.go(AppStrings.routeHome);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -101,7 +111,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                   children: [
                     IconButton(
                       icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: _closeScreen,
                     ),
                     const AppLogo(large: false),
                     const SizedBox(width: 8),

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 /// Live parallax background where blobs continuously drift toward phone tilt direction.
@@ -190,10 +192,19 @@ class _ScreenBackgroundState extends State<ScreenBackground>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bgColor = theme.scaffoldBackgroundColor;
-    final primary = theme.primaryColor;
-    final secondary = theme.colorScheme.secondary;
+    final primary = AppColors.backgroundBlobPrimary(context);
+    final secondary = AppColors.backgroundBlobSecondary(context);
     final isDark = theme.brightness == Brightness.dark;
+    final backgroundDecoration = BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          AppColors.backgroundGradientStart(context),
+          AppColors.backgroundGradientEnd(context),
+        ],
+      ),
+    );
 
     return AnimatedBuilder(
       animation: SettingsService.themeNotifier,
@@ -209,32 +220,39 @@ class _ScreenBackgroundState extends State<ScreenBackground>
         }
 
         if (!settings.enableFloatingCircles) {
-          return ColoredBox(color: bgColor, child: child);
+          return DecoratedBox(
+            decoration: backgroundDecoration,
+            child: child ?? const SizedBox.shrink(),
+          );
         }
 
         final opacity = settings.floatingCirclesOpacity.clamp(0.1, 1.0);
 
         return Stack(
           children: [
-            ColoredBox(color: bgColor),
-            IgnorePointer(
-              child: RepaintBoundary(
-                child: CustomPaint(
-                  size: size,
-                  painter: _BlobPainter(
-                    repaint: _blobNotifier,
-                    primary: primary,
-                    secondary: secondary,
-                    isDark: isDark,
-                    opacity: opacity,
-                    blob1Size: _blob1Size,
-                    blob2Size: _blob2Size,
-                    blobNotifier: _blobNotifier,
+            Positioned.fill(
+              child: DecoratedBox(decoration: backgroundDecoration),
+            ),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: RepaintBoundary(
+                  child: CustomPaint(
+                    size: size,
+                    painter: _BlobPainter(
+                      repaint: _blobNotifier,
+                      primary: primary,
+                      secondary: secondary,
+                      isDark: isDark,
+                      opacity: opacity,
+                      blob1Size: _blob1Size,
+                      blob2Size: _blob2Size,
+                      blobNotifier: _blobNotifier,
+                    ),
                   ),
                 ),
               ),
             ),
-            if (child != null) child,
+            if (child != null) Positioned.fill(child: child),
           ],
         );
       },
@@ -287,8 +305,8 @@ class _BlobPainter extends CustomPainter {
       center1,
       blob1Size / 2,
       [
-        primary.withValues(alpha: isDark ? opacity * 0.7 : opacity * 0.5),
-        primary.withValues(alpha: isDark ? opacity * 0.3 : opacity * 0.2),
+        primary.withValues(alpha: isDark ? opacity * 0.62 : opacity * 0.3),
+        primary.withValues(alpha: isDark ? opacity * 0.24 : opacity * 0.12),
         Colors.transparent,
       ],
       [0.0, 0.5, 1.0],
@@ -307,8 +325,8 @@ class _BlobPainter extends CustomPainter {
       center2,
       blob2Size / 2,
       [
-        secondary.withValues(alpha: isDark ? opacity * 0.6 : opacity * 0.4),
-        secondary.withValues(alpha: isDark ? opacity * 0.25 : opacity * 0.15),
+        secondary.withValues(alpha: isDark ? opacity * 0.54 : opacity * 0.24),
+        secondary.withValues(alpha: isDark ? opacity * 0.22 : opacity * 0.1),
         Colors.transparent,
       ],
       [0.0, 0.5, 1.0],

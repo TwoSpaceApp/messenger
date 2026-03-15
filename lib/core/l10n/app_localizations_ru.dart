@@ -1708,6 +1708,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsStorageClearBtn => 'Очистить выбранное';
 
   @override
+  String get storageMemoryTitle => 'Память';
+
+  @override
+  String get storageTotalLabel => 'Всего';
+
+  @override
+  String get storagePhotosLabel => 'Фото';
+
+  @override
+  String get storageVideosLabel => 'Видео';
+
+  @override
+  String get storageCacheLabel => 'Кэш';
+
+  @override
+  String get storageAppDataLabel => 'Данные приложения';
+
+  @override
+  String get storageCleanupTitle => 'Будет очищено';
+
+  @override
+  String get storageCleanupSubtitle => 'Посмотри, что можно безопасно удалить.';
+
+  @override
   String get settingsStorageKeepChat => 'Хранить данные чатов';
 
   @override

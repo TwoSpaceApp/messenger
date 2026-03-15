@@ -38,6 +38,13 @@ CustomTransitionPage<void> _buildPage(GoRouterState state, Widget child) {
   return buildAppTransitionPage(state: state, child: child);
 }
 
+NoTransitionPage<void> _buildStaticPage(GoRouterState state, Widget child) {
+  return NoTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+  );
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = _RouterRefreshNotifier();
   ref.onDispose(refreshNotifier.dispose);
@@ -113,27 +120,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppStrings.routeCustomization,
         pageBuilder: (context, state) =>
-            _buildPage(state, const CustomizationScreen()),
+          _buildStaticPage(state, const CustomizationScreen()),
       ),
       GoRoute(
         path: AppStrings.routePrivacy,
         pageBuilder: (context, state) =>
-            _buildPage(state, const PrivacyScreen()),
+          _buildStaticPage(state, const PrivacyScreen()),
       ),
       GoRoute(
         path: AppStrings.routeAccountSettings,
         pageBuilder: (context, state) =>
-            _buildPage(state, const AccountSettingsScreen()),
+          _buildStaticPage(state, const AccountSettingsScreen()),
       ),
       GoRoute(
         path: AppStrings.routeFeedback,
         pageBuilder: (context, state) =>
-            _buildPage(state, const FeedbackScreen()),
+          _buildStaticPage(state, const FeedbackScreen()),
       ),
       GoRoute(
         path: AppStrings.routeSettingsSearch,
         pageBuilder: (context, state) =>
-            _buildPage(state, const SettingsSearchScreen()),
+          _buildStaticPage(state, const SettingsSearchScreen()),
       ),
       GoRoute(
         path: AppStrings.routeProfile,
@@ -165,12 +172,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppStrings.routeNotifications,
         pageBuilder: (context, state) =>
-            _buildPage(state, const NotificationsScreen()),
+          _buildStaticPage(state, const NotificationsScreen()),
       ),
       GoRoute(
         path: AppStrings.routeStorage,
         pageBuilder: (context, state) =>
-            _buildPage(state, const StorageScreen()),
+          _buildStaticPage(state, const StorageScreen()),
       ),
       GoRoute(
         path: AppStrings.routeChat,

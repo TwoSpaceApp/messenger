@@ -279,8 +279,11 @@ class _CallsScreenState extends State<CallsScreen> {
             color: Theme.of(context).colorScheme.error.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(Icons.delete_outline_rounded,
-              color: Colors.white, size: 22),
+          child: Icon(
+            Icons.delete_outline_rounded,
+            color: Theme.of(context).colorScheme.onError,
+            size: 22,
+          ),
         ),
         child: GlassCard(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

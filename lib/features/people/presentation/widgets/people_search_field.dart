@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/utils/responsive.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 
@@ -24,23 +25,24 @@ class PeopleSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final horizontalPadding = 12.s(context);
     final iconSize = 20.s(context);
+    final theme = Theme.of(context);
     return GlassCard(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: TextField(
         controller: controller,
         focusNode: focusNode,
         autofocus: autofocus,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white,
+        style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
               fontSize: 15.s(context),
             ),
         onChanged: onChanged,
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.64)),
+          hintStyle: TextStyle(color: AppColors.hintText(context)),
           prefixIcon: Icon(
             Icons.search_rounded,
-            color: Colors.white70,
+            color: AppColors.iconMuted(context),
             size: iconSize,
           ),
           suffixIcon: controller.text.isNotEmpty
@@ -48,7 +50,7 @@ class PeopleSearchField extends StatelessWidget {
                   onPressed: onClear,
                   icon: Icon(
                     Icons.close_rounded,
-                    color: Colors.white70,
+                    color: AppColors.iconMuted(context),
                     size: iconSize,
                   ),
                 )

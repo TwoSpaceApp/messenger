@@ -4,6 +4,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
@@ -114,6 +115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       'avatar': chat.avatarUrl,
       'lastMessage': chat.lastMessage,
       'time': chat.lastMessageTime,
+      'unreadCount': chat.unreadCount,
       'roomType': chat.roomType,
       'isOnline': chat.isOnline,
       'presenceStatus': chat.presenceStatus,
@@ -175,12 +177,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Color _presenceColor(Map<String, dynamic> room) {
     final presenceStatus = room['presenceStatus'] as String?;
     if (presenceStatus == 'online' || room['isOnline'] == true) {
-      return const Color(0xFF4CD964);
+      return AppColors.onlineStatus(context);
     }
     if (presenceStatus == 'recently') {
-      return Colors.amberAccent;
+      return AppColors.recentlyStatus(context);
     }
-    return Colors.white54;
+    return AppColors.offlineStatus(context);
   }
 
   bool _showPresenceBadge(Map<String, dynamic> room) {
@@ -277,16 +279,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 l10n.chatsTitle,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.search, color: Colors.white),
+              icon: Icon(
+                Icons.search,
+                color: theme.colorScheme.onSurface,
+              ),
               onPressed: _openSearch,
             ),
             IconButton(
-              icon: const Icon(Icons.settings_outlined, color: Colors.white),
+              icon: Icon(
+                Icons.settings_outlined,
+                color: theme.colorScheme.onSurface,
+              ),
               onPressed: _openSettings,
             ),
           ],
@@ -348,19 +356,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildShimmerLoading() {
+    final baseColor = AppColors.skeletonBase(context);
+    final highlightColor = AppColors.skeletonHighlight(context);
+    final bottomInset = MediaQuery.of(context).padding.bottom + 124;
     return ListView.builder(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.fromLTRB(8, 8, 8, bottomInset),
       itemCount: 6,
       itemBuilder: (context, index) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Shimmer.fromColors(
-            baseColor: Colors.white.withValues(alpha: 0.1),
-            highlightColor: Colors.white.withValues(alpha: 0.2),
+            baseColor: baseColor,
+            highlightColor: highlightColor,
             child: Container(
               height: 72,
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
               padding: const EdgeInsets.all(12),
@@ -437,17 +448,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.forum_outlined,
                         size: 36,
-                        color: Colors.white70,
+                        color: AppColors.iconMuted(context),
                       ),
                       const SizedBox(height: 10),
                       Text(
                         l10n.noChats,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
                             ),
                       ),
@@ -465,12 +476,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       physics: const AlwaysScrollableScrollPhysics(
         parent: BouncingScrollPhysics(),
       ),
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.fromLTRB(
+        8,
+        8,
+        8,
+        MediaQuery.of(context).padding.bottom + 124,
+      ),
       cacheExtent: 500,
       itemCount: rooms.length,
       itemBuilder: (c, i) {
         final r = rooms[i];
         final id = r['id'] as String;
+        final unreadCount = r['unreadCount'] as int? ?? 0;
 
         final item = Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -500,7 +517,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               color: _presenceColor(r),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: const Color(0xFF1B2025),
+                                color: AppColors.presenceRing(context),
                                 width: 2,
                               ),
                             ),
@@ -516,18 +533,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: [
                       Text(
                         r['name'],
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.white),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _roomSubtitle(r),
-                        style: const TextStyle(
-                            fontSize: 14, color: Colors.white70),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.subtitleText(context),
+                            ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -539,9 +557,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Text(
                       _formatRoomTime(r['time'] as DateTime?),
-                      style:
-                          const TextStyle(fontSize: 12, color: Colors.white54),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppColors.hintText(context),
+                          ),
                     ),
+                    if (unreadCount > 0) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : '$unreadCount',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],

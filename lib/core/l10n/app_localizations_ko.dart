@@ -1672,6 +1672,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => '메모리';
+
+  @override
+  String get storageTotalLabel => '전체';
+
+  @override
+  String get storagePhotosLabel => '사진';
+
+  @override
+  String get storageVideosLabel => '동영상';
+
+  @override
+  String get storageCacheLabel => '캐시';
+
+  @override
+  String get storageAppDataLabel => '앱 데이터';
+
+  @override
+  String get storageCleanupTitle => '정리 예정';
+
+  @override
+  String get storageCleanupSubtitle => '안전하게 삭제할 항목을 확인하세요.';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override

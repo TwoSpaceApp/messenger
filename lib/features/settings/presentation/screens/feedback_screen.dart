@@ -125,117 +125,147 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.suggestImprovementLabel),
-        backgroundColor: theme.colorScheme.surface,
-        elevation: 0,
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
       ),
       body: ScreenBackground(
         child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GlassCard(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Column(
-                    children: [
-                      DropdownButtonFormField<String>(
-                        initialValue: _category,
-                        decoration: InputDecoration(
-                          labelText: l10n.categoryLabel,
-                        ),
-                        items: [
-                          DropdownMenuItem(
-                              value: 'features',
-                              child: Text(l10n.feedbackCategoryFeatures)),
-                          DropdownMenuItem(
-                              value: 'ux_design',
-                              child: Text(l10n.feedbackCategoryUxDesign)),
-                          DropdownMenuItem(
-                              value: 'performance',
-                              child: Text(l10n.feedbackCategoryPerformance)),
-                          DropdownMenuItem(
-                              value: 'security',
-                              child: Text(l10n.feedbackCategorySecurity)),
-                          DropdownMenuItem(
-                              value: 'network',
-                              child: Text(l10n.feedbackCategoryNetworkSync)),
-                        ],
-                        onChanged: (v) =>
-                            setState(() => _category = v ?? 'features'),
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _titleController,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: l10n.shortDescriptionLabel,
-                          hintText: l10n.shortDescriptionHint,
-                        ),
-                        validator: (v) {
-                          final hasTitle = (v ?? '').trim().isNotEmpty;
-                          final hasDetails =
-                              _detailsController.text.trim().isNotEmpty;
-                          if (!hasTitle && !hasDetails) {
-                            return l10n.feedbackValidation;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _detailsController,
-                        minLines: 3,
-                        maxLines: 8,
-                        decoration: InputDecoration(
-                          labelText: l10n.detailsOptionalLabel,
-                          hintText: l10n.detailsHint,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _sending ? null : _copy,
-                        icon: const Icon(Icons.copy),
-                        label: Text(l10n.copyButton),
+                    GlassCard(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Column(
+                        children: [
+                          DropdownButtonFormField<String>(
+                            initialValue: _category,
+                            decoration: InputDecoration(
+                              labelText: l10n.categoryLabel,
+                            ),
+                            items: [
+                              DropdownMenuItem(
+                                value: 'features',
+                                child: Text(l10n.feedbackCategoryFeatures),
+                              ),
+                              DropdownMenuItem(
+                                value: 'ux_design',
+                                child: Text(l10n.feedbackCategoryUxDesign),
+                              ),
+                              DropdownMenuItem(
+                                value: 'performance',
+                                child: Text(l10n.feedbackCategoryPerformance),
+                              ),
+                              DropdownMenuItem(
+                                value: 'security',
+                                child: Text(l10n.feedbackCategorySecurity),
+                              ),
+                              DropdownMenuItem(
+                                value: 'network',
+                                child: Text(l10n.feedbackCategoryNetworkSync),
+                              ),
+                            ],
+                            onChanged: (v) =>
+                                setState(() => _category = v ?? 'features'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _titleController,
+                            textInputAction: TextInputAction.next,
+                            decoration: InputDecoration(
+                              labelText: l10n.shortDescriptionLabel,
+                              hintText: l10n.shortDescriptionHint,
+                            ),
+                            validator: (v) {
+                              final hasTitle = (v ?? '').trim().isNotEmpty;
+                              final hasDetails =
+                                  _detailsController.text.trim().isNotEmpty;
+                              if (!hasTitle && !hasDetails) {
+                                return l10n.feedbackValidation;
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _detailsController,
+                            minLines: 3,
+                            maxLines: 8,
+                            decoration: InputDecoration(
+                              labelText: l10n.detailsOptionalLabel,
+                              hintText: l10n.detailsHint,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _sending ? null : _send,
-                        icon: _sending
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.send),
-                        label: Text(l10n.sendButton),
-                      ),
+                    const SizedBox(height: 16),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isCompact = constraints.maxWidth < 420;
+                        final copyButton = OutlinedButton.icon(
+                          onPressed: _sending ? null : _copy,
+                          icon: const Icon(Icons.copy),
+                          label: Text(l10n.copyButton),
+                        );
+                        final sendButton = ElevatedButton.icon(
+                          onPressed: _sending ? null : _send,
+                          icon: _sending
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.send),
+                          label: Text(l10n.sendButton),
+                        );
+
+                        if (isCompact) {
+                          return Column(
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: copyButton,
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: sendButton,
+                              ),
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          children: [
+                            Expanded(child: copyButton),
+                            const SizedBox(width: 12),
+                            Expanded(child: sendButton),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      ),
       ),
     );
   }

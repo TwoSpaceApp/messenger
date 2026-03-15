@@ -42,7 +42,6 @@ class WaveformPainter extends CustomPainter {
     final spacing = math.max(1.5, strokeWidth * 0.75);
     final barWidth = math.max(2.2, (size.width - spacing * (samples.length - 1)) / samples.length);
     final availableHeight = size.height - 4;
-    final playedIndex = safeProgress * math.max(1, samples.length - 1);
     final pulse = 0.5 + 0.5 * math.sin(pulsePhase * math.pi * 2);
 
     final backgroundRRect = RRect.fromRectAndRadius(
@@ -56,15 +55,12 @@ class WaveformPainter extends CustomPainter {
 
     for (var i = 0; i < samples.length; i++) {
       final normalized = samples[i].clamp(0.06, 1.0);
-        final barCenter = samples.length == 1 ? 0.5 : i / (samples.length - 1);
+      final barCenter = samples.length == 1 ? 0.5 : i / (samples.length - 1);
       final distanceToHead = (barCenter - safeProgress).abs();
       final activeBoost = isPlaying
-          ? math.max(0, 1 - (distanceToHead / 0.16)) * (0.12 + pulse * 0.26)
+          ? math.max(0, 1 - (distanceToHead / 0.09)) * (0.1 + pulse * 0.18)
           : 0;
-      final trailBoost = safeProgress >= barCenter
-          ? 0.06 * (1 - math.min(1, (safeProgress - barCenter) / 0.55))
-          : 0;
-      final visualLevel = (normalized + activeBoost + trailBoost).clamp(0.10, 1.0);
+      final visualLevel = (normalized + activeBoost).clamp(0.10, 1.0);
       final barHeight = math.max(4, availableHeight * visualLevel).toDouble();
       final left = i * (barWidth + spacing);
       final top = centerY - (barHeight / 2);
@@ -73,9 +69,10 @@ class WaveformPainter extends CustomPainter {
         Radius.circular(barWidth),
       );
 
-      final color = i <= playedIndex
-          ? Color.lerp(playedColor, Colors.white, math.max(0, 0.28 - distanceToHead))!
-          : Color.lerp(baseColor, playedColor, math.max(0, 0.14 - distanceToHead) * 1.8)!;
+        final isPlayed = barCenter <= safeProgress;
+        final color = isPlayed
+          ? Color.lerp(playedColor, Colors.white, math.max(0, 0.22 - distanceToHead))!
+          : Color.lerp(baseColor, playedColor, math.max(0, 0.1 - distanceToHead) * 1.5)!;
       barPaint.color = color;
       canvas.drawRRect(rect, backgroundPaint..color = baseColor.withValues(alpha: 0.26));
       canvas.drawRRect(rect, barPaint);

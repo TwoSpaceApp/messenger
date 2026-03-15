@@ -1672,6 +1672,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => 'メモリ';
+
+  @override
+  String get storageTotalLabel => '合計';
+
+  @override
+  String get storagePhotosLabel => '写真';
+
+  @override
+  String get storageVideosLabel => '動画';
+
+  @override
+  String get storageCacheLabel => 'キャッシュ';
+
+  @override
+  String get storageAppDataLabel => 'アプリデータ';
+
+  @override
+  String get storageCleanupTitle => '削除予定';
+
+  @override
+  String get storageCleanupSubtitle => '安全に削除できる項目を確認します。';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override

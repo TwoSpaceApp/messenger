@@ -120,4 +120,44 @@ class AppColors {
 
   static Color dateSeparatorText(BuildContext context) =>
       Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+
+  // ─── dynamic background / glass ────────────────────────────────────
+
+  static Color backgroundGradientStart(BuildContext context) =>
+      _isDark(context) ? const Color(0xFF0F1115) : const Color(0xFFF9FBFF);
+
+  static Color backgroundGradientEnd(BuildContext context) =>
+      _isDark(context) ? const Color(0xFF171C23) : const Color(0xFFEEF3F8);
+
+  static Color backgroundBlobPrimary(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return _isDark(context)
+        ? primary
+        : Color.lerp(primary, Colors.white, 0.38) ?? primary;
+  }
+
+  static Color backgroundBlobSecondary(BuildContext context) {
+    final secondary = Theme.of(context).colorScheme.secondary;
+    return _isDark(context)
+        ? secondary
+        : Color.lerp(secondary, const Color(0xFFE8F4FF), 0.46) ?? secondary;
+  }
+
+  static Color glassSurface(BuildContext context) =>
+      Theme.of(context).colorScheme.surface.withValues(
+        alpha: _isDark(context) ? 0.72 : 0.9,
+      );
+
+  static Color glassBorder(BuildContext context) =>
+      Theme.of(context).colorScheme.outline.withValues(
+        alpha: _isDark(context) ? 0.12 : 0.1,
+      );
+
+  static Color glassShadow(BuildContext context) =>
+      _isDark(context)
+          ? Colors.black.withValues(alpha: 0.22)
+          : Colors.black.withValues(alpha: 0.06);
+
+  static Color presenceRing(BuildContext context) =>
+      Theme.of(context).colorScheme.surface;
 }

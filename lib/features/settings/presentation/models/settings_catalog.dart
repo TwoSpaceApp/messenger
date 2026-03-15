@@ -113,14 +113,6 @@ List<SettingsSearchEntry> buildSettingsSearchEntries(AppLocalizations l10n) {
       onTap: (context) async => context.pop(),
     ),
     SettingsSearchEntry(
-      title: l10n.settingsStorageUsage,
-      subtitle: l10n.storageManagementSubtitle,
-      section: l10n.dataStorageSection,
-      icon: Icons.memory_rounded,
-      keywords: const ['storage', 'memory', 'cache', 'space'],
-      onTap: (context) async => context.push(AppStrings.routeStorage),
-    ),
-    SettingsSearchEntry(
       title: l10n.storageManagementLabel,
       subtitle: l10n.storageManagementSubtitle,
       section: l10n.dataStorageSection,
