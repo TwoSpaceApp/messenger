@@ -109,7 +109,9 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _scrollToEventId;
   bool _sending = false;
   final bool _isTyping = false;
+  static const int _maxAudioPlayers = 5;
   final Map<String, AudioPlayer> _audioPlayers = {};
+  final List<String> _audioPlayerAccessOrder = [];
   late final VoiceService _voiceService;
   StreamSubscription<List<AegisRoomMessage>>? _messagesSub;
   int _historyLimit = _historyPageSize;
@@ -223,6 +225,7 @@ class _ChatScreenState extends State<ChatScreen> {
     for (final player in _audioPlayers.values) {
       unawaited(player.dispose());
     }
+    _audioPlayerAccessOrder.clear();
     _voiceService.dispose();
     super.dispose();
   }
@@ -1476,7 +1479,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final headerName = _headerName ?? widget.chat.name;
     final headerAvatarUrl = _headerAvatarUrl ?? widget.chat.avatarUrl;
     final presenceLabel = _directPeerUserId != null ? _headerPresenceLabel(l10n) : null;
-    final bodyWidget = ValueListenableBuilder<_ChatTimelineState>(
+    final bodyWidget = ValueListenableBuilder(
+      valueListenable: SettingsService.themeNotifier,
+      builder: (context, themeSettings, _) {
+        final bubbleRounding = themeSettings.bubbleRounding;
+        final dynamicBubbles = themeSettings.dynamicBubbles;
+        return ValueListenableBuilder<_ChatTimelineState>(
       valueListenable: _timeline,
       builder: (context, timeline, _) {
         if (timeline.loading) {
@@ -1723,6 +1731,8 @@ class _ChatScreenState extends State<ChatScreen> {
                           child: _SquishyBubble(
                             isOwn: m.isOwn,
                               highlighted: timeline.highlighted.contains(m.id),
+                            bubbleRounding: bubbleRounding,
+                            dynamicBubbles: dynamicBubbles,
                             child: bubbleContent,
                           ),
                         ),
@@ -1740,6 +1750,8 @@ class _ChatScreenState extends State<ChatScreen> {
           addSemanticIndexes: false,
           ),
         );
+      },
+    );
       },
     );
 
@@ -2825,6 +2837,8 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<void>? _completeSub;
   StreamSubscription<PlayerState>? _stateSub;
+  Timer? _positionThrottle;
+  Duration? _pendingPosition;
   Future<void>? _prepareFuture;
   late final AnimationController _waveformPulse;
   late final AnimationController _interactionPulse;
@@ -2912,6 +2926,13 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
 
         _player = widget.audioPlayers[widget.message.id] ?? AudioPlayer();
         widget.audioPlayers[widget.message.id] = _player!;
+        // Evict oldest audio players to bound memory.
+        while (widget.audioPlayers.length > _ChatScreenState._maxAudioPlayers) {
+          final oldest = widget.audioPlayers.keys.first;
+          if (oldest == widget.message.id) break;
+          final old = widget.audioPlayers.remove(oldest);
+          unawaited(old?.dispose());
+        }
         await _player!.setReleaseMode(ReleaseMode.stop);
         await _player!.setSource(DeviceFileSource(_localPath!));
         _durationSub ??= _player!.onDurationChanged.listen((duration) {
@@ -2920,9 +2941,16 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
           }
         });
         _positionSub ??= _player!.onPositionChanged.listen((position) {
-          if (mounted) {
-            setState(() => _position = position);
-          }
+          _pendingPosition = position;
+          _positionThrottle ??= Timer(
+            const Duration(milliseconds: 100),
+            () {
+              _positionThrottle = null;
+              if (mounted) {
+                setState(() => _position = _pendingPosition ?? position);
+              }
+            },
+          );
         });
         _completeSub ??= _player!.onPlayerComplete.listen((_) {
           if (mounted) {
@@ -2961,6 +2989,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
     _positionSub?.cancel();
     _completeSub?.cancel();
     _stateSub?.cancel();
+    _positionThrottle?.cancel();
     _waveformPulse.dispose();
     _interactionPulse.dispose();
     super.dispose();
@@ -3267,10 +3296,14 @@ class _SquishyBubble extends StatefulWidget {
   final Widget child;
   final bool isOwn;
   final bool highlighted;
+  final double bubbleRounding;
+  final bool dynamicBubbles;
 
   const _SquishyBubble({
     required this.child,
     required this.isOwn,
+    required this.bubbleRounding,
+    required this.dynamicBubbles,
     this.highlighted = false,
   });
 
@@ -3302,38 +3335,32 @@ class _SquishyBubbleState extends State<_SquishyBubble> with SingleTickerProvide
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: SettingsService.themeNotifier,
-      builder: (context, themeSettings, _) {
-       final radius = themeSettings.bubbleRounding;
-        return GestureDetector(
-          onTapDown: (_) {
-             if (themeSettings.dynamicBubbles) _controller.forward();
-          },
-          onTapUp: (_) {
-             if (themeSettings.dynamicBubbles) _controller.reverse();
-          },
-          onTapCancel: () {
-             if (themeSettings.dynamicBubbles) _controller.reverse();
-          },
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Container(
-              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              margin: const EdgeInsets.symmetric(vertical: 6),
-              decoration: BoxDecoration(
-                color: widget.isOwn ? const Color(0xFF0077FF) : const Color(0xFF2E3338),
-                borderRadius: BorderRadius.circular(radius),
-                 border: widget.highlighted 
-                  ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
-                  : null,
-              ),
-              child: widget.child,
-            ),
+    return GestureDetector(
+      onTapDown: (_) {
+         if (widget.dynamicBubbles) _controller.forward();
+      },
+      onTapUp: (_) {
+         if (widget.dynamicBubbles) _controller.reverse();
+      },
+      onTapCancel: () {
+         if (widget.dynamicBubbles) _controller.reverse();
+      },
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Container(
+          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: widget.isOwn ? const Color(0xFF0077FF) : const Color(0xFF2E3338),
+            borderRadius: BorderRadius.circular(widget.bubbleRounding),
+             border: widget.highlighted 
+              ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
+              : null,
           ),
-        );
-      }
+          child: widget.child,
+        ),
+      ),
     );
   }
 }

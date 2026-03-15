@@ -23,7 +23,7 @@ class AegisClient {
   AegisClient() {
     _transport = AegisTransport();
     events = AegisEventDispatcher(_messageController.stream);
-    _transport.messages.listen((message) {
+    _transportMessageSub = _transport.messages.listen((message) {
       final waiter = _pendingResponseWaiters[message.sequenceId];
       if (waiter != null &&
           message.type == MessageType.error &&
@@ -42,7 +42,7 @@ class AegisClient {
       }
       _messageController.add(message);
     });
-    _transport.disconnects.listen((_) {
+    _transportDisconnectSub = _transport.disconnects.listen((_) {
       _isAuthenticated = false;
       _authenticatedUserId = null;
       _authenticatedUsername = null;
@@ -53,6 +53,8 @@ class AegisClient {
   }
   late AegisTransport _transport;
   late final AegisEventDispatcher events;
+  StreamSubscription<Message>? _transportMessageSub;
+  StreamSubscription<void>? _transportDisconnectSub;
   // ignore: unused_field
   String? _authToken;
   bool _isAuthenticated = false;
@@ -227,6 +229,11 @@ class AegisClient {
       await _publishPresence(isOnline: false);
     }
     await _transport.disconnect();
+    await _transportMessageSub?.cancel();
+    _transportMessageSub = null;
+    await _transportDisconnectSub?.cancel();
+    _transportDisconnectSub = null;
+    _pendingResponseWaiters.clear();
     _isAuthenticated = false;
     _authToken = null;
     _authenticatedUserId = null;

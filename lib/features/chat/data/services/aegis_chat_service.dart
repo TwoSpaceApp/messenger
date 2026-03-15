@@ -206,7 +206,14 @@ class AegisChatService {
   static const Duration _chatRefreshCooldown = Duration(seconds: 20);
 
   final Map<String, _StoredConversation> _conversations = {};
+  /// Reverse index: peerUserId → set of roomIds for fast profile→conversation sync.
+  final Map<int, Set<String>> _peerUserIdToRoomIds = <int, Set<String>>{};
+  static const int _maxCachedRooms = 30;
+  static const int _maxProfileCacheSize = 500;
+
   final Map<String, List<AegisRoomMessage>> _messages = {};
+  /// Tracks access order for LRU eviction of message cache.
+  final List<String> _messageAccessOrder = <String>[];
   final Map<int, Map<String, dynamic>> _profileCache = {};
   final Map<String, Future<Map<String, dynamic>>> _userInfoRequests =
       <String, Future<Map<String, dynamic>>>{};
@@ -236,6 +243,12 @@ class AegisChatService {
     for (final item in bootstrap.conversations) {
       final conversation = _StoredConversation.fromJson(item);
       _conversations[conversation.id] = conversation;
+      // Build reverse index for fast profile→conversation sync.
+      if (conversation.peerUserId != null) {
+        _peerUserIdToRoomIds
+            .putIfAbsent(conversation.peerUserId!, () => <String>{})
+            .add(conversation.id);
+      }
     }
     _profileCache.addAll(bootstrap.profiles);
     _storedRoomIds.addAll(bootstrap.storedRoomIds);
@@ -243,17 +256,22 @@ class AegisChatService {
   }
 
   Future<void> _ensureRoomMessagesLoaded(String roomId) async {
-    if (_hydratedRoomIds.contains(roomId)) return;
+    if (_hydratedRoomIds.contains(roomId)) {
+      _touchMessageCache(roomId);
+      return;
+    }
     _hydratedRoomIds.add(roomId);
 
     if (!_storedRoomIds.contains(roomId)) {
       _messages.putIfAbsent(roomId, () => <AegisRoomMessage>[]);
+      _touchMessageCache(roomId);
       return;
     }
 
-    final decoded = await _localStore.loadRoomMessagesJson(roomId);
+    final decoded = await _localStore.loadRoomMessagesJson(roomId, limit: 500);
     if (decoded.isEmpty) {
       _messages[roomId] = <AegisRoomMessage>[];
+      _touchMessageCache(roomId);
       return;
     }
     _messages[roomId] = decoded
@@ -261,6 +279,19 @@ class AegisChatService {
         .toList()
       ..sort((a, b) => a.time.compareTo(b.time));
     _storedRoomIds.add(roomId);
+    _touchMessageCache(roomId);
+  }
+
+  /// Moves [roomId] to the front of the LRU access order and evicts
+  /// the least recently used rooms when the cache exceeds its limit.
+  void _touchMessageCache(String roomId) {
+    _messageAccessOrder.remove(roomId);
+    _messageAccessOrder.insert(0, roomId);
+    while (_messageAccessOrder.length > _maxCachedRooms) {
+      final evicted = _messageAccessOrder.removeLast();
+      _messages.remove(evicted);
+      _hydratedRoomIds.remove(evicted);
+    }
   }
 
   Future<void> ensureReady() async {
@@ -282,6 +313,15 @@ class AegisChatService {
     if (existing != null && _storedConversationEquals(existing, conversation)) {
       return;
     }
+    // Maintain reverse index for fast profile→conversation sync.
+    if (existing?.peerUserId != null) {
+      _peerUserIdToRoomIds[existing!.peerUserId!]?.remove(conversation.id);
+    }
+    if (conversation.peerUserId != null) {
+      _peerUserIdToRoomIds
+          .putIfAbsent(conversation.peerUserId!, () => <String>{})
+          .add(conversation.id);
+    }
     _conversations[conversation.id] = conversation;
     _markConversationsDirty();
   }
@@ -292,6 +332,15 @@ class AegisChatService {
       return;
     }
     _profileCache[userId] = info;
+    // Evict oldest entries when cache exceeds limit.
+    if (_profileCache.length > _maxProfileCacheSize) {
+      final keysToRemove = _profileCache.keys
+          .take(_profileCache.length - _maxProfileCacheSize)
+          .toList(growable: false);
+      for (final key in keysToRemove) {
+        _profileCache.remove(key);
+      }
+    }
     _markProfilesDirty();
   }
 
@@ -444,9 +493,13 @@ class AegisChatService {
         (info['displayName'] ?? info['username'])?.toString().trim();
     final nextAvatar = normalizeAegisAvatarUrl(info['avatarUrl']?.toString());
 
-    for (final entry in _conversations.entries.toList(growable: false)) {
-      final conversation = entry.value;
-      if (conversation.peerUserId != userId) continue;
+    // Use reverse index for O(1) lookup instead of iterating all conversations.
+    final roomIds = _peerUserIdToRoomIds[userId];
+    if (roomIds == null || roomIds.isEmpty) return false;
+
+    for (final roomId in roomIds.toList(growable: false)) {
+      final conversation = _conversations[roomId];
+      if (conversation == null) continue;
 
       final updated = conversation.copyWith(
         title: (nextTitle?.isNotEmpty ?? false) ? nextTitle : conversation.title,
@@ -1248,27 +1301,22 @@ class AegisChatService {
     await _init();
     final room = _conversations[roomId];
     if (room == null) return const <Map<String, dynamic>>[];
-    final results = <Map<String, dynamic>>[];
-    const batchSize = 6;
     final ids = room.memberUserIds;
-    for (var i = 0; i < ids.length; i += batchSize) {
-      final chunk = ids.sublist(i, (i + batchSize).clamp(0, ids.length));
-      final batch = await Future.wait(
-        chunk.map((id) async {
-          try {
-            final info = await getUserInfo(id);
-            return {
-              'userId': id,
-              'displayName': info['displayName'] ?? info['username'] ?? id,
-              'avatarUrl': info['avatarUrl'],
-            };
-          } catch (_) {
-            return {'userId': id, 'displayName': id, 'avatarUrl': null};
-          }
-        }),
-      );
-      results.addAll(batch);
-    }
+    // Fetch all members in parallel with bounded concurrency.
+    final results = await Future.wait(
+      ids.map((id) async {
+        try {
+          final info = await getUserInfo(id);
+          return {
+            'userId': id,
+            'displayName': info['displayName'] ?? info['username'] ?? id,
+            'avatarUrl': info['avatarUrl'],
+          };
+        } catch (_) {
+          return {'userId': id, 'displayName': id, 'avatarUrl': null};
+        }
+      }),
+    );
     return results;
   }
 

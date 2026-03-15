@@ -46,15 +46,23 @@ class AegisChatLocalStore {
     return _loadBootstrap();
   }
 
-  Future<List<Map<String, dynamic>>> loadRoomMessagesJson(String roomId) async {
-    final rows = await (_database.select(_database.aegisMessages)
-          ..where((table) => table.roomId.equals(roomId))
-          ..orderBy([
-            (table) => OrderingTerm.asc(table.sentAtEpochMs),
-          ]))
-        .get();
+  Future<List<Map<String, dynamic>>> loadRoomMessagesJson(
+    String roomId, {
+    int? limit,
+  }) async {
+    final query = _database.select(_database.aegisMessages)
+      ..where((table) => table.roomId.equals(roomId))
+      ..orderBy([
+        (table) => OrderingTerm.desc(table.sentAtEpochMs),
+      ]);
+    if (limit != null) {
+      query.limit(limit);
+    }
+    final rows = await query.get();
+    // Reverse to chronological order (we fetched newest-first for LIMIT).
+    final ordered = rows.reversed;
 
-    return rows
+    return ordered
         .map(
           (row) => <String, dynamic>{
             'id': row.id,
@@ -90,17 +98,13 @@ class AegisChatLocalStore {
 
       final roomsToRewrite = dirtyRoomIds.difference(deletedRoomIds);
       for (final roomId in roomsToRewrite) {
-        await (_database.delete(_database.aegisMessages)
-              ..where((table) => table.roomId.equals(roomId)))
-            .go();
-
         final roomMessages = roomMessagesJsonById[roomId] ?? const [];
         if (roomMessages.isEmpty) {
           continue;
         }
 
         await _database.batch((batch) {
-          batch.insertAll(
+          batch.insertAllOnConflictUpdate(
             _database.aegisMessages,
             roomMessages
                 .map((message) => _messageCompanionFromJson(roomId, message))

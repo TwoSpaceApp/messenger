@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/config/theme_builder.dart';
 import 'package:two_space_app/core/constants/app_colors.dart';
@@ -193,25 +194,95 @@ class TwoSpaceApp extends ConsumerWidget {
     }
 
     final goRouter = ref.watch(routerProvider);
-    final appSettingsListenable = Listenable.merge(<Listenable>[
-      SettingsService.languageNotifier,
-      SettingsService.themeNotifier,
-      SettingsService.paleVioletNotifier,
-      SettingsService.themeModeNotifier,
-      SettingsService.textScaleNotifier,
-      DevToolsService.performanceOverlayEnabled,
-    ]);
 
+    return ValueListenableBuilder<bool>(
+      valueListenable: DevToolsService.performanceOverlayEnabled,
+      builder: (context, showPerformanceOverlay, _) {
+        return ValueListenableBuilder<String>(
+          valueListenable: SettingsService.languageNotifier,
+          builder: (context, languageCode, _) {
+            return _ThemeBuilder(
+              showPerformanceOverlay: showPerformanceOverlay,
+              languageCode: languageCode,
+              goRouter: goRouter,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildInitializationErrorApp(List<InitStepResult> failures) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: AppColors.backgroundError,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Critical Initialization Failure', // Hardcoded English text
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...failures.map(
+                  (f) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      '${f.stepName}: ${f.error}',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Rebuilds only when theme / text-scale settings change, keeping
+/// language and performance-overlay changes isolated in outer builders.
+class _ThemeBuilder extends StatelessWidget {
+  const _ThemeBuilder({
+    required this.showPerformanceOverlay,
+    required this.languageCode,
+    required this.goRouter,
+  });
+
+  final bool showPerformanceOverlay;
+  final String languageCode;
+  final GoRouter goRouter;
+
+  @override
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: appSettingsListenable,
+      animation: Listenable.merge(<Listenable>[
+        SettingsService.themeNotifier,
+        SettingsService.paleVioletNotifier,
+        SettingsService.themeModeNotifier,
+        SettingsService.textScaleNotifier,
+      ]),
       builder: (context, _) {
-        final languageCode = SettingsService.languageNotifier.value;
         final settings = SettingsService.themeNotifier.value;
         final paleVioletEnabled = SettingsService.paleVioletNotifier.value;
         final themeMode = SettingsService.themeModeNotifier.value;
         final textScale = SettingsService.textScaleNotifier.value;
-        final showPerformanceOverlay =
-            DevToolsService.performanceOverlayEnabled.value;
 
         final lightTheme = AppThemeBuilder.build(
           settings,
@@ -258,49 +329,6 @@ class TwoSpaceApp extends ConsumerWidget {
         }
         return app;
       },
-    );
-  }
-
-  Widget _buildInitializationErrorApp(List<InitStepResult> failures) {
-    return MaterialApp(
-      home: Scaffold(
-        backgroundColor: AppColors.backgroundError,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: AppColors.error,
-                  size: 48,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Critical Initialization Failure', // Hardcoded English text
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ...failures.map(
-                  (f) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      '${f.stepName}: ${f.error}',
-                      style: const TextStyle(color: AppColors.textSecondary),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -4,40 +4,36 @@ import 'dart:collection';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:two_space_app/core/providers/service_providers.dart';
 
-/// LRU cache implementation for user profiles
+/// LRU cache implementation for user profiles using LinkedHashMap
+/// for O(1) access-order operations.
 class UserProfileCache {
   UserProfileCache({this.capacity = 100})
-      : _cache = {},
-        _queue = Queue();
+      : _cache = LinkedHashMap<String, Map<String, dynamic>>();
   final int capacity;
-  final Map<String, Map<String, dynamic>> _cache;
-  final Queue<String> _queue;
+  final LinkedHashMap<String, Map<String, dynamic>> _cache;
 
-  /// Get a profile from the cache
+  /// Get a profile from the cache (O(1) — moves to end for LRU).
   Map<String, dynamic>? get(String userId) {
-    if (_cache.containsKey(userId)) {
-      // Move to front to mark as recently used
-      _queue.remove(userId);
-      _queue.addFirst(userId);
-      return _cache[userId];
+    final value = _cache.remove(userId);
+    if (value != null) {
+      _cache[userId] = value; // Re-insert at the end (most recently used).
+      return value;
     }
     return null;
   }
 
   /// Add or update a profile in the cache
   void set(String userId, Map<String, dynamic> profile) {
+    _cache.remove(userId); // Remove first so re-insert goes to end.
     if (_cache.length >= capacity) {
-      final lru = _queue.removeLast();
-      _cache.remove(lru);
+      _cache.remove(_cache.keys.first); // Evict least recently used.
     }
     _cache[userId] = profile;
-    _queue.addFirst(userId);
   }
 
   /// Clear the entire cache
   void clear() {
     _cache.clear();
-    _queue.clear();
   }
 }
 

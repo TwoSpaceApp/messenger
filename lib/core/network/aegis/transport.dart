@@ -31,6 +31,11 @@ class AegisTransport {
   /// или часть следующего. Буфер решает эту проблему.
   final List<int> _incomingBuffer = [];
 
+  /// Max incoming buffer size (16 MB) to protect against unbounded growth.
+  static const int _maxIncomingBufferSize = 16 * 1024 * 1024;
+
+  StreamSubscription<Uint8List>? _socketSubscription;
+
   final StreamController<Message> _messageController =
       StreamController<Message>.broadcast();
   final StreamController<void> _disconnectController =
@@ -131,6 +136,8 @@ class AegisTransport {
     _inboundMaskOffset = 0;
     _outboundMaskOffset = 0;
     AegisLogger.info('Disconnecting from server');
+    await _socketSubscription?.cancel();
+    _socketSubscription = null;
 
     try {
       await _socket.close();
@@ -219,7 +226,8 @@ class AegisTransport {
 
   /// Listen for incoming messages
   void _listenForMessages() {
-    _socket.listen(
+    _socketSubscription?.cancel();
+    _socketSubscription = _socket.listen(
       _handleIncomingData,
       onError: (error) {
         _isConnected = false;
@@ -235,6 +243,16 @@ class AegisTransport {
   /// Handle incoming data: accumulate in buffer and emit complete frames.
   void _handleIncomingData(Uint8List data) {
     _incomingBuffer.addAll(_applyInboundMask(data));
+    if (_incomingBuffer.length > _maxIncomingBufferSize) {
+      AegisLogger.error(
+        'Incoming buffer exceeded $_maxIncomingBufferSize bytes — '
+        'clearing and disconnecting.',
+      );
+      _incomingBuffer.clear();
+      _isConnected = false;
+      _disconnectController.add(null);
+      return;
+    }
     _processBuffer();
   }
 
