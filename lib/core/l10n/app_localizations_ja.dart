@@ -273,6 +273,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get messageInputHint => 'メッセージを入力...';
 
   @override
+  String get addCaptionHint => 'キャプションまたはメッセージを追加';
+
+  @override
+  String get unlockApp => 'ロック解除';
+
+  @override
+  String get unlockButton => 'ロック解除';
+
+  @override
+  String get dropFilesTitle => 'ファイルをドロップして添付';
+
+  @override
+  String get dropFilesSubtitle => 'メッセージ入力欄の上に表示されます。';
+
+  @override
+  String get videoUnavailable => '動画を利用できません';
+
+  @override
+  String get guestRole => 'ゲスト';
+
+  @override
   String get replyAction => '返信';
 
   @override

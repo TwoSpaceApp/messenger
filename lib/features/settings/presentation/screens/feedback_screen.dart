@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class FeedbackScreen extends StatefulWidget {
@@ -127,12 +128,14 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.suggestImprovementLabel),
         backgroundColor: theme.colorScheme.surface,
         elevation: 0,
       ),
-      body: SafeArea(
+      body: ScreenBackground(
+        child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Form(
@@ -232,6 +235,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

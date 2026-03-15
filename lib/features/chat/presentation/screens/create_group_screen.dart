@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/models/group.dart';
 import 'package:two_space_app/core/utils/responsive.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 
@@ -183,7 +185,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 700;
 
@@ -219,9 +220,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : LayoutBuilder(
+      backgroundColor: Colors.transparent,
+      body: ScreenBackground(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : LayoutBuilder(
               builder: (context, constraints) {
                 final maxWidth = constraints.maxWidth >= 1100 ? 860.0 : double.infinity;
                 return Center(
@@ -243,7 +246,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[800] : Colors.grey[200],
+                          color: AppColors.mediaPlaceholder(context),
                           borderRadius: BorderRadius.circular(60),
                           border: Border.all(
                             color: theme.colorScheme.primary
@@ -282,7 +285,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     decoration: InputDecoration(
                       hintText: l10n.roomNameHint,
                       filled: true,
-                      fillColor: isDark ? Colors.grey[900] : Colors.grey[50],
+                      fillColor: AppColors.mediaSurface(context),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
@@ -325,7 +328,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     decoration: InputDecoration(
                       hintText: l10n.roomTopicHint,
                       filled: true,
-                      fillColor: isDark ? Colors.grey[900] : Colors.grey[50],
+                      fillColor: AppColors.mediaSurface(context),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
@@ -408,6 +411,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 );
               },
             ),
+      ),
     );
   }
 }

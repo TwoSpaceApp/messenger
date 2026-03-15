@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/utils/responsive.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/features/people/data/models/person_entry.dart';
@@ -49,7 +50,7 @@ class PersonTile extends StatelessWidget {
         child: Text(
           trailingLabel ?? 'TwoSpace',
           style: theme.textTheme.labelSmall?.copyWith(
-            color: Colors.white,
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -88,7 +89,7 @@ class PersonTile extends StatelessWidget {
       actionIcon(
         icon: person.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
         onPressed: onFavoriteTap,
-        iconColor: person.isFavorite ? Colors.amberAccent : Colors.white70,
+        iconColor: person.isFavorite ? AppColors.favoriteActive(context) : AppColors.favoriteInactive(context),
       ),
       if (onInviteTap != null)
         actionIcon(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/highlighted_text.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/presentation/models/settings_catalog.dart';
 
 class SettingsSearchScreen extends StatefulWidget {
@@ -46,8 +47,10 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
     final sections = _sections(l10n);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.settingsTitle)),
-      body: SafeArea(
+      body: ScreenBackground(
+        child: SafeArea(
         child: Column(
           children: [
             Padding(
@@ -181,6 +184,7 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

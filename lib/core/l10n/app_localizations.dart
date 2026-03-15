@@ -606,6 +606,48 @@ abstract class AppLocalizations {
   /// **'Write a message...'**
   String get messageInputHint;
 
+  /// Hint shown when attachments are pending
+  ///
+  /// In en, this message translates to:
+  /// **'Add a caption or message'**
+  String get addCaptionHint;
+
+  /// Biometric prompt title
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock App'**
+  String get unlockApp;
+
+  /// Button to unlock app with biometrics
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlockButton;
+
+  /// Drag-and-drop overlay heading
+  ///
+  /// In en, this message translates to:
+  /// **'Drop files to attach'**
+  String get dropFilesTitle;
+
+  /// Drag-and-drop overlay description
+  ///
+  /// In en, this message translates to:
+  /// **'They will appear above the message field.'**
+  String get dropFilesSubtitle;
+
+  /// Shown when video cannot be loaded
+  ///
+  /// In en, this message translates to:
+  /// **'Video unavailable'**
+  String get videoUnavailable;
+
+  /// Guest role label
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get guestRole;
+
   /// Reply action label
   ///
   /// In en, this message translates to:

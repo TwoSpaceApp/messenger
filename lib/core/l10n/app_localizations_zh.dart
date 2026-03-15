@@ -273,6 +273,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageInputHint => '输入消息...';
 
   @override
+  String get addCaptionHint => '添加说明或消息';
+
+  @override
+  String get unlockApp => '解锁';
+
+  @override
+  String get unlockButton => '解锁';
+
+  @override
+  String get dropFilesTitle => '拖放文件以附加';
+
+  @override
+  String get dropFilesSubtitle => '它们将显示在消息输入框上方。';
+
+  @override
+  String get videoUnavailable => '视频不可用';
+
+  @override
+  String get guestRole => '访客';
+
+  @override
   String get replyAction => '回复';
 
   @override

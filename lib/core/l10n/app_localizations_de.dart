@@ -275,6 +275,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get messageInputHint => 'Nachricht schreiben...';
 
   @override
+  String get addCaptionHint => 'Bildunterschrift oder Nachricht hinzufügen';
+
+  @override
+  String get unlockApp => 'App entsperren';
+
+  @override
+  String get unlockButton => 'Entsperren';
+
+  @override
+  String get dropFilesTitle => 'Dateien zum Anhängen ablegen';
+
+  @override
+  String get dropFilesSubtitle =>
+      'Sie werden über dem Nachrichtenfeld angezeigt.';
+
+  @override
+  String get videoUnavailable => 'Video nicht verfügbar';
+
+  @override
+  String get guestRole => 'Gast';
+
+  @override
   String get replyAction => 'Antworten';
 
   @override

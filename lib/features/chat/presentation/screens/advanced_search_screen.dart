@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 
 class AdvancedSearchScreen extends StatefulWidget {
@@ -40,12 +41,12 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.advancedSearchTitle),
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface,
       ),
-      body: SafeArea(
+      body: ScreenBackground(
+        child: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             final maxWidth = constraints.maxWidth >= 1100 ? 860.0 : double.infinity;
@@ -231,6 +232,7 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
             );
           },
         ),
+      ),
       ),
     );
   }

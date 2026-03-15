@@ -274,6 +274,27 @@ class AppLocalizationsPl extends AppLocalizations {
   String get messageInputHint => 'Napisz wiadomość...';
 
   @override
+  String get addCaptionHint => 'Dodaj podpis lub wiadomość';
+
+  @override
+  String get unlockApp => 'Odblokuj';
+
+  @override
+  String get unlockButton => 'Odblokuj';
+
+  @override
+  String get dropFilesTitle => 'Upuść pliki do załączenia';
+
+  @override
+  String get dropFilesSubtitle => 'Pojawią się nad polem wiadomości.';
+
+  @override
+  String get videoUnavailable => 'Film niedostępny';
+
+  @override
+  String get guestRole => 'Gość';
+
+  @override
   String get replyAction => 'Odpowiedz';
 
   @override

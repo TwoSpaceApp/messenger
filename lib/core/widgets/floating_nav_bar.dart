@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
@@ -9,10 +10,12 @@ class FloatingNavBar extends StatefulWidget {
   const FloatingNavBar({
     required this.selectedIndex,
     required this.onItemSelected,
+    this.chatUnreadCount = 0,
     super.key,
   });
   final int selectedIndex;
   final Function(int) onItemSelected;
+  final int chatUnreadCount;
 
   @override
   State<FloatingNavBar> createState() => _FloatingNavBarState();
@@ -84,7 +87,7 @@ class _FloatingNavBarState extends State<FloatingNavBar>
                     borderRadius: BorderRadius.circular(35),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
+                        color: AppColors.shadow(context),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),
@@ -108,6 +111,7 @@ class _FloatingNavBarState extends State<FloatingNavBar>
                                     label: l10n.chatsTitle,
                                       index: 0,
                                       selected: widget.selectedIndex == 0,
+                                      badge: widget.chatUnreadCount,
                                       onTap: () => widget.onItemSelected(0)),
                                   _NavItem(
                                       icon: Icons.call_outlined,
@@ -151,12 +155,14 @@ class _NavItem extends StatelessWidget {
       required this.label,
       required this.index,
       required this.selected,
-      required this.onTap});
+      required this.onTap,
+      this.badge = 0});
   final IconData icon;
     final String label;
   final int index;
   final bool selected;
   final VoidCallback onTap;
+  final int badge;
 
   @override
   Widget build(BuildContext context) {
@@ -174,12 +180,39 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: selected
-                  ? Theme.of(context).primaryColor
-                  : Theme.of(context).iconTheme.color,
-              size: 24,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  icon,
+                  color: selected
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).iconTheme.color,
+                  size: 24,
+                ),
+                if (badge > 0)
+                  Positioned(
+                    right: -8,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.error,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(minWidth: 18, minHeight: 14),
+                      child: Text(
+                        badge > 99 ? '99+' : '$badge',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 2),
             Text(

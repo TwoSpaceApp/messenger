@@ -24,8 +24,17 @@ class AppThemeBuilder {
         isLightTheme ? const Color(0xFFF5F7FA) : const Color(0xFF0F1115);
     final surfaceColor =
         isLightTheme ? const Color(0xFFFFFFFF) : const Color(0xFF1D2227);
+    final surfaceContainerColor =
+        isLightTheme ? const Color(0xFFF0F2F5) : const Color(0xFF272C31);
+    final surfaceContainerHighColor =
+        isLightTheme ? const Color(0xFFE8EBF0) : const Color(0xFF2E3338);
     final onBackgroundColor = isLightTheme ? Colors.black87 : Colors.white;
     final onSurfaceColor = isLightTheme ? Colors.black87 : Colors.white;
+    final outlineColor = isLightTheme
+        ? Colors.black.withValues(alpha: 0.25)
+        : Colors.white.withValues(alpha: 0.25);
+    final errorColor =
+        isLightTheme ? const Color(0xFFD32F2F) : const Color(0xFFEF5350);
 
     final baseTheme = isLightTheme ? ThemeData.light() : ThemeData.dark();
 
@@ -60,9 +69,17 @@ class AppThemeBuilder {
           settings.compactMode ? VisualDensity.compact : VisualDensity.standard,
       colorScheme: baseTheme.colorScheme.copyWith(
         primary: primaryColor,
+        onPrimary: Colors.white,
         surface: surfaceColor,
+        surfaceContainer: surfaceContainerColor,
         onSurface: onSurfaceColor,
+        surfaceContainerHighest: surfaceContainerHighColor,
         secondary: primaryColor,
+        outline: outlineColor,
+        error: errorColor,
+        shadow: isLightTheme
+            ? Colors.black.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.25),
       ),
       textTheme: textTheme,
       appBarTheme: AppBarTheme(

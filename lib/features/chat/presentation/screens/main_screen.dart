@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/services/biometric_service.dart';
 import 'package:two_space_app/core/widgets/floating_nav_bar.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -21,6 +24,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   bool _isLocked = false;
   bool _biometricCheckInFlight = false;
   final Set<int> _initializedTabs = <int>{0};
+  int _totalUnread = 0;
+  StreamSubscription<List<Chat>>? _unreadSub;
 
   Widget _buildScreen(int index) {
     return switch (index) {
@@ -37,10 +42,17 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkBiometrics();
+    _unreadSub = AegisChatService().watchChats().listen((chats) {
+      final total = chats.fold<int>(0, (sum, c) => sum + c.unreadCount);
+      if (total != _totalUnread && mounted) {
+        setState(() => _totalUnread = total);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _unreadSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -69,7 +81,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     }
     
     try {
-      final success = await BiometricService.authenticate('Unlock App');
+      final success = await BiometricService.authenticate(AppLocalizations.of(context)?.unlockApp ?? 'Unlock App');
       if (success && mounted && _isLocked) {
         setState(() => _isLocked = false);
       }
@@ -97,7 +109,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _checkBiometrics,
-                child: const Text('Unlock'),
+                child: Text(AppLocalizations.of(context)?.unlockButton ?? 'Unlock'),
               ),
             ],
           ),
@@ -122,6 +134,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           FloatingNavBar(
             selectedIndex: _currentIndex,
             onItemSelected: _onTabChanged,
+            chatUnreadCount: _totalUnread,
           ),
         ],
       ),

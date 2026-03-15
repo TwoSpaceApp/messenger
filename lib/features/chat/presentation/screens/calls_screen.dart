@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
@@ -77,15 +78,15 @@ class _CallsScreenState extends State<CallsScreen> {
                               child: Text(
                                 l10n.callsTitle,
                                 style: theme.textTheme.titleLarge?.copyWith(
-                                  color: Colors.white,
+                                  color: theme.colorScheme.onSurface,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
                             IconButton(
                               onPressed: _openStartCall,
-                              icon: const Icon(Icons.add_ic_call_outlined,
-                                  color: Colors.white, size: 22),
+                              icon: Icon(Icons.add_ic_call_outlined,
+                                  color: theme.colorScheme.onSurface, size: 22),
                               tooltip: l10n.callsStartCallAction,
                               visualDensity: VisualDensity.compact,
                             ),
@@ -132,7 +133,7 @@ class _CallsScreenState extends State<CallsScreen> {
                                 child: Text(
                                   l10n.callsTopContactsTitle,
                                   style: theme.textTheme.titleSmall?.copyWith(
-                                    color: Colors.white70,
+                                    color: AppColors.subtitleText(context),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -185,15 +186,15 @@ class _CallsScreenState extends State<CallsScreen> {
         label: Text(label),
         selected: selected,
         onSelected: (_) => _controller.setFilter(filter),
-        backgroundColor: Colors.white.withValues(alpha: 0.10),
+        backgroundColor: AppColors.chipBackground(context),
         selectedColor:
             Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
         labelStyle: TextStyle(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.onSurface,
           fontSize: 13,
           fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
         ),
-        checkmarkColor: Colors.white,
+        checkmarkColor: Theme.of(context).colorScheme.onSurface,
         side: BorderSide.none,
         visualDensity: VisualDensity.compact,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -238,7 +239,7 @@ class _CallsScreenState extends State<CallsScreen> {
                     child: Text(
                       section.title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: Colors.white70,
+                            color: AppColors.subtitleText(context),
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.3,
                           ),
@@ -247,7 +248,7 @@ class _CallsScreenState extends State<CallsScreen> {
                   Text(
                     '${section.items.length}',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Colors.white38,
+                          color: AppColors.hintText(context),
                           fontWeight: FontWeight.w700,
                         ),
                   ),
@@ -297,7 +298,7 @@ class _CallsScreenState extends State<CallsScreen> {
             title: Text(
               thread.person.displayName,
               style: TextStyle(
-                color: thread.missedCount > 0 ? Colors.redAccent : Colors.white,
+                color: thread.missedCount > 0 ? AppColors.danger(context) : Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -306,7 +307,7 @@ class _CallsScreenState extends State<CallsScreen> {
               child: Text(
                 _threadSubtitle(thread, l10n),
                 style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.72), fontSize: 13),
+                    color: AppColors.subtitleText(context), fontSize: 13),
               ),
             ),
             trailing: SizedBox(
@@ -319,7 +320,7 @@ class _CallsScreenState extends State<CallsScreen> {
                     _formatTime(thread.latest.startedAt, l10n),
                     style: TextStyle(
                         fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.6)),
+                        color: AppColors.hintText(context)),
                   ),
                   const SizedBox(height: 4),
                   Row(
@@ -329,14 +330,14 @@ class _CallsScreenState extends State<CallsScreen> {
                         onTap: () => _startCall(thread.person, false),
                         child: Icon(Icons.call_outlined,
                             size: 18,
-                            color: Colors.green.withValues(alpha: 0.92)),
+                    color: Colors.green.withValues(alpha: 0.92)),
                       ),
                       const SizedBox(width: 12),
                       GestureDetector(
                         onTap: () => _startCall(thread.person, true),
                         child: Icon(Icons.videocam_outlined,
                             size: 18,
-                            color: Colors.blue.withValues(alpha: 0.92)),
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.92)),
                       ),
                     ],
                   ),
@@ -442,7 +443,7 @@ class _CallsScreenState extends State<CallsScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                    color: Colors.grey, borderRadius: BorderRadius.circular(99)),
+                    color: AppColors.divider(context), borderRadius: BorderRadius.circular(99)),
               ),
               ListTile(
                 leading: PersonAvatar(
@@ -527,7 +528,7 @@ class _TopContactChip extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
               ),

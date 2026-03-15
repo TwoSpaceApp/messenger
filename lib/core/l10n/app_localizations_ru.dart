@@ -274,6 +274,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get messageInputHint => 'Напишите сообщение...';
 
   @override
+  String get addCaptionHint => 'Добавьте подпись или сообщение';
+
+  @override
+  String get unlockApp => 'Разблокировать';
+
+  @override
+  String get unlockButton => 'Разблокировать';
+
+  @override
+  String get dropFilesTitle => 'Перетащите файлы для прикрепления';
+
+  @override
+  String get dropFilesSubtitle => 'Они появятся над полем ввода.';
+
+  @override
+  String get videoUnavailable => 'Видео недоступно';
+
+  @override
+  String get guestRole => 'Гость';
+
+  @override
   String get replyAction => 'Ответить';
 
   @override

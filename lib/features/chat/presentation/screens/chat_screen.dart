@@ -9,6 +9,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart' as share;
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
@@ -354,14 +355,14 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Color _headerPresenceColor() {
+  Color _headerPresenceColor(BuildContext context) {
     switch (_headerPresenceStatus) {
       case 'online':
-        return const Color(0xFF4CD964);
+        return AppColors.onlineStatus(context);
       case 'recently':
-        return Colors.amberAccent;
+        return AppColors.recentlyStatus(context);
       default:
-        return Colors.white60;
+        return AppColors.offlineStatus(context);
     }
   }
 
@@ -1092,7 +1093,7 @@ class _ChatScreenState extends State<ChatScreen> {
       SnackBar(
         content: Text(msg),
         duration: const Duration(seconds: 2),
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: AppColors.danger(context),
       ),
     );
   }
@@ -1449,7 +1450,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     Icon(Icons.file_upload_outlined, color: colorScheme.primary, size: 34),
                     const SizedBox(height: 10),
                     Text(
-                      'Drop files to attach',
+                      AppLocalizations.of(context)!.dropFilesTitle,
                       style: TextStyle(
                         color: colorScheme.onSurface,
                         fontWeight: FontWeight.w700,
@@ -1457,7 +1458,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'They will appear above the message field.',
+                      AppLocalizations.of(context)!.dropFilesSubtitle,
                       style: TextStyle(
                         color: colorScheme.onSurfaceVariant,
                         fontSize: 12,
@@ -1582,7 +1583,7 @@ class _ChatScreenState extends State<ChatScreen> {
               : null;
             final caption = _messageCaption(m);
           final bubbleContent = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.white70)),
+              if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: AppColors.subtitleText(context))),
               const SizedBox(height: 6),
               if (m.type == 'm.image' && (m.mediaId != null && m.mediaId!.isNotEmpty))
                 ConstrainedBox(
@@ -1627,7 +1628,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   m.text,
                   softWrap: true,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
+                    color: m.isOwn ? AppColors.ownBubbleText(context) : AppColors.otherBubbleText(context),
                   ),
                 ),
               if (caption != null) ...[
@@ -1636,7 +1637,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   caption,
                   softWrap: true,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
+                    color: m.isOwn ? AppColors.ownBubbleText(context) : AppColors.otherBubbleText(context),
                   ),
                 ),
               ],
@@ -1647,7 +1648,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Text(
                     MessageTimeFormatter.formatTime(m.time),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.68),
+                      color: m.isOwn ? AppColors.ownBubbleText(context).withValues(alpha: 0.68) : AppColors.otherBubbleText(context).withValues(alpha: 0.68),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1677,18 +1678,23 @@ class _ChatScreenState extends State<ChatScreen> {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: const Color(0xFF21262C), borderRadius: BorderRadius.circular(12)),
+                        decoration: BoxDecoration(color: AppColors.reactionBackground(context), borderRadius: BorderRadius.circular(12)),
                         child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          Text(entry.key, style: TextStyle(fontSize: 14, color: ((entry.value as Map)['myEventId'] != null) ? const Color(0xFF0077FF) : Colors.white70)),
+                          Text(entry.key, style: TextStyle(fontSize: 14, color: ((entry.value as Map)['myEventId'] != null) ? Theme.of(context).colorScheme.primary : AppColors.subtitleText(context))),
                           const SizedBox(width: 6),
-                          Text('${(entry.value as Map)['count']}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70)),
+                          Text('${(entry.value as Map)['count']}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.subtitleText(context))),
                         ]),
                       ),
                     ),
                 ]),
               ]
             ]);
-          return Padding(
+
+          // Date separator
+          final showDateSep = messageIndex == 0 ||
+              _differentDay(visibleMessages[messageIndex - 1].time, m.time);
+
+          final messageWidget = Padding(
             padding: const EdgeInsets.only(bottom: 2),
             child: RepaintBoundary(
               child: Dismissible(
@@ -1701,7 +1707,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 background: Container(
                   alignment: Alignment.centerLeft,
                   padding: const EdgeInsets.only(left: 16),
-                  child: const Icon(Icons.reply, color: Colors.blue),
+                  child: Icon(Icons.reply, color: Theme.of(context).colorScheme.primary),
                 ),
                 child: KeyedSubtree(
                   key: key,
@@ -1743,6 +1749,22 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           );
+
+          if (!showDateSep) return messageWidget;
+          final l10nLocal = AppLocalizations.of(context)!;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _DateSeparator(
+                label: MessageTimeFormatter.formatDateSeparator(
+                  m.time,
+                  todayLabel: l10nLocal.callsTodaySection,
+                  yesterdayLabel: l10nLocal.yesterdayLabel,
+                ),
+              ),
+              messageWidget,
+            ],
+          );
         },
           childCount: visibleMessages.length +
               (timeline.loadingMoreHistory ? 1 : 0),
@@ -1760,7 +1782,7 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF21262C).withValues(alpha: 0.7),
+        backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
         title: InkWell(
           onTap: _directPeerUserId != null
               ? () => _openUserProfile(
@@ -1796,7 +1818,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 12,
-                          color: _headerPresenceColor(),
+                          color: _headerPresenceColor(context),
                         ),
                       ),
                   ],
@@ -1854,7 +1876,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     color: colorScheme.surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  child: const TypingIndicator(dotColor: Colors.white70),
+                                  child: TypingIndicator(dotColor: AppColors.subtitleText(context)),
                                 ),
                               ),
                             ),
@@ -1883,7 +1905,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   )
                                 else if (_voiceService.isRecording)
                                   IconButton(
-                                    icon: const Icon(Icons.mic, color: Colors.red),
+                                    icon: Icon(Icons.mic, color: AppColors.recording(context)),
                                     constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                                     onPressed: _voiceService.isRecording ? _stopVoiceAndSend : null,
                                   )
@@ -1895,7 +1917,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     style: TextStyle(color: colorScheme.onSurface),
                                     decoration: InputDecoration(
                                       hintText: _pendingAttachments.isNotEmpty
-                                          ? 'Add a caption or message'
+                                          ? AppLocalizations.of(context)!.addCaptionHint
                                           : AppLocalizations.of(context)!.messageInputHint,
                                       hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                                       border: InputBorder.none,
@@ -2327,16 +2349,16 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
       return Container(
         width: widget.maxWidth,
         height: widget.maxWidth * 0.62,
-        color: const Color(0xFF21262C),
+        color: AppColors.mediaPlaceholder(context),
       );
     }
     if (_error != null || _localPath == null) {
       return Container(
         width: widget.maxWidth * 0.68,
         height: widget.maxWidth * 0.42,
-        color: const Color(0xFF21262C),
-        child: const Center(
-          child: Icon(Icons.broken_image, color: Colors.white54),
+        color: AppColors.mediaPlaceholder(context),
+        child: Center(
+          child: Icon(Icons.broken_image, color: AppColors.iconMuted(context)),
         ),
       );
     }
@@ -2346,9 +2368,9 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF171A1F),
+            color: AppColors.mediaSurface(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            border: Border.all(color: AppColors.mediaBorder(context)),
           ),
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -2359,7 +2381,7 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
               children: [
                 Positioned.fill(
                   child: ColoredBox(
-                    color: const Color(0xFF171A1F),
+                    color: AppColors.mediaSurface(context),
                     child: Image.file(
                       File(_localPath!),
                       fit: BoxFit.contain,
@@ -2515,7 +2537,7 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
         height: widget.maxWidth * 0.56,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: const Color(0xFF21262C),
+          color: AppColors.mediaPlaceholder(context),
         ),
       );
     }
@@ -2526,16 +2548,16 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: const Color(0xFF21262C),
+          color: AppColors.mediaPlaceholder(context),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.broken_image, color: Colors.white54),
-            SizedBox(width: 8),
+            Icon(Icons.broken_image, color: AppColors.iconMuted(context)),
+            const SizedBox(width: 8),
             Flexible(
               child: Text(
-                'Video unavailable',
+                AppLocalizations.of(context)!.videoUnavailable,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -2555,9 +2577,9 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
           child: Container(
             width: widget.maxWidth,
             decoration: BoxDecoration(
-              color: const Color(0xFF171A1F),
+              color: AppColors.mediaSurface(context),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              border: Border.all(color: AppColors.mediaBorder(context)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -3292,6 +3314,40 @@ class _TriangleClipper extends CustomClipper<Path> {
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
+bool _differentDay(DateTime a, DateTime b) {
+  final la = a.toLocal();
+  final lb = b.toLocal();
+  return la.year != lb.year || la.month != lb.month || la.day != lb.day;
+}
+
+class _DateSeparator extends StatelessWidget {
+  const _DateSeparator({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: AppColors.dateSeparatorBg(context),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppColors.dateSeparatorText(context),
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SquishyBubble extends StatefulWidget {
   final Widget child;
   final bool isOwn;
@@ -3352,7 +3408,7 @@ class _SquishyBubbleState extends State<_SquishyBubble> with SingleTickerProvide
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           margin: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
-            color: widget.isOwn ? const Color(0xFF0077FF) : const Color(0xFF2E3338),
+            color: widget.isOwn ? AppColors.ownBubble(context) : AppColors.otherBubble(context),
             borderRadius: BorderRadius.circular(widget.bubbleRounding),
              border: widget.highlighted 
               ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)

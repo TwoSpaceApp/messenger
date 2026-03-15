@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class NotificationsScreen extends StatelessWidget {
@@ -10,10 +11,12 @@ class NotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.settingsNotificationNew),
       ),
-      body: ListView(
+      body: ScreenBackground(
+        child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           GlassCard(
@@ -65,6 +68,7 @@ class NotificationsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

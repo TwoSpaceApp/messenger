@@ -275,6 +275,27 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messageInputHint => 'Scrivi un messaggio...';
 
   @override
+  String get addCaptionHint => 'Aggiungi una didascalia o un messaggio';
+
+  @override
+  String get unlockApp => 'Sblocca';
+
+  @override
+  String get unlockButton => 'Sblocca';
+
+  @override
+  String get dropFilesTitle => 'Trascina file da allegare';
+
+  @override
+  String get dropFilesSubtitle => 'Appariranno sopra il campo messaggio.';
+
+  @override
+  String get videoUnavailable => 'Video non disponibile';
+
+  @override
+  String get guestRole => 'Ospite';
+
+  @override
   String get replyAction => 'Rispondi';
 
   @override

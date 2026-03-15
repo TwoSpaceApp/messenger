@@ -273,6 +273,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get messageInputHint => '메시지 입력...';
 
   @override
+  String get addCaptionHint => '캡션 또는 메시지 추가';
+
+  @override
+  String get unlockApp => '잠금 해제';
+
+  @override
+  String get unlockButton => '잠금 해제';
+
+  @override
+  String get dropFilesTitle => '파일을 놓아 첨부';
+
+  @override
+  String get dropFilesSubtitle => '메시지 입력란 위에 나타납니다.';
+
+  @override
+  String get videoUnavailable => '동영상을 사용할 수 없음';
+
+  @override
+  String get guestRole => '게스트';
+
+  @override
   String get replyAction => '답장';
 
   @override

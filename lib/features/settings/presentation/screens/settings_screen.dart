@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/theme_switcher.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
@@ -54,7 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(l10n.logoutAction,
-                style: const TextStyle(color: Colors.red)),
+                style: TextStyle(color: AppColors.danger(context))),
           ),
         ],
       ),
@@ -205,6 +207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.settingsTitle),
         elevation: 0,
@@ -216,7 +219,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-      body: SafeArea(
+      body: ScreenBackground(
+        child: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,7 +556,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Text(
                   l10n.dangerZoneSection,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.red.shade400,
+                        color: AppColors.danger(context),
                         fontWeight: FontWeight.bold,
                       ),
                 ),
@@ -561,7 +565,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     border:
-                        Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        Border.all(color: AppColors.danger(context).withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Material(
@@ -573,7 +577,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
-                            Icon(Icons.logout, color: Colors.red.shade400),
+                            Icon(Icons.logout, color: AppColors.danger(context)),
                             const SizedBox(width: 16),
                             Expanded(
                               child: Column(
@@ -585,7 +589,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         .textTheme
                                         .bodyLarge
                                         ?.copyWith(
-                                          color: Colors.red.shade400,
+                                          color: AppColors.danger(context),
                                           fontWeight: FontWeight.w600,
                                         ),
                                   ),
@@ -596,7 +600,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         .bodySmall
                                         ?.copyWith(
                                           color:
-                                              Colors.red.withValues(alpha: 0.6),
+                                              AppColors.danger(context).withValues(alpha: 0.6),
                                         ),
                                   ),
                                 ],
@@ -620,6 +624,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

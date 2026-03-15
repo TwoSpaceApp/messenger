@@ -4,11 +4,13 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/services/navigation_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
@@ -367,7 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color _presenceColor(BuildContext context) {
     final status = (_user?['presenceStatus'] as String?)?.toLowerCase();
     if (status == 'online') {
-      return Colors.green;
+      return AppColors.onlineStatus(context);
     }
     return Theme.of(context).colorScheme.outline;
   }
@@ -398,9 +400,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final username = _username();
     final profileId = _profileId();
     final presenceLabel = _presenceLabel(l10n);
-    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.profileTitle),
         centerTitle: false,
@@ -415,7 +416,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
         ],
       ),
-      body: _loading
+      body: ScreenBackground(
+        child: _loading
           ? const AppLoadingState()
           : LayoutBuilder(
               builder: (context, constraints) {
@@ -514,6 +516,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
               },
             ),
+      ),
     );
   }
 

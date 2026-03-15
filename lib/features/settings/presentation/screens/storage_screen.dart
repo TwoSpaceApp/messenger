@@ -5,6 +5,7 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/storage_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 
 class StorageScreen extends StatefulWidget {
   const StorageScreen({super.key});
@@ -86,8 +87,13 @@ class _StorageScreenState extends State<StorageScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final snapshot = _snapshot;
+    final theme = Theme.of(context);
+    final appColor = theme.colorScheme.primary;
+    final mediaColor = theme.colorScheme.error;
+    final filesColor = theme.colorScheme.tertiary;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.settingsStorageManagement),
         actions: [
@@ -97,7 +103,8 @@ class _StorageScreenState extends State<StorageScreen> {
           ),
         ],
       ),
-      body: _loading
+      body: ScreenBackground(
+        child: _loading
           ? const AppLoadingState()
           : snapshot == null
             ? AppEmptyState(
@@ -122,7 +129,13 @@ class _StorageScreenState extends State<StorageScreen> {
                             SizedBox(
                               height: 200,
                               child: CustomPaint(
-                                painter: StoragePieChart(snapshot: snapshot),
+                                painter: StoragePieChart(
+                                  snapshot: snapshot,
+                                  appColor: appColor,
+                                  mediaColor: mediaColor,
+                                  filesColor: filesColor,
+                                  trackColor: theme.colorScheme.onSurface.withValues(alpha: 0.15),
+                                ),
                                 child: Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -151,14 +164,14 @@ class _StorageScreenState extends State<StorageScreen> {
                     ),
                     const SizedBox(height: 16),
                     _StorageTile(
-                      color: Colors.blue,
+                      color: appColor,
                       title: l10n.settingsStorageAppSize,
                       value: StorageService.formatBytes(snapshot.appDataBytes),
                       icon: Icons.phone_iphone_rounded,
                     ),
                     const SizedBox(height: 12),
                     _StorageSelectionTile(
-                      color: Colors.red,
+                      color: mediaColor,
                       title: l10n.mediaLabel,
                       value: StorageService.formatBytes(snapshot.mediaBytes),
                       icon: Icons.perm_media_rounded,
@@ -169,7 +182,7 @@ class _StorageScreenState extends State<StorageScreen> {
                     ),
                     const SizedBox(height: 12),
                     _StorageSelectionTile(
-                      color: Colors.green,
+                      color: filesColor,
                       title: l10n.filesLabel,
                       value: StorageService.formatBytes(snapshot.fileBytes),
                       icon: Icons.folder_copy_rounded,
@@ -198,14 +211,25 @@ class _StorageScreenState extends State<StorageScreen> {
                     ),
                   ],
                 ),
+      ),
     );
   }
 }
 
 class StoragePieChart extends CustomPainter {
-  const StoragePieChart({required this.snapshot});
+  const StoragePieChart({
+    required this.snapshot,
+    required this.appColor,
+    required this.mediaColor,
+    required this.filesColor,
+    required this.trackColor,
+  });
 
   final StorageSnapshot snapshot;
+  final Color appColor;
+  final Color mediaColor;
+  final Color filesColor;
+  final Color trackColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -218,15 +242,15 @@ class StoragePieChart extends CustomPainter {
       ..strokeWidth = 22
       ..strokeCap = StrokeCap.round;
 
-    paint.color = Colors.grey.withValues(alpha: 0.15);
+    paint.color = trackColor;
     canvas.drawArc(rect, 0, pi * 2, false, paint);
 
     if (total <= 0) return;
 
     final segments = [
-      (snapshot.appDataBytes, Colors.blue),
-      (snapshot.mediaBytes, Colors.red),
-      (snapshot.fileBytes, Colors.green),
+      (snapshot.appDataBytes, appColor),
+      (snapshot.mediaBytes, mediaColor),
+      (snapshot.fileBytes, filesColor),
     ];
 
     var startAngle = -pi / 2;
@@ -242,7 +266,11 @@ class StoragePieChart extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant StoragePieChart oldDelegate) {
-    return oldDelegate.snapshot != snapshot;
+    return oldDelegate.snapshot != snapshot ||
+        oldDelegate.appColor != appColor ||
+        oldDelegate.mediaColor != mediaColor ||
+        oldDelegate.filesColor != filesColor ||
+        oldDelegate.trackColor != trackColor;
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
@@ -85,7 +86,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                 Text(
                                   l10n.peopleTitle,
                                   style: theme.textTheme.titleLarge?.copyWith(
-                                    color: Colors.white,
+                                    color: theme.colorScheme.onSurface,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -95,7 +96,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.white70,
+                                    color: AppColors.subtitleText(context),
                                   ),
                                 ),
                               ],
@@ -564,7 +565,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           person.isFavorite
                               ? Icons.star_rounded
                               : Icons.star_border_rounded,
-                          color: person.isFavorite ? Colors.amber : null,
+                          color: person.isFavorite ? AppColors.favoriteActive(ctx) : null,
                         ),
                         title: Text(
                           person.isFavorite
@@ -640,7 +641,7 @@ class _SectionLabel extends StatelessWidget {
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Colors.white70,
+                    color: AppColors.subtitleText(context),
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,
                   ),
@@ -650,7 +651,7 @@ class _SectionLabel extends StatelessWidget {
             Text(
               '$count',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.white38,
+                    color: AppColors.hintText(context),
                     fontWeight: FontWeight.w700,
                   ),
             ),
@@ -676,9 +677,9 @@ class _PermissionBanner extends StatelessWidget {
           final content = <Widget>[
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.contact_phone_outlined,
-                  color: Colors.white70,
+                  color: AppColors.subtitleText(context),
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -688,7 +689,7 @@ class _PermissionBanner extends StatelessWidget {
                     style: Theme.of(context)
                         .textTheme
                         .bodySmall
-                        ?.copyWith(color: Colors.white70),
+                        ?.copyWith(color: AppColors.subtitleText(context)),
                   ),
                 ),
               ],

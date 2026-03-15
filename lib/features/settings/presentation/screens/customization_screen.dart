@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -99,7 +100,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
                       onPressed: () => Navigator.pop(context),
                     ),
                     const AppLogo(large: false),
@@ -108,7 +109,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                       l10n.customizationTitle,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -119,13 +120,13 @@ class _CustomizationScreenState extends State<CustomizationScreen>
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(20),
+                  color: AppColors.chipBackground(context),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TabBar(
                   controller: _tabController,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white60,
+                  labelColor: theme.colorScheme.onSurface,
+                  unselectedLabelColor: AppColors.subtitleText(context),
                   indicatorColor: theme.colorScheme.primary,
                   indicatorSize: TabBarIndicatorSize.tab,
                   tabs: [
@@ -165,7 +166,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
         children: [
           Card(
             elevation: 2,
-            color: Colors.white.withAlpha(20),
+            color: AppColors.chipBackground(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
@@ -180,10 +181,10 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                       const SizedBox(width: 12),
                       Text(
                         l10n.selectColorTheme,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -193,7 +194,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                     l10n.themeAppliesEverywhere,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withAlpha(150),
+                      color: AppColors.hintText(context),
                     ),
                   ),
                 ],
@@ -227,9 +228,9 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                           end: Alignment.bottomRight,
                         )
                       : null,
-                  color: selected ? null : Colors.white.withAlpha(20),
+                  color: selected ? null : AppColors.chipBackground(context),
                   border: Border.all(
-                    color: selected ? Color(v) : Colors.white.withAlpha(50),
+                    color: selected ? Color(v) : AppColors.divider(context),
                     width: selected ? 2 : 1,
                   ),
                   boxShadow: selected
@@ -258,7 +259,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                               color: Color(v),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: Colors.white.withAlpha(100), width: 2),
+                                  color: AppColors.hintText(context), width: 2),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -268,7 +269,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                               style: TextStyle(
                                 color: selected
                                     ? Colors.white
-                                    : Colors.white.withAlpha(200),
+                                    : AppColors.subtitleText(context),
                                 fontWeight: selected
                                     ? FontWeight.w600
                                     : FontWeight.w400,
@@ -302,7 +303,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
         children: [
           Card(
             elevation: 2,
-            color: Colors.white.withAlpha(20),
+            color: AppColors.chipBackground(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
@@ -317,10 +318,10 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                       const SizedBox(width: 12),
                       Text(
                         l10n.fontSettingsTitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -330,7 +331,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                     l10n.selectFontFamily,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withAlpha(150),
+                      color: AppColors.hintText(context),
                     ),
                   ),
                 ],
@@ -343,7 +344,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withAlpha(200),
+              color: AppColors.subtitleText(context),
             ),
           ),
           const SizedBox(height: 12),
@@ -357,7 +358,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 avatar: sel
-                    ? const Icon(Icons.check, size: 18, color: Colors.white)
+                    ? Icon(Icons.check, size: 18, color: Theme.of(context).colorScheme.onSurface)
                     : null,
                 label: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -378,9 +379,9 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                 selected: sel,
                 selectedColor:
                     Theme.of(context).colorScheme.primary.withAlpha(150),
-                backgroundColor: Colors.white.withAlpha(20),
+                backgroundColor: AppColors.chipBackground(context),
                 labelStyle: TextStyle(
-                    color: sel ? Colors.white : Colors.white.withAlpha(180)),
+                    color: sel ? Theme.of(context).colorScheme.onSurface : AppColors.subtitleText(context)),
                 onSelected: (_) {
                   _setFont(f);
                   setState(() => _selectedFont = f);
@@ -394,13 +395,13 @@ class _CustomizationScreenState extends State<CustomizationScreen>
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withAlpha(200),
+              color: AppColors.subtitleText(context),
             ),
           ),
           const SizedBox(height: 12),
           Card(
             elevation: 1,
-            color: Colors.white.withAlpha(15),
+            color: AppColors.cardOverlay(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
@@ -411,8 +412,8 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.format_size,
-                              size: 20, color: Colors.white70),
+                          Icon(Icons.format_size,
+                              size: 20, color: AppColors.subtitleText(context)),
                           Expanded(
                             child: Slider(
                               min: 300,
@@ -434,8 +435,8 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                             alignment: Alignment.center,
                             child: Text(
                               '$_selectedWeight',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -449,7 +450,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                           fontFamily: _selectedFont,
                           fontWeight: _resolveFontWeight(_selectedWeight),
                           fontSize: 18,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -474,7 +475,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
           // Floating Circles Section
           Card(
             elevation: 2,
-            color: Colors.white.withAlpha(20),
+            color: AppColors.chipBackground(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
@@ -489,10 +490,10 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                       const SizedBox(width: 12),
                       Text(
                         l10n.floatingCirclesLabel,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -502,7 +503,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                     l10n.circlesDesc,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withAlpha(150),
+                      color: AppColors.hintText(context),
                     ),
                   ),
                 ],
@@ -513,20 +514,20 @@ class _CustomizationScreenState extends State<CustomizationScreen>
 
           Card(
             elevation: 1,
-            color: Colors.white.withAlpha(15),
+            color: AppColors.cardOverlay(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Column(
               children: [
                 SwitchListTile(
-                  secondary: const Icon(Icons.blur_on, color: Colors.white70),
+                  secondary: Icon(Icons.blur_on, color: AppColors.subtitleText(context)),
                   title: Text(l10n.enableCircles,
-                      style: const TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                   subtitle: Text(
                     _enableFloatingCircles
                         ? l10n.circlesVisible
                         : l10n.circlesHidden,
-                    style: TextStyle(color: Colors.white.withAlpha(150)),
+                    style: TextStyle(color: AppColors.hintText(context)),
                   ),
                   value: _enableFloatingCircles,
                   onChanged: (v) async {
@@ -534,14 +535,14 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                     await SettingsService.updateTheme(enableFloatingCircles: v);
                   },
                 ),
-                const Divider(height: 1, color: Colors.white24),
+                Divider(height: 1, color: AppColors.divider(context)),
                 SwitchListTile(
-                  secondary: const Icon(Icons.sensors, color: Colors.white70),
+                  secondary: Icon(Icons.sensors, color: AppColors.subtitleText(context)),
                   title: Text(l10n.parallaxEffect,
-                      style: const TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                   subtitle: Text(
                     _enableParallax ? l10n.reactOnTilt : l10n.staticMotion,
-                    style: TextStyle(color: Colors.white.withAlpha(150)),
+                    style: TextStyle(color: AppColors.hintText(context)),
                   ),
                   value: _enableParallax,
                   onChanged: _enableFloatingCircles
@@ -559,7 +560,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
 
           Card(
             elevation: 1,
-            color: Colors.white.withAlpha(15),
+            color: AppColors.cardOverlay(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
@@ -569,17 +570,17 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.speed, color: Colors.white70, size: 20),
+                      Icon(Icons.speed, color: AppColors.subtitleText(context), size: 20),
                       const SizedBox(width: 8),
                       Text(
                         l10n.circlesSpeedLabel,
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
                       Text(
                         '${(_floatingCirclesSpeed * 100).round()}%',
-                        style: TextStyle(color: Colors.white.withAlpha(180)),
+                        style: TextStyle(color: AppColors.subtitleText(context)),
                       ),
                     ],
                   ),
@@ -606,11 +607,11 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                       Text(l10n.speedSlow,
                           style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withAlpha(120))),
+                              color: AppColors.hintText(context))),
                       Text(l10n.speedFast,
                           style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withAlpha(120))),
+                              color: AppColors.hintText(context))),
                     ],
                   ),
                 ],
@@ -622,7 +623,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
 
           Card(
             elevation: 1,
-            color: Colors.white.withAlpha(15),
+            color: AppColors.cardOverlay(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
@@ -632,18 +633,18 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.opacity,
-                          color: Colors.white70, size: 20),
+                      Icon(Icons.opacity,
+                          color: AppColors.subtitleText(context), size: 20),
                       const SizedBox(width: 8),
                       Text(
                         l10n.brightnessLabel,
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
                       Text(
                         '${(_floatingCirclesOpacity * 100).round()}%',
-                        style: TextStyle(color: Colors.white.withAlpha(180)),
+                        style: TextStyle(color: AppColors.subtitleText(context)),
                       ),
                     ],
                   ),
@@ -669,11 +670,11 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                       Text(l10n.dimOpacity,
                           style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withAlpha(120))),
+                              color: AppColors.hintText(context))),
                       Text(l10n.brightOpacity,
                           style: TextStyle(
                               fontSize: 12,
-                              color: Colors.white.withAlpha(120))),
+                              color: AppColors.hintText(context))),
                     ],
                   ),
                 ],
@@ -686,7 +687,7 @@ class _CustomizationScreenState extends State<CustomizationScreen>
           // Other UI settings
           Card(
             elevation: 2,
-            color: Colors.white.withAlpha(20),
+            color: AppColors.chipBackground(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Padding(
@@ -701,10 +702,10 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                       const SizedBox(width: 12),
                       Text(
                         l10n.advancedSettingsLabel,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -717,18 +718,18 @@ class _CustomizationScreenState extends State<CustomizationScreen>
 
           Card(
             elevation: 1,
-            color: Colors.white.withAlpha(15),
+            color: AppColors.cardOverlay(context),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(UITokens.corner)),
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.text_fields, color: Colors.white70),
+                  leading: Icon(Icons.text_fields, color: AppColors.subtitleText(context)),
                   title: Text(l10n.textSizeLabel,
-                      style: const TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                   subtitle: Text(
                     '${_fontSize.toStringAsFixed(0)} pt',
-                    style: TextStyle(color: Colors.white.withAlpha(150)),
+                    style: TextStyle(color: AppColors.hintText(context)),
                   ),
                   trailing: SizedBox(
                     width: 120,
@@ -744,14 +745,14 @@ class _CustomizationScreenState extends State<CustomizationScreen>
                     ),
                   ),
                 ),
-                const Divider(height: 1, color: Colors.white24),
+                Divider(height: 1, color: AppColors.divider(context)),
                 SwitchListTile(
-                  secondary: const Icon(Icons.compress, color: Colors.white70),
+                  secondary: Icon(Icons.compress, color: AppColors.subtitleText(context)),
                   title: Text(l10n.compactModeLabel,
-                      style: const TextStyle(color: Colors.white)),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                   subtitle: Text(
                     l10n.compactMode,
-                    style: TextStyle(color: Colors.white.withAlpha(150)),
+                    style: TextStyle(color: AppColors.hintText(context)),
                   ),
                   value: _compactMode,
                   onChanged: (v) async {
