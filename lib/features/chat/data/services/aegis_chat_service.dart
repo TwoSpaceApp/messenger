@@ -215,7 +215,10 @@ class AegisChatService {
   Timer? _persistTimer;
   Future<void>? _persistInFlight;
   Future<bool>? _chatRefreshInFlight;
-  final Set<String> _dirtyRoomIds = <String>{};
+    final Map<String, Map<String, AegisRoomMessage>> _dirtyMessagesByRoom =
+      <String, Map<String, AegisRoomMessage>>{};
+    final Map<String, Set<String>> _deletedMessageIdsByRoom =
+      <String, Set<String>>{};
   final Set<String> _deletedRoomIds = <String>{};
   bool _conversationsDirty = false;
   bool _profilesDirty = false;
@@ -244,7 +247,8 @@ class AegisChatService {
   final Set<String> _hydratedRoomIds = <String>{};
   StreamSubscription<List<Chat>>? _syncSub;
   bool _chatChangeQueued = false;
-  final Set<String> _queuedRoomIds = <String>{};
+  final Map<String, Timer> _roomEmitTimers = <String, Timer>{};
+  Timer? _chatEmitTimer;
 
   String get homeserver => 'aegis://${_auth.username ?? 'server'}';
 
@@ -391,6 +395,12 @@ class AegisChatService {
     await _incomingSub?.cancel();
     await _localStore.close();
     _attached = false;
+    for (final timer in _roomEmitTimers.values) {
+      timer.cancel();
+    }
+    _roomEmitTimers.clear();
+    _chatEmitTimer?.cancel();
+    _chatEmitTimer = null;
     for (final controller in _roomChanges.values) {
       await controller.close();
     }
@@ -406,6 +416,19 @@ class AegisChatService {
       if (!_chatListEquals(lastSnapshot, next)) {
         lastSnapshot = next;
         yield next;
+      }
+    }
+  }
+
+  Stream<int> watchUnreadChatsCount() async* {
+    await _init();
+    var lastCount = _currentUnreadChatsCount();
+    yield lastCount;
+    await for (final _ in _chatChanges.stream) {
+      final nextCount = _currentUnreadChatsCount();
+      if (nextCount != lastCount) {
+        lastCount = nextCount;
+        yield nextCount;
       }
     }
   }
@@ -452,6 +475,16 @@ class AegisChatService {
     final items = _conversations.values.toList()
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     return items.map(_conversationToChat).toList();
+  }
+
+  int _currentUnreadChatsCount() {
+    var total = 0;
+    for (final conversation in _conversations.values) {
+      if (conversation.unreadCount > 0) {
+        total++;
+      }
+    }
+    return total;
   }
 
   Chat _conversationToChat(_StoredConversation conversation) {
@@ -1021,7 +1054,7 @@ class AegisChatService {
       deliveredAt: previous.deliveredAt,
       readAt: previous.readAt,
     );
-    _dirtyRoomIds.add(roomId);
+    _markMessageDirty(roomId, list[index]);
     await _persist();
     _emitRoomChanged(roomId);
     _emitChanged();
@@ -1042,7 +1075,7 @@ class AegisChatService {
       }
     }
     _messages[roomId]?.removeWhere((element) => element.id == eventId);
-    _dirtyRoomIds.add(roomId);
+    _markMessageDeleted(roomId, eventId);
     await _persist();
     _emitRoomChanged(roomId);
     _emitChanged();
@@ -1068,11 +1101,13 @@ class AegisChatService {
       _markConversationsDirty();
     }
     _messages.remove(roomId);
-    _dirtyRoomIds.remove(roomId);
+    _dirtyMessagesByRoom.remove(roomId);
+    _deletedMessageIdsByRoom.remove(roomId);
     _deletedRoomIds.add(roomId);
     _storedRoomIds.remove(roomId);
     _hydratedRoomIds.remove(roomId);
     final controller = _roomChanges.remove(roomId);
+    _roomEmitTimers.remove(roomId)?.cancel();
     await controller?.close();
     await _persist();
     _emitChanged();
@@ -1367,6 +1402,10 @@ class AegisChatService {
     changed = await _refreshChatsFromServer(force: true) || changed;
     if (changed) {
       _emitChanged();
+    }
+
+    if (preloadRooms <= 0 || messageLimit <= 0) {
+      return;
     }
 
     // Lazy background refresh of top rooms — don't block caller
@@ -1931,10 +1970,36 @@ class AegisChatService {
     }
     _storedRoomIds.add(roomId);
     _hydratedRoomIds.add(roomId);
-    _dirtyRoomIds.add(roomId);
+    _markMessageDirty(roomId, message);
     await _persist();
     _emitRoomChanged(roomId);
     _emitChanged();
+  }
+
+  void _markMessageDirty(String roomId, AegisRoomMessage message) {
+    _dirtyMessagesByRoom
+        .putIfAbsent(roomId, () => <String, AegisRoomMessage>{})[message.id] =
+        message;
+    final deletedIds = _deletedMessageIdsByRoom[roomId];
+    if (deletedIds != null) {
+      deletedIds.remove(message.id);
+      if (deletedIds.isEmpty) {
+        _deletedMessageIdsByRoom.remove(roomId);
+      }
+    }
+  }
+
+  void _markMessageDeleted(String roomId, String messageId) {
+    final dirtyMessages = _dirtyMessagesByRoom[roomId];
+    if (dirtyMessages != null) {
+      dirtyMessages.remove(messageId);
+      if (dirtyMessages.isEmpty) {
+        _dirtyMessagesByRoom.remove(roomId);
+      }
+    }
+    _deletedMessageIdsByRoom
+        .putIfAbsent(roomId, () => <String>{})
+        .add(messageId);
   }
 
   void _handleIncomingMessage(Message message) {
@@ -2174,9 +2239,42 @@ class AegisChatService {
     _messages[roomId] = nextMessages;
     _storedRoomIds.add(roomId);
     _hydratedRoomIds.add(roomId);
-    _dirtyRoomIds.add(roomId);
+    _markMessageBatchDirty(roomId, currentMessages, nextMessages);
     await _persist();
     return true;
+  }
+
+  void _markMessageBatchDirty(
+    String roomId,
+    List<AegisRoomMessage> current,
+    List<AegisRoomMessage> next,
+  ) {
+    if (next.isEmpty) {
+      return;
+    }
+
+    final currentById = <String, AegisRoomMessage>{
+      for (final message in current) message.id: message,
+    };
+    for (final message in next) {
+      final existing = currentById[message.id];
+      if (existing == null || !_sameMessage(existing, message)) {
+        _markMessageDirty(roomId, message);
+      }
+    }
+  }
+
+  bool _sameMessage(AegisRoomMessage left, AegisRoomMessage right) {
+    return left.id == right.id &&
+        left.content == right.content &&
+        left.time == right.time &&
+        left.type == right.type &&
+        left.mediaId == right.mediaId &&
+        left.senderId == right.senderId &&
+        left.isDelivered == right.isDelivered &&
+        left.isRead == right.isRead &&
+        left.deliveredAt == right.deliveredAt &&
+        left.readAt == right.readAt;
   }
 
   bool _sameMessages(
@@ -2188,16 +2286,7 @@ class AegisChatService {
     for (var index = 0; index < current.length; index++) {
       final left = current[index];
       final right = next[index];
-      if (left.id != right.id ||
-          left.content != right.content ||
-          left.time != right.time ||
-          left.type != right.type ||
-          left.mediaId != right.mediaId ||
-          left.senderId != right.senderId ||
-          left.isDelivered != right.isDelivered ||
-          left.isRead != right.isRead ||
-          left.deliveredAt != right.deliveredAt ||
-          left.readAt != right.readAt) {
+      if (!_sameMessage(left, right)) {
         return false;
       }
     }
@@ -2315,17 +2404,10 @@ class AegisChatService {
       resolvedContent = (attachment.text?.trim().isNotEmpty ?? false)
           ? attachment.text!.trim()
           : attachment.fileName;
-      try {
-        final fileName = '${messageId}_${_sanitizeFileName(attachment.fileName)}';
-        // Decode media in isolate to avoid blocking UI thread
-        final decoded = await Isolate.run(attachment.decodeBytes);
-        mediaId = await _storeMediaBytes(
-          decoded,
-          preferredFileName: fileName,
-        );
-      } catch (_) {
-        mediaId = null;
-      }
+      mediaId = _buildInlineMediaDataUri(
+        mimeType: attachment.mimeType,
+        base64Data: attachment.base64Data,
+      );
     }
 
     return AegisRoomMessage(
@@ -2340,6 +2422,16 @@ class AegisChatService {
       deliveredAt: deliveredAt,
       readAt: readAt,
     );
+  }
+
+  String _buildInlineMediaDataUri({
+    required String mimeType,
+    required String base64Data,
+  }) {
+    final normalizedMimeType = mimeType.trim().isEmpty
+        ? 'application/octet-stream'
+        : mimeType.trim();
+    return 'data:$normalizedMimeType;base64,$base64Data';
   }
 
   Future<String?> _storeMediaBytes(
@@ -2492,11 +2584,22 @@ class AegisChatService {
       return;
     }
 
-    if (!_conversationsDirty && !_profilesDirty && _dirtyRoomIds.isEmpty && _deletedRoomIds.isEmpty) {
+    if (!_conversationsDirty &&
+        !_profilesDirty &&
+        _dirtyMessagesByRoom.isEmpty &&
+        _deletedMessageIdsByRoom.isEmpty &&
+        _deletedRoomIds.isEmpty) {
       return;
     }
 
-    final dirtyRoomIds = Set<String>.from(_dirtyRoomIds);
+    final dirtyMessagesByRoom = <String, Map<String, AegisRoomMessage>>{
+      for (final entry in _dirtyMessagesByRoom.entries)
+        entry.key: Map<String, AegisRoomMessage>.from(entry.value),
+    };
+    final deletedMessageIdsByRoom = <String, Set<String>>{
+      for (final entry in _deletedMessageIdsByRoom.entries)
+        entry.key: Set<String>.from(entry.value),
+    };
     final deletedRoomIds = Set<String>.from(_deletedRoomIds);
     final writeConversations = _conversationsDirty;
     final writeProfiles = _profilesDirty;
@@ -2504,13 +2607,14 @@ class AegisChatService {
 
     final future = () async {
     await _init();
-    // Only serialize messages for dirty rooms (incremental persist)
-    final roomMessagesJsonById = <String, List<Map<String, dynamic>>>{};
-    for (final roomId in dirtyRoomIds) {
-      final messages = _messages[roomId];
-      if (messages == null || messages.isEmpty) continue;
-      roomMessagesJsonById[roomId] = await Isolate.run(() {
-        return messages.map((m) => m.toJson()).toList(growable: false);
+    final upsertMessagesJsonByRoomId = <String, List<Map<String, dynamic>>>{};
+    for (final entry in dirtyMessagesByRoom.entries) {
+      if (deletedRoomIds.contains(entry.key) || entry.value.isEmpty) {
+        continue;
+      }
+      final messages = entry.value.values.toList(growable: false);
+      upsertMessagesJsonByRoomId[entry.key] = await Isolate.run(() {
+        return messages.map((message) => message.toJson()).toList(growable: false);
       });
     }
 
@@ -2521,8 +2625,8 @@ class AegisChatService {
       profilesJsonByUserId: writeProfiles
           ? Map<int, Map<String, dynamic>>.from(_profileCache)
           : const <int, Map<String, dynamic>>{},
-      roomMessagesJsonById: roomMessagesJsonById,
-      dirtyRoomIds: dirtyRoomIds,
+      upsertMessagesJsonByRoomId: upsertMessagesJsonByRoomId,
+      deletedMessageIdsByRoomId: deletedMessageIdsByRoom,
       deletedRoomIds: deletedRoomIds,
       writeConversations: writeConversations,
       writeProfiles: writeProfiles,
@@ -2532,7 +2636,26 @@ class AegisChatService {
     _persistInFlight = future;
     try {
       await future;
-      _dirtyRoomIds.removeAll(dirtyRoomIds);
+      for (final entry in dirtyMessagesByRoom.entries) {
+        final currentDirty = _dirtyMessagesByRoom[entry.key];
+        if (currentDirty == null) {
+          continue;
+        }
+        currentDirty.removeWhere((messageId, _) => entry.value.containsKey(messageId));
+        if (currentDirty.isEmpty) {
+          _dirtyMessagesByRoom.remove(entry.key);
+        }
+      }
+      for (final entry in deletedMessageIdsByRoom.entries) {
+        final currentDeleted = _deletedMessageIdsByRoom[entry.key];
+        if (currentDeleted == null) {
+          continue;
+        }
+        currentDeleted.removeAll(entry.value);
+        if (currentDeleted.isEmpty) {
+          _deletedMessageIdsByRoom.remove(entry.key);
+        }
+      }
       _deletedRoomIds.removeAll(deletedRoomIds);
       if (writeConversations) {
         _conversationsDirty = false;
@@ -2547,7 +2670,8 @@ class AegisChatService {
       if (_persistQueuedWhileWriting ||
           _conversationsDirty ||
           _profilesDirty ||
-          _dirtyRoomIds.isNotEmpty ||
+          _dirtyMessagesByRoom.isNotEmpty ||
+          _deletedMessageIdsByRoom.isNotEmpty ||
           _deletedRoomIds.isNotEmpty) {
         unawaited(_persist());
       }
@@ -2564,9 +2688,9 @@ class AegisChatService {
   void _emitRoomChanged(String roomId) {
     final controller = _roomChanges[roomId];
     if (controller == null || controller.isClosed) return;
-    if (!_queuedRoomIds.add(roomId)) return;
-    scheduleMicrotask(() {
-      _queuedRoomIds.remove(roomId);
+    _roomEmitTimers[roomId]?.cancel();
+    _roomEmitTimers[roomId] = Timer(const Duration(milliseconds: 40), () {
+      _roomEmitTimers.remove(roomId);
       if (!controller.isClosed) {
         controller.add(null);
       }
@@ -2576,7 +2700,8 @@ class AegisChatService {
   void _emitChanged() {
     if (_chatChanges.isClosed || _chatChangeQueued) return;
     _chatChangeQueued = true;
-    scheduleMicrotask(() {
+    _chatEmitTimer?.cancel();
+    _chatEmitTimer = Timer(const Duration(milliseconds: 40), () {
       _chatChangeQueued = false;
       if (!_chatChanges.isClosed) {
         _chatChanges.add(null);

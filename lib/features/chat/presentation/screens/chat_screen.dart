@@ -599,7 +599,14 @@ class _ChatScreenState extends State<ChatScreen> {
       final out = <_Msg>[];
       final imageMediaIds = <String>[];
       final imageIndexByMessageId = <String, int>{};
-      for (final m in msgs) {
+      for (var index = 0; index < msgs.length; index++) {
+        if (index > 0 && index % 40 == 0) {
+          await Future<void>.delayed(Duration.zero);
+          if (!mounted) {
+            return;
+          }
+        }
+        final m = msgs[index];
         final cached = _svc.peekUserInfo(m.senderId) ??
             const <String, dynamic>{};
         if (cached.isEmpty && m.senderId.isNotEmpty) {

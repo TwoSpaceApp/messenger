@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/services/biometric_service.dart';
 import 'package:two_space_app/core/widgets/floating_nav_bar.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -25,7 +24,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   bool _biometricCheckInFlight = false;
   final Set<int> _initializedTabs = <int>{0};
   int _totalUnread = 0;
-  StreamSubscription<List<Chat>>? _unreadSub;
+  StreamSubscription<int>? _unreadSub;
 
   Widget _buildScreen(int index) {
     return switch (index) {
@@ -42,8 +41,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkBiometrics();
-    _unreadSub = AegisChatService().watchChats().listen((chats) {
-      final total = chats.where((chat) => chat.unreadCount > 0).length;
+    _unreadSub = AegisChatService().watchUnreadChatsCount().listen((total) {
       if (total != _totalUnread && mounted) {
         setState(() => _totalUnread = total);
       }

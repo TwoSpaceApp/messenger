@@ -80,8 +80,8 @@ class AegisChatLocalStore {
   Future<void> saveChanges({
     required Iterable<Map<String, dynamic>> conversationsJson,
     required Map<int, Map<String, dynamic>> profilesJsonByUserId,
-    required Map<String, List<Map<String, dynamic>>> roomMessagesJsonById,
-    required Set<String> dirtyRoomIds,
+    required Map<String, List<Map<String, dynamic>>> upsertMessagesJsonByRoomId,
+    required Map<String, Set<String>> deletedMessageIdsByRoomId,
     required Set<String> deletedRoomIds,
     required bool writeConversations,
     required bool writeProfiles,
@@ -96,18 +96,24 @@ class AegisChatLocalStore {
             .go();
       }
 
-      final roomsToRewrite = dirtyRoomIds.difference(deletedRoomIds);
-      for (final roomId in roomsToRewrite) {
-        final roomMessages = roomMessagesJsonById[roomId] ?? const [];
-        if (roomMessages.isEmpty) {
+      for (final entry in deletedMessageIdsByRoomId.entries) {
+        if (deletedRoomIds.contains(entry.key) || entry.value.isEmpty) {
           continue;
         }
+        await (_database.delete(_database.aegisMessages)
+              ..where((table) => table.id.isIn(entry.value)))
+            .go();
+      }
 
+      for (final entry in upsertMessagesJsonByRoomId.entries) {
+        if (deletedRoomIds.contains(entry.key) || entry.value.isEmpty) {
+          continue;
+        }
         await _database.batch((batch) {
           batch.insertAllOnConflictUpdate(
             _database.aegisMessages,
-            roomMessages
-                .map((message) => _messageCompanionFromJson(roomId, message))
+            entry.value
+                .map((message) => _messageCompanionFromJson(entry.key, message))
                 .toList(growable: false),
           );
         });

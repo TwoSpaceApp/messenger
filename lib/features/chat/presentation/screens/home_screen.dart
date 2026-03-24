@@ -34,6 +34,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _loading = true;
   String? _errorMessage;
   StreamSubscription<List<Chat>>? _roomsSub;
+  Future<void>? _roomRefreshInFlight;
 
   final String _searchQuery = '';
 
@@ -59,6 +60,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _loadUserAndRooms() async {
+    final inFlight = _roomRefreshInFlight;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final future = _refreshRoomIndex();
+    _roomRefreshInFlight = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_roomRefreshInFlight, future)) {
+        _roomRefreshInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _refreshRoomIndex() async {
     if (!mounted) return;
     if (_rooms.isEmpty) {
       setState(() {
@@ -70,10 +89,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     try {
-      await _chat.refreshChatIndex();
-      final chats = await _chat.getChats();
-      final out = chats.map(_roomFromChat).toList();
-      if (mounted) setState(() => _rooms = out);
+      await _chat.refreshChatIndex(
+        preloadRooms: 0,
+        messageLimit: 0,
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _errorMessage = e.toString());
