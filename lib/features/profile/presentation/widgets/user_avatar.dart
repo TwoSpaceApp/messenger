@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -24,7 +25,30 @@ class UserAvatar extends StatefulWidget {
 
 class _UserAvatarState extends State<UserAvatar> {
   Uint8List? _bytes;
-  static final Map<String, Uint8List> _cache = {};
+  static const int _maxCacheSize = 50;
+  static final LinkedHashMap<String, Uint8List> _cache =
+      LinkedHashMap<String, Uint8List>();
+  static final Map<String, Future<Uint8List?>> _bytesInFlight =
+      <String, Future<Uint8List?>>{};
+
+  static void _putCache(String key, Uint8List value) {
+    // Move to end (most recently used)
+    _cache.remove(key);
+    _cache[key] = value;
+    // Evict oldest entries if over limit
+    while (_cache.length > _maxCacheSize) {
+      _cache.remove(_cache.keys.first);
+    }
+  }
+
+  static Uint8List? _getCache(String key) {
+    final value = _cache.remove(key);
+    if (value != null) {
+      // Re-insert at end to mark as recently used
+      _cache[key] = value;
+    }
+    return value;
+  }
 
   Uint8List? _decodeDataUri(String? rawUrl) {
     final value = rawUrl?.trim();
@@ -48,14 +72,43 @@ class _UserAvatarState extends State<UserAvatar> {
   @override
   void didUpdateWidget(covariant UserAvatar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If avatar data changed, clear cached bytes and reload
     if (oldWidget.avatarFileId != widget.avatarFileId ||
         oldWidget.avatarUrl != widget.avatarUrl) {
-      if (widget.avatarFileId != null && widget.avatarFileId!.isNotEmpty) {
-        _cache.remove(widget.avatarFileId);
-      }
       _bytes = null;
       _loadIfNeeded();
+    }
+  }
+
+  Future<Uint8List?> _readCachedBytes(String path) async {
+    final cached = _getCache(path);
+    if (cached != null) {
+      return cached;
+    }
+
+    final inFlight = _bytesInFlight[path];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final future = () async {
+      try {
+        final file = File(path);
+        if (!await file.exists()) {
+          return null;
+        }
+        final bytes = await file.readAsBytes();
+        _putCache(path, bytes);
+        return bytes;
+      } catch (_) {
+        return null;
+      }
+    }();
+
+    _bytesInFlight[path] = future;
+    try {
+      return await future;
+    } finally {
+      _bytesInFlight.remove(path);
     }
   }
 
@@ -70,31 +123,25 @@ class _UserAvatarState extends State<UserAvatar> {
     }
 
     if (isLocalAvatarFilePath(url)) {
-      try {
-        final file = File(url!);
-        if (await file.exists()) {
-          final bytes = await file.readAsBytes();
-          if (mounted) setState(() => _bytes = bytes);
-          return;
-        }
-      } catch (_) {}
+      final bytes = await _readCachedBytes(url!);
+      if (bytes != null && mounted) {
+        setState(() => _bytes = bytes);
+        return;
+      }
     }
 
     if (fid == null || fid.isEmpty) {
       return;
     }
-    if (fid.isNotEmpty && _cache.containsKey(fid)) {
-      setState(() => _bytes = _cache[fid]);
+    final cachedFid = _getCache(fid);
+    if (cachedFid != null) {
+      setState(() => _bytes = cachedFid);
       return;
     }
-    try {
-      final file = File(fid);
-      if (await file.exists()) {
-        final bytes = await file.readAsBytes();
-        _cache[fid] = bytes;
-        if (mounted) setState(() => _bytes = bytes);
-      }
-    } catch (_) {}
+    final bytes = await _readCachedBytes(fid);
+    if (bytes != null && mounted) {
+      setState(() => _bytes = bytes);
+    }
   }
 
   @override

@@ -274,6 +274,27 @@ class AppLocalizationsPl extends AppLocalizations {
   String get messageInputHint => 'Napisz wiadomość...';
 
   @override
+  String get addCaptionHint => 'Dodaj podpis lub wiadomość';
+
+  @override
+  String get unlockApp => 'Odblokuj';
+
+  @override
+  String get unlockButton => 'Odblokuj';
+
+  @override
+  String get dropFilesTitle => 'Upuść pliki do załączenia';
+
+  @override
+  String get dropFilesSubtitle => 'Pojawią się nad polem wiadomości.';
+
+  @override
+  String get videoUnavailable => 'Film niedostępny';
+
+  @override
+  String get guestRole => 'Gość';
+
+  @override
   String get replyAction => 'Odpowiedz';
 
   @override
@@ -1687,6 +1708,30 @@ class AppLocalizationsPl extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => 'Pamięć';
+
+  @override
+  String get storageTotalLabel => 'Razem';
+
+  @override
+  String get storagePhotosLabel => 'Zdjęcia';
+
+  @override
+  String get storageVideosLabel => 'Wideo';
+
+  @override
+  String get storageCacheLabel => 'Pamięć podręczna';
+
+  @override
+  String get storageAppDataLabel => 'Dane aplikacji';
+
+  @override
+  String get storageCleanupTitle => 'Do wyczyszczenia';
+
+  @override
+  String get storageCleanupSubtitle => 'Sprawdź, co można bezpiecznie usunąć.';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override
@@ -2002,4 +2047,15 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Tylna kamera';
+
+  @override
+  String get backgroundOptimizationDisabledTitle =>
+      'Efekty tła zostały uproszczone';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace wykrył długotrwałe spadki płynności i wyłączył ciężkie efekty tła, aby przewijanie i obsługa czatów pozostały płynne.';
+
+  @override
+  String get backgroundOptimizationOpenSettings => 'Otwórz ustawienia wyglądu';
 }

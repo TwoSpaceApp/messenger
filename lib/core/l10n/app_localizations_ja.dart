@@ -273,6 +273,27 @@ class AppLocalizationsJa extends AppLocalizations {
   String get messageInputHint => 'メッセージを入力...';
 
   @override
+  String get addCaptionHint => 'キャプションまたはメッセージを追加';
+
+  @override
+  String get unlockApp => 'ロック解除';
+
+  @override
+  String get unlockButton => 'ロック解除';
+
+  @override
+  String get dropFilesTitle => 'ファイルをドロップして添付';
+
+  @override
+  String get dropFilesSubtitle => 'メッセージ入力欄の上に表示されます。';
+
+  @override
+  String get videoUnavailable => '動画を利用できません';
+
+  @override
+  String get guestRole => 'ゲスト';
+
+  @override
   String get replyAction => '返信';
 
   @override
@@ -1651,6 +1672,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => 'メモリ';
+
+  @override
+  String get storageTotalLabel => '合計';
+
+  @override
+  String get storagePhotosLabel => '写真';
+
+  @override
+  String get storageVideosLabel => '動画';
+
+  @override
+  String get storageCacheLabel => 'キャッシュ';
+
+  @override
+  String get storageAppDataLabel => 'アプリデータ';
+
+  @override
+  String get storageCleanupTitle => '削除予定';
+
+  @override
+  String get storageCleanupSubtitle => '安全に削除できる項目を確認します。';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override
@@ -1951,4 +1996,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => '背面カメラ';
+
+  @override
+  String get backgroundOptimizationDisabledTitle => '背景エフェクトを軽量化しました';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace は継続的なフレーム遅延を検出したため、スクロールやチャット操作を滑らかに保つために重い背景エフェクトを無効にしました。';
+
+  @override
+  String get backgroundOptimizationOpenSettings => '表示設定を開く';
 }

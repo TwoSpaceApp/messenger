@@ -373,6 +373,34 @@
   "@messageInputHint": {
     "description": "Message input placeholder"
   },
+  "addCaptionHint": "Add a caption or message",
+  "@addCaptionHint": {
+    "description": "Hint shown when attachments are pending"
+  },
+  "unlockApp": "Unlock App",
+  "@unlockApp": {
+    "description": "Biometric prompt title"
+  },
+  "unlockButton": "Unlock",
+  "@unlockButton": {
+    "description": "Button to unlock app with biometrics"
+  },
+  "dropFilesTitle": "Drop files to attach",
+  "@dropFilesTitle": {
+    "description": "Drag-and-drop overlay heading"
+  },
+  "dropFilesSubtitle": "They will appear above the message field.",
+  "@dropFilesSubtitle": {
+    "description": "Drag-and-drop overlay description"
+  },
+  "videoUnavailable": "Video unavailable",
+  "@videoUnavailable": {
+    "description": "Shown when video cannot be loaded"
+  },
+  "guestRole": "Guest",
+  "@guestRole": {
+    "description": "Guest role label"
+  },
   "replyAction": "Reply",
   "@replyAction": {
     "description": "Reply action label"
@@ -2310,6 +2338,38 @@
   "@settingsStorageClearBtn": {
     "description": "Auto added setting"
   },
+  "storageMemoryTitle": "Memory",
+  "@storageMemoryTitle": {
+    "description": "Storage screen title"
+  },
+  "storageTotalLabel": "Total",
+  "@storageTotalLabel": {
+    "description": "Storage chart center label"
+  },
+  "storagePhotosLabel": "Photos",
+  "@storagePhotosLabel": {
+    "description": "Photos section in storage"
+  },
+  "storageVideosLabel": "Videos",
+  "@storageVideosLabel": {
+    "description": "Videos section in storage"
+  },
+  "storageCacheLabel": "Cache",
+  "@storageCacheLabel": {
+    "description": "Cache section in storage"
+  },
+  "storageAppDataLabel": "App data",
+  "@storageAppDataLabel": {
+    "description": "App data section in storage"
+  },
+  "storageCleanupTitle": "Selected to clear",
+  "@storageCleanupTitle": {
+    "description": "Selected cleanup total title"
+  },
+  "storageCleanupSubtitle": "Review what can be safely removed.",
+  "@storageCleanupSubtitle": {
+    "description": "Storage cleanup subtitle"
+  },
   "settingsStorageKeepChat": "Keep Chat Data",
   "@settingsStorageKeepChat": {
     "description": "Auto added setting"
@@ -2630,5 +2690,17 @@
   "callsCameraUnsupportedMessage": "This platform does not support the local video preview.",
   "callsCameraOffMessage": "Camera preview is turned off for this demo call.",
   "callsFrontCameraLabel": "Front camera",
-  "callsRearCameraLabel": "Rear camera"
+  "callsRearCameraLabel": "Rear camera",
+  "backgroundOptimizationDisabledTitle": "Background effects were simplified",
+  "@backgroundOptimizationDisabledTitle": {
+    "description": "Title for a notice shown when animated background effects were automatically disabled to reduce jank"
+  },
+  "backgroundOptimizationDisabledMessage": "TwoSpace detected sustained slow frames and turned off heavy background effects to keep scrolling and chat interactions smooth.",
+  "@backgroundOptimizationDisabledMessage": {
+    "description": "Body text for a notice shown when animated background effects were automatically disabled"
+  },
+  "backgroundOptimizationOpenSettings": "Open appearance settings",
+  "@backgroundOptimizationOpenSettings": {
+    "description": "Action label that opens appearance settings after background effects were automatically disabled"
+  }
 }

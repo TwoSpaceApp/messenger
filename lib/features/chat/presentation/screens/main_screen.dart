@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/biometric_service.dart';
 import 'package:two_space_app/core/widgets/floating_nav_bar.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -19,16 +21,36 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   bool _isLocked = false;
+  bool _biometricCheckInFlight = false;
+  final Set<int> _initializedTabs = <int>{0};
+  int _totalUnread = 0;
+  StreamSubscription<int>? _unreadSub;
+
+  Widget _buildScreen(int index) {
+    return switch (index) {
+      0 => const HomeScreen(),
+      1 => const CallsScreen(),
+      2 => const ContactsScreen(),
+      3 => const SettingsScreen(),
+      _ => const SizedBox.shrink(),
+    };
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkBiometrics();
+    _unreadSub = AegisChatService().watchUnreadChatsCount().listen((total) {
+      if (total != _totalUnread && mounted) {
+        setState(() => _totalUnread = total);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _unreadSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -49,16 +71,27 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   Future<void> _checkBiometrics() async {
     if (!SettingsService.biometricsNotifier.value) return;
+
+    if (_biometricCheckInFlight) return;
+    _biometricCheckInFlight = true;
+    if (mounted && !_isLocked) {
+      setState(() => _isLocked = true);
+    }
     
-    setState(() => _isLocked = true);
-    
-    final success = await BiometricService.authenticate('Unlock App');
-    if (success && mounted) {
-      setState(() => _isLocked = false);
+    try {
+      final success = await BiometricService.authenticate(AppLocalizations.of(context)?.unlockApp ?? 'Unlock App');
+      if (success && mounted && _isLocked) {
+        setState(() => _isLocked = false);
+      }
+    } finally {
+      _biometricCheckInFlight = false;
     }
   }
 
   void _onTabChanged(int index) {
+    if (!_initializedTabs.contains(index)) {
+      _initializedTabs.add(index);
+    }
     setState(() => _currentIndex = index);
   }
 
@@ -74,20 +107,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _checkBiometrics,
-                child: const Text('Unlock'),
+                child: Text(AppLocalizations.of(context)?.unlockButton ?? 'Unlock'),
               ),
             ],
           ),
         ),
       );
     }
-
-    final screens = [
-      const HomeScreen(),
-      const CallsScreen(),
-      const ContactsScreen(),
-      const SettingsScreen(),
-    ];
 
     return Scaffold(
       extendBody: true,
@@ -96,11 +122,17 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         children: [
           IndexedStack(
             index: _currentIndex,
-            children: screens,
+            children: List<Widget>.generate(
+              4,
+              (index) => _initializedTabs.contains(index)
+                  ? _buildScreen(index)
+                  : const SizedBox.shrink(),
+            ),
           ),
           FloatingNavBar(
             selectedIndex: _currentIndex,
             onItemSelected: _onTabChanged,
+            chatUnreadCount: _totalUnread,
           ),
         ],
       ),

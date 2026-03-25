@@ -606,6 +606,48 @@ abstract class AppLocalizations {
   /// **'Write a message...'**
   String get messageInputHint;
 
+  /// Hint shown when attachments are pending
+  ///
+  /// In en, this message translates to:
+  /// **'Add a caption or message'**
+  String get addCaptionHint;
+
+  /// Biometric prompt title
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock App'**
+  String get unlockApp;
+
+  /// Button to unlock app with biometrics
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlockButton;
+
+  /// Drag-and-drop overlay heading
+  ///
+  /// In en, this message translates to:
+  /// **'Drop files to attach'**
+  String get dropFilesTitle;
+
+  /// Drag-and-drop overlay description
+  ///
+  /// In en, this message translates to:
+  /// **'They will appear above the message field.'**
+  String get dropFilesSubtitle;
+
+  /// Shown when video cannot be loaded
+  ///
+  /// In en, this message translates to:
+  /// **'Video unavailable'**
+  String get videoUnavailable;
+
+  /// Guest role label
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get guestRole;
+
   /// Reply action label
   ///
   /// In en, this message translates to:
@@ -3186,6 +3228,54 @@ abstract class AppLocalizations {
   /// **'Clear Selected'**
   String get settingsStorageClearBtn;
 
+  /// Storage screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get storageMemoryTitle;
+
+  /// Storage chart center label
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get storageTotalLabel;
+
+  /// Photos section in storage
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get storagePhotosLabel;
+
+  /// Videos section in storage
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get storageVideosLabel;
+
+  /// Cache section in storage
+  ///
+  /// In en, this message translates to:
+  /// **'Cache'**
+  String get storageCacheLabel;
+
+  /// App data section in storage
+  ///
+  /// In en, this message translates to:
+  /// **'App data'**
+  String get storageAppDataLabel;
+
+  /// Selected cleanup total title
+  ///
+  /// In en, this message translates to:
+  /// **'Selected to clear'**
+  String get storageCleanupTitle;
+
+  /// Storage cleanup subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Review what can be safely removed.'**
+  String get storageCleanupSubtitle;
+
   /// Auto added setting
   ///
   /// In en, this message translates to:
@@ -3761,6 +3851,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rear camera'**
   String get callsRearCameraLabel;
+
+  /// Title for a notice shown when animated background effects were automatically disabled to reduce jank
+  ///
+  /// In en, this message translates to:
+  /// **'Background effects were simplified'**
+  String get backgroundOptimizationDisabledTitle;
+
+  /// Body text for a notice shown when animated background effects were automatically disabled
+  ///
+  /// In en, this message translates to:
+  /// **'TwoSpace detected sustained slow frames and turned off heavy background effects to keep scrolling and chat interactions smooth.'**
+  String get backgroundOptimizationDisabledMessage;
+
+  /// Action label that opens appearance settings after background effects were automatically disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Open appearance settings'**
+  String get backgroundOptimizationOpenSettings;
 }
 
 class _AppLocalizationsDelegate

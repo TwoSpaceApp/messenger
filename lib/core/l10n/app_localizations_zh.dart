@@ -273,6 +273,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messageInputHint => '输入消息...';
 
   @override
+  String get addCaptionHint => '添加说明或消息';
+
+  @override
+  String get unlockApp => '解锁';
+
+  @override
+  String get unlockButton => '解锁';
+
+  @override
+  String get dropFilesTitle => '拖放文件以附加';
+
+  @override
+  String get dropFilesSubtitle => '它们将显示在消息输入框上方。';
+
+  @override
+  String get videoUnavailable => '视频不可用';
+
+  @override
+  String get guestRole => '访客';
+
+  @override
   String get replyAction => '回复';
 
   @override
@@ -1651,6 +1672,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => '内存';
+
+  @override
+  String get storageTotalLabel => '总计';
+
+  @override
+  String get storagePhotosLabel => '照片';
+
+  @override
+  String get storageVideosLabel => '视频';
+
+  @override
+  String get storageCacheLabel => '缓存';
+
+  @override
+  String get storageAppDataLabel => '应用数据';
+
+  @override
+  String get storageCleanupTitle => '将被清理';
+
+  @override
+  String get storageCleanupSubtitle => '检查可安全删除的内容。';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override
@@ -1945,4 +1990,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => '后置摄像头';
+
+  @override
+  String get backgroundOptimizationDisabledTitle => '背景效果已精简';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace 检测到持续掉帧，因此关闭了较重的背景效果，以保持滚动和聊天操作流畅。';
+
+  @override
+  String get backgroundOptimizationOpenSettings => '打开外观设置';
 }

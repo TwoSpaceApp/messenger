@@ -3,17 +3,21 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/config/theme_builder.dart';
 import 'package:two_space_app/core/constants/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/navigation/app_router.dart';
+import 'package:two_space_app/core/services/background_effects_performance_service.dart';
 import 'package:two_space_app/core/services/dev_tools_service.dart';
 import 'package:two_space_app/core/services/initialization_service.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/widgets/dev_fab.dart';
+import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_listener.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 Future<void> main() async {
@@ -39,16 +43,34 @@ class AppBootstrapperState extends State<AppBootstrapper> {
   InitializationResult? _initResult;
   String _currentStep = 'Starting...';
   double _progress = 0;
+  DateTime _lastProgressUiUpdate = DateTime.fromMillisecondsSinceEpoch(0);
+
+  static const Duration _progressUiThrottle = Duration(milliseconds: 140);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(_lifecycleObserver);
+    BackgroundEffectsPerformanceService.start();
+    SettingsService.applyDeferredSettingsDefaults();
     _startInit();
   }
+
+  final WidgetsBindingObserver _lifecycleObserver = _AppLifecycleObserver();
+
 
   Future<void> _startInit() async {
     final result = await InitializationService.initialize(
       onProgress: (stepName, progress) {
+        final now = DateTime.now();
+        final canUpdateByTime =
+            now.difference(_lastProgressUiUpdate) >= _progressUiThrottle;
+        final shouldForceUpdate = progress >= 1.0 ||
+            (_currentStep != stepName && progress > _progress);
+        if (!canUpdateByTime && !shouldForceUpdate) {
+          return;
+        }
+        _lastProgressUiUpdate = now;
         setState(() {
           _currentStep = stepName;
           _progress = progress;
@@ -60,6 +82,12 @@ class AppBootstrapperState extends State<AppBootstrapper> {
         _initResult = result;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+    super.dispose();
   }
 
   @override
@@ -167,79 +195,16 @@ class TwoSpaceApp extends ConsumerWidget {
 
     final goRouter = ref.watch(routerProvider);
 
-    return ValueListenableBuilder<String>(
-      valueListenable: SettingsService.languageNotifier,
-      builder: (context, languageCode, ____) {
-        return ValueListenableBuilder<ThemeSettings>(
-          valueListenable: SettingsService.themeNotifier,
-          builder: (context, settings, _) {
-            return ValueListenableBuilder<bool>(
-              valueListenable: SettingsService.paleVioletNotifier,
-              builder: (context, paleVioletEnabled, __) {
-                return ValueListenableBuilder<ThemeMode>(
-                  valueListenable: SettingsService.themeModeNotifier,
-                  builder: (context, themeMode, ___) {
-                    return ValueListenableBuilder<double>(
-                      valueListenable: SettingsService.textScaleNotifier,
-                      builder: (context, textScale, ____) {
-                        return ValueListenableBuilder<bool>(
-                          valueListenable:
-                              DevToolsService.performanceOverlayEnabled,
-                          builder: (context, showPerformanceOverlay, __) {
-                            final lightTheme = AppThemeBuilder.build(
-                              settings,
-                              paleVioletEnabled,
-                              brightnessOverride: Brightness.light,
-                            );
-                            final darkTheme = AppThemeBuilder.build(
-                              settings,
-                              paleVioletEnabled,
-                              brightnessOverride: Brightness.dark,
-                            );
-
-                            final app = MaterialApp.router(
-                              title: 'TwoSpace',
-                              onGenerateTitle: (context) =>
-                                  AppLocalizations.of(context)?.appTitle ??
-                                  'TwoSpace',
-                              debugShowCheckedModeBanner: false,
-                              showPerformanceOverlay: showPerformanceOverlay,
-                              theme: lightTheme,
-                              darkTheme: darkTheme,
-                              themeMode: themeMode,
-                              locale: Locale(languageCode),
-                              localizationsDelegates:
-                                  AppLocalizations.localizationsDelegates,
-                              supportedLocales:
-                                  AppLocalizations.supportedLocales,
-                              routerConfig: goRouter,
-                              builder: (context, child) {
-                                final mediaQuery = MediaQuery.of(context);
-                                return MediaQuery(
-                                  data: mediaQuery.copyWith(
-                                    textScaler: TextScaler.linear(textScale),
-                                  ),
-                                  child: AuthListener(
-                                    child: child ?? const SizedBox(),
-                                  ),
-                                );
-                              },
-                            );
-
-                            if (kDebugMode || Environment.enableDevTools) {
-                              return Directionality(
-                                textDirection: TextDirection.ltr,
-                                child: Stack(children: [app, const DevFab()]),
-                              );
-                            }
-                            return app;
-                          },
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+    return ValueListenableBuilder<bool>(
+      valueListenable: DevToolsService.performanceOverlayEnabled,
+      builder: (context, showPerformanceOverlay, _) {
+        return ValueListenableBuilder<String>(
+          valueListenable: SettingsService.languageNotifier,
+          builder: (context, languageCode, _) {
+            return _ThemeBuilder(
+              showPerformanceOverlay: showPerformanceOverlay,
+              languageCode: languageCode,
+              goRouter: goRouter,
             );
           },
         );
@@ -288,5 +253,93 @@ class TwoSpaceApp extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// Rebuilds only when theme / text-scale settings change, keeping
+/// language and performance-overlay changes isolated in outer builders.
+class _ThemeBuilder extends StatelessWidget {
+  const _ThemeBuilder({
+    required this.showPerformanceOverlay,
+    required this.languageCode,
+    required this.goRouter,
+  });
+
+  final bool showPerformanceOverlay;
+  final String languageCode;
+  final GoRouter goRouter;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge(<Listenable>[
+        SettingsService.themeNotifier,
+        SettingsService.paleVioletNotifier,
+        SettingsService.themeModeNotifier,
+        SettingsService.textScaleNotifier,
+      ]),
+      builder: (context, _) {
+        final settings = SettingsService.themeNotifier.value;
+        final paleVioletEnabled = SettingsService.paleVioletNotifier.value;
+        final themeMode = SettingsService.themeModeNotifier.value;
+        final textScale = SettingsService.textScaleNotifier.value;
+
+        final lightTheme = AppThemeBuilder.build(
+          settings,
+          paleVioletEnabled,
+          brightnessOverride: Brightness.light,
+        );
+        final darkTheme = AppThemeBuilder.build(
+          settings,
+          paleVioletEnabled,
+          brightnessOverride: Brightness.dark,
+        );
+
+        final app = MaterialApp.router(
+          title: 'TwoSpace',
+          onGenerateTitle: (context) =>
+              AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
+          debugShowCheckedModeBanner: false,
+          showPerformanceOverlay: showPerformanceOverlay,
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeMode,
+          locale: Locale(languageCode),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: goRouter,
+          builder: (context, child) {
+            final mediaQuery = MediaQuery.of(context);
+            return MediaQuery(
+              data: mediaQuery.copyWith(
+                textScaler: TextScaler.linear(textScale),
+              ),
+              child: AuthListener(
+                child: child ?? const SizedBox(),
+              ),
+            );
+          },
+        );
+
+        if (kDebugMode || Environment.enableDevTools) {
+          return Directionality(
+            textDirection: TextDirection.ltr,
+            child: Stack(children: [app, const DevFab()]),
+          );
+        }
+        return app;
+      },
+    );
+  }
+}
+
+class _AppLifecycleObserver with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      return;
+    }
+    unawaited(AegisAuthService().restoreSession().catchError((_) => false));
+    unawaited(AegisChatService().ensureReady().catchError((_) => null));
   }
 }

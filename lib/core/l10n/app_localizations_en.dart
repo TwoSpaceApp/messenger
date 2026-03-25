@@ -274,6 +274,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageInputHint => 'Write a message...';
 
   @override
+  String get addCaptionHint => 'Add a caption or message';
+
+  @override
+  String get unlockApp => 'Unlock App';
+
+  @override
+  String get unlockButton => 'Unlock';
+
+  @override
+  String get dropFilesTitle => 'Drop files to attach';
+
+  @override
+  String get dropFilesSubtitle => 'They will appear above the message field.';
+
+  @override
+  String get videoUnavailable => 'Video unavailable';
+
+  @override
+  String get guestRole => 'Guest';
+
+  @override
   String get replyAction => 'Reply';
 
   @override
@@ -1682,6 +1703,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => 'Memory';
+
+  @override
+  String get storageTotalLabel => 'Total';
+
+  @override
+  String get storagePhotosLabel => 'Photos';
+
+  @override
+  String get storageVideosLabel => 'Videos';
+
+  @override
+  String get storageCacheLabel => 'Cache';
+
+  @override
+  String get storageAppDataLabel => 'App data';
+
+  @override
+  String get storageCleanupTitle => 'Selected to clear';
+
+  @override
+  String get storageCleanupSubtitle => 'Review what can be safely removed.';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override
@@ -1996,4 +2041,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Rear camera';
+
+  @override
+  String get backgroundOptimizationDisabledTitle =>
+      'Background effects were simplified';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace detected sustained slow frames and turned off heavy background effects to keep scrolling and chat interactions smooth.';
+
+  @override
+  String get backgroundOptimizationOpenSettings => 'Open appearance settings';
 }

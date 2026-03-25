@@ -69,11 +69,14 @@ class PeopleRepository {
   final PeopleLocalStore _localStore;
   final CallHistoryService _callHistoryService;
   DeviceContactsResult? _deviceContactsCache;
+  Future<DeviceContactsResult>? _deviceContactsInFlight;
+  DateTime? _deviceContactsFetchedAt;
   List<String>? _favoritesCache;
   List<PersonEntry>? _cachedPeopleCache;
   List<PersonEntry>? _recentPeopleCache;
   final Map<String, List<PersonEntry>> _remoteSearchCache =
       <String, List<PersonEntry>>{};
+  static const Duration _deviceContactsCacheTtl = Duration(minutes: 5);
 
   Future<PeopleDashboardData> loadDashboard({
     bool requestPermission = true,
@@ -138,6 +141,7 @@ class PeopleRepository {
     bool requestPermission = false,
   }) async {
     final normalizedQuery = query.trim().toLowerCase();
+    final shouldRunRemoteSearch = normalizedQuery.length >= 2;
     if (normalizedQuery.isEmpty) {
       return const PeopleSearchData(
         remoteResults: <PersonEntry>[],
@@ -179,29 +183,32 @@ class PeopleRepository {
       ),
     );
 
-    List<PersonEntry> remoteMatches =
-        _remoteSearchCache[normalizedQuery] ?? <PersonEntry>[];
-    try {
-      if (remoteMatches.isEmpty) {
-        await _chatService.ensureReady();
-        final response = await _chatService.searchUsers(query.trim());
-        remoteMatches = _sortPeople(
-          _applyFavoriteIds(
-            _mergePeople(response.map(_personFromSearchMap).toList()),
-            favorites,
-          ),
-        );
-        _remoteSearchCache[normalizedQuery] = remoteMatches;
-        if (remoteMatches.isNotEmpty) {
-          await _localStore.upsertCachedPeople(remoteMatches);
-          _cachedPeopleCache = _mergePeople(<PersonEntry>[
-            ...cachedPeople,
-            ...remoteMatches,
-          ]);
+    var remoteMatches = <PersonEntry>[];
+    if (shouldRunRemoteSearch) {
+      remoteMatches = _remoteSearchCache[normalizedQuery] ?? <PersonEntry>[];
+      try {
+        if (remoteMatches.isEmpty) {
+          await _chatService.ensureReady();
+          final response = await _chatService.searchUsers(query.trim());
+          remoteMatches = _sortPeople(
+            _applyFavoriteIds(
+              _mergePeople(response.map(_personFromSearchMap).toList()),
+              favorites,
+            ),
+          );
+          _remoteSearchCache[normalizedQuery] = remoteMatches;
+          if (remoteMatches.isNotEmpty) {
+            await _localStore.upsertCachedPeople(remoteMatches);
+            _cachedPeopleCache = _mergePeople(<PersonEntry>[
+              ...cachedPeople,
+              ...remoteMatches,
+            ]);
+          }
         }
+      } catch (_) {
+        remoteMatches =
+            localMatches.where((person) => person.isTwoSpaceUser).toList();
       }
-    } catch (_) {
-      remoteMatches = localMatches.where((person) => person.isTwoSpaceUser).toList();
     }
 
     return PeopleSearchData(
@@ -257,11 +264,47 @@ class PeopleRepository {
       );
     }
 
+    final cacheAge = _deviceContactsFetchedAt == null
+        ? null
+        : DateTime.now().difference(_deviceContactsFetchedAt!);
     if (_deviceContactsCache != null &&
+        cacheAge != null &&
+        cacheAge <= _deviceContactsCacheTtl &&
         (!requestPermission ||
             _deviceContactsCache!.permission ==
                 DeviceContactsPermission.granted)) {
       return _deviceContactsCache!;
+    }
+
+    final inFlight = _deviceContactsInFlight;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final future = _loadDeviceContactsInternal(requestPermission: requestPermission);
+    _deviceContactsInFlight = future;
+    try {
+      return await future;
+    } finally {
+      if (identical(_deviceContactsInFlight, future)) {
+        _deviceContactsInFlight = null;
+      }
+    }
+  }
+
+  Future<DeviceContactsResult> _loadDeviceContactsInternal({
+    required bool requestPermission,
+  }) async {
+    final cachedResult = _deviceContactsCache;
+    if (cachedResult != null &&
+        (!requestPermission ||
+            cachedResult.permission == DeviceContactsPermission.granted)) {
+      final cacheAge = _deviceContactsFetchedAt == null
+          ? null
+          : DateTime.now().difference(_deviceContactsFetchedAt!);
+      if (cacheAge != null && cacheAge <= _deviceContactsCacheTtl) {
+        return cachedResult;
+      }
     }
 
     final status = await Permission.contacts.status;
@@ -272,6 +315,7 @@ class PeopleRepository {
         contacts: await _fetchDeviceContacts(),
       );
       _deviceContactsCache = result;
+      _deviceContactsFetchedAt = DateTime.now();
       return result;
     }
 
@@ -296,6 +340,7 @@ class PeopleRepository {
         contacts: await _fetchDeviceContacts(),
       );
       _deviceContactsCache = grantedResult;
+      _deviceContactsFetchedAt = DateTime.now();
       return grantedResult;
     }
 
@@ -320,7 +365,6 @@ class PeopleRepository {
     try {
       final contacts = await FlutterContacts.getContacts(
         withProperties: true,
-        withPhoto: true,
       );
       final cachedPeople = await _readCachedPeople();
       final cachedByPhone = <String, PersonEntry>{};

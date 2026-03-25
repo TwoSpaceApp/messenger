@@ -275,6 +275,28 @@ class AppLocalizationsFr extends AppLocalizations {
   String get messageInputHint => 'Écrire un message...';
 
   @override
+  String get addCaptionHint => 'Ajouter une légende ou un message';
+
+  @override
+  String get unlockApp => 'Déverrouiller';
+
+  @override
+  String get unlockButton => 'Déverrouiller';
+
+  @override
+  String get dropFilesTitle => 'Déposez des fichiers à joindre';
+
+  @override
+  String get dropFilesSubtitle =>
+      'Ils apparaîtront au-dessus du champ de message.';
+
+  @override
+  String get videoUnavailable => 'Vidéo indisponible';
+
+  @override
+  String get guestRole => 'Invité';
+
+  @override
   String get replyAction => 'Répondre';
 
   @override
@@ -1700,6 +1722,31 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => 'Mémoire';
+
+  @override
+  String get storageTotalLabel => 'Total';
+
+  @override
+  String get storagePhotosLabel => 'Photos';
+
+  @override
+  String get storageVideosLabel => 'Vidéos';
+
+  @override
+  String get storageCacheLabel => 'Cache';
+
+  @override
+  String get storageAppDataLabel => 'Données de l\'app';
+
+  @override
+  String get storageCleanupTitle => 'À supprimer';
+
+  @override
+  String get storageCleanupSubtitle =>
+      'Vérifiez ce qui peut être supprimé sans risque.';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override
@@ -2018,4 +2065,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Caméra arrière';
+
+  @override
+  String get backgroundOptimizationDisabledTitle =>
+      'Les effets d\'arrière-plan ont été allégés';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace a détecté des ralentissements persistants et a désactivé les effets d\'arrière-plan les plus lourds pour garder le défilement et les chats fluides.';
+
+  @override
+  String get backgroundOptimizationOpenSettings =>
+      'Ouvrir les réglages d\'apparence';
 }

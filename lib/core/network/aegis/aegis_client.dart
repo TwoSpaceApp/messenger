@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/network/aegis/event_dispatcher.dart';
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
 import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
@@ -11,13 +11,19 @@ import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/transport.dart';
 
+String _encodeMediaAttachmentBase64(Uint8List mediaBytes) =>
+  base64Encode(mediaBytes);
+
 /// Main Aegis client class
 class AegisClient {
+  static const int maxMediaUploadBytes = 15 * 1024 * 1024;
+  static const int _mediaPayloadSafetyBytes = 2048;
+
   /// Create new Aegis client
   AegisClient() {
     _transport = AegisTransport();
     events = AegisEventDispatcher(_messageController.stream);
-    _transport.messages.listen((message) {
+    _transportMessageSub = _transport.messages.listen((message) {
       final waiter = _pendingResponseWaiters[message.sequenceId];
       if (waiter != null &&
           message.type == MessageType.error &&
@@ -36,7 +42,7 @@ class AegisClient {
       }
       _messageController.add(message);
     });
-    _transport.disconnects.listen((_) {
+    _transportDisconnectSub = _transport.disconnects.listen((_) {
       _isAuthenticated = false;
       _authenticatedUserId = null;
       _authenticatedUsername = null;
@@ -47,6 +53,8 @@ class AegisClient {
   }
   late AegisTransport _transport;
   late final AegisEventDispatcher events;
+  StreamSubscription<Message>? _transportMessageSub;
+  StreamSubscription<void>? _transportDisconnectSub;
   // ignore: unused_field
   String? _authToken;
   bool _isAuthenticated = false;
@@ -221,6 +229,11 @@ class AegisClient {
       await _publishPresence(isOnline: false);
     }
     await _transport.disconnect();
+    await _transportMessageSub?.cancel();
+    _transportMessageSub = null;
+    await _transportDisconnectSub?.cancel();
+    _transportDisconnectSub = null;
+    _pendingResponseWaiters.clear();
     _isAuthenticated = false;
     _authToken = null;
     _authenticatedUserId = null;
@@ -622,8 +635,28 @@ class AegisClient {
     String? fileName,
     String? mimeType,
     int? replyToMessageId,
+    void Function(double progress)? onProgress,
   }) async {
     _ensureAuthenticated();
+
+    if (mediaBytes.isEmpty) {
+      throw Exception('Media file is empty');
+    }
+    if (mediaBytes.length > maxMediaUploadBytes) {
+      throw Exception(
+        'Media file too large: ${mediaBytes.length} bytes. '
+        'Maximum allowed: $maxMediaUploadBytes bytes (15MB).',
+      );
+    }
+
+    final estimatedBase64Length = ((mediaBytes.length + 2) ~/ 3) * 4;
+    final estimatedPayloadLength = estimatedBase64Length + _mediaPayloadSafetyBytes;
+    if (estimatedPayloadLength > ProtocolConstants.maxPayloadSize) {
+      throw Exception(
+        'Media payload exceeds protocol limit '
+        '(${ProtocolConstants.maxPayloadSize} bytes).',
+      );
+    }
 
     final resolvedFileName = fileName ??
         switch (mediaKind) {
@@ -649,10 +682,17 @@ class AegisClient {
       MediaKind.voice => MessageContentType.audio,
     };
 
+    onProgress?.call(0.86);
+    final encodedBytes = await compute(
+      _encodeMediaAttachmentBase64,
+      mediaBytes,
+    );
+    onProgress?.call(0.96);
+
     final attachment = MediaAttachmentPayload(
       fileName: resolvedFileName,
       mimeType: resolvedMime,
-      base64Data: base64Encode(mediaBytes),
+      base64Data: encodedBytes,
       sizeBytes: mediaBytes.length,
     );
 

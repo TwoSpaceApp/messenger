@@ -9,24 +9,24 @@ final joinedChatsProvider = FutureProvider<List<Chat>>((ref) async {
   final service = ref.watch(chatService);
   final roomIds = await service.getJoinedRooms();
 
-  final chats = <Chat>[];
-  for (final id in roomIds) {
-    try {
-      final meta = await service.getRoomNameAndAvatar(id);
-      chats.add(
-        Chat(
+  // Fetch all room metadata in parallel instead of sequentially.
+  final results = await Future.wait(
+    roomIds.map((id) async {
+      try {
+        final meta = await service.getRoomNameAndAvatar(id);
+        return Chat(
           id: id,
           name: meta['name'] ?? id,
           avatarUrl: meta['avatar'],
           members: [],
-        ),
-      );
-    } catch (e) {
-      // Skip rooms that fail to load
-    }
-  }
+        );
+      } catch (e) {
+        return null;
+      }
+    }),
+  );
 
-  return chats;
+  return results.whereType<Chat>().toList();
 });
 
 // Get specific chat by ID

@@ -13,7 +13,9 @@ import 'package:two_space_app/features/auth/presentation/screens/login_screen.da
 import 'package:two_space_app/features/auth/presentation/screens/register_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/tfa_setup_screen.dart';
+import 'package:two_space_app/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/main_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/account_settings_screen.dart';
@@ -34,6 +36,13 @@ class _RouterRefreshNotifier extends ChangeNotifier {
 
 CustomTransitionPage<void> _buildPage(GoRouterState state, Widget child) {
   return buildAppTransitionPage(state: state, child: child);
+}
+
+NoTransitionPage<void> _buildStaticPage(GoRouterState state, Widget child) {
+  return NoTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+  );
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -57,7 +66,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         data: (auth) {
           if (isSplashRoute) {
             return auth.isAuthenticated
-                ? AppStrings.routeHome
+                ? AppStrings.routeWelcome
                 : AppStrings.routeLogin;
           }
           if (!auth.isAuthenticated && !isAuthRoute) {
@@ -102,29 +111,36 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _buildPage(state, const MainScreen()),
       ),
       GoRoute(
+        path: AppStrings.routeWelcome,
+        pageBuilder: (context, state) => _buildPage(
+          state,
+          const _WelcomeRouteLoader(),
+        ),
+      ),
+      GoRoute(
         path: AppStrings.routeCustomization,
         pageBuilder: (context, state) =>
-            _buildPage(state, const CustomizationScreen()),
+          _buildStaticPage(state, const CustomizationScreen()),
       ),
       GoRoute(
         path: AppStrings.routePrivacy,
         pageBuilder: (context, state) =>
-            _buildPage(state, const PrivacyScreen()),
+          _buildStaticPage(state, const PrivacyScreen()),
       ),
       GoRoute(
         path: AppStrings.routeAccountSettings,
         pageBuilder: (context, state) =>
-            _buildPage(state, const AccountSettingsScreen()),
+          _buildStaticPage(state, const AccountSettingsScreen()),
       ),
       GoRoute(
         path: AppStrings.routeFeedback,
         pageBuilder: (context, state) =>
-            _buildPage(state, const FeedbackScreen()),
+          _buildStaticPage(state, const FeedbackScreen()),
       ),
       GoRoute(
         path: AppStrings.routeSettingsSearch,
         pageBuilder: (context, state) =>
-            _buildPage(state, const SettingsSearchScreen()),
+          _buildStaticPage(state, const SettingsSearchScreen()),
       ),
       GoRoute(
         path: AppStrings.routeProfile,
@@ -156,12 +172,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppStrings.routeNotifications,
         pageBuilder: (context, state) =>
-            _buildPage(state, const NotificationsScreen()),
+          _buildStaticPage(state, const NotificationsScreen()),
       ),
       GoRoute(
         path: AppStrings.routeStorage,
         pageBuilder: (context, state) =>
-            _buildPage(state, const StorageScreen()),
+          _buildStaticPage(state, const StorageScreen()),
       ),
       GoRoute(
         path: AppStrings.routeChat,
@@ -179,3 +195,61 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Loads user info from the chat service and displays WelcomeScreen.
+class _WelcomeRouteLoader extends StatefulWidget {
+  const _WelcomeRouteLoader();
+
+  @override
+  State<_WelcomeRouteLoader> createState() => _WelcomeRouteLoaderState();
+}
+
+class _WelcomeRouteLoaderState extends State<_WelcomeRouteLoader> {
+  Map<String, dynamic>? _userInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    try {
+      final svc = AegisChatService();
+      final info = await svc.getOwnUserInfo(forceRefresh: true);
+      if (!mounted) {
+        return;
+      }
+      if ((info['id']?.toString().isEmpty ?? true) &&
+          (info['username']?.toString().isEmpty ?? true)) {
+        _goHome();
+        return;
+      }
+      setState(() => _userInfo = info);
+    } catch (_) {
+      _goHome();
+    }
+  }
+
+  void _goHome() {
+    if (mounted) {
+      GoRouter.of(context).go(AppStrings.routeHome);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final info = _userInfo;
+    if (info == null) {
+      return const SplashScreen();
+    }
+    return WelcomeScreen(
+      name: (info['displayName'] as String?) ??
+          (info['username'] as String?) ??
+          '',
+      username: info['username'] as String?,
+      avatarUrl: info['avatarUrl'] as String?,
+      description: info['bio'] as String?,
+    );
+  }
+}

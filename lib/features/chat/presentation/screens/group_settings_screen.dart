@@ -9,6 +9,7 @@ import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/group.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
@@ -254,12 +255,14 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
 
         if (_isLoading || _currentGroup == null) {
           return Scaffold(
+            backgroundColor: Colors.transparent,
             appBar: AppBar(
               title: Text(_currentGroup?.name ?? l10n.groupInfoTab),
               centerTitle: !isWideScreen,
-              elevation: 2,
             ),
-            body: const AppLoadingState(),
+            body: const ScreenBackground(
+              child: AppLoadingState(),
+            ),
           );
         }
 
@@ -280,12 +283,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 : 12.0;
 
         return Scaffold(
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: Text(_currentGroup!.name),
             centerTitle: !isWideScreen,
-            elevation: 2,
           ),
-          body: Align(
+          body: ScreenBackground(
+            child: Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1320),
@@ -336,6 +340,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       ),
               ),
             ),
+          ),
           ),
         );
       },
@@ -1095,7 +1100,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
           final member = banned[index];
           return Card(
             margin: const EdgeInsets.symmetric(vertical: 6),
-            color: Colors.red.withValues(alpha: 0.05),
+            color: theme.colorScheme.error.withValues(alpha: 0.05),
             child: ListTile(
               onTap: () => _openMemberProfile(member),
               leading: UserAvatar(
@@ -1107,12 +1112,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 member.displayName,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: Colors.red,
+                  color: theme.colorScheme.error,
                 ),
               ),
               subtitle: Text(l10n.bannedLabel),
               trailing: IconButton(
-                icon: const Icon(Icons.close, color: Colors.red),
+                icon: Icon(Icons.close, color: theme.colorScheme.error),
                 onPressed: () async {
                   try {
                     await _groupService.unbanUser(widget.roomId, member.userId);
@@ -1145,7 +1150,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       child: Column(
         children: [
           Card(
-            color: Colors.red.withValues(alpha: 0.1),
+            color: theme.colorScheme.error.withValues(alpha: 0.1),
             elevation: 2,
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -1154,12 +1159,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.2),
+                      color: theme.colorScheme.error.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.warning_rounded,
-                      color: Colors.red,
+                      color: theme.colorScheme.error,
                       size: 40,
                     ),
                   ),
@@ -1167,7 +1172,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   Text(
                     l10n.deleteGroupLabel,
                     style: theme.textTheme.headlineSmall?.copyWith(
-                      color: Colors.red,
+                      color: theme.colorScheme.error,
                       fontWeight: FontWeight.w700,
                     ),
                     textAlign: TextAlign.center,
@@ -1185,15 +1190,15 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: theme.colorScheme.error,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       onPressed: _showDeleteConfirmation,
                       icon: const Icon(Icons.delete_forever),
                       label: Text(
                         l10n.deleteGroupLabel,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: theme.colorScheme.onError,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1339,7 +1344,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
             child: Text(l10n.cancel),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () async {
               Navigator.pop(context);
               try {
@@ -1358,7 +1363,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
             },
             child: Text(
               l10n.delete,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onError),
             ),
           ),
         ],
@@ -1416,7 +1421,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       case GroupRole.member:
         return l10n.memberRole;
       case GroupRole.guest:
-        return 'guest';
+        return l10n.guestRole;
     }
   }
 
@@ -1435,13 +1440,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   Color _getRoleColor(GroupRole role, ThemeData theme) {
     switch (role) {
       case GroupRole.owner:
-        return Colors.red;
+        return theme.colorScheme.error;
       case GroupRole.admin:
         return Colors.orange;
       case GroupRole.member:
         return theme.colorScheme.primary;
       case GroupRole.guest:
-        return Colors.grey;
+        return theme.colorScheme.outline;
     }
   }
 }

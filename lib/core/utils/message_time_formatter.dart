@@ -35,6 +35,20 @@ class MessageTimeFormatter {
     return DateFormat('dd.MM.yy').format(localTime);
   }
 
+  static String formatDateSeparator(DateTime time, {required String todayLabel, required String yesterdayLabel}) {
+    final localTime = time.toLocal();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDay = DateTime(localTime.year, localTime.month, localTime.day);
+    final diff = today.difference(messageDay).inDays;
+    if (diff == 0) return todayLabel;
+    if (diff == 1) return yesterdayLabel;
+    if (localTime.year == now.year) {
+      return DateFormat('d MMMM').format(localTime);
+    }
+    return DateFormat('d MMMM yyyy').format(localTime);
+  }
+
   static String _timePattern(MessageTimestampPrecision? precision) {
     switch (
         precision ?? SettingsService.messageTimestampPrecisionNotifier.value) {

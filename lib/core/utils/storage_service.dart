@@ -6,16 +6,23 @@ import 'package:path_provider/path_provider.dart';
 class StorageSnapshot {
   const StorageSnapshot({
     required this.appDataBytes,
-    required this.mediaBytes,
+    required this.photoBytes,
+    required this.videoBytes,
     required this.fileBytes,
+    required this.cacheBytes,
   });
 
   final int appDataBytes;
-  final int mediaBytes;
+  final int photoBytes;
+  final int videoBytes;
   final int fileBytes;
+  final int cacheBytes;
 
-  int get totalBytes => appDataBytes + mediaBytes + fileBytes;
-  int get clearableBytes => mediaBytes + fileBytes;
+  int get mediaBytes => photoBytes + videoBytes;
+
+  int get totalBytes =>
+      appDataBytes + photoBytes + videoBytes + fileBytes + cacheBytes;
+  int get clearableBytes => photoBytes + videoBytes + fileBytes + cacheBytes;
 }
 
 class StorageService {
@@ -31,6 +38,18 @@ class StorageService {
     final documentsBytes = await _directorySize(documentsDir);
     final mediaDir = Directory(p.join(documentsDir.path, 'aegis_media'));
     final mediaBytes = await _directorySize(mediaDir);
+    final photoBytes = await _matchingFileBytesRecursive(
+      mediaDir,
+      (file) => _isImageFile(file.path),
+    );
+    final videoBytes = await _matchingFileBytesRecursive(
+      mediaDir,
+      (file) => _isVideoFile(file.path),
+    );
+    final otherMediaBytes = await _matchingFileBytesRecursive(
+      mediaDir,
+      (file) => !_isImageFile(file.path) && !_isVideoFile(file.path),
+    );
     final exportedFilesBytes = await _matchingFileBytes(
       documentsDir,
       (file) => _isExportedFile(file.path),
@@ -46,21 +65,38 @@ class StorageService {
 
     return StorageSnapshot(
       appDataBytes: appDataBytes,
-      mediaBytes: mediaBytes,
-      fileBytes: exportedFilesBytes + tempBytes,
+      photoBytes: photoBytes,
+      videoBytes: videoBytes,
+      fileBytes: exportedFilesBytes + otherMediaBytes,
+      cacheBytes: tempBytes,
     );
   }
 
   Future<void> clearSelected({
-    required bool clearMedia,
+    required bool clearPhotos,
+    required bool clearVideos,
     required bool clearFiles,
+    required bool clearCache,
   }) async {
     final documentsDir = await getApplicationDocumentsDirectory();
     final tempDir = await getTemporaryDirectory();
+    final mediaDir = Directory(p.join(documentsDir.path, 'aegis_media'));
 
-    if (clearMedia) {
-      final mediaDir = Directory(p.join(documentsDir.path, 'aegis_media'));
+    if (clearPhotos && clearVideos) {
       await _deleteDirectoryContents(mediaDir);
+    } else {
+      if (clearPhotos) {
+        await _deleteMatchingFilesRecursive(
+          mediaDir,
+          (file) => _isImageFile(file.path),
+        );
+      }
+      if (clearVideos) {
+        await _deleteMatchingFilesRecursive(
+          mediaDir,
+          (file) => _isVideoFile(file.path),
+        );
+      }
     }
 
     if (clearFiles) {
@@ -68,6 +104,13 @@ class StorageService {
         documentsDir,
         (file) => _isExportedFile(file.path),
       );
+      await _deleteMatchingFilesRecursive(
+        mediaDir,
+        (file) => !_isImageFile(file.path) && !_isVideoFile(file.path),
+      );
+    }
+
+    if (clearCache) {
       await _deleteDirectoryContents(tempDir);
     }
   }
@@ -131,6 +174,26 @@ class StorageService {
     }
   }
 
+  Future<int> _matchingFileBytesRecursive(
+    Directory directory,
+    bool Function(File file) predicate,
+  ) async {
+    try {
+      if (!await directory.exists()) return 0;
+
+      var total = 0;
+      await for (final entity
+          in directory.list(recursive: true, followLinks: false)) {
+        if (entity is File && predicate(entity)) {
+          total += await _fileSize(entity);
+        }
+      }
+      return total;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   Future<void> _deleteMatchingFiles(
     Directory directory,
     bool Function(File file) predicate,
@@ -139,6 +202,24 @@ class StorageService {
       if (!await directory.exists()) return;
 
       await for (final entity in directory.list(followLinks: false)) {
+        if (entity is File && predicate(entity)) {
+          try {
+            await entity.delete();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _deleteMatchingFilesRecursive(
+    Directory directory,
+    bool Function(File file) predicate,
+  ) async {
+    try {
+      if (!await directory.exists()) return;
+
+      await for (final entity
+          in directory.list(recursive: true, followLinks: false)) {
         if (entity is File && predicate(entity)) {
           try {
             await entity.delete();
@@ -172,5 +253,24 @@ class StorageService {
     return name.startsWith('chat_') ||
         name.startsWith('twospace_backup_') ||
         name.startsWith('two_space_debug_');
+  }
+
+  bool _isImageFile(String path) {
+    final lower = path.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.gif') ||
+        lower.endsWith('.webp') ||
+        lower.endsWith('.heic');
+  }
+
+  bool _isVideoFile(String path) {
+    final lower = path.toLowerCase();
+    return lower.endsWith('.mp4') ||
+        lower.endsWith('.mov') ||
+        lower.endsWith('.mkv') ||
+        lower.endsWith('.webm') ||
+        lower.endsWith('.avi');
   }
 }

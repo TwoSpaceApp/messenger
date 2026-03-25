@@ -275,6 +275,27 @@ class AppLocalizationsEs extends AppLocalizations {
   String get messageInputHint => 'Escribe un mensaje...';
 
   @override
+  String get addCaptionHint => 'Añadir un pie de foto o mensaje';
+
+  @override
+  String get unlockApp => 'Desbloquear';
+
+  @override
+  String get unlockButton => 'Desbloquear';
+
+  @override
+  String get dropFilesTitle => 'Suelta archivos para adjuntar';
+
+  @override
+  String get dropFilesSubtitle => 'Aparecerán sobre el campo de mensaje.';
+
+  @override
+  String get videoUnavailable => 'Vídeo no disponible';
+
+  @override
+  String get guestRole => 'Invitado';
+
+  @override
   String get replyAction => 'Responder';
 
   @override
@@ -1689,6 +1710,31 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => 'Memoria';
+
+  @override
+  String get storageTotalLabel => 'Total';
+
+  @override
+  String get storagePhotosLabel => 'Fotos';
+
+  @override
+  String get storageVideosLabel => 'Vídeos';
+
+  @override
+  String get storageCacheLabel => 'Caché';
+
+  @override
+  String get storageAppDataLabel => 'Datos de la app';
+
+  @override
+  String get storageCleanupTitle => 'Se borrará';
+
+  @override
+  String get storageCleanupSubtitle =>
+      'Revisa qué se puede eliminar con seguridad.';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override
@@ -2004,4 +2050,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Cámara trasera';
+
+  @override
+  String get backgroundOptimizationDisabledTitle =>
+      'Los efectos de fondo se simplificaron';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace detectó fotogramas lentos de forma continua y desactivó los efectos de fondo pesados para mantener fluido el desplazamiento y el uso de los chats.';
+
+  @override
+  String get backgroundOptimizationOpenSettings =>
+      'Abrir ajustes de apariencia';
 }

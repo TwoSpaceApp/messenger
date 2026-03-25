@@ -15,6 +15,7 @@ on:
     branches:
       - main
       - master
+      - develop
     paths:
       - 'lib/**'
       - 'android/**'
@@ -59,6 +60,9 @@ jobs:
           flutter doctor -v
 
       - name: Get dependencies
+        run: flutter pub get
+
+      - name: Get dependencies V2
         run: flutter pub get --enforce-lockfile
 
       - name: Prepare env for CI

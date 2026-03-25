@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/utils/responsive.dart';
 
 class SkeletonShimmer extends StatelessWidget {
@@ -13,8 +14,8 @@ class SkeletonShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Colors.white.withValues(alpha: 0.08),
-      highlightColor: Colors.white.withValues(alpha: 0.16),
+      baseColor: AppColors.skeletonBase(context),
+      highlightColor: AppColors.skeletonHighlight(context),
       child: child,
     );
   }
@@ -121,7 +122,7 @@ class _PersonTileSkeleton extends StatelessWidget {
           vertical: 12.s(context),
         ),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.24),
+          color: AppColors.skeletonBase(context),
           borderRadius: BorderRadius.circular(22.s(context)),
         ),
         child: Row(
@@ -129,8 +130,8 @@ class _PersonTileSkeleton extends StatelessWidget {
             Container(
               width: 48.s(context),
               height: 48.s(context),
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: AppColors.skeletonHighlight(context),
                 shape: BoxShape.circle,
               ),
             ),
@@ -156,8 +157,8 @@ class _PersonTileSkeleton extends StatelessWidget {
                   child: Container(
                     width: 16.s(context),
                     height: 16.s(context),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: AppColors.skeletonHighlight(context),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -184,7 +185,7 @@ class _CallTileSkeleton extends StatelessWidget {
           vertical: 12.s(context),
         ),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.24),
+          color: AppColors.skeletonBase(context),
           borderRadius: BorderRadius.circular(22.s(context)),
         ),
         child: Row(
@@ -192,8 +193,8 @@ class _CallTileSkeleton extends StatelessWidget {
             Container(
               width: 48.s(context),
               height: 48.s(context),
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: AppColors.skeletonHighlight(context),
                 shape: BoxShape.circle,
               ),
             ),
@@ -225,8 +226,8 @@ class _CallTileSkeleton extends StatelessWidget {
                       child: Container(
                         width: 16.s(context),
                         height: 16.s(context),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
+                        decoration: BoxDecoration(
+                          color: AppColors.skeletonHighlight(context),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -257,7 +258,7 @@ class _SkeletonLine extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.skeletonHighlight(context),
         borderRadius: BorderRadius.circular(height),
       ),
     );

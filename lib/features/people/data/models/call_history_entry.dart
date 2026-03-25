@@ -5,6 +5,50 @@ import 'package:two_space_app/features/people/data/models/person_entry.dart';
 enum CallHistoryDirection { incoming, outgoing }
 enum CallHistoryOutcome { connected, missed, canceled }
 
+String _directionWire(CallHistoryDirection value) {
+  switch (value) {
+    case CallHistoryDirection.incoming:
+      return 'incoming';
+    case CallHistoryDirection.outgoing:
+      return 'outgoing';
+  }
+}
+
+CallHistoryDirection _directionFromWire(String? value) {
+  switch (value) {
+    case 'incoming':
+      return CallHistoryDirection.incoming;
+    case 'outgoing':
+      return CallHistoryDirection.outgoing;
+    default:
+      return CallHistoryDirection.outgoing;
+  }
+}
+
+String _outcomeWire(CallHistoryOutcome value) {
+  switch (value) {
+    case CallHistoryOutcome.connected:
+      return 'connected';
+    case CallHistoryOutcome.missed:
+      return 'missed';
+    case CallHistoryOutcome.canceled:
+      return 'canceled';
+  }
+}
+
+CallHistoryOutcome _outcomeFromWire(String? value) {
+  switch (value) {
+    case 'connected':
+      return CallHistoryOutcome.connected;
+    case 'missed':
+      return CallHistoryOutcome.missed;
+    case 'canceled':
+      return CallHistoryOutcome.canceled;
+    default:
+      return CallHistoryOutcome.connected;
+  }
+}
+
 @immutable
 class CallHistoryEntry {
   const CallHistoryEntry({
@@ -59,14 +103,8 @@ class CallHistoryEntry {
           DateTime.tryParse(json['startedAt']?.toString() ?? '') ?? DateTime.now(),
       duration: Duration(milliseconds: json['durationMs'] as int? ?? 0),
       isVideo: json['isVideo'] == true,
-      direction: CallHistoryDirection.values.firstWhere(
-        (value) => value.name == json['direction'],
-        orElse: () => CallHistoryDirection.outgoing,
-      ),
-      outcome: CallHistoryOutcome.values.firstWhere(
-        (value) => value.name == json['outcome'],
-        orElse: () => CallHistoryOutcome.connected,
-      ),
+      direction: _directionFromWire(json['direction']?.toString()),
+      outcome: _outcomeFromWire(json['outcome']?.toString()),
     );
   }
 
@@ -77,8 +115,8 @@ class CallHistoryEntry {
       'startedAt': startedAt.toIso8601String(),
       'durationMs': duration.inMilliseconds,
       'isVideo': isVideo,
-      'direction': direction.name,
-      'outcome': outcome.name,
+      'direction': _directionWire(direction),
+      'outcome': _outcomeWire(outcome),
     };
   }
 }

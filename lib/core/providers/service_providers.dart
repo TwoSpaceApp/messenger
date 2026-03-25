@@ -11,10 +11,9 @@ final currentUserIdProvider = FutureProvider<String?>((ref) async {
 });
 
 final userInfoProvider =
-    FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
+    FutureProvider.family<Map<String, dynamic>, String>(
   (ref, userId) async {
     final profileService = ref.watch(aegisChatServiceProvider);
-    ref.keepAlive();
     return profileService.getUserInfo(userId);
   },
 );

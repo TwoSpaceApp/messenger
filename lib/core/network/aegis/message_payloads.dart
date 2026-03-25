@@ -152,6 +152,7 @@ ParsedMediaAttachment? tryParseMediaAttachment(
   MessageContentType contentType,
 ) {
   if (contentType != MessageContentType.image &&
+      contentType != MessageContentType.video &&
       contentType != MessageContentType.file &&
       contentType != MessageContentType.audio) {
     return null;

@@ -17,9 +17,52 @@ class UITokens {
   // Common Card elevation
   static const double cardElevation = 2;
 
+  // Responsive breakpoints
+  static const double mobileBreakpoint = 540;
+  static const double tabletBreakpoint = 760;
+  static const double desktopBreakpoint = 1100;
+
   // Helper to create a slightly emphasized text style based on theme
   static TextStyle emphasized(BuildContext context) => Theme.of(context)
       .textTheme
       .titleMedium!
       .copyWith(fontWeight: FontWeight.w600);
+
+  // ─── text style helpers ──────────────────────────────────────────────
+
+  static TextStyle senderName(BuildContext context) =>
+      Theme.of(context).textTheme.bodySmall!.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+          );
+
+  static TextStyle messageText(BuildContext context) =>
+      Theme.of(context).textTheme.bodyMedium!.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+          );
+
+  static TextStyle timestamp(BuildContext context) =>
+      Theme.of(context).textTheme.labelSmall!.copyWith(
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+            fontWeight: FontWeight.w500,
+          );
+
+  static TextStyle screenTitle(BuildContext context) =>
+      Theme.of(context).textTheme.titleLarge!.copyWith(
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.onSurface,
+          );
+
+  static TextStyle sectionHeader(BuildContext context) =>
+      Theme.of(context).textTheme.titleSmall!.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurface,
+          );
+
+  static TextStyle subtitle(BuildContext context) =>
+      Theme.of(context).textTheme.bodySmall!.copyWith(
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+          );
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
@@ -147,7 +149,8 @@ class _CreateChatScreenState extends State<CreateChatScreen>
   Future<void> _joinRoomByLink() async {
     final linkOrAlias = _joinLinkController.text.trim();
     if (linkOrAlias.isEmpty) {
-      setState(() => _errorMessage = AppLocalizations.of(context)!.joinLinkHint);
+      setState(() =>
+          _errorMessage = AppLocalizations.of(context)!.joinLinkHint);
       return;
     }
 
@@ -178,76 +181,88 @@ class _CreateChatScreenState extends State<CreateChatScreen>
       backgroundColor: Colors.transparent,
       body: ScreenBackground(
         child: SafeArea(
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const AppLogo(large: false),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.newChatTitle,
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth =
+                  constraints.maxWidth >= UITokens.desktopBreakpoint ? 920.0 : double.infinity;
+              final isNarrow = constraints.maxWidth < UITokens.mobileBreakpoint;
+              return Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.arrow_back,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                              onPressed: () => Navigator.pop(context),
                             ),
-                          ),
-                          Text(
-                            l10n.chatsSubtitle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.white70,
+                            const AppLogo(large: false),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.newChatTitle,
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  Text(
+                                    l10n.chatsSubtitle,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: AppColors.subtitleText(context),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      GlassCard(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.zero,
+                        child: TabBar(
+                          controller: _tabController,
+                          isScrollable: isNarrow,
+                          labelColor: theme.colorScheme.onSurface,
+                          unselectedLabelColor: AppColors.hintText(context),
+                          indicatorColor: theme.colorScheme.primary,
+                          tabs: [
+                            Tab(text: l10n.directChatTab),
+                            Tab(text: l10n.groupChatTab),
+                            Tab(text: l10n.joinByCodeTitle),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildDirectChatTab(),
+                            _buildGroupChatTab(),
+                            _buildJoinChatTab(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-
-              // Tab bar
-              GlassCard(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: EdgeInsets.zero,
-                child: TabBar(
-                  controller: _tabController,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.white60,
-                  indicatorColor: theme.colorScheme.primary,
-                  tabs: [
-                    Tab(text: l10n.directChatTab),
-                    Tab(text: l10n.groupChatTab),
-                    Tab(text: l10n.joinByCodeTitle),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Tab content
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildDirectChatTab(),
-                    _buildGroupChatTab(),
-                    _buildJoinChatTab(),
-                  ],
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -268,10 +283,10 @@ class _CreateChatScreenState extends State<CreateChatScreen>
               children: [
                 Text(
                   AppLocalizations.of(context)!.searchContactsTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -279,7 +294,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   l10n.inviteUserSubtitle,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withAlpha(180),
+                    color: AppColors.subtitleText(context),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -308,10 +323,10 @@ class _CreateChatScreenState extends State<CreateChatScreen>
               children: [
                 Text(
                   l10n.contactIdLabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -319,21 +334,21 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   l10n.contactIdDescription,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withAlpha(180),
+                    color: AppColors.subtitleText(context),
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: _userIdController,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   decoration: InputDecoration(
                     labelText: l10n.contactIdLabel,
-                    labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
-                    hintStyle: TextStyle(color: Colors.white.withAlpha(100)),
-                    prefixIcon: const Icon(Icons.person, color: Colors.white70),
+                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
+                    hintStyle: TextStyle(color: AppColors.hintText(context)),
+                    prefixIcon: Icon(Icons.person, color: AppColors.subtitleText(context)),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withAlpha(50)),
+                      borderSide: BorderSide(color: AppColors.divider(context)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -346,7 +361,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   const SizedBox(height: 12),
                   Text(
                     _errorMessage!,
-                    style: const TextStyle(color: Colors.redAccent),
+                    style: TextStyle(color: AppColors.danger(context)),
                   ),
                 ],
                 const SizedBox(height: 20),
@@ -380,13 +395,13 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                 Row(
                   children: [
                     Icon(Icons.info_outline,
-                        color: Colors.white.withAlpha(180)),
+                        color: AppColors.subtitleText(context)),
                     const SizedBox(width: 12),
                     Text(
                       l10n.hintCardTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -395,7 +410,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                 Text(
                   l10n.contactIdExplanation,
                   style: TextStyle(
-                    color: Colors.white.withAlpha(180),
+                    color: AppColors.subtitleText(context),
                     fontSize: 13,
                   ),
                 ),
@@ -421,23 +436,23 @@ class _CreateChatScreenState extends State<CreateChatScreen>
               children: [
                 Text(
                   l10n.createNewRoomTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: _roomNameController,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   decoration: InputDecoration(
                     labelText: l10n.roomNameLabel,
-                    labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
-                    prefixIcon: const Icon(Icons.group, color: Colors.white70),
+                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
+                    prefixIcon: Icon(Icons.group, color: AppColors.subtitleText(context)),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withAlpha(50)),
+                      borderSide: BorderSide(color: AppColors.divider(context)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -449,16 +464,16 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                 const SizedBox(height: 16),
                 TextField(
                   controller: _roomTopicController,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   maxLines: 2,
                   decoration: InputDecoration(
                     labelText: l10n.descriptionOptionalLabel,
-                    labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
+                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
                     prefixIcon:
-                        const Icon(Icons.description, color: Colors.white70),
+                        Icon(Icons.description, color: AppColors.subtitleText(context)),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withAlpha(50)),
+                      borderSide: BorderSide(color: AppColors.divider(context)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -472,13 +487,13 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     l10n.privateGroupLabel,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   ),
                   subtitle: Text(
                     _isPrivate
                         ? l10n.privateGroupSubtitle
                         : l10n.publicRoomSubtitle,
-                    style: TextStyle(color: Colors.white.withAlpha(150)),
+                    style: TextStyle(color: AppColors.subtitleText(context)),
                   ),
                   value: _isPrivate,
                   onChanged: (v) => setState(() => _isPrivate = v),
@@ -487,7 +502,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   const SizedBox(height: 12),
                   Text(
                     _errorMessage!,
-                    style: const TextStyle(color: Colors.redAccent),
+                    style: TextStyle(color: AppColors.danger(context)),
                   ),
                 ],
                 const SizedBox(height: 20),
@@ -532,10 +547,10 @@ class _CreateChatScreenState extends State<CreateChatScreen>
               children: [
                 Text(
                   l10n.joinByCodeTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -543,22 +558,22 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   l10n.joinByCodeSubtitle,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withAlpha(180),
+                    color: AppColors.subtitleText(context),
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: _joinLinkController,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   decoration: InputDecoration(
                     labelText: l10n.joinByCodeTitle,
                     hintText: l10n.joinLinkHint,
-                    labelStyle: TextStyle(color: Colors.white.withAlpha(180)),
-                    hintStyle: TextStyle(color: Colors.white.withAlpha(100)),
-                    prefixIcon: const Icon(Icons.link, color: Colors.white70),
+                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
+                    hintStyle: TextStyle(color: AppColors.hintText(context)),
+                    prefixIcon: Icon(Icons.link, color: AppColors.subtitleText(context)),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withAlpha(50)),
+                      borderSide: BorderSide(color: AppColors.divider(context)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -572,7 +587,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   const SizedBox(height: 12),
                   Text(
                     _errorMessage!,
-                    style: const TextStyle(color: Colors.redAccent),
+                    style: TextStyle(color: AppColors.danger(context)),
                   ),
                 ],
                 const SizedBox(height: 20),

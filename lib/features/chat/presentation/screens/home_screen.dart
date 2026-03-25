@@ -4,6 +4,8 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
@@ -27,14 +29,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  static const Duration _refreshInterval = Duration(seconds: 45);
   final AegisChatService _chat = AegisChatService();
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
   String? _errorMessage;
   StreamSubscription<List<Chat>>? _roomsSub;
-  Timer? _refreshTimer;
-  DateTime? _lastVisibleRefreshAt;
+  Future<void>? _roomRefreshInFlight;
 
   final String _searchQuery = '';
 
@@ -49,37 +49,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    unawaited(_loadCachedRooms());
     _subscribeToRooms();
-    _startBackgroundRefresh();
+    unawaited(_loadUserAndRooms());
   }
 
   @override
   void dispose() {
     _roomsSub?.cancel();
-    _refreshTimer?.cancel();
     super.dispose();
   }
 
-  Future<void> _loadCachedRooms() async {
+  Future<void> _loadUserAndRooms() async {
+    final inFlight = _roomRefreshInFlight;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final future = _refreshRoomIndex();
+    _roomRefreshInFlight = future;
     try {
-      final chats = await _chat.getChats();
-      final nextRooms = chats.map(_roomFromChat).toList(growable: false);
-      if (!mounted) return;
-      if (_roomListsEqual(_rooms, nextRooms) && !_loading) {
-        return;
+      await future;
+    } finally {
+      if (identical(_roomRefreshInFlight, future)) {
+        _roomRefreshInFlight = null;
       }
-      setState(() {
-        _rooms = nextRooms;
-        _loading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
     }
   }
 
-  Future<void> _loadUserAndRooms() async {
+  Future<void> _refreshRoomIndex() async {
     if (!mounted) return;
     if (_rooms.isEmpty) {
       setState(() {
@@ -91,10 +89,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     try {
-      await _chat.refreshChats();
-      final chats = await _chat.getChats();
-      final out = chats.map(_roomFromChat).toList();
-      if (mounted) setState(() => _rooms = out);
+      await _chat.refreshChatIndex(
+        preloadRooms: 0,
+        messageLimit: 0,
+      );
     } catch (e) {
       if (mounted) {
         setState(() => _errorMessage = e.toString());
@@ -102,19 +100,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  void _startBackgroundRefresh() {
-    _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(_refreshInterval, (_) {
-      final lastVisibleRefreshAt = _lastVisibleRefreshAt;
-      if (lastVisibleRefreshAt != null &&
-          DateTime.now().difference(lastVisibleRefreshAt) <
-              const Duration(seconds: 20)) {
-        return;
-      }
-      unawaited(_chat.refreshChatsQuietly());
-    });
   }
 
   void _subscribeToRooms() {
@@ -131,7 +116,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _loading = false;
           _errorMessage = null;
         });
-        _lastVisibleRefreshAt = DateTime.now();
       },
       onError: (Object error) {
         if (!mounted) return;
@@ -150,6 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       'avatar': chat.avatarUrl,
       'lastMessage': chat.lastMessage,
       'time': chat.lastMessageTime,
+      'unreadCount': chat.unreadCount,
       'roomType': chat.roomType,
       'isOnline': chat.isOnline,
       'presenceStatus': chat.presenceStatus,
@@ -211,12 +196,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Color _presenceColor(Map<String, dynamic> room) {
     final presenceStatus = room['presenceStatus'] as String?;
     if (presenceStatus == 'online' || room['isOnline'] == true) {
-      return const Color(0xFF4CD964);
+      return AppColors.onlineStatus(context);
     }
     if (presenceStatus == 'recently') {
-      return Colors.amberAccent;
+      return AppColors.recentlyStatus(context);
     }
-    return Colors.white54;
+    return AppColors.offlineStatus(context);
   }
 
   bool _showPresenceBadge(Map<String, dynamic> room) {
@@ -313,16 +298,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 l10n.chatsTitle,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.search, color: Colors.white),
+              icon: Icon(
+                Icons.search,
+                color: theme.colorScheme.onSurface,
+              ),
               onPressed: _openSearch,
             ),
             IconButton(
-              icon: const Icon(Icons.settings_outlined, color: Colors.white),
+              icon: Icon(
+                Icons.settings_outlined,
+                color: theme.colorScheme.onSurface,
+              ),
               onPressed: _openSettings,
             ),
           ],
@@ -341,21 +332,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.transparent,
       body: ScreenBackground(
         child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeroHeader(theme, l10n),
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 260),
-                  child: _loading ? _buildShimmerLoading() : _buildChatList(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth = constraints.maxWidth >= UITokens.desktopBreakpoint
+                  ? 920.0
+                  : double.infinity;
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: Column(
+                    children: [
+                      _buildHeroHeader(theme, l10n),
+                      Expanded(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          child: _loading
+                              ? _buildShimmerLoading()
+                              : RefreshIndicator.adaptive(
+                                  onRefresh: _loadUserAndRooms,
+                                  child: _buildChatList(),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 88,
+        ),
         child: FloatingActionButton(
           onPressed: _showStartChatSheet,
           child: const Icon(Icons.add_comment_outlined),
@@ -365,19 +375,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildShimmerLoading() {
+    final baseColor = AppColors.skeletonBase(context);
+    final highlightColor = AppColors.skeletonHighlight(context);
+    final bottomInset = MediaQuery.of(context).padding.bottom + 124;
     return ListView.builder(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.fromLTRB(8, 8, 8, bottomInset),
       itemCount: 6,
       itemBuilder: (context, index) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Shimmer.fromColors(
-            baseColor: Colors.white.withValues(alpha: 0.1),
-            highlightColor: Colors.white.withValues(alpha: 0.2),
+            baseColor: baseColor,
+            highlightColor: highlightColor,
             child: Container(
               height: 72,
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
               padding: const EdgeInsets.all(12),
@@ -415,48 +428,85 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildChatList() {
     final rooms = _filteredRooms;
     if (_errorMessage != null) {
-      return AppErrorState(
-        title: AppLocalizations.of(context)!.errorGeneric,
-        message: _errorMessage!,
-        actionLabel: AppLocalizations.of(context)!.retry,
-        onAction: _loadUserAndRooms,
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        padding: const EdgeInsets.all(12),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.55,
+            child: Center(
+              child: AppErrorState(
+                title: AppLocalizations.of(context)!.errorGeneric,
+                message: _errorMessage!,
+                actionLabel: AppLocalizations.of(context)!.retry,
+                onAction: _loadUserAndRooms,
+              ),
+            ),
+          ),
+        ],
       );
     }
 
     if (rooms.isEmpty) {
       final l10n = AppLocalizations.of(context)!;
-      return Padding(
-        padding: const EdgeInsets.all(12),
-        child: GlassCard(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.forum_outlined,
-                size: 56,
-                color: Colors.white70,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.noChats,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ],
-          ),
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
         ),
+        padding: const EdgeInsets.all(12),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 220),
+                child: GlassCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.forum_outlined,
+                        size: 36,
+                        color: AppColors.iconMuted(context),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        l10n.noChats,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(8),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        8,
+        8,
+        8,
+        MediaQuery.of(context).padding.bottom + 124,
+      ),
       cacheExtent: 500,
       itemCount: rooms.length,
       itemBuilder: (c, i) {
         final r = rooms[i];
         final id = r['id'] as String;
+        final unreadCount = r['unreadCount'] as int? ?? 0;
 
         final item = Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -486,7 +536,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               color: _presenceColor(r),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: const Color(0xFF1B2025),
+                                color: AppColors.presenceRing(context),
                                 width: 2,
                               ),
                             ),
@@ -502,18 +552,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: [
                       Text(
                         r['name'],
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.white),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _roomSubtitle(r),
-                        style: const TextStyle(
-                            fontSize: 14, color: Colors.white70),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.subtitleText(context),
+                            ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -525,9 +576,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Text(
                       _formatRoomTime(r['time'] as DateTime?),
-                      style:
-                          const TextStyle(fontSize: 12, color: Colors.white54),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppColors.hintText(context),
+                          ),
                     ),
+                    if (unreadCount > 0) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : '$unreadCount',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],

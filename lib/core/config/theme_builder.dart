@@ -24,8 +24,30 @@ class AppThemeBuilder {
         isLightTheme ? const Color(0xFFF5F7FA) : const Color(0xFF0F1115);
     final surfaceColor =
         isLightTheme ? const Color(0xFFFFFFFF) : const Color(0xFF1D2227);
+    final surfaceContainerColor =
+        isLightTheme ? const Color(0xFFF0F2F5) : const Color(0xFF272C31);
+    final surfaceContainerHighColor =
+        isLightTheme ? const Color(0xFFE8EBF0) : const Color(0xFF2E3338);
     final onBackgroundColor = isLightTheme ? Colors.black87 : Colors.white;
     final onSurfaceColor = isLightTheme ? Colors.black87 : Colors.white;
+    final outlineColor = isLightTheme
+        ? Colors.black.withValues(alpha: 0.25)
+        : Colors.white.withValues(alpha: 0.25);
+    final outlineVariantColor = isLightTheme
+      ? const Color(0xFFD7DEE7)
+      : const Color(0xFF3A4048);
+    final onSurfaceVariantColor =
+      isLightTheme ? const Color(0xFF55606D) : Colors.white70;
+    final errorColor =
+        isLightTheme ? const Color(0xFFD32F2F) : const Color(0xFFEF5350);
+    final tertiaryColor =
+      isLightTheme ? const Color(0xFF2E8BFF) : const Color(0xFF74B1FF);
+    final primaryContainerColor = isLightTheme
+      ? Color.lerp(primaryColor, Colors.white, 0.82)!
+      : primaryColor.withValues(alpha: 0.24);
+    final onPrimaryContainerColor = isLightTheme
+      ? const Color(0xFF17365D)
+      : Colors.white;
 
     final baseTheme = isLightTheme ? ThemeData.light() : ThemeData.dark();
 
@@ -60,14 +82,30 @@ class AppThemeBuilder {
           settings.compactMode ? VisualDensity.compact : VisualDensity.standard,
       colorScheme: baseTheme.colorScheme.copyWith(
         primary: primaryColor,
+        onPrimary: Colors.white,
+        primaryContainer: primaryContainerColor,
+        onPrimaryContainer: onPrimaryContainerColor,
         surface: surfaceColor,
+        surfaceContainer: surfaceContainerColor,
         onSurface: onSurfaceColor,
+        onSurfaceVariant: onSurfaceVariantColor,
+        surfaceContainerHighest: surfaceContainerHighColor,
         secondary: primaryColor,
+        tertiary: tertiaryColor,
+        outline: outlineColor,
+        outlineVariant: outlineVariantColor,
+        error: errorColor,
+        surfaceTint: primaryColor,
+        shadow: isLightTheme
+            ? Colors.black.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.25),
       ),
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         titleTextStyle: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.w600,
@@ -75,9 +113,12 @@ class AppThemeBuilder {
         ),
         iconTheme: IconThemeData(color: onBackgroundColor),
       ),
+      dividerColor: outlineVariantColor,
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surfaceColor,
+        fillColor: isLightTheme
+            ? const Color(0xFFF7FAFD)
+            : surfaceColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -105,6 +146,7 @@ class AppThemeBuilder {
         margin: settings.compactMode
             ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
             : const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        color: surfaceColor,
       ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {

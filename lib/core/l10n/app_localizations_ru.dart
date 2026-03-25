@@ -274,6 +274,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get messageInputHint => 'Напишите сообщение...';
 
   @override
+  String get addCaptionHint => 'Добавьте подпись или сообщение';
+
+  @override
+  String get unlockApp => 'Разблокировать';
+
+  @override
+  String get unlockButton => 'Разблокировать';
+
+  @override
+  String get dropFilesTitle => 'Перетащите файлы для прикрепления';
+
+  @override
+  String get dropFilesSubtitle => 'Они появятся над полем ввода.';
+
+  @override
+  String get videoUnavailable => 'Видео недоступно';
+
+  @override
+  String get guestRole => 'Гость';
+
+  @override
   String get replyAction => 'Ответить';
 
   @override
@@ -1687,6 +1708,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsStorageClearBtn => 'Очистить выбранное';
 
   @override
+  String get storageMemoryTitle => 'Память';
+
+  @override
+  String get storageTotalLabel => 'Всего';
+
+  @override
+  String get storagePhotosLabel => 'Фото';
+
+  @override
+  String get storageVideosLabel => 'Видео';
+
+  @override
+  String get storageCacheLabel => 'Кэш';
+
+  @override
+  String get storageAppDataLabel => 'Данные приложения';
+
+  @override
+  String get storageCleanupTitle => 'Будет очищено';
+
+  @override
+  String get storageCleanupSubtitle => 'Посмотри, что можно безопасно удалить.';
+
+  @override
   String get settingsStorageKeepChat => 'Хранить данные чатов';
 
   @override
@@ -2002,4 +2047,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Основная камера';
+
+  @override
+  String get backgroundOptimizationDisabledTitle => 'Фоновые эффекты упрощены';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace заметил стабильные просадки кадров и отключил тяжёлые фоновые эффекты, чтобы прокрутка и работа с чатами оставались плавными.';
+
+  @override
+  String get backgroundOptimizationOpenSettings =>
+      'Открыть настройки оформления';
 }

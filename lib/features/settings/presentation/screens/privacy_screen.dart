@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/biometric_service.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class PrivacyScreen extends StatefulWidget {
@@ -19,8 +20,10 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.privacyTitle)),
-      body: ListView(
+      body: ScreenBackground(
+        child: ListView(
         padding: const EdgeInsets.all(12),
         children: [
           ValueListenableBuilder<bool>(
@@ -66,11 +69,18 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                       onTap: _loading
                           ? null
                           : () async {
+                              final width = MediaQuery.of(context).size.width;
+                              final horizontalInset =
+                                  (width * 0.08).clamp(12.0, 28.0);
                               final controller =
                                   TextEditingController(text: days.toString());
                               final ok = await showDialog<bool>(
                                 context: context,
                                 builder: (ctx) => AlertDialog(
+                                  insetPadding: EdgeInsets.symmetric(
+                                    horizontal: horizontalInset,
+                                    vertical: 24,
+                                  ),
                                   title: Text(l10n.sessionExpiryDaysTitle),
                                   content: Column(
                                     mainAxisSize: MainAxisSize.min,
@@ -143,6 +153,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

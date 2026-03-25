@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/update_service.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 
 class UpdateScreen extends StatefulWidget {
   const UpdateScreen({required this.info, super.key});
@@ -62,9 +63,13 @@ class _UpdateScreenState extends State<UpdateScreen> {
       final canInstall = await UpdateService.canRequestInstallPackages();
       if (!canInstall) {
         if (!mounted) return;
+        final width = MediaQuery.of(context).size.width;
+        final horizontalInset = (width * 0.08).clamp(12.0, 28.0);
         final ok = await showDialog<bool>(
           context: context,
           builder: (c) => AlertDialog(
+            insetPadding:
+                EdgeInsets.symmetric(horizontal: horizontalInset, vertical: 24),
             title: Text(l10n.installPermissionTitle),
             content: Text(l10n.installPermissionContent),
             actions: [
@@ -108,8 +113,9 @@ class _UpdateScreenState extends State<UpdateScreen> {
         _selectedAbi = widget.info.selectedAbi!;
     } catch (_) {}
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: ScreenBackground(
+        child: SafeArea(
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -184,7 +190,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                           if (_error != null) ...[
                             Text(_error!,
                                 style:
-                                    const TextStyle(color: Colors.redAccent)),
+                                    TextStyle(color: theme.colorScheme.error)),
                             const SizedBox(height: 12),
                           ],
                           if (_downloading) ...[
@@ -255,6 +261,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

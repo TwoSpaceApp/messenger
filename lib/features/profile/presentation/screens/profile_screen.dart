@@ -1,10 +1,16 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/services/navigation_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
@@ -29,6 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _actionLoading = false;
   bool _isMe = false;
   bool _isEditing = false;
+  final ValueNotifier<double> _avatarStretch = ValueNotifier(0);
 
   final _nameController = TextEditingController();
   final _nicknameController = TextEditingController();
@@ -49,6 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _aboutController.dispose();
     _locationController.dispose();
     _birthdayController.dispose();
+    _avatarStretch.dispose();
     super.dispose();
   }
 
@@ -124,44 +132,106 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickAvatar() async {
-    final picker = ImagePicker();
     final l10n = AppLocalizations.of(context)!;
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
+    if (_actionLoading) return;
+
+    Uint8List? avatarBytes;
+    String mimePathOrName = '';
+
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        avatarBytes = await image.readAsBytes();
+        mimePathOrName = image.path;
+      }
+    } catch (_) {
+      // Ignore and fallback to FilePicker below.
+    }
+
+    if (avatarBytes == null) {
       try {
-        setState(() => _actionLoading = true);
-        final uploaded = await _chatService.uploadMyAvatar(
-          await image.readAsBytes(),
-          mimeType: _mimeTypeForPath(image.path),
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.image,
+          withData: true,
         );
-        if (!mounted) return;
-        setState(() {
-          _user = {
-            ...?_user,
-            'avatar': uploaded['avatarUrl'] ?? _user?['avatar'],
-            'avatars': uploaded['avatars'] ?? _user?['avatars'],
-            'presenceStatus':
-                uploaded['presenceStatus'] ?? _user?['presenceStatus'],
-            'lastSeenAt': uploaded['lastSeenAt'] ?? _user?['lastSeenAt'],
-            'prefs': {
-              if (_user?['prefs'] is Map)
-                ...Map<String, dynamic>.from(_user!['prefs'] as Map),
-              'avatarUrl': uploaded['avatarUrl'] ?? _user?['avatar'],
-            },
-          };
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.profileSaved)),
-        );
+        if (result == null || result.files.isEmpty) {
+          return;
+        }
+        final file = result.files.single;
+        avatarBytes = file.bytes;
+        mimePathOrName = file.name;
+        if (avatarBytes == null && file.path != null) {
+          avatarBytes = await File(file.path!).readAsBytes();
+          mimePathOrName = file.path!;
+        }
       } catch (e) {
         if (!mounted) return;
+        final raw = e.toString().toLowerCase();
+        final denied = raw.contains('permission') ||
+            raw.contains('denied') ||
+            raw.contains('access') ||
+            raw.contains('operation not permitted');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+          SnackBar(
+            content: Text(
+              denied
+                  ? l10n.filePickError('Нет доступа к выбранному файлу')
+                  : l10n.filePickError(e.toString()),
+            ),
+          ),
         );
-      } finally {
-        if (mounted) {
-          setState(() => _actionLoading = false);
-        }
+        return;
+      }
+    }
+
+    if (avatarBytes == null || avatarBytes.isEmpty) {
+      return;
+    }
+
+    try {
+      setState(() => _actionLoading = true);
+      final uploaded = await _chatService.uploadMyAvatar(
+        avatarBytes,
+        mimeType: _mimeTypeForPath(mimePathOrName),
+      );
+      if (!mounted) return;
+      setState(() {
+        _user = {
+          ...?_user,
+          'avatar': uploaded['avatarUrl'] ?? _user?['avatar'],
+          'avatars': uploaded['avatars'] ?? _user?['avatars'],
+          'presenceStatus': uploaded['presenceStatus'] ?? _user?['presenceStatus'],
+          'lastSeenAt': uploaded['lastSeenAt'] ?? _user?['lastSeenAt'],
+          'prefs': {
+            if (_user?['prefs'] is Map)
+              ...Map<String, dynamic>.from(_user!['prefs'] as Map),
+            'avatarUrl': uploaded['avatarUrl'] ?? _user?['avatar'],
+          },
+        };
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.profileSaved)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      final raw = e.toString().toLowerCase();
+      final denied = raw.contains('permission') ||
+          raw.contains('denied') ||
+          raw.contains('access') ||
+          raw.contains('operation not permitted');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            denied
+                ? 'Нет доступа к файлу аватара. Попробуйте выбрать другой файл.'
+                : e.toString().replaceAll('Exception: ', ''),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _actionLoading = false);
       }
     }
   }
@@ -299,7 +369,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color _presenceColor(BuildContext context) {
     final status = (_user?['presenceStatus'] as String?)?.toLowerCase();
     if (status == 'online') {
-      return Colors.green;
+      return AppColors.onlineStatus(context);
     }
     return Theme.of(context).colorScheme.outline;
   }
@@ -313,6 +383,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '${value.day}.${value.month.toString().padLeft(2, '0')}';
   }
 
+  bool _updateAvatarStretch(double next) {
+    final normalized = next.clamp(0.0, 72.0);
+    if ((_avatarStretch.value - normalized).abs() < 0.5) {
+      return false;
+    }
+    _avatarStretch.value = normalized;
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -321,9 +400,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final username = _username();
     final profileId = _profileId();
     final presenceLabel = _presenceLabel(l10n);
-    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.profileTitle),
         centerTitle: false,
@@ -338,28 +416,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
         ],
       ),
-      body: _loading
+      body: ScreenBackground(
+        child: _loading
           ? const AppLoadingState()
           : LayoutBuilder(
               builder: (context, constraints) {
-                final isWide = constraints.maxWidth >= 980;
-                final isTablet = constraints.maxWidth >= 680;
+            final isWide = constraints.maxWidth >= UITokens.desktopBreakpoint;
+            final isTablet = constraints.maxWidth >= UITokens.tabletBreakpoint;
                 final horizontalPadding = constraints.maxWidth >= 1400
                     ? 40.0
                     : isWide
                         ? 28.0
                         : isTablet
                             ? 20.0
-                            : 12.0;
-                final heroPanel = _buildHeroPanel(
-                  context: context,
-                  l10n: l10n,
-                  name: name,
-                  avatar: avatar,
-                  username: username,
-                  profileId: profileId,
-                  presenceLabel: presenceLabel,
-                  isWide: isWide,
+                  : 14.0;
+              final heroPanelWidth =
+                (constraints.maxWidth * 0.34).clamp(320.0, 420.0);
+                final heroPanel = ValueListenableBuilder<double>(
+                  valueListenable: _avatarStretch,
+                  builder: (context, stretch, _) => _buildHeroPanel(
+                    context: context,
+                    l10n: l10n,
+                    name: name,
+                    avatar: avatar,
+                    username: username,
+                    profileId: profileId,
+                    presenceLabel: presenceLabel,
+                    isWide: isWide,
+                    avatarStretch: stretch,
+                  ),
                 );
                 final detailsPanel = _buildDetailsPanel(
                   context: context,
@@ -372,37 +457,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   alignment: Alignment.topCenter,
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1280),
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.fromLTRB(
-                        horizontalPadding,
-                        isWide ? 24 : 16,
-                        horizontalPadding,
-                        24,
-                      ),
-                      child: isWide
-                          ? IntrinsicHeight(
-                              child: Row(
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (notification) {
+                        if (notification.metrics.axis != Axis.vertical) {
+                          return false;
+                        }
+
+                        if (notification is OverscrollNotification &&
+                            notification.metrics.pixels <=
+                                notification.metrics.minScrollExtent &&
+                            notification.overscroll < 0) {
+                          _updateAvatarStretch(
+                            _avatarStretch.value + (-notification.overscroll * 0.6),
+                          );
+                        } else if (notification is ScrollUpdateNotification &&
+                            notification.metrics.pixels >
+                                notification.metrics.minScrollExtent &&
+                            _avatarStretch.value > 0) {
+                          _updateAvatarStretch(0);
+                        } else if (notification is ScrollEndNotification &&
+                            _avatarStretch.value > 0) {
+                          _updateAvatarStretch(0);
+                        }
+                        return false;
+                      },
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          isWide ? 24 : 16,
+                          horizontalPadding,
+                          24,
+                        ),
+                        child: isWide
+                            ? Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(flex: 4, child: heroPanel),
+                                  SizedBox(width: heroPanelWidth, child: heroPanel),
                                   const SizedBox(width: 24),
-                                  Expanded(flex: 5, child: detailsPanel),
+                                  Expanded(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(maxWidth: 760),
+                                      child: detailsPanel,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  heroPanel,
+                                  const SizedBox(height: 16),
+                                  detailsPanel,
                                 ],
                               ),
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                heroPanel,
-                                const SizedBox(height: 16),
-                                detailsPanel,
-                              ],
-                            ),
+                      ),
                     ),
                   ),
                 );
               },
             ),
+      ),
     );
   }
 
@@ -415,10 +529,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String profileId,
     required String? presenceLabel,
     required bool isWide,
+    required double avatarStretch,
   }) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
-    final avatarSize = isWide ? 168.0 : 140.0;
+    final baseAvatarSize = isWide ? 124.0 : 102.0;
+    final avatarSize = baseAvatarSize + avatarStretch;
 
     return Card(
       elevation: UITokens.cardElevation,
@@ -441,106 +557,117 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Align(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: avatarSize,
-                    height: avatarSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          primary,
-                          primary.withValues(alpha: 0.58),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      curve: Curves.easeOut,
+                      width: avatarSize,
+                      height: avatarSize,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            primary,
+                            primary.withValues(alpha: 0.58),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primary.withValues(alpha: 0.22),
+                            blurRadius: 24 + (avatarStretch * 0.2),
+                            offset: const Offset(0, 10),
+                          ),
                         ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: primary.withValues(alpha: 0.22),
-                          blurRadius: 28,
-                          offset: const Offset(0, 14),
+                      padding: const EdgeInsets.all(4),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: UserAvatar(
+                          key: ValueKey(avatar ?? 'noavatar_${widget.userId}'),
+                          avatarUrl: avatar,
+                          name: name,
+                          radius: (avatarSize / 2) - 8,
                         ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(5),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      child: UserAvatar(
-                        key: ValueKey(avatar ?? 'noavatar_${widget.userId}'),
-                        avatarUrl: avatar,
-                        name: name,
-                        radius: (avatarSize / 2) - 8,
                       ),
                     ),
-                  ),
-                  if (_isMe && _isEditing)
-                    Positioned(
-                      right: -2,
-                      bottom: -2,
-                      child: FilledButton(
-                        onPressed: _pickAvatar,
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size(0, 0),
-                          padding: const EdgeInsets.all(12),
-                          shape: const CircleBorder(),
+                    if (_isMe && _isEditing)
+                      Positioned(
+                        right: -4,
+                        bottom: -4,
+                        child: FilledButton(
+                          onPressed: _pickAvatar,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(0, 0),
+                            padding: const EdgeInsets.all(10),
+                            shape: const CircleBorder(),
+                          ),
+                          child: const Icon(Icons.camera_alt_outlined, size: 18),
                         ),
-                        child: const Icon(Icons.camera_alt_outlined, size: 20),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '@$username',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            if (presenceLabel != null) ...[
-              const SizedBox(height: 12),
-              Align(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: _presenceColor(context).withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  ],
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.circle, size: 8, color: _presenceColor(context)),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          presenceLabel,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: _presenceColor(context),
-                            fontWeight: FontWeight.w600,
+                      Text(
+                        name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '@$username',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (presenceLabel != null) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _presenceColor(context).withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.circle, size: 8, color: _presenceColor(context)),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  presenceLabel,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: _presenceColor(context),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
-              ),
-            ],
-            const SizedBox(height: 18),
+              ],
+            ),
+            const SizedBox(height: 14),
             Wrap(
-              alignment: WrapAlignment.center,
               spacing: 10,
               runSpacing: 10,
               children: [
@@ -558,60 +685,126 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             if (!_isMe) ...[
-              const SizedBox(height: 22),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  _buildActionButton(
-                    icon: _actionLoading ? null : Icons.chat_bubble_outline,
-                    label: l10n.writeMessageButton,
-                    loading: _actionLoading,
-                    onPressed: _actionLoading
-                        ? null
-                        : () async {
-                            setState(() => _actionLoading = true);
-                            final messenger = ScaffoldMessenger.of(context);
-                            final navState = appNavigatorKey.currentState;
-                            try {
-                              final cs = createChatBackend();
-                              final m = await cs.getOrCreateDirectChat(widget.userId);
-                              final chat = Chat.fromMap(m);
-                              if (!mounted) return;
-                              navState?.pop(chat);
-                            } catch (e) {
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(l10n.createChatError(e.toString())),
-                                ),
-                              );
-                            } finally {
-                              if (mounted) {
-                                setState(() => _actionLoading = false);
-                              }
-                            }
-                          },
-                  ),
-                  _buildActionButton(
-                    icon: Icons.call_outlined,
-                    label: l10n.callButton,
-                    onPressed: () async {
-                      final roomName =
-                          'call_${widget.userId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_')}_${DateTime.now().millisecondsSinceEpoch}';
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => CallScreen(
-                            room: roomName,
-                            isVideo: true,
-                            displayName: _displayName(),
-                            avatarUrl: _avatarUrl(),
-                          ),
+              const SizedBox(height: 16),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final compactButtons = constraints.maxWidth < 500;
+                  if (compactButtons) {
+                    return Column(
+                      children: [
+                        _buildActionButton(
+                          icon: _actionLoading ? null : Icons.chat_bubble_outline,
+                          label: l10n.writeMessageButton,
+                          loading: _actionLoading,
+                          fullWidth: true,
+                          onPressed: _actionLoading
+                              ? null
+                              : () async {
+                                  setState(() => _actionLoading = true);
+                                  final messenger = ScaffoldMessenger.of(context);
+                                  final navState = appNavigatorKey.currentState;
+                                  try {
+                                    final cs = createChatBackend();
+                                    final m = await cs.getOrCreateDirectChat(widget.userId);
+                                    final chat = Chat.fromMap(m);
+                                    if (!mounted) return;
+                                    navState?.pop(chat);
+                                  } catch (e) {
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(l10n.createChatError(e.toString())),
+                                      ),
+                                    );
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _actionLoading = false);
+                                    }
+                                  }
+                                },
                         ),
-                      );
-                    },
-                  ),
-                ],
+                        const SizedBox(height: 10),
+                        _buildActionButton(
+                          icon: Icons.call_outlined,
+                          label: l10n.callButton,
+                          fullWidth: true,
+                          onPressed: () async {
+                            final roomName =
+                                'call_${widget.userId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_')}_${DateTime.now().millisecondsSinceEpoch}';
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => CallScreen(
+                                  room: roomName,
+                                  isVideo: true,
+                                  displayName: _displayName(),
+                                  avatarUrl: _avatarUrl(),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: _buildActionButton(
+                          icon: _actionLoading ? null : Icons.chat_bubble_outline,
+                          label: l10n.writeMessageButton,
+                          loading: _actionLoading,
+                          fullWidth: true,
+                          onPressed: _actionLoading
+                              ? null
+                              : () async {
+                                  setState(() => _actionLoading = true);
+                                  final messenger = ScaffoldMessenger.of(context);
+                                  final navState = appNavigatorKey.currentState;
+                                  try {
+                                    final cs = createChatBackend();
+                                    final m = await cs.getOrCreateDirectChat(widget.userId);
+                                    final chat = Chat.fromMap(m);
+                                    if (!mounted) return;
+                                    navState?.pop(chat);
+                                  } catch (e) {
+                                    messenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(l10n.createChatError(e.toString())),
+                                      ),
+                                    );
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _actionLoading = false);
+                                    }
+                                  }
+                                },
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildActionButton(
+                          icon: Icons.call_outlined,
+                          label: l10n.callButton,
+                          fullWidth: true,
+                          onPressed: () async {
+                            final roomName =
+                                'call_${widget.userId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_')}_${DateTime.now().millisecondsSinceEpoch}';
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => CallScreen(
+                                  room: roomName,
+                                  isVideo: true,
+                                  displayName: _displayName(),
+                                  avatarUrl: _avatarUrl(),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ],
@@ -685,16 +878,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               )
             else
-              Column(
-                children: [
-                  for (var i = 0; i < infoTiles.length; i++) ...[
-                    _buildInfoRow(infoTiles[i].label, infoTiles[i].value),
-                    if (i != infoTiles.length - 1) const Divider(height: 24),
-                  ],
-                ],
-              ),
+              _buildInfoList(infoTiles),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoList(List<({String label, String? value})> infoTiles) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(UITokens.cornerSm),
+        border: Border.all(
+          color: Theme.of(context)
+              .colorScheme
+              .outlineVariant
+              .withValues(alpha: 0.35),
+        ),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < infoTiles.length; i++) ...[
+            _buildTelegramInfoRow(infoTiles[i].label, infoTiles[i].value),
+            if (i != infoTiles.length - 1)
+              Divider(
+                height: 1,
+                color: Theme.of(context)
+                    .colorScheme
+                    .outlineVariant
+                    .withValues(alpha: 0.4),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTelegramInfoRow(String title, String? value) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Text(
+              title,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 6,
+            child: Text(
+              value?.isNotEmpty ?? false ? value! : '-',
+              textAlign: TextAlign.right,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -786,11 +1037,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       {required IconData? icon,
       required String label,
       VoidCallback? onPressed,
+      bool fullWidth = false,
       bool loading = false}) {
     return ElevatedButton.icon(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        minimumSize: const Size(180, 48),
+        minimumSize: Size(fullWidth ? double.infinity : 180, 48),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(UITokens.cornerSm)),
@@ -824,23 +1076,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildInfoRow(String title, String? value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(value?.isNotEmpty ?? false ? value! : '-',
-              style: Theme.of(context).textTheme.bodyLarge),
-          const SizedBox(height: 4),
-          Text(title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withAlpha((0.6 * 255).round()))),
-        ],
-      ),
-    );
-  }
 }

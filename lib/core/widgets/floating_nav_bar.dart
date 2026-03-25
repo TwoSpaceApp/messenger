@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
@@ -9,10 +10,12 @@ class FloatingNavBar extends StatefulWidget {
   const FloatingNavBar({
     required this.selectedIndex,
     required this.onItemSelected,
+    this.chatUnreadCount = 0,
     super.key,
   });
   final int selectedIndex;
   final Function(int) onItemSelected;
+  final int chatUnreadCount;
 
   @override
   State<FloatingNavBar> createState() => _FloatingNavBarState();
@@ -22,8 +25,6 @@ class _FloatingNavBarState extends State<FloatingNavBar>
     with SingleTickerProviderStateMixin {
   late final ValueNotifier<bool> _isExpanded;
   Timer? _hideTimer;
-  Offset _position = const Offset(0, 0); // Relative position
-  bool _initialized = false;
 
   // To handle drag limits
   final double _widthExpanded = 344;
@@ -60,102 +61,87 @@ class _FloatingNavBarState extends State<FloatingNavBar>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final size = MediaQuery.of(context).size;
-
-    // Initial centered position at bottom
-    if (!_initialized) {
-      _position = Offset((size.width - _widthExpanded) / 2, size.height - 100);
-      _initialized = true;
-    }
-
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Positioned(
-      left: _position.dx,
-      top: _position.dy,
-      child: GestureDetector(
-        onPanUpdate: (details) {
-          setState(() {
-            _position += details.delta;
-            // Clamp to screen
-            _position = Offset(
-              _position.dx.clamp(0, size.width - 60),
-              _position.dy.clamp(0, size.height - 80),
-            );
-          });
-          _onInteraction();
-        },
-        onTap: () {
-          if (!_isExpanded.value) {
-            _onInteraction();
-          }
-        },
-        child: Listener(
-          // Catch taps inside
-          onPointerDown: (_) => _onInteraction(),
-          child: ValueListenableBuilder<bool>(
-            valueListenable: _isExpanded,
-            builder: (context, expanded, child) {
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOutBack,
-                width: expanded ? _widthExpanded : _widthCollapsed,
-                height: _height,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(35),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(35),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                    child: ColoredBox(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surface
-                          .withValues(alpha: 0.7),
-                      child: expanded
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _NavItem(
-                                    icon: Icons.chat_bubble_outline,
-                                  label: l10n.chatsTitle,
-                                    index: 0,
-                                    selected: widget.selectedIndex == 0,
-                                    onTap: () => widget.onItemSelected(0)),
-                                _NavItem(
-                                    icon: Icons.call_outlined,
-                                  label: l10n.callsTitle,
-                                    index: 1,
-                                    selected: widget.selectedIndex == 1,
-                                    onTap: () => widget.onItemSelected(1)),
-                                _NavItem(
-                                  icon: Icons.groups_2_outlined,
-                                  label: l10n.peopleTitle,
-                                    index: 2,
-                                    selected: widget.selectedIndex == 2,
-                                    onTap: () => widget.onItemSelected(2)),
-                                _NavItem(
-                                    icon: Icons.settings_outlined,
-                                  label: l10n.settingsTitle,
-                                    index: 3,
-                                    selected: widget.selectedIndex == 3,
-                                    onTap: () => widget.onItemSelected(3)),
-                              ],
-                            )
-                          : const Center(
-                              child: Icon(Icons.more_horiz, size: 30),
-                            ),
+      left: 0,
+      right: 0,
+      bottom: 10 + bottomInset,
+      child: Center(
+        child: GestureDetector(
+          onTap: () {
+            if (!_isExpanded.value) {
+              _onInteraction();
+            }
+          },
+          child: Listener(
+            onPointerDown: (_) => _onInteraction(),
+            child: ValueListenableBuilder<bool>(
+              valueListenable: _isExpanded,
+              builder: (context, expanded, child) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOutBack,
+                  width: expanded ? _widthExpanded : _widthCollapsed,
+                  height: _height,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(35),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.shadow(context),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(35),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      child: ColoredBox(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surface
+                            .withValues(alpha: 0.7),
+                        child: expanded
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _NavItem(
+                                      icon: Icons.chat_bubble_outline,
+                                    label: l10n.chatsTitle,
+                                      index: 0,
+                                      selected: widget.selectedIndex == 0,
+                                      badge: widget.chatUnreadCount,
+                                      onTap: () => widget.onItemSelected(0)),
+                                  _NavItem(
+                                      icon: Icons.call_outlined,
+                                    label: l10n.callsTitle,
+                                      index: 1,
+                                      selected: widget.selectedIndex == 1,
+                                      onTap: () => widget.onItemSelected(1)),
+                                  _NavItem(
+                                    icon: Icons.groups_2_outlined,
+                                    label: l10n.peopleTitle,
+                                      index: 2,
+                                      selected: widget.selectedIndex == 2,
+                                      onTap: () => widget.onItemSelected(2)),
+                                  _NavItem(
+                                      icon: Icons.settings_outlined,
+                                    label: l10n.settingsTitle,
+                                      index: 3,
+                                      selected: widget.selectedIndex == 3,
+                                      onTap: () => widget.onItemSelected(3)),
+                                ],
+                              )
+                            : const Center(
+                                child: Icon(Icons.more_horiz, size: 30),
+                              ),
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -169,12 +155,14 @@ class _NavItem extends StatelessWidget {
       required this.label,
       required this.index,
       required this.selected,
-      required this.onTap});
+      required this.onTap,
+      this.badge = 0});
   final IconData icon;
     final String label;
   final int index;
   final bool selected;
   final VoidCallback onTap;
+  final int badge;
 
   @override
   Widget build(BuildContext context) {
@@ -192,12 +180,39 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: selected
-                  ? Theme.of(context).primaryColor
-                  : Theme.of(context).iconTheme.color,
-              size: 24,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  icon,
+                  color: selected
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).iconTheme.color,
+                  size: 24,
+                ),
+                if (badge > 0)
+                  Positioned(
+                    right: -8,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.error,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(minWidth: 18, minHeight: 14),
+                      child: Text(
+                        badge > 99 ? '99+' : '$badge',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 2),
             Text(

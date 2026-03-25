@@ -1,6 +1,5 @@
+import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -26,9 +25,11 @@ class MediaPreview extends StatefulWidget {
 }
 
 class _MediaPreviewState extends State<MediaPreview> {
+  static final Map<String, String> _pathCache = <String, String>{};
+
   bool _loading = false;
   String? _error;
-  Uint8List? _bytes;
+  String? _resolvedPath;
   final AegisChatService _chatService = AegisChatService();
 
   @override
@@ -43,21 +44,63 @@ class _MediaPreviewState extends State<MediaPreview> {
       });
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _loadBytesIfLocal();
+      if (mounted) {
+        unawaited(_resolveLocalPathIfAvailable());
+      }
     });
   }
 
-  Future<void> _loadBytesIfLocal() async {
+  Future<void> _resolveLocalPathIfAvailable() async {
     try {
-      if (_bytes != null) return;
+      if (_resolvedPath != null) return;
+      final cachedPath = _pathCache[widget.mediaId];
+      if (cachedPath != null && await File(cachedPath).exists()) {
+        if (mounted) {
+          setState(() {
+            _resolvedPath = cachedPath;
+          });
+        }
+        return;
+      }
+
       final file = File(widget.mediaId);
       if (await file.exists()) {
-        final bytes = await file.readAsBytes();
-        if (mounted) setState(() => _bytes = bytes);
+        _pathCache[widget.mediaId] = file.path;
+        if (mounted) {
+          setState(() {
+            _resolvedPath = file.path;
+          });
+        }
       }
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
     }
+  }
+
+  Future<String> _ensureResolvedPath() async {
+    final currentPath = _resolvedPath;
+    if (currentPath != null && await File(currentPath).exists()) {
+      return currentPath;
+    }
+
+    final cachedPath = _pathCache[widget.mediaId];
+    if (cachedPath != null && await File(cachedPath).exists()) {
+      if (mounted) {
+        setState(() {
+          _resolvedPath = cachedPath;
+        });
+      }
+      return cachedPath;
+    }
+
+    final downloadedPath = await _chatService.downloadMediaToTempFile(widget.mediaId);
+    _pathCache[widget.mediaId] = downloadedPath;
+    if (mounted) {
+      setState(() {
+        _resolvedPath = downloadedPath;
+      });
+    }
+    return downloadedPath;
   }
 
   Future<void> _download() async {
@@ -67,7 +110,7 @@ class _MediaPreviewState extends State<MediaPreview> {
       _error = null;
     });
     try {
-      final path = await _chatService.downloadMediaToTempFile(widget.mediaId);
+      final path = await _ensureResolvedPath();
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.fileDownloaded(path))));
@@ -89,7 +132,7 @@ class _MediaPreviewState extends State<MediaPreview> {
       _error = null;
     });
     try {
-      final temp = await _chatService.downloadMediaToTempFile(widget.mediaId);
+      final temp = await _ensureResolvedPath();
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.fileSavedTemp(temp))));
@@ -110,7 +153,7 @@ class _MediaPreviewState extends State<MediaPreview> {
       _error = null;
     });
     try {
-      final temp = await _chatService.downloadMediaToTempFile(widget.mediaId);
+      final temp = await _ensureResolvedPath();
       await Share.shareXFiles([XFile(temp)], text: widget.filename);
     } catch (e) {
       setState(() => _error = e.toString());
@@ -135,8 +178,8 @@ class _MediaPreviewState extends State<MediaPreview> {
           aspectRatio: 1,
           child: Builder(
             builder: (c) {
-              if (_bytes != null) {
-                return Image.memory(_bytes!, fit: BoxFit.cover);
+              if (_resolvedPath != null) {
+                return Image.file(File(_resolvedPath!), fit: BoxFit.cover);
               }
               if (isRemote) {
                 return Image.network(widget.mediaId,

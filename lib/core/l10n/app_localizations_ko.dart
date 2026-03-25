@@ -273,6 +273,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get messageInputHint => '메시지 입력...';
 
   @override
+  String get addCaptionHint => '캡션 또는 메시지 추가';
+
+  @override
+  String get unlockApp => '잠금 해제';
+
+  @override
+  String get unlockButton => '잠금 해제';
+
+  @override
+  String get dropFilesTitle => '파일을 놓아 첨부';
+
+  @override
+  String get dropFilesSubtitle => '메시지 입력란 위에 나타납니다.';
+
+  @override
+  String get videoUnavailable => '동영상을 사용할 수 없음';
+
+  @override
+  String get guestRole => '게스트';
+
+  @override
   String get replyAction => '답장';
 
   @override
@@ -1651,6 +1672,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => '메모리';
+
+  @override
+  String get storageTotalLabel => '전체';
+
+  @override
+  String get storagePhotosLabel => '사진';
+
+  @override
+  String get storageVideosLabel => '동영상';
+
+  @override
+  String get storageCacheLabel => '캐시';
+
+  @override
+  String get storageAppDataLabel => '앱 데이터';
+
+  @override
+  String get storageCleanupTitle => '정리 예정';
+
+  @override
+  String get storageCleanupSubtitle => '안전하게 삭제할 항목을 확인하세요.';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override
@@ -1951,4 +1996,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => '후면 카메라';
+
+  @override
+  String get backgroundOptimizationDisabledTitle => '배경 효과를 단순화했습니다';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace가 지속적인 프레임 저하를 감지하여 스크롤과 채팅 사용감을 부드럽게 유지하기 위해 무거운 배경 효과를 껐습니다.';
+
+  @override
+  String get backgroundOptimizationOpenSettings => '화면 설정 열기';
 }

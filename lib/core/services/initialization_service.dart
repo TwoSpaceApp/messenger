@@ -68,19 +68,46 @@ abstract class InitializationStep {
 class InitializationService {
   InitializationService._();
 
+  static InitializationResult? _cachedResult;
+  static Future<InitializationResult>? _initializeFuture;
+  static Future<void>? _deferredStartupFuture;
+
   static final List<List<InitializationStep>> _stepPhases = [
     <InitializationStep>[
       _EnvironmentStep(),
     ],
     <InitializationStep>[
-      _SentryStep(),
-      _EnvironmentValidationStep(),
       _SettingsStep(),
     ],
   ];
 
   /// Initialize the app with all required steps
   static Future<InitializationResult> initialize(
+      {void Function(String stepName, double progress)? onProgress}) async {
+    final cachedResult = _cachedResult;
+    if (cachedResult != null) {
+      return cachedResult;
+    }
+    final inFlight = _initializeFuture;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final future = _initializeInternal(onProgress: onProgress);
+    _initializeFuture = future;
+    try {
+      final result = await future;
+      _cachedResult = result;
+      _ensureDeferredStartup();
+      return result;
+    } finally {
+      if (identical(_initializeFuture, future)) {
+        _initializeFuture = null;
+      }
+    }
+  }
+
+  static Future<InitializationResult> _initializeInternal(
       {void Function(String stepName, double progress)? onProgress}) async {
     final startTime = DateTime.now();
     final results = <InitStepResult>[];
@@ -151,6 +178,19 @@ class InitializationService {
 
     _logInitializationResult(result);
     return result;
+  }
+
+  static void _ensureDeferredStartup() {
+    if (_deferredStartupFuture != null) {
+      return;
+    }
+    _deferredStartupFuture = () async {
+      await Future.wait<InitStepResult>(<Future<InitStepResult>>[
+        _executeStep(_SentryStep()),
+        _executeStep(_EnvironmentValidationStep()),
+      ]);
+      await SettingsService.loadDeferredSettings();
+    }();
   }
 
   /// Execute a single initialization step with timeout and error handling

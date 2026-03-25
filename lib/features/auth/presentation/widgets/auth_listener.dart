@@ -63,16 +63,20 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
 
     // Get user info for welcome screen
     var userName = l10n.userDefault;
+    String? username;
     String? avatarUrl;
+    String? description;
 
     if (userId != null) {
       try {
         final chatService = AegisChatService();
-        final userInfo = await chatService.getUserInfo(userId);
+        final userInfo = await chatService.getOwnUserInfo(forceRefresh: true);
         userName = userInfo['displayName'] as String? ??
             userInfo['username'] as String? ??
             userId.replaceAll('@', '');
+        username = userInfo['username'] as String?;
         avatarUrl = userInfo['avatarUrl'] as String?;
+        description = userInfo['bio'] as String?;
       } catch (_) {
         userName = userId.replaceAll('@', '');
       }
@@ -83,7 +87,9 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
       MaterialPageRoute(
         builder: (_) => WelcomeScreen(
           name: userName,
+          username: username,
           avatarUrl: avatarUrl,
+          description: description,
         ),
       ),
     );

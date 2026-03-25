@@ -275,6 +275,27 @@ class AppLocalizationsIt extends AppLocalizations {
   String get messageInputHint => 'Scrivi un messaggio...';
 
   @override
+  String get addCaptionHint => 'Aggiungi una didascalia o un messaggio';
+
+  @override
+  String get unlockApp => 'Sblocca';
+
+  @override
+  String get unlockButton => 'Sblocca';
+
+  @override
+  String get dropFilesTitle => 'Trascina file da allegare';
+
+  @override
+  String get dropFilesSubtitle => 'Appariranno sopra il campo messaggio.';
+
+  @override
+  String get videoUnavailable => 'Video non disponibile';
+
+  @override
+  String get guestRole => 'Ospite';
+
+  @override
   String get replyAction => 'Rispondi';
 
   @override
@@ -1690,6 +1711,31 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => 'Memoria';
+
+  @override
+  String get storageTotalLabel => 'Totale';
+
+  @override
+  String get storagePhotosLabel => 'Foto';
+
+  @override
+  String get storageVideosLabel => 'Video';
+
+  @override
+  String get storageCacheLabel => 'Cache';
+
+  @override
+  String get storageAppDataLabel => 'Dati app';
+
+  @override
+  String get storageCleanupTitle => 'Da pulire';
+
+  @override
+  String get storageCleanupSubtitle =>
+      'Controlla cosa può essere rimosso in sicurezza.';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override
@@ -2006,4 +2052,16 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Fotocamera posteriore';
+
+  @override
+  String get backgroundOptimizationDisabledTitle =>
+      'Gli effetti di sfondo sono stati semplificati';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace ha rilevato rallentamenti costanti dei frame e ha disattivato gli effetti di sfondo più pesanti per mantenere fluido lo scorrimento e l\'uso delle chat.';
+
+  @override
+  String get backgroundOptimizationOpenSettings =>
+      'Apri le impostazioni dell\'aspetto';
 }

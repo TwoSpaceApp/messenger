@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/utils/secure_store.dart';
 
@@ -115,6 +117,38 @@ class SettingsService {
   static const _soundEnabledKey = 'notifications_sound_enabled';
   static const _doNotDisturbKey = 'notifications_do_not_disturb';
   static const _biometricsKey = 'biometric_enabled';
+  static final Set<String> _coreKeys = <String>{
+    _fontKey,
+    _colorKey,
+    _weightKey,
+    _bubbleRoundingKey,
+    _dynamicBubblesKey,
+    _compactModeKey,
+    _navBarTimeoutKey,
+    _parallaxKey,
+    _floatingCirclesKey,
+    _floatingCirclesSpeedKey,
+    _floatingCirclesOpacityKey,
+    _paleVioletKey,
+    _languageKey,
+    _textScaleKey,
+    _themeModeKey,
+  };
+  static final Set<String> _deferredKeys = <String>{
+    _sessionTimeoutKey,
+    _showEmailKey,
+    _showPhoneKey,
+    _autoDownloadKey,
+    _sendByEnterKey,
+    _messageTimestampPrecisionKey,
+    _notificationsEnabledKey,
+    _soundEnabledKey,
+    _doNotDisturbKey,
+    _biometricsKey,
+  };
+  static Future<void>? _loadSettingsFuture;
+  static Future<void>? _loadDeferredSettingsFuture;
+  static bool _deferredSettingsLoaded = false;
 
   // Theme Notifier
   static final ValueNotifier<ThemeSettings> themeNotifier = 
@@ -139,7 +173,26 @@ class SettingsService {
   static final ValueNotifier<bool> doNotDisturbNotifier = ValueNotifier(false);
 
   static Future<void> loadSettings() async {
-    final stored = await SecureStore.readAll();
+    final inFlight = _loadSettingsFuture;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final future = _loadCoreSettings();
+    _loadSettingsFuture = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_loadSettingsFuture, future)) {
+        _loadSettingsFuture = null;
+      }
+    }
+    unawaited(loadDeferredSettings());
+  }
+
+  static Future<void> _loadCoreSettings() async {
+    final stored = await SecureStore.readMany(_coreKeys);
 
     String? valueOf(String key) => stored[key];
 
@@ -157,31 +210,99 @@ class SettingsService {
       floatingCirclesOpacity: double.tryParse(valueOf(_floatingCirclesOpacityKey) ?? '') ?? 0.5,
     );
     
-    // Load Others
+    // Load startup-critical settings only. Everything else is hydrated lazily.
     paleVioletNotifier.value = valueOf(_paleVioletKey) == 'true';
-    sessionTimeoutDaysNotifier.value = int.tryParse(valueOf(_sessionTimeoutKey) ?? '') ?? 30;
-    showEmailNotifier.value = valueOf(_showEmailKey) == 'true';
-    showPhoneNotifier.value = valueOf(_showPhoneKey) == 'true';
     languageNotifier.value = valueOf(_languageKey) ?? 'en';
     textScaleNotifier.value = double.tryParse(valueOf(_textScaleKey) ?? '') ?? 1.0;
-    autoDownloadMediaNotifier.value = valueOf(_autoDownloadKey) != 'false';
-    sendByEnterNotifier.value = valueOf(_sendByEnterKey) != 'false';
-    messageTimestampPrecisionNotifier.value =
-        MessageTimestampPrecisionX.fromStorage(
-      valueOf(_messageTimestampPrecisionKey),
-    );
-
-    // Theme mode (system/light/dark)
     themeModeNotifier.value = _themeModeFromString(valueOf(_themeModeKey));
+  }
 
-    final bioStr = valueOf(_biometricsKey) ?? valueOf('biometrics_enabled');
-    biometricsNotifier.value = (bioStr == 'true');
-    notificationsEnabledNotifier.value =
-        valueOf(_notificationsEnabledKey) != 'false';
-    soundEnabledNotifier.value =
-        valueOf(_soundEnabledKey) != 'false';
-    doNotDisturbNotifier.value =
-        valueOf(_doNotDisturbKey) == 'true';
+  static Future<void> loadDeferredSettings() async {
+    if (_deferredSettingsLoaded) {
+      return;
+    }
+    final inFlight = _loadDeferredSettingsFuture;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final future = () async {
+      final stored = await SecureStore.readMany(_deferredKeys);
+
+      String? valueOf(String key) => stored[key];
+
+      sessionTimeoutDaysNotifier.value =
+          int.tryParse(valueOf(_sessionTimeoutKey) ?? '') ?? 30;
+      showEmailNotifier.value = valueOf(_showEmailKey) == 'true';
+      showPhoneNotifier.value = valueOf(_showPhoneKey) == 'true';
+      autoDownloadMediaNotifier.value = valueOf(_autoDownloadKey) != 'false';
+      sendByEnterNotifier.value = valueOf(_sendByEnterKey) != 'false';
+      messageTimestampPrecisionNotifier.value =
+          MessageTimestampPrecisionX.fromStorage(
+        valueOf(_messageTimestampPrecisionKey),
+      );
+
+      final bioStr = valueOf(_biometricsKey);
+      biometricsNotifier.value = bioStr == 'true';
+      notificationsEnabledNotifier.value =
+          valueOf(_notificationsEnabledKey) != 'false';
+      soundEnabledNotifier.value = valueOf(_soundEnabledKey) != 'false';
+      doNotDisturbNotifier.value = valueOf(_doNotDisturbKey) == 'true';
+      _deferredSettingsLoaded = true;
+    }();
+
+    _loadDeferredSettingsFuture = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_loadDeferredSettingsFuture, future)) {
+        _loadDeferredSettingsFuture = null;
+      }
+    }
+  }
+
+  static Future<bool> autoDisableBackgroundEffects() async {
+    final current = themeNotifier.value;
+    final targetOpacity = current.floatingCirclesOpacity.clamp(0.16, 0.34);
+    if (!current.enableParallax &&
+        (!current.enableFloatingCircles ||
+            current.floatingCirclesOpacity <= targetOpacity)) {
+      return false;
+    }
+
+    await updateTheme(
+      enableParallax: false,
+      enableFloatingCircles: true,
+      floatingCirclesOpacity: targetOpacity,
+    );
+    return true;
+  }
+
+  static void resetDeferredSettingsCache() {
+    _deferredSettingsLoaded = false;
+    _loadDeferredSettingsFuture = null;
+  }
+
+  static Future<void> refreshAllSettingsFromStorage() async {
+    SecureStore.clearMemoryCache();
+    _deferredSettingsLoaded = false;
+    _loadSettingsFuture = null;
+    _loadDeferredSettingsFuture = null;
+    await loadSettings();
+  }
+
+  static void applyDeferredSettingsDefaults() {
+    sessionTimeoutDaysNotifier.value = 30;
+    showEmailNotifier.value = false;
+    showPhoneNotifier.value = false;
+    autoDownloadMediaNotifier.value = true;
+    sendByEnterNotifier.value = true;
+    messageTimestampPrecisionNotifier.value = MessageTimestampPrecision.minutes;
+    biometricsNotifier.value = false;
+    notificationsEnabledNotifier.value = true;
+    soundEnabledNotifier.value = true;
+    doNotDisturbNotifier.value = false;
   }
 
   static Future<void> setBiometricsEnabled(bool value) async {

@@ -1,4 +1,5 @@
 // Enhanced audio player widget with waveform and playback speed
+import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -23,30 +24,47 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
   Duration _position = Duration.zero;
   double _playbackSpeed = 1;
   final List<double> _speeds = [1.0, 1.25, 1.5, 1.75, 2.0];
+  StreamSubscription<PlayerState>? _stateSub;
+  StreamSubscription<Duration>? _durationSub;
+  StreamSubscription<Duration>? _positionSub;
+  /// Timer-based throttle: update position at most every 100ms.
+  Timer? _positionThrottle;
+  Duration _pendingPosition = Duration.zero;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
-    _audioPlayer.onPlayerStateChanged.listen((state) {
+    _stateSub = _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted) {
         setState(() => _playerState = state);
       }
     });
-    _audioPlayer.onDurationChanged.listen((duration) {
+    _durationSub = _audioPlayer.onDurationChanged.listen((duration) {
       if (mounted) {
         setState(() => _duration = duration);
       }
     });
-    _audioPlayer.onPositionChanged.listen((position) {
-      if (mounted) {
-        setState(() => _position = position);
+    // Throttle position updates to ~10 Hz to avoid excessive rebuilds.
+    _positionSub = _audioPlayer.onPositionChanged
+        .listen((position) {
+      _pendingPosition = position;
+      if (_positionThrottle == null || !_positionThrottle!.isActive) {
+        _positionThrottle = Timer(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            setState(() => _position = _pendingPosition);
+          }
+        });
       }
     });
   }
 
   @override
   void dispose() {
+    _stateSub?.cancel();
+    _durationSub?.cancel();
+    _positionSub?.cancel();
+    _positionThrottle?.cancel();
     _audioPlayer.dispose();
     super.dispose();
   }

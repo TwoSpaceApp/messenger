@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   audioplayers_windows
   connectivity_plus
+  desktop_drop
   emoji_picker_flutter
   file_selector_windows
   flutter_secure_storage_windows
@@ -14,6 +15,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   record_windows
   sentry_flutter
   share_plus
+  sqlite3_flutter_libs
   url_launcher_windows
 )
 

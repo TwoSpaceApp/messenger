@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/theme_switcher.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
@@ -38,12 +40,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _logout() async {
     final l10n = AppLocalizations.of(context)!;
+    final width = MediaQuery.of(context).size.width;
+    final horizontalInset = (width * 0.08).clamp(12.0, 28.0);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: Text(l10n.logoutDialogTitle),
         content: Text(l10n.logoutDialogContent),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        insetPadding:
+            EdgeInsets.symmetric(horizontal: horizontalInset, vertical: 24),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -51,7 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: Text(l10n.logoutAction,
-                style: const TextStyle(color: Colors.red)),
+                style: TextStyle(color: AppColors.danger(context))),
           ),
         ],
       ),
@@ -202,10 +207,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.settingsTitle),
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         actions: [
           IconButton(
             onPressed: () => context.push(AppStrings.routeSettingsSearch),
@@ -213,11 +220,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      body: ScreenBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 120,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Appearance
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
@@ -482,15 +493,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const Divider(height: 1),
                       ListTile(
-                        leading: const Icon(Icons.memory_rounded),
-                        title: Text(l10n.settingsStorageUsage),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context.push(AppStrings.routeStorage),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
                         leading: const Icon(Icons.storage),
                         title: Text(l10n.storageManagementLabel),
                         subtitle: Text(l10n.storageManagementSubtitle),
@@ -549,7 +551,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Text(
                   l10n.dangerZoneSection,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.red.shade400,
+                        color: AppColors.danger(context),
                         fontWeight: FontWeight.bold,
                       ),
                 ),
@@ -558,7 +560,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     border:
-                        Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        Border.all(color: AppColors.danger(context).withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Material(
@@ -570,7 +572,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
-                            Icon(Icons.logout, color: Colors.red.shade400),
+                            Icon(Icons.logout, color: AppColors.danger(context)),
                             const SizedBox(width: 16),
                             Expanded(
                               child: Column(
@@ -582,7 +584,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         .textTheme
                                         .bodyLarge
                                         ?.copyWith(
-                                          color: Colors.red.shade400,
+                                          color: AppColors.danger(context),
                                           fontWeight: FontWeight.w600,
                                         ),
                                   ),
@@ -593,7 +595,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         .bodySmall
                                         ?.copyWith(
                                           color:
-                                              Colors.red.withValues(alpha: 0.6),
+                                              AppColors.danger(context).withValues(alpha: 0.6),
                                         ),
                                   ),
                                 ],
@@ -617,6 +619,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart';
+import 'package:two_space_app/features/chat/data/local/aegis_chat_database.dart';
+
 // Offline message model
 class OfflineMessage {
   OfflineMessage({
@@ -38,72 +41,81 @@ class OfflineMessage {
       };
 }
 
-/// Stub implementation of OfflineQueueService using in-memory storage.
-/// Sembast/database plugin is optional; for now we cache messages in RAM.
 class OfflineQueueService {
   factory OfflineQueueService() => _instance;
 
   OfflineQueueService._internal();
   static final OfflineQueueService _instance = OfflineQueueService._internal();
-  static final Map<int, Map<String, dynamic>> _queueCache = {};
-  static int _nextId = 1;
+  final AegisChatDatabase _database = AegisChatDatabase();
 
-  /// Initialize the offline queue database (stub: no-op)
   static Future<void> initialize() async {
-    // Stub: in-memory cache only
+    await _instance._database.customSelect('SELECT 1').get();
   }
 
-  /// Add message to offline queue
   Future<void> queueMessage(OfflineMessage message) async {
-    _queueCache[_nextId++] = message.toMap();
+    await _database.into(_database.aegisOfflineQueue).insert(
+          AegisOfflineQueueCompanion.insert(
+            chatId: message.chatId,
+            content: message.content,
+            type: message.type,
+            createdAtEpochMs: message.createdAt.millisecondsSinceEpoch,
+            sent: Value(message.sent),
+            errorMessage: Value(message.errorMessage),
+          ),
+        );
   }
 
-  /// Get all queued messages
   Future<List<OfflineMessage>> getQueuedMessages() async {
-    return _queueCache.entries.map((e) {
-      final msg = OfflineMessage.fromMap(e.value);
-      return msg.copyWith(id: e.key);
-    }).toList();
+    final rows = await (_database.select(_database.aegisOfflineQueue)
+          ..orderBy([
+            (table) => OrderingTerm.asc(table.createdAtEpochMs),
+          ]))
+        .get();
+    return rows.map(_messageFromRow).toList(growable: false);
   }
 
-  /// Get queued messages for specific chat
   Future<List<OfflineMessage>> getQueuedMessagesForChat(String chatId) async {
-    return _queueCache.entries
-        .where((e) => (e.value['chatId'] as String?) == chatId)
-        .map((e) {
-      final msg = OfflineMessage.fromMap(e.value);
-      return msg.copyWith(id: e.key);
-    }).toList();
+    final rows = await (_database.select(_database.aegisOfflineQueue)
+          ..where((table) => table.chatId.equals(chatId))
+          ..orderBy([
+            (table) => OrderingTerm.asc(table.createdAtEpochMs),
+          ]))
+        .get();
+    return rows.map(_messageFromRow).toList(growable: false);
   }
 
-  /// Mark message as sent
   Future<void> markAsSent(int recordId) async {
-    if (_queueCache.containsKey(recordId)) {
-      _queueCache[recordId]!['sent'] = true;
-    }
+    await (_database.update(_database.aegisOfflineQueue)
+          ..where((table) => table.id.equals(recordId)))
+        .write(
+          const AegisOfflineQueueCompanion(
+            sent: Value(true),
+            errorMessage: Value(null),
+          ),
+        );
   }
 
-  /// Remove message from queue
   Future<void> removeMessage(int recordId) async {
-    _queueCache.remove(recordId);
+    await (_database.delete(_database.aegisOfflineQueue)
+          ..where((table) => table.id.equals(recordId)))
+        .go();
   }
 
-  /// Clear all sent messages from queue
   Future<void> clearSentMessages() async {
-    _queueCache.removeWhere((k, v) => v['sent'] == true);
+    await (_database.delete(_database.aegisOfflineQueue)
+          ..where((table) => table.sent.equals(true)))
+        .go();
   }
-}
 
-extension on OfflineMessage {
-  OfflineMessage copyWith({int? id}) {
+  OfflineMessage _messageFromRow(AegisOfflineQueueData row) {
     return OfflineMessage(
-      id: id ?? this.id,
-      chatId: chatId,
-      content: content,
-      type: type,
-      createdAt: createdAt,
-      sent: sent,
-      errorMessage: errorMessage,
+      id: row.id,
+      chatId: row.chatId,
+      content: row.content,
+      type: row.type,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAtEpochMs),
+      sent: row.sent,
+      errorMessage: row.errorMessage,
     );
   }
 }

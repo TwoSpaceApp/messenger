@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -70,7 +72,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
             child: Text(l10n.deleteButton),
           ),
         ],
@@ -89,12 +91,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.accountSettingsTitle),
         elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.surface,
       ),
-      body: SafeArea(
+      body: ScreenBackground(
+        child: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +246,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 child: Text(
                   l10n.dangerZoneSection,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.red.shade400,
+                        color: AppColors.danger(context),
                         fontWeight: FontWeight.bold,
                       ),
                 ),
@@ -251,7 +255,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     border:
-                        Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        Border.all(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Material(
@@ -264,7 +268,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         child: Row(
                           children: [
                             Icon(Icons.delete_forever,
-                                color: Colors.red.shade400),
+                                color: AppColors.danger(context)),
                             const SizedBox(width: 16),
                             Expanded(
                               child: Column(
@@ -276,7 +280,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                         .textTheme
                                         .bodyLarge
                                         ?.copyWith(
-                                          color: Colors.red.shade400,
+                                          color: AppColors.danger(context),
                                           fontWeight: FontWeight.w600,
                                         ),
                                   ),
@@ -287,14 +291,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                         .bodySmall
                                         ?.copyWith(
                                           color:
-                                              Colors.red.withValues(alpha: 0.6),
+                                              Theme.of(context).colorScheme.error.withValues(alpha: 0.6),
                                         ),
                                   ),
                                 ],
                               ),
                             ),
                             Icon(Icons.chevron_right,
-                                color: Colors.red.shade400),
+                                color: AppColors.danger(context)),
                           ],
                         ),
                       ),
@@ -306,6 +310,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -10,6 +10,7 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
@@ -348,7 +349,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
             onPressed: () => Navigator.pop(context, true),
             child: Text(
               l10n.leaveAction,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
         ],
@@ -768,8 +769,10 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(widget.initialName)),
-      body: LayoutBuilder(
+      body: ScreenBackground(
+        child: LayoutBuilder(
         builder: (context, constraints) {
           final isMobile = constraints.maxWidth < 900;
           final leftWidth = isMobile ? constraints.maxWidth : constraints.maxWidth * 0.3;
@@ -843,7 +846,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                                 children: [
                                   CircleAvatar(
                                     backgroundColor: isDanger
-                                        ? Colors.red
+                                        ? Theme.of(context).colorScheme.error
                                         : isSelected
                                             ? Theme.of(context).colorScheme.primary
                                             : Theme.of(context).colorScheme.surface,
@@ -863,7 +866,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                                       section.title,
                                       style: TextStyle(
                                         color: isDanger
-                                            ? Colors.red
+                                            ? Theme.of(context).colorScheme.error
                                             : isSelected
                                                 ? Theme.of(context).colorScheme.primary
                                                 : null,
@@ -927,6 +930,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
           );
         },
       ),
+      ),
     );
   }
 }
@@ -978,10 +982,13 @@ class _ChatSettingDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(title)),
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: GlassCard(child: child),
+      body: ScreenBackground(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: GlassCard(child: child),
+        ),
       ),
     );
   }

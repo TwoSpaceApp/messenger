@@ -275,6 +275,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get messageInputHint => 'Nachricht schreiben...';
 
   @override
+  String get addCaptionHint => 'Bildunterschrift oder Nachricht hinzufügen';
+
+  @override
+  String get unlockApp => 'App entsperren';
+
+  @override
+  String get unlockButton => 'Entsperren';
+
+  @override
+  String get dropFilesTitle => 'Dateien zum Anhängen ablegen';
+
+  @override
+  String get dropFilesSubtitle =>
+      'Sie werden über dem Nachrichtenfeld angezeigt.';
+
+  @override
+  String get videoUnavailable => 'Video nicht verfügbar';
+
+  @override
+  String get guestRole => 'Gast';
+
+  @override
   String get replyAction => 'Antworten';
 
   @override
@@ -1690,6 +1712,31 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageClearBtn => 'Clear Selected';
 
   @override
+  String get storageMemoryTitle => 'Speicher';
+
+  @override
+  String get storageTotalLabel => 'Gesamt';
+
+  @override
+  String get storagePhotosLabel => 'Fotos';
+
+  @override
+  String get storageVideosLabel => 'Videos';
+
+  @override
+  String get storageCacheLabel => 'Cache';
+
+  @override
+  String get storageAppDataLabel => 'App-Daten';
+
+  @override
+  String get storageCleanupTitle => 'Wird bereinigt';
+
+  @override
+  String get storageCleanupSubtitle =>
+      'Prüfe, was sicher entfernt werden kann.';
+
+  @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
 
   @override
@@ -2007,4 +2054,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get callsRearCameraLabel => 'Rückkamera';
+
+  @override
+  String get backgroundOptimizationDisabledTitle =>
+      'Hintergrundeffekte wurden vereinfacht';
+
+  @override
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace hat anhaltend langsame Frames erkannt und aufwendige Hintergrundeffekte deaktiviert, damit Scrollen und Chats flüssig bleiben.';
+
+  @override
+  String get backgroundOptimizationOpenSettings =>
+      'Darstellungseinstellungen öffnen';
 }
