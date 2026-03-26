@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 
 /// Message content types
 enum MessageContentType {
@@ -68,6 +71,37 @@ class ParsedRichText {
 
   final String text;
   final String? parseMode;
+}
+
+dynamic _normalizeMsgPack(dynamic value) {
+  if (value is Map) {
+    return value.map<String, dynamic>(
+      (key, item) => MapEntry(key.toString(), _normalizeMsgPack(item)),
+    );
+  }
+  if (value is List) {
+    return value.map(_normalizeMsgPack).toList(growable: false);
+  }
+  return value;
+}
+
+Map<String, dynamic> _decodePayloadMap(List<int> bytes) {
+  try {
+    final raw = msgpack.deserialize(Uint8List.fromList(bytes));
+    return _normalizeMsgPack(raw) as Map<String, dynamic>;
+  } catch (_) {
+    return jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+  }
+}
+
+class ParsedMediaEnvelope {
+  ParsedMediaEnvelope({
+    required this.attachments,
+    this.text,
+  });
+
+  final String? text;
+  final List<ParsedMediaAttachment> attachments;
 }
 
 ParsedRichText parseRichTextContent(String content) {
@@ -151,6 +185,17 @@ ParsedMediaAttachment? tryParseMediaAttachment(
   String content,
   MessageContentType contentType,
 ) {
+  final parsed = tryParseMediaAttachments(content, contentType);
+  if (parsed == null || parsed.attachments.isEmpty) {
+    return null;
+  }
+  return parsed.attachments.first;
+}
+
+ParsedMediaEnvelope? tryParseMediaAttachments(
+  String content,
+  MessageContentType contentType,
+) {
   if (contentType != MessageContentType.image &&
       contentType != MessageContentType.video &&
       contentType != MessageContentType.file &&
@@ -164,21 +209,45 @@ ParsedMediaAttachment? tryParseMediaAttachment(
       return null;
     }
 
-    final fileName = decoded['FileName'] ?? decoded['fileName'];
-    final mimeType = decoded['MimeType'] ?? decoded['mimeType'];
-    final base64Data = decoded['Base64Data'] ?? decoded['base64Data'];
-    if (fileName is! String || mimeType is! String || base64Data is! String) {
-      return null;
+    ParsedMediaAttachment? parseAttachment(
+      Map<String, dynamic> node,
+      String? fallbackText,
+    ) {
+      final fileName = node['FileName'] ?? node['fileName'];
+      final mimeType = node['MimeType'] ?? node['mimeType'];
+      final base64Data = node['Base64Data'] ?? node['base64Data'];
+      if (fileName is! String || mimeType is! String || base64Data is! String) {
+        return null;
+      }
+
+      final size = node['SizeBytes'] ?? node['sizeBytes'];
+      return ParsedMediaAttachment(
+        text: (node['Text'] ?? node['text']) as String? ?? fallbackText,
+        fileName: fileName,
+        mimeType: mimeType,
+        base64Data: base64Data,
+        sizeBytes: size is int ? size : int.tryParse('${size ?? ''}'),
+      );
     }
 
-    final size = decoded['SizeBytes'] ?? decoded['sizeBytes'];
-    return ParsedMediaAttachment(
-      text: (decoded['Text'] ?? decoded['text']) as String?,
-      fileName: fileName,
-      mimeType: mimeType,
-      base64Data: base64Data,
-      sizeBytes: size is int ? size : int.tryParse('${size ?? ''}'),
-    );
+    final rootText = (decoded['Text'] ?? decoded['text']) as String?;
+    final attachmentsNode = decoded['Attachments'] ?? decoded['attachments'];
+    if (attachmentsNode is List) {
+      final attachments = attachmentsNode
+          .whereType<Map<String, dynamic>>()
+          .map((item) => parseAttachment(item, rootText))
+          .whereType<ParsedMediaAttachment>()
+          .toList(growable: false);
+      if (attachments.isNotEmpty) {
+        return ParsedMediaEnvelope(text: rootText, attachments: attachments);
+      }
+    }
+
+    final single = parseAttachment(decoded, rootText);
+    if (single != null) {
+      return ParsedMediaEnvelope(text: rootText, attachments: [single]);
+    }
+    return null;
   } catch (_) {
     return null;
   }
@@ -683,7 +752,7 @@ class ChatListResponse {
       );
 
   factory ChatListResponse.fromBytes(List<int> bytes) {
-    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    final json = _decodePayloadMap(bytes);
     return ChatListResponse.fromJson(json);
   }
 
@@ -720,6 +789,8 @@ class PrivateChatHistoryItem {
     required this.content,
     required this.contentType,
     required this.createdAt,
+    this.deliveredTo = const <int>[],
+    this.readBy = const <int>[],
     this.fromUsername,
     this.username,
   });
@@ -733,6 +804,12 @@ class PrivateChatHistoryItem {
         contentType:
             MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
         createdAt: DateTime.parse(json['CreatedAt'] as String),
+        deliveredTo: (json['DeliveredTo'] as List<dynamic>? ?? const <dynamic>[])
+          .map((item) => (item as num).toInt())
+          .toList(growable: false),
+        readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
+          .map((item) => (item as num).toInt())
+          .toList(growable: false),
         fromUsername: json['FromUsername'] as String?,
         username: json['Username'] as String?,
       );
@@ -743,6 +820,8 @@ class PrivateChatHistoryItem {
   final String content;
   final MessageContentType contentType;
   final DateTime createdAt;
+  final List<int> deliveredTo;
+  final List<int> readBy;
   final String? fromUsername;
   final String? username;
 }
@@ -770,7 +849,7 @@ class PrivateChatHistoryResponse {
       );
 
   factory PrivateChatHistoryResponse.fromBytes(List<int> bytes) {
-    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    final json = _decodePayloadMap(bytes);
     return PrivateChatHistoryResponse.fromJson(json);
   }
 
@@ -808,6 +887,8 @@ class ChannelHistoryItem {
     required this.content,
     required this.contentType,
     required this.createdAt,
+    this.deliveredTo = const <int>[],
+    this.readBy = const <int>[],
     this.fromUsername,
     this.channelName,
   });
@@ -821,6 +902,12 @@ class ChannelHistoryItem {
         contentType:
             MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
         createdAt: DateTime.parse(json['CreatedAt'] as String),
+        deliveredTo: (json['DeliveredTo'] as List<dynamic>? ?? const <dynamic>[])
+          .map((item) => (item as num).toInt())
+          .toList(growable: false),
+        readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
+          .map((item) => (item as num).toInt())
+          .toList(growable: false),
         fromUsername: json['FromUsername'] as String?,
         channelName: json['ChannelName'] as String?,
       );
@@ -831,6 +918,8 @@ class ChannelHistoryItem {
   final String content;
   final MessageContentType contentType;
   final DateTime createdAt;
+  final List<int> deliveredTo;
+  final List<int> readBy;
   final String? fromUsername;
   final String? channelName;
 }
@@ -860,7 +949,7 @@ class ChannelHistoryResponse {
       );
 
   factory ChannelHistoryResponse.fromBytes(List<int> bytes) {
-    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    final json = _decodePayloadMap(bytes);
     return ChannelHistoryResponse.fromJson(json);
   }
 
@@ -871,6 +960,47 @@ class ChannelHistoryResponse {
   final String? message;
 }
 
+
+class MessageStatusEvent {
+  MessageStatusEvent({
+    required this.success,
+    required this.messageIds,
+    this.deliveredTo,
+    this.readBy,
+    this.processedAt,
+  });
+
+  factory MessageStatusEvent.fromJson(Map<String, dynamic> json) {
+    final processedAtRaw = json['ProcessedAt'];
+    return MessageStatusEvent(
+      success: json['Success'] as bool? ?? false,
+      messageIds: (json['MessageIds'] as List<dynamic>? ?? const <dynamic>[])
+          .map((item) => (item as num).toInt())
+          .toList(growable: false),
+      deliveredTo: (json['DeliveredTo'] as num?)?.toInt(),
+      readBy: (json['ReadBy'] as num?)?.toInt(),
+      processedAt: processedAtRaw is String ? DateTime.tryParse(processedAtRaw) : null,
+    );
+  }
+
+  factory MessageStatusEvent.fromBytes(List<int> bytes) {
+    return MessageStatusEvent.fromJson(_decodePayloadMap(bytes));
+  }
+
+  final bool success;
+  final List<int> messageIds;
+  final int? deliveredTo;
+  final int? readBy;
+  final DateTime? processedAt;
+
+  bool get isDeliveredUpdate => deliveredTo != null;
+  bool get isReadUpdate => readBy != null;
+}
+
+typedef ProfilePayload = ProfileData;
+typedef ProfileGetResponsePayload = ProfileGetResponse;
+typedef ProfileUpdateResponsePayload = ProfileUpdateResponse;
+
 class PrivateChatMessageEvent {
   PrivateChatMessageEvent({
     required this.id,
@@ -879,6 +1009,8 @@ class PrivateChatMessageEvent {
     required this.content,
     required this.contentType,
     required this.createdAt,
+    this.deliveredTo = const <int>[],
+    this.readBy = const <int>[],
     this.fromUsername,
     this.username,
   });
@@ -892,12 +1024,18 @@ class PrivateChatMessageEvent {
         contentType:
             MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
         createdAt: DateTime.parse(json['CreatedAt'] as String),
+        deliveredTo: (json['DeliveredTo'] as List<dynamic>? ?? const <dynamic>[])
+          .map((item) => (item as num).toInt())
+          .toList(growable: false),
+        readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
+          .map((item) => (item as num).toInt())
+          .toList(growable: false),
         fromUsername: json['FromUsername'] as String?,
         username: json['Username'] as String?,
       );
 
   factory PrivateChatMessageEvent.fromBytes(List<int> bytes) {
-    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+      final json = _decodePayloadMap(bytes);
     return PrivateChatMessageEvent.fromJson(json);
   }
 
@@ -907,8 +1045,14 @@ class PrivateChatMessageEvent {
   final String content;
   final MessageContentType contentType;
   final DateTime createdAt;
+  final List<int> deliveredTo;
+  final List<int> readBy;
   final String? fromUsername;
   final String? username;
+
+  List<ParsedMediaAttachment> get attachments =>
+      tryParseMediaAttachments(content, contentType)?.attachments ??
+      const <ParsedMediaAttachment>[];
 }
 
 class ChannelMessageEvent {
@@ -919,6 +1063,8 @@ class ChannelMessageEvent {
     required this.content,
     required this.contentType,
     required this.createdAt,
+    this.deliveredTo = const <int>[],
+    this.readBy = const <int>[],
     this.fromUsername,
     this.channelName,
   });
@@ -932,12 +1078,18 @@ class ChannelMessageEvent {
         contentType:
             MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
         createdAt: DateTime.parse(json['CreatedAt'] as String),
+        deliveredTo: (json['DeliveredTo'] as List<dynamic>? ?? const <dynamic>[])
+          .map((item) => (item as num).toInt())
+          .toList(growable: false),
+        readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
+          .map((item) => (item as num).toInt())
+          .toList(growable: false),
         fromUsername: json['FromUsername'] as String?,
         channelName: json['ChannelName'] as String?,
       );
 
   factory ChannelMessageEvent.fromBytes(List<int> bytes) {
-    final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+      final json = _decodePayloadMap(bytes);
     return ChannelMessageEvent.fromJson(json);
   }
 
@@ -947,8 +1099,14 @@ class ChannelMessageEvent {
   final String content;
   final MessageContentType contentType;
   final DateTime createdAt;
+  final List<int> deliveredTo;
+  final List<int> readBy;
   final String? fromUsername;
   final String? channelName;
+
+  List<ParsedMediaAttachment> get attachments =>
+      tryParseMediaAttachments(content, contentType)?.attachments ??
+      const <ParsedMediaAttachment>[];
 }
 
 class ProfileAvatarData {

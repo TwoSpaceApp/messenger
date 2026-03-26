@@ -3,6 +3,7 @@ include: package:very_good_analysis/analysis_options.yaml
 analyzer:
   exclude:
     - "Aegis-main/**"
+    - "Aegis-main-new/**"
     - "build/**"
     - "**/*.g.dart"
     - "**/*.freezed.dart"

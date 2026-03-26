@@ -13,6 +13,7 @@ import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/unread_badge.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
@@ -156,6 +157,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           leftItem['avatar'] != rightItem['avatar'] ||
           leftItem['lastMessage'] != rightItem['lastMessage'] ||
           leftItem['time'] != rightItem['time'] ||
+          leftItem['unreadCount'] != rightItem['unreadCount'] ||
           leftItem['roomType'] != rightItem['roomType'] ||
           leftItem['isOnline'] != rightItem['isOnline'] ||
           leftItem['presenceStatus'] != rightItem['presenceStatus'] ||
@@ -582,23 +584,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     if (unreadCount > 0) ...[
                       const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          unreadCount > 99 ? '99+' : '$unreadCount',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                      ),
+                      UnreadBadge(count: unreadCount),
                     ],
                   ],
                 ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 import 'package:two_space_app/core/network/aegis/event_dispatcher.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
@@ -50,7 +51,7 @@ void main() {
       controller.add(
         Message.withType(
           MessageType.privateChatMessageEvent,
-          utf8.encode(jsonEncode({
+          msgpack.serialize({
             'Id': 11,
             'FromUserId': 7,
             'ToUserId': 9,
@@ -58,7 +59,9 @@ void main() {
             'ContentType': 0,
             'CreatedAt': DateTime.utc(2026, 3, 12).toIso8601String(),
             'FromUsername': 'alice',
-          })),
+            'DeliveredTo': [9],
+            'ReadBy': [9],
+          }),
         )..sequenceId = 55,
       );
 
@@ -68,6 +71,37 @@ void main() {
       expect(event.toUserId, 9);
       expect(event.content, 'hello');
       expect(event.fromUsername, 'alice');
+      expect(event.deliveredTo, [9]);
+      expect(event.readBy, [9]);
+
+      await dispatcher.dispose();
+      await controller.close();
+    });
+
+    test('routes message status events into typed stream', () async {
+      final controller = StreamController<Message>.broadcast();
+      final dispatcher = AegisEventDispatcher(controller.stream);
+
+      final eventFuture = dispatcher.messageStatusEvents.first;
+
+      controller.add(
+        Message.withType(
+          MessageType.messageStatusEvent,
+          msgpack.serialize({
+            'Success': true,
+            'MessageIds': [101, 102],
+            'ReadBy': 42,
+            'ProcessedAt': DateTime.utc(2026, 3, 12, 9).toIso8601String(),
+          }),
+        )..sequenceId = 88,
+      );
+
+      final event = await eventFuture;
+      expect(event.success, isTrue);
+      expect(event.messageIds, [101, 102]);
+      expect(event.readBy, 42);
+      expect(event.isReadUpdate, isTrue);
+      expect(event.isDeliveredUpdate, isFalse);
 
       await dispatcher.dispose();
       await controller.close();

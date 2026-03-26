@@ -23,7 +23,11 @@ void main() {
       expect(decoded.sequenceId, 42);
       expect(decoded.flags, ProtocolConstants.flagRequiresAck);
       expect(decoded.payload, <int>[1, 2, 3, 4]);
-      expect(decoded.mac.length, ProtocolConstants.macSize);
+      expect(ProtocolConstants.macSize, 0);
+      expect(
+        encoded.length,
+        ProtocolConstants.headerSize + decoded.payload.length,
+      );
     });
 
     test('throws on invalid magic', () {
@@ -45,6 +49,23 @@ void main() {
       expect(
         () => MessageEncoder.decode(Uint8List.fromList(truncated)),
         throwsA(isA<ProtocolError>()),
+      );
+    });
+
+    test('compresses payloads above threshold and restores them on decode', () {
+      final payload = Uint8List.fromList(
+        List<int>.filled(ProtocolConstants.compressionThreshold + 128, 65),
+      );
+      final message = Message.withType(MessageType.message, payload)
+        ..sequenceId = 7;
+
+      final encoded = MessageEncoder.encode(message);
+      final decoded = MessageEncoder.decode(encoded);
+
+      expect(decoded.payload, payload);
+      expect(
+        decoded.flags & ProtocolConstants.flagCompressed,
+        0,
       );
     });
   });

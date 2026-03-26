@@ -1,7 +1,7 @@
 name: two_space_app
 description: "A secure and feature-rich messenger for the TwoSpace ecosystem."
 publish_to: 'none'
-version: 2.0.5-beta+8
+version: 2.0.5-beta+10
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
@@ -19,6 +19,8 @@ dependencies:
   flutter_contacts: ^1.1.9
   crypto: ^3.0.3
   pointycastle: ^3.9.1
+  msgpack_dart: ^1.0.1
+  es_compression: ^2.0.15
 
   # ===== State Management =====
   flutter_riverpod: ^3.0.0
@@ -40,6 +42,7 @@ dependencies:
   emoji_picker_flutter: ^4.4.0
   cached_network_image: ^3.4.1
   qr_flutter: ^4.1.0
+  shadcn_ui: ^0.27.0
 
   # ===== File & Path =====
   file_picker: ^10.3.10

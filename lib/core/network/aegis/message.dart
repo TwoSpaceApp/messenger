@@ -1,65 +1,43 @@
+import 'dart:typed_data';
+
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 
-/// Represents an Aegis protocol message
 class Message {
-  /// Create empty message
-  Message();
+	int magic = ProtocolConstants.magic;
+	int versionMajor = ProtocolConstants.versionMajor;
+	int versionMinor = ProtocolConstants.versionMinor;
+	int flags = ProtocolConstants.flagNone;
+	MessageType type = MessageType.unknown;
+	int sequenceId = 0;
+	int payloadLength = 0;
+	Uint8List payload = Uint8List(0);
 
-  /// Create message with specific type and payload
-  Message.withType(this.type, [List<int>? payload]) : payload = payload ?? [] {
-    payloadLength = this.payload.length;
-  }
+	Message();
 
-  /// Magic number for protocol identification
-  int magic = ProtocolConstants.magic;
+	Message.withType(this.type, [List<int>? payload])
+			: payload = payload != null ? Uint8List.fromList(payload) : Uint8List(0) {
+		payloadLength = this.payload.length;
+	}
 
-  /// Protocol version major
-  int versionMajor = ProtocolConstants.versionMajor;
+	int get totalSize => ProtocolConstants.headerSize + payloadLength;
 
-  /// Protocol version minor
-  int versionMinor = ProtocolConstants.versionMinor;
+	bool get isValid {
+		return magic == ProtocolConstants.magic &&
+				versionMajor == ProtocolConstants.versionMajor &&
+				versionMinor == ProtocolConstants.versionMinor &&
+				payloadLength <= ProtocolConstants.maxPayloadSize;
+	}
 
-  /// Message flags
-  int flags = ProtocolConstants.flagNone;
-
-  /// Message type
-  MessageType type = MessageType.unknown;
-
-  /// Sequence ID for ordering
-  int sequenceId = 0;
-
-  /// Payload length
-  int payloadLength = 0;
-
-  /// Message payload data
-  List<int> payload = [];
-
-  /// Message authentication code
-  List<int> mac = List.filled(ProtocolConstants.macSize, 0);
-
-  /// Calculate total message size in bytes
-  int get totalSize =>
-      ProtocolConstants.headerSize + payloadLength + ProtocolConstants.macSize;
-
-  /// Validate message structure
-  bool get isValid {
-    return magic == ProtocolConstants.magic &&
-        versionMajor == ProtocolConstants.versionMajor &&
-        versionMinor == ProtocolConstants.versionMinor &&
-        payloadLength <= ProtocolConstants.maxPayloadSize &&
-        mac.length == ProtocolConstants.macSize;
-  }
-
-  @override
-  String toString() {
-    return 'Message('
-        'magic: 0x${magic.toRadixString(16)}, '
-        'version: $versionMajor.$versionMinor, '
-        'type: $type, '
-        'sequenceId: $sequenceId, '
-        'payloadLength: $payloadLength, '
-        'flags: $flags'
-        ')';
-  }
+	@override
+	String toString() {
+		return 'Message('
+				'magic: 0x${magic.toRadixString(16)}, '
+				'version: $versionMajor.$versionMinor, '
+				'type: $type, '
+				'sequenceId: $sequenceId, '
+				'payloadLength: $payloadLength, '
+				'flags: 0x${flags.toRadixString(16)}'
+				')';
+	}
 }

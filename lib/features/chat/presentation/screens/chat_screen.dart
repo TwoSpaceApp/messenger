@@ -8,11 +8,14 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:share_plus/share_plus.dart' as share;
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/navigation/app_route_observer.dart';
 import 'package:two_space_app/core/sound/waveform_painter.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/utils/storage_service.dart';
@@ -24,6 +27,7 @@ import 'package:two_space_app/features/chat/data/services/voice_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_settings_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/group_settings_screen.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/media_player.dart';
+import 'package:two_space_app/features/chat/presentation/widgets/message_status_icon.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/typing_indicator.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
@@ -91,7 +95,8 @@ class _ChatTimelineState {
   }
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen>
+  with WidgetsBindingObserver, RouteAware {
   static const int _historyPageSize = 80;
   static const int _userInfoBatchSize = 6;
   static const Duration _searchDebounce = Duration(milliseconds: 260);
@@ -131,6 +136,14 @@ class _ChatScreenState extends State<ChatScreen> {
   String? _uploadLabel;
   final List<_ComposerAttachment> _pendingAttachments = <_ComposerAttachment>[];
   bool _desktopDropActive = false;
+  final Map<String, _Msg> _pendingOutgoingMessages = <String, _Msg>{};
+  int _nextPendingMessageId = 0;
+  ModalRoute<dynamic>? _route;
+  bool _routeObserverAttached = false;
+  bool _routeHasFocus = false;
+  bool _screenHasFocus = false;
+  AppLifecycleState _lifecycleState =
+      SchedulerBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
   
   // Group-related state
   // String? _groupBackgroundColor;
@@ -154,6 +167,57 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _setHighlighted(Set<String> messageIds) {
     _updateTimeline((current) => current.copyWith(highlighted: messageIds));
+  }
+
+  String _addPendingOutgoingMessage({
+    required String text,
+    required String type,
+    String? mediaId,
+  }) {
+    final tempId = 'pending:${_nextPendingMessageId++}';
+    final pending = _Msg(
+      id: tempId,
+      text: text,
+      isOwn: true,
+      time: DateTime.now(),
+      senderId: _currentUserId,
+      type: type,
+      mediaId: mediaId,
+      isPending: true,
+    );
+    _pendingOutgoingMessages[tempId] = pending;
+    _updateTimeline(
+      (current) => current.copyWith(
+        messages: _mergePendingMessages(
+          current.messages.where((message) => !message.isPending).toList(),
+        ),
+      ),
+    );
+    _scrollToLatest(animated: true);
+    return tempId;
+  }
+
+  void _removePendingOutgoingMessage(String tempId) {
+    if (_pendingOutgoingMessages.remove(tempId) == null) {
+      return;
+    }
+    _updateTimeline(
+      (current) => current.copyWith(
+        messages: _mergePendingMessages(
+          current.messages.where((message) => !message.isPending).toList(),
+        ),
+      ),
+    );
+  }
+
+  List<_Msg> _mergePendingMessages(List<_Msg> persistedMessages) {
+    if (_pendingOutgoingMessages.isEmpty) {
+      return persistedMessages;
+    }
+    final combined = List<_Msg>.from(persistedMessages)
+      ..addAll(_pendingOutgoingMessages.values);
+    combined.sort((left, right) => left.time.compareTo(right.time));
+    return combined;
   }
 
   List<_Msg> _visibleMessagesFor(List<_Msg> messages) {
@@ -189,7 +253,12 @@ class _ChatScreenState extends State<ChatScreen> {
           current.senderName != next.senderName ||
           current.senderAvatar != next.senderAvatar ||
           current.type != next.type ||
-          current.mediaId != next.mediaId) {
+          current.mediaId != next.mediaId ||
+          current.isDelivered != next.isDelivered ||
+          current.isRead != next.isRead ||
+          current.deliveredAt != next.deliveredAt ||
+          current.readAt != next.readAt ||
+          current.isPending != next.isPending) {
         return false;
       }
     }
@@ -199,6 +268,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _voiceService = VoiceService();
     _voiceService.init();
     _listController.addListener(_handleListScroll);
@@ -217,6 +287,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    if (_routeObserverAttached) {
+      appRouteObserver.unsubscribe(this);
+    }
     _searchDebounceTimer?.cancel();
     _messagesSub?.cancel();
     _timeline.dispose();
@@ -234,12 +308,76 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void didUpdateWidget(covariant ChatScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.chat.id != widget.chat.id && _screenHasFocus) {
+      unawaited(_svc.setActiveRoom(widget.chat.id));
+    }
     final oldQ = (oldWidget.searchQuery ?? '').trim();
     final newQ = (widget.searchQuery ?? '').trim();
     if (oldWidget.scrollToEventId != widget.scrollToEventId) _scrollToEventId = widget.scrollToEventId;
     if (oldQ != newQ || oldWidget.searchType != widget.searchType) {
       _scheduleServerSearch(newQ, widget.searchType ?? 'all');
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route == _route) {
+      return;
+    }
+    if (_routeObserverAttached) {
+      appRouteObserver.unsubscribe(this);
+      _routeObserverAttached = false;
+    }
+    _route = route;
+    if (route != null) {
+      appRouteObserver.subscribe(this, route);
+      _routeObserverAttached = true;
+      _routeHasFocus = route.isCurrent;
+      _syncFocusBinding();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _lifecycleState = state;
+    _syncFocusBinding();
+  }
+
+  @override
+  void didPush() {
+    _setRouteFocus(true);
+  }
+
+  @override
+  void didPopNext() {
+    _setRouteFocus(true);
+  }
+
+  @override
+  void didPushNext() {
+    _setRouteFocus(false);
+  }
+
+  @override
+  void didPop() {
+    _setRouteFocus(false);
+  }
+
+  void _setRouteFocus(bool hasFocus) {
+    _routeHasFocus = hasFocus;
+    _syncFocusBinding();
+  }
+
+  void _syncFocusBinding() {
+    final nextFocus =
+        _routeHasFocus && _lifecycleState == AppLifecycleState.resumed;
+    if (_screenHasFocus == nextFocus) {
+      return;
+    }
+    _screenHasFocus = nextFocus;
+    unawaited(_svc.setActiveRoom(nextFocus ? widget.chat.id : null));
   }
 
   void _scheduleServerSearch(String query, String type) {
@@ -654,7 +792,9 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
       
-      if (!mounted) return;
+        final mergedMessages = _mergePendingMessages(out);
+
+        if (!mounted) return;
       final nextMessageIds = out.map((message) => message.id).toSet();
       final nextHighlighted = _highlighted
           .where(nextMessageIds.contains)
@@ -663,7 +803,7 @@ class _ChatScreenState extends State<ChatScreen> {
         (messageId, _) => !nextMessageIds.contains(messageId),
       );
       final shouldUpdateTimeline =
-          !_sameVisualMessages(_messages, out) ||
+          !_sameVisualMessages(_messages, mergedMessages) ||
           _hasMoreHistory != (msgs.length >= _historyLimit) ||
           _loading ||
           !_sameStringList(_imageMediaIds, imageMediaIds) ||
@@ -672,7 +812,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (shouldUpdateTimeline) {
         _updateTimeline(
           (current) => current.copyWith(
-            messages: out,
+            messages: mergedMessages,
             imageMediaIds: imageMediaIds,
             imageIndexByMessageId: imageIndexByMessageId,
             hasMoreHistory: msgs.length >= _historyLimit,
@@ -684,6 +824,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (missingSenderIds.isNotEmpty) {
         unawaited(_prefetchUserInfo(missingSenderIds));
       }
+      unawaited(_svc.markRoomRead(widget.chat.id));
       
       // If we have an initial scroll target, try to scroll to it
       if (_scrollToEventId != null && _scrollToEventId!.isNotEmpty) {
@@ -956,69 +1097,170 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _showMessageActions(_Msg m, Offset globalPos) async {
     final l10n = AppLocalizations.of(context)!;
-  final overlay = Overlay.of(context);
-    OverlayEntry? entry;
-    entry = OverlayEntry(builder: (ctx) {
-      final mq = MediaQuery.of(ctx);
-      final left = math.max<double>(8, globalPos.dx - 120.0);
-      final top = math.max<double>(8, globalPos.dy - 80.0 - mq.viewPadding.top);
-      return GestureDetector(
-        onTap: () { entry?.remove(); },
-        behavior: HitTestBehavior.translucent,
-        child: Stack(children: [
-          Positioned(left: left, top: top, child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.85, end: 1),
-            duration: const Duration(milliseconds: 180),
-            builder: (ctx, s, child2) => Transform.scale(scale: s, child: Opacity(opacity: ((s - 0.85) / 0.15).clamp(0.0, 1.0), child: child2)),
-            child: Material(
-              color: Colors.transparent,
-              child: Stack(children: [
-                // triangle pointer
-                Positioned(left: 20, top: -8, child: Transform.rotate(angle: 0, child: ClipPath(clipper: _TriangleClipper(), child: Container(width: 18, height: 12, color: Theme.of(context).colorScheme.surface)))),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(12), boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 8)]),
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    // reactions row
-                    Row(mainAxisSize: MainAxisSize.min, children: [
-                      for (final e in ['👍','❤️','😂','🔥','😮','🎉'])
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: InkWell(
-                            onTap: () async {
-                              entry?.remove();
-                              _showEmojiBurst(context, e, globalPos);
-                              try {
-                                await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: e);
-                                _toggleReactionLocally(m.id, e);
-                              } catch (_) {}
-                            },
+    final theme = Theme.of(context);
+    final actions = <({IconData icon, String label, Future<void> Function() run})>[
+      (
+        icon: Icons.reply,
+        label: l10n.replyAction,
+        run: () async => _sendReplyForEvent(m.id),
+      ),
+      if (m.isOwn)
+        (
+          icon: Icons.edit,
+          label: l10n.editShort,
+          run: () async => _editEvent(m.id, m.text),
+        ),
+      (
+        icon: Icons.push_pin,
+        label: l10n.pinAction,
+        run: () async => _pinUnpinEvent(m.id),
+      ),
+      if (m.isOwn)
+        (
+          icon: Icons.delete_outline,
+          label: l10n.deleteButton,
+          run: () async => _redactEvent(m.id),
+        ),
+      (
+        icon: Icons.share_outlined,
+        label: l10n.shareAction,
+        run: () async => _shareMessage(m),
+      ),
+      (
+        icon: Icons.emoji_emotions_outlined,
+        label: l10n.moreButton,
+        run: () async {
+          final picked = await _showEmojiPickerDialog();
+          if (picked == null) {
+            return;
+          }
+          try {
+            _showEmojiBurst(context, picked, globalPos);
+            await _svc.sendReaction(
+              roomId: widget.chat.id,
+              eventId: m.id,
+              reaction: picked,
+            );
+            _toggleReactionLocally(m.id, picked);
+          } catch (_) {}
+        },
+      ),
+    ];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final maxHeight = MediaQuery.of(sheetContext).size.height * 0.72;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 560,
+                  maxHeight: maxHeight,
+                ),
+                child: Material(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(28),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
                             child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, shape: BoxShape.circle),
-                              child: Text(e, style: const TextStyle(fontSize: 18)),
+                              width: 42,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.outlineVariant,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
                             ),
                           ),
-                        ),
-                    ]),
-                    const SizedBox(height: 6),
-                    Row(mainAxisSize: MainAxisSize.min, children: [
-                      TextButton.icon(onPressed: () { entry?.remove(); _sendReplyForEvent(m.id); }, icon: const Icon(Icons.reply), label: Text(l10n.replyAction)), 
-                      if (m.isOwn) TextButton.icon(onPressed: () { entry?.remove(); _editEvent(m.id, m.text); }, icon: const Icon(Icons.edit), label: Text(l10n.editShort)), 
-                      TextButton.icon(onPressed: () { entry?.remove(); _pinUnpinEvent(m.id); }, icon: const Icon(Icons.push_pin), label: Text(l10n.pinAction)), 
-                      if (m.isOwn) TextButton.icon(onPressed: () { entry?.remove(); _redactEvent(m.id); }, icon: const Icon(Icons.delete), label: Text(l10n.deleteButton)),
-                      TextButton.icon(onPressed: () { entry?.remove(); _shareMessage(m); }, icon: const Icon(Icons.share), label: Text(l10n.shareAction)),
-                      TextButton.icon(onPressed: () async { entry?.remove(); final picked = await _showEmojiPickerDialog(); if (picked != null) { try { _showEmojiBurst(context, picked, globalPos); await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: picked); _toggleReactionLocally(m.id, picked); } catch (_) {} } }, icon: const Icon(Icons.emoji_emotions), label: Text(l10n.moreButton)),
-                    ]),
-                  ]),
+                          const SizedBox(height: 14),
+                          Text(
+                            m.text.isEmpty ? l10n.messageInputHint : m.text,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              for (final emoji in ['👍', '❤️', '😂', '🔥', '😮', '🎉'])
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(999),
+                                  onTap: () async {
+                                    Navigator.of(sheetContext).pop();
+                                    _showEmojiBurst(context, emoji, globalPos);
+                                    try {
+                                      await _svc.sendReaction(
+                                        roomId: widget.chat.id,
+                                        eventId: m.id,
+                                        reaction: emoji,
+                                      );
+                                      _toggleReactionLocally(m.id, emoji);
+                                    } catch (_) {}
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      emoji,
+                                      style: const TextStyle(fontSize: 22),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
+                            children: [
+                              for (final action in actions)
+                                SizedBox(
+                                  width: 160,
+                                  child: ShadButton.secondary(
+                                    onPressed: () async {
+                                      Navigator.of(sheetContext).pop();
+                                      await action.run();
+                                    },
+                                    leading: Icon(action.icon, size: 18),
+                                    child: Text(
+                                      action.label,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ]),
+              ),
             ),
-          )),
-        ]),
-      );
-    });
-  overlay.insert(entry);
+          ),
+        );
+      },
+    );
   }
 
   Future<String?> _showEmojiPickerDialog() async {
@@ -1078,16 +1320,23 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
     final l10n = AppLocalizations.of(context)!;
+    final pendingId = _addPendingOutgoingMessage(
+      text: text,
+      type: 'm.text',
+    );
     setState(() => _sending = true);
+    _controller.clear();
     try {
       await _svc.sendMessage(roomId: widget.chat.id, text: text);
-      setState(() {
-        _controller.text = '';
-      });
+      _removePendingOutgoingMessage(pendingId);
       _scrollToLatest(animated: true);
       // Clear draft after successful send
       await _draftService.deleteDraft(widget.chat.id);
     } catch (e) {
+      _removePendingOutgoingMessage(pendingId);
+      if (mounted) {
+        _controller.text = text;
+      }
       if (mounted) _showErrorMessage(l10n.sendError(e.toString()));
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -1679,7 +1928,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   if (m.isOwn) ...[
                     const SizedBox(width: 4),
-                    _MessageStatusIcon(message: m),
+                    MessageStatusIcon(
+                      isPending: m.isPending,
+                      isDelivered: m.isDelivered,
+                      isRead: m.isRead,
+                    ),
                   ],
                 ],
               ),
@@ -1994,28 +2247,9 @@ class _Msg {
   final bool isRead;
   final DateTime? deliveredAt;
   final DateTime? readAt;
+  final bool isPending;
 
-  _Msg({required this.id, required this.text, required this.isOwn, required this.time, this.senderId, this.senderName, this.senderAvatar, this.type, this.mediaId, this.isDelivered = false, this.isRead = false, this.deliveredAt, this.readAt});
-}
-
-class _MessageStatusIcon extends StatelessWidget {
-  const _MessageStatusIcon({required this.message});
-
-  final _Msg message;
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = message.isRead
-        ? Icons.done_all_rounded
-        : message.isDelivered
-            ? Icons.done_rounded
-            : Icons.schedule_rounded;
-    final color = message.isRead
-        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.88)
-        : AppColors.ownBubbleText(context).withValues(alpha: 0.72);
-
-    return Icon(icon, size: 15, color: color);
-  }
+  _Msg({required this.id, required this.text, required this.isOwn, required this.time, this.senderId, this.senderName, this.senderAvatar, this.type, this.mediaId, this.isDelivered = false, this.isRead = false, this.deliveredAt, this.readAt, this.isPending = false});
 }
 
 class _ComposerAttachment {
@@ -3334,21 +3568,6 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
     final ss = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$mm:$ss';
   }
-}
-
-class _TriangleClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final p = Path();
-    p.moveTo(0, size.height);
-    p.lineTo(size.width / 2, 0);
-    p.lineTo(size.width, size.height);
-    p.close();
-    return p;
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
 bool _differentDay(DateTime a, DateTime b) {

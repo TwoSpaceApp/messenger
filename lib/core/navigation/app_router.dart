@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/navigation/app_route_observer.dart';
 import 'package:two_space_app/core/navigation/app_transitions.dart';
 import 'package:two_space_app/core/navigation/title_observer.dart';
 import 'package:two_space_app/features/auth/presentation/screens/biometric_setup_screen.dart';
@@ -53,7 +54,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: AppStrings.routeSplash,
-    observers: [TitleObserver()],
+    observers: [appRouteObserver, TitleObserver()],
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authState = ref.read(authProvider);

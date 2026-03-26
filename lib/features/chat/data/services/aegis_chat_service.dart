@@ -210,6 +210,7 @@ class AegisChatService {
   bool _attached = false;
   Future<bool>? _bootstrapFuture;
   StreamSubscription<Message>? _incomingSub;
+  StreamSubscription<MessageStatusEvent>? _messageStatusSub;
   late Directory _storeDir;
   final AegisChatLocalStore _localStore = AegisChatLocalStore();
   Timer? _persistTimer;
@@ -249,6 +250,7 @@ class AegisChatService {
   bool _chatChangeQueued = false;
   final Map<String, Timer> _roomEmitTimers = <String, Timer>{};
   Timer? _chatEmitTimer;
+  String? _activeRoomId;
 
   String get homeserver => 'aegis://${_auth.username ?? 'server'}';
 
@@ -372,6 +374,8 @@ class AegisChatService {
     if (_attached) return;
     _attached = true;
     _incomingSub = _auth.rawClient.messages.listen(_handleIncomingMessage);
+    _messageStatusSub ??=
+        _auth.rawClient.messageStatusEvents.listen(_handleMessageStatusEvent);
   }
 
   Future<bool> _ensureChatBootstrap() async {
@@ -393,6 +397,7 @@ class AegisChatService {
   Future<void> dispose() async {
     await _flushPersistNow();
     await _incomingSub?.cancel();
+    await _messageStatusSub?.cancel();
     await _localStore.close();
     _attached = false;
     for (final timer in _roomEmitTimers.values) {
@@ -909,8 +914,6 @@ class AegisChatService {
       time: DateTime.now(),
       type: type,
       mediaId: mediaFileId,
-      isDelivered: true,
-      deliveredAt: DateTime.now(),
     );
     await _appendMessage(roomId, message);
     unawaited(_refreshChatsFromServer());
@@ -972,8 +975,6 @@ class AegisChatService {
       time: DateTime.now(),
       type: messageType,
       mediaId: storedPath,
-      isDelivered: true,
-      deliveredAt: DateTime.now(),
     );
     await _appendMessage(roomId, message);
     return message;
@@ -1110,6 +1111,72 @@ class AegisChatService {
     _roomEmitTimers.remove(roomId)?.cancel();
     await controller?.close();
     await _persist();
+    _emitChanged();
+  }
+
+  void _handleMessageStatusEvent(MessageStatusEvent event) {
+    if (!event.success || event.messageIds.isEmpty) {
+      return;
+    }
+
+    final processedAt = event.processedAt ?? DateTime.now();
+    final updatedRooms = <String>{};
+
+    for (final entry in _messages.entries) {
+      final roomId = entry.key;
+      final list = entry.value;
+      var roomUpdated = false;
+
+      for (var index = 0; index < list.length; index++) {
+        final message = list[index];
+        final messageId = int.tryParse(message.id);
+        if (messageId == null || !event.messageIds.contains(messageId)) {
+          continue;
+        }
+
+        final nextDelivered = message.isDelivered || event.isDeliveredUpdate;
+        final nextRead = message.isRead || event.isReadUpdate;
+        final nextDeliveredAt = message.deliveredAt ??
+            (event.isDeliveredUpdate ? processedAt : null);
+        final nextReadAt = message.readAt ??
+            (event.isReadUpdate ? processedAt : null);
+
+        if (nextDelivered == message.isDelivered &&
+            nextRead == message.isRead &&
+            nextDeliveredAt == message.deliveredAt &&
+            nextReadAt == message.readAt) {
+          continue;
+        }
+
+        list[index] = AegisRoomMessage(
+          id: message.id,
+          senderId: message.senderId,
+          content: message.content,
+          time: message.time,
+          type: message.type,
+          mediaId: message.mediaId,
+          isDelivered: nextDelivered,
+          isRead: nextRead,
+          deliveredAt: nextDeliveredAt,
+          readAt: nextReadAt,
+        );
+        _markMessageDirty(roomId, list[index]);
+        roomUpdated = true;
+      }
+
+      if (roomUpdated) {
+        updatedRooms.add(roomId);
+      }
+    }
+
+    if (updatedRooms.isEmpty) {
+      return;
+    }
+
+    unawaited(_persist());
+    for (final roomId in updatedRooms) {
+      _emitRoomChanged(roomId);
+    }
     _emitChanged();
   }
 
@@ -1438,6 +1505,70 @@ class AegisChatService {
       await refreshChats();
     } catch (_) {
       // Keep cached chats visible when the network is unavailable.
+    }
+  }
+
+  Future<void> setActiveRoom(String? roomId) async {
+    await ensureReady();
+    _activeRoomId = roomId;
+    if (roomId != null && roomId.isNotEmpty) {
+      await markRoomRead(roomId);
+    }
+  }
+
+  Future<void> markRoomRead(String roomId) async {
+    await ensureReady();
+    final room = _conversations[roomId];
+    if (room == null) {
+      return;
+    }
+
+    final selfUserId = (_auth.userId ?? 0).toString();
+    final list = _messages[roomId] ?? const <AegisRoomMessage>[];
+    final unreadIds = <int>[];
+    var updatedAnyMessage = false;
+    final now = DateTime.now();
+
+    for (var index = 0; index < list.length; index++) {
+      final message = list[index];
+      if (message.senderId == selfUserId) {
+        continue;
+      }
+
+      final parsedId = int.tryParse(message.id);
+      if (parsedId != null && !message.isRead) {
+        unreadIds.add(parsedId);
+      }
+
+      if (message.isRead) {
+        continue;
+      }
+
+      list[index] = AegisRoomMessage(
+        id: message.id,
+        senderId: message.senderId,
+        content: message.content,
+        time: message.time,
+        type: message.type,
+        mediaId: message.mediaId,
+        isDelivered: true,
+        isRead: true,
+        deliveredAt: message.deliveredAt ?? now,
+        readAt: message.readAt ?? now,
+      );
+      _markMessageDirty(roomId, list[index]);
+      updatedAnyMessage = true;
+    }
+
+    if (updatedAnyMessage || room.unreadCount != 0) {
+      _storeConversation(room.copyWith(unreadCount: 0));
+      unawaited(_persist());
+      _emitRoomChanged(roomId);
+      _emitChanged();
+    }
+
+    if (unreadIds.isNotEmpty) {
+      unawaited(_auth.rawClient.sendReadReceipt(unreadIds).catchError((_) {}));
     }
   }
 
@@ -1963,9 +2094,15 @@ class AegisChatService {
     }
     final room = _conversations[roomId];
     if (room != null) {
+      final isIncomingForInactiveRoom =
+          message.senderId != (_auth.userId ?? 0).toString() &&
+          _activeRoomId != roomId;
       _storeConversation(room.copyWith(
         updatedAt: message.time,
         lastMessage: message.content,
+        unreadCount: isIncomingForInactiveRoom
+            ? room.unreadCount + 1
+            : (_activeRoomId == roomId ? 0 : room.unreadCount),
       ));
     }
     _storedRoomIds.add(roomId);
@@ -2038,8 +2175,21 @@ class AegisChatService {
             content: event.content,
             contentType: event.contentType,
             createdAt: event.createdAt,
+            isDelivered: event.deliveredTo.isNotEmpty,
+            isRead: event.readBy.isNotEmpty,
           );
           await _appendMessage(roomId, roomMessage);
+          if (event.fromUserId != me) {
+            final messageId = int.tryParse(roomMessage.id);
+            if (messageId != null && messageId > 0) {
+              await _auth.rawClient
+                  .sendDeliveryReceipt(<int>[messageId])
+                  .catchError((_) {});
+            }
+            if (_activeRoomId == roomId) {
+              await markRoomRead(roomId);
+            }
+          }
         }());
       }
 
@@ -2066,8 +2216,21 @@ class AegisChatService {
             content: event.content,
             contentType: event.contentType,
             createdAt: event.createdAt,
+            isDelivered: event.deliveredTo.isNotEmpty,
+            isRead: event.readBy.isNotEmpty,
           );
           await _appendMessage(roomId, roomMessage);
+          if (event.fromUserId != _auth.userId) {
+            final messageId = int.tryParse(roomMessage.id);
+            if (messageId != null && messageId > 0) {
+              await _auth.rawClient
+                  .sendDeliveryReceipt(<int>[messageId])
+                  .catchError((_) {});
+            }
+            if (_activeRoomId == roomId) {
+              await markRoomRead(roomId);
+            }
+          }
         }());
       }
     } catch (_) {}
@@ -2312,9 +2475,15 @@ class AegisChatService {
       return null;
     }
 
+    bool readList(String lower, String upper) {
+      final value = payload[lower] ?? payload[upper];
+      return value is List && value.isNotEmpty;
+    }
+
     return (
-      readBool('isDelivered', 'IsDelivered'),
-      readBool('isRead', 'IsRead'),
+      readBool('isDelivered', 'IsDelivered') ||
+          readList('deliveredTo', 'DeliveredTo'),
+      readBool('isRead', 'IsRead') || readList('readBy', 'ReadBy'),
       readDate('deliveredAt', 'DeliveredAt'),
       readDate('readAt', 'ReadAt'),
     );

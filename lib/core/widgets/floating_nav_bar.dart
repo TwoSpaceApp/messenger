@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/unread_badge.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class FloatingNavBar extends StatefulWidget {
@@ -192,25 +192,9 @@ class _NavItem extends StatelessWidget {
                 ),
                 if (badge > 0)
                   Positioned(
-                    right: -8,
-                    top: -4,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.error,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      constraints: const BoxConstraints(minWidth: 18, minHeight: 14),
-                      child: Text(
-                        badge > 99 ? '99+' : '$badge',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
+                    right: -12,
+                    top: -6,
+                    child: UnreadBadge(count: badge),
                   ),
               ],
             ),

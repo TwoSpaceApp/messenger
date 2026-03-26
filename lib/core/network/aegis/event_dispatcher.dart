@@ -1,173 +1,151 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 
-/// Unified dispatcher that splits raw protocol messages into typed streams.
 class AegisEventDispatcher {
-  AegisEventDispatcher(Stream<Message> source) {
-    _subscription = source.listen(_route);
-  }
+	AegisEventDispatcher(Stream<Message> source) {
+		_subscription = source.listen(_route);
+	}
 
-  late final StreamSubscription<Message> _subscription;
+	late final StreamSubscription<Message> _subscription;
 
-  final StreamController<Message> _ackController =
-      StreamController<Message>.broadcast();
-  final StreamController<Message> _errorController =
-      StreamController<Message>.broadcast();
-  final StreamController<PrivateChatMessageEvent> _privateEventController =
-      StreamController<PrivateChatMessageEvent>.broadcast();
-  final StreamController<ChannelMessageEvent> _channelEventController =
-      StreamController<ChannelMessageEvent>.broadcast();
-  final StreamController<ChatListResponse> _chatListController =
-      StreamController<ChatListResponse>.broadcast();
-  final StreamController<PrivateChatHistoryResponse> _privateHistoryController =
-      StreamController<PrivateChatHistoryResponse>.broadcast();
-  final StreamController<ChannelHistoryResponse> _channelHistoryController =
-      StreamController<ChannelHistoryResponse>.broadcast();
+	final StreamController<Message> _ackController =
+			StreamController<Message>.broadcast();
+	final StreamController<Message> _errorController =
+			StreamController<Message>.broadcast();
+	final StreamController<PrivateChatMessageEvent> _privateEventController =
+			StreamController<PrivateChatMessageEvent>.broadcast();
+	final StreamController<ChannelMessageEvent> _channelEventController =
+			StreamController<ChannelMessageEvent>.broadcast();
+	final StreamController<MessageStatusEvent> _messageStatusController =
+			StreamController<MessageStatusEvent>.broadcast();
+	final StreamController<ChatListResponse> _chatListController =
+			StreamController<ChatListResponse>.broadcast();
+	final StreamController<PrivateChatHistoryResponse> _privateHistoryController =
+			StreamController<PrivateChatHistoryResponse>.broadcast();
+	final StreamController<ChannelHistoryResponse> _channelHistoryController =
+			StreamController<ChannelHistoryResponse>.broadcast();
 
-  Stream<Message> get ackMessages => _ackController.stream;
-  Stream<Message> get errorMessages => _errorController.stream;
-  Stream<PrivateChatMessageEvent> get privateMessageEvents =>
-      _privateEventController.stream;
-  Stream<ChannelMessageEvent> get channelMessageEvents =>
-      _channelEventController.stream;
-  Stream<ChatListResponse> get chatListResponses => _chatListController.stream;
-  Stream<PrivateChatHistoryResponse> get privateHistoryResponses =>
-      _privateHistoryController.stream;
-  Stream<ChannelHistoryResponse> get channelHistoryResponses =>
-      _channelHistoryController.stream;
+	Stream<Message> get ackMessages => _ackController.stream;
+	Stream<Message> get errorMessages => _errorController.stream;
+	Stream<PrivateChatMessageEvent> get privateMessageEvents =>
+			_privateEventController.stream;
+	Stream<ChannelMessageEvent> get channelMessageEvents =>
+			_channelEventController.stream;
+	Stream<MessageStatusEvent> get messageStatusEvents =>
+			_messageStatusController.stream;
+	Stream<ChatListResponse> get chatListResponses => _chatListController.stream;
+	Stream<PrivateChatHistoryResponse> get privateHistoryResponses =>
+			_privateHistoryController.stream;
+	Stream<ChannelHistoryResponse> get channelHistoryResponses =>
+			_channelHistoryController.stream;
 
-  StreamSubscription<Message> onAck(void Function(Message message) handler) {
-    return ackMessages.listen(handler);
-  }
+	Future<void> dispose() async {
+		await _subscription.cancel();
+		await _ackController.close();
+		await _errorController.close();
+		await _privateEventController.close();
+		await _channelEventController.close();
+		await _messageStatusController.close();
+		await _chatListController.close();
+		await _privateHistoryController.close();
+		await _channelHistoryController.close();
+	}
 
-  StreamSubscription<Message> onError(void Function(Message message) handler) {
-    return errorMessages.listen(handler);
-  }
+	void _route(Message message) {
+		if (message.type == MessageType.ack) {
+			_ackController.add(message);
+			return;
+		}
 
-  StreamSubscription<PrivateChatMessageEvent> onPrivateMessageEvent(
-    void Function(PrivateChatMessageEvent event) handler,
-  ) {
-    return privateMessageEvents.listen(handler);
-  }
+		if (message.type == MessageType.error) {
+			_errorController.add(message);
+			return;
+		}
 
-  StreamSubscription<ChannelMessageEvent> onChannelMessageEvent(
-    void Function(ChannelMessageEvent event) handler,
-  ) {
-    return channelMessageEvents.listen(handler);
-  }
+		if (message.type == MessageType.privateChatMessageEvent) {
+			_tryEmit(
+				() => PrivateChatMessageEvent.fromJson(_decodeMap(message.payload)),
+				_privateEventController,
+			);
+			return;
+		}
 
-  Future<void> dispose() async {
-    await _subscription.cancel();
-    await _ackController.close();
-    await _errorController.close();
-    await _privateEventController.close();
-    await _channelEventController.close();
-    await _chatListController.close();
-    await _privateHistoryController.close();
-    await _channelHistoryController.close();
-  }
+		if (message.type == MessageType.channelMessageEvent) {
+			_tryEmit(
+				() => ChannelMessageEvent.fromJson(_decodeMap(message.payload)),
+				_channelEventController,
+			);
+			return;
+		}
 
-  void _route(Message message) {
-    switch (message.type) {
-      case MessageType.ack:
-        _ackController.add(message);
-      case MessageType.error:
-        _errorController.add(message);
-      case MessageType.privateChatMessageEvent:
-        _tryEmit(
-          () => PrivateChatMessageEvent.fromBytes(message.payload),
-          _privateEventController,
-        );
-      case MessageType.channelMessageEvent:
-        _tryEmit(
-          () => ChannelMessageEvent.fromBytes(message.payload),
-          _channelEventController,
-        );
-      case MessageType.chatListResponse:
-        _tryEmit(
-          () => ChatListResponse.fromBytes(message.payload),
-          _chatListController,
-        );
-      case MessageType.privateChatHistoryResponse:
-        _tryEmit(
-          () => PrivateChatHistoryResponse.fromBytes(message.payload),
-          _privateHistoryController,
-        );
-      case MessageType.channelHistoryResponse:
-        _tryEmit(
-          () => ChannelHistoryResponse.fromBytes(message.payload),
-          _channelHistoryController,
-        );
-      case MessageType.unknown:
-      case MessageType.auth:
-      case MessageType.ping:
-      case MessageType.message:
-      case MessageType.handshake:
-      case MessageType.nack:
-      case MessageType.retransmitRequest:
-      case MessageType.userPresence:
-      case MessageType.groupMessage:
-      case MessageType.groupCreate:
-      case MessageType.groupLeave:
-      case MessageType.channelMessage:
-      case MessageType.channelCreate:
-      case MessageType.channelJoin:
-      case MessageType.channelLeave:
-      case MessageType.privateChatMessage:
-      case MessageType.userSearch:
-      case MessageType.userSearchResult:
-      case MessageType.register:
-      case MessageType.registerResponse:
-      case MessageType.profileUpdate:
-      case MessageType.profileUpdateResponse:
-      case MessageType.profileGet:
-      case MessageType.profileGetResponse:
-      case MessageType.messageEdit:
-      case MessageType.messageEditResponse:
-      case MessageType.messageDelete:
-      case MessageType.messageDeleteResponse:
-      case MessageType.channelEdit:
-      case MessageType.channelEditResponse:
-      case MessageType.groupEdit:
-      case MessageType.groupEditResponse:
-      case MessageType.memberRoleUpdate:
-      case MessageType.memberRoleUpdateResponse:
-      case MessageType.memberPermissionUpdate:
-      case MessageType.memberPermissionUpdateResponse:
-      case MessageType.groupMessageSend:
-      case MessageType.groupMessageResponse:
-      case MessageType.groupCreateResponse:
-      case MessageType.chatListRequest:
-      case MessageType.privateChatHistoryRequest:
-      case MessageType.channelHistoryRequest:
-      case MessageType.profileAvatarAdd:
-      case MessageType.profileAvatarAddResponse:
-      case MessageType.profileAvatarList:
-      case MessageType.profileAvatarListResponse:
-      case MessageType.profileAvatarDelete:
-      case MessageType.profileAvatarDeleteResponse:
-      case MessageType.profileAvatarSetPrimary:
-      case MessageType.profileAvatarSetPrimaryResponse:
-      case MessageType.channelLinkUpdate:
-      case MessageType.channelLinkUpdateResponse:
-      case MessageType.channelLinkGet:
-      case MessageType.channelLinkGetResponse:
-      case MessageType.channelResolve:
-      case MessageType.channelResolveResponse:
-      case MessageType.channelJoinByLink:
-      case MessageType.channelJoinByLinkResponse:
-        break;
-    }
-  }
+		if (message.type == MessageType.messageStatusEvent) {
+			_tryEmit(
+				() => MessageStatusEvent.fromJson(_decodeMap(message.payload)),
+				_messageStatusController,
+			);
+			return;
+		}
 
-  void _tryEmit<T>(T Function() parse, StreamController<T> controller) {
-    try {
-      controller.add(parse());
-    } catch (_) {
-      // Ignore payload parse errors so dispatcher never breaks message flow.
-    }
-  }
+		if (message.type == MessageType.chatListResponse) {
+			_tryEmit(
+				() => ChatListResponse.fromJson(_decodeMap(message.payload)),
+				_chatListController,
+			);
+			return;
+		}
+
+		if (message.type == MessageType.privateChatHistoryResponse) {
+			_tryEmit(
+				() => PrivateChatHistoryResponse.fromJson(_decodeMap(message.payload)),
+				_privateHistoryController,
+			);
+			return;
+		}
+
+		if (message.type == MessageType.channelHistoryResponse) {
+			_tryEmit(
+				() => ChannelHistoryResponse.fromJson(_decodeMap(message.payload)),
+				_channelHistoryController,
+			);
+		}
+	}
+
+	void _tryEmit<T>(T Function() parse, StreamController<T> controller) {
+		try {
+			controller.add(parse());
+		} catch (_) {}
+	}
+
+	Map<String, dynamic> _decodeMap(Uint8List payload) {
+		if (payload.isEmpty) {
+			return const <String, dynamic>{};
+		}
+
+		try {
+			final decoded = msgpack.deserialize(payload);
+			return _normalize(decoded) as Map<String, dynamic>;
+		} catch (_) {
+			final decoded = jsonDecode(utf8.decode(payload));
+			return _normalize(decoded) as Map<String, dynamic>;
+		}
+	}
+
+	dynamic _normalize(dynamic value) {
+		if (value is Map) {
+			return value.map<String, dynamic>(
+				(key, item) => MapEntry(key.toString(), _normalize(item)),
+			);
+		}
+		if (value is List) {
+			return value.map(_normalize).toList(growable: false);
+		}
+		return value;
+	}
 }

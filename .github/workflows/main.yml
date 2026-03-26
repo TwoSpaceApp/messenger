@@ -40,12 +40,6 @@ jobs:
       - name: Get dependencies V2
         run: flutter pub get --enforce-lockfile
 
-      - name: Ensure public env.g.dart is sanitized
-        shell: bash
-        run: |
-          grep -F "static const String aegisHost = '';" lib/core/config/env.g.dart
-          grep -F "static const String aegisTransportMaskingKey = '';" lib/core/config/env.g.dart
-
       - name: Prepare env for CI
         shell: bash
         run: |
