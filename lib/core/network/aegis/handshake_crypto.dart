@@ -94,6 +94,7 @@ class AegisHandshakeCrypto {
     required List<int> plaintext,
     required List<int> sessionKey,
     required List<int> nonce,
+    List<int> aad = const <int>[],
   }) {
     final cipher = GCMBlockCipher(AESEngine())
       ..init(
@@ -102,7 +103,7 @@ class AegisHandshakeCrypto {
           KeyParameter(Uint8List.fromList(sessionKey)),
           128,
           Uint8List.fromList(nonce),
-          Uint8List(0),
+          Uint8List.fromList(aad),
         ),
       );
     return cipher.process(Uint8List.fromList(plaintext));
@@ -111,6 +112,7 @@ class AegisHandshakeCrypto {
   static List<int> decryptPayload({
     required List<int> encryptedPayload,
     required List<int> sessionKey,
+    List<int> aad = const <int>[],
   }) {
     if (encryptedPayload.length < 12 + 16) {
       throw const FormatException('Encrypted payload is too short');
@@ -125,7 +127,7 @@ class AegisHandshakeCrypto {
           KeyParameter(Uint8List.fromList(sessionKey)),
           128,
           Uint8List.fromList(nonce),
-          Uint8List(0),
+          Uint8List.fromList(aad),
         ),
       );
     return cipher.process(Uint8List.fromList(ciphertextWithTag));
@@ -142,7 +144,8 @@ class AegisHandshakeCrypto {
     }
 
     final agreement = ECDHBasicAgreement()..init(clientPrivateKey);
-    final sharedSecret = agreement.calculateAgreement(ECPublicKey(point, _domain));
+    final sharedSecret =
+        agreement.calculateAgreement(ECPublicKey(point, _domain));
     final sharedSecretBytes = _bigIntToBytes(sharedSecret, 32);
     final derivedBytes = _hkdfSha256(
       inputKeyMaterial: sharedSecretBytes,

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
