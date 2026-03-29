@@ -47,7 +47,7 @@ class ThemeSettings {
   const ThemeSettings({
     this.fontFamily = 'Inter',
     this.primaryColorValue = 0xFF6200EE,
-    this.fontWeight = 4,
+    this.fontWeight = 400,
     this.bubbleRounding = 16.0,
     this.dynamicBubbles = true,
     this.compactMode = false,
@@ -89,6 +89,16 @@ class ThemeSettings {
 
 class SettingsService {
   SettingsService._();
+
+  static int normalizeFontWeight(int rawWeight) {
+    if (rawWeight >= 100 && rawWeight <= 900) {
+      return ((rawWeight / 100).round() * 100).clamp(300, 900);
+    }
+    if (rawWeight >= 1 && rawWeight <= 9) {
+      return (rawWeight * 100).clamp(300, 900);
+    }
+    return 400;
+  }
 
   static const _fontKey = 'theme_font_family';
   static const _colorKey = 'theme_primary_color';
@@ -199,7 +209,9 @@ class SettingsService {
     themeNotifier.value = ThemeSettings(
       fontFamily: valueOf(_fontKey) ?? 'Inter',
       primaryColorValue: int.tryParse(valueOf(_colorKey) ?? '') ?? 0xFF651FFF,
-      fontWeight: int.tryParse(valueOf(_weightKey) ?? '') ?? 4,
+      fontWeight: normalizeFontWeight(
+        int.tryParse(valueOf(_weightKey) ?? '') ?? 400,
+      ),
       bubbleRounding: double.tryParse(valueOf(_bubbleRoundingKey) ?? '') ?? 16.0,
       dynamicBubbles: valueOf(_dynamicBubblesKey) != 'false',
       compactMode: valueOf(_compactModeKey) == 'true',
@@ -374,6 +386,8 @@ class SettingsService {
     double? floatingCirclesOpacity,
   }) async {
     final current = themeNotifier.value;
+    final normalizedFontWeight =
+        fontWeight == null ? null : normalizeFontWeight(fontWeight);
     final next = current.copyWith(
       fontFamily: fontFamily,
       primaryColorValue: primaryColorValue,
@@ -382,7 +396,7 @@ class SettingsService {
       compactMode: compactMode,
       navBarHideTimeoutSeconds: navBarHideTimeoutSeconds,
       enableParallax: enableParallax,
-      fontWeight: fontWeight,
+      fontWeight: normalizedFontWeight,
       enableFloatingCircles: enableFloatingCircles,
       floatingCirclesSpeed: floatingCirclesSpeed,
       floatingCirclesOpacity: floatingCirclesOpacity,
@@ -392,7 +406,7 @@ class SettingsService {
 
     if (fontFamily != null) await SecureStore.write(_fontKey, fontFamily);
     if (primaryColorValue != null) await SecureStore.write(_colorKey, primaryColorValue.toString());
-    if (fontWeight != null) await SecureStore.write(_weightKey, fontWeight.toString());
+  if (normalizedFontWeight != null) await SecureStore.write(_weightKey, normalizedFontWeight.toString());
     if (bubbleRounding != null) await SecureStore.write(_bubbleRoundingKey, bubbleRounding.toString());
     if (dynamicBubbles != null) await SecureStore.write(_dynamicBubblesKey, dynamicBubbles.toString());
     if (compactMode != null) await SecureStore.write(_compactModeKey, compactMode.toString());

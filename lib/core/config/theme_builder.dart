@@ -6,6 +6,57 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 class AppThemeBuilder {
   AppThemeBuilder._();
 
+  static FontWeight _resolveFontWeight(int weight) {
+    switch (weight.clamp(300, 900)) {
+      case 300:
+        return FontWeight.w300;
+      case 400:
+        return FontWeight.w400;
+      case 500:
+        return FontWeight.w500;
+      case 600:
+        return FontWeight.w600;
+      case 700:
+        return FontWeight.w700;
+      case 800:
+        return FontWeight.w800;
+      case 900:
+        return FontWeight.w900;
+      default:
+        return FontWeight.w400;
+    }
+  }
+
+  static int _offsetWeight(int base, int delta) =>
+      (base + delta).clamp(300, 900);
+
+  static TextTheme _applyFontWeights(TextTheme textTheme, int baseWeight) {
+    TextStyle? weighted(TextStyle? style, int resolvedWeight) {
+      if (style == null) return null;
+      return style.copyWith(
+        fontWeight: _resolveFontWeight(resolvedWeight),
+      );
+    }
+
+    return textTheme.copyWith(
+      displayLarge: weighted(textTheme.displayLarge, _offsetWeight(baseWeight, 300)),
+      displayMedium: weighted(textTheme.displayMedium, _offsetWeight(baseWeight, 300)),
+      displaySmall: weighted(textTheme.displaySmall, _offsetWeight(baseWeight, 200)),
+      headlineLarge: weighted(textTheme.headlineLarge, _offsetWeight(baseWeight, 200)),
+      headlineMedium: weighted(textTheme.headlineMedium, _offsetWeight(baseWeight, 200)),
+      headlineSmall: weighted(textTheme.headlineSmall, _offsetWeight(baseWeight, 100)),
+      titleLarge: weighted(textTheme.titleLarge, _offsetWeight(baseWeight, 100)),
+      titleMedium: weighted(textTheme.titleMedium, _offsetWeight(baseWeight, 100)),
+      titleSmall: weighted(textTheme.titleSmall, _offsetWeight(baseWeight, 100)),
+      bodyLarge: weighted(textTheme.bodyLarge, baseWeight),
+      bodyMedium: weighted(textTheme.bodyMedium, baseWeight),
+      bodySmall: weighted(textTheme.bodySmall, baseWeight),
+      labelLarge: weighted(textTheme.labelLarge, _offsetWeight(baseWeight, 100)),
+      labelMedium: weighted(textTheme.labelMedium, _offsetWeight(baseWeight, 100)),
+      labelSmall: weighted(textTheme.labelSmall, _offsetWeight(baseWeight, 100)),
+    );
+  }
+
   static ThemeData build(
     ThemeSettings settings,
     bool paleVioletEnabled, {
@@ -74,6 +125,11 @@ class AppThemeBuilder {
     } else {
       textTheme = GoogleFonts.interTextTheme(mainTextTheme);
     }
+
+    textTheme = _applyFontWeights(
+      textTheme,
+      SettingsService.normalizeFontWeight(settings.fontWeight),
+    );
 
     return baseTheme.copyWith(
       primaryColor: primaryColor,
@@ -162,7 +218,7 @@ class AppThemeBuilder {
   }
 
   static bool _isLightIntention(int colorValue) {
-    const lightColors = [0xFF03A9F4, 0xFF8BC34A, 0xFFE8D7FF, 0xFFFFFFFF];
+    const lightColors = [0xFF03A9F4, 0xFF8BC34A, 0xFFE8D7FF, 0xFFFFB300];
     return lightColors.contains(colorValue);
   }
 }

@@ -1379,6 +1379,251 @@
   "@customizationTitle": {
     "description": "Customization screen title"
   },
+  "customizationHeroTitle": "Shape the app around your rhythm",
+  "@customizationHeroTitle": {
+    "description": "Customization hero title"
+  },
+  "customizationHeroSubtitle": "Build a distinct look with live preview, curated presets, motion, and density controls.",
+  "@customizationHeroSubtitle": {
+    "description": "Customization hero subtitle"
+  },
+  "livePreviewBadge": "Live preview",
+  "@livePreviewBadge": {
+    "description": "Live preview badge"
+  },
+  "stylePresetsTitle": "Style presets",
+  "@stylePresetsTitle": {
+    "description": "Style presets section title"
+  },
+  "stylePresetsSubtitle": "Start with a strong visual direction, then tune the details.",
+  "@stylePresetsSubtitle": {
+    "description": "Style presets section subtitle"
+  },
+  "moodSectionTitle": "Mood",
+  "@moodSectionTitle": {
+    "description": "Mood section title"
+  },
+  "moodSectionSubtitle": "Choose the accent that drives surfaces, highlights, and the background atmosphere.",
+  "@moodSectionSubtitle": {
+    "description": "Mood section subtitle"
+  },
+  "typeSectionTitle": "Type",
+  "@typeSectionTitle": {
+    "description": "Type section title"
+  },
+  "typeSectionSubtitle": "Pair a font family with the weight and size that feels right across the whole UI.",
+  "@typeSectionSubtitle": {
+    "description": "Type section subtitle"
+  },
+  "motionSectionTitle": "Motion",
+  "@motionSectionTitle": {
+    "description": "Motion section title"
+  },
+  "motionSectionSubtitle": "Control how much the interface breathes, drifts, and reacts in the background.",
+  "@motionSectionSubtitle": {
+    "description": "Motion section subtitle"
+  },
+  "densitySectionTitle": "Density",
+  "@densitySectionTitle": {
+    "description": "Density section title"
+  },
+  "densitySectionSubtitle": "Tighten spacing, bubble geometry, and navigation timing for a sharper layout.",
+  "@densitySectionSubtitle": {
+    "description": "Density section subtitle"
+  },
+  "dynamicBubblesLabel": "Dynamic bubbles",
+  "@dynamicBubblesLabel": {
+    "description": "Dynamic bubbles label"
+  },
+  "dynamicBubblesSubtitle": "Give chat bubbles directional corners for a more conversational rhythm.",
+  "@dynamicBubblesSubtitle": {
+    "description": "Dynamic bubbles subtitle"
+  },
+  "bubbleRoundingLabel": "Bubble rounding",
+  "@bubbleRoundingLabel": {
+    "description": "Bubble rounding label"
+  },
+  "bubbleRoundingCompact": "Sharper",
+  "@bubbleRoundingCompact": {
+    "description": "Bubble rounding compact label"
+  },
+  "bubbleRoundingSoft": "Softer",
+  "@bubbleRoundingSoft": {
+    "description": "Bubble rounding soft label"
+  },
+  "navBarTimeoutLabel": "Navigation auto-hide",
+  "@navBarTimeoutLabel": {
+    "description": "Navigation auto hide label"
+  },
+  "navBarTimeoutValue": "{seconds}s",
+  "@navBarTimeoutValue": {
+    "description": "Navigation auto hide duration",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "navBarTimeoutShort": "Fast",
+  "@navBarTimeoutShort": {
+    "description": "Short navigation timeout label"
+  },
+  "navBarTimeoutLong": "Relaxed",
+  "@navBarTimeoutLong": {
+    "description": "Long navigation timeout label"
+  },
+  "presetQuietGlass": "Quiet Glass",
+  "@presetQuietGlass": {
+    "description": "Quiet Glass preset title"
+  },
+  "presetQuietGlassSubtitle": "Balanced contrast with cool depth and steady motion.",
+  "@presetQuietGlassSubtitle": {
+    "description": "Quiet Glass preset subtitle"
+  },
+  "presetNightSignal": "Night Signal",
+  "@presetNightSignal": {
+    "description": "Night Signal preset title"
+  },
+  "presetNightSignalSubtitle": "Tighter density, stronger highlights, and a darker pulse.",
+  "@presetNightSignalSubtitle": {
+    "description": "Night Signal preset subtitle"
+  },
+  "presetEditorial": "Editorial",
+  "@presetEditorial": {
+    "description": "Editorial preset title"
+  },
+  "presetEditorialSubtitle": "Calmer motion, restrained color, and a more reading-focused tone.",
+  "@presetEditorialSubtitle": {
+    "description": "Editorial preset subtitle"
+  },
+  "presetSolarFlare": "Solar Flare",
+  "@presetSolarFlare": {
+    "description": "Solar Flare preset title"
+  },
+  "presetSolarFlareSubtitle": "Warm highlights and brighter surfaces with energetic movement.",
+  "@presetSolarFlareSubtitle": {
+    "description": "Solar Flare preset subtitle"
+  },
+  "presetRetroPulse": "Retro Pulse",
+  "@presetRetroPulse": {
+    "description": "Retro Pulse preset title"
+  },
+  "presetRetroPulseSubtitle": "Compact, playful, and intentionally stylized.",
+  "@presetRetroPulseSubtitle": {
+    "description": "Retro Pulse preset subtitle"
+  },
+  "previewRoomsLabel": "Rooms",
+  "@previewRoomsLabel": {
+    "description": "Preview rooms tab label"
+  },
+  "previewConversationLabel": "Conversation",
+  "@previewConversationLabel": {
+    "description": "Preview conversation tab label"
+  },
+  "previewSettingsLabel": "Settings",
+  "@previewSettingsLabel": {
+    "description": "Preview settings tab label"
+  },
+  "previewRoomsTitle": "Room list preview",
+  "@previewRoomsTitle": {
+    "description": "Room list preview title"
+  },
+  "previewConversationTitle": "Chat bubble preview",
+  "@previewConversationTitle": {
+    "description": "Conversation preview title"
+  },
+  "previewLiveLabel": "Live",
+  "@previewLiveLabel": {
+    "description": "Live preview label"
+  },
+  "previewRoomDesignSync": "Design Sync",
+  "@previewRoomDesignSync": {
+    "description": "Preview room design sync title"
+  },
+  "previewRoomDesignSyncSubtitle": "Hero card is ready for review.",
+  "@previewRoomDesignSyncSubtitle": {
+    "description": "Preview room design sync subtitle"
+  },
+  "previewRoomReleaseCheck": "Release Check",
+  "@previewRoomReleaseCheck": {
+    "description": "Preview room release check title"
+  },
+  "previewRoomReleaseCheckSubtitle": "Notes are grouped by security and fixes.",
+  "@previewRoomReleaseCheckSubtitle": {
+    "description": "Preview room release check subtitle"
+  },
+  "previewRoomAlphaOps": "Alpha Ops",
+  "@previewRoomAlphaOps": {
+    "description": "Preview room alpha ops title"
+  },
+  "previewRoomAlphaOpsSubtitle": "Motion is tuned for a calmer startup.",
+  "@previewRoomAlphaOpsSubtitle": {
+    "description": "Preview room alpha ops subtitle"
+  },
+  "previewIncomingMessage": "The preview should feel like the real app, not a generic demo.",
+  "@previewIncomingMessage": {
+    "description": "Preview incoming message"
+  },
+  "previewOutgoingMessage": "Agreed. Let the color, density, and type speak immediately.",
+  "@previewOutgoingMessage": {
+    "description": "Preview outgoing message"
+  },
+  "previewTypingStatus": "Typing indicator, spacing, and corners update here in real time.",
+  "@previewTypingStatus": {
+    "description": "Preview typing status"
+  },
+  "previewSettingsNotificationsSubtitle": "Preview how secondary settings cards will stack.",
+  "@previewSettingsNotificationsSubtitle": {
+    "description": "Preview settings notifications subtitle"
+  },
+  "previewSettingsPrivacySubtitle": "Check hierarchy, contrast, and icon weight before applying.",
+  "@previewSettingsPrivacySubtitle": {
+    "description": "Preview settings privacy subtitle"
+  },
+  "themeColorAegisViolet": "Aegis Violet",
+  "@themeColorAegisViolet": {
+    "description": "Theme color name"
+  },
+  "themeColorIndigoSignal": "Indigo Signal",
+  "@themeColorIndigoSignal": {
+    "description": "Theme color name"
+  },
+  "themeColorAmethyst": "Amethyst",
+  "@themeColorAmethyst": {
+    "description": "Theme color name"
+  },
+  "themeColorRosePulse": "Rose Pulse",
+  "@themeColorRosePulse": {
+    "description": "Theme color name"
+  },
+  "themeColorSolarAmber": "Solar Amber",
+  "@themeColorSolarAmber": {
+    "description": "Theme color name"
+  },
+  "themeColorPaleViolet": "Pale Violet",
+  "@themeColorPaleViolet": {
+    "description": "Theme color name"
+  },
+  "themeColorSignalCoral": "Signal Coral",
+  "@themeColorSignalCoral": {
+    "description": "Theme color name"
+  },
+  "themeColorMintRelay": "Mint Relay",
+  "@themeColorMintRelay": {
+    "description": "Theme color name"
+  },
+  "themeColorCyanAir": "Cyan Air",
+  "@themeColorCyanAir": {
+    "description": "Theme color name"
+  },
+  "themeColorLimeCurrent": "Lime Current",
+  "@themeColorLimeCurrent": {
+    "description": "Theme color name"
+  },
+  "themeColorSlateMono": "Slate Mono",
+  "@themeColorSlateMono": {
+    "description": "Theme color name"
+  },
   "colorsTab": "Colors",
   "@colorsTab": {
     "description": "Colors tab"
@@ -1680,6 +1925,130 @@
   "updateAvailableTitle": "Update available",
   "@updateAvailableTitle": {
     "description": "Update available title"
+  },
+  "updateHeroTitle": "Release ready to install",
+  "@updateHeroTitle": {
+    "description": "Update hero title"
+  },
+  "updateHeroSubtitle": "Review the release, verify its integrity, and move through installation with a clear step-by-step flow.",
+  "@updateHeroSubtitle": {
+    "description": "Update hero subtitle"
+  },
+  "updateStatusRequired": "Required",
+  "@updateStatusRequired": {
+    "description": "Required update status"
+  },
+  "updateStatusRecommended": "Recommended",
+  "@updateStatusRecommended": {
+    "description": "Recommended update status"
+  },
+  "updatePipelineTitle": "Update pipeline",
+  "@updatePipelineTitle": {
+    "description": "Update pipeline title"
+  },
+  "updatePipelineSubtitle": "Each stage exposes what is happening now and what comes next.",
+  "@updatePipelineSubtitle": {
+    "description": "Update pipeline subtitle"
+  },
+  "updateStageDownloadTitle": "Download package",
+  "@updateStageDownloadTitle": {
+    "description": "Download stage title"
+  },
+  "updateStageDownloadSubtitle": "Fetch the installer package to local storage.",
+  "@updateStageDownloadSubtitle": {
+    "description": "Download stage subtitle"
+  },
+  "updateStageVerifyTitle": "Verify integrity",
+  "@updateStageVerifyTitle": {
+    "description": "Verify stage title"
+  },
+  "updateStageVerifySubtitle": "Check the downloaded file against the published SHA-256 digest.",
+  "@updateStageVerifySubtitle": {
+    "description": "Verify stage subtitle"
+  },
+  "updateStageInstallTitle": "Install release",
+  "@updateStageInstallTitle": {
+    "description": "Install stage title"
+  },
+  "updateStageInstallSubtitle": "Request permission if needed and hand the package to the system installer.",
+  "@updateStageInstallSubtitle": {
+    "description": "Install stage subtitle"
+  },
+  "releaseSummaryTitle": "Release summary",
+  "@releaseSummaryTitle": {
+    "description": "Release summary title"
+  },
+  "releaseSummarySubtitle": "Important changes are grouped to make scanning faster than reading a raw changelog.",
+  "@releaseSummarySubtitle": {
+    "description": "Release summary subtitle"
+  },
+  "releaseSectionNew": "New",
+  "@releaseSectionNew": {
+    "description": "Release notes new section"
+  },
+  "releaseSectionImproved": "Improved",
+  "@releaseSectionImproved": {
+    "description": "Release notes improved section"
+  },
+  "releaseSectionFixed": "Fixed",
+  "@releaseSectionFixed": {
+    "description": "Release notes fixed section"
+  },
+  "releaseSectionSecurity": "Security",
+  "@releaseSectionSecurity": {
+    "description": "Release notes security section"
+  },
+  "updateTrustTitle": "Trust and compatibility",
+  "@updateTrustTitle": {
+    "description": "Update trust section title"
+  },
+  "updateTrustSubtitle": "See where the package comes from, how it is verified, and what build you are about to install.",
+  "@updateTrustSubtitle": {
+    "description": "Update trust section subtitle"
+  },
+  "updateTrustSource": "Source",
+  "@updateTrustSource": {
+    "description": "Update trust source label"
+  },
+  "updateTrustIntegrity": "Integrity",
+  "@updateTrustIntegrity": {
+    "description": "Update trust integrity label"
+  },
+  "updateTrustPlatform": "Platform",
+  "@updateTrustPlatform": {
+    "description": "Update trust platform label"
+  },
+  "updateTrustAbi": "ABI",
+  "@updateTrustAbi": {
+    "description": "Update trust ABI label"
+  },
+  "updateTrustVerified": "Verified",
+  "@updateTrustVerified": {
+    "description": "Update trust verified value"
+  },
+  "updateTrustPending": "Pending",
+  "@updateTrustPending": {
+    "description": "Update trust pending value"
+  },
+  "updateTrustFailed": "Failed",
+  "@updateTrustFailed": {
+    "description": "Update trust failed value"
+  },
+  "updateTrustUnavailable": "Unavailable",
+  "@updateTrustUnavailable": {
+    "description": "Update trust unavailable value"
+  },
+  "updateTrustUnknown": "Unknown",
+  "@updateTrustUnknown": {
+    "description": "Update trust unknown value"
+  },
+  "updateCurrentVersionLabel": "Current",
+  "@updateCurrentVersionLabel": {
+    "description": "Current version label"
+  },
+  "updateIncomingVersionLabel": "Incoming",
+  "@updateIncomingVersionLabel": {
+    "description": "Incoming version label"
   },
   "whatsNewLabel": "What's new",
   "@whatsNewLabel": {

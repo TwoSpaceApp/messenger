@@ -1011,6 +1011,207 @@ class AppLocalizationsPl extends AppLocalizations {
   String get customizationTitle => 'Personalizacja';
 
   @override
+  String get customizationHeroTitle => 'Shape the app around your rhythm';
+
+  @override
+  String get customizationHeroSubtitle =>
+      'Build a distinct look with live preview, curated presets, motion, and density controls.';
+
+  @override
+  String get livePreviewBadge => 'Live preview';
+
+  @override
+  String get stylePresetsTitle => 'Style presets';
+
+  @override
+  String get stylePresetsSubtitle =>
+      'Start with a strong visual direction, then tune the details.';
+
+  @override
+  String get moodSectionTitle => 'Mood';
+
+  @override
+  String get moodSectionSubtitle =>
+      'Choose the accent that drives surfaces, highlights, and the background atmosphere.';
+
+  @override
+  String get typeSectionTitle => 'Type';
+
+  @override
+  String get typeSectionSubtitle =>
+      'Pair a font family with the weight and size that feels right across the whole UI.';
+
+  @override
+  String get motionSectionTitle => 'Motion';
+
+  @override
+  String get motionSectionSubtitle =>
+      'Control how much the interface breathes, drifts, and reacts in the background.';
+
+  @override
+  String get densitySectionTitle => 'Density';
+
+  @override
+  String get densitySectionSubtitle =>
+      'Tighten spacing, bubble geometry, and navigation timing for a sharper layout.';
+
+  @override
+  String get dynamicBubblesLabel => 'Dynamic bubbles';
+
+  @override
+  String get dynamicBubblesSubtitle =>
+      'Give chat bubbles directional corners for a more conversational rhythm.';
+
+  @override
+  String get bubbleRoundingLabel => 'Bubble rounding';
+
+  @override
+  String get bubbleRoundingCompact => 'Sharper';
+
+  @override
+  String get bubbleRoundingSoft => 'Softer';
+
+  @override
+  String get navBarTimeoutLabel => 'Navigation auto-hide';
+
+  @override
+  String navBarTimeoutValue(int seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String get navBarTimeoutShort => 'Fast';
+
+  @override
+  String get navBarTimeoutLong => 'Relaxed';
+
+  @override
+  String get presetQuietGlass => 'Quiet Glass';
+
+  @override
+  String get presetQuietGlassSubtitle =>
+      'Balanced contrast with cool depth and steady motion.';
+
+  @override
+  String get presetNightSignal => 'Night Signal';
+
+  @override
+  String get presetNightSignalSubtitle =>
+      'Tighter density, stronger highlights, and a darker pulse.';
+
+  @override
+  String get presetEditorial => 'Editorial';
+
+  @override
+  String get presetEditorialSubtitle =>
+      'Calmer motion, restrained color, and a more reading-focused tone.';
+
+  @override
+  String get presetSolarFlare => 'Solar Flare';
+
+  @override
+  String get presetSolarFlareSubtitle =>
+      'Warm highlights and brighter surfaces with energetic movement.';
+
+  @override
+  String get presetRetroPulse => 'Retro Pulse';
+
+  @override
+  String get presetRetroPulseSubtitle =>
+      'Compact, playful, and intentionally stylized.';
+
+  @override
+  String get previewRoomsLabel => 'Rooms';
+
+  @override
+  String get previewConversationLabel => 'Conversation';
+
+  @override
+  String get previewSettingsLabel => 'Settings';
+
+  @override
+  String get previewRoomsTitle => 'Room list preview';
+
+  @override
+  String get previewConversationTitle => 'Chat bubble preview';
+
+  @override
+  String get previewLiveLabel => 'Live';
+
+  @override
+  String get previewRoomDesignSync => 'Design Sync';
+
+  @override
+  String get previewRoomDesignSyncSubtitle => 'Hero card is ready for review.';
+
+  @override
+  String get previewRoomReleaseCheck => 'Release Check';
+
+  @override
+  String get previewRoomReleaseCheckSubtitle =>
+      'Notes are grouped by security and fixes.';
+
+  @override
+  String get previewRoomAlphaOps => 'Alpha Ops';
+
+  @override
+  String get previewRoomAlphaOpsSubtitle =>
+      'Motion is tuned for a calmer startup.';
+
+  @override
+  String get previewIncomingMessage =>
+      'The preview should feel like the real app, not a generic demo.';
+
+  @override
+  String get previewOutgoingMessage =>
+      'Agreed. Let the color, density, and type speak immediately.';
+
+  @override
+  String get previewTypingStatus =>
+      'Typing indicator, spacing, and corners update here in real time.';
+
+  @override
+  String get previewSettingsNotificationsSubtitle =>
+      'Preview how secondary settings cards will stack.';
+
+  @override
+  String get previewSettingsPrivacySubtitle =>
+      'Check hierarchy, contrast, and icon weight before applying.';
+
+  @override
+  String get themeColorAegisViolet => 'Aegis Violet';
+
+  @override
+  String get themeColorIndigoSignal => 'Indigo Signal';
+
+  @override
+  String get themeColorAmethyst => 'Amethyst';
+
+  @override
+  String get themeColorRosePulse => 'Rose Pulse';
+
+  @override
+  String get themeColorSolarAmber => 'Solar Amber';
+
+  @override
+  String get themeColorPaleViolet => 'Pale Violet';
+
+  @override
+  String get themeColorSignalCoral => 'Signal Coral';
+
+  @override
+  String get themeColorMintRelay => 'Mint Relay';
+
+  @override
+  String get themeColorCyanAir => 'Cyan Air';
+
+  @override
+  String get themeColorLimeCurrent => 'Lime Current';
+
+  @override
+  String get themeColorSlateMono => 'Slate Mono';
+
+  @override
   String get colorsTab => 'Kolory';
 
   @override
@@ -1232,6 +1433,106 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get updateAvailableTitle => 'Dostępna aktualizacja';
+
+  @override
+  String get updateHeroTitle => 'Release ready to install';
+
+  @override
+  String get updateHeroSubtitle =>
+      'Review the release, verify its integrity, and move through installation with a clear step-by-step flow.';
+
+  @override
+  String get updateStatusRequired => 'Required';
+
+  @override
+  String get updateStatusRecommended => 'Recommended';
+
+  @override
+  String get updatePipelineTitle => 'Update pipeline';
+
+  @override
+  String get updatePipelineSubtitle =>
+      'Each stage exposes what is happening now and what comes next.';
+
+  @override
+  String get updateStageDownloadTitle => 'Download package';
+
+  @override
+  String get updateStageDownloadSubtitle =>
+      'Fetch the installer package to local storage.';
+
+  @override
+  String get updateStageVerifyTitle => 'Verify integrity';
+
+  @override
+  String get updateStageVerifySubtitle =>
+      'Check the downloaded file against the published SHA-256 digest.';
+
+  @override
+  String get updateStageInstallTitle => 'Install release';
+
+  @override
+  String get updateStageInstallSubtitle =>
+      'Request permission if needed and hand the package to the system installer.';
+
+  @override
+  String get releaseSummaryTitle => 'Release summary';
+
+  @override
+  String get releaseSummarySubtitle =>
+      'Important changes are grouped to make scanning faster than reading a raw changelog.';
+
+  @override
+  String get releaseSectionNew => 'New';
+
+  @override
+  String get releaseSectionImproved => 'Improved';
+
+  @override
+  String get releaseSectionFixed => 'Fixed';
+
+  @override
+  String get releaseSectionSecurity => 'Security';
+
+  @override
+  String get updateTrustTitle => 'Trust and compatibility';
+
+  @override
+  String get updateTrustSubtitle =>
+      'See where the package comes from, how it is verified, and what build you are about to install.';
+
+  @override
+  String get updateTrustSource => 'Source';
+
+  @override
+  String get updateTrustIntegrity => 'Integrity';
+
+  @override
+  String get updateTrustPlatform => 'Platform';
+
+  @override
+  String get updateTrustAbi => 'ABI';
+
+  @override
+  String get updateTrustVerified => 'Verified';
+
+  @override
+  String get updateTrustPending => 'Pending';
+
+  @override
+  String get updateTrustFailed => 'Failed';
+
+  @override
+  String get updateTrustUnavailable => 'Unavailable';
+
+  @override
+  String get updateTrustUnknown => 'Unknown';
+
+  @override
+  String get updateCurrentVersionLabel => 'Current';
+
+  @override
+  String get updateIncomingVersionLabel => 'Incoming';
 
   @override
   String get whatsNewLabel => 'Co nowego';

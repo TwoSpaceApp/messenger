@@ -1009,6 +1009,207 @@ class AppLocalizationsRu extends AppLocalizations {
   String get customizationTitle => 'Кастомизация';
 
   @override
+  String get customizationHeroTitle => 'Соберите интерфейс под свой ритм';
+
+  @override
+  String get customizationHeroSubtitle =>
+      'Настраивайте стиль через живое превью, готовые пресеты, движение и плотность интерфейса.';
+
+  @override
+  String get livePreviewBadge => 'Живое превью';
+
+  @override
+  String get stylePresetsTitle => 'Пресеты стиля';
+
+  @override
+  String get stylePresetsSubtitle =>
+      'Начните с готового визуального направления, затем доведите детали вручную.';
+
+  @override
+  String get moodSectionTitle => 'Характер';
+
+  @override
+  String get moodSectionSubtitle =>
+      'Выберите акцент, который задаёт фон, подсветки и общий тон интерфейса.';
+
+  @override
+  String get typeSectionTitle => 'Типографика';
+
+  @override
+  String get typeSectionSubtitle =>
+      'Подберите семейство шрифта, насыщенность и размер для всего приложения.';
+
+  @override
+  String get motionSectionTitle => 'Движение';
+
+  @override
+  String get motionSectionSubtitle =>
+      'Управляйте тем, насколько живо ведут себя фон и световые слои.';
+
+  @override
+  String get densitySectionTitle => 'Плотность';
+
+  @override
+  String get densitySectionSubtitle =>
+      'Настройте отступы, форму пузырей и скорость исчезновения навигации.';
+
+  @override
+  String get dynamicBubblesLabel => 'Динамические пузыри';
+
+  @override
+  String get dynamicBubblesSubtitle =>
+      'Добавляет направленные углы пузырям сообщений для более живого ритма диалога.';
+
+  @override
+  String get bubbleRoundingLabel => 'Скругление пузырей';
+
+  @override
+  String get bubbleRoundingCompact => 'Резче';
+
+  @override
+  String get bubbleRoundingSoft => 'Мягче';
+
+  @override
+  String get navBarTimeoutLabel => 'Автоскрытие навигации';
+
+  @override
+  String navBarTimeoutValue(int seconds) {
+    return '$seconds с';
+  }
+
+  @override
+  String get navBarTimeoutShort => 'Быстро';
+
+  @override
+  String get navBarTimeoutLong => 'Спокойно';
+
+  @override
+  String get presetQuietGlass => 'Quiet Glass';
+
+  @override
+  String get presetQuietGlassSubtitle =>
+      'Холодная глубина, ровный контраст и спокойное движение.';
+
+  @override
+  String get presetNightSignal => 'Night Signal';
+
+  @override
+  String get presetNightSignalSubtitle =>
+      'Более плотная компоновка, яркие акценты и тёмный пульс.';
+
+  @override
+  String get presetEditorial => 'Editorial';
+
+  @override
+  String get presetEditorialSubtitle =>
+      'Сдержанное движение, спокойный цвет и акцент на чтении.';
+
+  @override
+  String get presetSolarFlare => 'Solar Flare';
+
+  @override
+  String get presetSolarFlareSubtitle =>
+      'Тёплые акценты, светлее поверхности и более энергичный фон.';
+
+  @override
+  String get presetRetroPulse => 'Retro Pulse';
+
+  @override
+  String get presetRetroPulseSubtitle =>
+      'Компактно, игриво и намеренно стилизовано.';
+
+  @override
+  String get previewRoomsLabel => 'Комнаты';
+
+  @override
+  String get previewConversationLabel => 'Диалог';
+
+  @override
+  String get previewSettingsLabel => 'Настройки';
+
+  @override
+  String get previewRoomsTitle => 'Превью списка комнат';
+
+  @override
+  String get previewConversationTitle => 'Превью сообщений';
+
+  @override
+  String get previewLiveLabel => 'Live';
+
+  @override
+  String get previewRoomDesignSync => 'Design Sync';
+
+  @override
+  String get previewRoomDesignSyncSubtitle => 'Hero-блок готов к ревью.';
+
+  @override
+  String get previewRoomReleaseCheck => 'Release Check';
+
+  @override
+  String get previewRoomReleaseCheckSubtitle =>
+      'Заметки уже разбиты по безопасности и фиксам.';
+
+  @override
+  String get previewRoomAlphaOps => 'Alpha Ops';
+
+  @override
+  String get previewRoomAlphaOpsSubtitle =>
+      'Движение фона настроено на более спокойный старт.';
+
+  @override
+  String get previewIncomingMessage =>
+      'Превью должно ощущаться как реальное приложение, а не как абстрактный демо-макет.';
+
+  @override
+  String get previewOutgoingMessage =>
+      'Согласен. Цвет, плотность и типографика должны считываться сразу.';
+
+  @override
+  String get previewTypingStatus =>
+      'Индикатор набора, интервалы и углы пузырей меняются здесь сразу.';
+
+  @override
+  String get previewSettingsNotificationsSubtitle =>
+      'Так будет выглядеть стек вторичных карточек настроек.';
+
+  @override
+  String get previewSettingsPrivacySubtitle =>
+      'Проверьте иерархию, контраст и вес иконок до применения.';
+
+  @override
+  String get themeColorAegisViolet => 'Aegis Violet';
+
+  @override
+  String get themeColorIndigoSignal => 'Indigo Signal';
+
+  @override
+  String get themeColorAmethyst => 'Amethyst';
+
+  @override
+  String get themeColorRosePulse => 'Rose Pulse';
+
+  @override
+  String get themeColorSolarAmber => 'Solar Amber';
+
+  @override
+  String get themeColorPaleViolet => 'Pale Violet';
+
+  @override
+  String get themeColorSignalCoral => 'Signal Coral';
+
+  @override
+  String get themeColorMintRelay => 'Mint Relay';
+
+  @override
+  String get themeColorCyanAir => 'Cyan Air';
+
+  @override
+  String get themeColorLimeCurrent => 'Lime Current';
+
+  @override
+  String get themeColorSlateMono => 'Slate Mono';
+
+  @override
   String get colorsTab => 'Цвета';
 
   @override
@@ -1232,6 +1433,106 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get updateAvailableTitle => 'Доступно обновление';
+
+  @override
+  String get updateHeroTitle => 'Релиз готов к установке';
+
+  @override
+  String get updateHeroSubtitle =>
+      'Посмотрите состав релиза, проверьте целостность и пройдите установку по понятным шагам.';
+
+  @override
+  String get updateStatusRequired => 'Обязательно';
+
+  @override
+  String get updateStatusRecommended => 'Рекомендуется';
+
+  @override
+  String get updatePipelineTitle => 'Пайплайн обновления';
+
+  @override
+  String get updatePipelineSubtitle =>
+      'Каждый этап показывает, что происходит сейчас и что будет следующим шагом.';
+
+  @override
+  String get updateStageDownloadTitle => 'Скачать пакет';
+
+  @override
+  String get updateStageDownloadSubtitle =>
+      'Сохранить установочный пакет в локальное хранилище.';
+
+  @override
+  String get updateStageVerifyTitle => 'Проверить целостность';
+
+  @override
+  String get updateStageVerifySubtitle =>
+      'Сверить скачанный файл с опубликованным SHA-256 хэшем.';
+
+  @override
+  String get updateStageInstallTitle => 'Установить релиз';
+
+  @override
+  String get updateStageInstallSubtitle =>
+      'При необходимости запросить разрешение и передать пакет системному установщику.';
+
+  @override
+  String get releaseSummaryTitle => 'Сводка релиза';
+
+  @override
+  String get releaseSummarySubtitle =>
+      'Изменения сгруппированы так, чтобы их было проще просканировать, чем читать сырой changelog.';
+
+  @override
+  String get releaseSectionNew => 'Новое';
+
+  @override
+  String get releaseSectionImproved => 'Улучшено';
+
+  @override
+  String get releaseSectionFixed => 'Исправлено';
+
+  @override
+  String get releaseSectionSecurity => 'Безопасность';
+
+  @override
+  String get updateTrustTitle => 'Доверие и совместимость';
+
+  @override
+  String get updateTrustSubtitle =>
+      'Откуда пришёл пакет, как он проверяется и какую именно сборку вы собираетесь установить.';
+
+  @override
+  String get updateTrustSource => 'Источник';
+
+  @override
+  String get updateTrustIntegrity => 'Целостность';
+
+  @override
+  String get updateTrustPlatform => 'Платформа';
+
+  @override
+  String get updateTrustAbi => 'ABI';
+
+  @override
+  String get updateTrustVerified => 'Проверено';
+
+  @override
+  String get updateTrustPending => 'Ожидается';
+
+  @override
+  String get updateTrustFailed => 'Ошибка';
+
+  @override
+  String get updateTrustUnavailable => 'Недоступно';
+
+  @override
+  String get updateTrustUnknown => 'Неизвестно';
+
+  @override
+  String get updateCurrentVersionLabel => 'Текущая';
+
+  @override
+  String get updateIncomingVersionLabel => 'Новая';
 
   @override
   String get whatsNewLabel => 'Что нового';

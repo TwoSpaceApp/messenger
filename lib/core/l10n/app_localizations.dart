@@ -1980,6 +1980,366 @@ abstract class AppLocalizations {
   /// **'Customization'**
   String get customizationTitle;
 
+  /// Customization hero title
+  ///
+  /// In en, this message translates to:
+  /// **'Shape the app around your rhythm'**
+  String get customizationHeroTitle;
+
+  /// Customization hero subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Build a distinct look with live preview, curated presets, motion, and density controls.'**
+  String get customizationHeroSubtitle;
+
+  /// Live preview badge
+  ///
+  /// In en, this message translates to:
+  /// **'Live preview'**
+  String get livePreviewBadge;
+
+  /// Style presets section title
+  ///
+  /// In en, this message translates to:
+  /// **'Style presets'**
+  String get stylePresetsTitle;
+
+  /// Style presets section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Start with a strong visual direction, then tune the details.'**
+  String get stylePresetsSubtitle;
+
+  /// Mood section title
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get moodSectionTitle;
+
+  /// Mood section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the accent that drives surfaces, highlights, and the background atmosphere.'**
+  String get moodSectionSubtitle;
+
+  /// Type section title
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get typeSectionTitle;
+
+  /// Type section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Pair a font family with the weight and size that feels right across the whole UI.'**
+  String get typeSectionSubtitle;
+
+  /// Motion section title
+  ///
+  /// In en, this message translates to:
+  /// **'Motion'**
+  String get motionSectionTitle;
+
+  /// Motion section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Control how much the interface breathes, drifts, and reacts in the background.'**
+  String get motionSectionSubtitle;
+
+  /// Density section title
+  ///
+  /// In en, this message translates to:
+  /// **'Density'**
+  String get densitySectionTitle;
+
+  /// Density section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Tighten spacing, bubble geometry, and navigation timing for a sharper layout.'**
+  String get densitySectionSubtitle;
+
+  /// Dynamic bubbles label
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic bubbles'**
+  String get dynamicBubblesLabel;
+
+  /// Dynamic bubbles subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Give chat bubbles directional corners for a more conversational rhythm.'**
+  String get dynamicBubblesSubtitle;
+
+  /// Bubble rounding label
+  ///
+  /// In en, this message translates to:
+  /// **'Bubble rounding'**
+  String get bubbleRoundingLabel;
+
+  /// Bubble rounding compact label
+  ///
+  /// In en, this message translates to:
+  /// **'Sharper'**
+  String get bubbleRoundingCompact;
+
+  /// Bubble rounding soft label
+  ///
+  /// In en, this message translates to:
+  /// **'Softer'**
+  String get bubbleRoundingSoft;
+
+  /// Navigation auto hide label
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation auto-hide'**
+  String get navBarTimeoutLabel;
+
+  /// Navigation auto hide duration
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String navBarTimeoutValue(int seconds);
+
+  /// Short navigation timeout label
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get navBarTimeoutShort;
+
+  /// Long navigation timeout label
+  ///
+  /// In en, this message translates to:
+  /// **'Relaxed'**
+  String get navBarTimeoutLong;
+
+  /// Quiet Glass preset title
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet Glass'**
+  String get presetQuietGlass;
+
+  /// Quiet Glass preset subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced contrast with cool depth and steady motion.'**
+  String get presetQuietGlassSubtitle;
+
+  /// Night Signal preset title
+  ///
+  /// In en, this message translates to:
+  /// **'Night Signal'**
+  String get presetNightSignal;
+
+  /// Night Signal preset subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Tighter density, stronger highlights, and a darker pulse.'**
+  String get presetNightSignalSubtitle;
+
+  /// Editorial preset title
+  ///
+  /// In en, this message translates to:
+  /// **'Editorial'**
+  String get presetEditorial;
+
+  /// Editorial preset subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Calmer motion, restrained color, and a more reading-focused tone.'**
+  String get presetEditorialSubtitle;
+
+  /// Solar Flare preset title
+  ///
+  /// In en, this message translates to:
+  /// **'Solar Flare'**
+  String get presetSolarFlare;
+
+  /// Solar Flare preset subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Warm highlights and brighter surfaces with energetic movement.'**
+  String get presetSolarFlareSubtitle;
+
+  /// Retro Pulse preset title
+  ///
+  /// In en, this message translates to:
+  /// **'Retro Pulse'**
+  String get presetRetroPulse;
+
+  /// Retro Pulse preset subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Compact, playful, and intentionally stylized.'**
+  String get presetRetroPulseSubtitle;
+
+  /// Preview rooms tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms'**
+  String get previewRoomsLabel;
+
+  /// Preview conversation tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation'**
+  String get previewConversationLabel;
+
+  /// Preview settings tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get previewSettingsLabel;
+
+  /// Room list preview title
+  ///
+  /// In en, this message translates to:
+  /// **'Room list preview'**
+  String get previewRoomsTitle;
+
+  /// Conversation preview title
+  ///
+  /// In en, this message translates to:
+  /// **'Chat bubble preview'**
+  String get previewConversationTitle;
+
+  /// Live preview label
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get previewLiveLabel;
+
+  /// Preview room design sync title
+  ///
+  /// In en, this message translates to:
+  /// **'Design Sync'**
+  String get previewRoomDesignSync;
+
+  /// Preview room design sync subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Hero card is ready for review.'**
+  String get previewRoomDesignSyncSubtitle;
+
+  /// Preview room release check title
+  ///
+  /// In en, this message translates to:
+  /// **'Release Check'**
+  String get previewRoomReleaseCheck;
+
+  /// Preview room release check subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Notes are grouped by security and fixes.'**
+  String get previewRoomReleaseCheckSubtitle;
+
+  /// Preview room alpha ops title
+  ///
+  /// In en, this message translates to:
+  /// **'Alpha Ops'**
+  String get previewRoomAlphaOps;
+
+  /// Preview room alpha ops subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Motion is tuned for a calmer startup.'**
+  String get previewRoomAlphaOpsSubtitle;
+
+  /// Preview incoming message
+  ///
+  /// In en, this message translates to:
+  /// **'The preview should feel like the real app, not a generic demo.'**
+  String get previewIncomingMessage;
+
+  /// Preview outgoing message
+  ///
+  /// In en, this message translates to:
+  /// **'Agreed. Let the color, density, and type speak immediately.'**
+  String get previewOutgoingMessage;
+
+  /// Preview typing status
+  ///
+  /// In en, this message translates to:
+  /// **'Typing indicator, spacing, and corners update here in real time.'**
+  String get previewTypingStatus;
+
+  /// Preview settings notifications subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Preview how secondary settings cards will stack.'**
+  String get previewSettingsNotificationsSubtitle;
+
+  /// Preview settings privacy subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Check hierarchy, contrast, and icon weight before applying.'**
+  String get previewSettingsPrivacySubtitle;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Aegis Violet'**
+  String get themeColorAegisViolet;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Indigo Signal'**
+  String get themeColorIndigoSignal;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Amethyst'**
+  String get themeColorAmethyst;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Rose Pulse'**
+  String get themeColorRosePulse;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Solar Amber'**
+  String get themeColorSolarAmber;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Pale Violet'**
+  String get themeColorPaleViolet;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Coral'**
+  String get themeColorSignalCoral;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Mint Relay'**
+  String get themeColorMintRelay;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Cyan Air'**
+  String get themeColorCyanAir;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Lime Current'**
+  String get themeColorLimeCurrent;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
+  /// **'Slate Mono'**
+  String get themeColorSlateMono;
+
   /// Colors tab
   ///
   /// In en, this message translates to:
@@ -2399,6 +2759,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update available'**
   String get updateAvailableTitle;
+
+  /// Update hero title
+  ///
+  /// In en, this message translates to:
+  /// **'Release ready to install'**
+  String get updateHeroTitle;
+
+  /// Update hero subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Review the release, verify its integrity, and move through installation with a clear step-by-step flow.'**
+  String get updateHeroSubtitle;
+
+  /// Required update status
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get updateStatusRequired;
+
+  /// Recommended update status
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get updateStatusRecommended;
+
+  /// Update pipeline title
+  ///
+  /// In en, this message translates to:
+  /// **'Update pipeline'**
+  String get updatePipelineTitle;
+
+  /// Update pipeline subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Each stage exposes what is happening now and what comes next.'**
+  String get updatePipelineSubtitle;
+
+  /// Download stage title
+  ///
+  /// In en, this message translates to:
+  /// **'Download package'**
+  String get updateStageDownloadTitle;
+
+  /// Download stage subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch the installer package to local storage.'**
+  String get updateStageDownloadSubtitle;
+
+  /// Verify stage title
+  ///
+  /// In en, this message translates to:
+  /// **'Verify integrity'**
+  String get updateStageVerifyTitle;
+
+  /// Verify stage subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Check the downloaded file against the published SHA-256 digest.'**
+  String get updateStageVerifySubtitle;
+
+  /// Install stage title
+  ///
+  /// In en, this message translates to:
+  /// **'Install release'**
+  String get updateStageInstallTitle;
+
+  /// Install stage subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Request permission if needed and hand the package to the system installer.'**
+  String get updateStageInstallSubtitle;
+
+  /// Release summary title
+  ///
+  /// In en, this message translates to:
+  /// **'Release summary'**
+  String get releaseSummaryTitle;
+
+  /// Release summary subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Important changes are grouped to make scanning faster than reading a raw changelog.'**
+  String get releaseSummarySubtitle;
+
+  /// Release notes new section
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get releaseSectionNew;
+
+  /// Release notes improved section
+  ///
+  /// In en, this message translates to:
+  /// **'Improved'**
+  String get releaseSectionImproved;
+
+  /// Release notes fixed section
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get releaseSectionFixed;
+
+  /// Release notes security section
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get releaseSectionSecurity;
+
+  /// Update trust section title
+  ///
+  /// In en, this message translates to:
+  /// **'Trust and compatibility'**
+  String get updateTrustTitle;
+
+  /// Update trust section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'See where the package comes from, how it is verified, and what build you are about to install.'**
+  String get updateTrustSubtitle;
+
+  /// Update trust source label
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get updateTrustSource;
+
+  /// Update trust integrity label
+  ///
+  /// In en, this message translates to:
+  /// **'Integrity'**
+  String get updateTrustIntegrity;
+
+  /// Update trust platform label
+  ///
+  /// In en, this message translates to:
+  /// **'Platform'**
+  String get updateTrustPlatform;
+
+  /// Update trust ABI label
+  ///
+  /// In en, this message translates to:
+  /// **'ABI'**
+  String get updateTrustAbi;
+
+  /// Update trust verified value
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get updateTrustVerified;
+
+  /// Update trust pending value
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get updateTrustPending;
+
+  /// Update trust failed value
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get updateTrustFailed;
+
+  /// Update trust unavailable value
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get updateTrustUnavailable;
+
+  /// Update trust unknown value
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get updateTrustUnknown;
+
+  /// Current version label
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get updateCurrentVersionLabel;
+
+  /// Incoming version label
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming'**
+  String get updateIncomingVersionLabel;
 
   /// What's new label
   ///
