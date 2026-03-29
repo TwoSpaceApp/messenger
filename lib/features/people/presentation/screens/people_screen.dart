@@ -73,7 +73,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
                 constraints: const BoxConstraints(maxWidth: 860),
                 child: Column(
                   children: [
-                    // ── Header row ──
                     Padding(
                       padding: pad.copyWith(top: 10, bottom: 2),
                       child: Row(
@@ -90,122 +89,119 @@ class _PeopleScreenState extends State<PeopleScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                      if (!widget.simplified) ...[
-                        Padding(
-                          padding: pad.copyWith(top: 6, bottom: 8),
-                          child: SettingsHeroCard(
-                            icon: Icons.people_alt_rounded,
-                            title: l10n.peopleTitle,
-                            subtitle: l10n.peopleSubtitle,
-                            child: Wrap(
-                              spacing: 10,
-                              runSpacing: 10,
-                              children: [
-                                _QuickActionButton(
-                                  icon: Icons.search_rounded,
-                                  label: l10n.peopleQuickNewChat,
-                                  onTap: () => _searchFocusNode.requestFocus(),
+                                  l10n.peopleTitle,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    color: theme.colorScheme.onSurface,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                                _QuickActionButton(
-                                  icon: Icons.share_outlined,
-                                  label: l10n.peopleQuickInvite,
-                                  onTap: _shareInviteText,
-                                ),
-                                _QuickActionButton(
-                                  icon: Icons.sync_rounded,
-                                  label: l10n.peopleQuickSync,
-                                  onTap:
-                                      _controller.loading ? null : _controller.refresh,
-                                ),
+                                if (widget.simplified) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    l10n.peopleSubtitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.subtitleText(context),
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
-                        ),
-                      ],
+                          if (widget.simplified) ...[
+                            _HeaderIcon(
+                              icon: Icons.sync_rounded,
+                              tooltip: l10n.peopleQuickSync,
+                              onTap: _controller.loading ? null : _controller.refresh,
+                            ),
+                            _HeaderIcon(
+                              icon: Icons.share_outlined,
+                              tooltip: l10n.peopleQuickInvite,
+                              onTap: _shareInviteText,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (!widget.simplified) ...[
                       Padding(
-                        padding: pad.copyWith(top: 4, bottom: 8),
-                        child: GlassCard(
-                          child: Column(
+                        padding: pad.copyWith(top: 6, bottom: 8),
+                        child: SettingsHeroCard(
+                          icon: Icons.people_alt_rounded,
+                          title: l10n.peopleTitle,
+                          subtitle: l10n.peopleSubtitle,
+                          child: Wrap(
+                            spacing: 10,
+                            runSpacing: 10,
                             children: [
-                              PeopleSearchField(
-                                controller: _searchController,
-                                focusNode: _searchFocusNode,
-                                autofocus: widget.autofocusSearch,
-                                hintText: l10n.peopleSearchHint,
-                                onChanged: _controller.updateQuery,
-                                onClear: () {
-                                  _searchController.clear();
-                                  _controller.clearSearch();
-                                },
+                              _QuickActionButton(
+                                icon: Icons.search_rounded,
+                                label: l10n.peopleQuickNewChat,
+                                onTap: () => _searchFocusNode.requestFocus(),
                               ),
-                              if (!widget.simplified) ...[
-                                const SizedBox(height: 14),
-                                SizedBox(
-                                  height: 36,
-                                  child: ListView(
-                                    scrollDirection: Axis.horizontal,
-                                    keyboardDismissBehavior:
-                                        ScrollViewKeyboardDismissBehavior.onDrag,
-                                    children: [
-                                      _chip(PeopleSegment.all, l10n.peopleSegmentAll),
-                                      _chip(
-                                        PeopleSegment.twospace,
-                                        l10n.peopleSegmentTwoSpace,
-                                      ),
-                                      _chip(
-                                        PeopleSegment.phonebook,
-                                        l10n.peopleSegmentPhonebook,
-                                      ),
-                                      _chip(
-                                        PeopleSegment.recent,
-                                        l10n.peopleSegmentRecent,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                              _QuickActionButton(
+                                icon: Icons.share_outlined,
+                                label: l10n.peopleQuickInvite,
+                                onTap: _shareInviteText,
+                              ),
+                              _QuickActionButton(
+                                icon: Icons.sync_rounded,
+                                label: l10n.peopleQuickSync,
+                                onTap: _controller.loading ? null : _controller.refresh,
+                              ),
                             ],
                           ),
                         ),
                       ),
-                        ],
-                      ),
-                    ),
-                    // ── Search ──
+                    ],
                     Padding(
-                      padding: pad.copyWith(top: 4, bottom: 4),
-                      child: PeopleSearchField(
-                        controller: _searchController,
-                        focusNode: _searchFocusNode,
-                        autofocus: widget.autofocusSearch,
-                        hintText: l10n.peopleSearchHint,
-                        onChanged: _controller.updateQuery,
-                        onClear: () {
-                          _searchController.clear();
-                          _controller.clearSearch();
-                        },
-                      ),
-                    ),
-                    // ── Filter chips ──
-                    if (!widget.simplified) ...[
-                      SizedBox(
-                        height: 36,
-                        child: ListView(
-                          padding: pad,
-                          scrollDirection: Axis.horizontal,
-                          keyboardDismissBehavior:
-                              ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: pad.copyWith(top: 4, bottom: 8),
+                      child: GlassCard(
+                        child: Column(
                           children: [
-                            _chip(PeopleSegment.all, l10n.peopleSegmentAll),
-                            _chip(PeopleSegment.twospace, l10n.peopleSegmentTwoSpace),
-                            _chip(PeopleSegment.phonebook, l10n.peopleSegmentPhonebook),
-                            _chip(PeopleSegment.recent, l10n.peopleSegmentRecent),
+                            PeopleSearchField(
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              autofocus: widget.autofocusSearch,
+                              hintText: l10n.peopleSearchHint,
+                              onChanged: _controller.updateQuery,
+                              onClear: () {
+                                _searchController.clear();
+                                _controller.clearSearch();
+                              },
+                            ),
+                            if (!widget.simplified) ...[
+                              const SizedBox(height: 14),
+                              SizedBox(
+                                height: 36,
+                                child: ListView(
+                                  scrollDirection: Axis.horizontal,
+                                  keyboardDismissBehavior:
+                                      ScrollViewKeyboardDismissBehavior.onDrag,
+                                  children: [
+                                    _chip(PeopleSegment.all, l10n.peopleSegmentAll),
+                                    _chip(
+                                      PeopleSegment.twospace,
+                                      l10n.peopleSegmentTwoSpace,
+                                    ),
+                                    _chip(
+                                      PeopleSegment.phonebook,
+                                      l10n.peopleSegmentPhonebook,
+                                    ),
+                                    _chip(
+                                      PeopleSegment.recent,
+                                      l10n.peopleSegmentRecent,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                    ],
-                    // ── Body ──
+                    ),
+                    const SizedBox(height: 4),
                     Expanded(
                       child: RefreshIndicator(
                         onRefresh: _controller.refresh,
