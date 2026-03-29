@@ -17,6 +17,7 @@ import 'package:two_space_app/features/people/presentation/controllers/people_co
 import 'package:two_space_app/features/people/presentation/widgets/people_search_field.dart';
 import 'package:two_space_app/features/people/presentation/widgets/person_tile.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
 
 class PeopleScreen extends StatefulWidget {
   const PeopleScreen({
@@ -89,40 +90,84 @@ class _PeopleScreenState extends State<PeopleScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  l10n.peopleTitle,
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    color: theme.colorScheme.onSurface,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                      if (!widget.simplified) ...[
+                        Padding(
+                          padding: pad.copyWith(top: 6, bottom: 8),
+                          child: SettingsHeroCard(
+                            icon: Icons.people_alt_rounded,
+                            title: l10n.peopleTitle,
+                            subtitle: l10n.peopleSubtitle,
+                            child: Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: [
+                                _QuickActionButton(
+                                  icon: Icons.search_rounded,
+                                  label: l10n.peopleQuickNewChat,
+                                  onTap: () => _searchFocusNode.requestFocus(),
                                 ),
-                                if (!widget.simplified) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    l10n.peopleSubtitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: AppColors.subtitleText(context),
-                                    ),
-                                  ),
-                                ],
+                                _QuickActionButton(
+                                  icon: Icons.share_outlined,
+                                  label: l10n.peopleQuickInvite,
+                                  onTap: _shareInviteText,
+                                ),
+                                _QuickActionButton(
+                                  icon: Icons.sync_rounded,
+                                  label: l10n.peopleQuickSync,
+                                  onTap:
+                                      _controller.loading ? null : _controller.refresh,
+                                ),
                               ],
                             ),
                           ),
-                          if (!widget.simplified) ...[
-                            _HeaderIcon(
-                              icon: Icons.sync_rounded,
-                              tooltip: l10n.peopleQuickSync,
-                              onTap: _controller.loading
-                                  ? null
-                                  : _controller.refresh,
-                            ),
-                            _HeaderIcon(
-                              icon: Icons.share_outlined,
-                              tooltip: l10n.peopleQuickInvite,
-                              onTap: _shareInviteText,
-                            ),
-                          ],
+                        ),
+                      ],
+                      Padding(
+                        padding: pad.copyWith(top: 4, bottom: 8),
+                        child: GlassCard(
+                          child: Column(
+                            children: [
+                              PeopleSearchField(
+                                controller: _searchController,
+                                focusNode: _searchFocusNode,
+                                autofocus: widget.autofocusSearch,
+                                hintText: l10n.peopleSearchHint,
+                                onChanged: _controller.updateQuery,
+                                onClear: () {
+                                  _searchController.clear();
+                                  _controller.clearSearch();
+                                },
+                              ),
+                              if (!widget.simplified) ...[
+                                const SizedBox(height: 14),
+                                SizedBox(
+                                  height: 36,
+                                  child: ListView(
+                                    scrollDirection: Axis.horizontal,
+                                    keyboardDismissBehavior:
+                                        ScrollViewKeyboardDismissBehavior.onDrag,
+                                    children: [
+                                      _chip(PeopleSegment.all, l10n.peopleSegmentAll),
+                                      _chip(
+                                        PeopleSegment.twospace,
+                                        l10n.peopleSegmentTwoSpace,
+                                      ),
+                                      _chip(
+                                        PeopleSegment.phonebook,
+                                        l10n.peopleSegmentPhonebook,
+                                      ),
+                                      _chip(
+                                        PeopleSegment.recent,
+                                        l10n.peopleSegmentRecent,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
                         ],
                       ),
                     ),
@@ -596,6 +641,54 @@ class _PeopleScreenState extends State<PeopleScreen> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface.withValues(alpha: 0.44),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.12),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ),
       ),

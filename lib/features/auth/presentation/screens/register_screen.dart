@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
@@ -13,6 +14,18 @@ import 'package:two_space_app/features/auth/presentation/screens/welcome_screen.
 import 'package:two_space_app/features/auth/presentation/widgets/auth_background.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+
+class _RegisterStylePreset {
+  const _RegisterStylePreset({
+    required this.id,
+    required this.color,
+    required this.fontFamily,
+  });
+
+  final String id;
+  final int color;
+  final String fontFamily;
+}
 
 /// Modern RegisterScreen including Customization Step
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -26,6 +39,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     with SingleTickerProviderStateMixin {
   static final RegExp _aegisUsernamePattern =
       RegExp(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{2,31}$');
+  static const List<_RegisterStylePreset> _stylePresets = [
+    _RegisterStylePreset(
+      id: 'quietGlass',
+      color: 0xFF5263FF,
+      fontFamily: 'Inter',
+    ),
+    _RegisterStylePreset(
+      id: 'nightSignal',
+      color: 0xFF651FFF,
+      fontFamily: 'Oswald',
+    ),
+    _RegisterStylePreset(
+      id: 'editorial',
+      color: 0xFF5C6B73,
+      fontFamily: 'OpenSans',
+    ),
+    _RegisterStylePreset(
+      id: 'solarFlare',
+      color: 0xFFFFB300,
+      fontFamily: 'Roboto',
+    ),
+  ];
 
   late final _avatarAnimController = AnimationController(
     vsync: this,
@@ -38,6 +73,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _passCtl = TextEditingController();
   final _nicknameCtl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _nameFocus = FocusNode();
+  final _nicknameFocus = FocusNode();
 
   // String? _avatarPath;
   Uint8List? _avatarBytes;
@@ -53,8 +92,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   // Customization State
   late int _selectedColor;
   late String _selectedFont;
-
-  final List<Map<String, dynamic>> _colorChoices = ThemeOptions.colors;
 
   final List<String> _fontChoices = ThemeOptions.fonts;
 
@@ -79,7 +116,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     _emailCtl.dispose();
     _passCtl.dispose();
     _nicknameCtl.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    _nameFocus.dispose();
+    _nicknameFocus.dispose();
     super.dispose();
+  }
+
+  void _focusForStep(int step) {
+    if (!mounted) return;
+    switch (step) {
+      case 0:
+        _emailFocus.requestFocus();
+        return;
+      case 1:
+        _nameFocus.requestFocus();
+        return;
+      default:
+        FocusScope.of(context).unfocus();
+    }
   }
 
   Future<void> _nextStep() async {
@@ -105,10 +160,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
     // Change Content
     if (_step < 3) {
+      final nextStep = _step + 1;
       setState(() {
-        _step++;
+        _step = nextStep;
         _swapBlobs = !_swapBlobs;
         _isCovering = false; // Reveal new content
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusForStep(nextStep);
       });
     } else {
       // Final step, proceed to registration
@@ -119,11 +178,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   Future<void> _prevStep() async {
     if (_step > 0) {
+      final prevStep = _step - 1;
       setState(() => _isCovering = true);
       setState(() {
-        _step--;
+        _step = prevStep;
         _swapBlobs = !_swapBlobs;
         _isCovering = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusForStep(prevStep);
       });
     } else {
       // Navigate back to Login with animation
@@ -258,6 +321,159 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     return null;
   }
 
+  String _presetTitle(AppLocalizations l10n, String id) {
+    switch (id) {
+      case 'quietGlass':
+        return l10n.presetQuietGlass;
+      case 'nightSignal':
+        return l10n.presetNightSignal;
+      case 'editorial':
+        return l10n.presetEditorial;
+      case 'solarFlare':
+        return l10n.presetSolarFlare;
+      default:
+        return l10n.stylePresetsTitle;
+    }
+  }
+
+  String _presetSubtitle(AppLocalizations l10n, String id) {
+    switch (id) {
+      case 'quietGlass':
+        return l10n.presetQuietGlassSubtitle;
+      case 'nightSignal':
+        return l10n.presetNightSignalSubtitle;
+      case 'editorial':
+        return l10n.presetEditorialSubtitle;
+      case 'solarFlare':
+        return l10n.presetSolarFlareSubtitle;
+      default:
+        return l10n.themeAppliesEverywhere;
+    }
+  }
+
+  Future<void> _applyRegisterPreset(_RegisterStylePreset preset) async {
+    setState(() {
+      _selectedColor = preset.color;
+      _selectedFont = preset.fontFamily;
+    });
+    await SettingsService.updateTheme(
+      primaryColorValue: preset.color,
+      fontFamily: preset.fontFamily,
+    );
+  }
+
+  Future<void> _openFontPicker() async {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer
+                              .withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.text_fields_rounded,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.fontLabel,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l10n.selectFontFamily,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _fontChoices.length,
+                    itemBuilder: (context, index) {
+                      final font = _fontChoices[index];
+                      final selected = font == _selectedFont;
+                      return ListTile(
+                        leading: Icon(
+                          selected
+                              ? Icons.radio_button_checked_rounded
+                              : Icons.radio_button_off_rounded,
+                          color: selected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.outline,
+                        ),
+                        title: Text(
+                          font,
+                          style: TextStyle(fontFamily: font),
+                        ),
+                        subtitle: Text(
+                          'Аа',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        onTap: () async {
+                          setState(() => _selectedFont = font);
+                          await SettingsService.updateTheme(fontFamily: font);
+                          if (sheetContext.mounted) {
+                            Navigator.of(sheetContext).pop();
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -339,8 +555,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             // Content
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              child: KeyedSubtree(
+              child: Container(
                 key: ValueKey<int>(_step),
+                width: double.infinity,
+                constraints: const BoxConstraints(minHeight: 392),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(
+                    alpha: isDark ? 0.36 : 0.68,
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.12),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.08),
+                      blurRadius: 32,
+                      offset: const Offset(0, 20),
+                    ),
+                  ],
+                ),
                 child: _buildCurrentStep(theme, isDark),
               ),
             ),
@@ -411,8 +646,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       children: [
         TextFormField(
           controller: _emailCtl,
+          focusNode: _emailFocus,
           validator: _validateEmail,
           keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           decoration:
               _inputDecoration(theme, 'Email', Icons.email_outlined, isDark),
@@ -420,10 +658,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         const SizedBox(height: 16),
         TextFormField(
           controller: _passCtl,
+          focusNode: _passwordFocus,
           validator: _validatePassword,
           obscureText: _obscurePassword,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           onChanged: (_) => setState(() {}),
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _nextStep(),
           decoration: _inputDecoration(
                   theme, l10n.passwordLabel, Icons.lock_outline, isDark)
               .copyWith(
@@ -484,16 +725,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       children: [
         TextFormField(
           controller: _nameCtl,
+          focusNode: _nameFocus,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (_) => _nicknameFocus.requestFocus(),
           decoration: _inputDecoration(
               theme, l10n.fullNameLabel, Icons.person_outline, isDark),
         ),
         const SizedBox(height: 16),
         TextFormField(
           controller: _nicknameCtl,
+          focusNode: _nicknameFocus,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: _validateAegisUsername,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _nextStep(),
           decoration: _inputDecoration(
               theme, l10n.nicknameAtLabel, Icons.alternate_email, isDark),
         ),
@@ -611,86 +858,180 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           ),
         ),
         const SizedBox(height: 24),
-
-        // Color Picker
-        Text(l10n.colorThemeLabel, style: TextStyle(color: theme.hintColor)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: _colorChoices.map((choice) {
-            final colorValue = choice['value'] as int;
-            final isSelected = _selectedColor == colorValue;
-
-            return GestureDetector(
-              onTap: () async {
-                setState(() => _selectedColor = colorValue);
-                await SettingsService.updateTheme(
-                    primaryColorValue: colorValue);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Color(colorValue),
-                  shape: BoxShape.circle,
-                  border: isSelected
-                      ? Border.all(
-                          color: isDark ? Colors.white : Colors.black, width: 3)
-                      : null,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(colorValue).withValues(alpha: 0.4),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: isSelected
-                    ? const Icon(Icons.check, color: Colors.white)
-                    : null,
-              ),
-            );
-          }).toList(),
+        Text(
+          l10n.stylePresetsTitle,
+          style: TextStyle(color: theme.hintColor),
         ),
-
-        const SizedBox(height: 24),
-
-        // Font Picker
-        Text(l10n.fontLabel, style: TextStyle(color: theme.hintColor)),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withAlpha(50),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.2)),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedFont,
-              isExpanded: true,
-              dropdownColor: theme.colorScheme.surface,
-              items: _fontChoices.map((font) {
-                return DropdownMenuItem(
-                  value: font,
-                  child: Text(
-                    font,
-                    style: TextStyle(
-                      fontFamily: font,
-                      color: isDark ? Colors.white : Colors.black87,
+        SizedBox(
+          height: 174,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _stylePresets.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final preset = _stylePresets[index];
+              final selected =
+                  _selectedColor == preset.color && _selectedFont == preset.fontFamily;
+              final color = Color(preset.color);
+              return SizedBox(
+                width: 208,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(22),
+                    onTap: () => _applyRegisterPreset(preset),
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: selected
+                              ? color.withValues(alpha: 0.95)
+                              : theme.colorScheme.outline.withValues(alpha: 0.14),
+                          width: selected ? 2 : 1,
+                        ),
+                        gradient: LinearGradient(
+                          colors: [
+                            color.withValues(alpha: 0.18),
+                            theme.colorScheme.surface.withValues(alpha: 0.92),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 56,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          color,
+                                          color.withValues(alpha: 0.3),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: theme.colorScheme.surface.withValues(alpha: 0.76),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'Аа',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontFamily: preset.fontFamily,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              _presetTitle(l10n, preset.id),
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Expanded(
+                              child: Text(
+                                _presetSubtitle(l10n, preset.id),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.subtitleText(context),
+                                  height: 1.28,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                );
-              }).toList(),
-              onChanged: (v) {
-                if (v != null) {
-                  setState(() => _selectedFont = v);
-                  SettingsService.updateTheme(fontFamily: v);
-                }
-              },
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(l10n.fontLabel, style: TextStyle(color: theme.hintColor)),
+        const SizedBox(height: 12),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: _openFontPicker,
+            child: Ink(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface.withValues(alpha: 0.46),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withValues(alpha: 0.18),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.56),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Аа',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontFamily: _selectedFont,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedFont,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontFamily: _selectedFont,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.selectFontFamily,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.subtitleText(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(
+                    Icons.expand_more_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

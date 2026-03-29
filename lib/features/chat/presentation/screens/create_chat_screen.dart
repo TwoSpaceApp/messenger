@@ -9,6 +9,7 @@ import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
+import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
 
 enum CreateChatMode { direct, group, join }
 
@@ -170,6 +171,183 @@ class _CreateChatScreenState extends State<CreateChatScreen>
         });
       }
     }
+  }
+
+  InputDecoration _fieldDecoration({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    String? hint,
+  }) {
+    final theme = Theme.of(context);
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      labelStyle: TextStyle(color: AppColors.subtitleText(context)),
+      hintStyle: TextStyle(color: AppColors.hintText(context)),
+      prefixIcon: Icon(icon, color: AppColors.subtitleText(context)),
+      filled: true,
+      fillColor: theme.colorScheme.surface.withValues(alpha: 0.46),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(
+          color: theme.colorScheme.outline.withValues(alpha: 0.16),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.4),
+      ),
+    );
+  }
+
+  Widget _buildErrorBanner() {
+    final message = _errorMessage;
+    if (message == null) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.colorScheme.error.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.error_outline_rounded,
+            size: 18,
+            color: theme.colorScheme.error,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrimaryAction({
+    required VoidCallback? onPressed,
+    required Widget label,
+    IconData? icon,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        icon: icon == null ? const SizedBox.shrink() : Icon(icon),
+        label: label,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(54),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModeCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return GlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SettingsSectionHeader(
+            title: title,
+            subtitle: subtitle,
+            trailing: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+            ),
+          ),
+          const SizedBox(height: 18),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInlineInfo({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(alpha: 0.38),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 18, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.subtitleText(context),
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -335,146 +513,63 @@ class _CreateChatScreenState extends State<CreateChatScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.searchContactsTitle,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.inviteUserSubtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.subtitleText(context),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _loading ? null : _openContacts,
-                    icon: const Icon(Icons.search),
-                    label: Text(l10n.searchContactsTitle),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          _buildModeCard(
+            title: l10n.searchContactsTitle,
+            subtitle: l10n.inviteUserSubtitle,
+            icon: Icons.person_search_rounded,
+            children: [
+              _buildInlineInfo(
+                icon: Icons.bolt_rounded,
+                title: l10n.directChatTab,
+                subtitle: l10n.contactIdExplanation,
+              ),
+              const SizedBox(height: 14),
+              _buildPrimaryAction(
+                onPressed: _loading ? null : _openContacts,
+                icon: Icons.search_rounded,
+                label: Text(l10n.searchContactsTitle),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.contactIdLabel,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+          _buildModeCard(
+            title: l10n.contactIdLabel,
+            subtitle: l10n.contactIdDescription,
+            icon: Icons.alternate_email_rounded,
+            children: [
+              TextField(
+                controller: _userIdController,
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                decoration: _fieldDecoration(
+                  context: context,
+                  label: l10n.contactIdLabel,
+                  hint: l10n.contactIdExplanation,
+                  icon: Icons.person_outline_rounded,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.contactIdDescription,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.subtitleText(context),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _userIdController,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                  decoration: InputDecoration(
-                    labelText: l10n.contactIdLabel,
-                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
-                    hintStyle: TextStyle(color: AppColors.hintText(context)),
-                    prefixIcon: Icon(Icons.person, color: AppColors.subtitleText(context)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.divider(context)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary),
-                    ),
-                  ),
-                ),
-                if (_errorMessage != null && _tabController.index == 0) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(color: AppColors.danger(context)),
-                  ),
-                ],
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _loading ? null : _createDirectChat,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _loading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.startChatButton),
-                  ),
-                ),
+              ),
+              if (_errorMessage != null && _tabController.index == 0) ...[
+                const SizedBox(height: 12),
+                _buildErrorBanner(),
               ],
-            ),
+              const SizedBox(height: 16),
+              _buildPrimaryAction(
+                onPressed: _loading ? null : _createDirectChat,
+                icon: Icons.send_rounded,
+                label: _loading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.startChatButton),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
-          GlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.info_outline,
-                        color: AppColors.subtitleText(context)),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.hintCardTitle,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.contactIdExplanation,
-                  style: TextStyle(
-                    color: AppColors.subtitleText(context),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
+          _buildInlineInfo(
+            icon: Icons.info_outline_rounded,
+            title: l10n.hintCardTitle,
+            subtitle: l10n.contactIdExplanation,
           ),
         ],
       ),
@@ -488,62 +583,41 @@ class _CreateChatScreenState extends State<CreateChatScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.createNewRoomTitle,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+          _buildModeCard(
+            title: l10n.createNewRoomTitle,
+            subtitle: _isPrivate
+                ? l10n.privateGroupSubtitle
+                : l10n.publicRoomSubtitle,
+            icon: Icons.groups_rounded,
+            children: [
+              TextField(
+                controller: _roomNameController,
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                decoration: _fieldDecoration(
+                  context: context,
+                  label: l10n.roomNameLabel,
+                  icon: Icons.group_outlined,
                 ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _roomNameController,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                  decoration: InputDecoration(
-                    labelText: l10n.roomNameLabel,
-                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
-                    prefixIcon: Icon(Icons.group, color: AppColors.subtitleText(context)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.divider(context)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary),
-                    ),
-                  ),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: _roomTopicController,
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                maxLines: 2,
+                decoration: _fieldDecoration(
+                  context: context,
+                  label: l10n.descriptionOptionalLabel,
+                  icon: Icons.edit_note_rounded,
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _roomTopicController,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    labelText: l10n.descriptionOptionalLabel,
-                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
-                    prefixIcon:
-                        Icon(Icons.description, color: AppColors.subtitleText(context)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.divider(context)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary),
-                    ),
-                  ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14),
                   title: Text(
                     l10n.privateGroupLabel,
                     style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
@@ -557,35 +631,24 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   value: _isPrivate,
                   onChanged: (v) => setState(() => _isPrivate = v),
                 ),
-                if (_errorMessage != null && _tabController.index == 1) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(color: AppColors.danger(context)),
-                  ),
-                ],
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _loading ? null : _createGroupChat,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _loading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.createRoomButton),
-                  ),
-                ),
+              ),
+              if (_errorMessage != null && _tabController.index == 1) ...[
+                const SizedBox(height: 12),
+                _buildErrorBanner(),
               ],
-            ),
+              const SizedBox(height: 16),
+              _buildPrimaryAction(
+                onPressed: _loading ? null : _createGroupChat,
+                icon: Icons.add_comment_rounded,
+                label: _loading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.createRoomButton),
+              ),
+            ],
           ),
         ],
       ),
@@ -599,79 +662,44 @@ class _CreateChatScreenState extends State<CreateChatScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.joinByCodeTitle,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+          _buildModeCard(
+            title: l10n.joinByCodeTitle,
+            subtitle: l10n.joinByCodeSubtitle,
+            icon: Icons.key_rounded,
+            children: [
+              _buildInlineInfo(
+                icon: Icons.link_rounded,
+                title: l10n.joinByCodeTitle,
+                subtitle: l10n.joinLinkHint,
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: _joinLinkController,
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                decoration: _fieldDecoration(
+                  context: context,
+                  label: l10n.joinByCodeTitle,
+                  hint: l10n.joinLinkHint,
+                  icon: Icons.link_rounded,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.joinByCodeSubtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.subtitleText(context),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _joinLinkController,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                  decoration: InputDecoration(
-                    labelText: l10n.joinByCodeTitle,
-                    hintText: l10n.joinLinkHint,
-                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
-                    hintStyle: TextStyle(color: AppColors.hintText(context)),
-                    prefixIcon: Icon(Icons.link, color: AppColors.subtitleText(context)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.divider(context)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                ),
-                if (_errorMessage != null && _tabController.index == 2) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(color: AppColors.danger(context)),
-                  ),
-                ],
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _loading ? null : _joinRoomByLink,
-                    icon: const Icon(Icons.login),
-                    label: _loading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.joinByCodeTitle),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
+              ),
+              if (_errorMessage != null && _tabController.index == 2) ...[
+                const SizedBox(height: 12),
+                _buildErrorBanner(),
               ],
-            ),
+              const SizedBox(height: 16),
+              _buildPrimaryAction(
+                onPressed: _loading ? null : _joinRoomByLink,
+                icon: Icons.login_rounded,
+                label: _loading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.joinByCodeTitle),
+              ),
+            ],
           ),
         ],
       ),

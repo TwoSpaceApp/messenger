@@ -446,50 +446,6 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     );
   }
 
-  Widget _buildThemeModeSelector(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.themeModeLabel,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: ThemeMode.values.map((mode) {
-              final selected = _selectedThemeMode == mode;
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    right: mode == ThemeMode.system ? 0 : 8,
-                  ),
-                  child: _SegmentChoiceCard(
-                    label: _themeModeLabel(l10n, mode),
-                    icon: switch (mode) {
-                      ThemeMode.light => Icons.light_mode_rounded,
-                      ThemeMode.dark => Icons.dark_mode_rounded,
-                      ThemeMode.system => Icons.auto_mode_rounded,
-                    },
-                    selected: selected,
-                    onTap: () async {
-                      setState(() => _selectedThemeMode = mode);
-                      await _applyThemeUpdate(themeMode: mode);
-                    },
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMotionModeSelector(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -549,7 +505,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
           child: Theme(
             data: previewTheme,
             child: Container(
-              height: 304,
+              height: 328,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -563,23 +519,25 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
               ),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 260),
-                child: switch (_previewSurface) {
-                  _PreviewSurface.rooms => _PreviewRoomsCard(
-                      key: const ValueKey('rooms'),
-                      bubbleRounding: _bubbleRounding,
-                      compactMode: _compactMode,
-                    ),
-                  _PreviewSurface.conversation => _PreviewConversationCard(
-                      key: const ValueKey('conversation'),
-                      bubbleRounding: _bubbleRounding,
-                      dynamicBubbles: _dynamicBubbles,
-                      compactMode: _compactMode,
-                    ),
+                child: SizedBox.expand(
+                  child: switch (_previewSurface) {
+                    _PreviewSurface.rooms => _PreviewRoomsCard(
+                        key: const ValueKey('rooms'),
+                        bubbleRounding: _bubbleRounding,
+                        compactMode: _compactMode,
+                      ),
+                    _PreviewSurface.conversation => _PreviewConversationCard(
+                        key: const ValueKey('conversation'),
+                        bubbleRounding: _bubbleRounding,
+                        dynamicBubbles: _dynamicBubbles,
+                        compactMode: _compactMode,
+                      ),
                     _PreviewSurface.settings => _PreviewSettingsCard(
-                      key: const ValueKey('settings'),
-                      compactMode: _compactMode,
-                    ),
-                },
+                        key: const ValueKey('settings'),
+                        compactMode: _compactMode,
+                      ),
+                  },
+                ),
               ),
             ),
           ),
@@ -638,7 +596,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                 ),
                 const SizedBox(height: 14),
                 SizedBox(
-                  height: 164,
+                  height: 204,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: _presets.length,
@@ -669,35 +627,38 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                   subtitle: l10n.moodSectionSubtitle,
                 ),
                 const SizedBox(height: 14),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _colorChoices.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisExtent: 96,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemBuilder: (context, index) {
-                    final colorValue = _colorChoices[index]['value'] as int;
-                    final selected = colorValue == _selectedColor;
-                    return _ColorChoiceCard(
-                      label: _colorLabel(l10n, colorValue),
-                      toneLabel: _isLightColor(colorValue)
-                          ? l10n.themeLight
-                          : l10n.themeDark,
-                      color: Color(colorValue),
-                      selected: selected,
-                      onTap: () async {
-                        setState(() => _selectedColor = colorValue);
-                        await _applyThemeUpdate(color: colorValue);
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final crossAxisCount = constraints.maxWidth < 380 ? 1 : 2;
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _colorChoices.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        mainAxisExtent: 112,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemBuilder: (context, index) {
+                        final colorValue = _colorChoices[index]['value'] as int;
+                        final selected = colorValue == _selectedColor;
+                        return _ColorChoiceCard(
+                          label: _colorLabel(l10n, colorValue),
+                          toneLabel: _isLightColor(colorValue)
+                              ? l10n.themeLight
+                              : l10n.themeDark,
+                          color: Color(colorValue),
+                          selected: selected,
+                          onTap: () async {
+                            setState(() => _selectedColor = colorValue);
+                            await _applyThemeUpdate(color: colorValue);
+                          },
+                        );
                       },
                     );
                   },
                 ),
-                const SizedBox(height: 14),
-                _buildThemeModeSelector(context),
                 const SizedBox(height: 28),
                 SettingsSectionHeader(
                   title: l10n.typeSectionTitle,
@@ -970,7 +931,7 @@ class _PresetCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SizedBox(
-      width: 208,
+      width: 224,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -1009,11 +970,11 @@ class _PresetCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Container(
-                            height: 62,
+                          height: 70,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(18),
                             gradient: LinearGradient(
@@ -1029,8 +990,8 @@ class _PresetCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Container(
-                        width: 58,
-                        height: 62,
+                        width: 64,
+                        height: 70,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(18),
                           color:
@@ -1042,8 +1003,8 @@ class _PresetCard extends StatelessWidget {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 6),
                             child: Text(
-                              'AaBbCc',
-                              style: theme.textTheme.labelLarge?.copyWith(
+                              'Аа',
+                              style: theme.textTheme.titleLarge?.copyWith(
                                 fontFamily: fontFamily,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -1069,12 +1030,15 @@ class _PresetCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.subtitleText(context),
+                  Expanded(
+                    child: Text(
+                      subtitle,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.subtitleText(context),
+                        height: 1.28,
+                      ),
                     ),
                   ),
                 ],
@@ -1125,50 +1089,66 @@ class _ColorChoiceCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [color, color.withValues(alpha: 0.44)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.18),
-                        blurRadius: 14,
-                        offset: const Offset(0, 8),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [color, color.withValues(alpha: 0.44)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.18),
+                          blurRadius: 14,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         label,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
+                          height: 1.15,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        toneLabel,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.subtitleText(context),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          toneLabel,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: color,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 if (selected)
                   Icon(Icons.check_circle_rounded, color: color),
               ],
@@ -1198,7 +1178,7 @@ class _FontChoiceCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SizedBox(
-      width: 168,
+      width: 156,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -1219,9 +1199,10 @@ class _FontChoiceCard extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'AaBbCc',
+                    'Аа',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontFamily: fontFamily,
                       fontWeight: previewWeight,
@@ -1428,143 +1409,145 @@ class _PreviewRoomsCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    final rooms = <({String title, String subtitle, int unread, bool online})>[
+    final rooms = <({
+      String title,
+      String subtitle,
+      String time,
+      int unread,
+      bool muted,
+    })>[
       (
         title: l10n.previewRoomDesignSync,
         subtitle: l10n.previewRoomDesignSyncSubtitle,
+        time: '08:14',
         unread: 3,
-        online: true,
+        muted: false,
       ),
       (
         title: l10n.previewRoomReleaseCheck,
         subtitle: l10n.previewRoomReleaseCheckSubtitle,
+        time: '09:07',
         unread: 1,
-        online: false,
+        muted: true,
       ),
       (
         title: l10n.previewRoomAlphaOps,
         subtitle: l10n.previewRoomAlphaOpsSubtitle,
+        time: '09:41',
         unread: 0,
-        online: true,
+        muted: false,
       ),
     ];
 
-    final itemPadding = compactMode ? 12.0 : 14.0;
-    final gap = compactMode ? 8.0 : 10.0;
-
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.previewRoomsTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  l10n.previewLiveLabel,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            l10n.previewRoomsTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.previewRoomsSubtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.subtitleText(context),
+            ),
           ),
           const SizedBox(height: 14),
-          ...rooms.map(
-            (room) => Container(
-              margin: EdgeInsets.only(bottom: gap),
-              padding: EdgeInsets.all(itemPadding),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(
-                  bubbleRounding.clamp(12, 24),
-                ),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    foregroundColor: theme.colorScheme.primary,
-                    child: Text(
-                      room.title.isNotEmpty ? room.title[0] : '?',
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+          Expanded(
+            child: Column(
+              children: rooms.map((room) {
+                return Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(bottom: room == rooms.last ? 0 : 9),
+                    padding: EdgeInsets.all(compactMode ? 12 : 14),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(
+                        bubbleRounding.clamp(12, 24),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        Text(
-                          room.title,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
+                        CircleAvatar(
+                          backgroundColor: theme.colorScheme.primaryContainer,
+                          foregroundColor: theme.colorScheme.primary,
+                          child: Text(
+                            room.title.isNotEmpty ? room.title[0] : '?',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          room.subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.subtitleText(context),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                room.title,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                room.subtitle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.subtitleText(context),
+                                  height: 1.2,
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(room.time, style: theme.textTheme.labelSmall),
+                            const SizedBox(height: 8),
+                            if (room.unread > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  '${room.unread}',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onPrimary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              )
+                            else
+                              Icon(
+                                room.muted
+                                    ? Icons.notifications_off_rounded
+                                    : Icons.done_all_rounded,
+                                size: 16,
+                                color: room.muted
+                                    ? AppColors.hintText(context)
+                                    : AppColors.onlineStatus(context),
+                              ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('09:41', style: theme.textTheme.labelSmall),
-                      const SizedBox(height: 8),
-                      if (room.unread > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            '${room.unread}',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onPrimary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        )
-                      else
-                        Icon(
-                          room.online
-                              ? Icons.circle_rounded
-                              : Icons.schedule_rounded,
-                          size: 14,
-                          color: room.online
-                              ? AppColors.onlineStatus(context)
-                              : AppColors.hintText(context),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
+                );
+              }).toList(),
             ),
           ),
         ],
@@ -1612,10 +1595,10 @@ class _PreviewConversationCard extends StatelessWidget {
     final theme = Theme.of(context);
     final messagePadding = compactMode ? 12.0 : 14.0;
     final messageGap = compactMode ? 8.0 : 10.0;
-    final maxWidth = compactMode ? 228.0 : 250.0;
+    final maxWidth = compactMode ? 214.0 : 236.0;
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1623,6 +1606,13 @@ class _PreviewConversationCard extends StatelessWidget {
             l10n.previewConversationTitle,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.previewConversationSubtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.subtitleText(context),
             ),
           ),
           const SizedBox(height: 16),
@@ -1637,6 +1627,8 @@ class _PreviewConversationCard extends StatelessWidget {
               ),
               child: Text(
                 l10n.previewIncomingMessage,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium,
               ),
             ),
@@ -1658,6 +1650,8 @@ class _PreviewConversationCard extends StatelessWidget {
               ),
               child: Text(
                 l10n.previewOutgoingMessage,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onPrimary,
                 ),
@@ -1676,6 +1670,8 @@ class _PreviewConversationCard extends StatelessWidget {
               ),
               child: Text(
                 l10n.previewTypingStatus,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: AppColors.subtitleText(context),
                 ),
@@ -1746,23 +1742,50 @@ class _PreviewSettingsCard extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          tile(
-            Icons.palette_outlined,
-            l10n.appearanceSection,
-            l10n.customizationSubtitle,
+          Text(
+            l10n.previewSettingsTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
-          tile(
-            Icons.notifications_outlined,
-            l10n.notificationsSection,
-            l10n.previewSettingsNotificationsSubtitle,
+          const SizedBox(height: 4),
+          Text(
+            l10n.previewSettingsSubtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.subtitleText(context),
+            ),
           ),
-          tile(
-            Icons.lock_outline_rounded,
-            l10n.privacyLabel,
-            l10n.previewSettingsPrivacySubtitle,
+          const SizedBox(height: 14),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(
+                  child: tile(
+                    Icons.palette_outlined,
+                    l10n.appearanceSection,
+                    l10n.previewSettingsAppearanceSubtitle,
+                  ),
+                ),
+                Expanded(
+                  child: tile(
+                    Icons.notifications_outlined,
+                    l10n.notificationsSection,
+                    l10n.previewSettingsNotificationsSubtitle,
+                  ),
+                ),
+                Expanded(
+                  child: tile(
+                    Icons.lock_outline_rounded,
+                    l10n.privacyLabel,
+                    l10n.previewSettingsPrivacySubtitle,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

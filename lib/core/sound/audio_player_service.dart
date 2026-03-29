@@ -7,6 +7,7 @@ class AudioPlayerService {
 
   Stream<Duration> get positionStream => _player.onPositionChanged;
   Stream<Duration> get durationStream => _player.onDurationChanged;
+  Stream<void> get completionStream => _player.onPlayerComplete;
 
   Future<void> play(String source) async {
     final uri = Uri.tryParse(source);

@@ -1016,6 +1016,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Настраивайте стиль через живое превью, готовые пресеты, движение и плотность интерфейса.';
 
   @override
+  String get notificationsHeroSubtitle =>
+      'Настройте оповещения, звук и пользовательские превью так, чтобы всё ощущалось спокойно и аккуратно.';
+
+  @override
   String get livePreviewBadge => 'Живое превью';
 
   @override
@@ -1087,35 +1091,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get navBarTimeoutLong => 'Спокойно';
 
   @override
-  String get presetQuietGlass => 'Тихое стекло';
+  String get presetQuietGlass => 'Quiet Glass';
 
   @override
   String get presetQuietGlassSubtitle =>
       'Холодная глубина, ровный контраст и спокойное движение.';
 
   @override
-  String get presetNightSignal => 'Ночной сигнал';
+  String get presetNightSignal => 'Night Signal';
 
   @override
   String get presetNightSignalSubtitle =>
       'Более плотная компоновка, яркие акценты и тёмный пульс.';
 
   @override
-  String get presetEditorial => 'Редакционный';
+  String get presetEditorial => 'Editorial';
 
   @override
   String get presetEditorialSubtitle =>
       'Сдержанное движение, спокойный цвет и акцент на чтении.';
 
   @override
-  String get presetSolarFlare => 'Солнечная вспышка';
+  String get presetSolarFlare => 'Solar Flare';
 
   @override
   String get presetSolarFlareSubtitle =>
       'Тёплые акценты, светлее поверхности и более энергичный фон.';
 
   @override
-  String get presetRetroPulse => 'Ретро-пульс';
+  String get presetRetroPulse => 'Retro Pulse';
 
   @override
   String get presetRetroPulseSubtitle =>
@@ -1131,10 +1135,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get previewSettingsLabel => 'Настройки';
 
   @override
-  String get previewRoomsTitle => 'Превью списка комнат';
+  String get previewRoomsTitle => 'Утренний обзор';
 
   @override
-  String get previewConversationTitle => 'Превью сообщений';
+  String get previewRoomsSubtitle =>
+      'Компактный список комнат с живыми фразами и более понятными статусами.';
+
+  @override
+  String get previewConversationTitle => 'Короткий диалог';
+
+  @override
+  String get previewConversationSubtitle =>
+      'Проверьте, как в небольшом разговоре читаются ритм, отступы и форма пузырей.';
+
+  @override
+  String get previewSettingsTitle => 'Настройки под рукой';
+
+  @override
+  String get previewSettingsSubtitle =>
+      'Сразу видно, как будут собираться карточки параметров до применения ко всему приложению.';
 
   @override
   String get previewLiveLabel => 'Live';
@@ -1143,33 +1162,38 @@ class AppLocalizationsRu extends AppLocalizations {
   String get previewRoomDesignSync => 'Design Sync';
 
   @override
-  String get previewRoomDesignSyncSubtitle => 'Hero-блок готов к ревью.';
+  String get previewRoomDesignSyncSubtitle =>
+      'Доброе утро. Свежие макеты уже лежат в закрепе.';
 
   @override
   String get previewRoomReleaseCheck => 'Release Check';
 
   @override
   String get previewRoomReleaseCheckSubtitle =>
-      'Заметки уже разбиты по безопасности и фиксам.';
+      'Знаешь, который час стартуем релиз? Я собираю чек-лист.';
 
   @override
   String get previewRoomAlphaOps => 'Alpha Ops';
 
   @override
   String get previewRoomAlphaOpsSubtitle =>
-      'Движение фона настроено на более спокойный старт.';
+      'В Токио уже утро. Ночные логи выглядят спокойно.';
 
   @override
   String get previewIncomingMessage =>
-      'Превью должно ощущаться как реальное приложение, а не как абстрактный демо-макет.';
+      'Доброе утро. Фон уже перестал ощущаться как тестовый экран?';
 
   @override
   String get previewOutgoingMessage =>
-      'Согласен. Цвет, плотность и типографика должны считываться сразу.';
+      'Почти. Теперь это больше похоже на живой чат: спокойнее ритм, чище типографика.';
 
   @override
   String get previewTypingStatus =>
-      'Индикатор набора, интервалы и углы пузырей меняются здесь сразу.';
+      'Набор, углы и ритм сообщений меняются здесь сразу.';
+
+  @override
+  String get previewSettingsAppearanceSubtitle =>
+      'Выберите шаблон, подкрутите движение и проверьте цельность оболочки.';
 
   @override
   String get previewSettingsNotificationsSubtitle =>
@@ -1180,40 +1204,40 @@ class AppLocalizationsRu extends AppLocalizations {
       'Проверьте иерархию, контраст и вес иконок до применения.';
 
   @override
-  String get themeColorAegisViolet => 'Фиолетовый Аегис';
+  String get themeColorAegisViolet => 'Aegis Violet';
 
   @override
-  String get themeColorIndigoSignal => 'Индиго-сигнал';
+  String get themeColorIndigoSignal => 'Indigo Signal';
 
   @override
-  String get themeColorAmethyst => 'Аметист';
+  String get themeColorAmethyst => 'Amethyst';
 
   @override
-  String get themeColorRosePulse => 'Розовый пульс';
+  String get themeColorRosePulse => 'Rose Pulse';
 
   @override
-  String get themeColorSolarAmber => 'Солнечный янтарь';
+  String get themeColorSolarAmber => 'Solar Amber';
 
   @override
-  String get themeColorPaleViolet => 'Светлая сирень';
+  String get themeColorPaleViolet => 'Pale Violet';
 
   @override
-  String get themeColorSignalCoral => 'Сигнальный коралл';
+  String get themeColorSignalCoral => 'Signal Coral';
 
   @override
-  String get themeColorMintRelay => 'Мятный релей';
+  String get themeColorMintRelay => 'Mint Relay';
 
   @override
-  String get themeColorCyanAir => 'Циановый воздух';
+  String get themeColorCyanAir => 'Cyan Air';
 
   @override
-  String get themeColorLimeCurrent => 'Лаймовый ток';
+  String get themeColorLimeCurrent => 'Lime Current';
 
   @override
-  String get themeColorAuroraMint => 'Аврора-минт';
+  String get themeColorAuroraMint => 'Aurora Mint';
 
   @override
-  String get themeColorSlateMono => 'Сланцевый моно';
+  String get themeColorSlateMono => 'Slate Mono';
 
   @override
   String get backgroundMotionToggleLabel => 'Анимированный фон';
@@ -2086,6 +2110,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get storageTotalLabel => 'Всего';
 
   @override
+  String get storageSelectedLabel => 'Выбрано';
+
+  @override
   String get storagePhotosLabel => 'Фото';
 
   @override
@@ -2127,6 +2154,23 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get storageAutoCleanTypesLabel => 'Что очищать';
+
+  @override
+  String get storageAutoCleanStatusTitle => 'Статус автоочистки';
+
+  @override
+  String get storageAutoCleanStatusEnabled =>
+      'Автоочистка активна и запустится по расписанию или при превышении порога хранилища.';
+
+  @override
+  String get storageAutoCleanStatusDisabled =>
+      'Автоочистка выключена. Сейчас будет работать только ручная очистка.';
+
+  @override
+  String get storageAutoCleanLastRunLabel => 'Последний запуск';
+
+  @override
+  String get storageAutoCleanLastRunNever => 'Никогда';
 
   @override
   String get storageAutoCleanSelectAll => 'Выбрать всё';

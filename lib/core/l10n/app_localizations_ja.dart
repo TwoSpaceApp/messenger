@@ -1003,6 +1003,10 @@ class AppLocalizationsJa extends AppLocalizations {
       'Build a distinct look with live preview, curated presets, motion, and density controls.';
 
   @override
+  String get notificationsHeroSubtitle =>
+      'Tune alerts, sound behavior, and custom previews so incoming activity feels calm and readable.';
+
+  @override
   String get livePreviewBadge => 'Live preview';
 
   @override
@@ -1121,7 +1125,22 @@ class AppLocalizationsJa extends AppLocalizations {
   String get previewRoomsTitle => 'Room list preview';
 
   @override
+  String get previewRoomsSubtitle =>
+      'A compact room list with real-sounding snippets and cleaner status markers.';
+
+  @override
   String get previewConversationTitle => 'Chat bubble preview';
+
+  @override
+  String get previewConversationSubtitle =>
+      'Check how tone, spacing, and bubble shape read in a short live dialog.';
+
+  @override
+  String get previewSettingsTitle => 'Controls at hand';
+
+  @override
+  String get previewSettingsSubtitle =>
+      'Preview how the settings stack feels before applying anything globally.';
 
   @override
   String get previewLiveLabel => 'Live';
@@ -1157,6 +1176,10 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get previewTypingStatus =>
       'Typing indicator, spacing, and corners update here in real time.';
+
+  @override
+  String get previewSettingsAppearanceSubtitle =>
+      'Pick a template, adjust motion, and keep the whole shell consistent.';
 
   @override
   String get previewSettingsNotificationsSubtitle =>
@@ -2050,6 +2073,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get storageTotalLabel => '合計';
 
   @override
+  String get storageSelectedLabel => 'Selected';
+
+  @override
   String get storagePhotosLabel => '写真';
 
   @override
@@ -2091,6 +2117,23 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get storageAutoCleanTypesLabel => 'Clear data types';
+
+  @override
+  String get storageAutoCleanStatusTitle => 'Automation status';
+
+  @override
+  String get storageAutoCleanStatusEnabled =>
+      'Auto-clean is active and will run when the schedule arrives or the storage threshold is exceeded.';
+
+  @override
+  String get storageAutoCleanStatusDisabled =>
+      'Auto-clean is off. Only manual cleanup will run until you enable it again.';
+
+  @override
+  String get storageAutoCleanLastRunLabel => 'Last run';
+
+  @override
+  String get storageAutoCleanLastRunNever => 'Never';
 
   @override
   String get storageAutoCleanSelectAll => 'Select all';

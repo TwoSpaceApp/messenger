@@ -385,43 +385,72 @@ class _BlobPainter extends CustomPainter {
   }
 
   void _paintWaves(Canvas canvas, Size size) {
-    final shiftX = motionNotifier.tiltX * size.width * 0.045;
-    final liftY = motionNotifier.tiltY * 12;
-    final baseY = size.height * 0.78 + liftY;
+    final shiftX = motionNotifier.tiltX * size.width * 0.075;
+    final shiftY = motionNotifier.tiltY * size.height * 0.045;
     final phase = motionNotifier.wavePhase;
+
+    final glowPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(
+          size.width * (0.52 + motionNotifier.tiltX * 0.08),
+          size.height * (0.44 + motionNotifier.tiltY * 0.05),
+        ),
+        size.longestSide * 0.62,
+        [
+          primary.withValues(alpha: isDark ? opacity * 0.12 : opacity * 0.08),
+          secondary.withValues(alpha: isDark ? opacity * 0.09 : opacity * 0.05),
+          Colors.transparent,
+        ],
+        const [0.0, 0.46, 1.0],
+      );
+    canvas.drawRect(Offset.zero & size, glowPaint);
 
     _drawWaveLayer(
       canvas,
       size,
       color: secondary,
-      alpha: isDark ? opacity * 0.16 : opacity * 0.12,
-      baseY: baseY + 52,
-      amplitude: 16,
-      crestWidth: size.width * 0.44,
+      alpha: isDark ? opacity * 0.12 : opacity * 0.08,
+      baseY: size.height * 0.14 + shiftY * 0.35,
+      amplitude: 18,
+      crestWidth: size.width * 0.48,
       phase: phase,
-      shiftX: shiftX * 0.4,
+      shiftX: shiftX * 0.35,
+      fillToTop: true,
     );
     _drawWaveLayer(
       canvas,
       size,
       color: primary,
-      alpha: isDark ? opacity * 0.22 : opacity * 0.16,
-      baseY: baseY + 28,
-      amplitude: 22,
-      crestWidth: size.width * 0.38,
+      alpha: isDark ? opacity * 0.16 : opacity * 0.1,
+      baseY: size.height * 0.32 + shiftY * 0.52,
+      amplitude: 24,
+      crestWidth: size.width * 0.4,
       phase: (phase + 0.18) % 1.0,
       shiftX: shiftX * 0.7,
+      fillToTop: true,
+    );
+    _drawWaveLayer(
+      canvas,
+      size,
+      color: secondary,
+      alpha: isDark ? opacity * 0.2 : opacity * 0.14,
+      baseY: size.height * 0.52 + shiftY * 0.7,
+      amplitude: 28,
+      crestWidth: size.width * 0.34,
+      phase: (phase + 0.34) % 1.0,
+      shiftX: shiftX,
+      fillToTop: true,
     );
     _drawWaveLayer(
       canvas,
       size,
       color: primary,
-      alpha: isDark ? opacity * 0.34 : opacity * 0.22,
-      baseY: baseY,
-      amplitude: 28,
-      crestWidth: size.width * 0.32,
-      phase: (phase + 0.34) % 1.0,
-      shiftX: shiftX,
+      alpha: isDark ? opacity * 0.28 : opacity * 0.18,
+      baseY: size.height * 0.74 + shiftY,
+      amplitude: 32,
+      crestWidth: size.width * 0.3,
+      phase: (phase + 0.52) % 1.0,
+      shiftX: shiftX * 1.2,
     );
   }
 
@@ -435,8 +464,9 @@ class _BlobPainter extends CustomPainter {
     required double crestWidth,
     required double phase,
     required double shiftX,
+    bool fillToTop = false,
   }) {
-    final path = Path()..moveTo(0, size.height);
+    final path = Path()..moveTo(0, fillToTop ? 0 : size.height);
     final step = size.width / 4;
     final startY = baseY + amplitude * _waveValue(phase);
     path.lineTo(0, startY);
@@ -460,12 +490,12 @@ class _BlobPainter extends CustomPainter {
       previousY = y;
     }
 
-    path.lineTo(size.width, size.height);
+    path.lineTo(size.width, fillToTop ? 0 : size.height);
     path.close();
 
     final shader = ui.Gradient.linear(
-      Offset(0, baseY - amplitude),
-      Offset(0, size.height),
+      Offset(0, fillToTop ? 0 : baseY - amplitude),
+      Offset(0, fillToTop ? baseY + amplitude * 1.8 : size.height),
       [
         color.withValues(alpha: alpha),
         color.withValues(alpha: alpha * 0.55),

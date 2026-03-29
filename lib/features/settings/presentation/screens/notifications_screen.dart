@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/sound/audio_player_service.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -17,10 +20,21 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   final AudioPlayerService _audioPlayer = AudioPlayerService();
-  bool _playingPreview = false;
+  StreamSubscription<void>? _completionSub;
+  String? _playingSource;
+
+  @override
+  void initState() {
+    super.initState();
+    _completionSub = _audioPlayer.completionStream.listen((_) {
+      if (!mounted) return;
+      setState(() => _playingSource = null);
+    });
+  }
 
   @override
   void dispose() {
+    unawaited(_completionSub?.cancel());
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -56,16 +70,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _togglePreview(String? path) async {
     if (path == null || path.isEmpty) return;
-    if (_playingPreview) {
+    if (_playingSource == path) {
       await _audioPlayer.stop();
       if (!mounted) return;
-      setState(() => _playingPreview = false);
+      setState(() => _playingSource = null);
       return;
     }
 
     await _audioPlayer.play(path);
     if (!mounted) return;
-    setState(() => _playingPreview = true);
+    setState(() => _playingSource = path);
   }
 
   @override
@@ -75,35 +89,60 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.settingsNotificationNew),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
       ),
       body: ScreenBackground(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
+            ValueListenableBuilder<bool>(
+              valueListenable: SettingsService.notificationsEnabledNotifier,
+              builder: (context, enabled, _) {
+                return SettingsHeroCard(
+                  icon: enabled
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_off_rounded,
+                  title: l10n.settingsNotificationNew,
+                  subtitle: l10n.notificationsHeroSubtitle,
+                  badges: [
+                    _StatusBadge(
+                      label: enabled
+                          ? l10n.notificationsLabel
+                          : l10n.settingsDoNotDisturb,
+                      active: enabled,
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 16),
             GlassCard(
               child: Column(
                 children: [
                   ValueListenableBuilder<bool>(
                     valueListenable: SettingsService.notificationsEnabledNotifier,
                     builder: (context, enabled, _) {
-                      return SwitchListTile(
-                        title: Text(l10n.notificationsLabel),
-                        subtitle: Text(l10n.settingsNotificationNew),
+                      return _ToggleTile(
+                        icon: Icons.notifications_rounded,
+                        title: l10n.notificationsLabel,
+                        subtitle: l10n.settingsNotificationNew,
                         value: enabled,
                         onChanged: SettingsService.setNotificationsEnabled,
                       );
                     },
                   ),
-                  const Divider(height: 1),
+                  const Divider(height: 18),
                   ValueListenableBuilder<bool>(
                     valueListenable: SettingsService.notificationsEnabledNotifier,
                     builder: (context, notificationsEnabled, _) {
                       return ValueListenableBuilder<bool>(
                         valueListenable: SettingsService.soundEnabledNotifier,
                         builder: (context, enabled, __) {
-                          return SwitchListTile(
-                            title: Text(l10n.soundLabel),
-                            subtitle: Text(l10n.settingsSoundOptions),
+                          return _ToggleTile(
+                            icon: Icons.volume_up_rounded,
+                            title: l10n.soundLabel,
+                            subtitle: l10n.settingsSoundOptions,
                             value: enabled,
                             onChanged: notificationsEnabled
                                 ? SettingsService.setSoundEnabled
@@ -113,13 +152,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       );
                     },
                   ),
-                  const Divider(height: 1),
+                  const Divider(height: 18),
                   ValueListenableBuilder<bool>(
                     valueListenable: SettingsService.doNotDisturbNotifier,
                     builder: (context, enabled, _) {
-                      return SwitchListTile(
-                        title: Text(l10n.settingsDoNotDisturb),
-                        subtitle: Text(l10n.notificationsSection),
+                      return _ToggleTile(
+                        icon: Icons.do_not_disturb_on_total_silence_rounded,
+                        title: l10n.settingsDoNotDisturb,
+                        subtitle: l10n.notificationsSection,
                         value: enabled,
                         onChanged: SettingsService.setDoNotDisturb,
                       );
@@ -128,7 +168,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
+            SettingsSectionHeader(
+              title: l10n.soundLabel,
+              subtitle: l10n.settingsSoundOptions,
+            ),
+            const SizedBox(height: 14),
             ValueListenableBuilder<String?>(
               valueListenable: SettingsService.notificationTonePathNotifier,
               builder: (context, tonePath, _) {
@@ -136,6 +181,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   valueListenable: SettingsService.notificationToneNameNotifier,
                   builder: (context, toneName, __) {
                     return _SoundCard(
+                      icon: Icons.music_note_rounded,
                       title: l10n.notificationToneTitle,
                       subtitle: l10n.notificationToneSubtitle,
                       fileName: toneName,
@@ -146,9 +192,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       onPreview: tonePath == null || tonePath.isEmpty
                           ? null
                           : () => _togglePreview(tonePath),
-                      previewLabel: _playingPreview
+                      previewLabel: _playingSource == tonePath
                           ? l10n.stopPreviewLabel
                           : l10n.playPreviewLabel,
+                      previewActive: _playingSource == tonePath,
                     );
                   },
                 );
@@ -162,6 +209,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   valueListenable: SettingsService.ringtoneNameNotifier,
                   builder: (context, ringtoneName, __) {
                     return _SoundCard(
+                      icon: Icons.ring_volume_rounded,
                       title: l10n.ringtoneTitle,
                       subtitle: l10n.ringtoneSubtitle,
                       fileName: ringtoneName,
@@ -172,9 +220,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       onPreview: ringtonePath == null || ringtonePath.isEmpty
                           ? null
                           : () => _togglePreview(ringtonePath),
-                      previewLabel: _playingPreview
+                      previewLabel: _playingSource == ringtonePath
                           ? l10n.stopPreviewLabel
                           : l10n.playPreviewLabel,
+                      previewActive: _playingSource == ringtonePath,
                     );
                   },
                 );
@@ -189,21 +238,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
 class _SoundCard extends StatelessWidget {
   const _SoundCard({
+    required this.icon,
     required this.title,
     required this.subtitle,
     required this.fileName,
     required this.onPick,
     required this.onPreview,
     required this.previewLabel,
+    required this.previewActive,
     this.onClear,
   });
 
+  final IconData icon;
   final String title;
   final String subtitle;
   final String? fileName;
   final VoidCallback onPick;
   final VoidCallback? onPreview;
   final String previewLabel;
+  final bool previewActive;
   final VoidCallback? onClear;
 
   @override
@@ -215,63 +268,182 @@ class _SoundCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.56),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: theme.colorScheme.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.subtitleText(context),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
-            ),
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withValues(alpha: 0.42),
+              color: previewActive
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.34)
+                  : theme.colorScheme.surface.withValues(alpha: 0.42),
               borderRadius: BorderRadius.circular(18),
-            ),
-            child: Text(
-              fileName ?? l10n.customSoundNotSelected,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: fileName == null ? FontWeight.w500 : FontWeight.w700,
+              border: Border.all(
+                color: previewActive
+                    ? theme.colorScheme.primary.withValues(alpha: 0.22)
+                    : theme.colorScheme.outline.withValues(alpha: 0.12),
               ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    fileName ?? l10n.customSoundNotSelected,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight:
+                          fileName == null ? FontWeight.w500 : FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (previewActive) ...[
+                  const SizedBox(width: 12),
+                  Icon(
+                    Icons.graphic_eq_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
+                ],
+              ],
             ),
           ),
           const SizedBox(height: 14),
-          Row(
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
             children: [
-              Expanded(
+              SizedBox(
+                width: onClear == null ? double.infinity : null,
                 child: OutlinedButton.icon(
                   onPressed: onPick,
                   icon: const Icon(Icons.library_music_rounded),
                   label: Text(l10n.chooseSoundLabel),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
+              SizedBox(
+                width: onClear == null ? double.infinity : null,
                 child: FilledButton.icon(
                   onPressed: onPreview,
-                  icon: const Icon(Icons.play_arrow_rounded),
+                  icon: Icon(
+                    previewActive
+                        ? Icons.stop_circle_outlined
+                        : Icons.play_arrow_rounded,
+                  ),
                   label: Text(previewLabel),
                 ),
               ),
+              if (onClear != null)
+                OutlinedButton.icon(
+                  onPressed: onClear,
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  label: Text(l10n.clearCustomSoundLabel),
+                ),
             ],
           ),
-          if (onClear != null) ...[
-            const SizedBox(height: 10),
-            TextButton.icon(
-              onPressed: onClear,
-              icon: const Icon(Icons.delete_outline_rounded),
-              label: Text(l10n.clearCustomSoundLabel),
-            ),
-          ],
         ],
+      ),
+    );
+  }
+}
+
+class _ToggleTile extends StatelessWidget {
+  const _ToggleTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SwitchListTile.adaptive(
+      contentPadding: EdgeInsets.zero,
+      secondary: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.42),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, color: theme.colorScheme.primary),
+      ),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      value: value,
+      onChanged: onChanged,
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.label, required this.active});
+
+  final String label;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: active
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.72)
+            : theme.colorScheme.surface.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: active
+              ? theme.colorScheme.primary
+              : AppColors.subtitleText(context),
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

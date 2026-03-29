@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/storage_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
@@ -18,6 +19,7 @@ class StorageScreen extends StatefulWidget {
 
 class _StorageScreenState extends State<StorageScreen> {
   final StorageService _storageService = StorageService.instance;
+  final ScrollController _scrollController = ScrollController();
 
   StorageSnapshot? _snapshot;
   bool _loading = true;
@@ -33,6 +35,12 @@ class _StorageScreenState extends State<StorageScreen> {
   void initState() {
     super.initState();
     _loadStorage();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadStorage() async {
@@ -103,39 +111,244 @@ class _StorageScreenState extends State<StorageScreen> {
     setState(() => _autoCleanSettings = settings);
     await _storageService.saveAutoCleanSettings(settings);
     if (settings.enabled) {
-      await _loadStorage();
+      final snapshot = await _storageService.collectSnapshot();
+      if (!mounted) return;
+      setState(() {
+        _snapshot = snapshot;
+        _clearPhotos = _clearPhotos && snapshot.photoBytes > 0;
+        _clearVideos = _clearVideos && snapshot.videoBytes > 0;
+        _clearFiles = _clearFiles && snapshot.fileBytes > 0;
+        _clearCache = _clearCache && snapshot.cacheBytes > 0;
+      });
     }
   }
 
-  Future<void> _updateAutoCleanTypes(String action) async {
-    final next = switch (action) {
-      'photos' => _autoCleanSettings.copyWith(
-          clearPhotos: !_autoCleanSettings.clearPhotos,
-        ),
-      'videos' => _autoCleanSettings.copyWith(
-          clearVideos: !_autoCleanSettings.clearVideos,
-        ),
-      'files' => _autoCleanSettings.copyWith(
-          clearFiles: !_autoCleanSettings.clearFiles,
-        ),
-      'cache' => _autoCleanSettings.copyWith(
-          clearCache: !_autoCleanSettings.clearCache,
-        ),
-      'all' => _autoCleanSettings.copyWith(
-          clearPhotos: true,
-          clearVideos: true,
-          clearFiles: true,
-          clearCache: true,
-        ),
-      'none' => _autoCleanSettings.copyWith(
-          clearPhotos: false,
-          clearVideos: false,
-          clearFiles: false,
-          clearCache: false,
-        ),
-      _ => _autoCleanSettings,
-    };
-    await _saveAutoCleanSettings(next);
+  Future<void> _pickAutoCleanInterval() async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _SheetHandle(theme: theme),
+                _SheetHeader(
+                  icon: Icons.event_repeat_rounded,
+                  title: l10n.storageAutoCleanPeriodLabel,
+                  subtitle: l10n.storageAutoCleanSubtitle,
+                ),
+                ...StorageAutoCleanInterval.values.map((interval) {
+                  final selected = interval == _autoCleanSettings.interval;
+                  return ListTile(
+                    leading: Icon(
+                      selected
+                          ? Icons.radio_button_checked_rounded
+                          : Icons.radio_button_off_rounded,
+                      color: selected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.outline,
+                    ),
+                    title: Text(switch (interval) {
+                      StorageAutoCleanInterval.daily =>
+                        l10n.storageAutoCleanPeriodDaily,
+                      StorageAutoCleanInterval.weekly =>
+                        l10n.storageAutoCleanPeriodWeekly,
+                      StorageAutoCleanInterval.monthly =>
+                        l10n.storageAutoCleanPeriodMonthly,
+                    }),
+                    onTap: () async {
+                      await _saveAutoCleanSettings(
+                        _autoCleanSettings.copyWith(interval: interval),
+                      );
+                      if (sheetContext.mounted) {
+                        Navigator.of(sheetContext).pop();
+                      }
+                    },
+                  );
+                }),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAutoCleanThreshold() async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    const options = [
+      512 * 1024 * 1024,
+      1024 * 1024 * 1024,
+      2 * 1024 * 1024 * 1024,
+      4 * 1024 * 1024 * 1024,
+    ];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _SheetHandle(theme: theme),
+                _SheetHeader(
+                  icon: Icons.speed_rounded,
+                  title: l10n.storageAutoCleanThresholdLabel,
+                  subtitle: l10n.storageAutoCleanSubtitle,
+                ),
+                ...options.map((value) {
+                  final selected = value == _autoCleanSettings.maxBytes;
+                  return ListTile(
+                    leading: Icon(
+                      selected
+                          ? Icons.radio_button_checked_rounded
+                          : Icons.radio_button_off_rounded,
+                      color: selected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.outline,
+                    ),
+                    title: Text(StorageService.formatBytes(value)),
+                    onTap: () async {
+                      await _saveAutoCleanSettings(
+                        _autoCleanSettings.copyWith(maxBytes: value),
+                      );
+                      if (sheetContext.mounted) {
+                        Navigator.of(sheetContext).pop();
+                      }
+                    },
+                  );
+                }),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAutoCleanTypes() async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    var clearPhotos = _autoCleanSettings.clearPhotos;
+    var clearVideos = _autoCleanSettings.clearVideos;
+    var clearFiles = _autoCleanSettings.clearFiles;
+    var clearCache = _autoCleanSettings.clearCache;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _SheetHandle(theme: theme),
+                    _SheetHeader(
+                      icon: Icons.tune_rounded,
+                      title: l10n.storageAutoCleanTypesLabel,
+                      subtitle: l10n.storageAutoCleanSubtitle,
+                    ),
+                    CheckboxListTile(
+                      value: clearPhotos,
+                      onChanged: (value) =>
+                          setSheetState(() => clearPhotos = value ?? false),
+                      title: Text(l10n.storagePhotosLabel),
+                    ),
+                    CheckboxListTile(
+                      value: clearVideos,
+                      onChanged: (value) =>
+                          setSheetState(() => clearVideos = value ?? false),
+                      title: Text(l10n.storageVideosLabel),
+                    ),
+                    CheckboxListTile(
+                      value: clearFiles,
+                      onChanged: (value) =>
+                          setSheetState(() => clearFiles = value ?? false),
+                      title: Text(l10n.filesLabel),
+                    ),
+                    CheckboxListTile(
+                      value: clearCache,
+                      onChanged: (value) =>
+                          setSheetState(() => clearCache = value ?? false),
+                      title: Text(l10n.storageCacheLabel),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                setSheetState(() {
+                                  clearPhotos = true;
+                                  clearVideos = true;
+                                  clearFiles = true;
+                                  clearCache = true;
+                                });
+                              },
+                              child: Text(l10n.storageAutoCleanSelectAll),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () async {
+                                await _saveAutoCleanSettings(
+                                  _autoCleanSettings.copyWith(
+                                    clearPhotos: clearPhotos,
+                                    clearVideos: clearVideos,
+                                    clearFiles: clearFiles,
+                                    clearCache: clearCache,
+                                  ),
+                                );
+                                if (sheetContext.mounted) {
+                                  Navigator.of(sheetContext).pop();
+                                }
+                              },
+                              child: Text(l10n.save),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -167,6 +380,7 @@ class _StorageScreenState extends State<StorageScreen> {
                     icon: Icons.storage_rounded,
                   )
                 : ListView(
+                    controller: _scrollController,
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                     children: [
                       _StorageOverviewCard(snapshot: snapshot),
@@ -191,15 +405,9 @@ class _StorageScreenState extends State<StorageScreen> {
                         onAutoCleanChanged: (value) => _saveAutoCleanSettings(
                           _autoCleanSettings.copyWith(enabled: value),
                         ),
-                        onAutoCleanIntervalSelected: (interval) =>
-                            _saveAutoCleanSettings(
-                          _autoCleanSettings.copyWith(interval: interval),
-                        ),
-                        onAutoCleanThresholdSelected: (maxBytes) =>
-                            _saveAutoCleanSettings(
-                          _autoCleanSettings.copyWith(maxBytes: maxBytes),
-                        ),
-                        onAutoCleanTypesSelected: _updateAutoCleanTypes,
+                        onAutoCleanIntervalPressed: _pickAutoCleanInterval,
+                        onAutoCleanThresholdPressed: _pickAutoCleanThreshold,
+                        onAutoCleanTypesPressed: _pickAutoCleanTypes,
                         onClearPressed: _clearSelected,
                       ),
                     ],
@@ -216,9 +424,6 @@ class _StorageOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-
     return GlassCard(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -227,14 +432,6 @@ class _StorageOverviewCard extends StatelessWidget {
             SizedBox(
               height: 240,
               child: _AnimatedStorageRing(snapshot: snapshot),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              l10n.storageCleanupSubtitle,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
-              ),
             ),
           ],
         ),
@@ -258,9 +455,9 @@ class _StorageCleanupSection extends StatelessWidget {
     required this.onFilesChanged,
     required this.onCacheChanged,
     required this.onAutoCleanChanged,
-    required this.onAutoCleanIntervalSelected,
-    required this.onAutoCleanThresholdSelected,
-    required this.onAutoCleanTypesSelected,
+    required this.onAutoCleanIntervalPressed,
+    required this.onAutoCleanThresholdPressed,
+    required this.onAutoCleanTypesPressed,
     required this.onClearPressed,
   });
 
@@ -277,15 +474,27 @@ class _StorageCleanupSection extends StatelessWidget {
   final ValueChanged<bool> onFilesChanged;
   final ValueChanged<bool> onCacheChanged;
   final ValueChanged<bool> onAutoCleanChanged;
-  final ValueChanged<StorageAutoCleanInterval> onAutoCleanIntervalSelected;
-  final ValueChanged<int> onAutoCleanThresholdSelected;
-  final ValueChanged<String> onAutoCleanTypesSelected;
+  final VoidCallback onAutoCleanIntervalPressed;
+  final VoidCallback onAutoCleanThresholdPressed;
+  final VoidCallback onAutoCleanTypesPressed;
   final VoidCallback onClearPressed;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final materialL10n = MaterialLocalizations.of(context);
+    final lastRun = autoCleanSettings.lastRun;
+    final selectedLabels = [
+      if (clearPhotos) l10n.storagePhotosLabel,
+      if (clearVideos) l10n.storageVideosLabel,
+      if (clearFiles) l10n.filesLabel,
+      if (clearCache) l10n.storageCacheLabel,
+    ];
+    final lastRunLabel = lastRun == null
+        ? l10n.storageAutoCleanLastRunNever
+        : '${materialL10n.formatCompactDate(lastRun)} • '
+            '${materialL10n.formatTimeOfDay(TimeOfDay.fromDateTime(lastRun))}';
 
     return GlassCard(
       child: Padding(
@@ -305,43 +514,6 @@ class _StorageCleanupSection extends StatelessWidget {
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
               ),
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _StorageSummaryPill(
-                  color: theme.colorScheme.primary,
-                  icon: Icons.widgets_rounded,
-                  label: l10n.storageAppDataLabel,
-                  value: StorageService.formatBytes(snapshot.appDataBytes),
-                ),
-                _StorageSummaryPill(
-                  color: const Color(0xFF2F80ED),
-                  icon: Icons.photo_library_rounded,
-                  label: l10n.storagePhotosLabel,
-                  value: StorageService.formatBytes(snapshot.photoBytes),
-                ),
-                _StorageSummaryPill(
-                  color: const Color(0xFFFF7A59),
-                  icon: Icons.videocam_rounded,
-                  label: l10n.storageVideosLabel,
-                  value: StorageService.formatBytes(snapshot.videoBytes),
-                ),
-                _StorageSummaryPill(
-                  color: theme.colorScheme.tertiary,
-                  icon: Icons.folder_zip_rounded,
-                  label: l10n.filesLabel,
-                  value: StorageService.formatBytes(snapshot.fileBytes),
-                ),
-                _StorageSummaryPill(
-                  color: theme.colorScheme.error,
-                  icon: Icons.auto_delete_rounded,
-                  label: l10n.storageCacheLabel,
-                  value: StorageService.formatBytes(snapshot.cacheBytes),
-                ),
-              ],
             ),
             const SizedBox(height: 16),
             _CleanupToggleTile(
@@ -397,7 +569,7 @@ class _StorageCleanupSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.storageTotalLabel,
+                          l10n.storageSelectedLabel,
                           style: theme.textTheme.labelLarge?.copyWith(
                             color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
@@ -415,7 +587,7 @@ class _StorageCleanupSection extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      l10n.storageCleanupSubtitle,
+                      selectedLabels.isEmpty ? '—' : selectedLabels.join(', '),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
                         height: 1.35,
@@ -437,56 +609,28 @@ class _StorageCleanupSection extends StatelessWidget {
                     onChanged: onAutoCleanChanged,
                   ),
                   const Divider(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _StorageMenuButton(
-                          icon: Icons.event_repeat_rounded,
-                          label: l10n.storageAutoCleanPeriodLabel,
-                          value: switch (autoCleanSettings.interval) {
-                            StorageAutoCleanInterval.daily =>
-                              l10n.storageAutoCleanPeriodDaily,
-                            StorageAutoCleanInterval.weekly =>
-                              l10n.storageAutoCleanPeriodWeekly,
-                            StorageAutoCleanInterval.monthly =>
-                              l10n.storageAutoCleanPeriodMonthly,
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: StorageAutoCleanInterval.daily,
-                              child: Text(l10n.storageAutoCleanPeriodDaily),
-                            ),
-                            PopupMenuItem(
-                              value: StorageAutoCleanInterval.weekly,
-                              child: Text(l10n.storageAutoCleanPeriodWeekly),
-                            ),
-                            PopupMenuItem(
-                              value: StorageAutoCleanInterval.monthly,
-                              child: Text(l10n.storageAutoCleanPeriodMonthly),
-                            ),
-                          ],
-                          onSelected: onAutoCleanIntervalSelected,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _StorageMenuButton(
-                          icon: Icons.speed_rounded,
-                          label: l10n.storageAutoCleanThresholdLabel,
-                          value: StorageService.formatBytes(autoCleanSettings.maxBytes),
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(value: 512 * 1024 * 1024, child: Text('512 MB')),
-                            PopupMenuItem(value: 1024 * 1024 * 1024, child: Text('1 GB')),
-                            PopupMenuItem(value: 2 * 1024 * 1024 * 1024, child: Text('2 GB')),
-                            PopupMenuItem(value: 4 * 1024 * 1024 * 1024, child: Text('4 GB')),
-                          ],
-                          onSelected: onAutoCleanThresholdSelected,
-                        ),
-                      ),
-                    ],
+                  _StorageSheetField(
+                    icon: Icons.event_repeat_rounded,
+                    label: l10n.storageAutoCleanPeriodLabel,
+                    value: switch (autoCleanSettings.interval) {
+                      StorageAutoCleanInterval.daily =>
+                        l10n.storageAutoCleanPeriodDaily,
+                      StorageAutoCleanInterval.weekly =>
+                        l10n.storageAutoCleanPeriodWeekly,
+                      StorageAutoCleanInterval.monthly =>
+                        l10n.storageAutoCleanPeriodMonthly,
+                    },
+                    onTap: onAutoCleanIntervalPressed,
                   ),
                   const SizedBox(height: 10),
-                  _StorageMenuButton<String>(
+                  _StorageSheetField(
+                    icon: Icons.speed_rounded,
+                    label: l10n.storageAutoCleanThresholdLabel,
+                    value: StorageService.formatBytes(autoCleanSettings.maxBytes),
+                    onTap: onAutoCleanThresholdPressed,
+                  ),
+                  const SizedBox(height: 10),
+                  _StorageSheetField(
                     icon: Icons.tune_rounded,
                     label: l10n.storageAutoCleanTypesLabel,
                     value: [
@@ -495,22 +639,79 @@ class _StorageCleanupSection extends StatelessWidget {
                       if (autoCleanSettings.clearFiles) l10n.filesLabel,
                       if (autoCleanSettings.clearCache) l10n.storageCacheLabel,
                     ].join(', '),
-                    itemBuilder: (context) => [
-                      PopupMenuItem(value: 'photos', child: Text(l10n.storagePhotosLabel)),
-                      PopupMenuItem(value: 'videos', child: Text(l10n.storageVideosLabel)),
-                      PopupMenuItem(value: 'files', child: Text(l10n.filesLabel)),
-                      PopupMenuItem(value: 'cache', child: Text(l10n.storageCacheLabel)),
-                      const PopupMenuDivider(),
-                      PopupMenuItem(
-                        value: 'all',
-                        child: Text(l10n.storageAutoCleanSelectAll),
+                    onTap: onAutoCleanTypesPressed,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: autoCleanSettings.enabled
+                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.32)
+                    : theme.colorScheme.surface.withValues(alpha: 0.34),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: autoCleanSettings.enabled
+                      ? theme.colorScheme.primary.withValues(alpha: 0.14)
+                      : theme.colorScheme.outline.withValues(alpha: 0.12),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        autoCleanSettings.enabled
+                            ? Icons.auto_mode_rounded
+                            : Icons.pause_circle_outline_rounded,
+                        size: 18,
+                        color: autoCleanSettings.enabled
+                            ? theme.colorScheme.primary
+                            : AppColors.subtitleText(context),
                       ),
-                      PopupMenuItem(
-                        value: 'none',
-                        child: Text(l10n.storageAutoCleanSelectNone),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.storageAutoCleanStatusTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
-                    onSelected: onAutoCleanTypesSelected,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    autoCleanSettings.enabled
+                        ? l10n.storageAutoCleanStatusEnabled
+                        : l10n.storageAutoCleanStatusDisabled,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.subtitleText(context),
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      _StorageSummaryPill(
+                        color: theme.colorScheme.primary,
+                        icon: Icons.history_rounded,
+                        label: l10n.storageAutoCleanLastRunLabel,
+                        value: lastRunLabel,
+                      ),
+                      _StorageSummaryPill(
+                        color: theme.colorScheme.tertiary,
+                        icon: Icons.speed_rounded,
+                        label: l10n.storageAutoCleanThresholdLabel,
+                        value: StorageService.formatBytes(
+                          autoCleanSettings.maxBytes,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -601,68 +802,137 @@ class _StorageSummaryPill extends StatelessWidget {
   }
 }
 
-class _StorageMenuButton<T> extends StatelessWidget {
-  const _StorageMenuButton({
+class _StorageSheetField extends StatelessWidget {
+  const _StorageSheetField({
     required this.icon,
     required this.label,
     required this.value,
-    required this.itemBuilder,
-    required this.onSelected,
+    required this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  final PopupMenuItemBuilder<T> itemBuilder;
-  final PopupMenuItemSelected<T> onSelected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return PopupMenuButton<T>(
-      onSelected: onSelected,
-      itemBuilder: itemBuilder,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface.withValues(alpha: 0.42),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.12),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface.withValues(alpha: 0.42),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.12),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      value.isEmpty ? '—' : value,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.expand_more_rounded),
+            ],
           ),
         ),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: theme.colorScheme.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value.isEmpty ? '—' : value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
+      ),
+    );
+  }
+}
+
+class _SheetHandle extends StatelessWidget {
+  const _SheetHandle({required this.theme});
+
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      width: 40,
+      height: 4,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.outlineVariant,
+        borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+}
+
+class _SheetHeader extends StatelessWidget {
+  const _SheetHeader({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 8),
-            const Icon(Icons.expand_more_rounded),
-          ],
-        ),
+            child: Icon(icon, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(subtitle, style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

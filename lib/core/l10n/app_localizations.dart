@@ -1992,6 +1992,12 @@ abstract class AppLocalizations {
   /// **'Build a distinct look with live preview, curated presets, motion, and density controls.'**
   String get customizationHeroSubtitle;
 
+  /// Notifications screen hero subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Tune alerts, sound behavior, and custom previews so incoming activity feels calm and readable.'**
+  String get notificationsHeroSubtitle;
+
   /// Live preview badge
   ///
   /// In en, this message translates to:
@@ -2199,14 +2205,38 @@ abstract class AppLocalizations {
   /// Room list preview title
   ///
   /// In en, this message translates to:
-  /// **'Room list preview'**
+  /// **'Morning brief'**
   String get previewRoomsTitle;
+
+  /// Room list preview subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'A compact room list with real-sounding snippets and cleaner status markers.'**
+  String get previewRoomsSubtitle;
 
   /// Conversation preview title
   ///
   /// In en, this message translates to:
-  /// **'Chat bubble preview'**
+  /// **'Quick exchange'**
   String get previewConversationTitle;
+
+  /// Conversation preview subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Check how tone, spacing, and bubble shape read in a short live dialog.'**
+  String get previewConversationSubtitle;
+
+  /// Settings preview title
+  ///
+  /// In en, this message translates to:
+  /// **'Controls at hand'**
+  String get previewSettingsTitle;
+
+  /// Settings preview subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Preview how the settings stack feels before applying anything globally.'**
+  String get previewSettingsSubtitle;
 
   /// Live preview label
   ///
@@ -2223,7 +2253,7 @@ abstract class AppLocalizations {
   /// Preview room design sync subtitle
   ///
   /// In en, this message translates to:
-  /// **'Hero card is ready for review.'**
+  /// **'Good morning. I left the fresh mockups in the pinned note.'**
   String get previewRoomDesignSyncSubtitle;
 
   /// Preview room release check title
@@ -2235,7 +2265,7 @@ abstract class AppLocalizations {
   /// Preview room release check subtitle
   ///
   /// In en, this message translates to:
-  /// **'Notes are grouped by security and fixes.'**
+  /// **'Do you know what time the rollout starts? I am lining up the checklist.'**
   String get previewRoomReleaseCheckSubtitle;
 
   /// Preview room alpha ops title
@@ -2247,26 +2277,32 @@ abstract class AppLocalizations {
   /// Preview room alpha ops subtitle
   ///
   /// In en, this message translates to:
-  /// **'Motion is tuned for a calmer startup.'**
+  /// **'Tokyo is already awake. The overnight logs look clean.'**
   String get previewRoomAlphaOpsSubtitle;
 
   /// Preview incoming message
   ///
   /// In en, this message translates to:
-  /// **'The preview should feel like the real app, not a generic demo.'**
+  /// **'Good morning. Did the background finally stop feeling like a demo build?'**
   String get previewIncomingMessage;
 
   /// Preview outgoing message
   ///
   /// In en, this message translates to:
-  /// **'Agreed. Let the color, density, and type speak immediately.'**
+  /// **'Almost. Now it reads like a real chat: calmer spacing, cleaner type, better rhythm.'**
   String get previewOutgoingMessage;
 
   /// Preview typing status
   ///
   /// In en, this message translates to:
-  /// **'Typing indicator, spacing, and corners update here in real time.'**
+  /// **'Typing, corners, and pacing react here immediately.'**
   String get previewTypingStatus;
+
+  /// Settings preview appearance subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a template, adjust motion, and keep the whole shell consistent.'**
+  String get previewSettingsAppearanceSubtitle;
 
   /// Preview settings notifications subtitle
   ///
@@ -3912,6 +3948,12 @@ abstract class AppLocalizations {
   /// **'Total'**
   String get storageTotalLabel;
 
+  /// Selected storage amount label
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get storageSelectedLabel;
+
   /// Photos section in storage
   ///
   /// In en, this message translates to:
@@ -3995,6 +4037,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear data types'**
   String get storageAutoCleanTypesLabel;
+
+  /// Storage auto clean status card title
+  ///
+  /// In en, this message translates to:
+  /// **'Automation status'**
+  String get storageAutoCleanStatusTitle;
+
+  /// Storage auto clean enabled status
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-clean is active and will run when the schedule arrives or the storage threshold is exceeded.'**
+  String get storageAutoCleanStatusEnabled;
+
+  /// Storage auto clean disabled status
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-clean is off. Only manual cleanup will run until you enable it again.'**
+  String get storageAutoCleanStatusDisabled;
+
+  /// Storage auto clean last run label
+  ///
+  /// In en, this message translates to:
+  /// **'Last run'**
+  String get storageAutoCleanLastRunLabel;
+
+  /// Storage auto clean never run label
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get storageAutoCleanLastRunNever;
 
   /// Storage auto clean select all
   ///

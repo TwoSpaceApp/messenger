@@ -1387,6 +1387,10 @@
   "@customizationHeroSubtitle": {
     "description": "Customization hero subtitle"
   },
+  "notificationsHeroSubtitle": "Tune alerts, sound behavior, and custom previews so incoming activity feels calm and readable.",
+  "@notificationsHeroSubtitle": {
+    "description": "Notifications screen hero subtitle"
+  },
   "livePreviewBadge": "Live preview",
   "@livePreviewBadge": {
     "description": "Live preview badge"
@@ -1528,13 +1532,29 @@
   "@previewSettingsLabel": {
     "description": "Preview settings tab label"
   },
-  "previewRoomsTitle": "Room list preview",
+  "previewRoomsTitle": "Morning brief",
   "@previewRoomsTitle": {
     "description": "Room list preview title"
   },
-  "previewConversationTitle": "Chat bubble preview",
+  "previewRoomsSubtitle": "A compact room list with real-sounding snippets and cleaner status markers.",
+  "@previewRoomsSubtitle": {
+    "description": "Room list preview subtitle"
+  },
+  "previewConversationTitle": "Quick exchange",
   "@previewConversationTitle": {
     "description": "Conversation preview title"
+  },
+  "previewConversationSubtitle": "Check how tone, spacing, and bubble shape read in a short live dialog.",
+  "@previewConversationSubtitle": {
+    "description": "Conversation preview subtitle"
+  },
+  "previewSettingsTitle": "Controls at hand",
+  "@previewSettingsTitle": {
+    "description": "Settings preview title"
+  },
+  "previewSettingsSubtitle": "Preview how the settings stack feels before applying anything globally.",
+  "@previewSettingsSubtitle": {
+    "description": "Settings preview subtitle"
   },
   "previewLiveLabel": "Live",
   "@previewLiveLabel": {
@@ -1544,7 +1564,7 @@
   "@previewRoomDesignSync": {
     "description": "Preview room design sync title"
   },
-  "previewRoomDesignSyncSubtitle": "Hero card is ready for review.",
+  "previewRoomDesignSyncSubtitle": "Good morning. I left the fresh mockups in the pinned note.",
   "@previewRoomDesignSyncSubtitle": {
     "description": "Preview room design sync subtitle"
   },
@@ -1552,7 +1572,7 @@
   "@previewRoomReleaseCheck": {
     "description": "Preview room release check title"
   },
-  "previewRoomReleaseCheckSubtitle": "Notes are grouped by security and fixes.",
+  "previewRoomReleaseCheckSubtitle": "Do you know what time the rollout starts? I am lining up the checklist.",
   "@previewRoomReleaseCheckSubtitle": {
     "description": "Preview room release check subtitle"
   },
@@ -1560,21 +1580,25 @@
   "@previewRoomAlphaOps": {
     "description": "Preview room alpha ops title"
   },
-  "previewRoomAlphaOpsSubtitle": "Motion is tuned for a calmer startup.",
+  "previewRoomAlphaOpsSubtitle": "Tokyo is already awake. The overnight logs look clean.",
   "@previewRoomAlphaOpsSubtitle": {
     "description": "Preview room alpha ops subtitle"
   },
-  "previewIncomingMessage": "The preview should feel like the real app, not a generic demo.",
+  "previewIncomingMessage": "Good morning. Did the background finally stop feeling like a demo build?",
   "@previewIncomingMessage": {
     "description": "Preview incoming message"
   },
-  "previewOutgoingMessage": "Agreed. Let the color, density, and type speak immediately.",
+  "previewOutgoingMessage": "Almost. Now it reads like a real chat: calmer spacing, cleaner type, better rhythm.",
   "@previewOutgoingMessage": {
     "description": "Preview outgoing message"
   },
-  "previewTypingStatus": "Typing indicator, spacing, and corners update here in real time.",
+  "previewTypingStatus": "Typing, corners, and pacing react here immediately.",
   "@previewTypingStatus": {
     "description": "Preview typing status"
+  },
+  "previewSettingsAppearanceSubtitle": "Pick a template, adjust motion, and keep the whole shell consistent.",
+  "@previewSettingsAppearanceSubtitle": {
+    "description": "Settings preview appearance subtitle"
   },
   "previewSettingsNotificationsSubtitle": "Preview how secondary settings cards will stack.",
   "@previewSettingsNotificationsSubtitle": {
@@ -2799,6 +2823,10 @@
   "@storageTotalLabel": {
     "description": "Storage chart center label"
   },
+  "storageSelectedLabel": "Selected",
+  "@storageSelectedLabel": {
+    "description": "Selected storage amount label"
+  },
   "storagePhotosLabel": "Photos",
   "@storagePhotosLabel": {
     "description": "Photos section in storage"
@@ -2854,6 +2882,26 @@
   "storageAutoCleanTypesLabel": "Clear data types",
   "@storageAutoCleanTypesLabel": {
     "description": "Storage auto clean types label"
+  },
+  "storageAutoCleanStatusTitle": "Automation status",
+  "@storageAutoCleanStatusTitle": {
+    "description": "Storage auto clean status card title"
+  },
+  "storageAutoCleanStatusEnabled": "Auto-clean is active and will run when the schedule arrives or the storage threshold is exceeded.",
+  "@storageAutoCleanStatusEnabled": {
+    "description": "Storage auto clean enabled status"
+  },
+  "storageAutoCleanStatusDisabled": "Auto-clean is off. Only manual cleanup will run until you enable it again.",
+  "@storageAutoCleanStatusDisabled": {
+    "description": "Storage auto clean disabled status"
+  },
+  "storageAutoCleanLastRunLabel": "Last run",
+  "@storageAutoCleanLastRunLabel": {
+    "description": "Storage auto clean last run label"
+  },
+  "storageAutoCleanLastRunNever": "Never",
+  "@storageAutoCleanLastRunNever": {
+    "description": "Storage auto clean never run label"
   },
   "storageAutoCleanSelectAll": "Select all",
   "@storageAutoCleanSelectAll": {

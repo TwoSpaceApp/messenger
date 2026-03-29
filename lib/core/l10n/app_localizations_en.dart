@@ -1014,6 +1014,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Build a distinct look with live preview, curated presets, motion, and density controls.';
 
   @override
+  String get notificationsHeroSubtitle =>
+      'Tune alerts, sound behavior, and custom previews so incoming activity feels calm and readable.';
+
+  @override
   String get livePreviewBadge => 'Live preview';
 
   @override
@@ -1129,10 +1133,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previewSettingsLabel => 'Settings';
 
   @override
-  String get previewRoomsTitle => 'Room list preview';
+  String get previewRoomsTitle => 'Morning brief';
 
   @override
-  String get previewConversationTitle => 'Chat bubble preview';
+  String get previewRoomsSubtitle =>
+      'A compact room list with real-sounding snippets and cleaner status markers.';
+
+  @override
+  String get previewConversationTitle => 'Quick exchange';
+
+  @override
+  String get previewConversationSubtitle =>
+      'Check how tone, spacing, and bubble shape read in a short live dialog.';
+
+  @override
+  String get previewSettingsTitle => 'Controls at hand';
+
+  @override
+  String get previewSettingsSubtitle =>
+      'Preview how the settings stack feels before applying anything globally.';
 
   @override
   String get previewLiveLabel => 'Live';
@@ -1141,33 +1160,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get previewRoomDesignSync => 'Design Sync';
 
   @override
-  String get previewRoomDesignSyncSubtitle => 'Hero card is ready for review.';
+  String get previewRoomDesignSyncSubtitle =>
+      'Good morning. I left the fresh mockups in the pinned note.';
 
   @override
   String get previewRoomReleaseCheck => 'Release Check';
 
   @override
   String get previewRoomReleaseCheckSubtitle =>
-      'Notes are grouped by security and fixes.';
+      'Do you know what time the rollout starts? I am lining up the checklist.';
 
   @override
   String get previewRoomAlphaOps => 'Alpha Ops';
 
   @override
   String get previewRoomAlphaOpsSubtitle =>
-      'Motion is tuned for a calmer startup.';
+      'Tokyo is already awake. The overnight logs look clean.';
 
   @override
   String get previewIncomingMessage =>
-      'The preview should feel like the real app, not a generic demo.';
+      'Good morning. Did the background finally stop feeling like a demo build?';
 
   @override
   String get previewOutgoingMessage =>
-      'Agreed. Let the color, density, and type speak immediately.';
+      'Almost. Now it reads like a real chat: calmer spacing, cleaner type, better rhythm.';
 
   @override
   String get previewTypingStatus =>
-      'Typing indicator, spacing, and corners update here in real time.';
+      'Typing, corners, and pacing react here immediately.';
+
+  @override
+  String get previewSettingsAppearanceSubtitle =>
+      'Pick a template, adjust motion, and keep the whole shell consistent.';
 
   @override
   String get previewSettingsNotificationsSubtitle =>
@@ -2081,6 +2105,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageTotalLabel => 'Total';
 
   @override
+  String get storageSelectedLabel => 'Selected';
+
+  @override
   String get storagePhotosLabel => 'Photos';
 
   @override
@@ -2122,6 +2149,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storageAutoCleanTypesLabel => 'Clear data types';
+
+  @override
+  String get storageAutoCleanStatusTitle => 'Automation status';
+
+  @override
+  String get storageAutoCleanStatusEnabled =>
+      'Auto-clean is active and will run when the schedule arrives or the storage threshold is exceeded.';
+
+  @override
+  String get storageAutoCleanStatusDisabled =>
+      'Auto-clean is off. Only manual cleanup will run until you enable it again.';
+
+  @override
+  String get storageAutoCleanLastRunLabel => 'Last run';
+
+  @override
+  String get storageAutoCleanLastRunNever => 'Never';
 
   @override
   String get storageAutoCleanSelectAll => 'Select all';
