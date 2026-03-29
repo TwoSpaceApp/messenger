@@ -261,6 +261,84 @@ class _UpdateScreenState extends State<UpdateScreen> {
     return host.isEmpty ? l10n.updateTrustUnknown : host;
   }
 
+  bool _isPreviewBuild() {
+    final version = widget.info.latestVersion.toLowerCase();
+    final notes = widget.info.notes.toLowerCase();
+    final host = Uri.tryParse(widget.info.updateUrl)?.host.toLowerCase() ?? '';
+    return version.contains('dev') ||
+        notes.contains('debug preview') ||
+        host == 'example.com';
+  }
+
+  Widget _buildPreviewBuildCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.science_rounded,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.updatePreviewModeTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.updatePreviewModeSubtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.subtitleText(context),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              SettingsPill(
+                icon: Icons.draw_rounded,
+                label: widget.info.latestVersion,
+              ),
+              SettingsPill(
+                icon: Icons.notes_rounded,
+                label: widget.info.notes.trim().isEmpty
+                    ? l10n.updatePreviewModeEmptyNotes
+                    : widget.info.notes.trim(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRing(BuildContext context) {
     final theme = Theme.of(context);
     final activity = _downloading || _verifying || _installing;
@@ -365,6 +443,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final sections = _parseSections(l10n);
+    final isPreviewBuild = _isPreviewBuild();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -511,63 +590,70 @@ class _UpdateScreenState extends State<UpdateScreen> {
                     ),
                     const SizedBox(height: 24),
                     SettingsSectionHeader(
-                      title: l10n.releaseSummaryTitle,
-                      subtitle: l10n.releaseSummarySubtitle,
+                      title: isPreviewBuild
+                          ? l10n.updatePreviewModeTitle
+                          : l10n.releaseSummaryTitle,
+                      subtitle: isPreviewBuild
+                          ? l10n.updatePreviewModeSubtitle
+                          : l10n.releaseSummarySubtitle,
                     ),
                     const SizedBox(height: 14),
-                    ...sections.map(
-                      (section) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: GlassCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                section.title,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              ...section.items.map(
-                                (item) => Padding(
-                                  padding:
-                                      const EdgeInsets.only(bottom: 10),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(top: 6),
-                                        child: Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: theme.colorScheme.primary,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          item,
-                                          style: theme.textTheme.bodyMedium
-                                              ?.copyWith(
-                                            height: 1.35,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                    if (isPreviewBuild)
+                      _buildPreviewBuildCard(context)
+                    else
+                      ...sections.map(
+                        (section) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: GlassCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  section.title,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 12),
+                                ...section.items.map(
+                                  (item) => Padding(
+                                    padding:
+                                        const EdgeInsets.only(bottom: 10),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 6),
+                                          child: Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: theme.colorScheme.primary,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            item,
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                              height: 1.35,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     const SizedBox(height: 12),
                     SettingsSectionHeader(
                       title: l10n.updateTrustTitle,

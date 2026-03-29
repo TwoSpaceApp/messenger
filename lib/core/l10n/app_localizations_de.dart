@@ -1057,6 +1057,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Tighten spacing, bubble geometry, and navigation timing for a sharper layout.';
 
   @override
+  String get themeModeLabel => 'Light balance';
+
+  @override
   String get dynamicBubblesLabel => 'Dynamic bubbles';
 
   @override
@@ -1210,7 +1213,35 @@ class AppLocalizationsDe extends AppLocalizations {
   String get themeColorLimeCurrent => 'Lime Current';
 
   @override
+  String get themeColorAuroraMint => 'Aurora Mint';
+
+  @override
   String get themeColorSlateMono => 'Slate Mono';
+
+  @override
+  String get backgroundMotionToggleLabel => 'Animated background';
+
+  @override
+  String get backgroundMotionOnSubtitle =>
+      'The atmosphere layer stays alive behind the UI.';
+
+  @override
+  String get backgroundMotionOffSubtitle =>
+      'Use a still backdrop for a quieter, flatter surface.';
+
+  @override
+  String get motionModeCircles => 'Orbit';
+
+  @override
+  String get motionModeCirclesSubtitle =>
+      'Floating light blobs with soft parallax drift.';
+
+  @override
+  String get motionModeWaves => 'Waves';
+
+  @override
+  String get motionModeWavesSubtitle =>
+      'Layered bottom waves that move more like ambient light.';
 
   @override
   String get colorsTab => 'Farben';
@@ -1531,6 +1562,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get updateTrustUnknown => 'Unknown';
+
+  @override
+  String get updatePreviewModeTitle => 'Preview release card';
+
+  @override
+  String get updatePreviewModeSubtitle =>
+      'This entry was opened from the debug catalog, so it shows a styled placeholder instead of real release notes.';
+
+  @override
+  String get updatePreviewModeEmptyNotes =>
+      'Preview notes were not provided for this mock release.';
 
   @override
   String get updateCurrentVersionLabel => 'Current';
@@ -2001,6 +2043,35 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsSoundOptions => 'Sound Settings';
 
   @override
+  String get notificationToneTitle => 'Notification sound';
+
+  @override
+  String get notificationToneSubtitle =>
+      'Choose a local audio file for message and alert previews.';
+
+  @override
+  String get ringtoneTitle => 'Ringtone';
+
+  @override
+  String get ringtoneSubtitle =>
+      'Use a separate local audio file for incoming call previews.';
+
+  @override
+  String get chooseSoundLabel => 'Choose file';
+
+  @override
+  String get playPreviewLabel => 'Play preview';
+
+  @override
+  String get stopPreviewLabel => 'Stop preview';
+
+  @override
+  String get customSoundNotSelected => 'No custom file selected yet.';
+
+  @override
+  String get clearCustomSoundLabel => 'Reset custom file';
+
+  @override
   String get settingsStorageManagement => 'Storage Management';
 
   @override
@@ -2036,6 +2107,37 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get storageCleanupSubtitle =>
       'Prüfe, was sicher entfernt werden kann.';
+
+  @override
+  String get storageAutoCleanTitle => 'Auto-clean';
+
+  @override
+  String get storageAutoCleanSubtitle =>
+      'Run cleanup automatically on a schedule or when storage grows beyond the selected limit.';
+
+  @override
+  String get storageAutoCleanPeriodLabel => 'Cleanup period';
+
+  @override
+  String get storageAutoCleanPeriodDaily => 'Daily';
+
+  @override
+  String get storageAutoCleanPeriodWeekly => 'Weekly';
+
+  @override
+  String get storageAutoCleanPeriodMonthly => 'Monthly';
+
+  @override
+  String get storageAutoCleanThresholdLabel => 'Run instantly above';
+
+  @override
+  String get storageAutoCleanTypesLabel => 'Clear data types';
+
+  @override
+  String get storageAutoCleanSelectAll => 'Select all';
+
+  @override
+  String get storageAutoCleanSelectNone => 'Clear selection';
 
   @override
   String get settingsStorageKeepChat => 'Keep Chat Data';

@@ -1431,6 +1431,10 @@
   "@densitySectionSubtitle": {
     "description": "Density section subtitle"
   },
+  "themeModeLabel": "Light balance",
+  "@themeModeLabel": {
+    "description": "Theme mode selector label on customization screen"
+  },
   "dynamicBubblesLabel": "Dynamic bubbles",
   "@dynamicBubblesLabel": {
     "description": "Dynamic bubbles label"
@@ -1620,9 +1624,41 @@
   "@themeColorLimeCurrent": {
     "description": "Theme color name"
   },
+  "themeColorAuroraMint": "Aurora Mint",
+  "@themeColorAuroraMint": {
+    "description": "Theme color name"
+  },
   "themeColorSlateMono": "Slate Mono",
   "@themeColorSlateMono": {
     "description": "Theme color name"
+  },
+  "backgroundMotionToggleLabel": "Animated background",
+  "@backgroundMotionToggleLabel": {
+    "description": "Background motion master toggle label"
+  },
+  "backgroundMotionOnSubtitle": "The atmosphere layer stays alive behind the UI.",
+  "@backgroundMotionOnSubtitle": {
+    "description": "Background motion enabled subtitle"
+  },
+  "backgroundMotionOffSubtitle": "Use a still backdrop for a quieter, flatter surface.",
+  "@backgroundMotionOffSubtitle": {
+    "description": "Background motion disabled subtitle"
+  },
+  "motionModeCircles": "Orbit",
+  "@motionModeCircles": {
+    "description": "Circle motion mode label"
+  },
+  "motionModeCirclesSubtitle": "Floating light blobs with soft parallax drift.",
+  "@motionModeCirclesSubtitle": {
+    "description": "Circle motion mode subtitle"
+  },
+  "motionModeWaves": "Waves",
+  "@motionModeWaves": {
+    "description": "Wave motion mode label"
+  },
+  "motionModeWavesSubtitle": "Layered bottom waves that move more like ambient light.",
+  "@motionModeWavesSubtitle": {
+    "description": "Wave motion mode subtitle"
   },
   "colorsTab": "Colors",
   "@colorsTab": {
@@ -2041,6 +2077,18 @@
   "updateTrustUnknown": "Unknown",
   "@updateTrustUnknown": {
     "description": "Update trust unknown value"
+  },
+  "updatePreviewModeTitle": "Preview release card",
+  "@updatePreviewModeTitle": {
+    "description": "Debug update preview title"
+  },
+  "updatePreviewModeSubtitle": "This entry was opened from the debug catalog, so it shows a styled placeholder instead of real release notes.",
+  "@updatePreviewModeSubtitle": {
+    "description": "Debug update preview subtitle"
+  },
+  "updatePreviewModeEmptyNotes": "Preview notes were not provided for this mock release.",
+  "@updatePreviewModeEmptyNotes": {
+    "description": "Debug update preview empty notes text"
   },
   "updateCurrentVersionLabel": "Current",
   "@updateCurrentVersionLabel": {
@@ -2691,6 +2739,42 @@
   "@settingsSoundOptions": {
     "description": "Auto added setting"
   },
+  "notificationToneTitle": "Notification sound",
+  "@notificationToneTitle": {
+    "description": "Custom notification sound title"
+  },
+  "notificationToneSubtitle": "Choose a local audio file for message and alert previews.",
+  "@notificationToneSubtitle": {
+    "description": "Custom notification sound subtitle"
+  },
+  "ringtoneTitle": "Ringtone",
+  "@ringtoneTitle": {
+    "description": "Custom ringtone title"
+  },
+  "ringtoneSubtitle": "Use a separate local audio file for incoming call previews.",
+  "@ringtoneSubtitle": {
+    "description": "Custom ringtone subtitle"
+  },
+  "chooseSoundLabel": "Choose file",
+  "@chooseSoundLabel": {
+    "description": "Choose sound file button label"
+  },
+  "playPreviewLabel": "Play preview",
+  "@playPreviewLabel": {
+    "description": "Play preview button label"
+  },
+  "stopPreviewLabel": "Stop preview",
+  "@stopPreviewLabel": {
+    "description": "Stop preview button label"
+  },
+  "customSoundNotSelected": "No custom file selected yet.",
+  "@customSoundNotSelected": {
+    "description": "No custom sound selected label"
+  },
+  "clearCustomSoundLabel": "Reset custom file",
+  "@clearCustomSoundLabel": {
+    "description": "Clear custom sound button label"
+  },
   "settingsStorageManagement": "Storage Management",
   "@settingsStorageManagement": {
     "description": "Auto added setting"
@@ -2738,6 +2822,46 @@
   "storageCleanupSubtitle": "Review what can be safely removed.",
   "@storageCleanupSubtitle": {
     "description": "Storage cleanup subtitle"
+  },
+  "storageAutoCleanTitle": "Auto-clean",
+  "@storageAutoCleanTitle": {
+    "description": "Storage auto clean section title"
+  },
+  "storageAutoCleanSubtitle": "Run cleanup automatically on a schedule or when storage grows beyond the selected limit.",
+  "@storageAutoCleanSubtitle": {
+    "description": "Storage auto clean subtitle"
+  },
+  "storageAutoCleanPeriodLabel": "Cleanup period",
+  "@storageAutoCleanPeriodLabel": {
+    "description": "Storage auto clean period label"
+  },
+  "storageAutoCleanPeriodDaily": "Daily",
+  "@storageAutoCleanPeriodDaily": {
+    "description": "Storage auto clean daily period"
+  },
+  "storageAutoCleanPeriodWeekly": "Weekly",
+  "@storageAutoCleanPeriodWeekly": {
+    "description": "Storage auto clean weekly period"
+  },
+  "storageAutoCleanPeriodMonthly": "Monthly",
+  "@storageAutoCleanPeriodMonthly": {
+    "description": "Storage auto clean monthly period"
+  },
+  "storageAutoCleanThresholdLabel": "Run instantly above",
+  "@storageAutoCleanThresholdLabel": {
+    "description": "Storage auto clean threshold label"
+  },
+  "storageAutoCleanTypesLabel": "Clear data types",
+  "@storageAutoCleanTypesLabel": {
+    "description": "Storage auto clean types label"
+  },
+  "storageAutoCleanSelectAll": "Select all",
+  "@storageAutoCleanSelectAll": {
+    "description": "Storage auto clean select all"
+  },
+  "storageAutoCleanSelectNone": "Clear selection",
+  "@storageAutoCleanSelectNone": {
+    "description": "Storage auto clean select none"
   },
   "settingsStorageKeepChat": "Keep Chat Data",
   "@settingsStorageKeepChat": {

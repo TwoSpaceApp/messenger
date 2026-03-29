@@ -10,6 +10,7 @@ class ThemeOptions {
     {'name': 'Mint Relay', 'value': 0xFF15B097},
     {'name': 'Cyan Air', 'value': 0xFF03A9F4},
     {'name': 'Lime Current', 'value': 0xFF8BC34A},
+    {'name': 'Aurora Mint', 'value': 0xFF00C7B1},
     {'name': 'Slate Mono', 'value': 0xFF5C6B73},
   ];
 

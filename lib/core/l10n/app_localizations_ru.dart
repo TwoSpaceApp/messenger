@@ -1054,6 +1054,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Настройте отступы, форму пузырей и скорость исчезновения навигации.';
 
   @override
+  String get themeModeLabel => 'Баланс света';
+
+  @override
   String get dynamicBubblesLabel => 'Динамические пузыри';
 
   @override
@@ -1084,35 +1087,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get navBarTimeoutLong => 'Спокойно';
 
   @override
-  String get presetQuietGlass => 'Quiet Glass';
+  String get presetQuietGlass => 'Тихое стекло';
 
   @override
   String get presetQuietGlassSubtitle =>
       'Холодная глубина, ровный контраст и спокойное движение.';
 
   @override
-  String get presetNightSignal => 'Night Signal';
+  String get presetNightSignal => 'Ночной сигнал';
 
   @override
   String get presetNightSignalSubtitle =>
       'Более плотная компоновка, яркие акценты и тёмный пульс.';
 
   @override
-  String get presetEditorial => 'Editorial';
+  String get presetEditorial => 'Редакционный';
 
   @override
   String get presetEditorialSubtitle =>
       'Сдержанное движение, спокойный цвет и акцент на чтении.';
 
   @override
-  String get presetSolarFlare => 'Solar Flare';
+  String get presetSolarFlare => 'Солнечная вспышка';
 
   @override
   String get presetSolarFlareSubtitle =>
       'Тёплые акценты, светлее поверхности и более энергичный фон.';
 
   @override
-  String get presetRetroPulse => 'Retro Pulse';
+  String get presetRetroPulse => 'Ретро-пульс';
 
   @override
   String get presetRetroPulseSubtitle =>
@@ -1177,37 +1180,65 @@ class AppLocalizationsRu extends AppLocalizations {
       'Проверьте иерархию, контраст и вес иконок до применения.';
 
   @override
-  String get themeColorAegisViolet => 'Aegis Violet';
+  String get themeColorAegisViolet => 'Фиолетовый Аегис';
 
   @override
-  String get themeColorIndigoSignal => 'Indigo Signal';
+  String get themeColorIndigoSignal => 'Индиго-сигнал';
 
   @override
-  String get themeColorAmethyst => 'Amethyst';
+  String get themeColorAmethyst => 'Аметист';
 
   @override
-  String get themeColorRosePulse => 'Rose Pulse';
+  String get themeColorRosePulse => 'Розовый пульс';
 
   @override
-  String get themeColorSolarAmber => 'Solar Amber';
+  String get themeColorSolarAmber => 'Солнечный янтарь';
 
   @override
-  String get themeColorPaleViolet => 'Pale Violet';
+  String get themeColorPaleViolet => 'Светлая сирень';
 
   @override
-  String get themeColorSignalCoral => 'Signal Coral';
+  String get themeColorSignalCoral => 'Сигнальный коралл';
 
   @override
-  String get themeColorMintRelay => 'Mint Relay';
+  String get themeColorMintRelay => 'Мятный релей';
 
   @override
-  String get themeColorCyanAir => 'Cyan Air';
+  String get themeColorCyanAir => 'Циановый воздух';
 
   @override
-  String get themeColorLimeCurrent => 'Lime Current';
+  String get themeColorLimeCurrent => 'Лаймовый ток';
 
   @override
-  String get themeColorSlateMono => 'Slate Mono';
+  String get themeColorAuroraMint => 'Аврора-минт';
+
+  @override
+  String get themeColorSlateMono => 'Сланцевый моно';
+
+  @override
+  String get backgroundMotionToggleLabel => 'Анимированный фон';
+
+  @override
+  String get backgroundMotionOnSubtitle =>
+      'Световые слои продолжают мягко двигаться за интерфейсом.';
+
+  @override
+  String get backgroundMotionOffSubtitle =>
+      'Фон становится статичным и спокойным без лишнего движения.';
+
+  @override
+  String get motionModeCircles => 'Орбиты';
+
+  @override
+  String get motionModeCirclesSubtitle =>
+      'Плавающие световые сферы с мягким параллаксом.';
+
+  @override
+  String get motionModeWaves => 'Волны';
+
+  @override
+  String get motionModeWavesSubtitle =>
+      'Слоистые нижние волны, похожие на мягкое атмосферное свечение.';
 
   @override
   String get colorsTab => 'Цвета';
@@ -1527,6 +1558,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get updateTrustUnknown => 'Неизвестно';
+
+  @override
+  String get updatePreviewModeTitle => 'Карточка превью релиза';
+
+  @override
+  String get updatePreviewModeSubtitle =>
+      'Этот экран открыт из debug-каталога, поэтому здесь показан оформленный плейсхолдер вместо реальных заметок релиза.';
+
+  @override
+  String get updatePreviewModeEmptyNotes =>
+      'Для этого тестового релиза заметки пока не заданы.';
 
   @override
   String get updateCurrentVersionLabel => 'Текущая';
@@ -1997,6 +2039,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsSoundOptions => 'Настройки звука';
 
   @override
+  String get notificationToneTitle => 'Звук уведомлений';
+
+  @override
+  String get notificationToneSubtitle =>
+      'Выберите локальный аудиофайл для превью сообщений и оповещений.';
+
+  @override
+  String get ringtoneTitle => 'Рингтон';
+
+  @override
+  String get ringtoneSubtitle =>
+      'Используйте отдельный локальный файл для превью входящих звонков.';
+
+  @override
+  String get chooseSoundLabel => 'Выбрать файл';
+
+  @override
+  String get playPreviewLabel => 'Прослушать';
+
+  @override
+  String get stopPreviewLabel => 'Остановить';
+
+  @override
+  String get customSoundNotSelected => 'Пользовательский файл пока не выбран.';
+
+  @override
+  String get clearCustomSoundLabel => 'Сбросить файл';
+
+  @override
   String get settingsStorageManagement => 'Управление хранилищем';
 
   @override
@@ -2031,6 +2102,37 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get storageCleanupSubtitle => 'Посмотри, что можно безопасно удалить.';
+
+  @override
+  String get storageAutoCleanTitle => 'Автоочистка';
+
+  @override
+  String get storageAutoCleanSubtitle =>
+      'Запускайте очистку по расписанию или сразу, когда объём данных превысит выбранный порог.';
+
+  @override
+  String get storageAutoCleanPeriodLabel => 'Период очистки';
+
+  @override
+  String get storageAutoCleanPeriodDaily => 'Каждый день';
+
+  @override
+  String get storageAutoCleanPeriodWeekly => 'Раз в неделю';
+
+  @override
+  String get storageAutoCleanPeriodMonthly => 'Раз в месяц';
+
+  @override
+  String get storageAutoCleanThresholdLabel => 'Сразу при объёме больше';
+
+  @override
+  String get storageAutoCleanTypesLabel => 'Что очищать';
+
+  @override
+  String get storageAutoCleanSelectAll => 'Выбрать всё';
+
+  @override
+  String get storageAutoCleanSelectNone => 'Сбросить выбор';
 
   @override
   String get settingsStorageKeepChat => 'Хранить данные чатов';

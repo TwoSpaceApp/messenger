@@ -2058,6 +2058,12 @@ abstract class AppLocalizations {
   /// **'Tighten spacing, bubble geometry, and navigation timing for a sharper layout.'**
   String get densitySectionSubtitle;
 
+  /// Theme mode selector label on customization screen
+  ///
+  /// In en, this message translates to:
+  /// **'Light balance'**
+  String get themeModeLabel;
+
   /// Dynamic bubbles label
   ///
   /// In en, this message translates to:
@@ -2337,8 +2343,56 @@ abstract class AppLocalizations {
   /// Theme color name
   ///
   /// In en, this message translates to:
+  /// **'Aurora Mint'**
+  String get themeColorAuroraMint;
+
+  /// Theme color name
+  ///
+  /// In en, this message translates to:
   /// **'Slate Mono'**
   String get themeColorSlateMono;
+
+  /// Background motion master toggle label
+  ///
+  /// In en, this message translates to:
+  /// **'Animated background'**
+  String get backgroundMotionToggleLabel;
+
+  /// Background motion enabled subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'The atmosphere layer stays alive behind the UI.'**
+  String get backgroundMotionOnSubtitle;
+
+  /// Background motion disabled subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Use a still backdrop for a quieter, flatter surface.'**
+  String get backgroundMotionOffSubtitle;
+
+  /// Circle motion mode label
+  ///
+  /// In en, this message translates to:
+  /// **'Orbit'**
+  String get motionModeCircles;
+
+  /// Circle motion mode subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Floating light blobs with soft parallax drift.'**
+  String get motionModeCirclesSubtitle;
+
+  /// Wave motion mode label
+  ///
+  /// In en, this message translates to:
+  /// **'Waves'**
+  String get motionModeWaves;
+
+  /// Wave motion mode subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Layered bottom waves that move more like ambient light.'**
+  String get motionModeWavesSubtitle;
 
   /// Colors tab
   ///
@@ -2933,6 +2987,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown'**
   String get updateTrustUnknown;
+
+  /// Debug update preview title
+  ///
+  /// In en, this message translates to:
+  /// **'Preview release card'**
+  String get updatePreviewModeTitle;
+
+  /// Debug update preview subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'This entry was opened from the debug catalog, so it shows a styled placeholder instead of real release notes.'**
+  String get updatePreviewModeSubtitle;
+
+  /// Debug update preview empty notes text
+  ///
+  /// In en, this message translates to:
+  /// **'Preview notes were not provided for this mock release.'**
+  String get updatePreviewModeEmptyNotes;
 
   /// Current version label
   ///
@@ -3750,6 +3822,60 @@ abstract class AppLocalizations {
   /// **'Sound Settings'**
   String get settingsSoundOptions;
 
+  /// Custom notification sound title
+  ///
+  /// In en, this message translates to:
+  /// **'Notification sound'**
+  String get notificationToneTitle;
+
+  /// Custom notification sound subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a local audio file for message and alert previews.'**
+  String get notificationToneSubtitle;
+
+  /// Custom ringtone title
+  ///
+  /// In en, this message translates to:
+  /// **'Ringtone'**
+  String get ringtoneTitle;
+
+  /// Custom ringtone subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Use a separate local audio file for incoming call previews.'**
+  String get ringtoneSubtitle;
+
+  /// Choose sound file button label
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file'**
+  String get chooseSoundLabel;
+
+  /// Play preview button label
+  ///
+  /// In en, this message translates to:
+  /// **'Play preview'**
+  String get playPreviewLabel;
+
+  /// Stop preview button label
+  ///
+  /// In en, this message translates to:
+  /// **'Stop preview'**
+  String get stopPreviewLabel;
+
+  /// No custom sound selected label
+  ///
+  /// In en, this message translates to:
+  /// **'No custom file selected yet.'**
+  String get customSoundNotSelected;
+
+  /// Clear custom sound button label
+  ///
+  /// In en, this message translates to:
+  /// **'Reset custom file'**
+  String get clearCustomSoundLabel;
+
   /// Auto added setting
   ///
   /// In en, this message translates to:
@@ -3821,6 +3947,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review what can be safely removed.'**
   String get storageCleanupSubtitle;
+
+  /// Storage auto clean section title
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-clean'**
+  String get storageAutoCleanTitle;
+
+  /// Storage auto clean subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Run cleanup automatically on a schedule or when storage grows beyond the selected limit.'**
+  String get storageAutoCleanSubtitle;
+
+  /// Storage auto clean period label
+  ///
+  /// In en, this message translates to:
+  /// **'Cleanup period'**
+  String get storageAutoCleanPeriodLabel;
+
+  /// Storage auto clean daily period
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get storageAutoCleanPeriodDaily;
+
+  /// Storage auto clean weekly period
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get storageAutoCleanPeriodWeekly;
+
+  /// Storage auto clean monthly period
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get storageAutoCleanPeriodMonthly;
+
+  /// Storage auto clean threshold label
+  ///
+  /// In en, this message translates to:
+  /// **'Run instantly above'**
+  String get storageAutoCleanThresholdLabel;
+
+  /// Storage auto clean types label
+  ///
+  /// In en, this message translates to:
+  /// **'Clear data types'**
+  String get storageAutoCleanTypesLabel;
+
+  /// Storage auto clean select all
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get storageAutoCleanSelectAll;
+
+  /// Storage auto clean select none
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get storageAutoCleanSelectNone;
 
   /// Auto added setting
   ///

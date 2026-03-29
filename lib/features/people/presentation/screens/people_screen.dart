@@ -19,8 +19,13 @@ import 'package:two_space_app/features/people/presentation/widgets/person_tile.d
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 
 class PeopleScreen extends StatefulWidget {
-  const PeopleScreen({super.key, this.autofocusSearch = false});
+  const PeopleScreen({
+    super.key,
+    this.autofocusSearch = false,
+    this.simplified = false,
+  });
   final bool autofocusSearch;
+  final bool simplified;
 
   @override
   State<PeopleScreen> createState() => _PeopleScreenState();
@@ -90,28 +95,34 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  l10n.peopleSubtitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.subtitleText(context),
+                                if (!widget.simplified) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    l10n.peopleSubtitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.subtitleText(context),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ],
                             ),
                           ),
-                          _HeaderIcon(
-                            icon: Icons.sync_rounded,
-                            tooltip: l10n.peopleQuickSync,
-                            onTap: _controller.loading ? null : _controller.refresh,
-                          ),
-                          _HeaderIcon(
-                            icon: Icons.share_outlined,
-                            tooltip: l10n.peopleQuickInvite,
-                            onTap: _shareInviteText,
-                          ),
+                          if (!widget.simplified) ...[
+                            _HeaderIcon(
+                              icon: Icons.sync_rounded,
+                              tooltip: l10n.peopleQuickSync,
+                              onTap: _controller.loading
+                                  ? null
+                                  : _controller.refresh,
+                            ),
+                            _HeaderIcon(
+                              icon: Icons.share_outlined,
+                              tooltip: l10n.peopleQuickInvite,
+                              onTap: _shareInviteText,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -131,22 +142,24 @@ class _PeopleScreenState extends State<PeopleScreen> {
                       ),
                     ),
                     // ── Filter chips ──
-                    SizedBox(
-                      height: 36,
-                      child: ListView(
-                        padding: pad,
-                        scrollDirection: Axis.horizontal,
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        children: [
-                          _chip(PeopleSegment.all, l10n.peopleSegmentAll),
-                          _chip(PeopleSegment.twospace, l10n.peopleSegmentTwoSpace),
-                          _chip(PeopleSegment.phonebook, l10n.peopleSegmentPhonebook),
-                          _chip(PeopleSegment.recent, l10n.peopleSegmentRecent),
-                        ],
+                    if (!widget.simplified) ...[
+                      SizedBox(
+                        height: 36,
+                        child: ListView(
+                          padding: pad,
+                          scrollDirection: Axis.horizontal,
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          children: [
+                            _chip(PeopleSegment.all, l10n.peopleSegmentAll),
+                            _chip(PeopleSegment.twospace, l10n.peopleSegmentTwoSpace),
+                            _chip(PeopleSegment.phonebook, l10n.peopleSegmentPhonebook),
+                            _chip(PeopleSegment.recent, l10n.peopleSegmentRecent),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
+                      const SizedBox(height: 4),
+                    ],
                     // ── Body ──
                     Expanded(
                       child: RefreshIndicator(

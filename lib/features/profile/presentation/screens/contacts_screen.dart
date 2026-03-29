@@ -6,6 +6,6 @@ class ContactsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const PeopleScreen();
+    return const PeopleScreen(simplified: true);
   }
 }

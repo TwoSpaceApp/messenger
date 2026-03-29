@@ -193,7 +193,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                         child: Row(
                           children: [
                             IconButton(
@@ -203,48 +203,107 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                               ),
                               onPressed: () => Navigator.pop(context),
                             ),
-                            const AppLogo(large: false),
-                            const SizedBox(width: 8),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.newChatTitle,
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: theme.colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  Text(
-                                    l10n.chatsSubtitle,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: AppColors.subtitleText(context),
-                                    ),
-                                  ),
-                                ],
+                              child: Text(
+                                l10n.newChatTitle,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: theme.colorScheme.onSurface,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      GlassCard(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        padding: EdgeInsets.zero,
-                        child: TabBar(
-                          controller: _tabController,
-                          isScrollable: isNarrow,
-                          labelColor: theme.colorScheme.onSurface,
-                          unselectedLabelColor: AppColors.hintText(context),
-                          indicatorColor: theme.colorScheme.primary,
-                          tabs: [
-                            Tab(text: l10n.directChatTab),
-                            Tab(text: l10n.groupChatTab),
-                            Tab(text: l10n.joinByCodeTitle),
-                          ],
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: GlassCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 54,
+                                    height: 54,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(18),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          theme.colorScheme.primary,
+                                          theme.colorScheme.tertiary,
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const AppLogo(large: false),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l10n.newChatTitle,
+                                          style: theme.textTheme.headlineSmall
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          l10n.chatsSubtitle,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                            color: AppColors.subtitleText(context),
+                                            height: 1.35,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface.withValues(alpha: 0.46),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: theme.colorScheme.outline.withValues(alpha: 0.12),
+                                  ),
+                                ),
+                                child: TabBar(
+                                  controller: _tabController,
+                                  isScrollable: isNarrow,
+                                  labelColor: theme.colorScheme.onPrimary,
+                                  unselectedLabelColor: AppColors.hintText(context),
+                                  indicator: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        theme.colorScheme.primary,
+                                        theme.colorScheme.tertiary,
+                                      ],
+                                    ),
+                                  ),
+                                  dividerColor: Colors.transparent,
+                                  padding: const EdgeInsets.all(6),
+                                  tabs: [
+                                    Tab(text: l10n.directChatTab),
+                                    Tab(text: l10n.groupChatTab),
+                                    Tab(text: l10n.joinByCodeTitle),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),

@@ -6,6 +6,6 @@ class SearchContactsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const PeopleScreen(autofocusSearch: true);
+    return const PeopleScreen(autofocusSearch: true, simplified: true);
   }
 }

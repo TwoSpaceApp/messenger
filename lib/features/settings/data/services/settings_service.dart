@@ -5,6 +5,29 @@ import 'package:two_space_app/core/utils/secure_store.dart';
 
 enum MessageTimestampPrecision { minutes, seconds, milliseconds }
 
+enum BackgroundMotionMode { circles, waves }
+
+extension BackgroundMotionModeX on BackgroundMotionMode {
+  String get storageValue {
+    switch (this) {
+      case BackgroundMotionMode.circles:
+        return 'circles';
+      case BackgroundMotionMode.waves:
+        return 'waves';
+    }
+  }
+
+  static BackgroundMotionMode fromStorage(String? value) {
+    switch ((value ?? '').trim().toLowerCase()) {
+      case 'waves':
+        return BackgroundMotionMode.waves;
+      case 'circles':
+      default:
+        return BackgroundMotionMode.circles;
+    }
+  }
+}
+
 extension MessageTimestampPrecisionX on MessageTimestampPrecision {
   String get storageValue {
     switch (this) {
@@ -41,6 +64,7 @@ class ThemeSettings {
   final int navBarHideTimeoutSeconds;
   final bool enableParallax;
   final bool enableFloatingCircles;
+  final BackgroundMotionMode backgroundMotionMode;
   final double floatingCirclesSpeed;
   final double floatingCirclesOpacity;
 
@@ -54,6 +78,7 @@ class ThemeSettings {
     this.navBarHideTimeoutSeconds = 3,
     this.enableParallax = true,
     this.enableFloatingCircles = true,
+    this.backgroundMotionMode = BackgroundMotionMode.circles,
     this.floatingCirclesSpeed = 1.0,
     this.floatingCirclesOpacity = 0.5,
   });
@@ -68,6 +93,7 @@ class ThemeSettings {
     int? navBarHideTimeoutSeconds,
     bool? enableParallax,
     bool? enableFloatingCircles,
+    BackgroundMotionMode? backgroundMotionMode,
     double? floatingCirclesSpeed,
     double? floatingCirclesOpacity,
   }) {
@@ -81,6 +107,7 @@ class ThemeSettings {
       navBarHideTimeoutSeconds: navBarHideTimeoutSeconds ?? this.navBarHideTimeoutSeconds,
       enableParallax: enableParallax ?? this.enableParallax,
       enableFloatingCircles: enableFloatingCircles ?? this.enableFloatingCircles,
+      backgroundMotionMode: backgroundMotionMode ?? this.backgroundMotionMode,
       floatingCirclesSpeed: floatingCirclesSpeed ?? this.floatingCirclesSpeed,
       floatingCirclesOpacity: floatingCirclesOpacity ?? this.floatingCirclesOpacity,
     );
@@ -109,6 +136,7 @@ class SettingsService {
   static const _navBarTimeoutKey = 'ui_nav_hide_timeout';
   static const _parallaxKey = 'ui_enable_parallax';
   static const _floatingCirclesKey = 'ui_floating_circles';
+  static const _backgroundMotionModeKey = 'ui_background_motion_mode';
   static const _floatingCirclesSpeedKey = 'ui_floating_circles_speed';
   static const _floatingCirclesOpacityKey = 'ui_floating_circles_opacity';
   
@@ -126,6 +154,10 @@ class SettingsService {
   static const _notificationsEnabledKey = 'notifications_enabled';
   static const _soundEnabledKey = 'notifications_sound_enabled';
   static const _doNotDisturbKey = 'notifications_do_not_disturb';
+  static const _notificationTonePathKey = 'notifications_tone_path';
+  static const _notificationToneNameKey = 'notifications_tone_name';
+  static const _ringtonePathKey = 'notifications_ringtone_path';
+  static const _ringtoneNameKey = 'notifications_ringtone_name';
   static const _biometricsKey = 'biometric_enabled';
   static final Set<String> _coreKeys = <String>{
     _fontKey,
@@ -137,6 +169,7 @@ class SettingsService {
     _navBarTimeoutKey,
     _parallaxKey,
     _floatingCirclesKey,
+    _backgroundMotionModeKey,
     _floatingCirclesSpeedKey,
     _floatingCirclesOpacityKey,
     _paleVioletKey,
@@ -154,6 +187,10 @@ class SettingsService {
     _notificationsEnabledKey,
     _soundEnabledKey,
     _doNotDisturbKey,
+    _notificationTonePathKey,
+    _notificationToneNameKey,
+    _ringtonePathKey,
+    _ringtoneNameKey,
     _biometricsKey,
   };
   static Future<void>? _loadSettingsFuture;
@@ -181,6 +218,10 @@ class SettingsService {
   static final ValueNotifier<bool> notificationsEnabledNotifier = ValueNotifier(true);
   static final ValueNotifier<bool> soundEnabledNotifier = ValueNotifier(true);
   static final ValueNotifier<bool> doNotDisturbNotifier = ValueNotifier(false);
+  static final ValueNotifier<String?> notificationTonePathNotifier = ValueNotifier(null);
+  static final ValueNotifier<String?> notificationToneNameNotifier = ValueNotifier(null);
+  static final ValueNotifier<String?> ringtonePathNotifier = ValueNotifier(null);
+  static final ValueNotifier<String?> ringtoneNameNotifier = ValueNotifier(null);
 
   static Future<void> loadSettings() async {
     final inFlight = _loadSettingsFuture;
@@ -218,6 +259,8 @@ class SettingsService {
       navBarHideTimeoutSeconds: int.tryParse(valueOf(_navBarTimeoutKey) ?? '') ?? 3,
       enableParallax: valueOf(_parallaxKey) != 'false',
       enableFloatingCircles: valueOf(_floatingCirclesKey) != 'false',
+      backgroundMotionMode:
+          BackgroundMotionModeX.fromStorage(valueOf(_backgroundMotionModeKey)),
       floatingCirclesSpeed: double.tryParse(valueOf(_floatingCirclesSpeedKey) ?? '') ?? 1.0,
       floatingCirclesOpacity: double.tryParse(valueOf(_floatingCirclesOpacityKey) ?? '') ?? 0.5,
     );
@@ -261,6 +304,10 @@ class SettingsService {
           valueOf(_notificationsEnabledKey) != 'false';
       soundEnabledNotifier.value = valueOf(_soundEnabledKey) != 'false';
       doNotDisturbNotifier.value = valueOf(_doNotDisturbKey) == 'true';
+        notificationTonePathNotifier.value = valueOf(_notificationTonePathKey);
+        notificationToneNameNotifier.value = valueOf(_notificationToneNameKey);
+        ringtonePathNotifier.value = valueOf(_ringtonePathKey);
+        ringtoneNameNotifier.value = valueOf(_ringtoneNameKey);
       _deferredSettingsLoaded = true;
     }();
 
@@ -315,6 +362,10 @@ class SettingsService {
     notificationsEnabledNotifier.value = true;
     soundEnabledNotifier.value = true;
     doNotDisturbNotifier.value = false;
+    notificationTonePathNotifier.value = null;
+    notificationToneNameNotifier.value = null;
+    ringtonePathNotifier.value = null;
+    ringtoneNameNotifier.value = null;
   }
 
   static Future<void> setBiometricsEnabled(bool value) async {
@@ -342,6 +393,44 @@ class SettingsService {
   static Future<void> setDoNotDisturb(bool value) async {
     doNotDisturbNotifier.value = value;
     await SecureStore.write(_doNotDisturbKey, value.toString());
+  }
+
+  static Future<void> setNotificationTone({
+    required String? path,
+    required String? displayName,
+  }) async {
+    notificationTonePathNotifier.value = path;
+    notificationToneNameNotifier.value = displayName;
+    if (path == null || path.isEmpty) {
+      await SecureStore.delete(_notificationTonePathKey);
+      await SecureStore.delete(_notificationToneNameKey);
+      return;
+    }
+    await SecureStore.write(_notificationTonePathKey, path);
+    if (displayName != null && displayName.isNotEmpty) {
+      await SecureStore.write(_notificationToneNameKey, displayName);
+    } else {
+      await SecureStore.delete(_notificationToneNameKey);
+    }
+  }
+
+  static Future<void> setRingtone({
+    required String? path,
+    required String? displayName,
+  }) async {
+    ringtonePathNotifier.value = path;
+    ringtoneNameNotifier.value = displayName;
+    if (path == null || path.isEmpty) {
+      await SecureStore.delete(_ringtonePathKey);
+      await SecureStore.delete(_ringtoneNameKey);
+      return;
+    }
+    await SecureStore.write(_ringtonePathKey, path);
+    if (displayName != null && displayName.isNotEmpty) {
+      await SecureStore.write(_ringtoneNameKey, displayName);
+    } else {
+      await SecureStore.delete(_ringtoneNameKey);
+    }
   }
 
   static ThemeMode _themeModeFromString(String? v) {
@@ -382,6 +471,7 @@ class SettingsService {
     bool? enableParallax,
     int? fontWeight,
     bool? enableFloatingCircles,
+    BackgroundMotionMode? backgroundMotionMode,
     double? floatingCirclesSpeed,
     double? floatingCirclesOpacity,
   }) async {
@@ -398,6 +488,7 @@ class SettingsService {
       enableParallax: enableParallax,
       fontWeight: normalizedFontWeight,
       enableFloatingCircles: enableFloatingCircles,
+      backgroundMotionMode: backgroundMotionMode,
       floatingCirclesSpeed: floatingCirclesSpeed,
       floatingCirclesOpacity: floatingCirclesOpacity,
     );
@@ -406,13 +497,14 @@ class SettingsService {
 
     if (fontFamily != null) await SecureStore.write(_fontKey, fontFamily);
     if (primaryColorValue != null) await SecureStore.write(_colorKey, primaryColorValue.toString());
-  if (normalizedFontWeight != null) await SecureStore.write(_weightKey, normalizedFontWeight.toString());
+    if (normalizedFontWeight != null) await SecureStore.write(_weightKey, normalizedFontWeight.toString());
     if (bubbleRounding != null) await SecureStore.write(_bubbleRoundingKey, bubbleRounding.toString());
     if (dynamicBubbles != null) await SecureStore.write(_dynamicBubblesKey, dynamicBubbles.toString());
     if (compactMode != null) await SecureStore.write(_compactModeKey, compactMode.toString());
     if (navBarHideTimeoutSeconds != null) await SecureStore.write(_navBarTimeoutKey, navBarHideTimeoutSeconds.toString());
     if (enableParallax != null) await SecureStore.write(_parallaxKey, enableParallax.toString());
     if (enableFloatingCircles != null) await SecureStore.write(_floatingCirclesKey, enableFloatingCircles.toString());
+    if (backgroundMotionMode != null) await SecureStore.write(_backgroundMotionModeKey, backgroundMotionMode.storageValue);
     if (floatingCirclesSpeed != null) await SecureStore.write(_floatingCirclesSpeedKey, floatingCirclesSpeed.toString());
     if (floatingCirclesOpacity != null) await SecureStore.write(_floatingCirclesOpacityKey, floatingCirclesOpacity.toString());
   }

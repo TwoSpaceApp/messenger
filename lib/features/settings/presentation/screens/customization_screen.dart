@@ -16,9 +16,11 @@ class _ThemePreset {
   const _ThemePreset({
     required this.id,
     required this.color,
+    required this.themeMode,
     required this.fontFamily,
     required this.fontWeight,
     required this.enableFloatingCircles,
+    required this.backgroundMotionMode,
     required this.enableParallax,
     required this.floatingCirclesSpeed,
     required this.floatingCirclesOpacity,
@@ -31,9 +33,11 @@ class _ThemePreset {
 
   final String id;
   final int color;
+  final ThemeMode themeMode;
   final String fontFamily;
   final int fontWeight;
   final bool enableFloatingCircles;
+  final BackgroundMotionMode backgroundMotionMode;
   final bool enableParallax;
   final double floatingCirclesSpeed;
   final double floatingCirclesOpacity;
@@ -56,9 +60,11 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     _ThemePreset(
       id: 'quietGlass',
       color: 0xFF5263FF,
+      themeMode: ThemeMode.system,
       fontFamily: 'Inter',
       fontWeight: 500,
       enableFloatingCircles: true,
+      backgroundMotionMode: BackgroundMotionMode.circles,
       enableParallax: true,
       floatingCirclesSpeed: 0.9,
       floatingCirclesOpacity: 0.38,
@@ -71,9 +77,11 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     _ThemePreset(
       id: 'nightSignal',
       color: 0xFF651FFF,
+      themeMode: ThemeMode.dark,
       fontFamily: 'Oswald',
       fontWeight: 600,
       enableFloatingCircles: true,
+      backgroundMotionMode: BackgroundMotionMode.circles,
       enableParallax: true,
       floatingCirclesSpeed: 1.2,
       floatingCirclesOpacity: 0.62,
@@ -86,9 +94,11 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     _ThemePreset(
       id: 'editorial',
       color: 0xFF5C6B73,
+      themeMode: ThemeMode.light,
       fontFamily: 'OpenSans',
       fontWeight: 400,
       enableFloatingCircles: true,
+      backgroundMotionMode: BackgroundMotionMode.waves,
       enableParallax: false,
       floatingCirclesSpeed: 0.6,
       floatingCirclesOpacity: 0.24,
@@ -101,9 +111,11 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     _ThemePreset(
       id: 'solarFlare',
       color: 0xFFFFB300,
+      themeMode: ThemeMode.light,
       fontFamily: 'Roboto',
       fontWeight: 600,
       enableFloatingCircles: true,
+      backgroundMotionMode: BackgroundMotionMode.waves,
       enableParallax: true,
       floatingCirclesSpeed: 1.35,
       floatingCirclesOpacity: 0.46,
@@ -116,9 +128,11 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     _ThemePreset(
       id: 'retroPulse',
       color: 0xFFE2558F,
+      themeMode: ThemeMode.dark,
       fontFamily: 'PressStart 2P',
       fontWeight: 700,
       enableFloatingCircles: true,
+      backgroundMotionMode: BackgroundMotionMode.circles,
       enableParallax: false,
       floatingCirclesSpeed: 1.1,
       floatingCirclesOpacity: 0.42,
@@ -137,11 +151,13 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
   late String _selectedFont;
   late int _selectedWeight;
   late double _fontSize;
+  late ThemeMode _selectedThemeMode;
   late bool _compactMode;
   late bool _dynamicBubbles;
   late double _bubbleRounding;
   late int _navBarHideTimeoutSeconds;
   late bool _enableFloatingCircles;
+  late BackgroundMotionMode _backgroundMotionMode;
   late double _floatingCirclesSpeed;
   late double _floatingCirclesOpacity;
   late bool _enableParallax;
@@ -156,11 +172,13 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     _selectedFont = settings.fontFamily;
     _selectedWeight = SettingsService.normalizeFontWeight(settings.fontWeight);
     _fontSize = (SettingsService.textScaleNotifier.value * 14).clamp(12, 20);
+    _selectedThemeMode = SettingsService.themeModeNotifier.value;
     _compactMode = settings.compactMode;
     _dynamicBubbles = settings.dynamicBubbles;
     _bubbleRounding = settings.bubbleRounding;
     _navBarHideTimeoutSeconds = settings.navBarHideTimeoutSeconds;
     _enableFloatingCircles = settings.enableFloatingCircles;
+    _backgroundMotionMode = settings.backgroundMotionMode;
     _floatingCirclesSpeed = settings.floatingCirclesSpeed;
     _floatingCirclesOpacity = settings.floatingCirclesOpacity;
     _enableParallax = settings.enableParallax;
@@ -197,14 +215,22 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
       bubbleRounding: _bubbleRounding,
       navBarHideTimeoutSeconds: _navBarHideTimeoutSeconds,
       enableFloatingCircles: _enableFloatingCircles,
+      backgroundMotionMode: _backgroundMotionMode,
       floatingCirclesSpeed: _floatingCirclesSpeed,
       floatingCirclesOpacity: _floatingCirclesOpacity,
       enableParallax: _enableParallax,
     );
 
+    final brightness = switch (_selectedThemeMode) {
+      ThemeMode.light => Brightness.light,
+      ThemeMode.dark => Brightness.dark,
+      ThemeMode.system => Theme.of(context).brightness,
+    };
+
     return AppThemeBuilder.build(
       tempSettings,
       _selectedColor == 0xFFE8D7FF,
+      brightnessOverride: brightness,
     );
   }
 
@@ -212,11 +238,13 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     int? color,
     String? fontFamily,
     int? fontWeight,
+    ThemeMode? themeMode,
     bool? compactMode,
     bool? dynamicBubbles,
     double? bubbleRounding,
     int? navBarHideTimeoutSeconds,
     bool? enableFloatingCircles,
+    BackgroundMotionMode? backgroundMotionMode,
     double? floatingCirclesSpeed,
     double? floatingCirclesOpacity,
     bool? enableParallax,
@@ -231,10 +259,14 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
       bubbleRounding: bubbleRounding,
       navBarHideTimeoutSeconds: navBarHideTimeoutSeconds,
       enableFloatingCircles: enableFloatingCircles,
+      backgroundMotionMode: backgroundMotionMode,
       floatingCirclesSpeed: floatingCirclesSpeed,
       floatingCirclesOpacity: floatingCirclesOpacity,
       enableParallax: enableParallax,
     );
+    if (themeMode != null) {
+      await SettingsService.setThemeMode(themeMode);
+    }
     if (textScale != null) {
       await SettingsService.setTextScale(textScale);
     }
@@ -249,11 +281,13 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
       _selectedFont = preset.fontFamily;
       _selectedWeight = preset.fontWeight;
       _fontSize = (preset.textScale * 14).clamp(12, 20);
+      _selectedThemeMode = preset.themeMode;
       _compactMode = preset.compactMode;
       _dynamicBubbles = preset.dynamicBubbles;
       _bubbleRounding = preset.bubbleRounding;
       _navBarHideTimeoutSeconds = preset.navBarHideTimeoutSeconds;
       _enableFloatingCircles = preset.enableFloatingCircles;
+      _backgroundMotionMode = preset.backgroundMotionMode;
       _floatingCirclesSpeed = preset.floatingCirclesSpeed;
       _floatingCirclesOpacity = preset.floatingCirclesOpacity;
       _enableParallax = preset.enableParallax;
@@ -263,11 +297,13 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
       color: preset.color,
       fontFamily: preset.fontFamily,
       fontWeight: preset.fontWeight,
+      themeMode: preset.themeMode,
       compactMode: preset.compactMode,
       dynamicBubbles: preset.dynamicBubbles,
       bubbleRounding: preset.bubbleRounding,
       navBarHideTimeoutSeconds: preset.navBarHideTimeoutSeconds,
       enableFloatingCircles: preset.enableFloatingCircles,
+      backgroundMotionMode: preset.backgroundMotionMode,
       floatingCirclesSpeed: preset.floatingCirclesSpeed,
       floatingCirclesOpacity: preset.floatingCirclesOpacity,
       enableParallax: preset.enableParallax,
@@ -284,7 +320,13 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
   }
 
   bool _isLightColor(int color) {
-    return const {0xFF03A9F4, 0xFF8BC34A, 0xFFE8D7FF, 0xFFFFB300}
+    return const {
+      0xFF03A9F4,
+      0xFF8BC34A,
+      0xFFE8D7FF,
+      0xFFFFB300,
+      0xFF00C7B1,
+    }
         .contains(color);
   }
 
@@ -312,8 +354,21 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
         return l10n.themeColorLimeCurrent;
       case 0xFF5C6B73:
         return l10n.themeColorSlateMono;
+      case 0xFF00C7B1:
+        return l10n.themeColorAuroraMint;
       default:
         return l10n.colorThemeLabel;
+    }
+  }
+
+  String _themeModeLabel(AppLocalizations l10n, ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return l10n.themeLight;
+      case ThemeMode.dark:
+        return l10n.themeDark;
+      case ThemeMode.system:
+        return l10n.themeSystem;
     }
   }
 
@@ -362,40 +417,139 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     }
   }
 
-  Widget _buildPreviewShell(BuildContext context) {
+  Widget _buildPreviewSelector(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    return Row(
+      children: _PreviewSurface.values.map((surface) {
+        final selected = _previewSurface == surface;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: surface == _PreviewSurface.settings ? 0 : 8,
+            ),
+            child: _SegmentChoiceCard(
+              label: _previewSurfaceLabel(l10n, surface),
+              icon: switch (surface) {
+                _PreviewSurface.rooms => Icons.view_list_rounded,
+                _PreviewSurface.conversation => Icons.chat_bubble_rounded,
+                _PreviewSurface.settings => Icons.tune_rounded,
+              },
+              selected: selected,
+              onTap: () {
+                setState(() => _previewSurface = surface);
+              },
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildThemeModeSelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.themeModeLabel,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: ThemeMode.values.map((mode) {
+              final selected = _selectedThemeMode == mode;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: mode == ThemeMode.system ? 0 : 8,
+                  ),
+                  child: _SegmentChoiceCard(
+                    label: _themeModeLabel(l10n, mode),
+                    icon: switch (mode) {
+                      ThemeMode.light => Icons.light_mode_rounded,
+                      ThemeMode.dark => Icons.dark_mode_rounded,
+                      ThemeMode.system => Icons.auto_mode_rounded,
+                    },
+                    selected: selected,
+                    onTap: () async {
+                      setState(() => _selectedThemeMode = mode);
+                      await _applyThemeUpdate(themeMode: mode);
+                    },
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMotionModeSelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Row(
+      children: [
+        Expanded(
+          child: _SegmentChoiceCard(
+            label: l10n.motionModeCircles,
+            caption: l10n.motionModeCirclesSubtitle,
+            icon: Icons.blur_on_rounded,
+            selected: _backgroundMotionMode == BackgroundMotionMode.circles,
+            onTap: _enableFloatingCircles
+                ? () async {
+                    setState(() {
+                      _backgroundMotionMode = BackgroundMotionMode.circles;
+                    });
+                    await _applyThemeUpdate(
+                      backgroundMotionMode: BackgroundMotionMode.circles,
+                    );
+                  }
+                : null,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _SegmentChoiceCard(
+            label: l10n.motionModeWaves,
+            caption: l10n.motionModeWavesSubtitle,
+            icon: Icons.water_rounded,
+            selected: _backgroundMotionMode == BackgroundMotionMode.waves,
+            onTap: _enableFloatingCircles
+                ? () async {
+                    setState(() {
+                      _backgroundMotionMode = BackgroundMotionMode.waves;
+                    });
+                    await _applyThemeUpdate(
+                      backgroundMotionMode: BackgroundMotionMode.waves,
+                    );
+                  }
+                : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPreviewShell(BuildContext context) {
     final previewTheme = _previewTheme();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SegmentedButton<_PreviewSurface>(
-          segments: _PreviewSurface.values
-              .map(
-                (surface) => ButtonSegment<_PreviewSurface>(
-                  value: surface,
-                  label: Text(_previewSurfaceLabel(l10n, surface)),
-                  icon: Icon(
-                    switch (surface) {
-                      _PreviewSurface.rooms => Icons.view_list_rounded,
-                      _PreviewSurface.conversation => Icons.chat_bubble_rounded,
-                      _PreviewSurface.settings => Icons.tune_rounded,
-                    },
-                  ),
-                ),
-              )
-              .toList(),
-          selected: {_previewSurface},
-          onSelectionChanged: (selection) {
-            setState(() => _previewSurface = selection.first);
-          },
-        ),
+        _buildPreviewSelector(context),
         const SizedBox(height: 18),
         ClipRRect(
           borderRadius: BorderRadius.circular(24),
           child: Theme(
             data: previewTheme,
             child: Container(
+              height: 304,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -413,14 +567,17 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                   _PreviewSurface.rooms => _PreviewRoomsCard(
                       key: const ValueKey('rooms'),
                       bubbleRounding: _bubbleRounding,
+                      compactMode: _compactMode,
                     ),
                   _PreviewSurface.conversation => _PreviewConversationCard(
                       key: const ValueKey('conversation'),
                       bubbleRounding: _bubbleRounding,
                       dynamicBubbles: _dynamicBubbles,
+                      compactMode: _compactMode,
                     ),
-                  _PreviewSurface.settings => const _PreviewSettingsCard(
-                      key: ValueKey('settings'),
+                    _PreviewSurface.settings => _PreviewSettingsCard(
+                      key: const ValueKey('settings'),
+                      compactMode: _compactMode,
                     ),
                 },
               ),
@@ -472,20 +629,6 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                   icon: Icons.auto_awesome_rounded,
                   title: l10n.customizationHeroTitle,
                   subtitle: l10n.customizationHeroSubtitle,
-                  badges: [
-                    SettingsPill(
-                      icon: Icons.visibility_rounded,
-                      label: l10n.livePreviewBadge,
-                    ),
-                    SettingsPill(
-                      icon: Icons.palette_rounded,
-                      label: _colorLabel(l10n, _selectedColor),
-                    ),
-                    SettingsPill(
-                      icon: Icons.text_fields_rounded,
-                      label: _selectedFont,
-                    ),
-                  ],
                   child: _buildPreviewShell(context),
                 ),
                 const SizedBox(height: 28),
@@ -503,13 +646,17 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                     itemBuilder: (context, index) {
                       final preset = _presets[index];
                       final selected = preset.color == _selectedColor &&
+                          preset.themeMode == _selectedThemeMode &&
                           preset.fontFamily == _selectedFont &&
-                          preset.fontWeight == _selectedWeight;
+                          preset.fontWeight == _selectedWeight &&
+                          preset.backgroundMotionMode ==
+                              _backgroundMotionMode;
                       return _PresetCard(
                         title: _presetTitle(l10n, preset.id),
                         subtitle: _presetSubtitle(l10n, preset.id),
                         color: Color(preset.color),
                         fontFamily: preset.fontFamily,
+                        themeModeLabel: _themeModeLabel(l10n, preset.themeMode),
                         selected: selected,
                         onTap: () => _applyPreset(preset),
                       );
@@ -549,6 +696,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                     );
                   },
                 ),
+                const SizedBox(height: 14),
+                _buildThemeModeSelector(context),
                 const SizedBox(height: 28),
                 SettingsSectionHeader(
                   title: l10n.typeSectionTitle,
@@ -625,11 +774,11 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                           await _applyThemeUpdate(enableFloatingCircles: value);
                         },
                         secondary: const Icon(Icons.blur_on_rounded),
-                        title: Text(l10n.enableCircles),
+                        title: Text(l10n.backgroundMotionToggleLabel),
                         subtitle: Text(
                           _enableFloatingCircles
-                              ? l10n.circlesVisible
-                              : l10n.circlesHidden,
+                              ? l10n.backgroundMotionOnSubtitle
+                              : l10n.backgroundMotionOffSubtitle,
                         ),
                         contentPadding: EdgeInsets.zero,
                       ),
@@ -654,6 +803,8 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 14),
+                _buildMotionModeSelector(context),
                 const SizedBox(height: 14),
                 GlassCard(
                   child: Column(
@@ -801,6 +952,7 @@ class _PresetCard extends StatelessWidget {
     required this.subtitle,
     required this.color,
     required this.fontFamily,
+    required this.themeModeLabel,
     required this.selected,
     required this.onTap,
   });
@@ -809,6 +961,7 @@ class _PresetCard extends StatelessWidget {
   final String subtitle;
   final Color color;
   final String fontFamily;
+  final String themeModeLabel;
   final bool selected;
   final VoidCallback onTap;
 
@@ -817,7 +970,7 @@ class _PresetCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SizedBox(
-      width: 190,
+      width: 208,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -856,10 +1009,11 @@ class _PresetCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Container(
-                          height: 58,
+                            height: 62,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(18),
                             gradient: LinearGradient(
@@ -875,25 +1029,39 @@ class _PresetCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Container(
-                        width: 38,
-                        height: 58,
+                        width: 58,
+                        height: 62,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(18),
                           color:
                               theme.colorScheme.surface.withValues(alpha: 0.76),
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          'Aa',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            fontFamily: fontFamily,
-                            fontWeight: FontWeight.w700,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Text(
+                              'AaBbCc',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                fontFamily: fontFamily,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 14),
+                  Text(
+                    themeModeLabel,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Text(
                     title,
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -903,7 +1071,7 @@ class _PresetCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    maxLines: 2,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.subtitleText(context),
@@ -1053,7 +1221,7 @@ class _FontChoiceCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Aa',
+                    'AaBbCc',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontFamily: fontFamily,
                       fontWeight: previewWeight,
@@ -1072,6 +1240,83 @@ class _FontChoiceCard extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SegmentChoiceCard extends StatelessWidget {
+  const _SegmentChoiceCard({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+    this.caption,
+  });
+
+  final String label;
+  final String? caption;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outline.withValues(alpha: 0.16),
+              width: selected ? 2 : 1,
+            ),
+            color: selected
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.72)
+                : theme.colorScheme.surface.withValues(alpha: 0.68),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: selected
+                    ? theme.colorScheme.primary
+                    : AppColors.subtitleText(context),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (caption != null) ...[
+                const SizedBox(height: 3),
+                Text(
+                  caption!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.subtitleText(context),
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -1171,10 +1416,12 @@ class _SliderSettingTile extends StatelessWidget {
 class _PreviewRoomsCard extends StatelessWidget {
   const _PreviewRoomsCard({
     required this.bubbleRounding,
+    required this.compactMode,
     super.key,
   });
 
   final double bubbleRounding;
+  final bool compactMode;
 
   @override
   Widget build(BuildContext context) {
@@ -1201,6 +1448,9 @@ class _PreviewRoomsCard extends StatelessWidget {
         online: true,
       ),
     ];
+
+    final itemPadding = compactMode ? 12.0 : 14.0;
+    final gap = compactMode ? 8.0 : 10.0;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -1236,8 +1486,8 @@ class _PreviewRoomsCard extends StatelessWidget {
           const SizedBox(height: 14),
           ...rooms.map(
             (room) => Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(14),
+              margin: EdgeInsets.only(bottom: gap),
+              padding: EdgeInsets.all(itemPadding),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(
@@ -1327,11 +1577,13 @@ class _PreviewConversationCard extends StatelessWidget {
   const _PreviewConversationCard({
     required this.bubbleRounding,
     required this.dynamicBubbles,
+    required this.compactMode,
     super.key,
   });
 
   final double bubbleRounding;
   final bool dynamicBubbles;
+  final bool compactMode;
 
   BorderRadius _bubbleRadius(bool ownBubble) {
     final radius = Radius.circular(bubbleRounding.clamp(8, 28));
@@ -1358,6 +1610,9 @@ class _PreviewConversationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final messagePadding = compactMode ? 12.0 : 14.0;
+    final messageGap = compactMode ? 8.0 : 10.0;
+    final maxWidth = compactMode ? 228.0 : 250.0;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -1374,8 +1629,8 @@ class _PreviewConversationCard extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 250),
-              padding: const EdgeInsets.all(14),
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              padding: EdgeInsets.all(messagePadding),
               decoration: BoxDecoration(
                 color: AppColors.otherBubble(context),
                 borderRadius: _bubbleRadius(false),
@@ -1386,12 +1641,12 @@ class _PreviewConversationCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: messageGap),
           Align(
             alignment: Alignment.centerRight,
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 250),
-              padding: const EdgeInsets.all(14),
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              padding: EdgeInsets.all(messagePadding),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -1409,12 +1664,12 @@ class _PreviewConversationCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: messageGap),
           Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 220),
-              padding: const EdgeInsets.all(14),
+              constraints: BoxConstraints(maxWidth: maxWidth - 16),
+              padding: EdgeInsets.all(messagePadding),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: _bubbleRadius(false),
@@ -1434,7 +1689,9 @@ class _PreviewConversationCard extends StatelessWidget {
 }
 
 class _PreviewSettingsCard extends StatelessWidget {
-  const _PreviewSettingsCard({super.key});
+  const _PreviewSettingsCard({required this.compactMode, super.key});
+
+  final bool compactMode;
 
   @override
   Widget build(BuildContext context) {
@@ -1443,8 +1700,8 @@ class _PreviewSettingsCard extends StatelessWidget {
 
     Widget tile(IconData icon, String title, String subtitle) {
       return Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
+        margin: EdgeInsets.only(bottom: compactMode ? 8 : 10),
+        padding: EdgeInsets.all(compactMode ? 12 : 14),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface.withValues(alpha: 0.68),
           borderRadius: BorderRadius.circular(18),
