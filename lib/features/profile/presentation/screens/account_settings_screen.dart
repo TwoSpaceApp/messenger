@@ -4,6 +4,7 @@ import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/feature_in_development_dialog.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 
@@ -46,9 +47,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       return;
     }
 
-    // TODO: Implement password change logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.passwordChangeSuccess)),
+    await showFeatureInDevelopmentDialog(
+      context,
+      feature: l10n.changePasswordSection,
     );
 
     _currentPasswordController.clear();
@@ -80,9 +81,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     );
 
     if (confirmed ?? false) {
-      // TODO: Implement account deletion
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.deleteFeatureLater)),
+      await showFeatureInDevelopmentDialog(
+        context,
+        feature: l10n.deleteAccountTitle,
       );
     }
   }

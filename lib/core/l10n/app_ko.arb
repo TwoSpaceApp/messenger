@@ -3244,4 +3244,18 @@
   "@storageSelectedLabel": {
     "description": "Selected storage amount label"
   }
+  ,"roomJoinRuleLabel": "참여할 수 있는 사람",
+  "roomJoinRulePublic": "모두에게 공개",
+  "roomJoinRulePublicDescription": "누구나 이 방을 찾고 참여할 수 있습니다.",
+  "roomJoinRuleInviteOnly": "초대 전용",
+  "roomJoinRuleInviteOnlyDescription": "초대된 사용자만 이 방에 참여할 수 있습니다.",
+  "roomJoinRuleApproval": "승인 필요",
+  "roomJoinRuleApprovalDescription": "사용자는 접근을 요청할 수 있으며 참여 전에 승인이 필요합니다.",
+  "roomHistoryVisibilityLabel": "기록을 볼 수 있는 사람",
+  "roomHistoryVisibilityWorldReadable": "모든 사람",
+  "roomHistoryVisibilityWorldReadableDescription": "누구나 이전 메시지를 볼 수 있습니다.",
+  "roomHistoryVisibilityJoined": "참여한 멤버",
+  "roomHistoryVisibilityJoinedDescription": "이미 참여한 멤버만 이전 메시지를 볼 수 있습니다.",
+  "roomHistoryVisibilityInvited": "초대된 사용자만",
+  "roomHistoryVisibilityInvitedDescription": "초대된 사용자만 이전 메시지를 볼 수 있습니다."
 }

@@ -3241,4 +3241,18 @@
   "@storageSelectedLabel": {
     "description": "Selected storage amount label"
   }
+  ,"roomJoinRuleLabel": "Кто может вступить",
+  "roomJoinRulePublic": "Открыто для всех",
+  "roomJoinRulePublicDescription": "Любой пользователь может найти и вступить в эту комнату.",
+  "roomJoinRuleInviteOnly": "Только по приглашению",
+  "roomJoinRuleInviteOnlyDescription": "Вступить в эту комнату могут только приглашённые пользователи.",
+  "roomJoinRuleApproval": "Требуется одобрение",
+  "roomJoinRuleApprovalDescription": "Пользователи могут запросить доступ, но вступление требует одобрения.",
+  "roomHistoryVisibilityLabel": "Кто видит историю",
+  "roomHistoryVisibilityWorldReadable": "Все",
+  "roomHistoryVisibilityWorldReadableDescription": "Любой пользователь может просматривать предыдущие сообщения.",
+  "roomHistoryVisibilityJoined": "Вступившие участники",
+  "roomHistoryVisibilityJoinedDescription": "Предыдущие сообщения видят только вступившие участники.",
+  "roomHistoryVisibilityInvited": "Только приглашённые",
+  "roomHistoryVisibilityInvitedDescription": "Предыдущие сообщения видят только приглашённые пользователи."
 }

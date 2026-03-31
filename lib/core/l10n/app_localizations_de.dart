@@ -2512,4 +2512,52 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get backgroundOptimizationOpenSettings =>
       'Darstellungseinstellungen öffnen';
+
+  @override
+  String get roomJoinRuleLabel => 'Wer beitreten kann';
+
+  @override
+  String get roomJoinRulePublic => 'Offen für alle';
+
+  @override
+  String get roomJoinRulePublicDescription =>
+      'Jeder kann diesen Raum finden und ihm beitreten.';
+
+  @override
+  String get roomJoinRuleInviteOnly => 'Nur per Einladung';
+
+  @override
+  String get roomJoinRuleInviteOnlyDescription =>
+      'Nur eingeladene Nutzer können diesem Raum beitreten.';
+
+  @override
+  String get roomJoinRuleApproval => 'Genehmigung erforderlich';
+
+  @override
+  String get roomJoinRuleApprovalDescription =>
+      'Nutzer können Zugriff anfragen und müssen vor dem Beitritt genehmigt werden.';
+
+  @override
+  String get roomHistoryVisibilityLabel => 'Wer den Verlauf sehen kann';
+
+  @override
+  String get roomHistoryVisibilityWorldReadable => 'Alle';
+
+  @override
+  String get roomHistoryVisibilityWorldReadableDescription =>
+      'Jeder kann frühere Nachrichten sehen.';
+
+  @override
+  String get roomHistoryVisibilityJoined => 'Beigetretene Mitglieder';
+
+  @override
+  String get roomHistoryVisibilityJoinedDescription =>
+      'Nur beigetretene Mitglieder können frühere Nachrichten sehen.';
+
+  @override
+  String get roomHistoryVisibilityInvited => 'Nur eingeladene Nutzer';
+
+  @override
+  String get roomHistoryVisibilityInvitedDescription =>
+      'Nur eingeladene Nutzer können frühere Nachrichten sehen.';
 }

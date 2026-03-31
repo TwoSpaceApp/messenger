@@ -8,6 +8,7 @@ class Environment {
   static int? _cachedAegisPort;
   static Duration? _cachedAegisConnectTimeout;
   static String? _cachedAegisTransportMaskingKey;
+  static bool? _cachedAegisUseTls;
   static String? _cachedSentryDsn;
   static String? _cachedAppEnv;
   static bool? _cachedEnableDevTools;
@@ -27,6 +28,8 @@ class Environment {
         Env.aegisTransportMaskingKey.trim();
     return value.isEmpty ? null : value;
   }
+  static bool get aegisUseTls =>
+      _cachedAegisUseTls ??= Env.aegisUseTls == 'true';
 
   static String get sentryDsn => _cachedSentryDsn ??= Env.sentryDsn;
   static String get appEnv => _cachedAppEnv ??= Env.appEnv;
@@ -39,6 +42,7 @@ class Environment {
     print('AEGIS_HOST: $aegisHost');
     print('AEGIS_PORT: $aegisPort');
     print('AEGIS_TRANSPORT_MASKING_KEY: ${aegisTransportMaskingKey == null ? '(empty)' : '(set)'}');
+    print('AEGIS_USE_TLS: $aegisUseTls');
     print('APP_ENV: $appEnv');
     print('ENABLE_DEV_TOOLS: $enableDevTools');
   }

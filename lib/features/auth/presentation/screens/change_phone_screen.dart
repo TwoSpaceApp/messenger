@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/feature_in_development_dialog.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class ChangePhoneScreen extends StatefulWidget {
@@ -43,12 +44,13 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
     if (phone.isEmpty) return;
     setState(() => _loading = true);
     final messenger = ScaffoldMessenger.of(context);
-    Navigator.of(context);
     try {
       // Backend phone management is not available yet.
       if (!mounted) return;
-      messenger
-          .showSnackBar(SnackBar(content: Text(l10n.phoneCannotBeChanged)));
+      await showFeatureInDevelopmentDialog(
+        context,
+        feature: l10n.changePhoneTitle,
+      );
       // navState.pop(true);
     } catch (e) {
       if (!mounted) return;

@@ -2504,4 +2504,52 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get backgroundOptimizationOpenSettings => 'Otwórz ustawienia wyglądu';
+
+  @override
+  String get roomJoinRuleLabel => 'Kto może dołączyć';
+
+  @override
+  String get roomJoinRulePublic => 'Otwarte dla wszystkich';
+
+  @override
+  String get roomJoinRulePublicDescription =>
+      'Każdy może znaleźć i dołączyć do tego pokoju.';
+
+  @override
+  String get roomJoinRuleInviteOnly => 'Tylko na zaproszenie';
+
+  @override
+  String get roomJoinRuleInviteOnlyDescription =>
+      'Tylko zaproszeni użytkownicy mogą dołączyć do tego pokoju.';
+
+  @override
+  String get roomJoinRuleApproval => 'Wymagana akceptacja';
+
+  @override
+  String get roomJoinRuleApprovalDescription =>
+      'Użytkownicy mogą poprosić o dostęp i muszą zostać zaakceptowani przed dołączeniem.';
+
+  @override
+  String get roomHistoryVisibilityLabel => 'Kto może zobaczyć historię';
+
+  @override
+  String get roomHistoryVisibilityWorldReadable => 'Wszyscy';
+
+  @override
+  String get roomHistoryVisibilityWorldReadableDescription =>
+      'Każdy może zobaczyć wcześniejsze wiadomości.';
+
+  @override
+  String get roomHistoryVisibilityJoined => 'Dołączeni członkowie';
+
+  @override
+  String get roomHistoryVisibilityJoinedDescription =>
+      'Tylko członkowie, którzy już dołączyli, mogą zobaczyć wcześniejsze wiadomości.';
+
+  @override
+  String get roomHistoryVisibilityInvited => 'Tylko zaproszeni użytkownicy';
+
+  @override
+  String get roomHistoryVisibilityInvitedDescription =>
+      'Tylko zaproszeni użytkownicy mogą zobaczyć wcześniejsze wiadomości.';
 }

@@ -81,6 +81,7 @@ class AegisAuthService {
         Environment.aegisPort,
         timeout: Environment.aegisConnectTimeout,
         transportMaskingKey: Environment.aegisTransportMaskingKey,
+        useTls: Environment.aegisUseTls,
       );
       _ensureKeepAlive();
       _log.info('TCP-соединение установлено');
@@ -419,12 +420,8 @@ class AegisAuthService {
       throw NotAuthenticatedException();
     }
   }
-
-  /// Нижний уровень: сырой клиент для расширенных операций.
   AegisClient get rawClient => _client;
 }
-
-// ─── Вспомогательные исключения ───────────────────────────────────────────────
 
 class NotAuthenticatedException implements Exception {
   @override

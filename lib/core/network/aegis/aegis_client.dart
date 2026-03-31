@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 
+import 'package:two_space_app/core/network/aegis/aegis_app_credentials.dart';
 import 'package:two_space_app/core/network/aegis/event_dispatcher.dart';
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
 import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
@@ -59,6 +60,7 @@ class AegisClient {
     int port, {
     Duration? timeout,
     String? transportMaskingKey,
+    bool useTls = false,
     bool enableMaskingAutoFallback = true,
   }) async {
     final hasMaskingKey =
@@ -70,6 +72,7 @@ class AegisClient {
         port,
         timeout: timeout,
         transportMaskingKey: transportMaskingKey,
+        useTls: useTls,
       );
       await _sendHandshake();
       return;
@@ -81,12 +84,13 @@ class AegisClient {
         port,
         timeout: timeout,
         transportMaskingKey: transportMaskingKey,
+        useTls: useTls,
       );
       await _sendHandshake();
     } catch (firstError) {
       await _transport.disconnect();
       try {
-        await _transport.connect(host, port, timeout: timeout);
+        await _transport.connect(host, port, timeout: timeout, useTls: useTls);
         await _sendHandshake();
       } catch (secondError) {
         throw Exception(
@@ -187,6 +191,7 @@ class AegisClient {
     int toUserId,
     String content, {
     MessageContentType contentType = MessageContentType.text,
+    int? replyToMessageId,
     ParseMode? parseMode,
   }) async {
     _ensureAuthenticated();
@@ -196,6 +201,7 @@ class AegisClient {
         'ToUserId': toUserId,
         'Content': content,
         'ContentType': contentType.value,
+        if (replyToMessageId != null) 'ReplyToMessageId': replyToMessageId,
         if (parseMode != null) 'ParseMode': parseMode.value,
       },
       expectedTypes: const {MessageType.privateChatMessage, MessageType.ack},
@@ -225,6 +231,30 @@ class AegisClient {
       expectedTypes: const {MessageType.channelMessage, MessageType.ack},
     );
     return ChannelMessageResponse.fromJson(_decodeMap(response.payload));
+  }
+
+  Future<GroupMessageSendResponse> sendGroupMessage(
+    int groupId,
+    String content, {
+    MessageContentType contentType = MessageContentType.text,
+    int? replyToMessageId,
+    ParseMode? parseMode,
+    MediaAttachmentPayload? attachment,
+  }) async {
+    _ensureAuthenticated();
+    final response = await _sendRequest(
+      messageType: MessageType.groupMessageSend,
+      payload: {
+        'GroupId': groupId,
+        'Content': content,
+        'ContentType': contentType.value,
+        if (replyToMessageId != null) 'ReplyToMessageId': replyToMessageId,
+        if (parseMode != null) 'ParseMode': parseMode.value,
+        if (attachment != null) 'Attachment': attachment.toJson(),
+      },
+      expectedTypes: const {MessageType.groupMessageResponse, MessageType.ack},
+    );
+    return GroupMessageSendResponse.fromJson(_decodeMap(response.payload));
   }
 
   Future<MediaSendResponse> sendMedia({
@@ -415,6 +445,35 @@ class AegisClient {
   }) async {
     final dataUrl = 'data:$mimeType;base64,${base64Encode(imageBytes)}';
     return editChannel(channelId: channelId, avatarUrl: dataUrl);
+  }
+
+  Future<GroupEditResponse> editGroup({
+    required int groupId,
+    String? name,
+    String? description,
+    String? avatarUrl,
+  }) async {
+    _ensureAuthenticated();
+    final response = await _sendRequest(
+      messageType: MessageType.groupEdit,
+      payload: {
+        'GroupId': groupId,
+        if (name != null) 'Name': name,
+        if (description != null) 'Description': description,
+        if (avatarUrl != null) 'AvatarUrl': avatarUrl,
+      },
+      expectedTypes: const {MessageType.groupEditResponse, MessageType.ack},
+    );
+    return GroupEditResponse.fromJson(_decodeMap(response.payload));
+  }
+
+  Future<GroupEditResponse> uploadGroupAvatar(
+    int groupId,
+    Uint8List imageBytes, {
+    String mimeType = 'image/jpeg',
+  }) async {
+    final dataUrl = 'data:$mimeType;base64,${base64Encode(imageBytes)}';
+    return editGroup(groupId: groupId, avatarUrl: dataUrl);
   }
 
   Future<ProfileGetResponse> getOwnProfile() async {
@@ -630,6 +689,120 @@ class AegisClient {
     return ChannelHistoryResponse.fromJson(_decodeMap(response.payload));
   }
 
+  Future<GroupHistoryResponse> getGroupHistory(
+    int groupId, {
+    int limit = 100,
+    int? beforeMessageId,
+  }) async {
+    _ensureAuthenticated();
+    final response = await _sendRequest(
+      messageType: MessageType.groupHistoryRequest,
+      payload: {
+        'GroupId': groupId,
+        'Limit': limit,
+        if (beforeMessageId != null) 'BeforeMessageId': beforeMessageId,
+      },
+      expectedTypes: const {MessageType.groupHistoryResponse},
+    );
+    return GroupHistoryResponse.fromJson(_decodeMap(response.payload));
+  }
+
+  Future<ChannelMembersResponse> getChannelMembers(int channelId) async {
+    _ensureAuthenticated();
+    final response = await _sendRequest(
+      messageType: MessageType.channelMembersRequest,
+      payload: {'ChannelId': channelId},
+      expectedTypes: const {MessageType.channelMembersResponse},
+    );
+    return ChannelMembersResponse.fromJson(_decodeMap(response.payload));
+  }
+
+  Future<GroupMembersResponse> getGroupMembers(int groupId) async {
+    _ensureAuthenticated();
+    final response = await _sendRequest(
+      messageType: MessageType.groupMembersRequest,
+      payload: {'GroupId': groupId},
+      expectedTypes: const {MessageType.groupMembersResponse},
+    );
+    return GroupMembersResponse.fromJson(_decodeMap(response.payload));
+  }
+
+  Future<MessageReactResponse> reactToMessage({
+    required String scope,
+    required int messageId,
+    required String emoji,
+    bool remove = false,
+  }) async {
+    _ensureAuthenticated();
+    final response = await _sendRequest(
+      messageType: MessageType.messageReact,
+      payload: {
+        'Scope': scope,
+        'MessageId': messageId,
+        'Emoji': emoji,
+        if (remove) 'Remove': true,
+      },
+      expectedTypes: const {MessageType.messageReactResponse},
+    );
+    return MessageReactResponse.fromJson(_decodeMap(response.payload));
+  }
+
+  Future<MessagePinResponse> pinMessage({
+    required String scope,
+    required int messageId,
+    required int targetId,
+    bool unpin = false,
+  }) async {
+    _ensureAuthenticated();
+    final response = await _sendRequest(
+      messageType: MessageType.messagePin,
+      payload: {
+        'Scope': scope,
+        'MessageId': messageId,
+        'TargetId': targetId,
+        if (unpin) 'Unpin': true,
+      },
+      expectedTypes: const {MessageType.messagePinResponse},
+    );
+    return MessagePinResponse.fromJson(_decodeMap(response.payload));
+  }
+
+  Future<RoomSettingsGetResponse> getRoomSettings({
+    required String scope,
+    required int targetId,
+  }) async {
+    _ensureAuthenticated();
+    final response = await _sendRequest(
+      messageType: MessageType.roomSettingsGet,
+      payload: {
+        'Scope': scope,
+        'TargetId': targetId,
+      },
+      expectedTypes: const {MessageType.roomSettingsGetResponse},
+    );
+    return RoomSettingsGetResponse.fromJson(_decodeMap(response.payload));
+  }
+
+  Future<RoomSettingsUpdateResponse> updateRoomSettings({
+    required String scope,
+    required int targetId,
+    int? joinRule,
+    int? historyVisibility,
+  }) async {
+    _ensureAuthenticated();
+    final response = await _sendRequest(
+      messageType: MessageType.roomSettingsUpdate,
+      payload: {
+        'Scope': scope,
+        'TargetId': targetId,
+        if (joinRule != null) 'JoinRule': joinRule,
+        if (historyVisibility != null) 'HistoryVisibility': historyVisibility,
+      },
+      expectedTypes: const {MessageType.roomSettingsUpdateResponse},
+    );
+    return RoomSettingsUpdateResponse.fromJson(_decodeMap(response.payload));
+  }
+
   Future<void> sendDeliveryReceipt(
     List<int> messageIds, {
     DateTime? deliveredAt,
@@ -711,11 +884,16 @@ class AegisClient {
 
     final message = Message.withType(
       MessageType.handshake,
-      msgpack.serialize({
-        'PublicKey': base64Encode(handshake.publicKeySpki),
-        'ClientVersion': ProtocolConstants.versionMajor * 1000 +
-            ProtocolConstants.versionMinor,
-      }),
+      msgpack.serialize(
+        HandshakeRequestPayload(
+          publicKey: base64Encode(handshake.publicKeySpki),
+          clientVersion:
+              ProtocolConstants.versionMajor * 1000 +
+                  ProtocolConstants.versionMinor,
+          appId: AegisAppCredentials.appId,
+          appHash: AegisAppCredentials.appHash,
+        ).toJson(),
+      ),
     )..sequenceId = sequenceId;
     await _transport.sendMessage(message);
 
@@ -732,9 +910,13 @@ class AegisClient {
       );
     }
 
+    final serverPublicKeyBytes = Uint8List.fromList(
+      base64Decode(handshakeResponse.serverPublicKey!),
+    );
+
     final sessionKey = await AegisHandshakeCrypto.deriveSessionKey(
       clientPrivateKey: handshake.privateKey,
-      serverPublicKeySpki: base64Decode(handshakeResponse.serverPublicKey!),
+      serverPublicKeySpki: serverPublicKeyBytes,
     );
     _transport.setSessionKey(sessionKey);
   }
@@ -941,6 +1123,8 @@ class HandshakeResponsePayload {
     required this.success,
     this.serverPublicKey,
     this.message,
+    this.signature,
+    this.signatureAlgorithm,
   });
 
   factory HandshakeResponsePayload.fromJson(Map<String, dynamic> json) {
@@ -948,10 +1132,14 @@ class HandshakeResponsePayload {
       success: json['Success'] as bool? ?? false,
       serverPublicKey: json['ServerPublicKey'] as String?,
       message: json['Message'] as String?,
+      signature: json['Signature'] as String?,
+      signatureAlgorithm: json['SignatureAlgorithm'] as String?,
     );
   }
 
   final bool success;
   final String? serverPublicKey;
   final String? message;
+  final String? signature;
+  final String? signatureAlgorithm;
 }

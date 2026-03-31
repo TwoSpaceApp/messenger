@@ -3244,4 +3244,18 @@
   "@storageSelectedLabel": {
     "description": "Selected storage amount label"
   }
+  ,"roomJoinRuleLabel": "Qui peut rejoindre",
+  "roomJoinRulePublic": "Ouvert à tous",
+  "roomJoinRulePublicDescription": "Tout le monde peut découvrir et rejoindre ce salon.",
+  "roomJoinRuleInviteOnly": "Sur invitation uniquement",
+  "roomJoinRuleInviteOnlyDescription": "Seuls les utilisateurs invités peuvent rejoindre ce salon.",
+  "roomJoinRuleApproval": "Approbation requise",
+  "roomJoinRuleApprovalDescription": "Les utilisateurs peuvent demander l'accès et doivent être approuvés avant de rejoindre.",
+  "roomHistoryVisibilityLabel": "Qui peut voir l'historique",
+  "roomHistoryVisibilityWorldReadable": "Tout le monde",
+  "roomHistoryVisibilityWorldReadableDescription": "Tout le monde peut voir les messages précédents.",
+  "roomHistoryVisibilityJoined": "Membres ayant rejoint",
+  "roomHistoryVisibilityJoinedDescription": "Seuls les membres ayant rejoint peuvent voir les messages précédents.",
+  "roomHistoryVisibilityInvited": "Utilisateurs invités uniquement",
+  "roomHistoryVisibilityInvitedDescription": "Seuls les utilisateurs invités peuvent voir les messages précédents."
 }

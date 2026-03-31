@@ -3244,4 +3244,18 @@
   "@storageSelectedLabel": {
     "description": "Selected storage amount label"
   }
+  ,"roomJoinRuleLabel": "谁可以加入",
+  "roomJoinRulePublic": "向所有人开放",
+  "roomJoinRulePublicDescription": "任何人都可以发现并加入这个房间。",
+  "roomJoinRuleInviteOnly": "仅限邀请",
+  "roomJoinRuleInviteOnlyDescription": "只有受邀用户可以加入这个房间。",
+  "roomJoinRuleApproval": "需要批准",
+  "roomJoinRuleApprovalDescription": "用户可以申请访问，但加入前必须获得批准。",
+  "roomHistoryVisibilityLabel": "谁可以查看历史记录",
+  "roomHistoryVisibilityWorldReadable": "所有人",
+  "roomHistoryVisibilityWorldReadableDescription": "任何人都可以查看之前的消息。",
+  "roomHistoryVisibilityJoined": "已加入成员",
+  "roomHistoryVisibilityJoinedDescription": "只有已加入的成员可以查看之前的消息。",
+  "roomHistoryVisibilityInvited": "仅限受邀用户",
+  "roomHistoryVisibilityInvitedDescription": "只有受邀用户可以查看之前的消息。"
 }

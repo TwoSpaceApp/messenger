@@ -71,7 +71,7 @@ import 'app_localizations_zh.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -94,11 +94,11 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
@@ -111,7 +111,7 @@ abstract class AppLocalizations {
     Locale('ko'),
     Locale('pl'),
     Locale('ru'),
-    Locale('zh')
+    Locale('zh'),
   ];
 
   /// Application title
@@ -4673,6 +4673,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open appearance settings'**
   String get backgroundOptimizationOpenSettings;
+
+  /// No description provided for @roomJoinRuleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can join'**
+  String get roomJoinRuleLabel;
+
+  /// No description provided for @roomJoinRulePublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to everyone'**
+  String get roomJoinRulePublic;
+
+  /// No description provided for @roomJoinRulePublicDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone can discover and join this room.'**
+  String get roomJoinRulePublicDescription;
+
+  /// No description provided for @roomJoinRuleInviteOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite only'**
+  String get roomJoinRuleInviteOnly;
+
+  /// No description provided for @roomJoinRuleInviteOnlyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Only invited users can join this room.'**
+  String get roomJoinRuleInviteOnlyDescription;
+
+  /// No description provided for @roomJoinRuleApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval required'**
+  String get roomJoinRuleApproval;
+
+  /// No description provided for @roomJoinRuleApprovalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Users can request access and must be approved before joining.'**
+  String get roomJoinRuleApprovalDescription;
+
+  /// No description provided for @roomHistoryVisibilityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can see history'**
+  String get roomHistoryVisibilityLabel;
+
+  /// No description provided for @roomHistoryVisibilityWorldReadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get roomHistoryVisibilityWorldReadable;
+
+  /// No description provided for @roomHistoryVisibilityWorldReadableDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone can view earlier messages.'**
+  String get roomHistoryVisibilityWorldReadableDescription;
+
+  /// No description provided for @roomHistoryVisibilityJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined members'**
+  String get roomHistoryVisibilityJoined;
+
+  /// No description provided for @roomHistoryVisibilityJoinedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Only joined members can view earlier messages.'**
+  String get roomHistoryVisibilityJoinedDescription;
+
+  /// No description provided for @roomHistoryVisibilityInvited.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited users only'**
+  String get roomHistoryVisibilityInvited;
+
+  /// No description provided for @roomHistoryVisibilityInvitedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Only invited users can view earlier messages.'**
+  String get roomHistoryVisibilityInvitedDescription;
 }
 
 class _AppLocalizationsDelegate
@@ -4686,17 +4770,17 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) => <String>[
-        'de',
-        'en',
-        'es',
-        'fr',
-        'it',
-        'ja',
-        'ko',
-        'pl',
-        'ru',
-        'zh'
-      ].contains(locale.languageCode);
+    'de',
+    'en',
+    'es',
+    'fr',
+    'it',
+    'ja',
+    'ko',
+    'pl',
+    'ru',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -4728,8 +4812,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

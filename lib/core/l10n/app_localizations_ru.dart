@@ -2505,4 +2505,52 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get backgroundOptimizationOpenSettings =>
       'Открыть настройки оформления';
+
+  @override
+  String get roomJoinRuleLabel => 'Кто может вступить';
+
+  @override
+  String get roomJoinRulePublic => 'Открыто для всех';
+
+  @override
+  String get roomJoinRulePublicDescription =>
+      'Любой пользователь может найти и вступить в эту комнату.';
+
+  @override
+  String get roomJoinRuleInviteOnly => 'Только по приглашению';
+
+  @override
+  String get roomJoinRuleInviteOnlyDescription =>
+      'Вступить в эту комнату могут только приглашённые пользователи.';
+
+  @override
+  String get roomJoinRuleApproval => 'Требуется одобрение';
+
+  @override
+  String get roomJoinRuleApprovalDescription =>
+      'Пользователи могут запросить доступ, но вступление требует одобрения.';
+
+  @override
+  String get roomHistoryVisibilityLabel => 'Кто видит историю';
+
+  @override
+  String get roomHistoryVisibilityWorldReadable => 'Все';
+
+  @override
+  String get roomHistoryVisibilityWorldReadableDescription =>
+      'Любой пользователь может просматривать предыдущие сообщения.';
+
+  @override
+  String get roomHistoryVisibilityJoined => 'Вступившие участники';
+
+  @override
+  String get roomHistoryVisibilityJoinedDescription =>
+      'Предыдущие сообщения видят только вступившие участники.';
+
+  @override
+  String get roomHistoryVisibilityInvited => 'Только приглашённые';
+
+  @override
+  String get roomHistoryVisibilityInvitedDescription =>
+      'Предыдущие сообщения видят только приглашённые пользователи.';
 }

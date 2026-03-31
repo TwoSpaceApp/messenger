@@ -3244,4 +3244,18 @@
   "@storageSelectedLabel": {
     "description": "Selected storage amount label"
   }
+  ,"roomJoinRuleLabel": "参加できる人",
+  "roomJoinRulePublic": "全員に公開",
+  "roomJoinRulePublicDescription": "誰でもこのルームを見つけて参加できます。",
+  "roomJoinRuleInviteOnly": "招待制",
+  "roomJoinRuleInviteOnlyDescription": "招待されたユーザーのみこのルームに参加できます。",
+  "roomJoinRuleApproval": "承認が必要",
+  "roomJoinRuleApprovalDescription": "ユーザーは参加を申請でき、参加前に承認が必要です。",
+  "roomHistoryVisibilityLabel": "履歴を見られる人",
+  "roomHistoryVisibilityWorldReadable": "全員",
+  "roomHistoryVisibilityWorldReadableDescription": "誰でも以前のメッセージを閲覧できます。",
+  "roomHistoryVisibilityJoined": "参加済みメンバー",
+  "roomHistoryVisibilityJoinedDescription": "参加済みメンバーのみ以前のメッセージを閲覧できます。",
+  "roomHistoryVisibilityInvited": "招待ユーザーのみ",
+  "roomHistoryVisibilityInvitedDescription": "招待されたユーザーのみ以前のメッセージを閲覧できます。"
 }

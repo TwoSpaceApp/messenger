@@ -2452,4 +2452,49 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get backgroundOptimizationOpenSettings => '表示設定を開く';
+
+  @override
+  String get roomJoinRuleLabel => '参加できる人';
+
+  @override
+  String get roomJoinRulePublic => '全員に公開';
+
+  @override
+  String get roomJoinRulePublicDescription => '誰でもこのルームを見つけて参加できます。';
+
+  @override
+  String get roomJoinRuleInviteOnly => '招待制';
+
+  @override
+  String get roomJoinRuleInviteOnlyDescription => '招待されたユーザーのみこのルームに参加できます。';
+
+  @override
+  String get roomJoinRuleApproval => '承認が必要';
+
+  @override
+  String get roomJoinRuleApprovalDescription => 'ユーザーは参加を申請でき、参加前に承認が必要です。';
+
+  @override
+  String get roomHistoryVisibilityLabel => '履歴を見られる人';
+
+  @override
+  String get roomHistoryVisibilityWorldReadable => '全員';
+
+  @override
+  String get roomHistoryVisibilityWorldReadableDescription =>
+      '誰でも以前のメッセージを閲覧できます。';
+
+  @override
+  String get roomHistoryVisibilityJoined => '参加済みメンバー';
+
+  @override
+  String get roomHistoryVisibilityJoinedDescription =>
+      '参加済みメンバーのみ以前のメッセージを閲覧できます。';
+
+  @override
+  String get roomHistoryVisibilityInvited => '招待ユーザーのみ';
+
+  @override
+  String get roomHistoryVisibilityInvitedDescription =>
+      '招待されたユーザーのみ以前のメッセージを閲覧できます。';
 }

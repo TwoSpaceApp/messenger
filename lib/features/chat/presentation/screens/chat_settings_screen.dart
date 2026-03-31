@@ -12,6 +12,7 @@ import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
+import 'package:two_space_app/features/chat/presentation/widgets/feature_in_development_dialog.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
@@ -53,7 +54,8 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   final AegisChatService _svc = AegisChatService();
 
   bool _saving = false;
-  bool _isPublic = false;
+  int _joinRule = 1;
+  int _historyVisibility = 1;
   int _selectedIndex = 0;
   List<Map<String, dynamic>> _members = <Map<String, dynamic>>[];
   bool _loadingMembers = false;
@@ -65,9 +67,9 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
 
   bool get _isGroupRoom => widget.roomType == 'group';
 
-  bool get _isPublicRoom => widget.roomType == 'public' || _isPublic;
+  bool get _isPublicRoom => widget.roomType == 'public' || _joinRule == 0;
 
-  bool get _supportsLinks => !_isDirectChat && !_isGroupRoom && _isPublicRoom;
+  bool get _supportsLinks => !_isDirectChat && !_isGroupRoom;
 
   String? get _directPeerUserId {
     if (!_isDirectChat || !widget.roomId.startsWith('dm:')) return null;
@@ -96,8 +98,9 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   void initState() {
     super.initState();
     _nameController.text = widget.initialName;
-    _isPublic = widget.roomType == 'public';
+    _joinRule = widget.roomType == 'public' ? 0 : 1;
     _overviewFuture = _loadOverview();
+    _loadRoomSettings();
   }
 
   @override
@@ -169,6 +172,50 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     return error.toString().replaceFirst(RegExp('^Exception: '), '');
   }
 
+  String _joinRuleTitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomJoinRulePublic;
+      case 2:
+        return l10n.roomJoinRuleApproval;
+      default:
+        return l10n.roomJoinRuleInviteOnly;
+    }
+  }
+
+  String _joinRuleSubtitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomJoinRulePublicDescription;
+      case 2:
+        return l10n.roomJoinRuleApprovalDescription;
+      default:
+        return l10n.roomJoinRuleInviteOnlyDescription;
+    }
+  }
+
+  String _historyVisibilityTitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomHistoryVisibilityWorldReadable;
+      case 2:
+        return l10n.roomHistoryVisibilityInvited;
+      default:
+        return l10n.roomHistoryVisibilityJoined;
+    }
+  }
+
+  String _historyVisibilitySubtitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomHistoryVisibilityWorldReadableDescription;
+      case 2:
+        return l10n.roomHistoryVisibilityInvitedDescription;
+      default:
+        return l10n.roomHistoryVisibilityJoinedDescription;
+    }
+  }
+
   Future<Map<String, dynamic>> _loadOverview() async {
     final roomMeta = await _svc.getRoomNameAndAvatar(widget.roomId);
 
@@ -198,6 +245,21 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       'memberCount': members.length,
       'visibility': _isPublicRoom ? 'public' : 'private',
     };
+  }
+
+  Future<void> _loadRoomSettings() async {
+    if (_isDirectChat) {
+      return;
+    }
+    try {
+      final settings = await _svc.getRoomSettingsState(widget.roomId);
+      if (!mounted) return;
+      setState(() {
+        _joinRule = (settings['joinRule'] as int?) ?? _joinRule;
+        _historyVisibility =
+            (settings['historyVisibility'] as int?) ?? _historyVisibility;
+      });
+    } catch (_) {}
   }
 
   Future<List<AegisRoomMessage>> _loadRoomMessages() {
@@ -263,7 +325,8 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       if (name.isNotEmpty) {
         await _svc.setRoomName(widget.roomId, name);
       }
-      await _svc.setJoinRule(widget.roomId, _isPublic ? 'public' : 'invite');
+      await _svc.setJoinRuleValue(widget.roomId, _joinRule);
+      await _svc.setHistoryVisibility(widget.roomId, _historyVisibility);
       _overviewFuture = _loadOverview();
       if (!mounted) return;
       setState(() {});
@@ -364,6 +427,12 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.leftRoom)));
       Navigator.pop(context);
+      } on AegisFeatureInDevelopmentException {
+        if (!mounted) return;
+        await showFeatureInDevelopmentDialog(
+          context,
+          feature: l10n.leaveAction,
+        );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -672,14 +741,54 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                   label: Text(l10n.uploadAvatarButton),
                 ),
                 const SizedBox(height: 12),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.publicRoomOption),
-                  subtitle: Text(
-                    _isPublic ? l10n.publicRoomSubtitle : l10n.privateGroupSubtitle,
+                DropdownButtonFormField<int>(
+                  initialValue: _joinRule,
+                  decoration: InputDecoration(labelText: l10n.roomJoinRuleLabel),
+                  items: [0, 1, 2]
+                      .map(
+                        (value) => DropdownMenuItem<int>(
+                          value: value,
+                          child: Text(_joinRuleTitle(l10n, value)),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: _saving
+                      ? null
+                      : (value) {
+                          if (value == null) return;
+                          setState(() => _joinRule = value);
+                        },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _joinRuleSubtitle(l10n, _joinRule),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  initialValue: _historyVisibility,
+                  decoration: InputDecoration(
+                    labelText: l10n.roomHistoryVisibilityLabel,
                   ),
-                  value: _isPublic,
-                  onChanged: (value) => setState(() => _isPublic = value),
+                  items: [0, 1, 2]
+                      .map(
+                        (value) => DropdownMenuItem<int>(
+                          value: value,
+                          child: Text(_historyVisibilityTitle(l10n, value)),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: _saving
+                      ? null
+                      : (value) {
+                          if (value == null) return;
+                          setState(() => _historyVisibility = value);
+                        },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _historyVisibilitySubtitle(l10n, _historyVisibility),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
                 FilledButton(

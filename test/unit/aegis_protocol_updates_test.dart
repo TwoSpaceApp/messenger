@@ -39,6 +39,46 @@ void main() {
       expect(parsed.text, 'voice note');
       expect(parsed.decodeBytes(), utf8.encode('abc'));
     });
+
+    test('group edit payload preserves avatar updates', () {
+      final request = GroupEditRequest(
+        groupId: 42,
+        avatarUrl: 'data:image/png;base64,AAAA',
+        description: 'Updated avatar',
+      );
+
+      expect(request.toJson(), {
+        'GroupId': 42,
+        'Description': 'Updated avatar',
+        'AvatarUrl': 'data:image/png;base64,AAAA',
+      });
+
+      final response = GroupEditResponse.fromJson({
+        'Success': true,
+        'Message': 'Group updated',
+      });
+
+      expect(response.success, isTrue);
+      expect(response.message, 'Group updated');
+    });
+
+    test('handshake payload includes official app credentials', () {
+      final request = HandshakeRequestPayload(
+        publicKey: 'base64-public-key',
+        clientVersion: 1000,
+        appId: 2041001,
+        appHash:
+            '8f4c1db0e7c2456d9ab31f4e6d8c9a0137f2c4b56d8e1a903bc7d52e6f194a3c',
+      );
+
+      expect(request.toJson(), {
+        'PublicKey': 'base64-public-key',
+        'ClientVersion': 1000,
+        'AppId': 2041001,
+        'AppHash':
+            '8f4c1db0e7c2456d9ab31f4e6d8c9a0137f2c4b56d8e1a903bc7d52e6f194a3c',
+      });
+    });
   });
 
   group('AegisEventDispatcher', () {
@@ -59,6 +99,7 @@ void main() {
             'ContentType': 0,
             'CreatedAt': DateTime.utc(2026, 3, 12).toIso8601String(),
             'FromUsername': 'alice',
+            'ReplyToMessageId': 10,
             'DeliveredTo': [9],
             'ReadBy': [9],
           }),
@@ -71,6 +112,7 @@ void main() {
       expect(event.toUserId, 9);
       expect(event.content, 'hello');
       expect(event.fromUsername, 'alice');
+      expect(event.replyToMessageId, 10);
       expect(event.deliveredTo, [9]);
       expect(event.readBy, [9]);
 

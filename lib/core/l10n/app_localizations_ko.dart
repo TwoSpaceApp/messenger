@@ -2452,4 +2452,50 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get backgroundOptimizationOpenSettings => '화면 설정 열기';
+
+  @override
+  String get roomJoinRuleLabel => '참여할 수 있는 사람';
+
+  @override
+  String get roomJoinRulePublic => '모두에게 공개';
+
+  @override
+  String get roomJoinRulePublicDescription => '누구나 이 방을 찾고 참여할 수 있습니다.';
+
+  @override
+  String get roomJoinRuleInviteOnly => '초대 전용';
+
+  @override
+  String get roomJoinRuleInviteOnlyDescription => '초대된 사용자만 이 방에 참여할 수 있습니다.';
+
+  @override
+  String get roomJoinRuleApproval => '승인 필요';
+
+  @override
+  String get roomJoinRuleApprovalDescription =>
+      '사용자는 접근을 요청할 수 있으며 참여 전에 승인이 필요합니다.';
+
+  @override
+  String get roomHistoryVisibilityLabel => '기록을 볼 수 있는 사람';
+
+  @override
+  String get roomHistoryVisibilityWorldReadable => '모든 사람';
+
+  @override
+  String get roomHistoryVisibilityWorldReadableDescription =>
+      '누구나 이전 메시지를 볼 수 있습니다.';
+
+  @override
+  String get roomHistoryVisibilityJoined => '참여한 멤버';
+
+  @override
+  String get roomHistoryVisibilityJoinedDescription =>
+      '이미 참여한 멤버만 이전 메시지를 볼 수 있습니다.';
+
+  @override
+  String get roomHistoryVisibilityInvited => '초대된 사용자만';
+
+  @override
+  String get roomHistoryVisibilityInvitedDescription =>
+      '초대된 사용자만 이전 메시지를 볼 수 있습니다.';
 }

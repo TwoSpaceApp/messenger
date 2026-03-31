@@ -3243,5 +3243,19 @@
   "backgroundOptimizationOpenSettings": "Open appearance settings",
   "@backgroundOptimizationOpenSettings": {
     "description": "Action label that opens appearance settings after background effects were automatically disabled"
-  }
+  },
+  "roomJoinRuleLabel": "Who can join",
+  "roomJoinRulePublic": "Open to everyone",
+  "roomJoinRulePublicDescription": "Anyone can discover and join this room.",
+  "roomJoinRuleInviteOnly": "Invite only",
+  "roomJoinRuleInviteOnlyDescription": "Only invited users can join this room.",
+  "roomJoinRuleApproval": "Approval required",
+  "roomJoinRuleApprovalDescription": "Users can request access and must be approved before joining.",
+  "roomHistoryVisibilityLabel": "Who can see history",
+  "roomHistoryVisibilityWorldReadable": "Everyone",
+  "roomHistoryVisibilityWorldReadableDescription": "Anyone can view earlier messages.",
+  "roomHistoryVisibilityJoined": "Joined members",
+  "roomHistoryVisibilityJoinedDescription": "Only joined members can view earlier messages.",
+  "roomHistoryVisibilityInvited": "Invited users only",
+  "roomHistoryVisibilityInvitedDescription": "Only invited users can view earlier messages."
 }

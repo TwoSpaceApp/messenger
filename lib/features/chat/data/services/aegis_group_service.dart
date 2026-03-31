@@ -9,22 +9,38 @@ class AegisGroupService {
     required GroupVisibility visibility,
     required bool showMessageHistory,
     String? description,
+    List<int>? avatarBytes,
+    String? avatarFileName,
   }) {
     return _chat.createGroupRoom(
       name: name,
       description: description,
       visibility: visibility,
       showMessageHistory: showMessageHistory,
+      avatarBytes: avatarBytes,
+      avatarFileName: avatarFileName,
     );
   }
 
   Future<GroupRoom?> getGroupRoom(String roomId) async {
     await _chat.ensureReady();
-    return _chat.getGroupRoom(roomId);
+    return _chat.loadGroupRoom(roomId);
   }
 
   Future<void> setShowMessageHistory(String roomId, bool value) {
     return _chat.setShowMessageHistory(roomId, value);
+  }
+
+  Future<Map<String, dynamic>> getRoomSettingsState(String roomId) {
+    return _chat.getRoomSettingsState(roomId);
+  }
+
+  Future<void> setJoinRuleValue(String roomId, int joinRule) {
+    return _chat.setJoinRuleValue(roomId, joinRule);
+  }
+
+  Future<void> setHistoryVisibility(String roomId, int historyVisibility) {
+    return _chat.setHistoryVisibility(roomId, historyVisibility);
   }
 
   Future<void> setUserRole(String roomId, String userId, GroupRole role) {

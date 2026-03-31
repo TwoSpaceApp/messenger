@@ -104,6 +104,35 @@ class ParsedMediaEnvelope {
   final List<ParsedMediaAttachment> attachments;
 }
 
+class HandshakeRequestPayload {
+  HandshakeRequestPayload({
+    required this.publicKey,
+    this.clientVersion,
+    this.appId,
+    this.appHash,
+  });
+
+  factory HandshakeRequestPayload.fromJson(Map<String, dynamic> json) =>
+      HandshakeRequestPayload(
+        publicKey: (json['PublicKey'] ?? json['publicKey']) as String,
+        clientVersion: json['ClientVersion'] as int?,
+        appId: json['AppId'] as int?,
+        appHash: json['AppHash'] as String?,
+      );
+
+  final String publicKey;
+  final int? clientVersion;
+  final int? appId;
+  final String? appHash;
+
+  Map<String, dynamic> toJson() => {
+        'PublicKey': publicKey,
+        if (clientVersion != null) 'ClientVersion': clientVersion,
+        if (appId != null) 'AppId': appId,
+        if (appHash != null && appHash!.isNotEmpty) 'AppHash': appHash,
+      };
+}
+
 ParsedRichText parseRichTextContent(String content) {
   try {
     final decoded = jsonDecode(content);
@@ -960,6 +989,390 @@ class ChannelHistoryResponse {
   final String? message;
 }
 
+class GroupHistoryRequest {
+  GroupHistoryRequest({
+    required this.groupId,
+    this.limit = 50,
+    this.beforeMessageId,
+  });
+
+  final int groupId;
+  final int limit;
+  final int? beforeMessageId;
+
+  Map<String, dynamic> toJson() => {
+        'GroupId': groupId,
+        'Limit': limit,
+        if (beforeMessageId != null) 'BeforeMessageId': beforeMessageId,
+      };
+
+  List<int> toBytes() => utf8.encode(jsonEncode(toJson()));
+}
+
+class GroupHistoryItem {
+  GroupHistoryItem({
+    required this.id,
+    required this.groupId,
+    required this.fromUserId,
+    required this.content,
+    required this.contentType,
+    required this.createdAt,
+    this.deliveredTo = const <int>[],
+    this.readBy = const <int>[],
+    this.isPinned = false,
+    this.fromUsername,
+    this.groupName,
+  });
+
+  factory GroupHistoryItem.fromJson(Map<String, dynamic> json) =>
+      GroupHistoryItem(
+        id: json['Id'] as int,
+        groupId: json['GroupId'] as int,
+        fromUserId: json['FromUserId'] as int,
+        content: json['Content'] as String,
+        contentType:
+            MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
+        createdAt: DateTime.parse(json['CreatedAt'] as String),
+        deliveredTo: (json['DeliveredTo'] as List<dynamic>? ?? const <dynamic>[])
+            .map((item) => (item as num).toInt())
+            .toList(growable: false),
+        readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
+            .map((item) => (item as num).toInt())
+            .toList(growable: false),
+        isPinned: json['IsPinned'] as bool? ?? false,
+        fromUsername: json['FromUsername'] as String?,
+        groupName: json['GroupName'] as String?,
+      );
+
+  final int id;
+  final int groupId;
+  final int fromUserId;
+  final String content;
+  final MessageContentType contentType;
+  final DateTime createdAt;
+  final List<int> deliveredTo;
+  final List<int> readBy;
+  final bool isPinned;
+  final String? fromUsername;
+  final String? groupName;
+}
+
+class GroupHistoryResponse {
+  GroupHistoryResponse({
+    required this.success,
+    required this.groupId,
+    required this.messages,
+    this.groupName,
+    this.message,
+  });
+
+  factory GroupHistoryResponse.fromJson(Map<String, dynamic> json) =>
+      GroupHistoryResponse(
+        success: json['Success'] as bool,
+        groupId: json['GroupId'] as int? ?? 0,
+        groupName: json['GroupName'] as String?,
+        messages: (json['Messages'] as List<dynamic>? ?? const <dynamic>[])
+            .map(
+              (item) => GroupHistoryItem.fromJson(
+                item as Map<String, dynamic>,
+              ),
+            )
+            .toList(),
+        message: json['Message'] as String?,
+      );
+
+  factory GroupHistoryResponse.fromBytes(List<int> bytes) {
+    final json = _decodePayloadMap(bytes);
+    return GroupHistoryResponse.fromJson(json);
+  }
+
+  final bool success;
+  final int groupId;
+  final String? groupName;
+  final List<GroupHistoryItem> messages;
+  final String? message;
+}
+
+class GroupMessageEvent {
+  GroupMessageEvent({
+    required this.id,
+    required this.groupId,
+    required this.fromUserId,
+    required this.content,
+    required this.contentType,
+    required this.createdAt,
+    this.fromUsername,
+    this.groupName,
+  });
+
+  factory GroupMessageEvent.fromJson(Map<String, dynamic> json) =>
+      GroupMessageEvent(
+        id: json['Id'] as int,
+        groupId: json['GroupId'] as int,
+        fromUserId: json['FromUserId'] as int,
+        content: json['Content'] as String,
+        contentType:
+            MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
+        createdAt: DateTime.parse(json['CreatedAt'] as String),
+        fromUsername: json['FromUsername'] as String?,
+        groupName: json['GroupName'] as String?,
+      );
+
+  factory GroupMessageEvent.fromBytes(List<int> bytes) {
+    final json = _decodePayloadMap(bytes);
+    return GroupMessageEvent.fromJson(json);
+  }
+
+  final int id;
+  final int groupId;
+  final int fromUserId;
+  final String content;
+  final MessageContentType contentType;
+  final DateTime createdAt;
+  final String? fromUsername;
+  final String? groupName;
+}
+
+class MemberSummary {
+  MemberSummary({
+    required this.userId,
+    required this.username,
+    required this.role,
+    required this.joinedAt,
+    required this.canSendMessages,
+    required this.canDeleteOthersMessages,
+    required this.canPinMessages,
+    required this.canManageRoles,
+  });
+
+  factory MemberSummary.fromJson(Map<String, dynamic> json) => MemberSummary(
+        userId: json['UserId'] as int,
+        username: json['Username'] as String,
+        role: json['Role'] as String,
+        joinedAt: DateTime.parse(json['JoinedAt'] as String),
+        canSendMessages: json['CanSendMessages'] as bool? ?? false,
+        canDeleteOthersMessages:
+            json['CanDeleteOthersMessages'] as bool? ?? false,
+        canPinMessages: json['CanPinMessages'] as bool? ?? false,
+        canManageRoles: json['CanManageRoles'] as bool? ?? false,
+      );
+
+  final int userId;
+  final String username;
+  final String role;
+  final DateTime joinedAt;
+  final bool canSendMessages;
+  final bool canDeleteOthersMessages;
+  final bool canPinMessages;
+  final bool canManageRoles;
+}
+
+class ChannelMembersResponse {
+  ChannelMembersResponse({
+    required this.success,
+    required this.channelId,
+    required this.members,
+    this.message,
+  });
+
+  factory ChannelMembersResponse.fromJson(Map<String, dynamic> json) =>
+      ChannelMembersResponse(
+        success: json['Success'] as bool? ?? false,
+        channelId: json['ChannelId'] as int? ?? 0,
+        members: (json['Members'] as List<dynamic>? ?? const <dynamic>[])
+            .map((item) => MemberSummary.fromJson(item as Map<String, dynamic>))
+            .toList(growable: false),
+        message: json['Message'] as String?,
+      );
+
+  final bool success;
+  final int channelId;
+  final List<MemberSummary> members;
+  final String? message;
+}
+
+class GroupMembersResponse {
+  GroupMembersResponse({
+    required this.success,
+    required this.groupId,
+    required this.members,
+    this.message,
+  });
+
+  factory GroupMembersResponse.fromJson(Map<String, dynamic> json) =>
+      GroupMembersResponse(
+        success: json['Success'] as bool? ?? false,
+        groupId: json['GroupId'] as int? ?? 0,
+        members: (json['Members'] as List<dynamic>? ?? const <dynamic>[])
+            .map((item) => MemberSummary.fromJson(item as Map<String, dynamic>))
+            .toList(growable: false),
+        message: json['Message'] as String?,
+      );
+
+  final bool success;
+  final int groupId;
+  final List<MemberSummary> members;
+  final String? message;
+}
+
+class ReactionCount {
+  ReactionCount({
+    required this.emoji,
+    required this.count,
+    required this.byMe,
+  });
+
+  factory ReactionCount.fromJson(Map<String, dynamic> json) => ReactionCount(
+        emoji: json['Emoji'] as String,
+        count: (json['Count'] as num?)?.toInt() ?? 0,
+        byMe: json['ByMe'] as bool? ?? false,
+      );
+
+  final String emoji;
+  final int count;
+  final bool byMe;
+}
+
+class MessageReactResponse {
+  MessageReactResponse({
+    required this.success,
+    this.message,
+    this.reactions = const <ReactionCount>[],
+  });
+
+  factory MessageReactResponse.fromJson(Map<String, dynamic> json) =>
+      MessageReactResponse(
+        success: json['Success'] as bool? ?? false,
+        message: json['Message'] as String?,
+        reactions: (json['Reactions'] as List<dynamic>? ?? const <dynamic>[])
+            .map((item) => ReactionCount.fromJson(item as Map<String, dynamic>))
+            .toList(growable: false),
+      );
+
+  final bool success;
+  final String? message;
+  final List<ReactionCount> reactions;
+}
+
+class MessageReactionEventPayload {
+  MessageReactionEventPayload({
+    required this.scope,
+    required this.messageId,
+    required this.userId,
+    required this.emoji,
+    required this.removed,
+    required this.reactions,
+  });
+
+  factory MessageReactionEventPayload.fromJson(Map<String, dynamic> json) =>
+      MessageReactionEventPayload(
+        scope: json['Scope'] as String,
+        messageId: (json['MessageId'] as num).toInt(),
+        userId: (json['UserId'] as num).toInt(),
+        emoji: json['Emoji'] as String,
+        removed: json['Removed'] as bool? ?? false,
+        reactions: (json['Reactions'] as List<dynamic>? ?? const <dynamic>[])
+            .map((item) => ReactionCount.fromJson(item as Map<String, dynamic>))
+            .toList(growable: false),
+      );
+
+  factory MessageReactionEventPayload.fromBytes(List<int> bytes) {
+    final json = _decodePayloadMap(bytes);
+    return MessageReactionEventPayload.fromJson(json);
+  }
+
+  final String scope;
+  final int messageId;
+  final int userId;
+  final String emoji;
+  final bool removed;
+  final List<ReactionCount> reactions;
+}
+
+class MessagePinResponse {
+  MessagePinResponse({required this.success, this.message});
+
+  factory MessagePinResponse.fromJson(Map<String, dynamic> json) =>
+      MessagePinResponse(
+        success: json['Success'] as bool? ?? false,
+        message: json['Message'] as String?,
+      );
+
+  final bool success;
+  final String? message;
+}
+
+class MessagePinEventPayload {
+  MessagePinEventPayload({
+    required this.scope,
+    required this.messageId,
+    required this.targetId,
+    required this.pinned,
+    required this.actorUserId,
+  });
+
+  factory MessagePinEventPayload.fromJson(Map<String, dynamic> json) =>
+      MessagePinEventPayload(
+        scope: json['Scope'] as String,
+        messageId: (json['MessageId'] as num).toInt(),
+        targetId: (json['TargetId'] as num).toInt(),
+        pinned: json['Pinned'] as bool? ?? false,
+        actorUserId: (json['ActorUserId'] as num).toInt(),
+      );
+
+  factory MessagePinEventPayload.fromBytes(List<int> bytes) {
+    final json = _decodePayloadMap(bytes);
+    return MessagePinEventPayload.fromJson(json);
+  }
+
+  final String scope;
+  final int messageId;
+  final int targetId;
+  final bool pinned;
+  final int actorUserId;
+}
+
+class RoomSettingsGetResponse {
+  RoomSettingsGetResponse({
+    required this.success,
+    required this.scope,
+    required this.targetId,
+    required this.joinRule,
+    required this.historyVisibility,
+    this.message,
+  });
+
+  factory RoomSettingsGetResponse.fromJson(Map<String, dynamic> json) =>
+      RoomSettingsGetResponse(
+        success: json['Success'] as bool? ?? false,
+        scope: json['Scope'] as String? ?? '',
+        targetId: (json['TargetId'] as num?)?.toInt() ?? 0,
+        joinRule: (json['JoinRule'] as num?)?.toInt() ?? 0,
+        historyVisibility: (json['HistoryVisibility'] as num?)?.toInt() ?? 0,
+        message: json['Message'] as String?,
+      );
+
+  final bool success;
+  final String scope;
+  final int targetId;
+  final int joinRule;
+  final int historyVisibility;
+  final String? message;
+}
+
+class RoomSettingsUpdateResponse {
+  RoomSettingsUpdateResponse({required this.success, this.message});
+
+  factory RoomSettingsUpdateResponse.fromJson(Map<String, dynamic> json) =>
+      RoomSettingsUpdateResponse(
+        success: json['Success'] as bool? ?? false,
+        message: json['Message'] as String?,
+      );
+
+  final bool success;
+  final String? message;
+}
+
 
 class MessageStatusEvent {
   MessageStatusEvent({
@@ -1011,6 +1424,7 @@ class PrivateChatMessageEvent {
     required this.createdAt,
     this.deliveredTo = const <int>[],
     this.readBy = const <int>[],
+    this.replyToMessageId,
     this.fromUsername,
     this.username,
   });
@@ -1030,6 +1444,7 @@ class PrivateChatMessageEvent {
         readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
           .map((item) => (item as num).toInt())
           .toList(growable: false),
+        replyToMessageId: (json['ReplyToMessageId'] as num?)?.toInt(),
         fromUsername: json['FromUsername'] as String?,
         username: json['Username'] as String?,
       );
@@ -1047,6 +1462,7 @@ class PrivateChatMessageEvent {
   final DateTime createdAt;
   final List<int> deliveredTo;
   final List<int> readBy;
+  final int? replyToMessageId;
   final String? fromUsername;
   final String? username;
 
@@ -1065,6 +1481,7 @@ class ChannelMessageEvent {
     required this.createdAt,
     this.deliveredTo = const <int>[],
     this.readBy = const <int>[],
+    this.replyToMessageId,
     this.fromUsername,
     this.channelName,
   });
@@ -1084,6 +1501,7 @@ class ChannelMessageEvent {
         readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
           .map((item) => (item as num).toInt())
           .toList(growable: false),
+        replyToMessageId: (json['ReplyToMessageId'] as num?)?.toInt(),
         fromUsername: json['FromUsername'] as String?,
         channelName: json['ChannelName'] as String?,
       );
@@ -1101,6 +1519,7 @@ class ChannelMessageEvent {
   final DateTime createdAt;
   final List<int> deliveredTo;
   final List<int> readBy;
+  final int? replyToMessageId;
   final String? fromUsername;
   final String? channelName;
 
@@ -1964,6 +2383,7 @@ class PrivateChatMessageRequest {
     required this.toUserId,
     required this.content,
     this.contentType = MessageContentType.text,
+    this.replyToMessageId,
     this.attachment,
     this.parseMode,
   });
@@ -1974,6 +2394,7 @@ class PrivateChatMessageRequest {
         content: json['Content'] as String,
         contentType:
             MessageContentType.fromValue(json['ContentType'] as int? ?? 0),
+        replyToMessageId: (json['ReplyToMessageId'] as num?)?.toInt(),
         attachment: json['Attachment'] is Map<String, dynamic>
           ? MediaAttachmentPayload.fromJson(
             json['Attachment'] as Map<String, dynamic>,
@@ -1984,6 +2405,7 @@ class PrivateChatMessageRequest {
   final int toUserId;
   final String content;
   final MessageContentType contentType;
+  final int? replyToMessageId;
       final MediaAttachmentPayload? attachment;
       final String? parseMode;
 
@@ -1991,6 +2413,7 @@ class PrivateChatMessageRequest {
         'ToUserId': toUserId,
         'Content': content,
         'ContentType': contentType.value,
+        if (replyToMessageId != null) 'ReplyToMessageId': replyToMessageId,
         if (attachment != null) 'Attachment': attachment!.toJson(),
         if (parseMode != null) 'ParseMode': parseMode,
       };

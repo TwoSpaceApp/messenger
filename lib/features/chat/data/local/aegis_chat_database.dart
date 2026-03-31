@@ -43,6 +43,11 @@ class AegisMessages extends Table {
   IntColumn get sentAtEpochMs => integer()();
   TextColumn get type => text().withDefault(const Constant('m.text'))();
   TextColumn get mediaId => text().nullable()();
+  IntColumn get replyToMessageId => integer().nullable()();
+  BoolColumn get isDelivered => boolean().withDefault(const Constant(false))();
+  BoolColumn get isRead => boolean().withDefault(const Constant(false))();
+  IntColumn get deliveredAtEpochMs => integer().nullable()();
+  IntColumn get readAtEpochMs => integer().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -157,7 +162,7 @@ class AegisChatDatabase extends _$AegisChatDatabase {
   AegisChatDatabase.forExecutor(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -176,6 +181,21 @@ class AegisChatDatabase extends _$AegisChatDatabase {
             await migrator.createTable(aegisPeopleFavorites);
             await migrator.createTable(aegisPeopleEntries);
             await migrator.createTable(aegisPeopleCallHistory);
+          }
+          if (from < 4) {
+            await migrator.addColumn(aegisMessages, aegisMessages.isDelivered);
+            await migrator.addColumn(aegisMessages, aegisMessages.isRead);
+            await migrator.addColumn(
+              aegisMessages,
+              aegisMessages.deliveredAtEpochMs,
+            );
+            await migrator.addColumn(aegisMessages, aegisMessages.readAtEpochMs);
+          }
+          if (from < 5) {
+            await migrator.addColumn(
+              aegisMessages,
+              aegisMessages.replyToMessageId,
+            );
           }
           await _createIndexes();
         },

@@ -1,19 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:es_compression/brotli.dart';
 
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
-import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_encoder.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/ring_buffer.dart';
+import 'package:two_space_app/core/network/aegis/session_crypto.dart';
 
 class AegisTransport {
   static final BrotliCodec _brotli = BrotliCodec();
@@ -23,13 +22,14 @@ class AegisTransport {
   int _nextSequenceId = 1;
   final RingBuffer _pendingBuffer = RingBuffer();
   Uint8List _transportMaskingKey = Uint8List(0);
-  Uint8List _sessionKey = Uint8List(0);
+  AegisSessionCrypto? _sessionCrypto;
   int _inboundMaskOffset = 0;
   int _outboundMaskOffset = 0;
   StreamSubscription<Uint8List>? _socketSubscription;
   Timer? _healthCheckTimer;
   final int _maxBufferSize;
   bool _isPaused = false;
+  bool _isExtractingFrames = false;
 
   final StreamController<Message> _messageController =
       StreamController<Message>.broadcast();
@@ -42,14 +42,16 @@ class AegisTransport {
   Stream<Message> get messages => _messageController.stream;
   Stream<void> get disconnects => _disconnectController.stream;
   bool get isConnected => _isConnected;
-  bool get hasSessionKey => _sessionKey.isNotEmpty;
+  bool get hasSessionKey => _sessionCrypto != null;
 
   void setSessionKey(List<int> sessionKey) {
-    _sessionKey = Uint8List.fromList(sessionKey);
+    _sessionCrypto?.dispose();
+    _sessionCrypto = AegisSessionCrypto(Uint8List.fromList(sessionKey));
   }
 
   void clearSessionKey() {
-    _sessionKey = Uint8List(0);
+    _sessionCrypto?.dispose();
+    _sessionCrypto = null;
   }
 
   Future<void> connect(
@@ -57,6 +59,7 @@ class AegisTransport {
     int port, {
     Duration? timeout,
     String? transportMaskingKey,
+    bool useTls = false,
     Duration? healthCheckInterval,
   }) async {
     if (_isConnected) {
@@ -65,14 +68,21 @@ class AegisTransport {
 
     try {
       final connectTimeout = timeout ?? const Duration(seconds: 10);
-      _socket = await Socket.connect(host, port, timeout: connectTimeout)
-          .timeout(connectTimeout);
+      _socket = useTls
+          ? await SecureSocket.connect(
+              host,
+              port,
+              timeout: connectTimeout,
+            ).timeout(connectTimeout)
+          : await Socket.connect(host, port, timeout: connectTimeout)
+              .timeout(connectTimeout);
       _isConnected = true;
       _nextSequenceId = 1;
       _pendingBuffer.clear();
       _inboundMaskOffset = 0;
       _outboundMaskOffset = 0;
-      _sessionKey = Uint8List(0);
+      _sessionCrypto?.dispose();
+      _sessionCrypto = null;
       _isPaused = false;
       _transportMaskingKey =
           transportMaskingKey != null && transportMaskingKey.trim().isNotEmpty
@@ -105,7 +115,8 @@ class AegisTransport {
 
     _pendingBuffer.clear();
     _transportMaskingKey = Uint8List(0);
-    _sessionKey = Uint8List(0);
+    _sessionCrypto?.dispose();
+    _sessionCrypto = null;
     _inboundMaskOffset = 0;
     _outboundMaskOffset = 0;
     if (!_disconnectController.isClosed) {
@@ -122,7 +133,7 @@ class AegisTransport {
       if (message.sequenceId == 0) {
         message.sequenceId = _nextSequenceId++;
       }
-      final encoded = _prepareOutboundFrame(message);
+      final encoded = await _prepareOutboundFrame(message);
       final outgoing = _applyOutboundMask(encoded);
       _socket.add(outgoing);
       await _socket.flush();
@@ -151,13 +162,62 @@ class AegisTransport {
       return;
     }
     _pendingBuffer.write(_applyInboundMask(data));
+    _updateBackpressure();
+    unawaited(_extractFrames());
+  }
 
+  Future<void> _extractFrames() async {
+    if (_isExtractingFrames) {
+      return;
+    }
+
+    _isExtractingFrames = true;
+    try {
+      while (_pendingBuffer.length >= ProtocolConstants.headerSize) {
+        final payloadLengthView =
+            _pendingBuffer.peekBytes(ProtocolConstants.payloadLengthOffset, 4);
+        final payloadLength = ByteData.view(
+          payloadLengthView.buffer,
+          payloadLengthView.offsetInBytes,
+          4,
+        ).getUint32(0);
+
+        if (payloadLength > ProtocolConstants.maxPayloadSize) {
+          _pendingBuffer.clear();
+          _handleDisconnectSignal();
+          return;
+        }
+
+        final frameSize = ProtocolConstants.headerSize + payloadLength;
+        if (_pendingBuffer.length < frameSize) {
+          return;
+        }
+
+        final frame = _pendingBuffer.take(frameSize);
+        try {
+          final message = await _finalizeInboundFrame(frame);
+          if (!_messageController.isClosed) {
+            _messageController.add(message);
+          }
+        } catch (error) {
+          AegisLogger.error('Error decoding message', error);
+        }
+      }
+    } finally {
+      _isExtractingFrames = false;
+      _updateBackpressure();
+      if (_pendingBuffer.length >= ProtocolConstants.headerSize) {
+        unawaited(_extractFrames());
+      }
+    }
+  }
+
+  void _updateBackpressure() {
     if (!_isPaused && _pendingBuffer.length > _maxBufferSize) {
       _socketSubscription?.pause();
       _isPaused = true;
+      return;
     }
-
-    _extractFrames();
 
     if (_isPaused && _pendingBuffer.length < _maxBufferSize ~/ 2) {
       _socketSubscription?.resume();
@@ -165,40 +225,7 @@ class AegisTransport {
     }
   }
 
-  void _extractFrames() {
-    while (_pendingBuffer.length >= ProtocolConstants.headerSize) {
-      final payloadLengthView =
-          _pendingBuffer.peekBytes(ProtocolConstants.payloadLengthOffset, 4);
-      final payloadLength = ByteData.view(
-        payloadLengthView.buffer,
-        payloadLengthView.offsetInBytes,
-        4,
-      ).getUint32(0);
-
-      if (payloadLength > ProtocolConstants.maxPayloadSize) {
-        _pendingBuffer.clear();
-        _handleDisconnectSignal();
-        return;
-      }
-
-      final frameSize = ProtocolConstants.headerSize + payloadLength;
-      if (_pendingBuffer.length < frameSize) {
-        return;
-      }
-
-      final frame = _pendingBuffer.take(frameSize);
-      try {
-        final message = _finalizeInboundFrame(frame);
-        if (!_messageController.isClosed) {
-          _messageController.add(message);
-        }
-      } catch (error) {
-        AegisLogger.error('Error decoding message', error);
-      }
-    }
-  }
-
-  Uint8List _prepareOutboundFrame(Message message) {
+  Future<Uint8List> _prepareOutboundFrame(Message message) async {
     final prepared = Message()
       ..magic = message.magic
       ..versionMajor = message.versionMajor
@@ -209,7 +236,7 @@ class AegisTransport {
       ..payload = Uint8List.fromList(message.payload)
       ..payloadLength = message.payload.length;
 
-    if (_sessionKey.isEmpty || prepared.type == MessageType.handshake) {
+    if (_sessionCrypto == null || prepared.type == MessageType.handshake) {
       return MessageEncoder.encode(prepared);
     }
 
@@ -229,38 +256,24 @@ class AegisTransport {
       } catch (_) {}
     }
 
-    final nonce = _generateNonce();
-    final encryptedPayloadLength = payload.length + nonce.length + 16;
-    final aad = _buildHeaderBytes(
-      prepared,
-      flags: flags | ProtocolConstants.flagEncrypted,
-      payloadLength: encryptedPayloadLength,
-    );
-    final encryptedBody = AegisHandshakeCrypto.encryptPayload(
-      plaintext: payload,
-      sessionKey: _sessionKey,
-      nonce: nonce,
-      aad: aad,
-    );
-
-    prepared.flags = flags | ProtocolConstants.flagEncrypted;
-    prepared.payload = Uint8List.fromList(<int>[...nonce, ...encryptedBody]);
-    prepared.payloadLength = prepared.payload.length;
-    return MessageEncoder.encode(prepared);
+    prepared.flags = flags;
+    prepared.payload = payload;
+    prepared.payloadLength = payload.length;
+    final encryptedMessage = await _sessionCrypto!.encryptMessage(prepared);
+    return MessageEncoder.encode(encryptedMessage);
   }
 
-  Message _finalizeInboundFrame(Uint8List frame) {
+  Future<Message> _finalizeInboundFrame(Uint8List frame) async {
     final message = MessageEncoder.decode(frame);
     if ((message.flags & ProtocolConstants.flagEncrypted) != 0) {
-      if (_sessionKey.isEmpty) {
+      if (_sessionCrypto == null) {
         throw const FormatException(
             'Encrypted payload received before handshake');
       }
-      message.payload = Uint8List.fromList(
-        _decryptInboundPayload(frame, message),
+      await _sessionCrypto!.decryptMessage(
+        message,
+        frame.sublist(0, ProtocolConstants.headerSize),
       );
-      message.payloadLength = message.payload.length;
-      message.flags &= ~ProtocolConstants.flagEncrypted;
     }
 
     if ((message.flags & ProtocolConstants.flagCompressed) != 0) {
@@ -273,57 +286,6 @@ class AegisTransport {
     }
 
     return message;
-  }
-
-  List<int> _decryptInboundPayload(Uint8List frame, Message message) {
-    final encryptedPayload = message.payload;
-    final aadCandidates = <List<int>>[
-      frame.sublist(0, ProtocolConstants.headerSize),
-      _buildHeaderBytes(
-        message,
-        flags: message.flags,
-        payloadLength: encryptedPayload.length - 28,
-      ),
-    ];
-
-    Object? lastError;
-    for (final aad in aadCandidates) {
-      try {
-        return AegisHandshakeCrypto.decryptPayload(
-          encryptedPayload: encryptedPayload,
-          sessionKey: _sessionKey,
-          aad: aad,
-        );
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    throw ConnectionException('Failed to decrypt incoming message', lastError);
-  }
-
-  Uint8List _buildHeaderBytes(
-    Message message, {
-    required int flags,
-    required int payloadLength,
-  }) {
-    final buffer = Uint8List(ProtocolConstants.headerSize);
-    final byteData = ByteData.view(buffer.buffer);
-    byteData.setUint32(0, message.magic);
-    buffer[4] = message.versionMajor;
-    buffer[5] = message.versionMinor;
-    buffer[6] = flags;
-    byteData.setUint16(7, message.type.value);
-    byteData.setUint64(9, message.sequenceId);
-    byteData.setUint32(17, payloadLength);
-    return buffer;
-  }
-
-  Uint8List _generateNonce() {
-    final random = Random.secure();
-    return Uint8List.fromList(
-      List<int>.generate(12, (_) => random.nextInt(256)),
-    );
   }
 
   void _startHealthCheck(Duration interval) {

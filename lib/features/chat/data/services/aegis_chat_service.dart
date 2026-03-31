@@ -16,6 +16,15 @@ import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/chat/data/local/aegis_chat_local_store.dart';
 
+class AegisFeatureInDevelopmentException implements Exception {
+  const AegisFeatureInDevelopmentException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class AegisRoomMessage {
   AegisRoomMessage({
     required this.id,
@@ -24,6 +33,7 @@ class AegisRoomMessage {
     required this.time,
     this.type = 'm.text',
     this.mediaId,
+    this.replyToMessageId,
     this.isDelivered = false,
     this.isRead = false,
     this.deliveredAt,
@@ -39,12 +49,13 @@ class AegisRoomMessage {
           DateTime.fromMillisecondsSinceEpoch(0),
       type: json['type'] as String? ?? 'm.text',
       mediaId: json['mediaId'] as String?,
-        isDelivered: json['isDelivered'] as bool? ?? false,
-        isRead: json['isRead'] as bool? ?? false,
-        deliveredAt: json['deliveredAt'] != null
+      replyToMessageId: (json['replyToMessageId'] as num?)?.toInt(),
+      isDelivered: json['isDelivered'] as bool? ?? false,
+      isRead: json['isRead'] as bool? ?? false,
+      deliveredAt: json['deliveredAt'] != null
           ? DateTime.tryParse(json['deliveredAt'] as String)
           : null,
-        readAt: json['readAt'] != null
+      readAt: json['readAt'] != null
           ? DateTime.tryParse(json['readAt'] as String)
           : null,
     );
@@ -56,10 +67,11 @@ class AegisRoomMessage {
   final DateTime time;
   final String type;
   final String? mediaId;
-    final bool isDelivered;
-    final bool isRead;
-    final DateTime? deliveredAt;
-    final DateTime? readAt;
+  final int? replyToMessageId;
+  final bool isDelivered;
+  final bool isRead;
+  final DateTime? deliveredAt;
+  final DateTime? readAt;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -68,6 +80,7 @@ class AegisRoomMessage {
         'time': time.toIso8601String(),
         'type': type,
         if (mediaId != null) 'mediaId': mediaId,
+        if (replyToMessageId != null) 'replyToMessageId': replyToMessageId,
       'isDelivered': isDelivered,
       'isRead': isRead,
       if (deliveredAt != null) 'deliveredAt': deliveredAt!.toIso8601String(),
@@ -236,6 +249,10 @@ class AegisChatService {
   static const int _maxProfileCacheSize = 500;
 
   final Map<String, List<AegisRoomMessage>> _messages = {};
+    final Map<String, Map<String, Map<String, dynamic>>> _roomReactions =
+      <String, Map<String, Map<String, dynamic>>>{};
+    final Map<String, List<String>> _pinnedEventIdsByRoom =
+      <String, List<String>>{};
   /// Tracks access order for LRU eviction of message cache.
   final List<String> _messageAccessOrder = <String>[];
   final Map<int, Map<String, dynamic>> _profileCache = {};
@@ -840,6 +857,7 @@ class AegisChatService {
     required String text,
     String type = 'm.text',
     String? mediaFileId,
+    int? replyToMessageId,
     void Function(double progress)? onMediaSendProgress,
   }) async {
     await ensureReady();
@@ -889,10 +907,23 @@ class AegisChatService {
       final response = await _auth.rawClient.sendPrivateMessage(
         peerId,
         mediaFileId ?? text,
+        replyToMessageId: replyToMessageId,
       );
       messageId = response.messageId ?? response.message?.id;
       if (!response.success) {
         throw Exception(response.messageText ?? 'Unable to send message');
+      }
+    } else if (conversation.kind == 'group') {
+      final groupId = conversation.channelId;
+      if (groupId == null) throw Exception('Missing group id');
+      final response = await _auth.rawClient.sendGroupMessage(
+        groupId,
+        mediaFileId ?? text,
+        replyToMessageId: replyToMessageId,
+      );
+      messageId = response.messageId;
+      if (!response.success) {
+        throw Exception(response.message ?? 'Unable to send message');
       }
     } else {
       final channelId = conversation.channelId;
@@ -900,6 +931,7 @@ class AegisChatService {
       final response = await _auth.rawClient.sendChannelMessage(
         channelId,
         mediaFileId ?? text,
+        replyToMessageId: replyToMessageId,
       );
       messageId = response.messageId ?? response.message?.id;
       if (!response.success) {
@@ -914,6 +946,7 @@ class AegisChatService {
       time: DateTime.now(),
       type: type,
       mediaId: mediaFileId,
+      replyToMessageId: replyToMessageId,
     );
     await _appendMessage(roomId, message);
     unawaited(_refreshChatsFromServer());
@@ -1019,7 +1052,15 @@ class AegisChatService {
     required String body,
     String? formattedBody,
   }) async {
-    await sendMessage(roomId: roomId, text: body);
+    final replyToMessageId = int.tryParse(replyToId);
+    if (replyToMessageId == null) {
+      throw Exception('Unable to reply to a non-numeric message id');
+    }
+    await sendMessage(
+      roomId: roomId,
+      text: body,
+      replyToMessageId: replyToMessageId,
+    );
   }
 
   Future<void> editMessage(String roomId, String eventId, String text,
@@ -1031,8 +1072,15 @@ class AegisChatService {
       final response = await _auth.rawClient.editMessage(
         messageId: messageId,
         newContent: text,
-        scope: conversation.kind == 'direct' ? 'private' : 'channel',
-        channelId: conversation.kind == 'direct' ? null : conversation.channelId,
+        scope: conversation.kind == 'direct'
+            ? 'private'
+            : conversation.kind == 'group'
+                ? 'group'
+                : 'channel',
+        channelId: conversation.kind == 'direct' || conversation.kind == 'group'
+            ? null
+            : conversation.channelId,
+        groupId: conversation.kind == 'group' ? conversation.channelId : null,
       );
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to edit message');
@@ -1050,6 +1098,7 @@ class AegisChatService {
       time: previous.time,
       type: previous.type,
       mediaId: previous.mediaId,
+      replyToMessageId: previous.replyToMessageId,
       isDelivered: previous.isDelivered,
       isRead: previous.isRead,
       deliveredAt: previous.deliveredAt,
@@ -1068,8 +1117,15 @@ class AegisChatService {
     if (conversation != null && messageId != null) {
       final response = await _auth.rawClient.deleteMessage(
         messageId: messageId,
-        scope: conversation.kind == 'direct' ? 'private' : 'channel',
-        channelId: conversation.kind == 'direct' ? null : conversation.channelId,
+        scope: conversation.kind == 'direct'
+            ? 'private'
+            : conversation.kind == 'group'
+                ? 'group'
+                : 'channel',
+        channelId: conversation.kind == 'direct' || conversation.kind == 'group'
+            ? null
+            : conversation.channelId,
+        groupId: conversation.kind == 'group' ? conversation.channelId : null,
       );
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to delete message');
@@ -1086,18 +1142,93 @@ class AegisChatService {
     required String roomId,
     required String eventId,
     required String reaction,
-  }) async {}
+  }) async {
+    await ensureReady();
+    final conversation = _conversations[roomId];
+    final messageId = int.tryParse(eventId);
+    if (conversation == null || messageId == null) {
+      throw Exception('Unable to react to this message');
+    }
 
-  Future<Map<String, dynamic>> getReactions(String roomId, String eventId) async {
-    return const <String, dynamic>{};
+    final response = await _auth.rawClient.reactToMessage(
+      scope: _roomScope(conversation),
+      messageId: messageId,
+      emoji: reaction,
+    );
+    if (!response.success) {
+      throw Exception(response.message ?? 'Unable to update reactions');
+    }
+
+    _updateReactionCache(roomId, eventId, response.reactions);
   }
 
-  Future<List<String>> getPinnedEvents(String roomId) async => const <String>[];
+  Future<Map<String, dynamic>> getReactions(String roomId, String eventId) async {
+    await ensureReady();
+    return Map<String, dynamic>.from(
+      _roomReactions[roomId]?[eventId] ?? const <String, dynamic>{},
+    );
+  }
 
-  Future<void> setPinnedEvents(String roomId, List<String> eventIds) async {}
+  Future<List<String>> getPinnedEvents(String roomId) async {
+    await ensureReady();
+    return List<String>.from(_pinnedEventIdsByRoom[roomId] ?? const <String>[]);
+  }
+
+  Future<void> setPinnedEvents(String roomId, List<String> eventIds) async {
+    await ensureReady();
+    final conversation = _conversations[roomId];
+    if (conversation == null || conversation.channelId == null) {
+      throw Exception('Pinned messages are only available for rooms');
+    }
+    if (conversation.kind == 'direct') {
+      throw Exception('Pinned messages are not supported in direct chats');
+    }
+
+    final current = Set<String>.from(_pinnedEventIdsByRoom[roomId] ?? const <String>[]);
+    final target = eventIds.toSet();
+
+    for (final eventId in target.difference(current)) {
+      final messageId = int.tryParse(eventId);
+      if (messageId == null) {
+        continue;
+      }
+      final response = await _auth.rawClient.pinMessage(
+        scope: _roomScope(conversation),
+        messageId: messageId,
+        targetId: conversation.channelId!,
+      );
+      if (!response.success) {
+        throw Exception(response.message ?? 'Unable to pin message');
+      }
+    }
+
+    for (final eventId in current.difference(target)) {
+      final messageId = int.tryParse(eventId);
+      if (messageId == null) {
+        continue;
+      }
+      final response = await _auth.rawClient.pinMessage(
+        scope: _roomScope(conversation),
+        messageId: messageId,
+        targetId: conversation.channelId!,
+        unpin: true,
+      );
+      if (!response.success) {
+        throw Exception(response.message ?? 'Unable to unpin message');
+      }
+    }
+
+    _setPinnedEventsCache(roomId, eventIds);
+  }
 
   Future<void> leaveRoom(String roomId) async {
     await _init();
+    final room = _conversations[roomId];
+    if (room != null && room.kind != 'direct') {
+      throw const AegisFeatureInDevelopmentException(
+        'Room leave is not supported by the server yet',
+      );
+    }
     if (_conversations.remove(roomId) != null) {
       _markConversationsDirty();
     }
@@ -1155,6 +1286,7 @@ class AegisChatService {
           time: message.time,
           type: message.type,
           mediaId: message.mediaId,
+          replyToMessageId: message.replyToMessageId,
           isDelivered: nextDelivered,
           isRead: nextRead,
           deliveredAt: nextDeliveredAt,
@@ -1268,17 +1400,29 @@ class AegisChatService {
       ),
     );
     final payloadBytes = (bytes as List<int>).toList();
+    final resolvedMimeType = _inferMimeType(target.path, type: 'm.image');
     await target.writeAsBytes(payloadBytes);
     final conversation = _conversations[roomId];
     if (conversation != null) {
       if (conversation.channelId != null) {
-        final response = await _auth.rawClient.uploadChannelAvatar(
-          conversation.channelId!,
-          Uint8List.fromList(payloadBytes),
-          mimeType: 'image/png',
-        );
-        if (!response.success) {
-          throw Exception(response.message ?? 'Unable to update room avatar');
+        if (conversation.kind == 'group') {
+          final response = await _auth.rawClient.uploadGroupAvatar(
+            conversation.channelId!,
+            Uint8List.fromList(payloadBytes),
+            mimeType: resolvedMimeType,
+          );
+          if (!response.success) {
+            throw Exception(response.message ?? 'Unable to update room avatar');
+          }
+        } else {
+          final response = await _auth.rawClient.uploadChannelAvatar(
+            conversation.channelId!,
+            Uint8List.fromList(payloadBytes),
+            mimeType: resolvedMimeType,
+          );
+          if (!response.success) {
+            throw Exception(response.message ?? 'Unable to update room avatar');
+          }
         }
       }
       _storeConversation(conversation.copyWith(
@@ -1431,6 +1575,32 @@ class AegisChatService {
     await _init();
     final room = _conversations[roomId];
     if (room == null) return const <Map<String, dynamic>>[];
+    if (room.kind == 'group' && room.channelId != null) {
+      final response = await _auth.rawClient.getGroupMembers(room.channelId!);
+      if (!response.success) {
+        throw Exception(response.message ?? 'Unable to load group members');
+      }
+      _storeConversation(room.copyWith(
+        memberUserIds: response.members
+            .map((member) => member.userId.toString())
+            .toList(growable: false),
+        updatedAt: DateTime.now(),
+      ));
+      return Future.wait(response.members.map(_memberSummaryToRoomMemberMap));
+    }
+    if (room.kind != 'direct' && room.channelId != null) {
+      final response = await _auth.rawClient.getChannelMembers(room.channelId!);
+      if (!response.success) {
+        throw Exception(response.message ?? 'Unable to load channel members');
+      }
+      _storeConversation(room.copyWith(
+        memberUserIds: response.members
+            .map((member) => member.userId.toString())
+            .toList(growable: false),
+        updatedAt: DateTime.now(),
+      ));
+      return Future.wait(response.members.map(_memberSummaryToRoomMemberMap));
+    }
     final ids = room.memberUserIds;
     // Fetch all members in parallel with bounded concurrency.
     final results = await Future.wait(
@@ -1551,6 +1721,7 @@ class AegisChatService {
         time: message.time,
         type: message.type,
         mediaId: message.mediaId,
+        replyToMessageId: message.replyToMessageId,
         isDelivered: true,
         isRead: true,
         deliveredAt: message.deliveredAt ?? now,
@@ -1573,15 +1744,63 @@ class AegisChatService {
   }
 
   Future<void> setJoinRule(String roomId, String rule) async {
+    final normalized = switch (rule) {
+      'public' => 0,
+      'approval' => 2,
+      _ => 1,
+    };
+    await setJoinRuleValue(roomId, normalized);
+  }
+
+  Future<void> setJoinRuleValue(String roomId, int joinRule) async {
     await _init();
     final room = _conversations[roomId];
     if (room == null) return;
+    if (room.channelId != null && room.kind != 'direct') {
+      final response = await _auth.rawClient.updateRoomSettings(
+        scope: _roomScope(room),
+        targetId: room.channelId!,
+        joinRule: joinRule,
+      );
+      if (!response.success) {
+        throw Exception(response.message ?? 'Unable to update room visibility');
+      }
+    }
     _storeConversation(room.copyWith(
-      isPublic: rule == 'public',
+      isPublic: joinRule == 0,
       updatedAt: DateTime.now(),
     ));
     await _persist();
     _emitChanged();
+  }
+
+  Future<Map<String, dynamic>> getRoomSettingsState(String roomId) async {
+    await ensureReady();
+    final room = _conversations[roomId];
+    if (room == null || room.channelId == null || room.kind == 'direct') {
+      return {
+        'joinRule': (room?.isPublic ?? false) ? 0 : 1,
+        'historyVisibility': (room?.showMessageHistory ?? false) ? 1 : 2,
+      };
+    }
+
+    final response = await _auth.rawClient.getRoomSettings(
+      scope: _roomScope(room),
+      targetId: room.channelId!,
+    );
+    if (!response.success) {
+      throw Exception(response.message ?? 'Unable to load room settings');
+    }
+
+    _storeConversation(room.copyWith(
+      isPublic: response.joinRule == 0,
+      showMessageHistory: response.historyVisibility != 2,
+      updatedAt: DateTime.now(),
+    ));
+    return {
+      'joinRule': response.joinRule,
+      'historyVisibility': response.historyVisibility,
+    };
   }
 
   Future<Map<String, String?>> getRoomLinkInfo(
@@ -1773,6 +1992,8 @@ class AegisChatService {
     required GroupVisibility visibility,
     required bool showMessageHistory,
     String? description,
+    List<int>? avatarBytes,
+    String? avatarFileName,
   }) async {
     await ensureReady();
     final response = await _auth.rawClient.createChannel(
@@ -1797,6 +2018,22 @@ class AegisChatService {
       showMessageHistory: showMessageHistory,
       memberUserIds: <String>[me],
     ));
+    final settingsResponse = await _auth.rawClient.updateRoomSettings(
+      scope: 'group',
+      targetId: channelId,
+      joinRule: visibility == GroupVisibility.public ? 0 : 1,
+      historyVisibility: showMessageHistory ? 1 : 2,
+    );
+    if (!settingsResponse.success) {
+      throw Exception(settingsResponse.message ?? 'Unable to initialize group settings');
+    }
+    if (avatarBytes != null && avatarBytes.isNotEmpty) {
+      await setRoomAvatar(
+        roomId,
+        avatarBytes,
+        fileName: avatarFileName,
+      );
+    }
     await _persist();
     _emitChanged();
     return getGroupRoom(roomId) ??
@@ -1841,12 +2078,100 @@ class AegisChatService {
     );
   }
 
+  Future<GroupRoom?> loadGroupRoom(String roomId) async {
+    await ensureReady();
+    final room = _conversations[roomId];
+    if (room == null || room.kind != 'group' || room.channelId == null) {
+      return getGroupRoom(roomId);
+    }
+
+    final settings = await _auth.rawClient.getRoomSettings(
+      scope: 'group',
+      targetId: room.channelId!,
+    );
+    if (!settings.success) {
+      throw Exception(settings.message ?? 'Unable to load group settings');
+    }
+
+    final membersResponse = await _auth.rawClient.getGroupMembers(room.channelId!);
+    if (!membersResponse.success) {
+      throw Exception(membersResponse.message ?? 'Unable to load group members');
+    }
+
+    final memberIds = membersResponse.members
+        .map((member) => member.userId.toString())
+        .toList(growable: false);
+    final updatedRoom = room.copyWith(
+      isPublic: settings.joinRule == 0,
+      showMessageHistory: settings.historyVisibility != 2,
+      memberUserIds: memberIds,
+      updatedAt: DateTime.now(),
+    );
+    _storeConversation(updatedRoom);
+
+    final members = await Future.wait(
+      membersResponse.members.map((member) async {
+        final info = await _memberSummaryToRoomMemberMap(member);
+        return GroupMember(
+          userId: info['userId'] as String,
+          displayName: info['displayName'] as String,
+          avatarUrl: info['avatarUrl'] as String?,
+          role: _mapMemberRole(member.role),
+          joinedAt: member.joinedAt,
+        );
+      }),
+    );
+
+    final currentUserId = (_auth.userId ?? 0).toString();
+    final currentUserRole = members.firstWhere(
+      (member) => member.userId == currentUserId,
+      orElse: () => GroupMember(
+        userId: currentUserId,
+        displayName: currentUserId,
+        role: GroupRole.member,
+        joinedAt: updatedRoom.updatedAt,
+      ),
+    ).role;
+
+    await _persist();
+    _emitChanged();
+    return GroupRoom(
+      roomId: updatedRoom.id,
+      name: updatedRoom.title,
+      description: updatedRoom.description,
+      avatarUrl: updatedRoom.avatarUrl,
+      visibility: updatedRoom.isPublic
+          ? GroupVisibility.public
+          : GroupVisibility.private,
+      currentUserRole: currentUserRole,
+      memberCount: members.length,
+      showMessageHistory: updatedRoom.showMessageHistory,
+      createdAt: updatedRoom.updatedAt,
+      updatedAt: updatedRoom.updatedAt,
+      members: members,
+    );
+  }
+
   Future<void> setShowMessageHistory(String roomId, bool value) async {
-    await _init();
+    await setHistoryVisibility(roomId, value ? 1 : 2);
+  }
+
+  Future<void> setHistoryVisibility(String roomId, int historyVisibility) async {
+    await ensureReady();
     final room = _conversations[roomId];
     if (room == null) return;
+    if (room.channelId != null && room.kind != 'direct') {
+      final response = await _auth.rawClient.updateRoomSettings(
+        scope: _roomScope(room),
+        targetId: room.channelId!,
+        historyVisibility: historyVisibility,
+      );
+      if (!response.success) {
+        throw Exception(response.message ?? 'Unable to update history visibility');
+      }
+    }
     _storeConversation(room.copyWith(
-      showMessageHistory: value,
+      showMessageHistory: historyVisibility != 2,
       updatedAt: DateTime.now(),
     ));
     await _persist();
@@ -1858,10 +2183,11 @@ class AegisChatService {
     final room = _conversations[roomId];
     final targetUserId = int.tryParse(userId);
     if (room?.channelId == null || targetUserId == null) return;
+    final targetId = room!.channelId!;
 
     final response = await _auth.rawClient.updateMemberRole(
-      scope: 'channel',
-      targetId: room!.channelId!,
+      scope: _roomScope(room),
+      targetId: targetId,
       targetUserId: targetUserId,
       newRole: _mapGroupRole(role),
     );
@@ -1880,10 +2206,11 @@ class AegisChatService {
     final room = _conversations[roomId];
     final targetUserId = int.tryParse(userId);
     if (room?.channelId == null || targetUserId == null) return;
+    final targetId = room!.channelId!;
 
     final response = await _auth.rawClient.updateMemberPermissions(
-      scope: 'channel',
-      targetId: room!.channelId!,
+      scope: _roomScope(room),
+      targetId: targetId,
       targetUserId: targetUserId,
       canSendMessages: false,
     );
@@ -1897,10 +2224,11 @@ class AegisChatService {
     final room = _conversations[roomId];
     final targetUserId = int.tryParse(userId);
     if (room?.channelId == null || targetUserId == null) return;
+    final targetId = room!.channelId!;
 
     final response = await _auth.rawClient.updateMemberPermissions(
-      scope: 'channel',
-      targetId: room!.channelId!,
+      scope: _roomScope(room),
+      targetId: targetId,
       targetUserId: targetUserId,
       canSendMessages: false,
       canInviteUsers: false,
@@ -1917,10 +2245,11 @@ class AegisChatService {
     final room = _conversations[roomId];
     final targetUserId = int.tryParse(userId);
     if (room?.channelId == null || targetUserId == null) return;
+    final targetId = room!.channelId!;
 
     final response = await _auth.rawClient.updateMemberPermissions(
-      scope: 'channel',
-      targetId: room!.channelId!,
+      scope: _roomScope(room),
+      targetId: targetId,
       targetUserId: targetUserId,
       canSendMessages: true,
       canInviteUsers: true,
@@ -1940,7 +2269,7 @@ class AegisChatService {
 
     if (room.channelId != null && targetUserId != null) {
       final response = await _auth.rawClient.updateMemberPermissions(
-        scope: 'channel',
+        scope: _roomScope(room),
         targetId: room.channelId!,
         targetUserId: targetUserId,
         canSendMessages: false,
@@ -1961,7 +2290,11 @@ class AegisChatService {
     _emitChanged();
   }
 
-  Future<void> deleteGroup(String roomId) => leaveRoom(roomId);
+  Future<void> deleteGroup(String roomId) async {
+    throw const AegisFeatureInDevelopmentException(
+      'Group deletion is not supported by the server yet',
+    );
+  }
 
   Future<void> updateMyProfile({
     String? displayName,
@@ -2141,7 +2474,10 @@ class AegisChatService {
 
   void _handleIncomingMessage(Message message) {
     if (message.type != MessageType.privateChatMessageEvent &&
+        message.type != MessageType.groupMessageEvent &&
         message.type != MessageType.channelMessageEvent &&
+        message.type != MessageType.messageReactionEvent &&
+        message.type != MessageType.messagePinEvent &&
         message.type != MessageType.privateChatMessage &&
         message.type != MessageType.channelMessage) {
       return;
@@ -2175,6 +2511,7 @@ class AegisChatService {
             content: event.content,
             contentType: event.contentType,
             createdAt: event.createdAt,
+            replyToMessageId: event.replyToMessageId,
             isDelivered: event.deliveredTo.isNotEmpty,
             isRead: event.readBy.isNotEmpty,
           );
@@ -2216,6 +2553,7 @@ class AegisChatService {
             content: event.content,
             contentType: event.contentType,
             createdAt: event.createdAt,
+            replyToMessageId: event.replyToMessageId,
             isDelivered: event.deliveredTo.isNotEmpty,
             isRead: event.readBy.isNotEmpty,
           );
@@ -2232,6 +2570,68 @@ class AegisChatService {
             }
           }
         }());
+      }
+
+      if (message.type == MessageType.groupMessageEvent) {
+        final event = GroupMessageEvent.fromBytes(message.payload);
+        final roomId = 'channel:${event.groupId}';
+        _conversations.putIfAbsent(
+          roomId,
+          () => _StoredConversation(
+            id: roomId,
+            title: event.groupName ?? 'Group ${event.groupId}',
+            kind: 'group',
+            updatedAt: event.createdAt,
+            channelId: event.groupId,
+            memberUserIds: <String>[event.fromUserId.toString()],
+          ),
+        );
+        unawaited(() async {
+          final roomMessage = await _historyItemToRoomMessage(
+            messageId: event.id.toString(),
+            senderId: event.fromUserId.toString(),
+            content: event.content,
+            contentType: event.contentType,
+            createdAt: event.createdAt,
+          );
+          await _appendMessage(roomId, roomMessage);
+          if (event.fromUserId != _auth.userId) {
+            final messageId = int.tryParse(roomMessage.id);
+            if (messageId != null && messageId > 0) {
+              await _auth.rawClient
+                  .sendDeliveryReceipt(<int>[messageId])
+                  .catchError((_) {});
+            }
+            if (_activeRoomId == roomId) {
+              await markRoomRead(roomId);
+            }
+          }
+        }());
+      }
+
+      if (message.type == MessageType.messageReactionEvent) {
+        final event = MessageReactionEventPayload.fromBytes(message.payload);
+        final roomId = _findRoomIdByMessageId(event.messageId);
+        if (roomId != null) {
+          _updateReactionCache(roomId, event.messageId.toString(), event.reactions);
+          _emitRoomChanged(roomId);
+        }
+      }
+
+      if (message.type == MessageType.messagePinEvent) {
+        final event = MessagePinEventPayload.fromBytes(message.payload);
+        final roomId = _roomIdForScope(event.scope, event.targetId);
+        if (roomId != null) {
+          final current =
+              List<String>.from(_pinnedEventIdsByRoom[roomId] ?? const <String>[]);
+          final eventId = event.messageId.toString();
+          current.remove(eventId);
+          if (event.pinned) {
+            current.insert(0, eventId);
+          }
+          _setPinnedEventsCache(roomId, current);
+          _emitRoomChanged(roomId);
+        }
       }
     } catch (_) {}
   }
@@ -2359,12 +2759,44 @@ class AegisChatService {
             content: item.content,
             contentType: item.contentType,
             createdAt: item.createdAt,
+            replyToMessageId: _extractHistoryReplyToMessageId(item),
             isDelivered: status.$1,
             isRead: status.$2,
             deliveredAt: status.$3,
             readAt: status.$4,
           );
         }),
+      );
+    } else if (conversation.kind == 'group' && conversation.channelId != null) {
+      final response = await _auth.rawClient.getGroupHistory(
+        conversation.channelId!,
+        limit: limit,
+      );
+      if (!response.success) {
+        throw Exception(response.message ?? 'Unable to load room history');
+      }
+      nextMessages = await Future.wait(
+        response.messages.map((item) {
+          final status = _extractHistoryStatus(item);
+          return _historyItemToRoomMessage(
+            messageId: item.id.toString(),
+            senderId: item.fromUserId.toString(),
+            content: item.content,
+            contentType: item.contentType,
+            createdAt: item.createdAt,
+            isDelivered: status.$1,
+            isRead: status.$2,
+            deliveredAt: status.$3,
+            readAt: status.$4,
+          );
+        }),
+      );
+      _setPinnedEventsCache(
+        roomId,
+        response.messages
+            .where((item) => item.isPinned)
+            .map((item) => item.id.toString())
+            .toList(growable: false),
       );
     } else if (conversation.channelId != null) {
       final response = await _auth.rawClient.getChannelHistory(
@@ -2383,6 +2815,7 @@ class AegisChatService {
             content: item.content,
             contentType: item.contentType,
             createdAt: item.createdAt,
+            replyToMessageId: _extractHistoryReplyToMessageId(item),
             isDelivered: status.$1,
             isRead: status.$2,
             deliveredAt: status.$3,
@@ -2433,6 +2866,7 @@ class AegisChatService {
         left.time == right.time &&
         left.type == right.type &&
         left.mediaId == right.mediaId &&
+      left.replyToMessageId == right.replyToMessageId &&
         left.senderId == right.senderId &&
         left.isDelivered == right.isDelivered &&
         left.isRead == right.isRead &&
@@ -2487,6 +2921,108 @@ class AegisChatService {
       readDate('deliveredAt', 'DeliveredAt'),
       readDate('readAt', 'ReadAt'),
     );
+  }
+
+  int? _extractHistoryReplyToMessageId(dynamic item) {
+    Map<String, dynamic> payload;
+    try {
+      payload = Map<String, dynamic>.from((item as dynamic).toJson() as Map);
+    } catch (_) {
+      return null;
+    }
+
+    final value = payload['replyToMessageId'] ?? payload['ReplyToMessageId'];
+    return (value as num?)?.toInt();
+  }
+
+  Future<Map<String, dynamic>> _memberSummaryToRoomMemberMap(
+    MemberSummary member,
+  ) async {
+    final cached = _profileCache[member.userId];
+    if (cached == null) {
+      try {
+        final info = await getUserInfo(member.userId.toString());
+        _storeProfile(member.userId, info);
+      } catch (_) {}
+    }
+    final profile = _profileCache[member.userId];
+    return {
+      'userId': member.userId.toString(),
+      'displayName': profile?['displayName'] ?? member.username,
+      'avatarUrl': profile?['avatarUrl'],
+      'role': member.role,
+      'joinedAt': member.joinedAt.toIso8601String(),
+      'canSendMessages': member.canSendMessages,
+      'canDeleteOthersMessages': member.canDeleteOthersMessages,
+      'canPinMessages': member.canPinMessages,
+      'canManageRoles': member.canManageRoles,
+    };
+  }
+
+  GroupRole _mapMemberRole(String role) {
+    switch (role.trim().toLowerCase()) {
+      case 'owner':
+        return GroupRole.owner;
+      case 'admin':
+      case 'moderator':
+        return GroupRole.admin;
+      case 'guest':
+        return GroupRole.guest;
+      default:
+        return GroupRole.member;
+    }
+  }
+
+  String _roomScope(_StoredConversation room) {
+    switch (room.kind) {
+      case 'group':
+        return 'group';
+      case 'direct':
+        return 'private';
+      default:
+        return 'channel';
+    }
+  }
+
+  String? _roomIdForScope(String scope, int targetId) {
+    switch (scope) {
+      case 'group':
+      case 'channel':
+        return 'channel:$targetId';
+      default:
+        return null;
+    }
+  }
+
+  String? _findRoomIdByMessageId(int messageId) {
+    final targetId = messageId.toString();
+    for (final entry in _messages.entries) {
+      if (entry.value.any((message) => message.id == targetId)) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
+  void _updateReactionCache(
+    String roomId,
+    String eventId,
+    List<ReactionCount> reactions,
+  ) {
+    final normalized = <String, dynamic>{
+      for (final reaction in reactions)
+        reaction.emoji: <String, dynamic>{
+          'count': reaction.count,
+          if (reaction.byMe) 'myEventId': 'remote',
+        },
+    };
+        final roomReactions =
+          _roomReactions.putIfAbsent(roomId, () => <String, Map<String, dynamic>>{});
+        roomReactions[eventId] = normalized;
+  }
+
+  void _setPinnedEventsCache(String roomId, List<String> eventIds) {
+    _pinnedEventIdsByRoom[roomId] = List<String>.from(eventIds);
   }
 
   bool _storedConversationEquals(
@@ -2560,6 +3096,7 @@ class AegisChatService {
     required String content,
     required MessageContentType contentType,
     required DateTime createdAt,
+    int? replyToMessageId,
     bool isDelivered = false,
     bool isRead = false,
     DateTime? deliveredAt,
@@ -2586,6 +3123,7 @@ class AegisChatService {
       time: createdAt,
       type: _mapMessageType(contentType),
       mediaId: mediaId,
+      replyToMessageId: replyToMessageId,
       isDelivered: isDelivered,
       isRead: isRead,
       deliveredAt: deliveredAt,

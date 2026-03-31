@@ -9,10 +9,12 @@ class AegisHandshakeResult {
   AegisHandshakeResult({
     required this.privateKey,
     required this.publicKeySpki,
+    required this.publicKeyRaw,
   });
 
   final ECPrivateKey privateKey;
   final List<int> publicKeySpki;
+  final Uint8List publicKeyRaw;
 }
 
 class AegisHandshakeCrypto {
@@ -65,6 +67,7 @@ class AegisHandshakeCrypto {
         ..._p256SpkiPrefix,
         ...publicKey.Q!.getEncoded(false),
       ],
+      publicKeyRaw: Uint8List.fromList(publicKey.Q!.getEncoded(false)),
     );
   }
 
@@ -137,7 +140,7 @@ class AegisHandshakeCrypto {
     required ECPrivateKey clientPrivateKey,
     required List<int> serverPublicKeySpki,
   }) {
-    final rawServerKey = _decodeSpki(serverPublicKeySpki);
+    final rawServerKey = _normalizePeerPublicKey(serverPublicKeySpki);
     final point = _domain.curve.decodePoint(Uint8List.fromList(rawServerKey));
     if (point == null) {
       throw const FormatException('Invalid server public key');
@@ -183,6 +186,13 @@ class AegisHandshakeCrypto {
     }
 
     return spkiBytes.sublist(_p256SpkiPrefix.length);
+  }
+
+  static List<int> _normalizePeerPublicKey(List<int> peerPublicKey) {
+    if (peerPublicKey.length == 65 && peerPublicKey.first == 0x04) {
+      return peerPublicKey;
+    }
+    return _decodeSpki(peerPublicKey);
   }
 
   static List<int> _bigIntToBytes(BigInt value, int length) {

@@ -2446,4 +2446,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backgroundOptimizationOpenSettings => '打开外观设置';
+
+  @override
+  String get roomJoinRuleLabel => '谁可以加入';
+
+  @override
+  String get roomJoinRulePublic => '向所有人开放';
+
+  @override
+  String get roomJoinRulePublicDescription => '任何人都可以发现并加入这个房间。';
+
+  @override
+  String get roomJoinRuleInviteOnly => '仅限邀请';
+
+  @override
+  String get roomJoinRuleInviteOnlyDescription => '只有受邀用户可以加入这个房间。';
+
+  @override
+  String get roomJoinRuleApproval => '需要批准';
+
+  @override
+  String get roomJoinRuleApprovalDescription => '用户可以申请访问，但加入前必须获得批准。';
+
+  @override
+  String get roomHistoryVisibilityLabel => '谁可以查看历史记录';
+
+  @override
+  String get roomHistoryVisibilityWorldReadable => '所有人';
+
+  @override
+  String get roomHistoryVisibilityWorldReadableDescription => '任何人都可以查看之前的消息。';
+
+  @override
+  String get roomHistoryVisibilityJoined => '已加入成员';
+
+  @override
+  String get roomHistoryVisibilityJoinedDescription => '只有已加入的成员可以查看之前的消息。';
+
+  @override
+  String get roomHistoryVisibilityInvited => '仅限受邀用户';
+
+  @override
+  String get roomHistoryVisibilityInvitedDescription => '只有受邀用户可以查看之前的消息。';
 }

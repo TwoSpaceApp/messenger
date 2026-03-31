@@ -12,121 +12,188 @@ class $AegisConversationsTable extends AegisConversations
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-      'id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
-      'title', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _kindMeta = const VerificationMeta('kind');
   @override
   late final GeneratedColumn<String> kind = GeneratedColumn<String>(
-      'kind', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _updatedAtEpochMsMeta =
-      const VerificationMeta('updatedAtEpochMs');
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtEpochMsMeta = const VerificationMeta(
+    'updatedAtEpochMs',
+  );
   @override
   late final GeneratedColumn<int> updatedAtEpochMs = GeneratedColumn<int>(
-      'updated_at_epoch_ms', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _lastMessageMeta =
-      const VerificationMeta('lastMessage');
+    'updated_at_epoch_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastMessageMeta = const VerificationMeta(
+    'lastMessage',
+  );
   @override
   late final GeneratedColumn<String> lastMessage = GeneratedColumn<String>(
-      'last_message', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _unreadCountMeta =
-      const VerificationMeta('unreadCount');
+    'last_message',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _unreadCountMeta = const VerificationMeta(
+    'unreadCount',
+  );
   @override
   late final GeneratedColumn<int> unreadCount = GeneratedColumn<int>(
-      'unread_count', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _avatarUrlMeta =
-      const VerificationMeta('avatarUrl');
+    'unread_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _avatarUrlMeta = const VerificationMeta(
+    'avatarUrl',
+  );
   @override
   late final GeneratedColumn<String> avatarUrl = GeneratedColumn<String>(
-      'avatar_url', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _descriptionMeta =
-      const VerificationMeta('description');
+    'avatar_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
   @override
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _peerUserIdMeta =
-      const VerificationMeta('peerUserId');
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _peerUserIdMeta = const VerificationMeta(
+    'peerUserId',
+  );
   @override
   late final GeneratedColumn<int> peerUserId = GeneratedColumn<int>(
-      'peer_user_id', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _peerUsernameMeta =
-      const VerificationMeta('peerUsername');
+    'peer_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _peerUsernameMeta = const VerificationMeta(
+    'peerUsername',
+  );
   @override
   late final GeneratedColumn<String> peerUsername = GeneratedColumn<String>(
-      'peer_username', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _channelIdMeta =
-      const VerificationMeta('channelId');
+    'peer_username',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _channelIdMeta = const VerificationMeta(
+    'channelId',
+  );
   @override
   late final GeneratedColumn<int> channelId = GeneratedColumn<int>(
-      'channel_id', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _isPublicMeta =
-      const VerificationMeta('isPublic');
+    'channel_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isPublicMeta = const VerificationMeta(
+    'isPublic',
+  );
   @override
   late final GeneratedColumn<bool> isPublic = GeneratedColumn<bool>(
-      'is_public', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_public" IN (0, 1))'),
-      defaultValue: const Constant(false));
+    'is_public',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_public" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _showMessageHistoryMeta =
       const VerificationMeta('showMessageHistory');
   @override
   late final GeneratedColumn<bool> showMessageHistory = GeneratedColumn<bool>(
-      'show_message_history', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("show_message_history" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _memberUserIdsJsonMeta =
-      const VerificationMeta('memberUserIdsJson');
+    'show_message_history',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("show_message_history" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _memberUserIdsJsonMeta = const VerificationMeta(
+    'memberUserIdsJson',
+  );
   @override
   late final GeneratedColumn<String> memberUserIdsJson =
-      GeneratedColumn<String>('member_user_ids_json', aliasedName, false,
-          type: DriftSqlType.string,
-          requiredDuringInsert: false,
-          defaultValue: const Constant('[]'));
+      GeneratedColumn<String>(
+        'member_user_ids_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('[]'),
+      );
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        title,
-        kind,
-        updatedAtEpochMs,
-        lastMessage,
-        unreadCount,
-        avatarUrl,
-        description,
-        peerUserId,
-        peerUsername,
-        channelId,
-        isPublic,
-        showMessageHistory,
-        memberUserIdsJson
-      ];
+    id,
+    title,
+    kind,
+    updatedAtEpochMs,
+    lastMessage,
+    unreadCount,
+    avatarUrl,
+    description,
+    peerUserId,
+    peerUsername,
+    channelId,
+    isPublic,
+    showMessageHistory,
+    memberUserIdsJson,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'aegis_conversations';
   @override
-  VerificationContext validateIntegrity(Insertable<AegisConversation> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<AegisConversation> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -136,77 +203,111 @@ class $AegisConversationsTable extends AegisConversations
     }
     if (data.containsKey('title')) {
       context.handle(
-          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
     if (data.containsKey('kind')) {
       context.handle(
-          _kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
     } else if (isInserting) {
       context.missing(_kindMeta);
     }
     if (data.containsKey('updated_at_epoch_ms')) {
       context.handle(
+        _updatedAtEpochMsMeta,
+        updatedAtEpochMs.isAcceptableOrUnknown(
+          data['updated_at_epoch_ms']!,
           _updatedAtEpochMsMeta,
-          updatedAtEpochMs.isAcceptableOrUnknown(
-              data['updated_at_epoch_ms']!, _updatedAtEpochMsMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_updatedAtEpochMsMeta);
     }
     if (data.containsKey('last_message')) {
       context.handle(
+        _lastMessageMeta,
+        lastMessage.isAcceptableOrUnknown(
+          data['last_message']!,
           _lastMessageMeta,
-          lastMessage.isAcceptableOrUnknown(
-              data['last_message']!, _lastMessageMeta));
+        ),
+      );
     }
     if (data.containsKey('unread_count')) {
       context.handle(
+        _unreadCountMeta,
+        unreadCount.isAcceptableOrUnknown(
+          data['unread_count']!,
           _unreadCountMeta,
-          unreadCount.isAcceptableOrUnknown(
-              data['unread_count']!, _unreadCountMeta));
+        ),
+      );
     }
     if (data.containsKey('avatar_url')) {
-      context.handle(_avatarUrlMeta,
-          avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta));
+      context.handle(
+        _avatarUrlMeta,
+        avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta),
+      );
     }
     if (data.containsKey('description')) {
       context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
           _descriptionMeta,
-          description.isAcceptableOrUnknown(
-              data['description']!, _descriptionMeta));
+        ),
+      );
     }
     if (data.containsKey('peer_user_id')) {
       context.handle(
+        _peerUserIdMeta,
+        peerUserId.isAcceptableOrUnknown(
+          data['peer_user_id']!,
           _peerUserIdMeta,
-          peerUserId.isAcceptableOrUnknown(
-              data['peer_user_id']!, _peerUserIdMeta));
+        ),
+      );
     }
     if (data.containsKey('peer_username')) {
       context.handle(
+        _peerUsernameMeta,
+        peerUsername.isAcceptableOrUnknown(
+          data['peer_username']!,
           _peerUsernameMeta,
-          peerUsername.isAcceptableOrUnknown(
-              data['peer_username']!, _peerUsernameMeta));
+        ),
+      );
     }
     if (data.containsKey('channel_id')) {
-      context.handle(_channelIdMeta,
-          channelId.isAcceptableOrUnknown(data['channel_id']!, _channelIdMeta));
+      context.handle(
+        _channelIdMeta,
+        channelId.isAcceptableOrUnknown(data['channel_id']!, _channelIdMeta),
+      );
     }
     if (data.containsKey('is_public')) {
-      context.handle(_isPublicMeta,
-          isPublic.isAcceptableOrUnknown(data['is_public']!, _isPublicMeta));
+      context.handle(
+        _isPublicMeta,
+        isPublic.isAcceptableOrUnknown(data['is_public']!, _isPublicMeta),
+      );
     }
     if (data.containsKey('show_message_history')) {
       context.handle(
+        _showMessageHistoryMeta,
+        showMessageHistory.isAcceptableOrUnknown(
+          data['show_message_history']!,
           _showMessageHistoryMeta,
-          showMessageHistory.isAcceptableOrUnknown(
-              data['show_message_history']!, _showMessageHistoryMeta));
+        ),
+      );
     }
     if (data.containsKey('member_user_ids_json')) {
       context.handle(
+        _memberUserIdsJsonMeta,
+        memberUserIdsJson.isAcceptableOrUnknown(
+          data['member_user_ids_json']!,
           _memberUserIdsJsonMeta,
-          memberUserIdsJson.isAcceptableOrUnknown(
-              data['member_user_ids_json']!, _memberUserIdsJsonMeta));
+        ),
+      );
     }
     return context;
   }
@@ -217,34 +318,62 @@ class $AegisConversationsTable extends AegisConversations
   AegisConversation map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AegisConversation(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      title: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
-      kind: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
       updatedAtEpochMs: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}updated_at_epoch_ms'])!,
-      lastMessage: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}last_message']),
-      unreadCount: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}unread_count'])!,
-      avatarUrl: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}avatar_url']),
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description']),
-      peerUserId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}peer_user_id']),
-      peerUsername: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}peer_username']),
-      channelId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}channel_id']),
-      isPublic: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_public'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_epoch_ms'],
+      )!,
+      lastMessage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_message'],
+      ),
+      unreadCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}unread_count'],
+      )!,
+      avatarUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_url'],
+      ),
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      peerUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}peer_user_id'],
+      ),
+      peerUsername: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}peer_username'],
+      ),
+      channelId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}channel_id'],
+      ),
+      isPublic: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_public'],
+      )!,
       showMessageHistory: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}show_message_history'])!,
+        DriftSqlType.bool,
+        data['${effectivePrefix}show_message_history'],
+      )!,
       memberUserIdsJson: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}member_user_ids_json'])!,
+        DriftSqlType.string,
+        data['${effectivePrefix}member_user_ids_json'],
+      )!,
     );
   }
 
@@ -270,21 +399,22 @@ class AegisConversation extends DataClass
   final bool isPublic;
   final bool showMessageHistory;
   final String memberUserIdsJson;
-  const AegisConversation(
-      {required this.id,
-      required this.title,
-      required this.kind,
-      required this.updatedAtEpochMs,
-      this.lastMessage,
-      required this.unreadCount,
-      this.avatarUrl,
-      this.description,
-      this.peerUserId,
-      this.peerUsername,
-      this.channelId,
-      required this.isPublic,
-      required this.showMessageHistory,
-      required this.memberUserIdsJson});
+  const AegisConversation({
+    required this.id,
+    required this.title,
+    required this.kind,
+    required this.updatedAtEpochMs,
+    this.lastMessage,
+    required this.unreadCount,
+    this.avatarUrl,
+    this.description,
+    this.peerUserId,
+    this.peerUsername,
+    this.channelId,
+    required this.isPublic,
+    required this.showMessageHistory,
+    required this.memberUserIdsJson,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -348,8 +478,10 @@ class AegisConversation extends DataClass
     );
   }
 
-  factory AegisConversation.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory AegisConversation.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AegisConversation(
       id: serializer.fromJson<String>(json['id']),
@@ -389,38 +521,37 @@ class AegisConversation extends DataClass
     };
   }
 
-  AegisConversation copyWith(
-          {String? id,
-          String? title,
-          String? kind,
-          int? updatedAtEpochMs,
-          Value<String?> lastMessage = const Value.absent(),
-          int? unreadCount,
-          Value<String?> avatarUrl = const Value.absent(),
-          Value<String?> description = const Value.absent(),
-          Value<int?> peerUserId = const Value.absent(),
-          Value<String?> peerUsername = const Value.absent(),
-          Value<int?> channelId = const Value.absent(),
-          bool? isPublic,
-          bool? showMessageHistory,
-          String? memberUserIdsJson}) =>
-      AegisConversation(
-        id: id ?? this.id,
-        title: title ?? this.title,
-        kind: kind ?? this.kind,
-        updatedAtEpochMs: updatedAtEpochMs ?? this.updatedAtEpochMs,
-        lastMessage: lastMessage.present ? lastMessage.value : this.lastMessage,
-        unreadCount: unreadCount ?? this.unreadCount,
-        avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
-        description: description.present ? description.value : this.description,
-        peerUserId: peerUserId.present ? peerUserId.value : this.peerUserId,
-        peerUsername:
-            peerUsername.present ? peerUsername.value : this.peerUsername,
-        channelId: channelId.present ? channelId.value : this.channelId,
-        isPublic: isPublic ?? this.isPublic,
-        showMessageHistory: showMessageHistory ?? this.showMessageHistory,
-        memberUserIdsJson: memberUserIdsJson ?? this.memberUserIdsJson,
-      );
+  AegisConversation copyWith({
+    String? id,
+    String? title,
+    String? kind,
+    int? updatedAtEpochMs,
+    Value<String?> lastMessage = const Value.absent(),
+    int? unreadCount,
+    Value<String?> avatarUrl = const Value.absent(),
+    Value<String?> description = const Value.absent(),
+    Value<int?> peerUserId = const Value.absent(),
+    Value<String?> peerUsername = const Value.absent(),
+    Value<int?> channelId = const Value.absent(),
+    bool? isPublic,
+    bool? showMessageHistory,
+    String? memberUserIdsJson,
+  }) => AegisConversation(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    kind: kind ?? this.kind,
+    updatedAtEpochMs: updatedAtEpochMs ?? this.updatedAtEpochMs,
+    lastMessage: lastMessage.present ? lastMessage.value : this.lastMessage,
+    unreadCount: unreadCount ?? this.unreadCount,
+    avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
+    description: description.present ? description.value : this.description,
+    peerUserId: peerUserId.present ? peerUserId.value : this.peerUserId,
+    peerUsername: peerUsername.present ? peerUsername.value : this.peerUsername,
+    channelId: channelId.present ? channelId.value : this.channelId,
+    isPublic: isPublic ?? this.isPublic,
+    showMessageHistory: showMessageHistory ?? this.showMessageHistory,
+    memberUserIdsJson: memberUserIdsJson ?? this.memberUserIdsJson,
+  );
   AegisConversation copyWithCompanion(AegisConversationsCompanion data) {
     return AegisConversation(
       id: data.id.present ? data.id.value : this.id,
@@ -429,15 +560,19 @@ class AegisConversation extends DataClass
       updatedAtEpochMs: data.updatedAtEpochMs.present
           ? data.updatedAtEpochMs.value
           : this.updatedAtEpochMs,
-      lastMessage:
-          data.lastMessage.present ? data.lastMessage.value : this.lastMessage,
-      unreadCount:
-          data.unreadCount.present ? data.unreadCount.value : this.unreadCount,
+      lastMessage: data.lastMessage.present
+          ? data.lastMessage.value
+          : this.lastMessage,
+      unreadCount: data.unreadCount.present
+          ? data.unreadCount.value
+          : this.unreadCount,
       avatarUrl: data.avatarUrl.present ? data.avatarUrl.value : this.avatarUrl,
-      description:
-          data.description.present ? data.description.value : this.description,
-      peerUserId:
-          data.peerUserId.present ? data.peerUserId.value : this.peerUserId,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      peerUserId: data.peerUserId.present
+          ? data.peerUserId.value
+          : this.peerUserId,
       peerUsername: data.peerUsername.present
           ? data.peerUsername.value
           : this.peerUsername,
@@ -475,20 +610,21 @@ class AegisConversation extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      id,
-      title,
-      kind,
-      updatedAtEpochMs,
-      lastMessage,
-      unreadCount,
-      avatarUrl,
-      description,
-      peerUserId,
-      peerUsername,
-      channelId,
-      isPublic,
-      showMessageHistory,
-      memberUserIdsJson);
+    id,
+    title,
+    kind,
+    updatedAtEpochMs,
+    lastMessage,
+    unreadCount,
+    avatarUrl,
+    description,
+    peerUserId,
+    peerUsername,
+    channelId,
+    isPublic,
+    showMessageHistory,
+    memberUserIdsJson,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -558,10 +694,10 @@ class AegisConversationsCompanion extends UpdateCompanion<AegisConversation> {
     this.showMessageHistory = const Value.absent(),
     this.memberUserIdsJson = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : id = Value(id),
-        title = Value(title),
-        kind = Value(kind),
-        updatedAtEpochMs = Value(updatedAtEpochMs);
+  }) : id = Value(id),
+       title = Value(title),
+       kind = Value(kind),
+       updatedAtEpochMs = Value(updatedAtEpochMs);
   static Insertable<AegisConversation> custom({
     Expression<String>? id,
     Expression<String>? title,
@@ -599,22 +735,23 @@ class AegisConversationsCompanion extends UpdateCompanion<AegisConversation> {
     });
   }
 
-  AegisConversationsCompanion copyWith(
-      {Value<String>? id,
-      Value<String>? title,
-      Value<String>? kind,
-      Value<int>? updatedAtEpochMs,
-      Value<String?>? lastMessage,
-      Value<int>? unreadCount,
-      Value<String?>? avatarUrl,
-      Value<String?>? description,
-      Value<int?>? peerUserId,
-      Value<String?>? peerUsername,
-      Value<int?>? channelId,
-      Value<bool>? isPublic,
-      Value<bool>? showMessageHistory,
-      Value<String>? memberUserIdsJson,
-      Value<int>? rowid}) {
+  AegisConversationsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? title,
+    Value<String>? kind,
+    Value<int>? updatedAtEpochMs,
+    Value<String?>? lastMessage,
+    Value<int>? unreadCount,
+    Value<String?>? avatarUrl,
+    Value<String?>? description,
+    Value<int?>? peerUserId,
+    Value<String?>? peerUsername,
+    Value<int?>? channelId,
+    Value<bool>? isPublic,
+    Value<bool>? showMessageHistory,
+    Value<String>? memberUserIdsJson,
+    Value<int>? rowid,
+  }) {
     return AegisConversationsCompanion(
       id: id ?? this.id,
       title: title ?? this.title,
@@ -717,55 +854,160 @@ class $AegisMessagesTable extends AegisMessages
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-      'id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _roomIdMeta = const VerificationMeta('roomId');
   @override
   late final GeneratedColumn<String> roomId = GeneratedColumn<String>(
-      'room_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _senderIdMeta =
-      const VerificationMeta('senderId');
+    'room_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _senderIdMeta = const VerificationMeta(
+    'senderId',
+  );
   @override
   late final GeneratedColumn<String> senderId = GeneratedColumn<String>(
-      'sender_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _contentMeta =
-      const VerificationMeta('content');
+    'sender_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
   @override
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
-      'content', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _sentAtEpochMsMeta =
-      const VerificationMeta('sentAtEpochMs');
+    'content',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sentAtEpochMsMeta = const VerificationMeta(
+    'sentAtEpochMs',
+  );
   @override
   late final GeneratedColumn<int> sentAtEpochMs = GeneratedColumn<int>(
-      'sent_at_epoch_ms', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+    'sent_at_epoch_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('m.text'));
-  static const VerificationMeta _mediaIdMeta =
-      const VerificationMeta('mediaId');
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('m.text'),
+  );
+  static const VerificationMeta _mediaIdMeta = const VerificationMeta(
+    'mediaId',
+  );
   @override
   late final GeneratedColumn<String> mediaId = GeneratedColumn<String>(
-      'media_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'media_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _replyToMessageIdMeta = const VerificationMeta(
+    'replyToMessageId',
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, roomId, senderId, content, sentAtEpochMs, type, mediaId];
+  late final GeneratedColumn<int> replyToMessageId = GeneratedColumn<int>(
+    'reply_to_message_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDeliveredMeta = const VerificationMeta(
+    'isDelivered',
+  );
+  @override
+  late final GeneratedColumn<bool> isDelivered = GeneratedColumn<bool>(
+    'is_delivered',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_delivered" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isReadMeta = const VerificationMeta('isRead');
+  @override
+  late final GeneratedColumn<bool> isRead = GeneratedColumn<bool>(
+    'is_read',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_read" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deliveredAtEpochMsMeta =
+      const VerificationMeta('deliveredAtEpochMs');
+  @override
+  late final GeneratedColumn<int> deliveredAtEpochMs = GeneratedColumn<int>(
+    'delivered_at_epoch_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _readAtEpochMsMeta = const VerificationMeta(
+    'readAtEpochMs',
+  );
+  @override
+  late final GeneratedColumn<int> readAtEpochMs = GeneratedColumn<int>(
+    'read_at_epoch_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    roomId,
+    senderId,
+    content,
+    sentAtEpochMs,
+    type,
+    mediaId,
+    replyToMessageId,
+    isDelivered,
+    isRead,
+    deliveredAtEpochMs,
+    readAtEpochMs,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'aegis_messages';
   @override
-  VerificationContext validateIntegrity(Insertable<AegisMessage> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<AegisMessage> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -774,38 +1016,93 @@ class $AegisMessagesTable extends AegisMessages
       context.missing(_idMeta);
     }
     if (data.containsKey('room_id')) {
-      context.handle(_roomIdMeta,
-          roomId.isAcceptableOrUnknown(data['room_id']!, _roomIdMeta));
+      context.handle(
+        _roomIdMeta,
+        roomId.isAcceptableOrUnknown(data['room_id']!, _roomIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_roomIdMeta);
     }
     if (data.containsKey('sender_id')) {
-      context.handle(_senderIdMeta,
-          senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta));
+      context.handle(
+        _senderIdMeta,
+        senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_senderIdMeta);
     }
     if (data.containsKey('content')) {
-      context.handle(_contentMeta,
-          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
+      );
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
     if (data.containsKey('sent_at_epoch_ms')) {
       context.handle(
+        _sentAtEpochMsMeta,
+        sentAtEpochMs.isAcceptableOrUnknown(
+          data['sent_at_epoch_ms']!,
           _sentAtEpochMsMeta,
-          sentAtEpochMs.isAcceptableOrUnknown(
-              data['sent_at_epoch_ms']!, _sentAtEpochMsMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_sentAtEpochMsMeta);
     }
     if (data.containsKey('type')) {
       context.handle(
-          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
     }
     if (data.containsKey('media_id')) {
-      context.handle(_mediaIdMeta,
-          mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta));
+      context.handle(
+        _mediaIdMeta,
+        mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta),
+      );
+    }
+    if (data.containsKey('reply_to_message_id')) {
+      context.handle(
+        _replyToMessageIdMeta,
+        replyToMessageId.isAcceptableOrUnknown(
+          data['reply_to_message_id']!,
+          _replyToMessageIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_delivered')) {
+      context.handle(
+        _isDeliveredMeta,
+        isDelivered.isAcceptableOrUnknown(
+          data['is_delivered']!,
+          _isDeliveredMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_read')) {
+      context.handle(
+        _isReadMeta,
+        isRead.isAcceptableOrUnknown(data['is_read']!, _isReadMeta),
+      );
+    }
+    if (data.containsKey('delivered_at_epoch_ms')) {
+      context.handle(
+        _deliveredAtEpochMsMeta,
+        deliveredAtEpochMs.isAcceptableOrUnknown(
+          data['delivered_at_epoch_ms']!,
+          _deliveredAtEpochMsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('read_at_epoch_ms')) {
+      context.handle(
+        _readAtEpochMsMeta,
+        readAtEpochMs.isAcceptableOrUnknown(
+          data['read_at_epoch_ms']!,
+          _readAtEpochMsMeta,
+        ),
+      );
     }
     return context;
   }
@@ -816,20 +1113,54 @@ class $AegisMessagesTable extends AegisMessages
   AegisMessage map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AegisMessage(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      roomId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}room_id'])!,
-      senderId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}sender_id'])!,
-      content: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}content'])!,
-      sentAtEpochMs: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sent_at_epoch_ms'])!,
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      mediaId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}media_id']),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      roomId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}room_id'],
+      )!,
+      senderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sender_id'],
+      )!,
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      )!,
+      sentAtEpochMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sent_at_epoch_ms'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      mediaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_id'],
+      ),
+      replyToMessageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reply_to_message_id'],
+      ),
+      isDelivered: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_delivered'],
+      )!,
+      isRead: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_read'],
+      )!,
+      deliveredAtEpochMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}delivered_at_epoch_ms'],
+      ),
+      readAtEpochMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}read_at_epoch_ms'],
+      ),
     );
   }
 
@@ -847,14 +1178,25 @@ class AegisMessage extends DataClass implements Insertable<AegisMessage> {
   final int sentAtEpochMs;
   final String type;
   final String? mediaId;
-  const AegisMessage(
-      {required this.id,
-      required this.roomId,
-      required this.senderId,
-      required this.content,
-      required this.sentAtEpochMs,
-      required this.type,
-      this.mediaId});
+  final int? replyToMessageId;
+  final bool isDelivered;
+  final bool isRead;
+  final int? deliveredAtEpochMs;
+  final int? readAtEpochMs;
+  const AegisMessage({
+    required this.id,
+    required this.roomId,
+    required this.senderId,
+    required this.content,
+    required this.sentAtEpochMs,
+    required this.type,
+    this.mediaId,
+    this.replyToMessageId,
+    required this.isDelivered,
+    required this.isRead,
+    this.deliveredAtEpochMs,
+    this.readAtEpochMs,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -866,6 +1208,17 @@ class AegisMessage extends DataClass implements Insertable<AegisMessage> {
     map['type'] = Variable<String>(type);
     if (!nullToAbsent || mediaId != null) {
       map['media_id'] = Variable<String>(mediaId);
+    }
+    if (!nullToAbsent || replyToMessageId != null) {
+      map['reply_to_message_id'] = Variable<int>(replyToMessageId);
+    }
+    map['is_delivered'] = Variable<bool>(isDelivered);
+    map['is_read'] = Variable<bool>(isRead);
+    if (!nullToAbsent || deliveredAtEpochMs != null) {
+      map['delivered_at_epoch_ms'] = Variable<int>(deliveredAtEpochMs);
+    }
+    if (!nullToAbsent || readAtEpochMs != null) {
+      map['read_at_epoch_ms'] = Variable<int>(readAtEpochMs);
     }
     return map;
   }
@@ -881,11 +1234,24 @@ class AegisMessage extends DataClass implements Insertable<AegisMessage> {
       mediaId: mediaId == null && nullToAbsent
           ? const Value.absent()
           : Value(mediaId),
+      replyToMessageId: replyToMessageId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(replyToMessageId),
+      isDelivered: Value(isDelivered),
+      isRead: Value(isRead),
+      deliveredAtEpochMs: deliveredAtEpochMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deliveredAtEpochMs),
+      readAtEpochMs: readAtEpochMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(readAtEpochMs),
     );
   }
 
-  factory AegisMessage.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory AegisMessage.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AegisMessage(
       id: serializer.fromJson<String>(json['id']),
@@ -895,6 +1261,11 @@ class AegisMessage extends DataClass implements Insertable<AegisMessage> {
       sentAtEpochMs: serializer.fromJson<int>(json['sentAtEpochMs']),
       type: serializer.fromJson<String>(json['type']),
       mediaId: serializer.fromJson<String?>(json['mediaId']),
+      replyToMessageId: serializer.fromJson<int?>(json['replyToMessageId']),
+      isDelivered: serializer.fromJson<bool>(json['isDelivered']),
+      isRead: serializer.fromJson<bool>(json['isRead']),
+      deliveredAtEpochMs: serializer.fromJson<int?>(json['deliveredAtEpochMs']),
+      readAtEpochMs: serializer.fromJson<int?>(json['readAtEpochMs']),
     );
   }
   @override
@@ -908,26 +1279,47 @@ class AegisMessage extends DataClass implements Insertable<AegisMessage> {
       'sentAtEpochMs': serializer.toJson<int>(sentAtEpochMs),
       'type': serializer.toJson<String>(type),
       'mediaId': serializer.toJson<String?>(mediaId),
+      'replyToMessageId': serializer.toJson<int?>(replyToMessageId),
+      'isDelivered': serializer.toJson<bool>(isDelivered),
+      'isRead': serializer.toJson<bool>(isRead),
+      'deliveredAtEpochMs': serializer.toJson<int?>(deliveredAtEpochMs),
+      'readAtEpochMs': serializer.toJson<int?>(readAtEpochMs),
     };
   }
 
-  AegisMessage copyWith(
-          {String? id,
-          String? roomId,
-          String? senderId,
-          String? content,
-          int? sentAtEpochMs,
-          String? type,
-          Value<String?> mediaId = const Value.absent()}) =>
-      AegisMessage(
-        id: id ?? this.id,
-        roomId: roomId ?? this.roomId,
-        senderId: senderId ?? this.senderId,
-        content: content ?? this.content,
-        sentAtEpochMs: sentAtEpochMs ?? this.sentAtEpochMs,
-        type: type ?? this.type,
-        mediaId: mediaId.present ? mediaId.value : this.mediaId,
-      );
+  AegisMessage copyWith({
+    String? id,
+    String? roomId,
+    String? senderId,
+    String? content,
+    int? sentAtEpochMs,
+    String? type,
+    Value<String?> mediaId = const Value.absent(),
+    Value<int?> replyToMessageId = const Value.absent(),
+    bool? isDelivered,
+    bool? isRead,
+    Value<int?> deliveredAtEpochMs = const Value.absent(),
+    Value<int?> readAtEpochMs = const Value.absent(),
+  }) => AegisMessage(
+    id: id ?? this.id,
+    roomId: roomId ?? this.roomId,
+    senderId: senderId ?? this.senderId,
+    content: content ?? this.content,
+    sentAtEpochMs: sentAtEpochMs ?? this.sentAtEpochMs,
+    type: type ?? this.type,
+    mediaId: mediaId.present ? mediaId.value : this.mediaId,
+    replyToMessageId: replyToMessageId.present
+        ? replyToMessageId.value
+        : this.replyToMessageId,
+    isDelivered: isDelivered ?? this.isDelivered,
+    isRead: isRead ?? this.isRead,
+    deliveredAtEpochMs: deliveredAtEpochMs.present
+        ? deliveredAtEpochMs.value
+        : this.deliveredAtEpochMs,
+    readAtEpochMs: readAtEpochMs.present
+        ? readAtEpochMs.value
+        : this.readAtEpochMs,
+  );
   AegisMessage copyWithCompanion(AegisMessagesCompanion data) {
     return AegisMessage(
       id: data.id.present ? data.id.value : this.id,
@@ -939,6 +1331,19 @@ class AegisMessage extends DataClass implements Insertable<AegisMessage> {
           : this.sentAtEpochMs,
       type: data.type.present ? data.type.value : this.type,
       mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
+      replyToMessageId: data.replyToMessageId.present
+          ? data.replyToMessageId.value
+          : this.replyToMessageId,
+      isDelivered: data.isDelivered.present
+          ? data.isDelivered.value
+          : this.isDelivered,
+      isRead: data.isRead.present ? data.isRead.value : this.isRead,
+      deliveredAtEpochMs: data.deliveredAtEpochMs.present
+          ? data.deliveredAtEpochMs.value
+          : this.deliveredAtEpochMs,
+      readAtEpochMs: data.readAtEpochMs.present
+          ? data.readAtEpochMs.value
+          : this.readAtEpochMs,
     );
   }
 
@@ -951,14 +1356,31 @@ class AegisMessage extends DataClass implements Insertable<AegisMessage> {
           ..write('content: $content, ')
           ..write('sentAtEpochMs: $sentAtEpochMs, ')
           ..write('type: $type, ')
-          ..write('mediaId: $mediaId')
+          ..write('mediaId: $mediaId, ')
+          ..write('replyToMessageId: $replyToMessageId, ')
+          ..write('isDelivered: $isDelivered, ')
+          ..write('isRead: $isRead, ')
+          ..write('deliveredAtEpochMs: $deliveredAtEpochMs, ')
+          ..write('readAtEpochMs: $readAtEpochMs')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, roomId, senderId, content, sentAtEpochMs, type, mediaId);
+  int get hashCode => Object.hash(
+    id,
+    roomId,
+    senderId,
+    content,
+    sentAtEpochMs,
+    type,
+    mediaId,
+    replyToMessageId,
+    isDelivered,
+    isRead,
+    deliveredAtEpochMs,
+    readAtEpochMs,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -969,7 +1391,12 @@ class AegisMessage extends DataClass implements Insertable<AegisMessage> {
           other.content == this.content &&
           other.sentAtEpochMs == this.sentAtEpochMs &&
           other.type == this.type &&
-          other.mediaId == this.mediaId);
+          other.mediaId == this.mediaId &&
+          other.replyToMessageId == this.replyToMessageId &&
+          other.isDelivered == this.isDelivered &&
+          other.isRead == this.isRead &&
+          other.deliveredAtEpochMs == this.deliveredAtEpochMs &&
+          other.readAtEpochMs == this.readAtEpochMs);
 }
 
 class AegisMessagesCompanion extends UpdateCompanion<AegisMessage> {
@@ -980,6 +1407,11 @@ class AegisMessagesCompanion extends UpdateCompanion<AegisMessage> {
   final Value<int> sentAtEpochMs;
   final Value<String> type;
   final Value<String?> mediaId;
+  final Value<int?> replyToMessageId;
+  final Value<bool> isDelivered;
+  final Value<bool> isRead;
+  final Value<int?> deliveredAtEpochMs;
+  final Value<int?> readAtEpochMs;
   final Value<int> rowid;
   const AegisMessagesCompanion({
     this.id = const Value.absent(),
@@ -989,6 +1421,11 @@ class AegisMessagesCompanion extends UpdateCompanion<AegisMessage> {
     this.sentAtEpochMs = const Value.absent(),
     this.type = const Value.absent(),
     this.mediaId = const Value.absent(),
+    this.replyToMessageId = const Value.absent(),
+    this.isDelivered = const Value.absent(),
+    this.isRead = const Value.absent(),
+    this.deliveredAtEpochMs = const Value.absent(),
+    this.readAtEpochMs = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AegisMessagesCompanion.insert({
@@ -999,12 +1436,17 @@ class AegisMessagesCompanion extends UpdateCompanion<AegisMessage> {
     required int sentAtEpochMs,
     this.type = const Value.absent(),
     this.mediaId = const Value.absent(),
+    this.replyToMessageId = const Value.absent(),
+    this.isDelivered = const Value.absent(),
+    this.isRead = const Value.absent(),
+    this.deliveredAtEpochMs = const Value.absent(),
+    this.readAtEpochMs = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : id = Value(id),
-        roomId = Value(roomId),
-        senderId = Value(senderId),
-        content = Value(content),
-        sentAtEpochMs = Value(sentAtEpochMs);
+  }) : id = Value(id),
+       roomId = Value(roomId),
+       senderId = Value(senderId),
+       content = Value(content),
+       sentAtEpochMs = Value(sentAtEpochMs);
   static Insertable<AegisMessage> custom({
     Expression<String>? id,
     Expression<String>? roomId,
@@ -1013,6 +1455,11 @@ class AegisMessagesCompanion extends UpdateCompanion<AegisMessage> {
     Expression<int>? sentAtEpochMs,
     Expression<String>? type,
     Expression<String>? mediaId,
+    Expression<int>? replyToMessageId,
+    Expression<bool>? isDelivered,
+    Expression<bool>? isRead,
+    Expression<int>? deliveredAtEpochMs,
+    Expression<int>? readAtEpochMs,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1023,19 +1470,31 @@ class AegisMessagesCompanion extends UpdateCompanion<AegisMessage> {
       if (sentAtEpochMs != null) 'sent_at_epoch_ms': sentAtEpochMs,
       if (type != null) 'type': type,
       if (mediaId != null) 'media_id': mediaId,
+      if (replyToMessageId != null) 'reply_to_message_id': replyToMessageId,
+      if (isDelivered != null) 'is_delivered': isDelivered,
+      if (isRead != null) 'is_read': isRead,
+      if (deliveredAtEpochMs != null)
+        'delivered_at_epoch_ms': deliveredAtEpochMs,
+      if (readAtEpochMs != null) 'read_at_epoch_ms': readAtEpochMs,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  AegisMessagesCompanion copyWith(
-      {Value<String>? id,
-      Value<String>? roomId,
-      Value<String>? senderId,
-      Value<String>? content,
-      Value<int>? sentAtEpochMs,
-      Value<String>? type,
-      Value<String?>? mediaId,
-      Value<int>? rowid}) {
+  AegisMessagesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? roomId,
+    Value<String>? senderId,
+    Value<String>? content,
+    Value<int>? sentAtEpochMs,
+    Value<String>? type,
+    Value<String?>? mediaId,
+    Value<int?>? replyToMessageId,
+    Value<bool>? isDelivered,
+    Value<bool>? isRead,
+    Value<int?>? deliveredAtEpochMs,
+    Value<int?>? readAtEpochMs,
+    Value<int>? rowid,
+  }) {
     return AegisMessagesCompanion(
       id: id ?? this.id,
       roomId: roomId ?? this.roomId,
@@ -1044,6 +1503,11 @@ class AegisMessagesCompanion extends UpdateCompanion<AegisMessage> {
       sentAtEpochMs: sentAtEpochMs ?? this.sentAtEpochMs,
       type: type ?? this.type,
       mediaId: mediaId ?? this.mediaId,
+      replyToMessageId: replyToMessageId ?? this.replyToMessageId,
+      isDelivered: isDelivered ?? this.isDelivered,
+      isRead: isRead ?? this.isRead,
+      deliveredAtEpochMs: deliveredAtEpochMs ?? this.deliveredAtEpochMs,
+      readAtEpochMs: readAtEpochMs ?? this.readAtEpochMs,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1072,6 +1536,21 @@ class AegisMessagesCompanion extends UpdateCompanion<AegisMessage> {
     if (mediaId.present) {
       map['media_id'] = Variable<String>(mediaId.value);
     }
+    if (replyToMessageId.present) {
+      map['reply_to_message_id'] = Variable<int>(replyToMessageId.value);
+    }
+    if (isDelivered.present) {
+      map['is_delivered'] = Variable<bool>(isDelivered.value);
+    }
+    if (isRead.present) {
+      map['is_read'] = Variable<bool>(isRead.value);
+    }
+    if (deliveredAtEpochMs.present) {
+      map['delivered_at_epoch_ms'] = Variable<int>(deliveredAtEpochMs.value);
+    }
+    if (readAtEpochMs.present) {
+      map['read_at_epoch_ms'] = Variable<int>(readAtEpochMs.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1088,6 +1567,11 @@ class AegisMessagesCompanion extends UpdateCompanion<AegisMessage> {
           ..write('sentAtEpochMs: $sentAtEpochMs, ')
           ..write('type: $type, ')
           ..write('mediaId: $mediaId, ')
+          ..write('replyToMessageId: $replyToMessageId, ')
+          ..write('isDelivered: $isDelivered, ')
+          ..write('isRead: $isRead, ')
+          ..write('deliveredAtEpochMs: $deliveredAtEpochMs, ')
+          ..write('readAtEpochMs: $readAtEpochMs, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1103,116 +1587,177 @@ class $AegisProfilesTable extends AegisProfiles
   static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
   @override
   late final GeneratedColumn<int> userId = GeneratedColumn<int>(
-      'user_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _payloadJsonMeta =
-      const VerificationMeta('payloadJson');
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
   @override
   late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
-      'payload_json', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _usernameMeta =
-      const VerificationMeta('username');
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usernameMeta = const VerificationMeta(
+    'username',
+  );
   @override
   late final GeneratedColumn<String> username = GeneratedColumn<String>(
-      'username', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _displayNameMeta =
-      const VerificationMeta('displayName');
+    'username',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
   @override
   late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
-      'display_name', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _avatarUrlMeta =
-      const VerificationMeta('avatarUrl');
+    'display_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _avatarUrlMeta = const VerificationMeta(
+    'avatarUrl',
+  );
   @override
   late final GeneratedColumn<String> avatarUrl = GeneratedColumn<String>(
-      'avatar_url', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _presenceStatusMeta =
-      const VerificationMeta('presenceStatus');
+    'avatar_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _presenceStatusMeta = const VerificationMeta(
+    'presenceStatus',
+  );
   @override
   late final GeneratedColumn<String> presenceStatus = GeneratedColumn<String>(
-      'presence_status', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _isOnlineMeta =
-      const VerificationMeta('isOnline');
+    'presence_status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isOnlineMeta = const VerificationMeta(
+    'isOnline',
+  );
   @override
   late final GeneratedColumn<bool> isOnline = GeneratedColumn<bool>(
-      'is_online', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_online" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _lastSeenAtEpochMsMeta =
-      const VerificationMeta('lastSeenAtEpochMs');
+    'is_online',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_online" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _lastSeenAtEpochMsMeta = const VerificationMeta(
+    'lastSeenAtEpochMs',
+  );
   @override
   late final GeneratedColumn<int> lastSeenAtEpochMs = GeneratedColumn<int>(
-      'last_seen_at_epoch_ms', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+    'last_seen_at_epoch_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        userId,
-        payloadJson,
-        username,
-        displayName,
-        avatarUrl,
-        presenceStatus,
-        isOnline,
-        lastSeenAtEpochMs
-      ];
+    userId,
+    payloadJson,
+    username,
+    displayName,
+    avatarUrl,
+    presenceStatus,
+    isOnline,
+    lastSeenAtEpochMs,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'aegis_profiles';
   @override
-  VerificationContext validateIntegrity(Insertable<AegisProfile> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<AegisProfile> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('user_id')) {
-      context.handle(_userIdMeta,
-          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
     }
     if (data.containsKey('payload_json')) {
       context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
           _payloadJsonMeta,
-          payloadJson.isAcceptableOrUnknown(
-              data['payload_json']!, _payloadJsonMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_payloadJsonMeta);
     }
     if (data.containsKey('username')) {
-      context.handle(_usernameMeta,
-          username.isAcceptableOrUnknown(data['username']!, _usernameMeta));
+      context.handle(
+        _usernameMeta,
+        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
+      );
     }
     if (data.containsKey('display_name')) {
       context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
           _displayNameMeta,
-          displayName.isAcceptableOrUnknown(
-              data['display_name']!, _displayNameMeta));
+        ),
+      );
     }
     if (data.containsKey('avatar_url')) {
-      context.handle(_avatarUrlMeta,
-          avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta));
+      context.handle(
+        _avatarUrlMeta,
+        avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta),
+      );
     }
     if (data.containsKey('presence_status')) {
       context.handle(
+        _presenceStatusMeta,
+        presenceStatus.isAcceptableOrUnknown(
+          data['presence_status']!,
           _presenceStatusMeta,
-          presenceStatus.isAcceptableOrUnknown(
-              data['presence_status']!, _presenceStatusMeta));
+        ),
+      );
     }
     if (data.containsKey('is_online')) {
-      context.handle(_isOnlineMeta,
-          isOnline.isAcceptableOrUnknown(data['is_online']!, _isOnlineMeta));
+      context.handle(
+        _isOnlineMeta,
+        isOnline.isAcceptableOrUnknown(data['is_online']!, _isOnlineMeta),
+      );
     }
     if (data.containsKey('last_seen_at_epoch_ms')) {
       context.handle(
+        _lastSeenAtEpochMsMeta,
+        lastSeenAtEpochMs.isAcceptableOrUnknown(
+          data['last_seen_at_epoch_ms']!,
           _lastSeenAtEpochMsMeta,
-          lastSeenAtEpochMs.isAcceptableOrUnknown(
-              data['last_seen_at_epoch_ms']!, _lastSeenAtEpochMsMeta));
+        ),
+      );
     }
     return context;
   }
@@ -1223,22 +1768,38 @@ class $AegisProfilesTable extends AegisProfiles
   AegisProfile map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AegisProfile(
-      userId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}user_id'])!,
-      payloadJson: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}payload_json'])!,
-      username: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}username']),
-      displayName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}display_name']),
-      avatarUrl: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}avatar_url']),
-      presenceStatus: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}presence_status']),
-      isOnline: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_online'])!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_id'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
+      username: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      ),
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      ),
+      avatarUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_url'],
+      ),
+      presenceStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}presence_status'],
+      ),
+      isOnline: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_online'],
+      )!,
       lastSeenAtEpochMs: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}last_seen_at_epoch_ms']),
+        DriftSqlType.int,
+        data['${effectivePrefix}last_seen_at_epoch_ms'],
+      ),
     );
   }
 
@@ -1257,15 +1818,16 @@ class AegisProfile extends DataClass implements Insertable<AegisProfile> {
   final String? presenceStatus;
   final bool isOnline;
   final int? lastSeenAtEpochMs;
-  const AegisProfile(
-      {required this.userId,
-      required this.payloadJson,
-      this.username,
-      this.displayName,
-      this.avatarUrl,
-      this.presenceStatus,
-      required this.isOnline,
-      this.lastSeenAtEpochMs});
+  const AegisProfile({
+    required this.userId,
+    required this.payloadJson,
+    this.username,
+    this.displayName,
+    this.avatarUrl,
+    this.presenceStatus,
+    required this.isOnline,
+    this.lastSeenAtEpochMs,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1313,8 +1875,10 @@ class AegisProfile extends DataClass implements Insertable<AegisProfile> {
     );
   }
 
-  factory AegisProfile.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory AegisProfile.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AegisProfile(
       userId: serializer.fromJson<int>(json['userId']),
@@ -1342,36 +1906,39 @@ class AegisProfile extends DataClass implements Insertable<AegisProfile> {
     };
   }
 
-  AegisProfile copyWith(
-          {int? userId,
-          String? payloadJson,
-          Value<String?> username = const Value.absent(),
-          Value<String?> displayName = const Value.absent(),
-          Value<String?> avatarUrl = const Value.absent(),
-          Value<String?> presenceStatus = const Value.absent(),
-          bool? isOnline,
-          Value<int?> lastSeenAtEpochMs = const Value.absent()}) =>
-      AegisProfile(
-        userId: userId ?? this.userId,
-        payloadJson: payloadJson ?? this.payloadJson,
-        username: username.present ? username.value : this.username,
-        displayName: displayName.present ? displayName.value : this.displayName,
-        avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
-        presenceStatus:
-            presenceStatus.present ? presenceStatus.value : this.presenceStatus,
-        isOnline: isOnline ?? this.isOnline,
-        lastSeenAtEpochMs: lastSeenAtEpochMs.present
-            ? lastSeenAtEpochMs.value
-            : this.lastSeenAtEpochMs,
-      );
+  AegisProfile copyWith({
+    int? userId,
+    String? payloadJson,
+    Value<String?> username = const Value.absent(),
+    Value<String?> displayName = const Value.absent(),
+    Value<String?> avatarUrl = const Value.absent(),
+    Value<String?> presenceStatus = const Value.absent(),
+    bool? isOnline,
+    Value<int?> lastSeenAtEpochMs = const Value.absent(),
+  }) => AegisProfile(
+    userId: userId ?? this.userId,
+    payloadJson: payloadJson ?? this.payloadJson,
+    username: username.present ? username.value : this.username,
+    displayName: displayName.present ? displayName.value : this.displayName,
+    avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
+    presenceStatus: presenceStatus.present
+        ? presenceStatus.value
+        : this.presenceStatus,
+    isOnline: isOnline ?? this.isOnline,
+    lastSeenAtEpochMs: lastSeenAtEpochMs.present
+        ? lastSeenAtEpochMs.value
+        : this.lastSeenAtEpochMs,
+  );
   AegisProfile copyWithCompanion(AegisProfilesCompanion data) {
     return AegisProfile(
       userId: data.userId.present ? data.userId.value : this.userId,
-      payloadJson:
-          data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
       username: data.username.present ? data.username.value : this.username,
-      displayName:
-          data.displayName.present ? data.displayName.value : this.displayName,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
       avatarUrl: data.avatarUrl.present ? data.avatarUrl.value : this.avatarUrl,
       presenceStatus: data.presenceStatus.present
           ? data.presenceStatus.value
@@ -1399,8 +1966,16 @@ class AegisProfile extends DataClass implements Insertable<AegisProfile> {
   }
 
   @override
-  int get hashCode => Object.hash(userId, payloadJson, username, displayName,
-      avatarUrl, presenceStatus, isOnline, lastSeenAtEpochMs);
+  int get hashCode => Object.hash(
+    userId,
+    payloadJson,
+    username,
+    displayName,
+    avatarUrl,
+    presenceStatus,
+    isOnline,
+    lastSeenAtEpochMs,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1466,15 +2041,16 @@ class AegisProfilesCompanion extends UpdateCompanion<AegisProfile> {
     });
   }
 
-  AegisProfilesCompanion copyWith(
-      {Value<int>? userId,
-      Value<String>? payloadJson,
-      Value<String?>? username,
-      Value<String?>? displayName,
-      Value<String?>? avatarUrl,
-      Value<String?>? presenceStatus,
-      Value<bool>? isOnline,
-      Value<int?>? lastSeenAtEpochMs}) {
+  AegisProfilesCompanion copyWith({
+    Value<int>? userId,
+    Value<String>? payloadJson,
+    Value<String?>? username,
+    Value<String?>? displayName,
+    Value<String?>? avatarUrl,
+    Value<String?>? presenceStatus,
+    Value<bool>? isOnline,
+    Value<int?>? lastSeenAtEpochMs,
+  }) {
     return AegisProfilesCompanion(
       userId: userId ?? this.userId,
       payloadJson: payloadJson ?? this.payloadJson,
@@ -1542,13 +2118,21 @@ class $AegisMetadataTable extends AegisMetadata
   static const VerificationMeta _keyMeta = const VerificationMeta('key');
   @override
   late final GeneratedColumn<String> key = GeneratedColumn<String>(
-      'key', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _valueMeta = const VerificationMeta('value');
   @override
   late final GeneratedColumn<String> value = GeneratedColumn<String>(
-      'value', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   @override
   List<GeneratedColumn> get $columns => [key, value];
   @override
@@ -1557,19 +2141,25 @@ class $AegisMetadataTable extends AegisMetadata
   String get actualTableName => $name;
   static const String $name = 'aegis_metadata';
   @override
-  VerificationContext validateIntegrity(Insertable<AegisMetadataData> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<AegisMetadataData> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('key')) {
       context.handle(
-          _keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
     } else if (isInserting) {
       context.missing(_keyMeta);
     }
     if (data.containsKey('value')) {
       context.handle(
-          _valueMeta, value.isAcceptableOrUnknown(data['value']!, _valueMeta));
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
     } else if (isInserting) {
       context.missing(_valueMeta);
     }
@@ -1582,10 +2172,14 @@ class $AegisMetadataTable extends AegisMetadata
   AegisMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AegisMetadataData(
-      key: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}key'])!,
-      value: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}value'])!,
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value'],
+      )!,
     );
   }
 
@@ -1609,14 +2203,13 @@ class AegisMetadataData extends DataClass
   }
 
   AegisMetadataCompanion toCompanion(bool nullToAbsent) {
-    return AegisMetadataCompanion(
-      key: Value(key),
-      value: Value(value),
-    );
+    return AegisMetadataCompanion(key: Value(key), value: Value(value));
   }
 
-  factory AegisMetadataData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory AegisMetadataData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AegisMetadataData(
       key: serializer.fromJson<String>(json['key']),
@@ -1632,10 +2225,8 @@ class AegisMetadataData extends DataClass
     };
   }
 
-  AegisMetadataData copyWith({String? key, String? value}) => AegisMetadataData(
-        key: key ?? this.key,
-        value: value ?? this.value,
-      );
+  AegisMetadataData copyWith({String? key, String? value}) =>
+      AegisMetadataData(key: key ?? this.key, value: value ?? this.value);
   AegisMetadataData copyWithCompanion(AegisMetadataCompanion data) {
     return AegisMetadataData(
       key: data.key.present ? data.key.value : this.key,
@@ -1675,8 +2266,8 @@ class AegisMetadataCompanion extends UpdateCompanion<AegisMetadataData> {
     required String key,
     required String value,
     this.rowid = const Value.absent(),
-  })  : key = Value(key),
-        value = Value(value);
+  }) : key = Value(key),
+       value = Value(value);
   static Insertable<AegisMetadataData> custom({
     Expression<String>? key,
     Expression<String>? value,
@@ -1689,8 +2280,11 @@ class AegisMetadataCompanion extends UpdateCompanion<AegisMetadataData> {
     });
   }
 
-  AegisMetadataCompanion copyWith(
-      {Value<String>? key, Value<String>? value, Value<int>? rowid}) {
+  AegisMetadataCompanion copyWith({
+    Value<String>? key,
+    Value<String>? value,
+    Value<int>? rowid,
+  }) {
     return AegisMetadataCompanion(
       key: key ?? this.key,
       value: value ?? this.value,
@@ -1733,52 +2327,90 @@ class $AegisOfflineQueueTable extends AegisOfflineQueue
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
   static const VerificationMeta _chatIdMeta = const VerificationMeta('chatId');
   @override
   late final GeneratedColumn<String> chatId = GeneratedColumn<String>(
-      'chat_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _contentMeta =
-      const VerificationMeta('content');
+    'chat_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
   @override
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
-      'content', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'content',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _createdAtEpochMsMeta =
-      const VerificationMeta('createdAtEpochMs');
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtEpochMsMeta = const VerificationMeta(
+    'createdAtEpochMs',
+  );
   @override
   late final GeneratedColumn<int> createdAtEpochMs = GeneratedColumn<int>(
-      'created_at_epoch_ms', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+    'created_at_epoch_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _sentMeta = const VerificationMeta('sent');
   @override
   late final GeneratedColumn<bool> sent = GeneratedColumn<bool>(
-      'sent', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("sent" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _errorMessageMeta =
-      const VerificationMeta('errorMessage');
+    'sent',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("sent" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _errorMessageMeta = const VerificationMeta(
+    'errorMessage',
+  );
   @override
   late final GeneratedColumn<String> errorMessage = GeneratedColumn<String>(
-      'error_message', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'error_message',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, chatId, content, type, createdAtEpochMs, sent, errorMessage];
+  List<GeneratedColumn> get $columns => [
+    id,
+    chatId,
+    content,
+    type,
+    createdAtEpochMs,
+    sent,
+    errorMessage,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1786,48 +2418,63 @@ class $AegisOfflineQueueTable extends AegisOfflineQueue
   static const String $name = 'aegis_offline_queue';
   @override
   VerificationContext validateIntegrity(
-      Insertable<AegisOfflineQueueData> instance,
-      {bool isInserting = false}) {
+    Insertable<AegisOfflineQueueData> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('chat_id')) {
-      context.handle(_chatIdMeta,
-          chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta));
+      context.handle(
+        _chatIdMeta,
+        chatId.isAcceptableOrUnknown(data['chat_id']!, _chatIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_chatIdMeta);
     }
     if (data.containsKey('content')) {
-      context.handle(_contentMeta,
-          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
+      );
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
     if (data.containsKey('type')) {
       context.handle(
-          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
     if (data.containsKey('created_at_epoch_ms')) {
       context.handle(
+        _createdAtEpochMsMeta,
+        createdAtEpochMs.isAcceptableOrUnknown(
+          data['created_at_epoch_ms']!,
           _createdAtEpochMsMeta,
-          createdAtEpochMs.isAcceptableOrUnknown(
-              data['created_at_epoch_ms']!, _createdAtEpochMsMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_createdAtEpochMsMeta);
     }
     if (data.containsKey('sent')) {
       context.handle(
-          _sentMeta, sent.isAcceptableOrUnknown(data['sent']!, _sentMeta));
+        _sentMeta,
+        sent.isAcceptableOrUnknown(data['sent']!, _sentMeta),
+      );
     }
     if (data.containsKey('error_message')) {
       context.handle(
+        _errorMessageMeta,
+        errorMessage.isAcceptableOrUnknown(
+          data['error_message']!,
           _errorMessageMeta,
-          errorMessage.isAcceptableOrUnknown(
-              data['error_message']!, _errorMessageMeta));
+        ),
+      );
     }
     return context;
   }
@@ -1838,20 +2485,34 @@ class $AegisOfflineQueueTable extends AegisOfflineQueue
   AegisOfflineQueueData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AegisOfflineQueueData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      chatId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}chat_id'])!,
-      content: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}content'])!,
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      chatId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}chat_id'],
+      )!,
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
       createdAtEpochMs: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}created_at_epoch_ms'])!,
-      sent: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}sent'])!,
-      errorMessage: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}error_message']),
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_epoch_ms'],
+      )!,
+      sent: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}sent'],
+      )!,
+      errorMessage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}error_message'],
+      ),
     );
   }
 
@@ -1870,14 +2531,15 @@ class AegisOfflineQueueData extends DataClass
   final int createdAtEpochMs;
   final bool sent;
   final String? errorMessage;
-  const AegisOfflineQueueData(
-      {required this.id,
-      required this.chatId,
-      required this.content,
-      required this.type,
-      required this.createdAtEpochMs,
-      required this.sent,
-      this.errorMessage});
+  const AegisOfflineQueueData({
+    required this.id,
+    required this.chatId,
+    required this.content,
+    required this.type,
+    required this.createdAtEpochMs,
+    required this.sent,
+    this.errorMessage,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1907,8 +2569,10 @@ class AegisOfflineQueueData extends DataClass
     );
   }
 
-  factory AegisOfflineQueueData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory AegisOfflineQueueData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AegisOfflineQueueData(
       id: serializer.fromJson<int>(json['id']),
@@ -1934,24 +2598,23 @@ class AegisOfflineQueueData extends DataClass
     };
   }
 
-  AegisOfflineQueueData copyWith(
-          {int? id,
-          String? chatId,
-          String? content,
-          String? type,
-          int? createdAtEpochMs,
-          bool? sent,
-          Value<String?> errorMessage = const Value.absent()}) =>
-      AegisOfflineQueueData(
-        id: id ?? this.id,
-        chatId: chatId ?? this.chatId,
-        content: content ?? this.content,
-        type: type ?? this.type,
-        createdAtEpochMs: createdAtEpochMs ?? this.createdAtEpochMs,
-        sent: sent ?? this.sent,
-        errorMessage:
-            errorMessage.present ? errorMessage.value : this.errorMessage,
-      );
+  AegisOfflineQueueData copyWith({
+    int? id,
+    String? chatId,
+    String? content,
+    String? type,
+    int? createdAtEpochMs,
+    bool? sent,
+    Value<String?> errorMessage = const Value.absent(),
+  }) => AegisOfflineQueueData(
+    id: id ?? this.id,
+    chatId: chatId ?? this.chatId,
+    content: content ?? this.content,
+    type: type ?? this.type,
+    createdAtEpochMs: createdAtEpochMs ?? this.createdAtEpochMs,
+    sent: sent ?? this.sent,
+    errorMessage: errorMessage.present ? errorMessage.value : this.errorMessage,
+  );
   AegisOfflineQueueData copyWithCompanion(AegisOfflineQueueCompanion data) {
     return AegisOfflineQueueData(
       id: data.id.present ? data.id.value : this.id,
@@ -1984,7 +2647,14 @@ class AegisOfflineQueueData extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      id, chatId, content, type, createdAtEpochMs, sent, errorMessage);
+    id,
+    chatId,
+    content,
+    type,
+    createdAtEpochMs,
+    sent,
+    errorMessage,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2024,10 +2694,10 @@ class AegisOfflineQueueCompanion
     required int createdAtEpochMs,
     this.sent = const Value.absent(),
     this.errorMessage = const Value.absent(),
-  })  : chatId = Value(chatId),
-        content = Value(content),
-        type = Value(type),
-        createdAtEpochMs = Value(createdAtEpochMs);
+  }) : chatId = Value(chatId),
+       content = Value(content),
+       type = Value(type),
+       createdAtEpochMs = Value(createdAtEpochMs);
   static Insertable<AegisOfflineQueueData> custom({
     Expression<int>? id,
     Expression<String>? chatId,
@@ -2048,14 +2718,15 @@ class AegisOfflineQueueCompanion
     });
   }
 
-  AegisOfflineQueueCompanion copyWith(
-      {Value<int>? id,
-      Value<String>? chatId,
-      Value<String>? content,
-      Value<String>? type,
-      Value<int>? createdAtEpochMs,
-      Value<bool>? sent,
-      Value<String?>? errorMessage}) {
+  AegisOfflineQueueCompanion copyWith({
+    Value<int>? id,
+    Value<String>? chatId,
+    Value<String>? content,
+    Value<String>? type,
+    Value<int>? createdAtEpochMs,
+    Value<bool>? sent,
+    Value<String?>? errorMessage,
+  }) {
     return AegisOfflineQueueCompanion(
       id: id ?? this.id,
       chatId: chatId ?? this.chatId,
@@ -2115,12 +2786,17 @@ class $AegisPeopleFavoritesTable extends AegisPeopleFavorites
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $AegisPeopleFavoritesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _personIdMeta =
-      const VerificationMeta('personId');
+  static const VerificationMeta _personIdMeta = const VerificationMeta(
+    'personId',
+  );
   @override
   late final GeneratedColumn<String> personId = GeneratedColumn<String>(
-      'person_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'person_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   @override
   List<GeneratedColumn> get $columns => [personId];
   @override
@@ -2130,13 +2806,16 @@ class $AegisPeopleFavoritesTable extends AegisPeopleFavorites
   static const String $name = 'aegis_people_favorites';
   @override
   VerificationContext validateIntegrity(
-      Insertable<AegisPeopleFavorite> instance,
-      {bool isInserting = false}) {
+    Insertable<AegisPeopleFavorite> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('person_id')) {
-      context.handle(_personIdMeta,
-          personId.isAcceptableOrUnknown(data['person_id']!, _personIdMeta));
+      context.handle(
+        _personIdMeta,
+        personId.isAcceptableOrUnknown(data['person_id']!, _personIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_personIdMeta);
     }
@@ -2149,8 +2828,10 @@ class $AegisPeopleFavoritesTable extends AegisPeopleFavorites
   AegisPeopleFavorite map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AegisPeopleFavorite(
-      personId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}person_id'])!,
+      personId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      )!,
     );
   }
 
@@ -2172,13 +2853,13 @@ class AegisPeopleFavorite extends DataClass
   }
 
   AegisPeopleFavoritesCompanion toCompanion(bool nullToAbsent) {
-    return AegisPeopleFavoritesCompanion(
-      personId: Value(personId),
-    );
+    return AegisPeopleFavoritesCompanion(personId: Value(personId));
   }
 
-  factory AegisPeopleFavorite.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory AegisPeopleFavorite.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AegisPeopleFavorite(
       personId: serializer.fromJson<String>(json['personId']),
@@ -2187,14 +2868,11 @@ class AegisPeopleFavorite extends DataClass
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'personId': serializer.toJson<String>(personId),
-    };
+    return <String, dynamic>{'personId': serializer.toJson<String>(personId)};
   }
 
-  AegisPeopleFavorite copyWith({String? personId}) => AegisPeopleFavorite(
-        personId: personId ?? this.personId,
-      );
+  AegisPeopleFavorite copyWith({String? personId}) =>
+      AegisPeopleFavorite(personId: personId ?? this.personId);
   AegisPeopleFavorite copyWithCompanion(AegisPeopleFavoritesCompanion data) {
     return AegisPeopleFavorite(
       personId: data.personId.present ? data.personId.value : this.personId,
@@ -2239,8 +2917,10 @@ class AegisPeopleFavoritesCompanion
     });
   }
 
-  AegisPeopleFavoritesCompanion copyWith(
-      {Value<String>? personId, Value<int>? rowid}) {
+  AegisPeopleFavoritesCompanion copyWith({
+    Value<String>? personId,
+    Value<int>? rowid,
+  }) {
     return AegisPeopleFavoritesCompanion(
       personId: personId ?? this.personId,
       rowid: rowid ?? this.rowid,
@@ -2278,215 +2958,319 @@ class $AegisPeopleEntriesTable extends AegisPeopleEntries
   static const VerificationMeta _bucketMeta = const VerificationMeta('bucket');
   @override
   late final GeneratedColumn<String> bucket = GeneratedColumn<String>(
-      'bucket', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _personIdMeta =
-      const VerificationMeta('personId');
+    'bucket',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _personIdMeta = const VerificationMeta(
+    'personId',
+  );
   @override
   late final GeneratedColumn<String> personId = GeneratedColumn<String>(
-      'person_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _payloadJsonMeta =
-      const VerificationMeta('payloadJson');
+    'person_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
   @override
   late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
-      'payload_json', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _displayNameMeta =
-      const VerificationMeta('displayName');
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
   @override
   late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
-      'display_name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _usernameMeta =
-      const VerificationMeta('username');
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _usernameMeta = const VerificationMeta(
+    'username',
+  );
   @override
   late final GeneratedColumn<String> username = GeneratedColumn<String>(
-      'username', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _remoteUserIdMeta =
-      const VerificationMeta('remoteUserId');
+    'username',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remoteUserIdMeta = const VerificationMeta(
+    'remoteUserId',
+  );
   @override
   late final GeneratedColumn<String> remoteUserId = GeneratedColumn<String>(
-      'remote_user_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _isTwoSpaceUserMeta =
-      const VerificationMeta('isTwoSpaceUser');
+    'remote_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isTwoSpaceUserMeta = const VerificationMeta(
+    'isTwoSpaceUser',
+  );
   @override
   late final GeneratedColumn<bool> isTwoSpaceUser = GeneratedColumn<bool>(
-      'is_two_space_user', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_two_space_user" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isDeviceContactMeta =
-      const VerificationMeta('isDeviceContact');
+    'is_two_space_user',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_two_space_user" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isDeviceContactMeta = const VerificationMeta(
+    'isDeviceContact',
+  );
   @override
   late final GeneratedColumn<bool> isDeviceContact = GeneratedColumn<bool>(
-      'is_device_contact', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_device_contact" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isFavoriteMeta =
-      const VerificationMeta('isFavorite');
+    'is_device_contact',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_device_contact" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
+    'isFavorite',
+  );
   @override
   late final GeneratedColumn<bool> isFavorite = GeneratedColumn<bool>(
-      'is_favorite', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_favorite" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isOnlineMeta =
-      const VerificationMeta('isOnline');
+    'is_favorite',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_favorite" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isOnlineMeta = const VerificationMeta(
+    'isOnline',
+  );
   @override
   late final GeneratedColumn<bool> isOnline = GeneratedColumn<bool>(
-      'is_online', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_online" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _presenceStatusMeta =
-      const VerificationMeta('presenceStatus');
+    'is_online',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_online" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _presenceStatusMeta = const VerificationMeta(
+    'presenceStatus',
+  );
   @override
   late final GeneratedColumn<String> presenceStatus = GeneratedColumn<String>(
-      'presence_status', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _lastSeenAtEpochMsMeta =
-      const VerificationMeta('lastSeenAtEpochMs');
+    'presence_status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastSeenAtEpochMsMeta = const VerificationMeta(
+    'lastSeenAtEpochMs',
+  );
   @override
   late final GeneratedColumn<int> lastSeenAtEpochMs = GeneratedColumn<int>(
-      'last_seen_at_epoch_ms', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+    'last_seen_at_epoch_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _lastInteractionAtEpochMsMeta =
       const VerificationMeta('lastInteractionAtEpochMs');
   @override
   late final GeneratedColumn<int> lastInteractionAtEpochMs =
-      GeneratedColumn<int>('last_interaction_at_epoch_ms', aliasedName, true,
-          type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _sortEpochMsMeta =
-      const VerificationMeta('sortEpochMs');
+      GeneratedColumn<int>(
+        'last_interaction_at_epoch_ms',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _sortEpochMsMeta = const VerificationMeta(
+    'sortEpochMs',
+  );
   @override
   late final GeneratedColumn<int> sortEpochMs = GeneratedColumn<int>(
-      'sort_epoch_ms', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
+    'sort_epoch_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        bucket,
-        personId,
-        payloadJson,
-        displayName,
-        username,
-        remoteUserId,
-        isTwoSpaceUser,
-        isDeviceContact,
-        isFavorite,
-        isOnline,
-        presenceStatus,
-        lastSeenAtEpochMs,
-        lastInteractionAtEpochMs,
-        sortEpochMs
-      ];
+    bucket,
+    personId,
+    payloadJson,
+    displayName,
+    username,
+    remoteUserId,
+    isTwoSpaceUser,
+    isDeviceContact,
+    isFavorite,
+    isOnline,
+    presenceStatus,
+    lastSeenAtEpochMs,
+    lastInteractionAtEpochMs,
+    sortEpochMs,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'aegis_people_entries';
   @override
-  VerificationContext validateIntegrity(Insertable<AegisPeopleEntry> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<AegisPeopleEntry> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('bucket')) {
-      context.handle(_bucketMeta,
-          bucket.isAcceptableOrUnknown(data['bucket']!, _bucketMeta));
+      context.handle(
+        _bucketMeta,
+        bucket.isAcceptableOrUnknown(data['bucket']!, _bucketMeta),
+      );
     } else if (isInserting) {
       context.missing(_bucketMeta);
     }
     if (data.containsKey('person_id')) {
-      context.handle(_personIdMeta,
-          personId.isAcceptableOrUnknown(data['person_id']!, _personIdMeta));
+      context.handle(
+        _personIdMeta,
+        personId.isAcceptableOrUnknown(data['person_id']!, _personIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_personIdMeta);
     }
     if (data.containsKey('payload_json')) {
       context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
           _payloadJsonMeta,
-          payloadJson.isAcceptableOrUnknown(
-              data['payload_json']!, _payloadJsonMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_payloadJsonMeta);
     }
     if (data.containsKey('display_name')) {
       context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
           _displayNameMeta,
-          displayName.isAcceptableOrUnknown(
-              data['display_name']!, _displayNameMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_displayNameMeta);
     }
     if (data.containsKey('username')) {
-      context.handle(_usernameMeta,
-          username.isAcceptableOrUnknown(data['username']!, _usernameMeta));
+      context.handle(
+        _usernameMeta,
+        username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
+      );
     }
     if (data.containsKey('remote_user_id')) {
       context.handle(
+        _remoteUserIdMeta,
+        remoteUserId.isAcceptableOrUnknown(
+          data['remote_user_id']!,
           _remoteUserIdMeta,
-          remoteUserId.isAcceptableOrUnknown(
-              data['remote_user_id']!, _remoteUserIdMeta));
+        ),
+      );
     }
     if (data.containsKey('is_two_space_user')) {
       context.handle(
+        _isTwoSpaceUserMeta,
+        isTwoSpaceUser.isAcceptableOrUnknown(
+          data['is_two_space_user']!,
           _isTwoSpaceUserMeta,
-          isTwoSpaceUser.isAcceptableOrUnknown(
-              data['is_two_space_user']!, _isTwoSpaceUserMeta));
+        ),
+      );
     }
     if (data.containsKey('is_device_contact')) {
       context.handle(
+        _isDeviceContactMeta,
+        isDeviceContact.isAcceptableOrUnknown(
+          data['is_device_contact']!,
           _isDeviceContactMeta,
-          isDeviceContact.isAcceptableOrUnknown(
-              data['is_device_contact']!, _isDeviceContactMeta));
+        ),
+      );
     }
     if (data.containsKey('is_favorite')) {
       context.handle(
-          _isFavoriteMeta,
-          isFavorite.isAcceptableOrUnknown(
-              data['is_favorite']!, _isFavoriteMeta));
+        _isFavoriteMeta,
+        isFavorite.isAcceptableOrUnknown(data['is_favorite']!, _isFavoriteMeta),
+      );
     }
     if (data.containsKey('is_online')) {
-      context.handle(_isOnlineMeta,
-          isOnline.isAcceptableOrUnknown(data['is_online']!, _isOnlineMeta));
+      context.handle(
+        _isOnlineMeta,
+        isOnline.isAcceptableOrUnknown(data['is_online']!, _isOnlineMeta),
+      );
     }
     if (data.containsKey('presence_status')) {
       context.handle(
+        _presenceStatusMeta,
+        presenceStatus.isAcceptableOrUnknown(
+          data['presence_status']!,
           _presenceStatusMeta,
-          presenceStatus.isAcceptableOrUnknown(
-              data['presence_status']!, _presenceStatusMeta));
+        ),
+      );
     }
     if (data.containsKey('last_seen_at_epoch_ms')) {
       context.handle(
+        _lastSeenAtEpochMsMeta,
+        lastSeenAtEpochMs.isAcceptableOrUnknown(
+          data['last_seen_at_epoch_ms']!,
           _lastSeenAtEpochMsMeta,
-          lastSeenAtEpochMs.isAcceptableOrUnknown(
-              data['last_seen_at_epoch_ms']!, _lastSeenAtEpochMsMeta));
+        ),
+      );
     }
     if (data.containsKey('last_interaction_at_epoch_ms')) {
       context.handle(
+        _lastInteractionAtEpochMsMeta,
+        lastInteractionAtEpochMs.isAcceptableOrUnknown(
+          data['last_interaction_at_epoch_ms']!,
           _lastInteractionAtEpochMsMeta,
-          lastInteractionAtEpochMs.isAcceptableOrUnknown(
-              data['last_interaction_at_epoch_ms']!,
-              _lastInteractionAtEpochMsMeta));
+        ),
+      );
     }
     if (data.containsKey('sort_epoch_ms')) {
       context.handle(
+        _sortEpochMsMeta,
+        sortEpochMs.isAcceptableOrUnknown(
+          data['sort_epoch_ms']!,
           _sortEpochMsMeta,
-          sortEpochMs.isAcceptableOrUnknown(
-              data['sort_epoch_ms']!, _sortEpochMsMeta));
+        ),
+      );
     }
     return context;
   }
@@ -2497,35 +3281,62 @@ class $AegisPeopleEntriesTable extends AegisPeopleEntries
   AegisPeopleEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AegisPeopleEntry(
-      bucket: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}bucket'])!,
-      personId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}person_id'])!,
-      payloadJson: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}payload_json'])!,
-      displayName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}display_name'])!,
-      username: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}username']),
-      remoteUserId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}remote_user_id']),
+      bucket: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bucket'],
+      )!,
+      personId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      username: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      ),
+      remoteUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_user_id'],
+      ),
       isTwoSpaceUser: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}is_two_space_user'])!,
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_two_space_user'],
+      )!,
       isDeviceContact: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}is_device_contact'])!,
-      isFavorite: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_favorite'])!,
-      isOnline: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_online'])!,
-      presenceStatus: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}presence_status']),
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_device_contact'],
+      )!,
+      isFavorite: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_favorite'],
+      )!,
+      isOnline: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_online'],
+      )!,
+      presenceStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}presence_status'],
+      ),
       lastSeenAtEpochMs: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}last_seen_at_epoch_ms']),
+        DriftSqlType.int,
+        data['${effectivePrefix}last_seen_at_epoch_ms'],
+      ),
       lastInteractionAtEpochMs: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}last_interaction_at_epoch_ms']),
-      sortEpochMs: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sort_epoch_ms'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}last_interaction_at_epoch_ms'],
+      ),
+      sortEpochMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_epoch_ms'],
+      )!,
     );
   }
 
@@ -2551,21 +3362,22 @@ class AegisPeopleEntry extends DataClass
   final int? lastSeenAtEpochMs;
   final int? lastInteractionAtEpochMs;
   final int sortEpochMs;
-  const AegisPeopleEntry(
-      {required this.bucket,
-      required this.personId,
-      required this.payloadJson,
-      required this.displayName,
-      this.username,
-      this.remoteUserId,
-      required this.isTwoSpaceUser,
-      required this.isDeviceContact,
-      required this.isFavorite,
-      required this.isOnline,
-      this.presenceStatus,
-      this.lastSeenAtEpochMs,
-      this.lastInteractionAtEpochMs,
-      required this.sortEpochMs});
+  const AegisPeopleEntry({
+    required this.bucket,
+    required this.personId,
+    required this.payloadJson,
+    required this.displayName,
+    this.username,
+    this.remoteUserId,
+    required this.isTwoSpaceUser,
+    required this.isDeviceContact,
+    required this.isFavorite,
+    required this.isOnline,
+    this.presenceStatus,
+    this.lastSeenAtEpochMs,
+    this.lastInteractionAtEpochMs,
+    required this.sortEpochMs,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2590,8 +3402,9 @@ class AegisPeopleEntry extends DataClass
       map['last_seen_at_epoch_ms'] = Variable<int>(lastSeenAtEpochMs);
     }
     if (!nullToAbsent || lastInteractionAtEpochMs != null) {
-      map['last_interaction_at_epoch_ms'] =
-          Variable<int>(lastInteractionAtEpochMs);
+      map['last_interaction_at_epoch_ms'] = Variable<int>(
+        lastInteractionAtEpochMs,
+      );
     }
     map['sort_epoch_ms'] = Variable<int>(sortEpochMs);
     return map;
@@ -2626,8 +3439,10 @@ class AegisPeopleEntry extends DataClass
     );
   }
 
-  factory AegisPeopleEntry.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory AegisPeopleEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AegisPeopleEntry(
       bucket: serializer.fromJson<String>(json['bucket']),
@@ -2642,8 +3457,9 @@ class AegisPeopleEntry extends DataClass
       isOnline: serializer.fromJson<bool>(json['isOnline']),
       presenceStatus: serializer.fromJson<String?>(json['presenceStatus']),
       lastSeenAtEpochMs: serializer.fromJson<int?>(json['lastSeenAtEpochMs']),
-      lastInteractionAtEpochMs:
-          serializer.fromJson<int?>(json['lastInteractionAtEpochMs']),
+      lastInteractionAtEpochMs: serializer.fromJson<int?>(
+        json['lastInteractionAtEpochMs'],
+      ),
       sortEpochMs: serializer.fromJson<int>(json['sortEpochMs']),
     );
   }
@@ -2663,57 +3479,60 @@ class AegisPeopleEntry extends DataClass
       'isOnline': serializer.toJson<bool>(isOnline),
       'presenceStatus': serializer.toJson<String?>(presenceStatus),
       'lastSeenAtEpochMs': serializer.toJson<int?>(lastSeenAtEpochMs),
-      'lastInteractionAtEpochMs':
-          serializer.toJson<int?>(lastInteractionAtEpochMs),
+      'lastInteractionAtEpochMs': serializer.toJson<int?>(
+        lastInteractionAtEpochMs,
+      ),
       'sortEpochMs': serializer.toJson<int>(sortEpochMs),
     };
   }
 
-  AegisPeopleEntry copyWith(
-          {String? bucket,
-          String? personId,
-          String? payloadJson,
-          String? displayName,
-          Value<String?> username = const Value.absent(),
-          Value<String?> remoteUserId = const Value.absent(),
-          bool? isTwoSpaceUser,
-          bool? isDeviceContact,
-          bool? isFavorite,
-          bool? isOnline,
-          Value<String?> presenceStatus = const Value.absent(),
-          Value<int?> lastSeenAtEpochMs = const Value.absent(),
-          Value<int?> lastInteractionAtEpochMs = const Value.absent(),
-          int? sortEpochMs}) =>
-      AegisPeopleEntry(
-        bucket: bucket ?? this.bucket,
-        personId: personId ?? this.personId,
-        payloadJson: payloadJson ?? this.payloadJson,
-        displayName: displayName ?? this.displayName,
-        username: username.present ? username.value : this.username,
-        remoteUserId:
-            remoteUserId.present ? remoteUserId.value : this.remoteUserId,
-        isTwoSpaceUser: isTwoSpaceUser ?? this.isTwoSpaceUser,
-        isDeviceContact: isDeviceContact ?? this.isDeviceContact,
-        isFavorite: isFavorite ?? this.isFavorite,
-        isOnline: isOnline ?? this.isOnline,
-        presenceStatus:
-            presenceStatus.present ? presenceStatus.value : this.presenceStatus,
-        lastSeenAtEpochMs: lastSeenAtEpochMs.present
-            ? lastSeenAtEpochMs.value
-            : this.lastSeenAtEpochMs,
-        lastInteractionAtEpochMs: lastInteractionAtEpochMs.present
-            ? lastInteractionAtEpochMs.value
-            : this.lastInteractionAtEpochMs,
-        sortEpochMs: sortEpochMs ?? this.sortEpochMs,
-      );
+  AegisPeopleEntry copyWith({
+    String? bucket,
+    String? personId,
+    String? payloadJson,
+    String? displayName,
+    Value<String?> username = const Value.absent(),
+    Value<String?> remoteUserId = const Value.absent(),
+    bool? isTwoSpaceUser,
+    bool? isDeviceContact,
+    bool? isFavorite,
+    bool? isOnline,
+    Value<String?> presenceStatus = const Value.absent(),
+    Value<int?> lastSeenAtEpochMs = const Value.absent(),
+    Value<int?> lastInteractionAtEpochMs = const Value.absent(),
+    int? sortEpochMs,
+  }) => AegisPeopleEntry(
+    bucket: bucket ?? this.bucket,
+    personId: personId ?? this.personId,
+    payloadJson: payloadJson ?? this.payloadJson,
+    displayName: displayName ?? this.displayName,
+    username: username.present ? username.value : this.username,
+    remoteUserId: remoteUserId.present ? remoteUserId.value : this.remoteUserId,
+    isTwoSpaceUser: isTwoSpaceUser ?? this.isTwoSpaceUser,
+    isDeviceContact: isDeviceContact ?? this.isDeviceContact,
+    isFavorite: isFavorite ?? this.isFavorite,
+    isOnline: isOnline ?? this.isOnline,
+    presenceStatus: presenceStatus.present
+        ? presenceStatus.value
+        : this.presenceStatus,
+    lastSeenAtEpochMs: lastSeenAtEpochMs.present
+        ? lastSeenAtEpochMs.value
+        : this.lastSeenAtEpochMs,
+    lastInteractionAtEpochMs: lastInteractionAtEpochMs.present
+        ? lastInteractionAtEpochMs.value
+        : this.lastInteractionAtEpochMs,
+    sortEpochMs: sortEpochMs ?? this.sortEpochMs,
+  );
   AegisPeopleEntry copyWithCompanion(AegisPeopleEntriesCompanion data) {
     return AegisPeopleEntry(
       bucket: data.bucket.present ? data.bucket.value : this.bucket,
       personId: data.personId.present ? data.personId.value : this.personId,
-      payloadJson:
-          data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
-      displayName:
-          data.displayName.present ? data.displayName.value : this.displayName,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
       username: data.username.present ? data.username.value : this.username,
       remoteUserId: data.remoteUserId.present
           ? data.remoteUserId.value
@@ -2724,8 +3543,9 @@ class AegisPeopleEntry extends DataClass
       isDeviceContact: data.isDeviceContact.present
           ? data.isDeviceContact.value
           : this.isDeviceContact,
-      isFavorite:
-          data.isFavorite.present ? data.isFavorite.value : this.isFavorite,
+      isFavorite: data.isFavorite.present
+          ? data.isFavorite.value
+          : this.isFavorite,
       isOnline: data.isOnline.present ? data.isOnline.value : this.isOnline,
       presenceStatus: data.presenceStatus.present
           ? data.presenceStatus.value
@@ -2736,8 +3556,9 @@ class AegisPeopleEntry extends DataClass
       lastInteractionAtEpochMs: data.lastInteractionAtEpochMs.present
           ? data.lastInteractionAtEpochMs.value
           : this.lastInteractionAtEpochMs,
-      sortEpochMs:
-          data.sortEpochMs.present ? data.sortEpochMs.value : this.sortEpochMs,
+      sortEpochMs: data.sortEpochMs.present
+          ? data.sortEpochMs.value
+          : this.sortEpochMs,
     );
   }
 
@@ -2764,20 +3585,21 @@ class AegisPeopleEntry extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      bucket,
-      personId,
-      payloadJson,
-      displayName,
-      username,
-      remoteUserId,
-      isTwoSpaceUser,
-      isDeviceContact,
-      isFavorite,
-      isOnline,
-      presenceStatus,
-      lastSeenAtEpochMs,
-      lastInteractionAtEpochMs,
-      sortEpochMs);
+    bucket,
+    personId,
+    payloadJson,
+    displayName,
+    username,
+    remoteUserId,
+    isTwoSpaceUser,
+    isDeviceContact,
+    isFavorite,
+    isOnline,
+    presenceStatus,
+    lastSeenAtEpochMs,
+    lastInteractionAtEpochMs,
+    sortEpochMs,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2847,10 +3669,10 @@ class AegisPeopleEntriesCompanion extends UpdateCompanion<AegisPeopleEntry> {
     this.lastInteractionAtEpochMs = const Value.absent(),
     this.sortEpochMs = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : bucket = Value(bucket),
-        personId = Value(personId),
-        payloadJson = Value(payloadJson),
-        displayName = Value(displayName);
+  }) : bucket = Value(bucket),
+       personId = Value(personId),
+       payloadJson = Value(payloadJson),
+       displayName = Value(displayName);
   static Insertable<AegisPeopleEntry> custom({
     Expression<String>? bucket,
     Expression<String>? personId,
@@ -2888,22 +3710,23 @@ class AegisPeopleEntriesCompanion extends UpdateCompanion<AegisPeopleEntry> {
     });
   }
 
-  AegisPeopleEntriesCompanion copyWith(
-      {Value<String>? bucket,
-      Value<String>? personId,
-      Value<String>? payloadJson,
-      Value<String>? displayName,
-      Value<String?>? username,
-      Value<String?>? remoteUserId,
-      Value<bool>? isTwoSpaceUser,
-      Value<bool>? isDeviceContact,
-      Value<bool>? isFavorite,
-      Value<bool>? isOnline,
-      Value<String?>? presenceStatus,
-      Value<int?>? lastSeenAtEpochMs,
-      Value<int?>? lastInteractionAtEpochMs,
-      Value<int>? sortEpochMs,
-      Value<int>? rowid}) {
+  AegisPeopleEntriesCompanion copyWith({
+    Value<String>? bucket,
+    Value<String>? personId,
+    Value<String>? payloadJson,
+    Value<String>? displayName,
+    Value<String?>? username,
+    Value<String?>? remoteUserId,
+    Value<bool>? isTwoSpaceUser,
+    Value<bool>? isDeviceContact,
+    Value<bool>? isFavorite,
+    Value<bool>? isOnline,
+    Value<String?>? presenceStatus,
+    Value<int?>? lastSeenAtEpochMs,
+    Value<int?>? lastInteractionAtEpochMs,
+    Value<int>? sortEpochMs,
+    Value<int>? rowid,
+  }) {
     return AegisPeopleEntriesCompanion(
       bucket: bucket ?? this.bucket,
       personId: personId ?? this.personId,
@@ -2964,8 +3787,9 @@ class AegisPeopleEntriesCompanion extends UpdateCompanion<AegisPeopleEntry> {
       map['last_seen_at_epoch_ms'] = Variable<int>(lastSeenAtEpochMs.value);
     }
     if (lastInteractionAtEpochMs.present) {
-      map['last_interaction_at_epoch_ms'] =
-          Variable<int>(lastInteractionAtEpochMs.value);
+      map['last_interaction_at_epoch_ms'] = Variable<int>(
+        lastInteractionAtEpochMs.value,
+      );
     }
     if (sortEpochMs.present) {
       map['sort_epoch_ms'] = Variable<int>(sortEpochMs.value);
@@ -3008,67 +3832,105 @@ class $AegisPeopleCallHistoryTable extends AegisPeopleCallHistory
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-      'id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _personIdMeta =
-      const VerificationMeta('personId');
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _personIdMeta = const VerificationMeta(
+    'personId',
+  );
   @override
   late final GeneratedColumn<String> personId = GeneratedColumn<String>(
-      'person_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _payloadJsonMeta =
-      const VerificationMeta('payloadJson');
+    'person_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
   @override
   late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
-      'payload_json', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _startedAtEpochMsMeta =
-      const VerificationMeta('startedAtEpochMs');
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startedAtEpochMsMeta = const VerificationMeta(
+    'startedAtEpochMs',
+  );
   @override
   late final GeneratedColumn<int> startedAtEpochMs = GeneratedColumn<int>(
-      'started_at_epoch_ms', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _durationMsMeta =
-      const VerificationMeta('durationMs');
+    'started_at_epoch_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _durationMsMeta = const VerificationMeta(
+    'durationMs',
+  );
   @override
   late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
-      'duration_ms', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _isVideoMeta =
-      const VerificationMeta('isVideo');
+    'duration_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isVideoMeta = const VerificationMeta(
+    'isVideo',
+  );
   @override
   late final GeneratedColumn<bool> isVideo = GeneratedColumn<bool>(
-      'is_video', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_video" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _directionMeta =
-      const VerificationMeta('direction');
+    'is_video',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_video" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _directionMeta = const VerificationMeta(
+    'direction',
+  );
   @override
   late final GeneratedColumn<String> direction = GeneratedColumn<String>(
-      'direction', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _outcomeMeta =
-      const VerificationMeta('outcome');
+    'direction',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _outcomeMeta = const VerificationMeta(
+    'outcome',
+  );
   @override
   late final GeneratedColumn<String> outcome = GeneratedColumn<String>(
-      'outcome', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'outcome',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        personId,
-        payloadJson,
-        startedAtEpochMs,
-        durationMs,
-        isVideo,
-        direction,
-        outcome
-      ];
+    id,
+    personId,
+    payloadJson,
+    startedAtEpochMs,
+    durationMs,
+    isVideo,
+    direction,
+    outcome,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3076,8 +3938,9 @@ class $AegisPeopleCallHistoryTable extends AegisPeopleCallHistory
   static const String $name = 'aegis_people_call_history';
   @override
   VerificationContext validateIntegrity(
-      Insertable<AegisPeopleCallHistoryData> instance,
-      {bool isInserting = false}) {
+    Insertable<AegisPeopleCallHistoryData> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -3086,46 +3949,60 @@ class $AegisPeopleCallHistoryTable extends AegisPeopleCallHistory
       context.missing(_idMeta);
     }
     if (data.containsKey('person_id')) {
-      context.handle(_personIdMeta,
-          personId.isAcceptableOrUnknown(data['person_id']!, _personIdMeta));
+      context.handle(
+        _personIdMeta,
+        personId.isAcceptableOrUnknown(data['person_id']!, _personIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_personIdMeta);
     }
     if (data.containsKey('payload_json')) {
       context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
           _payloadJsonMeta,
-          payloadJson.isAcceptableOrUnknown(
-              data['payload_json']!, _payloadJsonMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_payloadJsonMeta);
     }
     if (data.containsKey('started_at_epoch_ms')) {
       context.handle(
+        _startedAtEpochMsMeta,
+        startedAtEpochMs.isAcceptableOrUnknown(
+          data['started_at_epoch_ms']!,
           _startedAtEpochMsMeta,
-          startedAtEpochMs.isAcceptableOrUnknown(
-              data['started_at_epoch_ms']!, _startedAtEpochMsMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_startedAtEpochMsMeta);
     }
     if (data.containsKey('duration_ms')) {
       context.handle(
-          _durationMsMeta,
-          durationMs.isAcceptableOrUnknown(
-              data['duration_ms']!, _durationMsMeta));
+        _durationMsMeta,
+        durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta),
+      );
     }
     if (data.containsKey('is_video')) {
-      context.handle(_isVideoMeta,
-          isVideo.isAcceptableOrUnknown(data['is_video']!, _isVideoMeta));
+      context.handle(
+        _isVideoMeta,
+        isVideo.isAcceptableOrUnknown(data['is_video']!, _isVideoMeta),
+      );
     }
     if (data.containsKey('direction')) {
-      context.handle(_directionMeta,
-          direction.isAcceptableOrUnknown(data['direction']!, _directionMeta));
+      context.handle(
+        _directionMeta,
+        direction.isAcceptableOrUnknown(data['direction']!, _directionMeta),
+      );
     } else if (isInserting) {
       context.missing(_directionMeta);
     }
     if (data.containsKey('outcome')) {
-      context.handle(_outcomeMeta,
-          outcome.isAcceptableOrUnknown(data['outcome']!, _outcomeMeta));
+      context.handle(
+        _outcomeMeta,
+        outcome.isAcceptableOrUnknown(data['outcome']!, _outcomeMeta),
+      );
     } else if (isInserting) {
       context.missing(_outcomeMeta);
     }
@@ -3135,26 +4012,44 @@ class $AegisPeopleCallHistoryTable extends AegisPeopleCallHistory
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  AegisPeopleCallHistoryData map(Map<String, dynamic> data,
-      {String? tablePrefix}) {
+  AegisPeopleCallHistoryData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AegisPeopleCallHistoryData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      personId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}person_id'])!,
-      payloadJson: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}payload_json'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      personId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
       startedAtEpochMs: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}started_at_epoch_ms'])!,
-      durationMs: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}duration_ms'])!,
-      isVideo: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_video'])!,
-      direction: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}direction'])!,
-      outcome: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}outcome'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}started_at_epoch_ms'],
+      )!,
+      durationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_ms'],
+      )!,
+      isVideo: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_video'],
+      )!,
+      direction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}direction'],
+      )!,
+      outcome: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}outcome'],
+      )!,
     );
   }
 
@@ -3174,15 +4069,16 @@ class AegisPeopleCallHistoryData extends DataClass
   final bool isVideo;
   final String direction;
   final String outcome;
-  const AegisPeopleCallHistoryData(
-      {required this.id,
-      required this.personId,
-      required this.payloadJson,
-      required this.startedAtEpochMs,
-      required this.durationMs,
-      required this.isVideo,
-      required this.direction,
-      required this.outcome});
+  const AegisPeopleCallHistoryData({
+    required this.id,
+    required this.personId,
+    required this.payloadJson,
+    required this.startedAtEpochMs,
+    required this.durationMs,
+    required this.isVideo,
+    required this.direction,
+    required this.outcome,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3210,8 +4106,10 @@ class AegisPeopleCallHistoryData extends DataClass
     );
   }
 
-  factory AegisPeopleCallHistoryData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory AegisPeopleCallHistoryData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AegisPeopleCallHistoryData(
       id: serializer.fromJson<String>(json['id']),
@@ -3239,37 +4137,40 @@ class AegisPeopleCallHistoryData extends DataClass
     };
   }
 
-  AegisPeopleCallHistoryData copyWith(
-          {String? id,
-          String? personId,
-          String? payloadJson,
-          int? startedAtEpochMs,
-          int? durationMs,
-          bool? isVideo,
-          String? direction,
-          String? outcome}) =>
-      AegisPeopleCallHistoryData(
-        id: id ?? this.id,
-        personId: personId ?? this.personId,
-        payloadJson: payloadJson ?? this.payloadJson,
-        startedAtEpochMs: startedAtEpochMs ?? this.startedAtEpochMs,
-        durationMs: durationMs ?? this.durationMs,
-        isVideo: isVideo ?? this.isVideo,
-        direction: direction ?? this.direction,
-        outcome: outcome ?? this.outcome,
-      );
+  AegisPeopleCallHistoryData copyWith({
+    String? id,
+    String? personId,
+    String? payloadJson,
+    int? startedAtEpochMs,
+    int? durationMs,
+    bool? isVideo,
+    String? direction,
+    String? outcome,
+  }) => AegisPeopleCallHistoryData(
+    id: id ?? this.id,
+    personId: personId ?? this.personId,
+    payloadJson: payloadJson ?? this.payloadJson,
+    startedAtEpochMs: startedAtEpochMs ?? this.startedAtEpochMs,
+    durationMs: durationMs ?? this.durationMs,
+    isVideo: isVideo ?? this.isVideo,
+    direction: direction ?? this.direction,
+    outcome: outcome ?? this.outcome,
+  );
   AegisPeopleCallHistoryData copyWithCompanion(
-      AegisPeopleCallHistoryCompanion data) {
+    AegisPeopleCallHistoryCompanion data,
+  ) {
     return AegisPeopleCallHistoryData(
       id: data.id.present ? data.id.value : this.id,
       personId: data.personId.present ? data.personId.value : this.personId,
-      payloadJson:
-          data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
       startedAtEpochMs: data.startedAtEpochMs.present
           ? data.startedAtEpochMs.value
           : this.startedAtEpochMs,
-      durationMs:
-          data.durationMs.present ? data.durationMs.value : this.durationMs,
+      durationMs: data.durationMs.present
+          ? data.durationMs.value
+          : this.durationMs,
       isVideo: data.isVideo.present ? data.isVideo.value : this.isVideo,
       direction: data.direction.present ? data.direction.value : this.direction,
       outcome: data.outcome.present ? data.outcome.value : this.outcome,
@@ -3292,8 +4193,16 @@ class AegisPeopleCallHistoryData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(id, personId, payloadJson, startedAtEpochMs,
-      durationMs, isVideo, direction, outcome);
+  int get hashCode => Object.hash(
+    id,
+    personId,
+    payloadJson,
+    startedAtEpochMs,
+    durationMs,
+    isVideo,
+    direction,
+    outcome,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3340,12 +4249,12 @@ class AegisPeopleCallHistoryCompanion
     required String direction,
     required String outcome,
     this.rowid = const Value.absent(),
-  })  : id = Value(id),
-        personId = Value(personId),
-        payloadJson = Value(payloadJson),
-        startedAtEpochMs = Value(startedAtEpochMs),
-        direction = Value(direction),
-        outcome = Value(outcome);
+  }) : id = Value(id),
+       personId = Value(personId),
+       payloadJson = Value(payloadJson),
+       startedAtEpochMs = Value(startedAtEpochMs),
+       direction = Value(direction),
+       outcome = Value(outcome);
   static Insertable<AegisPeopleCallHistoryData> custom({
     Expression<String>? id,
     Expression<String>? personId,
@@ -3370,16 +4279,17 @@ class AegisPeopleCallHistoryCompanion
     });
   }
 
-  AegisPeopleCallHistoryCompanion copyWith(
-      {Value<String>? id,
-      Value<String>? personId,
-      Value<String>? payloadJson,
-      Value<int>? startedAtEpochMs,
-      Value<int>? durationMs,
-      Value<bool>? isVideo,
-      Value<String>? direction,
-      Value<String>? outcome,
-      Value<int>? rowid}) {
+  AegisPeopleCallHistoryCompanion copyWith({
+    Value<String>? id,
+    Value<String>? personId,
+    Value<String>? payloadJson,
+    Value<int>? startedAtEpochMs,
+    Value<int>? durationMs,
+    Value<bool>? isVideo,
+    Value<String>? direction,
+    Value<String>? outcome,
+    Value<int>? rowid,
+  }) {
     return AegisPeopleCallHistoryCompanion(
       id: id ?? this.id,
       personId: personId ?? this.personId,
@@ -3464,53 +4374,53 @@ abstract class _$AegisChatDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-        aegisConversations,
-        aegisMessages,
-        aegisProfiles,
-        aegisMetadata,
-        aegisOfflineQueue,
-        aegisPeopleFavorites,
-        aegisPeopleEntries,
-        aegisPeopleCallHistory
-      ];
+    aegisConversations,
+    aegisMessages,
+    aegisProfiles,
+    aegisMetadata,
+    aegisOfflineQueue,
+    aegisPeopleFavorites,
+    aegisPeopleEntries,
+    aegisPeopleCallHistory,
+  ];
 }
 
-typedef $$AegisConversationsTableCreateCompanionBuilder
-    = AegisConversationsCompanion Function({
-  required String id,
-  required String title,
-  required String kind,
-  required int updatedAtEpochMs,
-  Value<String?> lastMessage,
-  Value<int> unreadCount,
-  Value<String?> avatarUrl,
-  Value<String?> description,
-  Value<int?> peerUserId,
-  Value<String?> peerUsername,
-  Value<int?> channelId,
-  Value<bool> isPublic,
-  Value<bool> showMessageHistory,
-  Value<String> memberUserIdsJson,
-  Value<int> rowid,
-});
-typedef $$AegisConversationsTableUpdateCompanionBuilder
-    = AegisConversationsCompanion Function({
-  Value<String> id,
-  Value<String> title,
-  Value<String> kind,
-  Value<int> updatedAtEpochMs,
-  Value<String?> lastMessage,
-  Value<int> unreadCount,
-  Value<String?> avatarUrl,
-  Value<String?> description,
-  Value<int?> peerUserId,
-  Value<String?> peerUsername,
-  Value<int?> channelId,
-  Value<bool> isPublic,
-  Value<bool> showMessageHistory,
-  Value<String> memberUserIdsJson,
-  Value<int> rowid,
-});
+typedef $$AegisConversationsTableCreateCompanionBuilder =
+    AegisConversationsCompanion Function({
+      required String id,
+      required String title,
+      required String kind,
+      required int updatedAtEpochMs,
+      Value<String?> lastMessage,
+      Value<int> unreadCount,
+      Value<String?> avatarUrl,
+      Value<String?> description,
+      Value<int?> peerUserId,
+      Value<String?> peerUsername,
+      Value<int?> channelId,
+      Value<bool> isPublic,
+      Value<bool> showMessageHistory,
+      Value<String> memberUserIdsJson,
+      Value<int> rowid,
+    });
+typedef $$AegisConversationsTableUpdateCompanionBuilder =
+    AegisConversationsCompanion Function({
+      Value<String> id,
+      Value<String> title,
+      Value<String> kind,
+      Value<int> updatedAtEpochMs,
+      Value<String?> lastMessage,
+      Value<int> unreadCount,
+      Value<String?> avatarUrl,
+      Value<String?> description,
+      Value<int?> peerUserId,
+      Value<String?> peerUsername,
+      Value<int?> channelId,
+      Value<bool> isPublic,
+      Value<bool> showMessageHistory,
+      Value<String> memberUserIdsJson,
+      Value<int> rowid,
+    });
 
 class $$AegisConversationsTableFilterComposer
     extends Composer<_$AegisChatDatabase, $AegisConversationsTable> {
@@ -3522,49 +4432,74 @@ class $$AegisConversationsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnFilters(column));
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get kind => $composableBuilder(
-      column: $table.kind, builder: (column) => ColumnFilters(column));
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get updatedAtEpochMs => $composableBuilder(
-      column: $table.updatedAtEpochMs,
-      builder: (column) => ColumnFilters(column));
+    column: $table.updatedAtEpochMs,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get lastMessage => $composableBuilder(
-      column: $table.lastMessage, builder: (column) => ColumnFilters(column));
+    column: $table.lastMessage,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get unreadCount => $composableBuilder(
-      column: $table.unreadCount, builder: (column) => ColumnFilters(column));
+    column: $table.unreadCount,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get avatarUrl => $composableBuilder(
-      column: $table.avatarUrl, builder: (column) => ColumnFilters(column));
+    column: $table.avatarUrl,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnFilters(column));
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get peerUserId => $composableBuilder(
-      column: $table.peerUserId, builder: (column) => ColumnFilters(column));
+    column: $table.peerUserId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get peerUsername => $composableBuilder(
-      column: $table.peerUsername, builder: (column) => ColumnFilters(column));
+    column: $table.peerUsername,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get channelId => $composableBuilder(
-      column: $table.channelId, builder: (column) => ColumnFilters(column));
+    column: $table.channelId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isPublic => $composableBuilder(
-      column: $table.isPublic, builder: (column) => ColumnFilters(column));
+    column: $table.isPublic,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get showMessageHistory => $composableBuilder(
-      column: $table.showMessageHistory,
-      builder: (column) => ColumnFilters(column));
+    column: $table.showMessageHistory,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get memberUserIdsJson => $composableBuilder(
-      column: $table.memberUserIdsJson,
-      builder: (column) => ColumnFilters(column));
+    column: $table.memberUserIdsJson,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$AegisConversationsTableOrderingComposer
@@ -3577,50 +4512,74 @@ class $$AegisConversationsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnOrderings(column));
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get kind => $composableBuilder(
-      column: $table.kind, builder: (column) => ColumnOrderings(column));
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get updatedAtEpochMs => $composableBuilder(
-      column: $table.updatedAtEpochMs,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.updatedAtEpochMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get lastMessage => $composableBuilder(
-      column: $table.lastMessage, builder: (column) => ColumnOrderings(column));
+    column: $table.lastMessage,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get unreadCount => $composableBuilder(
-      column: $table.unreadCount, builder: (column) => ColumnOrderings(column));
+    column: $table.unreadCount,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get avatarUrl => $composableBuilder(
-      column: $table.avatarUrl, builder: (column) => ColumnOrderings(column));
+    column: $table.avatarUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnOrderings(column));
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get peerUserId => $composableBuilder(
-      column: $table.peerUserId, builder: (column) => ColumnOrderings(column));
+    column: $table.peerUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get peerUsername => $composableBuilder(
-      column: $table.peerUsername,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.peerUsername,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get channelId => $composableBuilder(
-      column: $table.channelId, builder: (column) => ColumnOrderings(column));
+    column: $table.channelId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isPublic => $composableBuilder(
-      column: $table.isPublic, builder: (column) => ColumnOrderings(column));
+    column: $table.isPublic,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get showMessageHistory => $composableBuilder(
-      column: $table.showMessageHistory,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.showMessageHistory,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get memberUserIdsJson => $composableBuilder(
-      column: $table.memberUserIdsJson,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.memberUserIdsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AegisConversationsTableAnnotationComposer
@@ -3642,25 +4601,37 @@ class $$AegisConversationsTableAnnotationComposer
       $composableBuilder(column: $table.kind, builder: (column) => column);
 
   GeneratedColumn<int> get updatedAtEpochMs => $composableBuilder(
-      column: $table.updatedAtEpochMs, builder: (column) => column);
+    column: $table.updatedAtEpochMs,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get lastMessage => $composableBuilder(
-      column: $table.lastMessage, builder: (column) => column);
+    column: $table.lastMessage,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get unreadCount => $composableBuilder(
-      column: $table.unreadCount, builder: (column) => column);
+    column: $table.unreadCount,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get avatarUrl =>
       $composableBuilder(column: $table.avatarUrl, builder: (column) => column);
 
   GeneratedColumn<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => column);
+    column: $table.description,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get peerUserId => $composableBuilder(
-      column: $table.peerUserId, builder: (column) => column);
+    column: $table.peerUserId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get peerUsername => $composableBuilder(
-      column: $table.peerUsername, builder: (column) => column);
+    column: $table.peerUsername,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get channelId =>
       $composableBuilder(column: $table.channelId, builder: (column) => column);
@@ -3669,31 +4640,43 @@ class $$AegisConversationsTableAnnotationComposer
       $composableBuilder(column: $table.isPublic, builder: (column) => column);
 
   GeneratedColumn<bool> get showMessageHistory => $composableBuilder(
-      column: $table.showMessageHistory, builder: (column) => column);
+    column: $table.showMessageHistory,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get memberUserIdsJson => $composableBuilder(
-      column: $table.memberUserIdsJson, builder: (column) => column);
+    column: $table.memberUserIdsJson,
+    builder: (column) => column,
+  );
 }
 
-class $$AegisConversationsTableTableManager extends RootTableManager<
-    _$AegisChatDatabase,
-    $AegisConversationsTable,
-    AegisConversation,
-    $$AegisConversationsTableFilterComposer,
-    $$AegisConversationsTableOrderingComposer,
-    $$AegisConversationsTableAnnotationComposer,
-    $$AegisConversationsTableCreateCompanionBuilder,
-    $$AegisConversationsTableUpdateCompanionBuilder,
-    (
-      AegisConversation,
-      BaseReferences<_$AegisChatDatabase, $AegisConversationsTable,
-          AegisConversation>
-    ),
-    AegisConversation,
-    PrefetchHooks Function()> {
+class $$AegisConversationsTableTableManager
+    extends
+        RootTableManager<
+          _$AegisChatDatabase,
+          $AegisConversationsTable,
+          AegisConversation,
+          $$AegisConversationsTableFilterComposer,
+          $$AegisConversationsTableOrderingComposer,
+          $$AegisConversationsTableAnnotationComposer,
+          $$AegisConversationsTableCreateCompanionBuilder,
+          $$AegisConversationsTableUpdateCompanionBuilder,
+          (
+            AegisConversation,
+            BaseReferences<
+              _$AegisChatDatabase,
+              $AegisConversationsTable,
+              AegisConversation
+            >,
+          ),
+          AegisConversation,
+          PrefetchHooks Function()
+        > {
   $$AegisConversationsTableTableManager(
-      _$AegisChatDatabase db, $AegisConversationsTable table)
-      : super(TableManagerState(
+    _$AegisChatDatabase db,
+    $AegisConversationsTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -3702,120 +4685,138 @@ class $$AegisConversationsTableTableManager extends RootTableManager<
               $$AegisConversationsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$AegisConversationsTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> id = const Value.absent(),
-            Value<String> title = const Value.absent(),
-            Value<String> kind = const Value.absent(),
-            Value<int> updatedAtEpochMs = const Value.absent(),
-            Value<String?> lastMessage = const Value.absent(),
-            Value<int> unreadCount = const Value.absent(),
-            Value<String?> avatarUrl = const Value.absent(),
-            Value<String?> description = const Value.absent(),
-            Value<int?> peerUserId = const Value.absent(),
-            Value<String?> peerUsername = const Value.absent(),
-            Value<int?> channelId = const Value.absent(),
-            Value<bool> isPublic = const Value.absent(),
-            Value<bool> showMessageHistory = const Value.absent(),
-            Value<String> memberUserIdsJson = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisConversationsCompanion(
-            id: id,
-            title: title,
-            kind: kind,
-            updatedAtEpochMs: updatedAtEpochMs,
-            lastMessage: lastMessage,
-            unreadCount: unreadCount,
-            avatarUrl: avatarUrl,
-            description: description,
-            peerUserId: peerUserId,
-            peerUsername: peerUsername,
-            channelId: channelId,
-            isPublic: isPublic,
-            showMessageHistory: showMessageHistory,
-            memberUserIdsJson: memberUserIdsJson,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String id,
-            required String title,
-            required String kind,
-            required int updatedAtEpochMs,
-            Value<String?> lastMessage = const Value.absent(),
-            Value<int> unreadCount = const Value.absent(),
-            Value<String?> avatarUrl = const Value.absent(),
-            Value<String?> description = const Value.absent(),
-            Value<int?> peerUserId = const Value.absent(),
-            Value<String?> peerUsername = const Value.absent(),
-            Value<int?> channelId = const Value.absent(),
-            Value<bool> isPublic = const Value.absent(),
-            Value<bool> showMessageHistory = const Value.absent(),
-            Value<String> memberUserIdsJson = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisConversationsCompanion.insert(
-            id: id,
-            title: title,
-            kind: kind,
-            updatedAtEpochMs: updatedAtEpochMs,
-            lastMessage: lastMessage,
-            unreadCount: unreadCount,
-            avatarUrl: avatarUrl,
-            description: description,
-            peerUserId: peerUserId,
-            peerUsername: peerUsername,
-            channelId: channelId,
-            isPublic: isPublic,
-            showMessageHistory: showMessageHistory,
-            memberUserIdsJson: memberUserIdsJson,
-            rowid: rowid,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<int> updatedAtEpochMs = const Value.absent(),
+                Value<String?> lastMessage = const Value.absent(),
+                Value<int> unreadCount = const Value.absent(),
+                Value<String?> avatarUrl = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<int?> peerUserId = const Value.absent(),
+                Value<String?> peerUsername = const Value.absent(),
+                Value<int?> channelId = const Value.absent(),
+                Value<bool> isPublic = const Value.absent(),
+                Value<bool> showMessageHistory = const Value.absent(),
+                Value<String> memberUserIdsJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AegisConversationsCompanion(
+                id: id,
+                title: title,
+                kind: kind,
+                updatedAtEpochMs: updatedAtEpochMs,
+                lastMessage: lastMessage,
+                unreadCount: unreadCount,
+                avatarUrl: avatarUrl,
+                description: description,
+                peerUserId: peerUserId,
+                peerUsername: peerUsername,
+                channelId: channelId,
+                isPublic: isPublic,
+                showMessageHistory: showMessageHistory,
+                memberUserIdsJson: memberUserIdsJson,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String title,
+                required String kind,
+                required int updatedAtEpochMs,
+                Value<String?> lastMessage = const Value.absent(),
+                Value<int> unreadCount = const Value.absent(),
+                Value<String?> avatarUrl = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<int?> peerUserId = const Value.absent(),
+                Value<String?> peerUsername = const Value.absent(),
+                Value<int?> channelId = const Value.absent(),
+                Value<bool> isPublic = const Value.absent(),
+                Value<bool> showMessageHistory = const Value.absent(),
+                Value<String> memberUserIdsJson = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AegisConversationsCompanion.insert(
+                id: id,
+                title: title,
+                kind: kind,
+                updatedAtEpochMs: updatedAtEpochMs,
+                lastMessage: lastMessage,
+                unreadCount: unreadCount,
+                avatarUrl: avatarUrl,
+                description: description,
+                peerUserId: peerUserId,
+                peerUsername: peerUsername,
+                channelId: channelId,
+                isPublic: isPublic,
+                showMessageHistory: showMessageHistory,
+                memberUserIdsJson: memberUserIdsJson,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$AegisConversationsTableProcessedTableManager = ProcessedTableManager<
-    _$AegisChatDatabase,
-    $AegisConversationsTable,
-    AegisConversation,
-    $$AegisConversationsTableFilterComposer,
-    $$AegisConversationsTableOrderingComposer,
-    $$AegisConversationsTableAnnotationComposer,
-    $$AegisConversationsTableCreateCompanionBuilder,
-    $$AegisConversationsTableUpdateCompanionBuilder,
-    (
+typedef $$AegisConversationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AegisChatDatabase,
+      $AegisConversationsTable,
       AegisConversation,
-      BaseReferences<_$AegisChatDatabase, $AegisConversationsTable,
-          AegisConversation>
-    ),
-    AegisConversation,
-    PrefetchHooks Function()>;
-typedef $$AegisMessagesTableCreateCompanionBuilder = AegisMessagesCompanion
-    Function({
-  required String id,
-  required String roomId,
-  required String senderId,
-  required String content,
-  required int sentAtEpochMs,
-  Value<String> type,
-  Value<String?> mediaId,
-  Value<int> rowid,
-});
-typedef $$AegisMessagesTableUpdateCompanionBuilder = AegisMessagesCompanion
-    Function({
-  Value<String> id,
-  Value<String> roomId,
-  Value<String> senderId,
-  Value<String> content,
-  Value<int> sentAtEpochMs,
-  Value<String> type,
-  Value<String?> mediaId,
-  Value<int> rowid,
-});
+      $$AegisConversationsTableFilterComposer,
+      $$AegisConversationsTableOrderingComposer,
+      $$AegisConversationsTableAnnotationComposer,
+      $$AegisConversationsTableCreateCompanionBuilder,
+      $$AegisConversationsTableUpdateCompanionBuilder,
+      (
+        AegisConversation,
+        BaseReferences<
+          _$AegisChatDatabase,
+          $AegisConversationsTable,
+          AegisConversation
+        >,
+      ),
+      AegisConversation,
+      PrefetchHooks Function()
+    >;
+typedef $$AegisMessagesTableCreateCompanionBuilder =
+    AegisMessagesCompanion Function({
+      required String id,
+      required String roomId,
+      required String senderId,
+      required String content,
+      required int sentAtEpochMs,
+      Value<String> type,
+      Value<String?> mediaId,
+      Value<int?> replyToMessageId,
+      Value<bool> isDelivered,
+      Value<bool> isRead,
+      Value<int?> deliveredAtEpochMs,
+      Value<int?> readAtEpochMs,
+      Value<int> rowid,
+    });
+typedef $$AegisMessagesTableUpdateCompanionBuilder =
+    AegisMessagesCompanion Function({
+      Value<String> id,
+      Value<String> roomId,
+      Value<String> senderId,
+      Value<String> content,
+      Value<int> sentAtEpochMs,
+      Value<String> type,
+      Value<String?> mediaId,
+      Value<int?> replyToMessageId,
+      Value<bool> isDelivered,
+      Value<bool> isRead,
+      Value<int?> deliveredAtEpochMs,
+      Value<int?> readAtEpochMs,
+      Value<int> rowid,
+    });
 
 class $$AegisMessagesTableFilterComposer
     extends Composer<_$AegisChatDatabase, $AegisMessagesTable> {
@@ -3827,25 +4828,64 @@ class $$AegisMessagesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get roomId => $composableBuilder(
-      column: $table.roomId, builder: (column) => ColumnFilters(column));
+    column: $table.roomId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get senderId => $composableBuilder(
-      column: $table.senderId, builder: (column) => ColumnFilters(column));
+    column: $table.senderId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnFilters(column));
+    column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get sentAtEpochMs => $composableBuilder(
-      column: $table.sentAtEpochMs, builder: (column) => ColumnFilters(column));
+    column: $table.sentAtEpochMs,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnFilters(column));
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get mediaId => $composableBuilder(
-      column: $table.mediaId, builder: (column) => ColumnFilters(column));
+    column: $table.mediaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get replyToMessageId => $composableBuilder(
+    column: $table.replyToMessageId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDelivered => $composableBuilder(
+    column: $table.isDelivered,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isRead => $composableBuilder(
+    column: $table.isRead,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deliveredAtEpochMs => $composableBuilder(
+    column: $table.deliveredAtEpochMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get readAtEpochMs => $composableBuilder(
+    column: $table.readAtEpochMs,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$AegisMessagesTableOrderingComposer
@@ -3858,26 +4898,64 @@ class $$AegisMessagesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get roomId => $composableBuilder(
-      column: $table.roomId, builder: (column) => ColumnOrderings(column));
+    column: $table.roomId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get senderId => $composableBuilder(
-      column: $table.senderId, builder: (column) => ColumnOrderings(column));
+    column: $table.senderId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnOrderings(column));
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get sentAtEpochMs => $composableBuilder(
-      column: $table.sentAtEpochMs,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.sentAtEpochMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnOrderings(column));
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get mediaId => $composableBuilder(
-      column: $table.mediaId, builder: (column) => ColumnOrderings(column));
+    column: $table.mediaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get replyToMessageId => $composableBuilder(
+    column: $table.replyToMessageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDelivered => $composableBuilder(
+    column: $table.isDelivered,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isRead => $composableBuilder(
+    column: $table.isRead,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deliveredAtEpochMs => $composableBuilder(
+    column: $table.deliveredAtEpochMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get readAtEpochMs => $composableBuilder(
+    column: $table.readAtEpochMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AegisMessagesTableAnnotationComposer
@@ -3902,33 +4980,67 @@ class $$AegisMessagesTableAnnotationComposer
       $composableBuilder(column: $table.content, builder: (column) => column);
 
   GeneratedColumn<int> get sentAtEpochMs => $composableBuilder(
-      column: $table.sentAtEpochMs, builder: (column) => column);
+    column: $table.sentAtEpochMs,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
   GeneratedColumn<String> get mediaId =>
       $composableBuilder(column: $table.mediaId, builder: (column) => column);
+
+  GeneratedColumn<int> get replyToMessageId => $composableBuilder(
+    column: $table.replyToMessageId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDelivered => $composableBuilder(
+    column: $table.isDelivered,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isRead =>
+      $composableBuilder(column: $table.isRead, builder: (column) => column);
+
+  GeneratedColumn<int> get deliveredAtEpochMs => $composableBuilder(
+    column: $table.deliveredAtEpochMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get readAtEpochMs => $composableBuilder(
+    column: $table.readAtEpochMs,
+    builder: (column) => column,
+  );
 }
 
-class $$AegisMessagesTableTableManager extends RootTableManager<
-    _$AegisChatDatabase,
-    $AegisMessagesTable,
-    AegisMessage,
-    $$AegisMessagesTableFilterComposer,
-    $$AegisMessagesTableOrderingComposer,
-    $$AegisMessagesTableAnnotationComposer,
-    $$AegisMessagesTableCreateCompanionBuilder,
-    $$AegisMessagesTableUpdateCompanionBuilder,
-    (
-      AegisMessage,
-      BaseReferences<_$AegisChatDatabase, $AegisMessagesTable, AegisMessage>
-    ),
-    AegisMessage,
-    PrefetchHooks Function()> {
+class $$AegisMessagesTableTableManager
+    extends
+        RootTableManager<
+          _$AegisChatDatabase,
+          $AegisMessagesTable,
+          AegisMessage,
+          $$AegisMessagesTableFilterComposer,
+          $$AegisMessagesTableOrderingComposer,
+          $$AegisMessagesTableAnnotationComposer,
+          $$AegisMessagesTableCreateCompanionBuilder,
+          $$AegisMessagesTableUpdateCompanionBuilder,
+          (
+            AegisMessage,
+            BaseReferences<
+              _$AegisChatDatabase,
+              $AegisMessagesTable,
+              AegisMessage
+            >,
+          ),
+          AegisMessage,
+          PrefetchHooks Function()
+        > {
   $$AegisMessagesTableTableManager(
-      _$AegisChatDatabase db, $AegisMessagesTable table)
-      : super(TableManagerState(
+    _$AegisChatDatabase db,
+    $AegisMessagesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -3937,90 +5049,113 @@ class $$AegisMessagesTableTableManager extends RootTableManager<
               $$AegisMessagesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$AegisMessagesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> id = const Value.absent(),
-            Value<String> roomId = const Value.absent(),
-            Value<String> senderId = const Value.absent(),
-            Value<String> content = const Value.absent(),
-            Value<int> sentAtEpochMs = const Value.absent(),
-            Value<String> type = const Value.absent(),
-            Value<String?> mediaId = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisMessagesCompanion(
-            id: id,
-            roomId: roomId,
-            senderId: senderId,
-            content: content,
-            sentAtEpochMs: sentAtEpochMs,
-            type: type,
-            mediaId: mediaId,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String id,
-            required String roomId,
-            required String senderId,
-            required String content,
-            required int sentAtEpochMs,
-            Value<String> type = const Value.absent(),
-            Value<String?> mediaId = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisMessagesCompanion.insert(
-            id: id,
-            roomId: roomId,
-            senderId: senderId,
-            content: content,
-            sentAtEpochMs: sentAtEpochMs,
-            type: type,
-            mediaId: mediaId,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> roomId = const Value.absent(),
+                Value<String> senderId = const Value.absent(),
+                Value<String> content = const Value.absent(),
+                Value<int> sentAtEpochMs = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String?> mediaId = const Value.absent(),
+                Value<int?> replyToMessageId = const Value.absent(),
+                Value<bool> isDelivered = const Value.absent(),
+                Value<bool> isRead = const Value.absent(),
+                Value<int?> deliveredAtEpochMs = const Value.absent(),
+                Value<int?> readAtEpochMs = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AegisMessagesCompanion(
+                id: id,
+                roomId: roomId,
+                senderId: senderId,
+                content: content,
+                sentAtEpochMs: sentAtEpochMs,
+                type: type,
+                mediaId: mediaId,
+                replyToMessageId: replyToMessageId,
+                isDelivered: isDelivered,
+                isRead: isRead,
+                deliveredAtEpochMs: deliveredAtEpochMs,
+                readAtEpochMs: readAtEpochMs,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String roomId,
+                required String senderId,
+                required String content,
+                required int sentAtEpochMs,
+                Value<String> type = const Value.absent(),
+                Value<String?> mediaId = const Value.absent(),
+                Value<int?> replyToMessageId = const Value.absent(),
+                Value<bool> isDelivered = const Value.absent(),
+                Value<bool> isRead = const Value.absent(),
+                Value<int?> deliveredAtEpochMs = const Value.absent(),
+                Value<int?> readAtEpochMs = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AegisMessagesCompanion.insert(
+                id: id,
+                roomId: roomId,
+                senderId: senderId,
+                content: content,
+                sentAtEpochMs: sentAtEpochMs,
+                type: type,
+                mediaId: mediaId,
+                replyToMessageId: replyToMessageId,
+                isDelivered: isDelivered,
+                isRead: isRead,
+                deliveredAtEpochMs: deliveredAtEpochMs,
+                readAtEpochMs: readAtEpochMs,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$AegisMessagesTableProcessedTableManager = ProcessedTableManager<
-    _$AegisChatDatabase,
-    $AegisMessagesTable,
-    AegisMessage,
-    $$AegisMessagesTableFilterComposer,
-    $$AegisMessagesTableOrderingComposer,
-    $$AegisMessagesTableAnnotationComposer,
-    $$AegisMessagesTableCreateCompanionBuilder,
-    $$AegisMessagesTableUpdateCompanionBuilder,
-    (
+typedef $$AegisMessagesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AegisChatDatabase,
+      $AegisMessagesTable,
       AegisMessage,
-      BaseReferences<_$AegisChatDatabase, $AegisMessagesTable, AegisMessage>
-    ),
-    AegisMessage,
-    PrefetchHooks Function()>;
-typedef $$AegisProfilesTableCreateCompanionBuilder = AegisProfilesCompanion
-    Function({
-  Value<int> userId,
-  required String payloadJson,
-  Value<String?> username,
-  Value<String?> displayName,
-  Value<String?> avatarUrl,
-  Value<String?> presenceStatus,
-  Value<bool> isOnline,
-  Value<int?> lastSeenAtEpochMs,
-});
-typedef $$AegisProfilesTableUpdateCompanionBuilder = AegisProfilesCompanion
-    Function({
-  Value<int> userId,
-  Value<String> payloadJson,
-  Value<String?> username,
-  Value<String?> displayName,
-  Value<String?> avatarUrl,
-  Value<String?> presenceStatus,
-  Value<bool> isOnline,
-  Value<int?> lastSeenAtEpochMs,
-});
+      $$AegisMessagesTableFilterComposer,
+      $$AegisMessagesTableOrderingComposer,
+      $$AegisMessagesTableAnnotationComposer,
+      $$AegisMessagesTableCreateCompanionBuilder,
+      $$AegisMessagesTableUpdateCompanionBuilder,
+      (
+        AegisMessage,
+        BaseReferences<_$AegisChatDatabase, $AegisMessagesTable, AegisMessage>,
+      ),
+      AegisMessage,
+      PrefetchHooks Function()
+    >;
+typedef $$AegisProfilesTableCreateCompanionBuilder =
+    AegisProfilesCompanion Function({
+      Value<int> userId,
+      required String payloadJson,
+      Value<String?> username,
+      Value<String?> displayName,
+      Value<String?> avatarUrl,
+      Value<String?> presenceStatus,
+      Value<bool> isOnline,
+      Value<int?> lastSeenAtEpochMs,
+    });
+typedef $$AegisProfilesTableUpdateCompanionBuilder =
+    AegisProfilesCompanion Function({
+      Value<int> userId,
+      Value<String> payloadJson,
+      Value<String?> username,
+      Value<String?> displayName,
+      Value<String?> avatarUrl,
+      Value<String?> presenceStatus,
+      Value<bool> isOnline,
+      Value<int?> lastSeenAtEpochMs,
+    });
 
 class $$AegisProfilesTableFilterComposer
     extends Composer<_$AegisChatDatabase, $AegisProfilesTable> {
@@ -4032,30 +5167,44 @@ class $$AegisProfilesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get userId => $composableBuilder(
-      column: $table.userId, builder: (column) => ColumnFilters(column));
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => ColumnFilters(column));
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get username => $composableBuilder(
-      column: $table.username, builder: (column) => ColumnFilters(column));
+    column: $table.username,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => ColumnFilters(column));
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get avatarUrl => $composableBuilder(
-      column: $table.avatarUrl, builder: (column) => ColumnFilters(column));
+    column: $table.avatarUrl,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get presenceStatus => $composableBuilder(
-      column: $table.presenceStatus,
-      builder: (column) => ColumnFilters(column));
+    column: $table.presenceStatus,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isOnline => $composableBuilder(
-      column: $table.isOnline, builder: (column) => ColumnFilters(column));
+    column: $table.isOnline,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get lastSeenAtEpochMs => $composableBuilder(
-      column: $table.lastSeenAtEpochMs,
-      builder: (column) => ColumnFilters(column));
+    column: $table.lastSeenAtEpochMs,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$AegisProfilesTableOrderingComposer
@@ -4068,30 +5217,44 @@ class $$AegisProfilesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get userId => $composableBuilder(
-      column: $table.userId, builder: (column) => ColumnOrderings(column));
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => ColumnOrderings(column));
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get username => $composableBuilder(
-      column: $table.username, builder: (column) => ColumnOrderings(column));
+    column: $table.username,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => ColumnOrderings(column));
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get avatarUrl => $composableBuilder(
-      column: $table.avatarUrl, builder: (column) => ColumnOrderings(column));
+    column: $table.avatarUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get presenceStatus => $composableBuilder(
-      column: $table.presenceStatus,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.presenceStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isOnline => $composableBuilder(
-      column: $table.isOnline, builder: (column) => ColumnOrderings(column));
+    column: $table.isOnline,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get lastSeenAtEpochMs => $composableBuilder(
-      column: $table.lastSeenAtEpochMs,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastSeenAtEpochMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AegisProfilesTableAnnotationComposer
@@ -4107,45 +5270,62 @@ class $$AegisProfilesTableAnnotationComposer
       $composableBuilder(column: $table.userId, builder: (column) => column);
 
   GeneratedColumn<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => column);
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get username =>
       $composableBuilder(column: $table.username, builder: (column) => column);
 
   GeneratedColumn<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => column);
+    column: $table.displayName,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get avatarUrl =>
       $composableBuilder(column: $table.avatarUrl, builder: (column) => column);
 
   GeneratedColumn<String> get presenceStatus => $composableBuilder(
-      column: $table.presenceStatus, builder: (column) => column);
+    column: $table.presenceStatus,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isOnline =>
       $composableBuilder(column: $table.isOnline, builder: (column) => column);
 
   GeneratedColumn<int> get lastSeenAtEpochMs => $composableBuilder(
-      column: $table.lastSeenAtEpochMs, builder: (column) => column);
+    column: $table.lastSeenAtEpochMs,
+    builder: (column) => column,
+  );
 }
 
-class $$AegisProfilesTableTableManager extends RootTableManager<
-    _$AegisChatDatabase,
-    $AegisProfilesTable,
-    AegisProfile,
-    $$AegisProfilesTableFilterComposer,
-    $$AegisProfilesTableOrderingComposer,
-    $$AegisProfilesTableAnnotationComposer,
-    $$AegisProfilesTableCreateCompanionBuilder,
-    $$AegisProfilesTableUpdateCompanionBuilder,
-    (
-      AegisProfile,
-      BaseReferences<_$AegisChatDatabase, $AegisProfilesTable, AegisProfile>
-    ),
-    AegisProfile,
-    PrefetchHooks Function()> {
+class $$AegisProfilesTableTableManager
+    extends
+        RootTableManager<
+          _$AegisChatDatabase,
+          $AegisProfilesTable,
+          AegisProfile,
+          $$AegisProfilesTableFilterComposer,
+          $$AegisProfilesTableOrderingComposer,
+          $$AegisProfilesTableAnnotationComposer,
+          $$AegisProfilesTableCreateCompanionBuilder,
+          $$AegisProfilesTableUpdateCompanionBuilder,
+          (
+            AegisProfile,
+            BaseReferences<
+              _$AegisChatDatabase,
+              $AegisProfilesTable,
+              AegisProfile
+            >,
+          ),
+          AegisProfile,
+          PrefetchHooks Function()
+        > {
   $$AegisProfilesTableTableManager(
-      _$AegisChatDatabase db, $AegisProfilesTable table)
-      : super(TableManagerState(
+    _$AegisChatDatabase db,
+    $AegisProfilesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -4154,80 +5334,83 @@ class $$AegisProfilesTableTableManager extends RootTableManager<
               $$AegisProfilesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$AegisProfilesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> userId = const Value.absent(),
-            Value<String> payloadJson = const Value.absent(),
-            Value<String?> username = const Value.absent(),
-            Value<String?> displayName = const Value.absent(),
-            Value<String?> avatarUrl = const Value.absent(),
-            Value<String?> presenceStatus = const Value.absent(),
-            Value<bool> isOnline = const Value.absent(),
-            Value<int?> lastSeenAtEpochMs = const Value.absent(),
-          }) =>
-              AegisProfilesCompanion(
-            userId: userId,
-            payloadJson: payloadJson,
-            username: username,
-            displayName: displayName,
-            avatarUrl: avatarUrl,
-            presenceStatus: presenceStatus,
-            isOnline: isOnline,
-            lastSeenAtEpochMs: lastSeenAtEpochMs,
-          ),
-          createCompanionCallback: ({
-            Value<int> userId = const Value.absent(),
-            required String payloadJson,
-            Value<String?> username = const Value.absent(),
-            Value<String?> displayName = const Value.absent(),
-            Value<String?> avatarUrl = const Value.absent(),
-            Value<String?> presenceStatus = const Value.absent(),
-            Value<bool> isOnline = const Value.absent(),
-            Value<int?> lastSeenAtEpochMs = const Value.absent(),
-          }) =>
-              AegisProfilesCompanion.insert(
-            userId: userId,
-            payloadJson: payloadJson,
-            username: username,
-            displayName: displayName,
-            avatarUrl: avatarUrl,
-            presenceStatus: presenceStatus,
-            isOnline: isOnline,
-            lastSeenAtEpochMs: lastSeenAtEpochMs,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<int> userId = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<String?> username = const Value.absent(),
+                Value<String?> displayName = const Value.absent(),
+                Value<String?> avatarUrl = const Value.absent(),
+                Value<String?> presenceStatus = const Value.absent(),
+                Value<bool> isOnline = const Value.absent(),
+                Value<int?> lastSeenAtEpochMs = const Value.absent(),
+              }) => AegisProfilesCompanion(
+                userId: userId,
+                payloadJson: payloadJson,
+                username: username,
+                displayName: displayName,
+                avatarUrl: avatarUrl,
+                presenceStatus: presenceStatus,
+                isOnline: isOnline,
+                lastSeenAtEpochMs: lastSeenAtEpochMs,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> userId = const Value.absent(),
+                required String payloadJson,
+                Value<String?> username = const Value.absent(),
+                Value<String?> displayName = const Value.absent(),
+                Value<String?> avatarUrl = const Value.absent(),
+                Value<String?> presenceStatus = const Value.absent(),
+                Value<bool> isOnline = const Value.absent(),
+                Value<int?> lastSeenAtEpochMs = const Value.absent(),
+              }) => AegisProfilesCompanion.insert(
+                userId: userId,
+                payloadJson: payloadJson,
+                username: username,
+                displayName: displayName,
+                avatarUrl: avatarUrl,
+                presenceStatus: presenceStatus,
+                isOnline: isOnline,
+                lastSeenAtEpochMs: lastSeenAtEpochMs,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$AegisProfilesTableProcessedTableManager = ProcessedTableManager<
-    _$AegisChatDatabase,
-    $AegisProfilesTable,
-    AegisProfile,
-    $$AegisProfilesTableFilterComposer,
-    $$AegisProfilesTableOrderingComposer,
-    $$AegisProfilesTableAnnotationComposer,
-    $$AegisProfilesTableCreateCompanionBuilder,
-    $$AegisProfilesTableUpdateCompanionBuilder,
-    (
+typedef $$AegisProfilesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AegisChatDatabase,
+      $AegisProfilesTable,
       AegisProfile,
-      BaseReferences<_$AegisChatDatabase, $AegisProfilesTable, AegisProfile>
-    ),
-    AegisProfile,
-    PrefetchHooks Function()>;
-typedef $$AegisMetadataTableCreateCompanionBuilder = AegisMetadataCompanion
-    Function({
-  required String key,
-  required String value,
-  Value<int> rowid,
-});
-typedef $$AegisMetadataTableUpdateCompanionBuilder = AegisMetadataCompanion
-    Function({
-  Value<String> key,
-  Value<String> value,
-  Value<int> rowid,
-});
+      $$AegisProfilesTableFilterComposer,
+      $$AegisProfilesTableOrderingComposer,
+      $$AegisProfilesTableAnnotationComposer,
+      $$AegisProfilesTableCreateCompanionBuilder,
+      $$AegisProfilesTableUpdateCompanionBuilder,
+      (
+        AegisProfile,
+        BaseReferences<_$AegisChatDatabase, $AegisProfilesTable, AegisProfile>,
+      ),
+      AegisProfile,
+      PrefetchHooks Function()
+    >;
+typedef $$AegisMetadataTableCreateCompanionBuilder =
+    AegisMetadataCompanion Function({
+      required String key,
+      required String value,
+      Value<int> rowid,
+    });
+typedef $$AegisMetadataTableUpdateCompanionBuilder =
+    AegisMetadataCompanion Function({
+      Value<String> key,
+      Value<String> value,
+      Value<int> rowid,
+    });
 
 class $$AegisMetadataTableFilterComposer
     extends Composer<_$AegisChatDatabase, $AegisMetadataTable> {
@@ -4239,10 +5422,14 @@ class $$AegisMetadataTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get key => $composableBuilder(
-      column: $table.key, builder: (column) => ColumnFilters(column));
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get value => $composableBuilder(
-      column: $table.value, builder: (column) => ColumnFilters(column));
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$AegisMetadataTableOrderingComposer
@@ -4255,10 +5442,14 @@ class $$AegisMetadataTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get key => $composableBuilder(
-      column: $table.key, builder: (column) => ColumnOrderings(column));
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get value => $composableBuilder(
-      column: $table.value, builder: (column) => ColumnOrderings(column));
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AegisMetadataTableAnnotationComposer
@@ -4277,25 +5468,33 @@ class $$AegisMetadataTableAnnotationComposer
       $composableBuilder(column: $table.value, builder: (column) => column);
 }
 
-class $$AegisMetadataTableTableManager extends RootTableManager<
-    _$AegisChatDatabase,
-    $AegisMetadataTable,
-    AegisMetadataData,
-    $$AegisMetadataTableFilterComposer,
-    $$AegisMetadataTableOrderingComposer,
-    $$AegisMetadataTableAnnotationComposer,
-    $$AegisMetadataTableCreateCompanionBuilder,
-    $$AegisMetadataTableUpdateCompanionBuilder,
-    (
-      AegisMetadataData,
-      BaseReferences<_$AegisChatDatabase, $AegisMetadataTable,
-          AegisMetadataData>
-    ),
-    AegisMetadataData,
-    PrefetchHooks Function()> {
+class $$AegisMetadataTableTableManager
+    extends
+        RootTableManager<
+          _$AegisChatDatabase,
+          $AegisMetadataTable,
+          AegisMetadataData,
+          $$AegisMetadataTableFilterComposer,
+          $$AegisMetadataTableOrderingComposer,
+          $$AegisMetadataTableAnnotationComposer,
+          $$AegisMetadataTableCreateCompanionBuilder,
+          $$AegisMetadataTableUpdateCompanionBuilder,
+          (
+            AegisMetadataData,
+            BaseReferences<
+              _$AegisChatDatabase,
+              $AegisMetadataTable,
+              AegisMetadataData
+            >,
+          ),
+          AegisMetadataData,
+          PrefetchHooks Function()
+        > {
   $$AegisMetadataTableTableManager(
-      _$AegisChatDatabase db, $AegisMetadataTable table)
-      : super(TableManagerState(
+    _$AegisChatDatabase db,
+    $AegisMetadataTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -4304,69 +5503,72 @@ class $$AegisMetadataTableTableManager extends RootTableManager<
               $$AegisMetadataTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$AegisMetadataTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> key = const Value.absent(),
-            Value<String> value = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisMetadataCompanion(
-            key: key,
-            value: value,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String key,
-            required String value,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisMetadataCompanion.insert(
-            key: key,
-            value: value,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> key = const Value.absent(),
+                Value<String> value = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) =>
+                  AegisMetadataCompanion(key: key, value: value, rowid: rowid),
+          createCompanionCallback:
+              ({
+                required String key,
+                required String value,
+                Value<int> rowid = const Value.absent(),
+              }) => AegisMetadataCompanion.insert(
+                key: key,
+                value: value,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$AegisMetadataTableProcessedTableManager = ProcessedTableManager<
-    _$AegisChatDatabase,
-    $AegisMetadataTable,
-    AegisMetadataData,
-    $$AegisMetadataTableFilterComposer,
-    $$AegisMetadataTableOrderingComposer,
-    $$AegisMetadataTableAnnotationComposer,
-    $$AegisMetadataTableCreateCompanionBuilder,
-    $$AegisMetadataTableUpdateCompanionBuilder,
-    (
+typedef $$AegisMetadataTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AegisChatDatabase,
+      $AegisMetadataTable,
       AegisMetadataData,
-      BaseReferences<_$AegisChatDatabase, $AegisMetadataTable,
-          AegisMetadataData>
-    ),
-    AegisMetadataData,
-    PrefetchHooks Function()>;
-typedef $$AegisOfflineQueueTableCreateCompanionBuilder
-    = AegisOfflineQueueCompanion Function({
-  Value<int> id,
-  required String chatId,
-  required String content,
-  required String type,
-  required int createdAtEpochMs,
-  Value<bool> sent,
-  Value<String?> errorMessage,
-});
-typedef $$AegisOfflineQueueTableUpdateCompanionBuilder
-    = AegisOfflineQueueCompanion Function({
-  Value<int> id,
-  Value<String> chatId,
-  Value<String> content,
-  Value<String> type,
-  Value<int> createdAtEpochMs,
-  Value<bool> sent,
-  Value<String?> errorMessage,
-});
+      $$AegisMetadataTableFilterComposer,
+      $$AegisMetadataTableOrderingComposer,
+      $$AegisMetadataTableAnnotationComposer,
+      $$AegisMetadataTableCreateCompanionBuilder,
+      $$AegisMetadataTableUpdateCompanionBuilder,
+      (
+        AegisMetadataData,
+        BaseReferences<
+          _$AegisChatDatabase,
+          $AegisMetadataTable,
+          AegisMetadataData
+        >,
+      ),
+      AegisMetadataData,
+      PrefetchHooks Function()
+    >;
+typedef $$AegisOfflineQueueTableCreateCompanionBuilder =
+    AegisOfflineQueueCompanion Function({
+      Value<int> id,
+      required String chatId,
+      required String content,
+      required String type,
+      required int createdAtEpochMs,
+      Value<bool> sent,
+      Value<String?> errorMessage,
+    });
+typedef $$AegisOfflineQueueTableUpdateCompanionBuilder =
+    AegisOfflineQueueCompanion Function({
+      Value<int> id,
+      Value<String> chatId,
+      Value<String> content,
+      Value<String> type,
+      Value<int> createdAtEpochMs,
+      Value<bool> sent,
+      Value<String?> errorMessage,
+    });
 
 class $$AegisOfflineQueueTableFilterComposer
     extends Composer<_$AegisChatDatabase, $AegisOfflineQueueTable> {
@@ -4378,26 +5580,39 @@ class $$AegisOfflineQueueTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get chatId => $composableBuilder(
-      column: $table.chatId, builder: (column) => ColumnFilters(column));
+    column: $table.chatId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnFilters(column));
+    column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnFilters(column));
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get createdAtEpochMs => $composableBuilder(
-      column: $table.createdAtEpochMs,
-      builder: (column) => ColumnFilters(column));
+    column: $table.createdAtEpochMs,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get sent => $composableBuilder(
-      column: $table.sent, builder: (column) => ColumnFilters(column));
+    column: $table.sent,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get errorMessage => $composableBuilder(
-      column: $table.errorMessage, builder: (column) => ColumnFilters(column));
+    column: $table.errorMessage,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$AegisOfflineQueueTableOrderingComposer
@@ -4410,27 +5625,39 @@ class $$AegisOfflineQueueTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get chatId => $composableBuilder(
-      column: $table.chatId, builder: (column) => ColumnOrderings(column));
+    column: $table.chatId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnOrderings(column));
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnOrderings(column));
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get createdAtEpochMs => $composableBuilder(
-      column: $table.createdAtEpochMs,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.createdAtEpochMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get sent => $composableBuilder(
-      column: $table.sent, builder: (column) => ColumnOrderings(column));
+    column: $table.sent,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get errorMessage => $composableBuilder(
-      column: $table.errorMessage,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.errorMessage,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AegisOfflineQueueTableAnnotationComposer
@@ -4455,34 +5682,46 @@ class $$AegisOfflineQueueTableAnnotationComposer
       $composableBuilder(column: $table.type, builder: (column) => column);
 
   GeneratedColumn<int> get createdAtEpochMs => $composableBuilder(
-      column: $table.createdAtEpochMs, builder: (column) => column);
+    column: $table.createdAtEpochMs,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get sent =>
       $composableBuilder(column: $table.sent, builder: (column) => column);
 
   GeneratedColumn<String> get errorMessage => $composableBuilder(
-      column: $table.errorMessage, builder: (column) => column);
+    column: $table.errorMessage,
+    builder: (column) => column,
+  );
 }
 
-class $$AegisOfflineQueueTableTableManager extends RootTableManager<
-    _$AegisChatDatabase,
-    $AegisOfflineQueueTable,
-    AegisOfflineQueueData,
-    $$AegisOfflineQueueTableFilterComposer,
-    $$AegisOfflineQueueTableOrderingComposer,
-    $$AegisOfflineQueueTableAnnotationComposer,
-    $$AegisOfflineQueueTableCreateCompanionBuilder,
-    $$AegisOfflineQueueTableUpdateCompanionBuilder,
-    (
-      AegisOfflineQueueData,
-      BaseReferences<_$AegisChatDatabase, $AegisOfflineQueueTable,
-          AegisOfflineQueueData>
-    ),
-    AegisOfflineQueueData,
-    PrefetchHooks Function()> {
+class $$AegisOfflineQueueTableTableManager
+    extends
+        RootTableManager<
+          _$AegisChatDatabase,
+          $AegisOfflineQueueTable,
+          AegisOfflineQueueData,
+          $$AegisOfflineQueueTableFilterComposer,
+          $$AegisOfflineQueueTableOrderingComposer,
+          $$AegisOfflineQueueTableAnnotationComposer,
+          $$AegisOfflineQueueTableCreateCompanionBuilder,
+          $$AegisOfflineQueueTableUpdateCompanionBuilder,
+          (
+            AegisOfflineQueueData,
+            BaseReferences<
+              _$AegisChatDatabase,
+              $AegisOfflineQueueTable,
+              AegisOfflineQueueData
+            >,
+          ),
+          AegisOfflineQueueData,
+          PrefetchHooks Function()
+        > {
   $$AegisOfflineQueueTableTableManager(
-      _$AegisChatDatabase db, $AegisOfflineQueueTable table)
-      : super(TableManagerState(
+    _$AegisChatDatabase db,
+    $AegisOfflineQueueTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -4491,76 +5730,84 @@ class $$AegisOfflineQueueTableTableManager extends RootTableManager<
               $$AegisOfflineQueueTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$AegisOfflineQueueTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String> chatId = const Value.absent(),
-            Value<String> content = const Value.absent(),
-            Value<String> type = const Value.absent(),
-            Value<int> createdAtEpochMs = const Value.absent(),
-            Value<bool> sent = const Value.absent(),
-            Value<String?> errorMessage = const Value.absent(),
-          }) =>
-              AegisOfflineQueueCompanion(
-            id: id,
-            chatId: chatId,
-            content: content,
-            type: type,
-            createdAtEpochMs: createdAtEpochMs,
-            sent: sent,
-            errorMessage: errorMessage,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required String chatId,
-            required String content,
-            required String type,
-            required int createdAtEpochMs,
-            Value<bool> sent = const Value.absent(),
-            Value<String?> errorMessage = const Value.absent(),
-          }) =>
-              AegisOfflineQueueCompanion.insert(
-            id: id,
-            chatId: chatId,
-            content: content,
-            type: type,
-            createdAtEpochMs: createdAtEpochMs,
-            sent: sent,
-            errorMessage: errorMessage,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> chatId = const Value.absent(),
+                Value<String> content = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<int> createdAtEpochMs = const Value.absent(),
+                Value<bool> sent = const Value.absent(),
+                Value<String?> errorMessage = const Value.absent(),
+              }) => AegisOfflineQueueCompanion(
+                id: id,
+                chatId: chatId,
+                content: content,
+                type: type,
+                createdAtEpochMs: createdAtEpochMs,
+                sent: sent,
+                errorMessage: errorMessage,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String chatId,
+                required String content,
+                required String type,
+                required int createdAtEpochMs,
+                Value<bool> sent = const Value.absent(),
+                Value<String?> errorMessage = const Value.absent(),
+              }) => AegisOfflineQueueCompanion.insert(
+                id: id,
+                chatId: chatId,
+                content: content,
+                type: type,
+                createdAtEpochMs: createdAtEpochMs,
+                sent: sent,
+                errorMessage: errorMessage,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$AegisOfflineQueueTableProcessedTableManager = ProcessedTableManager<
-    _$AegisChatDatabase,
-    $AegisOfflineQueueTable,
-    AegisOfflineQueueData,
-    $$AegisOfflineQueueTableFilterComposer,
-    $$AegisOfflineQueueTableOrderingComposer,
-    $$AegisOfflineQueueTableAnnotationComposer,
-    $$AegisOfflineQueueTableCreateCompanionBuilder,
-    $$AegisOfflineQueueTableUpdateCompanionBuilder,
-    (
+typedef $$AegisOfflineQueueTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AegisChatDatabase,
+      $AegisOfflineQueueTable,
       AegisOfflineQueueData,
-      BaseReferences<_$AegisChatDatabase, $AegisOfflineQueueTable,
-          AegisOfflineQueueData>
-    ),
-    AegisOfflineQueueData,
-    PrefetchHooks Function()>;
-typedef $$AegisPeopleFavoritesTableCreateCompanionBuilder
-    = AegisPeopleFavoritesCompanion Function({
-  required String personId,
-  Value<int> rowid,
-});
-typedef $$AegisPeopleFavoritesTableUpdateCompanionBuilder
-    = AegisPeopleFavoritesCompanion Function({
-  Value<String> personId,
-  Value<int> rowid,
-});
+      $$AegisOfflineQueueTableFilterComposer,
+      $$AegisOfflineQueueTableOrderingComposer,
+      $$AegisOfflineQueueTableAnnotationComposer,
+      $$AegisOfflineQueueTableCreateCompanionBuilder,
+      $$AegisOfflineQueueTableUpdateCompanionBuilder,
+      (
+        AegisOfflineQueueData,
+        BaseReferences<
+          _$AegisChatDatabase,
+          $AegisOfflineQueueTable,
+          AegisOfflineQueueData
+        >,
+      ),
+      AegisOfflineQueueData,
+      PrefetchHooks Function()
+    >;
+typedef $$AegisPeopleFavoritesTableCreateCompanionBuilder =
+    AegisPeopleFavoritesCompanion Function({
+      required String personId,
+      Value<int> rowid,
+    });
+typedef $$AegisPeopleFavoritesTableUpdateCompanionBuilder =
+    AegisPeopleFavoritesCompanion Function({
+      Value<String> personId,
+      Value<int> rowid,
+    });
 
 class $$AegisPeopleFavoritesTableFilterComposer
     extends Composer<_$AegisChatDatabase, $AegisPeopleFavoritesTable> {
@@ -4572,7 +5819,9 @@ class $$AegisPeopleFavoritesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get personId => $composableBuilder(
-      column: $table.personId, builder: (column) => ColumnFilters(column));
+    column: $table.personId,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$AegisPeopleFavoritesTableOrderingComposer
@@ -4585,7 +5834,9 @@ class $$AegisPeopleFavoritesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get personId => $composableBuilder(
-      column: $table.personId, builder: (column) => ColumnOrderings(column));
+    column: $table.personId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AegisPeopleFavoritesTableAnnotationComposer
@@ -4601,111 +5852,128 @@ class $$AegisPeopleFavoritesTableAnnotationComposer
       $composableBuilder(column: $table.personId, builder: (column) => column);
 }
 
-class $$AegisPeopleFavoritesTableTableManager extends RootTableManager<
-    _$AegisChatDatabase,
-    $AegisPeopleFavoritesTable,
-    AegisPeopleFavorite,
-    $$AegisPeopleFavoritesTableFilterComposer,
-    $$AegisPeopleFavoritesTableOrderingComposer,
-    $$AegisPeopleFavoritesTableAnnotationComposer,
-    $$AegisPeopleFavoritesTableCreateCompanionBuilder,
-    $$AegisPeopleFavoritesTableUpdateCompanionBuilder,
-    (
-      AegisPeopleFavorite,
-      BaseReferences<_$AegisChatDatabase, $AegisPeopleFavoritesTable,
-          AegisPeopleFavorite>
-    ),
-    AegisPeopleFavorite,
-    PrefetchHooks Function()> {
+class $$AegisPeopleFavoritesTableTableManager
+    extends
+        RootTableManager<
+          _$AegisChatDatabase,
+          $AegisPeopleFavoritesTable,
+          AegisPeopleFavorite,
+          $$AegisPeopleFavoritesTableFilterComposer,
+          $$AegisPeopleFavoritesTableOrderingComposer,
+          $$AegisPeopleFavoritesTableAnnotationComposer,
+          $$AegisPeopleFavoritesTableCreateCompanionBuilder,
+          $$AegisPeopleFavoritesTableUpdateCompanionBuilder,
+          (
+            AegisPeopleFavorite,
+            BaseReferences<
+              _$AegisChatDatabase,
+              $AegisPeopleFavoritesTable,
+              AegisPeopleFavorite
+            >,
+          ),
+          AegisPeopleFavorite,
+          PrefetchHooks Function()
+        > {
   $$AegisPeopleFavoritesTableTableManager(
-      _$AegisChatDatabase db, $AegisPeopleFavoritesTable table)
-      : super(TableManagerState(
+    _$AegisChatDatabase db,
+    $AegisPeopleFavoritesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
               $$AegisPeopleFavoritesTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
               $$AegisPeopleFavoritesTableOrderingComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
               $$AegisPeopleFavoritesTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> personId = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisPeopleFavoritesCompanion(
-            personId: personId,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String personId,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisPeopleFavoritesCompanion.insert(
-            personId: personId,
-            rowid: rowid,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> personId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AegisPeopleFavoritesCompanion(
+                personId: personId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String personId,
+                Value<int> rowid = const Value.absent(),
+              }) => AegisPeopleFavoritesCompanion.insert(
+                personId: personId,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$AegisPeopleFavoritesTableProcessedTableManager
-    = ProcessedTableManager<
-        _$AegisChatDatabase,
-        $AegisPeopleFavoritesTable,
+typedef $$AegisPeopleFavoritesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AegisChatDatabase,
+      $AegisPeopleFavoritesTable,
+      AegisPeopleFavorite,
+      $$AegisPeopleFavoritesTableFilterComposer,
+      $$AegisPeopleFavoritesTableOrderingComposer,
+      $$AegisPeopleFavoritesTableAnnotationComposer,
+      $$AegisPeopleFavoritesTableCreateCompanionBuilder,
+      $$AegisPeopleFavoritesTableUpdateCompanionBuilder,
+      (
         AegisPeopleFavorite,
-        $$AegisPeopleFavoritesTableFilterComposer,
-        $$AegisPeopleFavoritesTableOrderingComposer,
-        $$AegisPeopleFavoritesTableAnnotationComposer,
-        $$AegisPeopleFavoritesTableCreateCompanionBuilder,
-        $$AegisPeopleFavoritesTableUpdateCompanionBuilder,
-        (
-          AegisPeopleFavorite,
-          BaseReferences<_$AegisChatDatabase, $AegisPeopleFavoritesTable,
-              AegisPeopleFavorite>
-        ),
-        AegisPeopleFavorite,
-        PrefetchHooks Function()>;
-typedef $$AegisPeopleEntriesTableCreateCompanionBuilder
-    = AegisPeopleEntriesCompanion Function({
-  required String bucket,
-  required String personId,
-  required String payloadJson,
-  required String displayName,
-  Value<String?> username,
-  Value<String?> remoteUserId,
-  Value<bool> isTwoSpaceUser,
-  Value<bool> isDeviceContact,
-  Value<bool> isFavorite,
-  Value<bool> isOnline,
-  Value<String?> presenceStatus,
-  Value<int?> lastSeenAtEpochMs,
-  Value<int?> lastInteractionAtEpochMs,
-  Value<int> sortEpochMs,
-  Value<int> rowid,
-});
-typedef $$AegisPeopleEntriesTableUpdateCompanionBuilder
-    = AegisPeopleEntriesCompanion Function({
-  Value<String> bucket,
-  Value<String> personId,
-  Value<String> payloadJson,
-  Value<String> displayName,
-  Value<String?> username,
-  Value<String?> remoteUserId,
-  Value<bool> isTwoSpaceUser,
-  Value<bool> isDeviceContact,
-  Value<bool> isFavorite,
-  Value<bool> isOnline,
-  Value<String?> presenceStatus,
-  Value<int?> lastSeenAtEpochMs,
-  Value<int?> lastInteractionAtEpochMs,
-  Value<int> sortEpochMs,
-  Value<int> rowid,
-});
+        BaseReferences<
+          _$AegisChatDatabase,
+          $AegisPeopleFavoritesTable,
+          AegisPeopleFavorite
+        >,
+      ),
+      AegisPeopleFavorite,
+      PrefetchHooks Function()
+    >;
+typedef $$AegisPeopleEntriesTableCreateCompanionBuilder =
+    AegisPeopleEntriesCompanion Function({
+      required String bucket,
+      required String personId,
+      required String payloadJson,
+      required String displayName,
+      Value<String?> username,
+      Value<String?> remoteUserId,
+      Value<bool> isTwoSpaceUser,
+      Value<bool> isDeviceContact,
+      Value<bool> isFavorite,
+      Value<bool> isOnline,
+      Value<String?> presenceStatus,
+      Value<int?> lastSeenAtEpochMs,
+      Value<int?> lastInteractionAtEpochMs,
+      Value<int> sortEpochMs,
+      Value<int> rowid,
+    });
+typedef $$AegisPeopleEntriesTableUpdateCompanionBuilder =
+    AegisPeopleEntriesCompanion Function({
+      Value<String> bucket,
+      Value<String> personId,
+      Value<String> payloadJson,
+      Value<String> displayName,
+      Value<String?> username,
+      Value<String?> remoteUserId,
+      Value<bool> isTwoSpaceUser,
+      Value<bool> isDeviceContact,
+      Value<bool> isFavorite,
+      Value<bool> isOnline,
+      Value<String?> presenceStatus,
+      Value<int?> lastSeenAtEpochMs,
+      Value<int?> lastInteractionAtEpochMs,
+      Value<int> sortEpochMs,
+      Value<int> rowid,
+    });
 
 class $$AegisPeopleEntriesTableFilterComposer
     extends Composer<_$AegisChatDatabase, $AegisPeopleEntriesTable> {
@@ -4717,51 +5985,74 @@ class $$AegisPeopleEntriesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get bucket => $composableBuilder(
-      column: $table.bucket, builder: (column) => ColumnFilters(column));
+    column: $table.bucket,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get personId => $composableBuilder(
-      column: $table.personId, builder: (column) => ColumnFilters(column));
+    column: $table.personId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => ColumnFilters(column));
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => ColumnFilters(column));
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get username => $composableBuilder(
-      column: $table.username, builder: (column) => ColumnFilters(column));
+    column: $table.username,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get remoteUserId => $composableBuilder(
-      column: $table.remoteUserId, builder: (column) => ColumnFilters(column));
+    column: $table.remoteUserId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isTwoSpaceUser => $composableBuilder(
-      column: $table.isTwoSpaceUser,
-      builder: (column) => ColumnFilters(column));
+    column: $table.isTwoSpaceUser,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isDeviceContact => $composableBuilder(
-      column: $table.isDeviceContact,
-      builder: (column) => ColumnFilters(column));
+    column: $table.isDeviceContact,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isFavorite => $composableBuilder(
-      column: $table.isFavorite, builder: (column) => ColumnFilters(column));
+    column: $table.isFavorite,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isOnline => $composableBuilder(
-      column: $table.isOnline, builder: (column) => ColumnFilters(column));
+    column: $table.isOnline,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get presenceStatus => $composableBuilder(
-      column: $table.presenceStatus,
-      builder: (column) => ColumnFilters(column));
+    column: $table.presenceStatus,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get lastSeenAtEpochMs => $composableBuilder(
-      column: $table.lastSeenAtEpochMs,
-      builder: (column) => ColumnFilters(column));
+    column: $table.lastSeenAtEpochMs,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get lastInteractionAtEpochMs => $composableBuilder(
-      column: $table.lastInteractionAtEpochMs,
-      builder: (column) => ColumnFilters(column));
+    column: $table.lastInteractionAtEpochMs,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get sortEpochMs => $composableBuilder(
-      column: $table.sortEpochMs, builder: (column) => ColumnFilters(column));
+    column: $table.sortEpochMs,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$AegisPeopleEntriesTableOrderingComposer
@@ -4774,52 +6065,74 @@ class $$AegisPeopleEntriesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get bucket => $composableBuilder(
-      column: $table.bucket, builder: (column) => ColumnOrderings(column));
+    column: $table.bucket,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get personId => $composableBuilder(
-      column: $table.personId, builder: (column) => ColumnOrderings(column));
+    column: $table.personId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => ColumnOrderings(column));
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => ColumnOrderings(column));
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get username => $composableBuilder(
-      column: $table.username, builder: (column) => ColumnOrderings(column));
+    column: $table.username,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get remoteUserId => $composableBuilder(
-      column: $table.remoteUserId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.remoteUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isTwoSpaceUser => $composableBuilder(
-      column: $table.isTwoSpaceUser,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.isTwoSpaceUser,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isDeviceContact => $composableBuilder(
-      column: $table.isDeviceContact,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.isDeviceContact,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isFavorite => $composableBuilder(
-      column: $table.isFavorite, builder: (column) => ColumnOrderings(column));
+    column: $table.isFavorite,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isOnline => $composableBuilder(
-      column: $table.isOnline, builder: (column) => ColumnOrderings(column));
+    column: $table.isOnline,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get presenceStatus => $composableBuilder(
-      column: $table.presenceStatus,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.presenceStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get lastSeenAtEpochMs => $composableBuilder(
-      column: $table.lastSeenAtEpochMs,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastSeenAtEpochMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get lastInteractionAtEpochMs => $composableBuilder(
-      column: $table.lastInteractionAtEpochMs,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastInteractionAtEpochMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get sortEpochMs => $composableBuilder(
-      column: $table.sortEpochMs, builder: (column) => ColumnOrderings(column));
+    column: $table.sortEpochMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AegisPeopleEntriesTableAnnotationComposer
@@ -4838,61 +6151,89 @@ class $$AegisPeopleEntriesTableAnnotationComposer
       $composableBuilder(column: $table.personId, builder: (column) => column);
 
   GeneratedColumn<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => column);
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => column);
+    column: $table.displayName,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get username =>
       $composableBuilder(column: $table.username, builder: (column) => column);
 
   GeneratedColumn<String> get remoteUserId => $composableBuilder(
-      column: $table.remoteUserId, builder: (column) => column);
+    column: $table.remoteUserId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isTwoSpaceUser => $composableBuilder(
-      column: $table.isTwoSpaceUser, builder: (column) => column);
+    column: $table.isTwoSpaceUser,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isDeviceContact => $composableBuilder(
-      column: $table.isDeviceContact, builder: (column) => column);
+    column: $table.isDeviceContact,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isFavorite => $composableBuilder(
-      column: $table.isFavorite, builder: (column) => column);
+    column: $table.isFavorite,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isOnline =>
       $composableBuilder(column: $table.isOnline, builder: (column) => column);
 
   GeneratedColumn<String> get presenceStatus => $composableBuilder(
-      column: $table.presenceStatus, builder: (column) => column);
+    column: $table.presenceStatus,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get lastSeenAtEpochMs => $composableBuilder(
-      column: $table.lastSeenAtEpochMs, builder: (column) => column);
+    column: $table.lastSeenAtEpochMs,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get lastInteractionAtEpochMs => $composableBuilder(
-      column: $table.lastInteractionAtEpochMs, builder: (column) => column);
+    column: $table.lastInteractionAtEpochMs,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get sortEpochMs => $composableBuilder(
-      column: $table.sortEpochMs, builder: (column) => column);
+    column: $table.sortEpochMs,
+    builder: (column) => column,
+  );
 }
 
-class $$AegisPeopleEntriesTableTableManager extends RootTableManager<
-    _$AegisChatDatabase,
-    $AegisPeopleEntriesTable,
-    AegisPeopleEntry,
-    $$AegisPeopleEntriesTableFilterComposer,
-    $$AegisPeopleEntriesTableOrderingComposer,
-    $$AegisPeopleEntriesTableAnnotationComposer,
-    $$AegisPeopleEntriesTableCreateCompanionBuilder,
-    $$AegisPeopleEntriesTableUpdateCompanionBuilder,
-    (
-      AegisPeopleEntry,
-      BaseReferences<_$AegisChatDatabase, $AegisPeopleEntriesTable,
-          AegisPeopleEntry>
-    ),
-    AegisPeopleEntry,
-    PrefetchHooks Function()> {
+class $$AegisPeopleEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AegisChatDatabase,
+          $AegisPeopleEntriesTable,
+          AegisPeopleEntry,
+          $$AegisPeopleEntriesTableFilterComposer,
+          $$AegisPeopleEntriesTableOrderingComposer,
+          $$AegisPeopleEntriesTableAnnotationComposer,
+          $$AegisPeopleEntriesTableCreateCompanionBuilder,
+          $$AegisPeopleEntriesTableUpdateCompanionBuilder,
+          (
+            AegisPeopleEntry,
+            BaseReferences<
+              _$AegisChatDatabase,
+              $AegisPeopleEntriesTable,
+              AegisPeopleEntry
+            >,
+          ),
+          AegisPeopleEntry,
+          PrefetchHooks Function()
+        > {
   $$AegisPeopleEntriesTableTableManager(
-      _$AegisChatDatabase db, $AegisPeopleEntriesTable table)
-      : super(TableManagerState(
+    _$AegisChatDatabase db,
+    $AegisPeopleEntriesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -4901,122 +6242,130 @@ class $$AegisPeopleEntriesTableTableManager extends RootTableManager<
               $$AegisPeopleEntriesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$AegisPeopleEntriesTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> bucket = const Value.absent(),
-            Value<String> personId = const Value.absent(),
-            Value<String> payloadJson = const Value.absent(),
-            Value<String> displayName = const Value.absent(),
-            Value<String?> username = const Value.absent(),
-            Value<String?> remoteUserId = const Value.absent(),
-            Value<bool> isTwoSpaceUser = const Value.absent(),
-            Value<bool> isDeviceContact = const Value.absent(),
-            Value<bool> isFavorite = const Value.absent(),
-            Value<bool> isOnline = const Value.absent(),
-            Value<String?> presenceStatus = const Value.absent(),
-            Value<int?> lastSeenAtEpochMs = const Value.absent(),
-            Value<int?> lastInteractionAtEpochMs = const Value.absent(),
-            Value<int> sortEpochMs = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisPeopleEntriesCompanion(
-            bucket: bucket,
-            personId: personId,
-            payloadJson: payloadJson,
-            displayName: displayName,
-            username: username,
-            remoteUserId: remoteUserId,
-            isTwoSpaceUser: isTwoSpaceUser,
-            isDeviceContact: isDeviceContact,
-            isFavorite: isFavorite,
-            isOnline: isOnline,
-            presenceStatus: presenceStatus,
-            lastSeenAtEpochMs: lastSeenAtEpochMs,
-            lastInteractionAtEpochMs: lastInteractionAtEpochMs,
-            sortEpochMs: sortEpochMs,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String bucket,
-            required String personId,
-            required String payloadJson,
-            required String displayName,
-            Value<String?> username = const Value.absent(),
-            Value<String?> remoteUserId = const Value.absent(),
-            Value<bool> isTwoSpaceUser = const Value.absent(),
-            Value<bool> isDeviceContact = const Value.absent(),
-            Value<bool> isFavorite = const Value.absent(),
-            Value<bool> isOnline = const Value.absent(),
-            Value<String?> presenceStatus = const Value.absent(),
-            Value<int?> lastSeenAtEpochMs = const Value.absent(),
-            Value<int?> lastInteractionAtEpochMs = const Value.absent(),
-            Value<int> sortEpochMs = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisPeopleEntriesCompanion.insert(
-            bucket: bucket,
-            personId: personId,
-            payloadJson: payloadJson,
-            displayName: displayName,
-            username: username,
-            remoteUserId: remoteUserId,
-            isTwoSpaceUser: isTwoSpaceUser,
-            isDeviceContact: isDeviceContact,
-            isFavorite: isFavorite,
-            isOnline: isOnline,
-            presenceStatus: presenceStatus,
-            lastSeenAtEpochMs: lastSeenAtEpochMs,
-            lastInteractionAtEpochMs: lastInteractionAtEpochMs,
-            sortEpochMs: sortEpochMs,
-            rowid: rowid,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> bucket = const Value.absent(),
+                Value<String> personId = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<String?> username = const Value.absent(),
+                Value<String?> remoteUserId = const Value.absent(),
+                Value<bool> isTwoSpaceUser = const Value.absent(),
+                Value<bool> isDeviceContact = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
+                Value<bool> isOnline = const Value.absent(),
+                Value<String?> presenceStatus = const Value.absent(),
+                Value<int?> lastSeenAtEpochMs = const Value.absent(),
+                Value<int?> lastInteractionAtEpochMs = const Value.absent(),
+                Value<int> sortEpochMs = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AegisPeopleEntriesCompanion(
+                bucket: bucket,
+                personId: personId,
+                payloadJson: payloadJson,
+                displayName: displayName,
+                username: username,
+                remoteUserId: remoteUserId,
+                isTwoSpaceUser: isTwoSpaceUser,
+                isDeviceContact: isDeviceContact,
+                isFavorite: isFavorite,
+                isOnline: isOnline,
+                presenceStatus: presenceStatus,
+                lastSeenAtEpochMs: lastSeenAtEpochMs,
+                lastInteractionAtEpochMs: lastInteractionAtEpochMs,
+                sortEpochMs: sortEpochMs,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String bucket,
+                required String personId,
+                required String payloadJson,
+                required String displayName,
+                Value<String?> username = const Value.absent(),
+                Value<String?> remoteUserId = const Value.absent(),
+                Value<bool> isTwoSpaceUser = const Value.absent(),
+                Value<bool> isDeviceContact = const Value.absent(),
+                Value<bool> isFavorite = const Value.absent(),
+                Value<bool> isOnline = const Value.absent(),
+                Value<String?> presenceStatus = const Value.absent(),
+                Value<int?> lastSeenAtEpochMs = const Value.absent(),
+                Value<int?> lastInteractionAtEpochMs = const Value.absent(),
+                Value<int> sortEpochMs = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AegisPeopleEntriesCompanion.insert(
+                bucket: bucket,
+                personId: personId,
+                payloadJson: payloadJson,
+                displayName: displayName,
+                username: username,
+                remoteUserId: remoteUserId,
+                isTwoSpaceUser: isTwoSpaceUser,
+                isDeviceContact: isDeviceContact,
+                isFavorite: isFavorite,
+                isOnline: isOnline,
+                presenceStatus: presenceStatus,
+                lastSeenAtEpochMs: lastSeenAtEpochMs,
+                lastInteractionAtEpochMs: lastInteractionAtEpochMs,
+                sortEpochMs: sortEpochMs,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$AegisPeopleEntriesTableProcessedTableManager = ProcessedTableManager<
-    _$AegisChatDatabase,
-    $AegisPeopleEntriesTable,
-    AegisPeopleEntry,
-    $$AegisPeopleEntriesTableFilterComposer,
-    $$AegisPeopleEntriesTableOrderingComposer,
-    $$AegisPeopleEntriesTableAnnotationComposer,
-    $$AegisPeopleEntriesTableCreateCompanionBuilder,
-    $$AegisPeopleEntriesTableUpdateCompanionBuilder,
-    (
+typedef $$AegisPeopleEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AegisChatDatabase,
+      $AegisPeopleEntriesTable,
       AegisPeopleEntry,
-      BaseReferences<_$AegisChatDatabase, $AegisPeopleEntriesTable,
-          AegisPeopleEntry>
-    ),
-    AegisPeopleEntry,
-    PrefetchHooks Function()>;
-typedef $$AegisPeopleCallHistoryTableCreateCompanionBuilder
-    = AegisPeopleCallHistoryCompanion Function({
-  required String id,
-  required String personId,
-  required String payloadJson,
-  required int startedAtEpochMs,
-  Value<int> durationMs,
-  Value<bool> isVideo,
-  required String direction,
-  required String outcome,
-  Value<int> rowid,
-});
-typedef $$AegisPeopleCallHistoryTableUpdateCompanionBuilder
-    = AegisPeopleCallHistoryCompanion Function({
-  Value<String> id,
-  Value<String> personId,
-  Value<String> payloadJson,
-  Value<int> startedAtEpochMs,
-  Value<int> durationMs,
-  Value<bool> isVideo,
-  Value<String> direction,
-  Value<String> outcome,
-  Value<int> rowid,
-});
+      $$AegisPeopleEntriesTableFilterComposer,
+      $$AegisPeopleEntriesTableOrderingComposer,
+      $$AegisPeopleEntriesTableAnnotationComposer,
+      $$AegisPeopleEntriesTableCreateCompanionBuilder,
+      $$AegisPeopleEntriesTableUpdateCompanionBuilder,
+      (
+        AegisPeopleEntry,
+        BaseReferences<
+          _$AegisChatDatabase,
+          $AegisPeopleEntriesTable,
+          AegisPeopleEntry
+        >,
+      ),
+      AegisPeopleEntry,
+      PrefetchHooks Function()
+    >;
+typedef $$AegisPeopleCallHistoryTableCreateCompanionBuilder =
+    AegisPeopleCallHistoryCompanion Function({
+      required String id,
+      required String personId,
+      required String payloadJson,
+      required int startedAtEpochMs,
+      Value<int> durationMs,
+      Value<bool> isVideo,
+      required String direction,
+      required String outcome,
+      Value<int> rowid,
+    });
+typedef $$AegisPeopleCallHistoryTableUpdateCompanionBuilder =
+    AegisPeopleCallHistoryCompanion Function({
+      Value<String> id,
+      Value<String> personId,
+      Value<String> payloadJson,
+      Value<int> startedAtEpochMs,
+      Value<int> durationMs,
+      Value<bool> isVideo,
+      Value<String> direction,
+      Value<String> outcome,
+      Value<int> rowid,
+    });
 
 class $$AegisPeopleCallHistoryTableFilterComposer
     extends Composer<_$AegisChatDatabase, $AegisPeopleCallHistoryTable> {
@@ -5028,29 +6377,44 @@ class $$AegisPeopleCallHistoryTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get personId => $composableBuilder(
-      column: $table.personId, builder: (column) => ColumnFilters(column));
+    column: $table.personId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => ColumnFilters(column));
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get startedAtEpochMs => $composableBuilder(
-      column: $table.startedAtEpochMs,
-      builder: (column) => ColumnFilters(column));
+    column: $table.startedAtEpochMs,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get durationMs => $composableBuilder(
-      column: $table.durationMs, builder: (column) => ColumnFilters(column));
+    column: $table.durationMs,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isVideo => $composableBuilder(
-      column: $table.isVideo, builder: (column) => ColumnFilters(column));
+    column: $table.isVideo,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get direction => $composableBuilder(
-      column: $table.direction, builder: (column) => ColumnFilters(column));
+    column: $table.direction,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get outcome => $composableBuilder(
-      column: $table.outcome, builder: (column) => ColumnFilters(column));
+    column: $table.outcome,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$AegisPeopleCallHistoryTableOrderingComposer
@@ -5063,29 +6427,44 @@ class $$AegisPeopleCallHistoryTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get personId => $composableBuilder(
-      column: $table.personId, builder: (column) => ColumnOrderings(column));
+    column: $table.personId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => ColumnOrderings(column));
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get startedAtEpochMs => $composableBuilder(
-      column: $table.startedAtEpochMs,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.startedAtEpochMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get durationMs => $composableBuilder(
-      column: $table.durationMs, builder: (column) => ColumnOrderings(column));
+    column: $table.durationMs,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isVideo => $composableBuilder(
-      column: $table.isVideo, builder: (column) => ColumnOrderings(column));
+    column: $table.isVideo,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get direction => $composableBuilder(
-      column: $table.direction, builder: (column) => ColumnOrderings(column));
+    column: $table.direction,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get outcome => $composableBuilder(
-      column: $table.outcome, builder: (column) => ColumnOrderings(column));
+    column: $table.outcome,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AegisPeopleCallHistoryTableAnnotationComposer
@@ -5104,13 +6483,19 @@ class $$AegisPeopleCallHistoryTableAnnotationComposer
       $composableBuilder(column: $table.personId, builder: (column) => column);
 
   GeneratedColumn<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => column);
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get startedAtEpochMs => $composableBuilder(
-      column: $table.startedAtEpochMs, builder: (column) => column);
+    column: $table.startedAtEpochMs,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get durationMs => $composableBuilder(
-      column: $table.durationMs, builder: (column) => column);
+    column: $table.durationMs,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isVideo =>
       $composableBuilder(column: $table.isVideo, builder: (column) => column);
@@ -5122,104 +6507,123 @@ class $$AegisPeopleCallHistoryTableAnnotationComposer
       $composableBuilder(column: $table.outcome, builder: (column) => column);
 }
 
-class $$AegisPeopleCallHistoryTableTableManager extends RootTableManager<
-    _$AegisChatDatabase,
-    $AegisPeopleCallHistoryTable,
-    AegisPeopleCallHistoryData,
-    $$AegisPeopleCallHistoryTableFilterComposer,
-    $$AegisPeopleCallHistoryTableOrderingComposer,
-    $$AegisPeopleCallHistoryTableAnnotationComposer,
-    $$AegisPeopleCallHistoryTableCreateCompanionBuilder,
-    $$AegisPeopleCallHistoryTableUpdateCompanionBuilder,
-    (
-      AegisPeopleCallHistoryData,
-      BaseReferences<_$AegisChatDatabase, $AegisPeopleCallHistoryTable,
-          AegisPeopleCallHistoryData>
-    ),
-    AegisPeopleCallHistoryData,
-    PrefetchHooks Function()> {
+class $$AegisPeopleCallHistoryTableTableManager
+    extends
+        RootTableManager<
+          _$AegisChatDatabase,
+          $AegisPeopleCallHistoryTable,
+          AegisPeopleCallHistoryData,
+          $$AegisPeopleCallHistoryTableFilterComposer,
+          $$AegisPeopleCallHistoryTableOrderingComposer,
+          $$AegisPeopleCallHistoryTableAnnotationComposer,
+          $$AegisPeopleCallHistoryTableCreateCompanionBuilder,
+          $$AegisPeopleCallHistoryTableUpdateCompanionBuilder,
+          (
+            AegisPeopleCallHistoryData,
+            BaseReferences<
+              _$AegisChatDatabase,
+              $AegisPeopleCallHistoryTable,
+              AegisPeopleCallHistoryData
+            >,
+          ),
+          AegisPeopleCallHistoryData,
+          PrefetchHooks Function()
+        > {
   $$AegisPeopleCallHistoryTableTableManager(
-      _$AegisChatDatabase db, $AegisPeopleCallHistoryTable table)
-      : super(TableManagerState(
+    _$AegisChatDatabase db,
+    $AegisPeopleCallHistoryTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
               $$AegisPeopleCallHistoryTableFilterComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createOrderingComposer: () =>
               $$AegisPeopleCallHistoryTableOrderingComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
               $$AegisPeopleCallHistoryTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> id = const Value.absent(),
-            Value<String> personId = const Value.absent(),
-            Value<String> payloadJson = const Value.absent(),
-            Value<int> startedAtEpochMs = const Value.absent(),
-            Value<int> durationMs = const Value.absent(),
-            Value<bool> isVideo = const Value.absent(),
-            Value<String> direction = const Value.absent(),
-            Value<String> outcome = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisPeopleCallHistoryCompanion(
-            id: id,
-            personId: personId,
-            payloadJson: payloadJson,
-            startedAtEpochMs: startedAtEpochMs,
-            durationMs: durationMs,
-            isVideo: isVideo,
-            direction: direction,
-            outcome: outcome,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String id,
-            required String personId,
-            required String payloadJson,
-            required int startedAtEpochMs,
-            Value<int> durationMs = const Value.absent(),
-            Value<bool> isVideo = const Value.absent(),
-            required String direction,
-            required String outcome,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AegisPeopleCallHistoryCompanion.insert(
-            id: id,
-            personId: personId,
-            payloadJson: payloadJson,
-            startedAtEpochMs: startedAtEpochMs,
-            durationMs: durationMs,
-            isVideo: isVideo,
-            direction: direction,
-            outcome: outcome,
-            rowid: rowid,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> personId = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<int> startedAtEpochMs = const Value.absent(),
+                Value<int> durationMs = const Value.absent(),
+                Value<bool> isVideo = const Value.absent(),
+                Value<String> direction = const Value.absent(),
+                Value<String> outcome = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AegisPeopleCallHistoryCompanion(
+                id: id,
+                personId: personId,
+                payloadJson: payloadJson,
+                startedAtEpochMs: startedAtEpochMs,
+                durationMs: durationMs,
+                isVideo: isVideo,
+                direction: direction,
+                outcome: outcome,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String personId,
+                required String payloadJson,
+                required int startedAtEpochMs,
+                Value<int> durationMs = const Value.absent(),
+                Value<bool> isVideo = const Value.absent(),
+                required String direction,
+                required String outcome,
+                Value<int> rowid = const Value.absent(),
+              }) => AegisPeopleCallHistoryCompanion.insert(
+                id: id,
+                personId: personId,
+                payloadJson: payloadJson,
+                startedAtEpochMs: startedAtEpochMs,
+                durationMs: durationMs,
+                isVideo: isVideo,
+                direction: direction,
+                outcome: outcome,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$AegisPeopleCallHistoryTableProcessedTableManager
-    = ProcessedTableManager<
-        _$AegisChatDatabase,
-        $AegisPeopleCallHistoryTable,
+typedef $$AegisPeopleCallHistoryTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AegisChatDatabase,
+      $AegisPeopleCallHistoryTable,
+      AegisPeopleCallHistoryData,
+      $$AegisPeopleCallHistoryTableFilterComposer,
+      $$AegisPeopleCallHistoryTableOrderingComposer,
+      $$AegisPeopleCallHistoryTableAnnotationComposer,
+      $$AegisPeopleCallHistoryTableCreateCompanionBuilder,
+      $$AegisPeopleCallHistoryTableUpdateCompanionBuilder,
+      (
         AegisPeopleCallHistoryData,
-        $$AegisPeopleCallHistoryTableFilterComposer,
-        $$AegisPeopleCallHistoryTableOrderingComposer,
-        $$AegisPeopleCallHistoryTableAnnotationComposer,
-        $$AegisPeopleCallHistoryTableCreateCompanionBuilder,
-        $$AegisPeopleCallHistoryTableUpdateCompanionBuilder,
-        (
-          AegisPeopleCallHistoryData,
-          BaseReferences<_$AegisChatDatabase, $AegisPeopleCallHistoryTable,
-              AegisPeopleCallHistoryData>
-        ),
-        AegisPeopleCallHistoryData,
-        PrefetchHooks Function()>;
+        BaseReferences<
+          _$AegisChatDatabase,
+          $AegisPeopleCallHistoryTable,
+          AegisPeopleCallHistoryData
+        >,
+      ),
+      AegisPeopleCallHistoryData,
+      PrefetchHooks Function()
+    >;
 
 class $AegisChatDatabaseManager {
   final _$AegisChatDatabase _db;
@@ -5240,5 +6644,7 @@ class $AegisChatDatabaseManager {
       $$AegisPeopleEntriesTableTableManager(_db, _db.aegisPeopleEntries);
   $$AegisPeopleCallHistoryTableTableManager get aegisPeopleCallHistory =>
       $$AegisPeopleCallHistoryTableTableManager(
-          _db, _db.aegisPeopleCallHistory);
+        _db,
+        _db.aegisPeopleCallHistory,
+      );
 }

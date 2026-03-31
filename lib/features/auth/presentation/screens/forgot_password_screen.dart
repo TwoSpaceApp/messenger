@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/navigation_service.dart';
+import 'package:two_space_app/core/widgets/feature_in_development_dialog.dart';
 // ui_tokens not needed here
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -28,10 +29,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       // Password reset flow is not connected to the backend yet.
       if (!mounted) return;
-      final navCtx = appNavigatorKey.currentContext;
-      if (navCtx != null)
-        ScaffoldMessenger.of(navCtx).showSnackBar(
-            SnackBar(content: Text(l10n.forgotPasswordUnavailable)));
+      await showFeatureInDevelopmentDialog(
+        context,
+        feature: l10n.forgotPasswordTitle,
+      );
       // appNavigatorKey.currentState?.pop();
     } catch (e) {
       if (!mounted) return;

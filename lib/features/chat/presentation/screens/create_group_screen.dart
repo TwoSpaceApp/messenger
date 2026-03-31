@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
@@ -44,8 +45,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   Future<void> _pickImage() async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         setState(() {
           _selectedImage = File(pickedFile.path);
@@ -72,6 +72,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final avatarBytes = await _selectedImage?.readAsBytes();
       final group = await _groupService.createGroupRoom(
         name: _nameController.text,
         description: _descriptionController.text.isEmpty
@@ -79,13 +80,15 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             : _descriptionController.text,
         visibility: _visibility,
         showMessageHistory: _showMessageHistory,
+        avatarBytes: avatarBytes,
+        avatarFileName:
+            _selectedImage == null ? null : p.basename(_selectedImage!.path),
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.roomCreatedSuccess)),
         );
-        // Создаем Chat объект из GroupRoom
         final chatObj = Chat(
           id: group.roomId,
           name: group.name,
@@ -93,7 +96,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           roomType: 'group',
           lastMessageTime: DateTime.now(),
         );
-        // Навигация в созданную комнату
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => ChatScreen(chat: chatObj),

@@ -12,6 +12,7 @@ import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
+import 'package:two_space_app/features/chat/presentation/widgets/feature_in_development_dialog.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
@@ -50,6 +51,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   int _selectedTabIndex = 0;
   bool _isLoading = false;
   bool _isSavingGroupInfo = false;
+  int _joinRule = 1;
+  int _historyVisibility = 1;
   GroupRoom? _currentGroup;
 
   @override
@@ -94,11 +97,15 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     setState(() => _isLoading = true);
     try {
       final group = await _groupService.getGroupRoom(widget.roomId);
+      final settings = await _groupService.getRoomSettingsState(widget.roomId);
       if (!mounted) return;
       setState(() {
         _currentGroup = group;
         _nameController.text = group?.name ?? '';
         _descriptionController.text = group?.description ?? '';
+        _joinRule = (settings['joinRule'] as int?) ?? _joinRule;
+        _historyVisibility =
+            (settings['historyVisibility'] as int?) ?? _historyVisibility;
       });
     } catch (e) {
       if (!mounted) return;
@@ -203,6 +210,84 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.textCopied)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    }
+  }
+
+  String _joinRuleTitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomJoinRulePublic;
+      case 2:
+        return l10n.roomJoinRuleApproval;
+      default:
+        return l10n.roomJoinRuleInviteOnly;
+    }
+  }
+
+  String _joinRuleSubtitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomJoinRulePublicDescription;
+      case 2:
+        return l10n.roomJoinRuleApprovalDescription;
+      default:
+        return l10n.roomJoinRuleInviteOnlyDescription;
+    }
+  }
+
+  String _historyVisibilityTitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomHistoryVisibilityWorldReadable;
+      case 2:
+        return l10n.roomHistoryVisibilityInvited;
+      default:
+        return l10n.roomHistoryVisibilityJoined;
+    }
+  }
+
+  String _historyVisibilitySubtitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomHistoryVisibilityWorldReadableDescription;
+      case 2:
+        return l10n.roomHistoryVisibilityInvitedDescription;
+      default:
+        return l10n.roomHistoryVisibilityJoinedDescription;
+    }
+  }
+
+  Future<void> _updateJoinRule(int value) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await _groupService.setJoinRuleValue(widget.roomId, value);
+      await _loadGroupData();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settingSaved)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    }
+  }
+
+  Future<void> _updateHistoryVisibility(int value) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await _groupService.setHistoryVisibility(widget.roomId, value);
+      await _loadGroupData();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settingSaved)),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -752,7 +837,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     ],
                   ),
                 ],
-                if (group.visibility == GroupVisibility.public) ...[
+                ...[
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: _copyGroupLink,
@@ -763,33 +848,58 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 if (_canManageMembers) ...[
                   const SizedBox(height: 24),
                   _buildInfoBlock(
-                    label: l10n.messageHistoryToggle,
-                    value: l10n.showHistorySubtitle,
-                    trailing: SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.showHistoryToggleLabel),
-                      subtitle: Text(l10n.showHistorySubtitle),
-                      value: group.showMessageHistory,
-                      onChanged: (value) async {
-                        try {
-                          await _groupService.setShowMessageHistory(
-                            widget.roomId,
-                            value,
-                          );
-                          await _loadGroupData();
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.settingSaved)),
-                          );
-                        } catch (e) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.genericError(e.toString())),
-                            ),
-                          );
-                        }
-                      },
+                    label: l10n.roomJoinRuleLabel,
+                    value: _joinRuleSubtitle(l10n, _joinRule),
+                    trailing: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DropdownButtonFormField<int>(
+                          initialValue: _joinRule,
+                          decoration: InputDecoration(
+                            labelText: l10n.roomJoinRuleLabel,
+                          ),
+                          items: [0, 1, 2]
+                              .map(
+                                (value) => DropdownMenuItem<int>(
+                                  value: value,
+                                  child: Text(_joinRuleTitle(l10n, value)),
+                                ),
+                              )
+                              .toList(growable: false),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() => _joinRule = value);
+                            _updateJoinRule(value);
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<int>(
+                          initialValue: _historyVisibility,
+                          decoration: InputDecoration(
+                            labelText: l10n.roomHistoryVisibilityLabel,
+                          ),
+                          items: [0, 1, 2]
+                              .map(
+                                (value) => DropdownMenuItem<int>(
+                                  value: value,
+                                  child: Text(
+                                    _historyVisibilityTitle(l10n, value),
+                                  ),
+                                ),
+                              )
+                              .toList(growable: false),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() => _historyVisibility = value);
+                            _updateHistoryVisibility(value);
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _historyVisibilitySubtitle(l10n, _historyVisibility),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                     ),
                     fullWidth: true,
                   ),
@@ -1353,6 +1463,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(l10n.groupDeleted)),
+                );
+              } on AegisFeatureInDevelopmentException {
+                if (!mounted) return;
+                await showFeatureInDevelopmentDialog(
+                  context,
+                  feature: l10n.delete,
                 );
               } catch (e) {
                 if (!mounted) return;
