@@ -149,8 +149,10 @@ jobs:
           AEGIS_APP_HASH=${AEGIS_APP_HASH_VALUE:-}
           EOF
 
-      - name: Regenerate code for build env
-        run: dart run build_runner build --delete-conflicting-outputs
+      - name: Force regenerate code for build env
+        run: |
+          dart run build_runner clean
+          dart run build_runner build --delete-conflicting-outputs
 
       - name: Verify build env values are embedded
         shell: bash
