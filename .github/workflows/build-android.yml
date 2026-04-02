@@ -25,20 +25,6 @@ on:
       - 'analysis_options.yaml'
       - 'l10n.yaml'
       - '.github/workflows/build-android.yml'
-  pull_request:
-    branches:
-      - main
-      - master
-      - develop
-    paths:
-      - 'lib/**'
-      - 'android/**'
-      - 'assets/**'
-      - 'pubspec.yaml'
-      - '.env.example'
-      - 'analysis_options.yaml'
-      - 'l10n.yaml'
-      - '.github/workflows/build-android.yml'
 
 concurrency:
   group: android-build-${{ github.workflow }}-${{ github.ref }}
@@ -110,6 +96,11 @@ jobs:
           AEGIS_APP_ID_VALUE: ${{ secrets.AEGIS_APP_ID }}
           AEGIS_APP_HASH_VALUE: ${{ secrets.AEGIS_APP_HASH }}
         run: |
+          if [[ -z "${AEGIS_HOST_VALUE}" ]]; then
+            echo "::error::AEGIS_HOST secret is missing or unavailable for this workflow event. Android build artifacts are only produced for push/workflow_dispatch runs with repository secrets access."
+            exit 1
+          fi
+
           cat > .env <<EOF
           APP_ENV=${APP_ENV_VALUE:-development}
           ENABLE_DEV_TOOLS=${ENABLE_DEV_TOOLS_VALUE:-false}
@@ -125,6 +116,14 @@ jobs:
 
       - name: Regenerate code for build env
         run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Verify build env values are embedded
+        shell: bash
+        run: |
+          if grep -q "static const String aegisHost = '';" lib/core/config/env.g.dart; then
+            echo "::error::Generated env.g.dart still contains an empty AEGIS_HOST. Check GitHub secrets and the build env generation step."
+            exit 1
+          fi
 
       - name: Build Debug APK
         if: steps.meta.outputs.build_mode == 'debug'
