@@ -40,6 +40,9 @@ jobs:
       - name: Get dependencies V2
         run: flutter pub get --enforce-lockfile
 
+      - name: Codegen (build_runner)
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Prepare env for CI
         shell: bash
         run: |
@@ -52,9 +55,6 @@ jobs:
           AEGIS_CONNECT_TIMEOUT_SECONDS=10
           AEGIS_TRANSPORT_MASKING_KEY=${{ secrets.AEGIS_TRANSPORT_MASKING_KEY }}
           EOF
-
-      - name: Codegen (build_runner)
-        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Analyze code
         run: flutter analyze
