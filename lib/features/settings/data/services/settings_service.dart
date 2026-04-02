@@ -28,6 +28,45 @@ extension BackgroundMotionModeX on BackgroundMotionMode {
   }
 }
 
+enum ShapeVariant { expressive, rounded, compact }
+
+extension ShapeVariantX on ShapeVariant {
+  String get storageValue {
+    switch (this) {
+      case ShapeVariant.expressive:
+        return 'expressive';
+      case ShapeVariant.rounded:
+        return 'rounded';
+      case ShapeVariant.compact:
+        return 'compact';
+    }
+  }
+
+  static ShapeVariant fromStorage(String? value) {
+    switch ((value ?? '').trim().toLowerCase()) {
+      case 'expressive':
+        return ShapeVariant.expressive;
+      case 'compact':
+        return ShapeVariant.compact;
+      case 'rounded':
+      default:
+        return ShapeVariant.rounded;
+    }
+  }
+
+  /// Base corner radius for cards, inputs and buttons.
+  double get cornerRadius {
+    switch (this) {
+      case ShapeVariant.expressive:
+        return 24;
+      case ShapeVariant.rounded:
+        return 14;
+      case ShapeVariant.compact:
+        return 6;
+    }
+  }
+}
+
 extension MessageTimestampPrecisionX on MessageTimestampPrecision {
   String get storageValue {
     switch (this) {
@@ -67,6 +106,7 @@ class ThemeSettings {
   final BackgroundMotionMode backgroundMotionMode;
   final double floatingCirclesSpeed;
   final double floatingCirclesOpacity;
+  final ShapeVariant shapeVariant;
 
   const ThemeSettings({
     this.fontFamily = 'Inter',
@@ -81,6 +121,7 @@ class ThemeSettings {
     this.backgroundMotionMode = BackgroundMotionMode.circles,
     this.floatingCirclesSpeed = 1.0,
     this.floatingCirclesOpacity = 0.5,
+    this.shapeVariant = ShapeVariant.rounded,
   });
 
   ThemeSettings copyWith({
@@ -96,6 +137,7 @@ class ThemeSettings {
     BackgroundMotionMode? backgroundMotionMode,
     double? floatingCirclesSpeed,
     double? floatingCirclesOpacity,
+    ShapeVariant? shapeVariant,
   }) {
     return ThemeSettings(
       fontFamily: fontFamily ?? this.fontFamily,
@@ -104,12 +146,16 @@ class ThemeSettings {
       bubbleRounding: bubbleRounding ?? this.bubbleRounding,
       dynamicBubbles: dynamicBubbles ?? this.dynamicBubbles,
       compactMode: compactMode ?? this.compactMode,
-      navBarHideTimeoutSeconds: navBarHideTimeoutSeconds ?? this.navBarHideTimeoutSeconds,
+      navBarHideTimeoutSeconds:
+          navBarHideTimeoutSeconds ?? this.navBarHideTimeoutSeconds,
       enableParallax: enableParallax ?? this.enableParallax,
-      enableFloatingCircles: enableFloatingCircles ?? this.enableFloatingCircles,
+      enableFloatingCircles:
+          enableFloatingCircles ?? this.enableFloatingCircles,
       backgroundMotionMode: backgroundMotionMode ?? this.backgroundMotionMode,
       floatingCirclesSpeed: floatingCirclesSpeed ?? this.floatingCirclesSpeed,
-      floatingCirclesOpacity: floatingCirclesOpacity ?? this.floatingCirclesOpacity,
+      floatingCirclesOpacity:
+          floatingCirclesOpacity ?? this.floatingCirclesOpacity,
+      shapeVariant: shapeVariant ?? this.shapeVariant,
     );
   }
 }
@@ -139,7 +185,8 @@ class SettingsService {
   static const _backgroundMotionModeKey = 'ui_background_motion_mode';
   static const _floatingCirclesSpeedKey = 'ui_floating_circles_speed';
   static const _floatingCirclesOpacityKey = 'ui_floating_circles_opacity';
-  
+  static const _shapeVariantKey = 'ui_shape_variant';
+
   // Legacy/Other settings keys
   static const _paleVioletKey = 'theme_pale_violet';
   static const _sessionTimeoutKey = 'security_session_timeout';
@@ -150,7 +197,8 @@ class SettingsService {
   static const _autoDownloadKey = 'app_auto_download';
   static const _sendByEnterKey = 'app_send_enter';
   static const _themeModeKey = 'app_theme_mode';
-  static const _messageTimestampPrecisionKey = 'chat_message_timestamp_precision';
+  static const _messageTimestampPrecisionKey =
+      'chat_message_timestamp_precision';
   static const _notificationsEnabledKey = 'notifications_enabled';
   static const _soundEnabledKey = 'notifications_sound_enabled';
   static const _doNotDisturbKey = 'notifications_do_not_disturb';
@@ -172,6 +220,7 @@ class SettingsService {
     _backgroundMotionModeKey,
     _floatingCirclesSpeedKey,
     _floatingCirclesOpacityKey,
+    _shapeVariantKey,
     _paleVioletKey,
     _languageKey,
     _textScaleKey,
@@ -198,30 +247,46 @@ class SettingsService {
   static bool _deferredSettingsLoaded = false;
 
   // Theme Notifier
-  static final ValueNotifier<ThemeSettings> themeNotifier = 
-      ValueNotifier(const ThemeSettings());
-      
+  static final ValueNotifier<ThemeSettings> themeNotifier = ValueNotifier(
+    const ThemeSettings(),
+  );
+
   // Other Notifiers (restoring missing ones)
   static final ValueNotifier<bool> paleVioletNotifier = ValueNotifier(false);
-  static final ValueNotifier<int> sessionTimeoutDaysNotifier = ValueNotifier(30);
+  static final ValueNotifier<int> sessionTimeoutDaysNotifier = ValueNotifier(
+    30,
+  );
   static final ValueNotifier<bool> showEmailNotifier = ValueNotifier(false);
   static final ValueNotifier<bool> showPhoneNotifier = ValueNotifier(false);
   static final ValueNotifier<String> languageNotifier = ValueNotifier('en');
   static final ValueNotifier<double> textScaleNotifier = ValueNotifier(1);
-  static final ValueNotifier<bool> autoDownloadMediaNotifier = ValueNotifier(true);
+  static final ValueNotifier<bool> autoDownloadMediaNotifier = ValueNotifier(
+    true,
+  );
   static final ValueNotifier<bool> sendByEnterNotifier = ValueNotifier(true);
   static final ValueNotifier<MessageTimestampPrecision>
-      messageTimestampPrecisionNotifier =
-      ValueNotifier(MessageTimestampPrecision.minutes);
-  static final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
+  messageTimestampPrecisionNotifier = ValueNotifier(
+    MessageTimestampPrecision.minutes,
+  );
+  static final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(
+    ThemeMode.system,
+  );
   static final ValueNotifier<bool> biometricsNotifier = ValueNotifier(false);
-  static final ValueNotifier<bool> notificationsEnabledNotifier = ValueNotifier(true);
+  static final ValueNotifier<bool> notificationsEnabledNotifier = ValueNotifier(
+    true,
+  );
   static final ValueNotifier<bool> soundEnabledNotifier = ValueNotifier(true);
   static final ValueNotifier<bool> doNotDisturbNotifier = ValueNotifier(false);
-  static final ValueNotifier<String?> notificationTonePathNotifier = ValueNotifier(null);
-  static final ValueNotifier<String?> notificationToneNameNotifier = ValueNotifier(null);
-  static final ValueNotifier<String?> ringtonePathNotifier = ValueNotifier(null);
-  static final ValueNotifier<String?> ringtoneNameNotifier = ValueNotifier(null);
+  static final ValueNotifier<String?> notificationTonePathNotifier =
+      ValueNotifier(null);
+  static final ValueNotifier<String?> notificationToneNameNotifier =
+      ValueNotifier(null);
+  static final ValueNotifier<String?> ringtonePathNotifier = ValueNotifier(
+    null,
+  );
+  static final ValueNotifier<String?> ringtoneNameNotifier = ValueNotifier(
+    null,
+  );
 
   static Future<void> loadSettings() async {
     final inFlight = _loadSettingsFuture;
@@ -253,22 +318,29 @@ class SettingsService {
       fontWeight: normalizeFontWeight(
         int.tryParse(valueOf(_weightKey) ?? '') ?? 400,
       ),
-      bubbleRounding: double.tryParse(valueOf(_bubbleRoundingKey) ?? '') ?? 16.0,
+      bubbleRounding:
+          double.tryParse(valueOf(_bubbleRoundingKey) ?? '') ?? 16.0,
       dynamicBubbles: valueOf(_dynamicBubblesKey) != 'false',
       compactMode: valueOf(_compactModeKey) == 'true',
-      navBarHideTimeoutSeconds: int.tryParse(valueOf(_navBarTimeoutKey) ?? '') ?? 3,
+      navBarHideTimeoutSeconds:
+          int.tryParse(valueOf(_navBarTimeoutKey) ?? '') ?? 3,
       enableParallax: valueOf(_parallaxKey) != 'false',
       enableFloatingCircles: valueOf(_floatingCirclesKey) != 'false',
-      backgroundMotionMode:
-          BackgroundMotionModeX.fromStorage(valueOf(_backgroundMotionModeKey)),
-      floatingCirclesSpeed: double.tryParse(valueOf(_floatingCirclesSpeedKey) ?? '') ?? 1.0,
-      floatingCirclesOpacity: double.tryParse(valueOf(_floatingCirclesOpacityKey) ?? '') ?? 0.5,
+      backgroundMotionMode: BackgroundMotionModeX.fromStorage(
+        valueOf(_backgroundMotionModeKey),
+      ),
+      floatingCirclesSpeed:
+          double.tryParse(valueOf(_floatingCirclesSpeedKey) ?? '') ?? 1.0,
+      floatingCirclesOpacity:
+          double.tryParse(valueOf(_floatingCirclesOpacityKey) ?? '') ?? 0.5,
+      shapeVariant: ShapeVariantX.fromStorage(valueOf(_shapeVariantKey)),
     );
-    
+
     // Load startup-critical settings only. Everything else is hydrated lazily.
     paleVioletNotifier.value = valueOf(_paleVioletKey) == 'true';
     languageNotifier.value = valueOf(_languageKey) ?? 'en';
-    textScaleNotifier.value = double.tryParse(valueOf(_textScaleKey) ?? '') ?? 1.0;
+    textScaleNotifier.value =
+        double.tryParse(valueOf(_textScaleKey) ?? '') ?? 1.0;
     themeModeNotifier.value = _themeModeFromString(valueOf(_themeModeKey));
   }
 
@@ -295,8 +367,8 @@ class SettingsService {
       sendByEnterNotifier.value = valueOf(_sendByEnterKey) != 'false';
       messageTimestampPrecisionNotifier.value =
           MessageTimestampPrecisionX.fromStorage(
-        valueOf(_messageTimestampPrecisionKey),
-      );
+            valueOf(_messageTimestampPrecisionKey),
+          );
 
       final bioStr = valueOf(_biometricsKey);
       biometricsNotifier.value = bioStr == 'true';
@@ -304,10 +376,10 @@ class SettingsService {
           valueOf(_notificationsEnabledKey) != 'false';
       soundEnabledNotifier.value = valueOf(_soundEnabledKey) != 'false';
       doNotDisturbNotifier.value = valueOf(_doNotDisturbKey) == 'true';
-        notificationTonePathNotifier.value = valueOf(_notificationTonePathKey);
-        notificationToneNameNotifier.value = valueOf(_notificationToneNameKey);
-        ringtonePathNotifier.value = valueOf(_ringtonePathKey);
-        ringtoneNameNotifier.value = valueOf(_ringtoneNameKey);
+      notificationTonePathNotifier.value = valueOf(_notificationTonePathKey);
+      notificationToneNameNotifier.value = valueOf(_notificationToneNameKey);
+      ringtonePathNotifier.value = valueOf(_ringtonePathKey);
+      ringtoneNameNotifier.value = valueOf(_ringtoneNameKey);
       _deferredSettingsLoaded = true;
     }();
 
@@ -474,10 +546,12 @@ class SettingsService {
     BackgroundMotionMode? backgroundMotionMode,
     double? floatingCirclesSpeed,
     double? floatingCirclesOpacity,
+    ShapeVariant? shapeVariant,
   }) async {
     final current = themeNotifier.value;
-    final normalizedFontWeight =
-        fontWeight == null ? null : normalizeFontWeight(fontWeight);
+    final normalizedFontWeight = fontWeight == null
+        ? null
+        : normalizeFontWeight(fontWeight);
     final next = current.copyWith(
       fontFamily: fontFamily,
       primaryColorValue: primaryColorValue,
@@ -491,22 +565,51 @@ class SettingsService {
       backgroundMotionMode: backgroundMotionMode,
       floatingCirclesSpeed: floatingCirclesSpeed,
       floatingCirclesOpacity: floatingCirclesOpacity,
+      shapeVariant: shapeVariant,
     );
-    
+
     themeNotifier.value = next;
 
     if (fontFamily != null) await SecureStore.write(_fontKey, fontFamily);
-    if (primaryColorValue != null) await SecureStore.write(_colorKey, primaryColorValue.toString());
-    if (normalizedFontWeight != null) await SecureStore.write(_weightKey, normalizedFontWeight.toString());
-    if (bubbleRounding != null) await SecureStore.write(_bubbleRoundingKey, bubbleRounding.toString());
-    if (dynamicBubbles != null) await SecureStore.write(_dynamicBubblesKey, dynamicBubbles.toString());
-    if (compactMode != null) await SecureStore.write(_compactModeKey, compactMode.toString());
-    if (navBarHideTimeoutSeconds != null) await SecureStore.write(_navBarTimeoutKey, navBarHideTimeoutSeconds.toString());
-    if (enableParallax != null) await SecureStore.write(_parallaxKey, enableParallax.toString());
-    if (enableFloatingCircles != null) await SecureStore.write(_floatingCirclesKey, enableFloatingCircles.toString());
-    if (backgroundMotionMode != null) await SecureStore.write(_backgroundMotionModeKey, backgroundMotionMode.storageValue);
-    if (floatingCirclesSpeed != null) await SecureStore.write(_floatingCirclesSpeedKey, floatingCirclesSpeed.toString());
-    if (floatingCirclesOpacity != null) await SecureStore.write(_floatingCirclesOpacityKey, floatingCirclesOpacity.toString());
+    if (primaryColorValue != null)
+      await SecureStore.write(_colorKey, primaryColorValue.toString());
+    if (normalizedFontWeight != null)
+      await SecureStore.write(_weightKey, normalizedFontWeight.toString());
+    if (bubbleRounding != null)
+      await SecureStore.write(_bubbleRoundingKey, bubbleRounding.toString());
+    if (dynamicBubbles != null)
+      await SecureStore.write(_dynamicBubblesKey, dynamicBubbles.toString());
+    if (compactMode != null)
+      await SecureStore.write(_compactModeKey, compactMode.toString());
+    if (navBarHideTimeoutSeconds != null)
+      await SecureStore.write(
+        _navBarTimeoutKey,
+        navBarHideTimeoutSeconds.toString(),
+      );
+    if (enableParallax != null)
+      await SecureStore.write(_parallaxKey, enableParallax.toString());
+    if (enableFloatingCircles != null)
+      await SecureStore.write(
+        _floatingCirclesKey,
+        enableFloatingCircles.toString(),
+      );
+    if (backgroundMotionMode != null)
+      await SecureStore.write(
+        _backgroundMotionModeKey,
+        backgroundMotionMode.storageValue,
+      );
+    if (floatingCirclesSpeed != null)
+      await SecureStore.write(
+        _floatingCirclesSpeedKey,
+        floatingCirclesSpeed.toString(),
+      );
+    if (floatingCirclesOpacity != null)
+      await SecureStore.write(
+        _floatingCirclesOpacityKey,
+        floatingCirclesOpacity.toString(),
+      );
+    if (shapeVariant != null)
+      await SecureStore.write(_shapeVariantKey, shapeVariant.storageValue);
   }
 
   // --- Legacy/Compatibility Methods ---
@@ -514,17 +617,19 @@ class SettingsService {
   static Future<void> updatePrimaryColor(int color) async {
     await updateTheme(primaryColorValue: color);
   }
-  
+
   static Future<void> setPrimaryColor(int color) => updatePrimaryColor(color);
 
   static Future<void> updateFontFamily(String family) async {
     await updateTheme(fontFamily: family);
   }
+
   static Future<void> setFont(String family) => updateFontFamily(family);
 
   static Future<void> updateFontWeight(int weight) async {
     await updateTheme(fontWeight: weight);
   }
+
   static Future<void> setFontWeight(int weight) => updateFontWeight(weight);
 
   static Future<void> togglePaleViolet() async {
@@ -532,6 +637,7 @@ class SettingsService {
     paleVioletNotifier.value = newVal;
     await SecureStore.write(_paleVioletKey, newVal.toString());
   }
+
   static Future<void> setPaleVioletMode(bool enabled) async {
     paleVioletNotifier.value = enabled;
     await SecureStore.write(_paleVioletKey, enabled.toString());
@@ -541,22 +647,22 @@ class SettingsService {
     sessionTimeoutDaysNotifier.value = days;
     await SecureStore.write(_sessionTimeoutKey, days.toString());
   }
-  
+
   static Future<void> setShowEmail(bool val) async {
     showEmailNotifier.value = val;
     await SecureStore.write(_showEmailKey, val.toString());
   }
-  
+
   static Future<void> setShowPhone(bool val) async {
     showPhoneNotifier.value = val;
     await SecureStore.write(_showPhoneKey, val.toString());
   }
-  
+
   static Future<void> setLanguage(String lang) async {
     languageNotifier.value = lang;
     await SecureStore.write(_languageKey, lang);
   }
-  
+
   static Future<void> setTextScale(double scale) async {
     textScaleNotifier.value = scale;
     await SecureStore.write(_textScaleKey, scale.toString());
@@ -565,12 +671,12 @@ class SettingsService {
   static Future<void> setCompactMode(bool value) async {
     await updateTheme(compactMode: value);
   }
-  
+
   static Future<void> setAutoDownloadMedia(bool val) async {
     autoDownloadMediaNotifier.value = val;
     await SecureStore.write(_autoDownloadKey, val.toString());
   }
-  
+
   static Future<void> setSendByEnter(bool val) async {
     sendByEnterNotifier.value = val;
     await SecureStore.write(_sendByEnterKey, val.toString());

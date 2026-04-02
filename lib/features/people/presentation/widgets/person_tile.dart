@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/utils/responsive.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
@@ -71,11 +72,10 @@ class PersonTile extends StatelessWidget {
             color: theme.colorScheme.outline.withValues(alpha: 0.24),
           ),
         ),
-        child: IconButton(
-          visualDensity: VisualDensity.compact,
+        child: ShadIconButton.ghost(
+          width: 36.s(context),
+          height: 36.s(context),
           iconSize: iconSize - 1,
-          splashRadius: 20.s(context),
-          tooltip: tooltip,
           onPressed: onPressed,
           icon: Icon(
             icon,

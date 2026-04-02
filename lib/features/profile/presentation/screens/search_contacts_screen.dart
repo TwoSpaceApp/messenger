@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/features/people/presentation/screens/people_screen.dart';
 
 class SearchContactsScreen extends StatelessWidget {
@@ -6,6 +7,8 @@ class SearchContactsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const PeopleScreen(autofocusSearch: true, simplified: true);
+    return const ShadAppBuilder(
+      child: PeopleScreen(),
+    );
   }
 }

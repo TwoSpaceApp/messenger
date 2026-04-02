@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/services/dev_network_logger.dart';
 import 'package:two_space_app/core/services/dev_tools_service.dart';
@@ -19,7 +20,9 @@ import 'package:two_space_app/features/settings/presentation/screens/dev_screen_
 class FeatureFlags {
   static final ValueNotifier<bool> enableNewChatUI = ValueNotifier(false);
   static final ValueNotifier<bool> forceVideoCompression = ValueNotifier(true);
-  static final ValueNotifier<bool> enableAggressiveCaching = ValueNotifier(false);
+  static final ValueNotifier<bool> enableAggressiveCaching = ValueNotifier(
+    false,
+  );
   static final ValueNotifier<bool> ignoreServerOffline = ValueNotifier(false);
 }
 
@@ -56,7 +59,10 @@ class _DevMenuScreenState extends State<DevMenuScreen>
           controller: _tabController,
           isScrollable: true,
           tabs: const [
-            Tab(icon: Icon(Icons.dashboard_customize_outlined), text: 'Actions'),
+            Tab(
+              icon: Icon(Icons.dashboard_customize_outlined),
+              text: 'Actions',
+            ),
             Tab(icon: Icon(Icons.brush_outlined), text: 'UI Inspect'),
             Tab(icon: Icon(Icons.article_outlined), text: 'Logs'),
             Tab(icon: Icon(Icons.network_check), text: 'Network'),
@@ -98,7 +104,9 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
       builder: (context, snapshot) {
         final sourceLogs = snapshot.data ?? const <String>[];
         final logs = _showOnlyErrors
-            ? sourceLogs.where((line) => line.contains(LogLevel.error.emoji)).toList()
+            ? sourceLogs
+                  .where((line) => line.contains(LogLevel.error.emoji))
+                  .toList()
             : sourceLogs;
 
         if (logs.isEmpty) {
@@ -120,20 +128,23 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
               child: Row(
                 children: [
-                  FilterChip(
-                    label: Text(
-                      _showOnlyErrors
-                          ? 'Только ошибки'
-                          : 'Все записи (${sourceLogs.length})',
+                  if (_showOnlyErrors)
+                    ShadButton.secondary(
+                      onPressed: () => setState(() => _showOnlyErrors = false),
+                      height: 34,
+                      child: const Text('Только ошибки'),
+                    )
+                  else
+                    ShadButton.outline(
+                      onPressed: () => setState(() => _showOnlyErrors = true),
+                      height: 34,
+                      child: Text('Все записи (${sourceLogs.length})'),
                     ),
-                    selected: _showOnlyErrors,
-                    onSelected: (value) => setState(() => _showOnlyErrors = value),
-                  ),
                   const Spacer(),
-                  TextButton.icon(
+                  const ShadButton.outline(
                     onPressed: DevLogger.clear,
-                    icon: const Icon(Icons.delete_sweep_outlined),
-                    label: const Text('Очистить'),
+                    leading: Icon(Icons.delete_sweep_outlined),
+                    child: Text('Очистить'),
                   ),
                 ],
               ),
@@ -142,7 +153,7 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                 itemCount: logs.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final line = logs[index];
                   final color = _appLogColor(line);
@@ -196,14 +207,14 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
   String? _selectedGroup;
 
   List<DevScreenEntry> get _allScreens => [
-        DevScreenEntry(
-          title: 'DevMenuScreen',
-          source: 'settings/dev_menu_screen.dart',
-          group: 'Settings',
-          builder: (_) => const DevMenuScreen(),
-        ),
-        ...DevScreenCatalog.entries,
-      ];
+    DevScreenEntry(
+      title: 'DevMenuScreen',
+      source: 'settings/dev_menu_screen.dart',
+      group: 'Settings',
+      builder: (_) => const DevMenuScreen(),
+    ),
+    ...DevScreenCatalog.entries,
+  ];
 
   List<String> get _groups =>
       _allScreens.map((entry) => entry.group).toSet().toList()..sort();
@@ -243,22 +254,20 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
       padding: const EdgeInsets.all(16),
       children: [
         _buildSectionTitle(context, 'Screen Explorer'),
-        TextField(
+        ShadInput(
           controller: _searchController,
           onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: 'Поиск по имени, группе или файлу экрана',
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: query.isEmpty
-                ? null
-                : IconButton(
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() {});
-                    },
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-          ),
+          placeholder: const Text('Поиск по имени, группе или файлу экрана'),
+          leading: const Icon(Icons.search_rounded),
+          trailing: query.isEmpty
+              ? null
+              : ShadIconButton.ghost(
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {});
+                  },
+                  icon: const Icon(Icons.close_rounded),
+                ),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -276,7 +285,9 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
               ),
               ..._groups.map(
                 (group) {
-                  final count = _allScreens.where((e) => e.group == group).length;
+                  final count = _allScreens
+                      .where((e) => e.group == group)
+                      .length;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
@@ -297,7 +308,8 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
               ? const AppEmptyState(
                   key: ValueKey('empty-dev-screens'),
                   title: 'Экраны не найдены',
-                  message: 'Измените поисковый запрос или снимите фильтр группы.',
+                  message:
+                      'Измените поисковый запрос или снимите фильтр группы.',
                   icon: Icons.travel_explore_rounded,
                 )
               : Container(
@@ -305,13 +317,19 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+                      color: Theme.of(
+                        context,
+                      ).dividerColor.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Column(
                     children: [
                       for (final entry in groupedScreens.entries) ...[
-                        _buildGroupHeader(context, entry.key, entry.value.length),
+                        _buildGroupHeader(
+                          context,
+                          entry.key,
+                          entry.value.length,
+                        ),
                         for (var i = 0; i < entry.value.length; i++) ...[
                           _buildScreenTile(context, entry.value[i], query),
                           if (i != entry.value.length - 1)
@@ -383,15 +401,17 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
           Text(
             group,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -416,8 +436,9 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: CircleAvatar(
-        backgroundColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+        backgroundColor: Theme.of(
+          context,
+        ).colorScheme.primary.withValues(alpha: 0.12),
         child: Icon(
           Icons.web_asset_outlined,
           color: Theme.of(context).colorScheme.primary,
@@ -436,19 +457,18 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
             entry.source,
             query: query,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.72),
-                ),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.72),
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             'Открыть экран',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -465,9 +485,9 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        ),
       ),
     );
   }
@@ -479,15 +499,10 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
     VoidCallback onTap, {
     Color? color,
   }) {
-    return ElevatedButton.icon(
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        backgroundColor: color?.withValues(alpha: 0.1),
-        foregroundColor: color ?? Theme.of(context).colorScheme.onSurface,
-      ),
+    return ShadButton.outline(
       onPressed: onTap,
-      icon: Icon(icon, size: 20),
-      label: Text(label),
+      leading: Icon(icon, size: 20, color: color),
+      child: Text(label),
     );
   }
 }
@@ -505,32 +520,33 @@ class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        SwitchListTile(
-          title: const Text('Показывать границы (debugPaintSize)'),
-          subtitle: const Text('Отображение отступов и границ всех виджетов'),
+        ShadSwitch(
           value: debugPaintSizeEnabled,
           onChanged: (val) => setState(() => debugPaintSizeEnabled = val),
+          label: const Text('Показывать границы (debugPaintSize)'),
+          sublabel: const Text('Отображение отступов и границ всех виджетов'),
         ),
-        SwitchListTile(
-          title: const Text('Закрашивать перерисовки (RepaintRainbow)'),
-          subtitle:
-              const Text('Подсвечивает элементы, которые перерисовываются'),
+        ShadSwitch(
           value: debugRepaintRainbowEnabled,
           onChanged: (val) => setState(() => debugRepaintRainbowEnabled = val),
+          label: const Text('Закрашивать перерисовки (RepaintRainbow)'),
+          sublabel: const Text(
+            'Подсвечивает элементы, которые перерисовываются',
+          ),
         ),
-        SwitchListTile(
-          title: const Text('Медленные анимации (timeDilation = 5.0)'),
-          subtitle: const Text('Замедляет все анимации в приложении'),
+        ShadSwitch(
           value: timeDilation != 1.0,
           onChanged: (val) => setState(() => timeDilation = val ? 5.0 : 1.0),
+          label: const Text('Медленные анимации (timeDilation = 5.0)'),
+          sublabel: const Text('Замедляет все анимации в приложении'),
         ),
-        SwitchListTile(
-          title: const Text('Профилирование производительности'),
-          subtitle: const Text('Отображает Performance Overlay сверху'),
+        ShadSwitch(
           value: DevToolsService.performanceOverlayEnabled.value,
           onChanged: (val) => setState(
             () => DevToolsService.performanceOverlayEnabled.value = val,
           ),
+          label: const Text('Профилирование производительности'),
+          sublabel: const Text('Отображает Performance Overlay сверху'),
         ),
       ],
     );
@@ -547,9 +563,13 @@ class _DevMenuFeatureFlagsTab extends StatelessWidget {
       children: [
         _buildFlagTile('Enable New Chat UI', FeatureFlags.enableNewChatUI),
         _buildFlagTile(
-            'Force Video Compression', FeatureFlags.forceVideoCompression),
+          'Force Video Compression',
+          FeatureFlags.forceVideoCompression,
+        ),
         _buildFlagTile(
-            'Enable Aggressive Caching', FeatureFlags.enableAggressiveCaching),
+          'Enable Aggressive Caching',
+          FeatureFlags.enableAggressiveCaching,
+        ),
         _buildFlagTile(
           'Ignore Server Offline (no logout)',
           FeatureFlags.ignoreServerOffline,
@@ -568,11 +588,11 @@ class _DevMenuFeatureFlagsTab extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: flag,
       builder: (context, value, _) {
-        return SwitchListTile(
-          title: Text(title),
-          subtitle: subtitle == null ? null : Text(subtitle),
+        return ShadSwitch(
           value: value,
           onChanged: (val) => flag.value = val,
+          label: Text(title),
+          sublabel: subtitle == null ? null : Text(subtitle),
         );
       },
     );
@@ -619,18 +639,23 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
               child: Row(
                 children: [
-                  FilterChip(
-                    label: Text(_showOnlyErrors
-                        ? 'Только ошибки'
-                        : 'Все запросы (${sourceLogs.length})'),
-                    selected: _showOnlyErrors,
-                    onSelected: (value) => setState(() => _showOnlyErrors = value),
-                  ),
+                  if (_showOnlyErrors)
+                    ShadButton.secondary(
+                      onPressed: () => setState(() => _showOnlyErrors = false),
+                      height: 34,
+                      child: const Text('Только ошибки'),
+                    )
+                  else
+                    ShadButton.outline(
+                      onPressed: () => setState(() => _showOnlyErrors = true),
+                      height: 34,
+                      child: Text('Все запросы (${sourceLogs.length})'),
+                    ),
                   const Spacer(),
-                  TextButton.icon(
+                  ShadButton.outline(
                     onPressed: DevNetworkLogger.instance.clear,
-                    icon: const Icon(Icons.delete_sweep_outlined),
-                    label: const Text('Очистить'),
+                    leading: const Icon(Icons.delete_sweep_outlined),
+                    child: const Text('Очистить'),
                   ),
                 ],
               ),
@@ -638,7 +663,7 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
             Expanded(
               child: ListView.separated(
                 itemCount: logs.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final log = logs[index];
                   final color = _colorFor(log);
@@ -648,7 +673,9 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                     child: ExpansionTile(
                       leading: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 6),
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
@@ -677,8 +704,14 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                         children: [
                           _buildMetaChip(log.statusLabel, color),
                           _buildMetaChip(log.kindLabel, color),
-                          _buildMetaChip('${log.latencyMs} ms', Colors.blueGrey),
-                          _buildMetaChip(log.responseTypeLabel, Colors.deepPurple),
+                          _buildMetaChip(
+                            '${log.latencyMs} ms',
+                            Colors.blueGrey,
+                          ),
+                          _buildMetaChip(
+                            log.responseTypeLabel,
+                            Colors.deepPurple,
+                          ),
                         ],
                       ),
                       children: [
@@ -701,7 +734,8 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                             log.responseHeaders,
                             accent: Colors.cyanAccent,
                           ),
-                        if (log.responseBody != null || log.errorMessage != null)
+                        if (log.responseBody != null ||
+                            log.errorMessage != null)
                           _buildCodeBlock(
                             'Response body · ${log.responseTypeLabel}',
                             log.errorMessage ?? log.responseBody,
@@ -882,8 +916,9 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
         ListTile(
           leading: const Icon(Icons.numbers),
           title: const Text('Version'),
-          subtitle:
-              Text('${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})'),
+          subtitle: Text(
+            '${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})',
+          ),
         ),
         ListTile(
           leading: const Icon(Icons.code),

@@ -82,8 +82,9 @@ class InitializationService {
   ];
 
   /// Initialize the app with all required steps
-  static Future<InitializationResult> initialize(
-      {void Function(String stepName, double progress)? onProgress}) async {
+  static Future<InitializationResult> initialize({
+    void Function(String stepName, double progress)? onProgress,
+  }) async {
     final cachedResult = _cachedResult;
     if (cachedResult != null) {
       return cachedResult;
@@ -107,11 +108,15 @@ class InitializationService {
     }
   }
 
-  static Future<InitializationResult> _initializeInternal(
-      {void Function(String stepName, double progress)? onProgress}) async {
+  static Future<InitializationResult> _initializeInternal({
+    void Function(String stepName, double progress)? onProgress,
+  }) async {
     final startTime = DateTime.now();
     final results = <InitStepResult>[];
-    final totalSteps = _stepPhases.fold<int>(0, (sum, phase) => sum + phase.length);
+    final totalSteps = _stepPhases.fold<int>(
+      0,
+      (sum, phase) => sum + phase.length,
+    );
     var completedSteps = 0;
 
     for (final phase in _stepPhases) {
@@ -129,7 +134,8 @@ class InitializationService {
         if (stepResult.failed && step.critical) {
           if (kDebugMode) {
             print(
-                '❌ Critical step "${step.name}" failed. Stopping initialization.');
+              '❌ Critical step "${step.name}" failed. Stopping initialization.',
+            );
           }
           break;
         }
@@ -153,11 +159,14 @@ class InitializationService {
           onProgress(stepResult.stepName, completedSteps / totalSteps);
         }
         if (stepResult.failed) {
-          final step = phase.firstWhere((candidate) => candidate.name == stepResult.stepName);
+          final step = phase.firstWhere(
+            (candidate) => candidate.name == stepResult.stepName,
+          );
           if (step.critical) {
             if (kDebugMode) {
               print(
-                  '❌ Critical step "${step.name}" failed. Stopping initialization.');
+                '❌ Critical step "${step.name}" failed. Stopping initialization.',
+              );
             }
             final result = InitializationResult(
               steps: results,
@@ -206,7 +215,8 @@ class InitializationService {
         step.timeout,
         onTimeout: () {
           throw TimeoutException(
-              'Step timed out after ${step.timeout.inSeconds}s');
+            'Step timed out after ${step.timeout.inSeconds}s',
+          );
         },
       );
 
@@ -221,7 +231,7 @@ class InitializationService {
         success: true,
         duration: duration,
       );
-    } catch (e, stackTrace) {
+    } on Object catch (e, stackTrace) {
       final duration = DateTime.now().difference(stepStartTime);
 
       if (kDebugMode) {
@@ -239,6 +249,7 @@ class InitializationService {
               'critical': step.critical,
             },
           );
+          // ignore: avoid_catches_without_on_clauses
         } catch (_) {
           // Ignore Sentry errors during initialization
         }
@@ -343,7 +354,7 @@ class _SettingsStep implements InitializationStep {
   bool get critical => false;
 
   @override
-  Duration get timeout => const Duration(seconds: 5);
+  Duration get timeout => const Duration(seconds: 15);
 
   @override
   Future<void> execute() async {

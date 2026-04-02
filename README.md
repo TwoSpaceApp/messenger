@@ -71,15 +71,15 @@ TwoSpace использует **Aegis** — собственный бинарн�
 Минимальный набор Aegis-переменных для клиента:
 
 - `AEGIS_HOST` - адрес вашего Aegis-сервера;
-- `AEGIS_TRANSPORT_MASKING_KEY` - текущий masking key сервера/стенда.
+- `AEGIS_PORT` - порт сервера, по умолчанию `8888`;
 
 Остальные Aegis-переменные опциональны и нужны только если конкретный стенд этого требует:
 
-- `AEGIS_PORT` - порт сервера, по умолчанию `8888`;
 - `AEGIS_CONNECT_TIMEOUT_SECONDS` - таймаут подключения;
+- `AEGIS_TRANSPORT_MASKING_KEY` - задавайте только если сервер явно включает `Server:EnableTransportMasking`;
 - `AEGIS_USE_TLS=true` - включайте, если стенд принимает TLS-соединения;
 
-`api_id` и `api_hash` клиент передаёт в handshake автоматически из встроенных app credentials.
+По умолчанию клиент передаёт встроенные app credentials. Для приватного/кастомного стенда можно переопределить их через `AEGIS_APP_ID` и `AEGIS_APP_HASH`.
 
 Полный гайд для разработки (зависимости для Linux/Windows, команды сборки, pre-commit checks) — в [CONTRIBUTING.md](CONTRIBUTING.md).
 

@@ -47,9 +47,9 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     final shouldAnimate = settings.enableFloatingCircles && _appActive;
 
     if (shouldAnimate) {
-        _animationTimer ??= Timer.periodic(_animationTick, (_) {
+      _animationTimer ??= Timer.periodic(_animationTick, (_) {
         if (!mounted) return;
-          _updateMotionState();
+        _updateMotionState();
       });
     } else {
       _animationTimer?.cancel();
@@ -76,7 +76,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
 
     try {
       _accelSub ??= accelerometerEventStream().listen(
-        (AccelerometerEvent event) {
+        (event) {
           if (!mounted) return;
           _tiltX = (event.x / 9.8).clamp(-1.0, 1.0);
           _tiltY = (event.y / 9.8).clamp(-1.0, 1.0);
@@ -94,7 +94,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
         },
         cancelOnError: true,
       );
-    } catch (error) {
+    } on Object catch (error) {
       if (_isMissingPluginError(error)) {
         _accelerometerUnavailable = true;
       }
@@ -144,8 +144,8 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     final screenH = size.height;
     final now = DateTime.now();
     final elapsedMs = _lastAnimationAt == null
-      ? _animationTick.inMilliseconds.toDouble()
-      : now.difference(_lastAnimationAt!).inMicroseconds / 1000;
+        ? _animationTick.inMilliseconds.toDouble()
+        : now.difference(_lastAnimationAt!).inMicroseconds / 1000;
     _lastAnimationAt = now;
     final deltaFactor = (elapsedMs / 16.0).clamp(0.6, 2.6);
 
@@ -154,22 +154,27 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     _smoothedTiltY += (_tiltY - _smoothedTiltY) * _tiltSmoothing;
 
     var b1x =
-      _motionNotifier.blob1X + _smoothedTiltX * speedMultiplier * 1.35 * deltaFactor;
+        _motionNotifier.blob1X +
+        _smoothedTiltX * speedMultiplier * 1.35 * deltaFactor;
     var b1y =
-      _motionNotifier.blob1Y + _smoothedTiltY * speedMultiplier * 1.35 * deltaFactor;
+        _motionNotifier.blob1Y +
+        _smoothedTiltY * speedMultiplier * 1.35 * deltaFactor;
     var b2x =
-      _motionNotifier.blob2X + _smoothedTiltX * speedMultiplier * 1.05 * deltaFactor;
+        _motionNotifier.blob2X +
+        _smoothedTiltX * speedMultiplier * 1.05 * deltaFactor;
     var b2y =
-      _motionNotifier.blob2Y + _smoothedTiltY * speedMultiplier * 1.05 * deltaFactor;
+        _motionNotifier.blob2Y +
+        _smoothedTiltY * speedMultiplier * 1.05 * deltaFactor;
     final nextWavePhase =
-      (_motionNotifier.wavePhase + 0.0038 * speedMultiplier * deltaFactor) % 1.0;
+        (_motionNotifier.wavePhase + 0.0038 * speedMultiplier * deltaFactor) %
+        1.0;
 
     final changedEnough =
-      settings.backgroundMotionMode == BackgroundMotionMode.waves ||
-      (b1x - _motionNotifier.blob1X).abs() >= _minVisualDelta ||
-      (b1y - _motionNotifier.blob1Y).abs() >= _minVisualDelta ||
-      (b2x - _motionNotifier.blob2X).abs() >= _minVisualDelta ||
-      (b2y - _motionNotifier.blob2Y).abs() >= _minVisualDelta;
+        settings.backgroundMotionMode == BackgroundMotionMode.waves ||
+        (b1x - _motionNotifier.blob1X).abs() >= _minVisualDelta ||
+        (b1y - _motionNotifier.blob1Y).abs() >= _minVisualDelta ||
+        (b2x - _motionNotifier.blob2X).abs() >= _minVisualDelta ||
+        (b2y - _motionNotifier.blob2Y).abs() >= _minVisualDelta;
 
     if (!changedEnough) return;
 

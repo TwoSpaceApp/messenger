@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/storage_service.dart';
@@ -14,8 +15,6 @@ class StorageScreen extends StatefulWidget {
   @override
   State<StorageScreen> createState() => _StorageScreenState();
 }
-
-
 
 class _StorageScreenState extends State<StorageScreen> {
   final StorageService _storageService = StorageService.instance;
@@ -73,19 +72,46 @@ class _StorageScreenState extends State<StorageScreen> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.clearCacheTitle),
-        content: Text(l10n.clearCacheContent),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: GlassCard(
+          borderRadius: 24,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.clearCacheTitle,
+                style: Theme.of(dialogContext).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(l10n.clearCacheContent),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: ShadButton.outline(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      height: 44,
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ShadButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      height: 44,
+                      child: Text(l10n.delete),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.delete),
-          ),
-        ],
+        ),
       ),
     );
 
@@ -264,8 +290,9 @@ class _StorageScreenState extends State<StorageScreen> {
             return Container(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
               ),
               child: SafeArea(
                 top: false,
@@ -278,36 +305,48 @@ class _StorageScreenState extends State<StorageScreen> {
                       title: l10n.storageAutoCleanTypesLabel,
                       subtitle: l10n.storageAutoCleanSubtitle,
                     ),
-                    CheckboxListTile(
-                      value: clearPhotos,
-                      onChanged: (value) =>
-                          setSheetState(() => clearPhotos = value ?? false),
-                      title: Text(l10n.storagePhotosLabel),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: ShadCheckbox(
+                        value: clearPhotos,
+                        onChanged: (value) =>
+                            setSheetState(() => clearPhotos = value),
+                        label: Text(l10n.storagePhotosLabel),
+                      ),
                     ),
-                    CheckboxListTile(
-                      value: clearVideos,
-                      onChanged: (value) =>
-                          setSheetState(() => clearVideos = value ?? false),
-                      title: Text(l10n.storageVideosLabel),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: ShadCheckbox(
+                        value: clearVideos,
+                        onChanged: (value) =>
+                            setSheetState(() => clearVideos = value),
+                        label: Text(l10n.storageVideosLabel),
+                      ),
                     ),
-                    CheckboxListTile(
-                      value: clearFiles,
-                      onChanged: (value) =>
-                          setSheetState(() => clearFiles = value ?? false),
-                      title: Text(l10n.filesLabel),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: ShadCheckbox(
+                        value: clearFiles,
+                        onChanged: (value) =>
+                            setSheetState(() => clearFiles = value),
+                        label: Text(l10n.filesLabel),
+                      ),
                     ),
-                    CheckboxListTile(
-                      value: clearCache,
-                      onChanged: (value) =>
-                          setSheetState(() => clearCache = value ?? false),
-                      title: Text(l10n.storageCacheLabel),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: ShadCheckbox(
+                        value: clearCache,
+                        onChanged: (value) =>
+                            setSheetState(() => clearCache = value),
+                        label: Text(l10n.storageCacheLabel),
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                       child: Row(
                         children: [
                           Expanded(
-                            child: OutlinedButton(
+                            child: ShadButton.outline(
                               onPressed: () {
                                 setSheetState(() {
                                   clearPhotos = true;
@@ -316,12 +355,13 @@ class _StorageScreenState extends State<StorageScreen> {
                                   clearCache = true;
                                 });
                               },
+                              height: 44,
                               child: Text(l10n.storageAutoCleanSelectAll),
                             ),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: FilledButton(
+                            child: ShadButton(
                               onPressed: () async {
                                 await _saveAutoCleanSettings(
                                   _autoCleanSettings.copyWith(
@@ -335,6 +375,7 @@ class _StorageScreenState extends State<StorageScreen> {
                                   Navigator.of(sheetContext).pop();
                                 }
                               },
+                              height: 44,
                               child: Text(l10n.save),
                             ),
                           ),
@@ -364,7 +405,7 @@ class _StorageScreenState extends State<StorageScreen> {
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         actions: [
-          IconButton(
+          ShadIconButton.ghost(
             onPressed: _loading || _clearing ? null : _loadStorage,
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -374,44 +415,44 @@ class _StorageScreenState extends State<StorageScreen> {
         child: _loading
             ? const AppLoadingState()
             : snapshot == null
-                ? AppEmptyState(
-                    title: l10n.nothingFound,
-                    message: l10n.noResultsFound,
-                    icon: Icons.storage_rounded,
-                  )
-                : ListView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    children: [
-                      _StorageOverviewCard(snapshot: snapshot),
-                      const SizedBox(height: 16),
-                      _StorageCleanupSection(
-                        snapshot: snapshot,
-                        clearPhotos: _clearPhotos,
-                        clearVideos: _clearVideos,
-                        clearFiles: _clearFiles,
-                        clearCache: _clearCache,
-                        selectedBytes: _selectedBytes(snapshot),
-                        clearing: _clearing,
-                        autoCleanSettings: _autoCleanSettings,
-                        onPhotosChanged: (value) =>
-                            setState(() => _clearPhotos = value),
-                        onVideosChanged: (value) =>
-                            setState(() => _clearVideos = value),
-                        onFilesChanged: (value) =>
-                            setState(() => _clearFiles = value),
-                        onCacheChanged: (value) =>
-                            setState(() => _clearCache = value),
-                        onAutoCleanChanged: (value) => _saveAutoCleanSettings(
-                          _autoCleanSettings.copyWith(enabled: value),
-                        ),
-                        onAutoCleanIntervalPressed: _pickAutoCleanInterval,
-                        onAutoCleanThresholdPressed: _pickAutoCleanThreshold,
-                        onAutoCleanTypesPressed: _pickAutoCleanTypes,
-                        onClearPressed: _clearSelected,
-                      ),
-                    ],
+            ? AppEmptyState(
+                title: l10n.nothingFound,
+                message: l10n.noResultsFound,
+                icon: Icons.storage_rounded,
+              )
+            : ListView(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                children: [
+                  _StorageOverviewCard(snapshot: snapshot),
+                  const SizedBox(height: 16),
+                  _StorageCleanupSection(
+                    snapshot: snapshot,
+                    clearPhotos: _clearPhotos,
+                    clearVideos: _clearVideos,
+                    clearFiles: _clearFiles,
+                    clearCache: _clearCache,
+                    selectedBytes: _selectedBytes(snapshot),
+                    clearing: _clearing,
+                    autoCleanSettings: _autoCleanSettings,
+                    onPhotosChanged: (value) =>
+                        setState(() => _clearPhotos = value),
+                    onVideosChanged: (value) =>
+                        setState(() => _clearVideos = value),
+                    onFilesChanged: (value) =>
+                        setState(() => _clearFiles = value),
+                    onCacheChanged: (value) =>
+                        setState(() => _clearCache = value),
+                    onAutoCleanChanged: (value) => _saveAutoCleanSettings(
+                      _autoCleanSettings.copyWith(enabled: value),
+                    ),
+                    onAutoCleanIntervalPressed: _pickAutoCleanInterval,
+                    onAutoCleanThresholdPressed: _pickAutoCleanThreshold,
+                    onAutoCleanTypesPressed: _pickAutoCleanTypes,
+                    onClearPressed: _clearSelected,
                   ),
+                ],
+              ),
       ),
     );
   }
@@ -494,7 +535,7 @@ class _StorageCleanupSection extends StatelessWidget {
     final lastRunLabel = lastRun == null
         ? l10n.storageAutoCleanLastRunNever
         : '${materialL10n.formatCompactDate(lastRun)} • '
-            '${materialL10n.formatTimeOfDay(TimeOfDay.fromDateTime(lastRun))}';
+              '${materialL10n.formatTimeOfDay(TimeOfDay.fromDateTime(lastRun))}';
 
     return GlassCard(
       child: Padding(
@@ -559,7 +600,9 @@ class _StorageCleanupSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.32),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.32,
+                ),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Row(
@@ -571,7 +614,9 @@ class _StorageCleanupSection extends StatelessWidget {
                         Text(
                           l10n.storageSelectedLabel,
                           style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -589,7 +634,9 @@ class _StorageCleanupSection extends StatelessWidget {
                     child: Text(
                       selectedLabels.isEmpty ? '—' : selectedLabels.join(', '),
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.72,
+                        ),
                         height: 1.35,
                       ),
                     ),
@@ -601,12 +648,11 @@ class _StorageCleanupSection extends StatelessWidget {
             GlassCard(
               child: Column(
                 children: [
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.storageAutoCleanTitle),
-                    subtitle: Text(l10n.storageAutoCleanSubtitle),
+                  ShadSwitch(
                     value: autoCleanSettings.enabled,
                     onChanged: onAutoCleanChanged,
+                    label: Text(l10n.storageAutoCleanTitle),
+                    sublabel: Text(l10n.storageAutoCleanSubtitle),
                   ),
                   const Divider(height: 16),
                   _StorageSheetField(
@@ -626,7 +672,9 @@ class _StorageCleanupSection extends StatelessWidget {
                   _StorageSheetField(
                     icon: Icons.speed_rounded,
                     label: l10n.storageAutoCleanThresholdLabel,
-                    value: StorageService.formatBytes(autoCleanSettings.maxBytes),
+                    value: StorageService.formatBytes(
+                      autoCleanSettings.maxBytes,
+                    ),
                     onTap: onAutoCleanThresholdPressed,
                   ),
                   const SizedBox(height: 10),
@@ -634,8 +682,10 @@ class _StorageCleanupSection extends StatelessWidget {
                     icon: Icons.tune_rounded,
                     label: l10n.storageAutoCleanTypesLabel,
                     value: [
-                      if (autoCleanSettings.clearPhotos) l10n.storagePhotosLabel,
-                      if (autoCleanSettings.clearVideos) l10n.storageVideosLabel,
+                      if (autoCleanSettings.clearPhotos)
+                        l10n.storagePhotosLabel,
+                      if (autoCleanSettings.clearVideos)
+                        l10n.storageVideosLabel,
                       if (autoCleanSettings.clearFiles) l10n.filesLabel,
                       if (autoCleanSettings.clearCache) l10n.storageCacheLabel,
                     ].join(', '),
@@ -722,17 +772,30 @@ class _StorageCleanupSection extends StatelessWidget {
                 final actionButton = SizedBox(
                   height: 50,
                   width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed:
-                        clearing || selectedBytes <= 0 ? null : onClearPressed,
-                    icon: clearing
-                        ? const SizedBox(
+                  child: ShadButton(
+                    onPressed: clearing || selectedBytes <= 0
+                        ? null
+                        : onClearPressed,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (clearing)
+                          const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
                           )
-                        : const Icon(Icons.cleaning_services_rounded),
-                    label: Text(l10n.settingsStorageClearBtn),
+                        else
+                          const Icon(
+                            Icons.cleaning_services_rounded,
+                            size: 18,
+                          ),
+                        const SizedBox(width: 8),
+                        Text(l10n.settingsStorageClearBtn),
+                      ],
+                    ),
                   ),
                 );
 
@@ -845,7 +908,9 @@ class _StorageSheetField extends StatelessWidget {
                     Text(
                       label,
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.72,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -969,15 +1034,23 @@ class _CleanupToggleTile extends StatelessWidget {
           color: theme.colorScheme.outline.withValues(alpha: 0.12),
         ),
       ),
-      child: SwitchListTile.adaptive(
+      child: ShadSwitch(
         value: enabled && selected,
         onChanged: enabled ? onChanged : null,
-        secondary: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.14),
-          child: Icon(icon, color: color),
+        label: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withValues(alpha: 0.14),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(label)),
+          ],
         ),
-        title: Text(label),
-        subtitle: Text(value),
+        sublabel: Padding(
+          padding: const EdgeInsets.only(left: 52),
+          child: Text(value),
+        ),
       ),
     );
   }
@@ -1010,16 +1083,16 @@ class _AnimatedStorageRing extends StatelessWidget {
                 Text(
                   l10n.storageTotalLabel,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   StorageService.formatBytes(snapshot.totalBytes),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),

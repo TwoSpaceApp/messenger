@@ -24,9 +24,14 @@ abstract class Env {
       _Env.aegisConnectTimeoutSeconds;
 
   @EnviedField(varName: 'AEGIS_TRANSPORT_MASKING_KEY', defaultValue: '')
-  static const String aegisTransportMaskingKey =
-      _Env.aegisTransportMaskingKey;
+  static const String aegisTransportMaskingKey = _Env.aegisTransportMaskingKey;
 
   @EnviedField(varName: 'AEGIS_USE_TLS', defaultValue: 'false')
   static const String aegisUseTls = _Env.aegisUseTls;
+
+  @EnviedField(varName: 'AEGIS_APP_ID', defaultValue: '')
+  static const String aegisAppId = _Env.aegisAppId;
+
+  @EnviedField(varName: 'AEGIS_APP_HASH', defaultValue: '')
+  static const String aegisAppHash = _Env.aegisAppHash;
 }

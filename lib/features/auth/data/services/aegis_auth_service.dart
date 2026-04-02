@@ -5,11 +5,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/network/aegis/aegis_client.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
+import 'package:two_space_app/core/network/aegis/official_api_credentials.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_identity_service.dart';
 
 export 'package:two_space_app/core/network/aegis/message_payloads.dart'
-    show User, UserSearchResponse, UserSearchResult;
+    show RegisteredUserInfo, User, UserSearchResponse, UserSearchResult;
 
 const _kAegisTokenKey = 'aegis_auth_token';
 const _kAegisUsernameKey = 'aegis_username';
@@ -31,7 +32,7 @@ class AegisAuthService {
 
   final DevLogger _log = DevLogger('AegisAuthService');
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
-  final AegisClient _client = AegisClient();
+  final AegisClient _client = _buildClient();
   final AegisIdentityService _identity = AegisIdentityService();
 
   String? _token;
@@ -54,6 +55,74 @@ class AegisAuthService {
     return _token;
   }
 
+  static AegisClient _buildClient() {
+    const official = AegisOfficialApiCredentials.credentials;
+    final appId = Environment.aegisAppId;
+    final appHash = Environment.aegisAppHash;
+
+    final resolvedAppId = appId ?? official.appId;
+    final resolvedAppHash = (appHash != null && appHash.isNotEmpty)
+        ? appHash
+        : official.appHash;
+
+    return AegisClient.withApiCredentials(
+      AegisApiCredentials(appId: resolvedAppId, appHash: resolvedAppHash),
+    );
+  }
+
+  void _logConnectionProfile() {
+    final maskingEnabled =
+        Environment.aegisTransportMaskingKey?.isNotEmpty ?? false;
+    final appId =
+        Environment.aegisAppId ?? AegisOfficialApiCredentials.credentials.appId;
+    final appHashSource = (Environment.aegisAppHash?.isNotEmpty ?? false)
+        ? 'env'
+        : 'official-fallback';
+
+    _log.info(
+      'Aegis profile: host=${Environment.aegisHost}:${Environment.aegisPort}, '
+      'tls=${Environment.aegisUseTls}, masking=$maskingEnabled, '
+      'appId=$appId, appHashSource=$appHashSource',
+    );
+  }
+
+  String _classifyConnectionError(Object error) {
+    final text = error.toString().toLowerCase();
+    if (text.contains('app credentials required')) {
+      return 'handshake_rejected_app_credentials';
+    }
+    if (text.contains('handshake') && text.contains('failed')) {
+      return 'handshake_failed';
+    }
+    if (text.contains('no route to host') ||
+        text.contains('connection refused')) {
+      return 'network_unreachable';
+    }
+    if (text.contains('timeout') || text.contains('timed out')) {
+      return 'network_timeout';
+    }
+    if (text.contains('socket') || text.contains('connection')) {
+      return 'socket_error';
+    }
+    return 'unknown';
+  }
+
+  bool _shouldTryTlsFallback(Object error, {required bool configuredTls}) {
+    // Avoid auto-upgrading plain TCP to TLS when TLS is disabled in env.
+    // This mostly adds noisy TLS handshake failures and masks root causes.
+    if (!configuredTls) {
+      return false;
+    }
+    final text = error.toString().toLowerCase();
+    if (text.contains('app credentials required')) {
+      return false;
+    }
+    return text.contains('timeout') ||
+        text.contains('timed out') ||
+        text.contains('no response for seq=') ||
+        text.contains('failed connect with masking and fallback');
+  }
+
   Future<String?> getStoredUsername() async {
     _username ??= await _secure.read(key: _kAegisUsernameKey);
     return _username;
@@ -74,15 +143,53 @@ class AegisAuthService {
     }
 
     final future = () async {
+      _logConnectionProfile();
       _log.info(
-          'Подключение к ${Environment.aegisHost}:${Environment.aegisPort}');
-      await _client.connect(
-        Environment.aegisHost,
-        Environment.aegisPort,
-        timeout: Environment.aegisConnectTimeout,
-        transportMaskingKey: Environment.aegisTransportMaskingKey,
-        useTls: Environment.aegisUseTls,
+        'Подключение к ${Environment.aegisHost}:${Environment.aegisPort}',
       );
+      final configuredTls = Environment.aegisUseTls;
+      try {
+        await _client.connect(
+          Environment.aegisHost,
+          Environment.aegisPort,
+          timeout: Environment.aegisConnectTimeout,
+          transportMaskingKey: Environment.aegisTransportMaskingKey,
+          useTls: configuredTls,
+        );
+      } on Object catch (e) {
+        if (_shouldTryTlsFallback(e, configuredTls: configuredTls)) {
+          final fallbackTls = !configuredTls;
+          _log.warning(
+            'Primary connect failed, retry with TLS=$fallbackTls: $e',
+          );
+          try {
+            if (_client.isConnected) {
+              await _client.disconnect();
+            }
+          } catch (_) {}
+
+          try {
+            await _client.connect(
+              Environment.aegisHost,
+              Environment.aegisPort,
+              timeout: Environment.aegisConnectTimeout,
+              transportMaskingKey: Environment.aegisTransportMaskingKey,
+              useTls: fallbackTls,
+            );
+            _log.info(
+              'Connected using TLS fallback mode (env TLS=$configuredTls, active TLS=$fallbackTls)',
+            );
+          } on Object catch (fallbackError) {
+            final code = _classifyConnectionError(fallbackError);
+            _log.error('Connect failed [$code]: $fallbackError');
+            rethrow;
+          }
+        } else {
+          final code = _classifyConnectionError(e);
+          _log.error('Connect failed [$code]: $e');
+          rethrow;
+        }
+      }
       _ensureKeepAlive();
       _log.info('TCP-соединение установлено');
     }();
@@ -170,28 +277,22 @@ class AegisAuthService {
         final separatorIndex = _token!.indexOf(':');
         final identifier = _token!.substring(0, separatorIndex);
         final password = _token!.substring(separatorIndex + 1);
-        final response = await _client.authenticateWithPassword(
-          username: identifier,
-          password: password,
-        );
-        _username = response.username;
-        _userId = response.userId;
-        if (response.sessionToken.isNotEmpty) {
-          _token = response.sessionToken;
-        }
+        await _client.login(identifier, password);
+        _username = _client.username ?? identifier;
+        _userId = _client.userId;
       } else {
-        final response = await _client.authenticateWithToken(_token!);
-        _username = response.username;
-        _userId = response.userId;
-        if (response.sessionToken.isNotEmpty) {
-          _token = response.sessionToken;
-        }
+        await _client.loginWithToken(_token!);
+        _username = _client.username;
+        _userId = _client.userId;
       }
       await _saveSession();
       _ensureKeepAlive();
       _log.info('Сессия восстановлена для $_username');
       return true;
-    } catch (e) {
+    } on Object catch (e) {
+      _log.error(
+        'Restore session failed [${_classifyConnectionError(e)}]: $e',
+      );
       _log.warning('Не удалось восстановить сессию: $e');
       if (_isAuthRejectionError(e)) {
         await clearSession();
@@ -217,7 +318,7 @@ class AegisAuthService {
   ///
   /// После успешной регистрации автоматически сохраняет токен и
   /// аутентифицирует клиент.
-  Future<User> register({
+  Future<RegisteredUserInfo> register({
     required String username,
     required String email,
     required String password,
@@ -296,16 +397,25 @@ class AegisAuthService {
     //   токен (UUID / JWT), который и нужно сохранять вместо пароля.
     //   До этого момента plain-текст пароля попадает в FlutterSecureStorage
     //   (шифруется Keystore/Keychain) и в память клиента.
-    final response = await _client.authenticateWithPassword(
-      username: identifier,
-      password: password,
-    );
+    try {
+      await _client.login(identifier, password);
+    } on Object catch (e) {
+      _log.error('Login failed [${_classifyConnectionError(e)}]: $e');
+      final errorText = e.toString();
+      if (errorText.contains('App credentials required')) {
+        throw Exception(
+          'Сервер требует app credentials. Укажите AEGIS_APP_ID и '
+          'AEGIS_APP_HASH в .env и пересоберите приложение.',
+        );
+      }
+      rethrow;
+    }
 
-    _token = response.sessionToken.isNotEmpty
-        ? response.sessionToken
-        : '$identifier:$password';
-    _username = response.username.isNotEmpty ? response.username : identifier;
-    _userId = response.userId > 0 ? response.userId : null;
+    _token = '$identifier:$password';
+    _username = (_client.username?.isNotEmpty ?? false)
+        ? _client.username
+        : identifier;
+    _userId = _client.userId;
 
     await _saveSession();
     _ensureKeepAlive();
@@ -320,7 +430,7 @@ class AegisAuthService {
     await clearSession();
     try {
       await _client.disconnect();
-    } catch (e) {
+    } on Object catch (e) {
       _log.debug('Ошибка при disconnect: $e');
     }
   }
@@ -340,7 +450,7 @@ class AegisAuthService {
   }) async {
     try {
       await login(identifier: username, password: password);
-    } catch (e) {
+    } on Object catch (e) {
       _log.warning('Автологин после регистрации не удался: $e');
       // Не бросаем — регистрация прошла успешно
     }
@@ -372,7 +482,7 @@ class AegisAuthService {
       }
       try {
         await _client.ping();
-      } catch (e) {
+      } on Object catch (e) {
         _log.debug('Ping keep-alive не удался: $e');
         unawaited(_recoverSessionAfterKeepAliveFailure());
       }
@@ -395,7 +505,7 @@ class AegisAuthService {
 
       try {
         await ensureSession();
-      } catch (e) {
+      } on Object catch (e) {
         _log.debug('Автовосстановление сессии не удалось: $e');
       }
     }();
@@ -420,6 +530,7 @@ class AegisAuthService {
       throw NotAuthenticatedException();
     }
   }
+
   AegisClient get rawClient => _client;
 }
 

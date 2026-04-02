@@ -43,7 +43,7 @@ class PeopleController extends ChangeNotifier {
         requestPermission: requestPermission,
       );
       _error = null;
-    } catch (error) {
+    } on Object catch (error) {
       _error = error.toString();
     } finally {
       _loading = false;
@@ -124,7 +124,7 @@ class PeopleController extends ChangeNotifier {
       if (requestId != _searchRequestId) return;
       _searchData = result;
       _error = null;
-    } catch (error) {
+    } on Object catch (error) {
       if (requestId != _searchRequestId) return;
       _error = error.toString();
     } finally {

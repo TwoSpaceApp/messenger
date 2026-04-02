@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 
 class EnhancedAudioPlayer extends StatefulWidget {
@@ -27,6 +28,7 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
   StreamSubscription<PlayerState>? _stateSub;
   StreamSubscription<Duration>? _durationSub;
   StreamSubscription<Duration>? _positionSub;
+
   /// Timer-based throttle: update position at most every 100ms.
   Timer? _positionThrottle;
   Duration _pendingPosition = Duration.zero;
@@ -46,8 +48,7 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
       }
     });
     // Throttle position updates to ~10 Hz to avoid excessive rebuilds.
-    _positionSub = _audioPlayer.onPositionChanged
-        .listen((position) {
+    _positionSub = _audioPlayer.onPositionChanged.listen((position) {
       _pendingPosition = position;
       if (_positionThrottle == null || !_positionThrottle!.isActive) {
         _positionThrottle = Timer(const Duration(milliseconds: 100), () {
@@ -98,20 +99,25 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Playback controls
           Row(
             children: [
-              // Play/Pause button
-              IconButton(
-                icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+              ShadIconButton.secondary(
+                width: 42,
+                height: 42,
+                icon: Icon(
+                  isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                ),
                 onPressed: _togglePlayPause,
               ),
-              // Waveform placeholder (can be enhanced with actual waveform)
+              const SizedBox(width: 8),
               Expanded(
                 child: SliderTheme(
                   data: const SliderThemeData(
@@ -120,17 +126,19 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
                   ),
                   child: Slider(
                     max: _duration.inMilliseconds.toDouble(),
-                    value: _position.inMilliseconds
-                        .toDouble()
-                        .clamp(0, _duration.inMilliseconds.toDouble()),
+                    value: _position.inMilliseconds.toDouble().clamp(
+                      0,
+                      _duration.inMilliseconds.toDouble(),
+                    ),
                     onChanged: (value) async {
-                      await _audioPlayer
-                          .seek(Duration(milliseconds: value.toInt()));
+                      await _audioPlayer.seek(
+                        Duration(milliseconds: value.toInt()),
+                      );
                     },
                   ),
                 ),
               ),
-              // Time display
+              const SizedBox(width: 8),
               Text(
                 _formatDuration(_position),
                 style: theme.textTheme.bodySmall,
@@ -138,7 +146,6 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
             ],
           ),
           const SizedBox(height: 8),
-          // Speed selector
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -148,13 +155,17 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
                 for (final speed in _speeds)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ChoiceChip(
-                      label: Text('${speed}x'),
-                      selected: _playbackSpeed == speed,
-                      onSelected: (selected) {
-                        if (selected) _changeSpeed(speed);
-                      },
-                    ),
+                    child: _playbackSpeed == speed
+                        ? ShadButton.secondary(
+                            onPressed: () {},
+                            height: 32,
+                            child: Text('${speed}x'),
+                          )
+                        : ShadButton.outline(
+                            onPressed: () => _changeSpeed(speed),
+                            height: 32,
+                            child: Text('${speed}x'),
+                          ),
                   ),
               ],
             ),

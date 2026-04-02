@@ -59,38 +59,21 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
 
   Future<void> _navigateToWelcome(String? userId) async {
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
 
-    // Get user info for welcome screen
-    var userName = l10n.userDefault;
-    String? username;
-    String? avatarUrl;
-    String? description;
-
+    // Get user info - not used but can be extended later
     if (userId != null) {
       try {
         final chatService = AegisChatService();
-        final userInfo = await chatService.getOwnUserInfo(forceRefresh: true);
-        userName = userInfo['displayName'] as String? ??
-            userInfo['username'] as String? ??
-            userId.replaceAll('@', '');
-        username = userInfo['username'] as String?;
-        avatarUrl = userInfo['avatarUrl'] as String?;
-        description = userInfo['bio'] as String?;
+        await chatService.getOwnUserInfo(forceRefresh: true);
       } catch (_) {
-        userName = userId.replaceAll('@', '');
+        // Ignore errors
       }
     }
 
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => WelcomeScreen(
-          name: userName,
-          username: username,
-          avatarUrl: avatarUrl,
-          description: description,
-        ),
+        builder: (_) => const WelcomeScreen(),
       ),
     );
   }

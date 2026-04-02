@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/feature_in_development_dialog.dart';
@@ -61,22 +61,47 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(l10n.deleteAccountTitle),
-        content: Text(
-          l10n.deleteAccountContent,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: GlassCard(
+          borderRadius: 24,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.deleteAccountTitle,
+                style: Theme.of(dialogContext).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(l10n.deleteAccountContent),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: ShadButton.outline(
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: Text(l10n.cancelButton),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ShadButton(
+                      onPressed: () => Navigator.pop(dialogContext, true),
+                      child: Text(
+                        l10n.deleteButton,
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancelButton),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-            child: Text(l10n.deleteButton),
-          ),
-        ],
       ),
     );
 
@@ -95,8 +120,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.accountSettingsTitle),
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
       ),
       body: ScreenBackground(
         child: SafeArea(
@@ -121,77 +146,86 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextField(
+                      ShadInput(
                         controller: _currentPasswordController,
                         obscureText: _obscureCurrentPassword,
-                        decoration: InputDecoration(
-                          labelText: l10n.currentPasswordLabel,
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscureCurrentPassword
+                        placeholder: Text(l10n.currentPasswordLabel),
+                        leading: const Icon(Icons.lock_outline, size: 18),
+                        trailing: ShadIconButton.ghost(
+                          width: 32,
+                          height: 32,
+                          icon: Icon(
+                            _obscureCurrentPassword
                                 ? Icons.visibility
-                                : Icons.visibility_off),
-                            onPressed: () => setState(() =>
-                                _obscureCurrentPassword =
-                                    !_obscureCurrentPassword),
+                                : Icons.visibility_off,
+                            size: 18,
                           ),
-                          border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(UITokens.cornerSm)),
+                          onPressed: () => setState(
+                            () => _obscureCurrentPassword =
+                                !_obscureCurrentPassword,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      TextField(
+                      ShadInput(
                         controller: _newPasswordController,
                         obscureText: _obscureNewPassword,
-                        decoration: InputDecoration(
-                          labelText: l10n.newPasswordLabel,
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscureNewPassword
+                        placeholder: Text(l10n.newPasswordLabel),
+                        leading: const Icon(Icons.lock, size: 18),
+                        trailing: ShadIconButton.ghost(
+                          width: 32,
+                          height: 32,
+                          icon: Icon(
+                            _obscureNewPassword
                                 ? Icons.visibility
-                                : Icons.visibility_off),
-                            onPressed: () => setState(() =>
-                                _obscureNewPassword = !_obscureNewPassword),
+                                : Icons.visibility_off,
+                            size: 18,
                           ),
-                          border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(UITokens.cornerSm)),
-                          helperText: l10n.minPasswordHelper,
+                          onPressed: () => setState(
+                            () => _obscureNewPassword = !_obscureNewPassword,
+                          ),
                         ),
                       ),
+                      const SizedBox(height: 6),
+                      Text(
+                        l10n.minPasswordHelper,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                      ),
                       const SizedBox(height: 16),
-                      TextField(
+                      ShadInput(
                         controller: _confirmPasswordController,
                         obscureText: _obscureConfirmPassword,
-                        decoration: InputDecoration(
-                          labelText: l10n.confirmPasswordLabel,
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscureConfirmPassword
+                        placeholder: Text(l10n.confirmPasswordLabel),
+                        leading: const Icon(Icons.lock, size: 18),
+                        trailing: ShadIconButton.ghost(
+                          width: 32,
+                          height: 32,
+                          icon: Icon(
+                            _obscureConfirmPassword
                                 ? Icons.visibility
-                                : Icons.visibility_off),
-                            onPressed: () => setState(() =>
-                                _obscureConfirmPassword =
-                                    !_obscureConfirmPassword),
+                                : Icons.visibility_off,
+                            size: 18,
                           ),
-                          border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(UITokens.cornerSm)),
+                          onPressed: () => setState(
+                            () => _obscureConfirmPassword =
+                                !_obscureConfirmPassword,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
+                        child: ShadButton(
                           onPressed: _changePassword,
-                          icon: const Icon(Icons.check),
-                          label: Text(l10n.changePasswordButton),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(UITokens.cornerSm)),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.check, size: 18),
+                              const SizedBox(width: 8),
+                              Text(l10n.changePasswordButton),
+                            ],
                           ),
                         ),
                       ),

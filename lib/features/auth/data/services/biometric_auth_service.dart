@@ -14,7 +14,7 @@ class BiometricAuthService {
   Future<bool> canAuthenticate() async {
     try {
       return await _auth.canCheckBiometrics;
-    } catch (e) {
+    } on Object catch (_) {
       return false;
     }
   }
@@ -23,7 +23,7 @@ class BiometricAuthService {
   Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       return await _auth.getAvailableBiometrics();
-    } catch (e) {
+    } on Object catch (_) {
       return [];
     }
   }
@@ -36,7 +36,7 @@ class BiometricAuthService {
         biometricOnly: true,
         persistAcrossBackgrounding: true,
       );
-    } catch (e) {
+    } on Object catch (_) {
       return false;
     }
   }
@@ -66,7 +66,9 @@ class BiometricAuthService {
   /// Enable/disable biometric authentication for app access
   Future<void> setBiometricEnabled(bool enabled) async {
     await _secureStorage.write(
-        key: 'biometric_enabled', value: enabled.toString());
+      key: 'biometric_enabled',
+      value: enabled.toString(),
+    );
   }
 
   /// Check if biometric is enabled

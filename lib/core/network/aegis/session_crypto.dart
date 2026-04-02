@@ -1,24 +1,122 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
+import 'package:two_space_app/core/network/aegis/security_utils.dart';
+
+class AegisHandshakeContext {
+  static final Ecdh _ecdh = Ecdh.p256(length: 32);
+  static final Hkdf _hkdf = Hkdf(
+    hmac: Hmac.sha256(),
+    outputLength: 32,
+  );
+
+  final KeyPair _keyPair;
+  final Uint8List publicKey;
+
+  AegisHandshakeContext._(this._keyPair, this.publicKey);
+
+  static Future<AegisHandshakeContext> create() async {
+    final keyPair = await _ecdh.newKeyPair();
+    final publicKey = await keyPair.extractPublicKey();
+    final rawPublicKey = Uint8List(65)
+      ..[0] = 0x04
+      ..setRange(1, 33, publicKey.x)
+      ..setRange(33, 65, publicKey.y);
+    return AegisHandshakeContext._(
+      keyPair,
+      rawPublicKey,
+    );
+  }
+
+  Future<Uint8List> deriveSessionKey(Uint8List remotePublicKeyBytes) async {
+    final sharedSecret = await _ecdh.sharedSecretKey(
+      keyPair: _keyPair,
+      remotePublicKey: EcPublicKey(
+        x: remotePublicKeyBytes.sublist(1, 33),
+        y: remotePublicKeyBytes.sublist(33, 65),
+        type: KeyPairType.p256,
+      ),
+    );
+
+    final sessionKey = await _hkdf.deriveKey(
+      secretKey: sharedSecret,
+      info: utf8.encode('AegisKeyDerivation'),
+    );
+
+    return Uint8List.fromList(await sessionKey.extractBytes());
+  }
+}
+
+class AegisHandshakeVerifier {
+  static final Ecdsa _ecdsa = Ecdsa.p256(Sha256());
+
+  static Future<bool> verifyServerHandshakeSignature({
+    required Uint8List trustedSigningPublicKey,
+    required Uint8List serverEphemeralPublicKey,
+    required Uint8List clientEphemeralPublicKey,
+    required Uint8List signature,
+  }) async {
+    if (trustedSigningPublicKey.length != 65 ||
+        trustedSigningPublicKey[0] != 0x04) {
+      return false;
+    }
+
+    final transcript = _buildTranscript(
+      serverEphemeralPublicKey,
+      clientEphemeralPublicKey,
+    );
+
+    final publicKey = EcPublicKey(
+      x: trustedSigningPublicKey.sublist(1, 33),
+      y: trustedSigningPublicKey.sublist(33, 65),
+      type: KeyPairType.p256,
+    );
+
+    return _ecdsa.verify(
+      transcript,
+      signature: Signature(signature, publicKey: publicKey),
+    );
+  }
+
+  static Uint8List _buildTranscript(
+    Uint8List serverPublicKey,
+    Uint8List clientPublicKey,
+  ) {
+    const marker = 'AEGIS-HANDSHAKE-V1';
+    final markerBytes = Uint8List.fromList(ascii.encode(marker));
+    final output = BytesBuilder(copy: false)
+      ..add(markerBytes)
+      ..add(_int32(serverPublicKey.length))
+      ..add(serverPublicKey)
+      ..add(_int32(clientPublicKey.length))
+      ..add(clientPublicKey);
+    return output.toBytes();
+  }
+
+  static Uint8List _int32(int value) {
+    final bytes = ByteData(4)..setInt32(0, value, Endian.little);
+    return bytes.buffer.asUint8List();
+  }
+}
 
 class AegisSessionCrypto {
   static final AesGcm _aesGcm = AesGcm.with256bits();
 
+  final Uint8List _sessionKey;
+
   AegisSessionCrypto(Uint8List sessionKey)
-      : _sessionKey = Uint8List.fromList(sessionKey) {
+    : _sessionKey = Uint8List.fromList(sessionKey) {
     if (_sessionKey.length != 32) {
       throw ArgumentError('Session key must be 32 bytes');
     }
   }
 
-  final Uint8List _sessionKey;
-
   Future<Message> encryptMessage(Message message) async {
-    final nonce = _randomNonce();
+    final nonce = SecureBufferUtils.secureRandomBytes(12);
     final encryptedPayloadLength = nonce.length + message.payload.length + 16;
     final wireMessage = Message()
       ..magic = message.magic
@@ -49,6 +147,8 @@ class AegisSessionCrypto {
       wireMessage.payload.length,
       secretBox.mac.bytes,
     );
+
+    SecureBufferUtils.zeroOut(nonce);
     return wireMessage;
   }
 
@@ -86,20 +186,20 @@ class AegisSessionCrypto {
     message.flags &= ~ProtocolConstants.flagEncrypted;
   }
 
+  void dispose() {
+    SecureBufferUtils.zeroOut(_sessionKey);
+  }
+
   Uint8List _buildHeaderBytes(Message message) {
     final header = Uint8List(ProtocolConstants.headerSize);
-    final data = ByteData.view(header.buffer);
-    data.setUint32(0, message.magic);
+    final bd = ByteData.view(header.buffer);
+    bd.setUint32(0, message.magic);
     header[4] = message.versionMajor;
     header[5] = message.versionMinor;
     header[6] = message.flags;
-    data.setUint16(7, message.type.value);
-    data.setUint64(9, message.sequenceId);
-    data.setUint32(17, message.payloadLength);
+    bd.setUint16(7, message.type.value);
+    bd.setUint64(9, message.sequenceId);
+    bd.setUint32(17, message.payloadLength);
     return header;
   }
-
-  Uint8List _randomNonce() => Uint8List.fromList(_aesGcm.newNonce());
-
-  void dispose() {}
 }

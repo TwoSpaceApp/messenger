@@ -1,10 +1,9 @@
-// ignore_for_file: deprecated_member_use
-
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/group.dart';
@@ -83,11 +82,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          userId: member.userId,
-          initialName: member.displayName,
-          initialAvatar: member.avatarUrl,
-        ),
+        builder: (_) => const ProfileScreen(),
       ),
     );
   }
@@ -107,7 +102,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         _historyVisibility =
             (settings['historyVisibility'] as int?) ?? _historyVisibility;
       });
-    } catch (e) {
+    } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.loadError(e.toString()))),
@@ -146,7 +141,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.roomAvatarUpdated)),
       );
-    } catch (e) {
+    } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.genericError(e.toString()))),
@@ -186,7 +181,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.settingSaved)),
       );
-    } catch (e) {
+    } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.genericError(e.toString()))),
@@ -208,14 +203,77 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       }
       await Clipboard.setData(ClipboardData(text: link));
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.textCopied)));
-    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.textCopied)));
+    } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.genericError(e.toString()))),
       );
     }
+  }
+
+  Future<void> _pickJoinRule() async {
+    final l10n = AppLocalizations.of(context)!;
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final value in [0, 1, 2])
+                ListTile(
+                  title: Text(_joinRuleTitle(l10n, value)),
+                  subtitle: Text(_joinRuleSubtitle(l10n, value)),
+                  trailing: _joinRule == value
+                      ? const Icon(Icons.check_rounded)
+                      : null,
+                  onTap: () => Navigator.of(sheetContext).pop(value),
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+    if (!mounted || selected == null) return;
+    setState(() => _joinRule = selected);
+    await _updateJoinRule(selected);
+  }
+
+  Future<void> _pickHistoryVisibility() async {
+    final l10n = AppLocalizations.of(context)!;
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final value in [0, 1, 2])
+                ListTile(
+                  title: Text(_historyVisibilityTitle(l10n, value)),
+                  subtitle: Text(_historyVisibilitySubtitle(l10n, value)),
+                  trailing: _historyVisibility == value
+                      ? const Icon(Icons.check_rounded)
+                      : null,
+                  onTap: () => Navigator.of(sheetContext).pop(value),
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+    if (!mounted || selected == null) return;
+    setState(() => _historyVisibility = selected);
+    await _updateHistoryVisibility(selected);
   }
 
   String _joinRuleTitle(AppLocalizations l10n, int value) {
@@ -271,7 +329,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.settingSaved)),
       );
-    } catch (e) {
+    } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.genericError(e.toString()))),
@@ -288,7 +346,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.settingSaved)),
       );
-    } catch (e) {
+    } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.genericError(e.toString()))),
@@ -364,8 +422,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         final horizontalPadding = isWideScreen
             ? 28.0
             : isTablet
-                ? 20.0
-                : 12.0;
+            ? 20.0
+            : 12.0;
 
         return Scaffold(
           backgroundColor: Colors.transparent,
@@ -375,57 +433,57 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
           ),
           body: ScreenBackground(
             child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1320),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  16,
-                  horizontalPadding,
-                  24,
-                ),
-                child: isWideScreen
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 300,
-                            child: _buildNavigationPane(
-                              sections: sections,
-                              compact: false,
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1320),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    16,
+                    horizontalPadding,
+                    24,
+                  ),
+                  child: isWideScreen
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 300,
+                              child: _buildNavigationPane(
+                                sections: sections,
+                                compact: false,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            child: _buildContentPane(
-                              sections: sections,
-                              compact: false,
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: _buildContentPane(
+                                sections: sections,
+                                compact: false,
+                              ),
                             ),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildTopSummaryCard(),
-                          const SizedBox(height: 16),
-                          _buildNavigationPane(
-                            sections: sections,
-                            compact: true,
-                          ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            child: _buildContentPane(
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildTopSummaryCard(),
+                            const SizedBox(height: 16),
+                            _buildNavigationPane(
                               sections: sections,
                               compact: true,
                             ),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: _buildContentPane(
+                                sections: sections,
+                                compact: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
               ),
             ),
-          ),
           ),
         );
       },
@@ -513,8 +571,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }) {
     final l10n = AppLocalizations.of(context)!;
     return Column(
-      crossAxisAlignment:
-          dense ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      crossAxisAlignment: dense
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
       children: [
         UserAvatar(
           avatarUrl: group.avatarUrl,
@@ -577,7 +636,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.75),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.75,
+        ),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -594,30 +655,32 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   Widget _buildSectionChip(int index, _GroupSettingsSection section) {
     final theme = Theme.of(context);
     final isSelected = _selectedTabIndex == index;
-    return ChoiceChip(
-      selected: isSelected,
-      onSelected: (_) => setState(() => _selectedTabIndex = index),
-      avatar: Icon(
-        section.icon,
-        size: 18,
-        color: isSelected
-            ? theme.colorScheme.onPrimaryContainer
-            : section.destructive
-                ? theme.colorScheme.error
-                : theme.colorScheme.onSurfaceVariant,
+    final icon = Icon(
+      section.icon,
+      size: 18,
+      color: isSelected
+          ? theme.colorScheme.onPrimaryContainer
+          : section.destructive
+          ? theme.colorScheme.error
+          : theme.colorScheme.onSurfaceVariant,
+    );
+    if (isSelected) {
+      return ShadButton.secondary(
+        onPressed: () => setState(() => _selectedTabIndex = index),
+        leading: icon,
+        child: Text(section.title),
+      );
+    }
+    return ShadButton.outline(
+      onPressed: () => setState(() => _selectedTabIndex = index),
+      leading: icon,
+      child: Text(
+        section.title,
+        style: TextStyle(
+          color: section.destructive ? theme.colorScheme.error : null,
+          fontWeight: FontWeight.w600,
+        ),
       ),
-      label: Text(section.title),
-      labelStyle: TextStyle(
-        color: isSelected
-            ? theme.colorScheme.onPrimaryContainer
-            : section.destructive
-                ? theme.colorScheme.error
-                : theme.colorScheme.onSurface,
-        fontWeight: FontWeight.w600,
-      ),
-      selectedColor: section.destructive
-          ? theme.colorScheme.errorContainer
-          : theme.colorScheme.primaryContainer,
     );
   }
 
@@ -633,8 +696,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? section.destructive
-                  ? theme.colorScheme.errorContainer.withValues(alpha: 0.7)
-                  : theme.colorScheme.primaryContainer.withValues(alpha: 0.78)
+                    ? theme.colorScheme.errorContainer.withValues(alpha: 0.7)
+                    : theme.colorScheme.primaryContainer.withValues(alpha: 0.78)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(UITokens.corner),
           border: Border.all(
@@ -649,11 +712,11 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               section.icon,
               color: isSelected
                   ? section.destructive
-                      ? theme.colorScheme.onErrorContainer
-                      : theme.colorScheme.onPrimaryContainer
+                        ? theme.colorScheme.onErrorContainer
+                        : theme.colorScheme.onPrimaryContainer
                   : section.destructive
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.onSurfaceVariant,
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -663,11 +726,11 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   fontWeight: FontWeight.w600,
                   color: isSelected
                       ? section.destructive
-                          ? theme.colorScheme.onErrorContainer
-                          : theme.colorScheme.onPrimaryContainer
+                            ? theme.colorScheme.onErrorContainer
+                            : theme.colorScheme.onPrimaryContainer
                       : section.destructive
-                          ? theme.colorScheme.error
-                          : null,
+                      ? theme.colorScheme.error
+                      : null,
                 ),
               ),
             ),
@@ -697,7 +760,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
             decoration: BoxDecoration(
               color: section.destructive
                   ? theme.colorScheme.errorContainer.withValues(alpha: 0.55)
-                  : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+                  : theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.55,
+                    ),
             ),
             child: Row(
               children: [
@@ -719,7 +784,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               ],
             ),
           ),
-          Expanded(child: section.content),
+          Expanded(child: RepaintBoundary(child: section.content)),
         ],
       ),
     );
@@ -798,51 +863,53 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 ),
                 if (_canManageMembers) ...[
                   const SizedBox(height: 24),
-                  TextField(
+                  ShadInput(
                     controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: l10n.roomNameLabel,
-                    ),
+                    placeholder: Text(l10n.roomNameLabel),
+                    leading: const Icon(Icons.edit_outlined, size: 18),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  ShadInput(
                     controller: _descriptionController,
                     minLines: 3,
                     maxLines: 5,
-                    decoration: InputDecoration(
-                      labelText: l10n.descriptionOptionalLabel,
-                    ),
+                    placeholder: Text(l10n.descriptionOptionalLabel),
+                    leading: const Icon(Icons.description_outlined, size: 18),
                   ),
                   const SizedBox(height: 16),
                   Wrap(
                     spacing: 12,
                     runSpacing: 12,
                     children: [
-                      FilledButton.icon(
-                        onPressed: _isSavingGroupInfo ? null : _pickAndUploadAvatar,
-                        icon: const Icon(Icons.image_outlined),
-                        label: Text(l10n.uploadAvatarButton),
+                      ShadButton.outline(
+                        onPressed: _isSavingGroupInfo
+                            ? null
+                            : _pickAndUploadAvatar,
+                        leading: const Icon(Icons.image_outlined, size: 18),
+                        child: Text(l10n.uploadAvatarButton),
                       ),
-                      FilledButton.icon(
+                      ShadButton(
                         onPressed: _isSavingGroupInfo ? null : _saveGroupInfo,
-                        icon: _isSavingGroupInfo
+                        leading: _isSavingGroupInfo
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.save_outlined),
-                        label: Text(l10n.saveButton),
+                        child: Text(l10n.saveButton),
                       ),
                     ],
                   ),
                 ],
                 ...[
                   const SizedBox(height: 24),
-                  FilledButton.icon(
+                  ShadButton.outline(
                     onPressed: _copyGroupLink,
-                    icon: const Icon(Icons.link_outlined),
-                    label: Text(l10n.copyLinkAction),
+                    leading: const Icon(Icons.link_outlined, size: 18),
+                    child: Text(l10n.copyLinkAction),
                   ),
                 ],
                 if (_canManageMembers) ...[
@@ -853,46 +920,42 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     trailing: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        DropdownButtonFormField<int>(
-                          initialValue: _joinRule,
-                          decoration: InputDecoration(
-                            labelText: l10n.roomJoinRuleLabel,
-                          ),
-                          items: [0, 1, 2]
-                              .map(
-                                (value) => DropdownMenuItem<int>(
-                                  value: value,
-                                  child: Text(_joinRuleTitle(l10n, value)),
-                                ),
-                              )
-                              .toList(growable: false),
-                          onChanged: (value) {
-                            if (value == null) return;
-                            setState(() => _joinRule = value);
-                            _updateJoinRule(value);
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<int>(
-                          initialValue: _historyVisibility,
-                          decoration: InputDecoration(
-                            labelText: l10n.roomHistoryVisibilityLabel,
-                          ),
-                          items: [0, 1, 2]
-                              .map(
-                                (value) => DropdownMenuItem<int>(
-                                  value: value,
+                        SizedBox(
+                          width: 320,
+                          child: ShadButton.outline(
+                            onPressed: _pickJoinRule,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
                                   child: Text(
-                                    _historyVisibilityTitle(l10n, value),
+                                    '${l10n.roomJoinRuleLabel}: ${_joinRuleTitle(l10n, _joinRule)}',
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                              )
-                              .toList(growable: false),
-                          onChanged: (value) {
-                            if (value == null) return;
-                            setState(() => _historyVisibility = value);
-                            _updateHistoryVisibility(value);
-                          },
+                                const Icon(Icons.expand_more_rounded, size: 18),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: 320,
+                          child: ShadButton.outline(
+                            onPressed: _pickHistoryVisibility,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${l10n.roomHistoryVisibilityLabel}: ${_historyVisibilityTitle(l10n, _historyVisibility)}',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const Icon(Icons.expand_more_rounded, size: 18),
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -916,7 +979,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                         color: _parseColor(group.backgroundColor),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.3,
+                          ),
                         ),
                       ),
                     ),
@@ -992,11 +1057,15 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     member.role.toString().split('.').last.toUpperCase(),
                     style: const TextStyle(fontSize: 10),
                   ),
-                  backgroundColor:
-                      _getRoleColor(member.role, theme).withValues(alpha: 0.2),
+                  backgroundColor: _getRoleColor(
+                    member.role,
+                    theme,
+                  ).withValues(alpha: 0.2),
                   side: BorderSide(
-                    color:
-                        _getRoleColor(member.role, theme).withValues(alpha: 0.5),
+                    color: _getRoleColor(
+                      member.role,
+                      theme,
+                    ).withValues(alpha: 0.5),
                   ),
                 ),
                 if (member.userId.isNotEmpty)
@@ -1147,42 +1216,42 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
-                    children: [
-                      UserAvatar(
-                        avatarUrl: member.avatarUrl,
-                        name: member.displayName,
-                        radius: 16,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              member.displayName,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            if (member.userId.isNotEmpty)
-                              Text(
-                                member.userId,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.outline,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                          ],
+                      children: [
+                        UserAvatar(
+                          avatarUrl: member.avatarUrl,
+                          name: member.displayName,
+                          radius: 16,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                member.displayName,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (member.userId.isNotEmpty)
+                                Text(
+                                  member.userId,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.outline,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -1226,8 +1295,14 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 ),
               ),
               subtitle: Text(l10n.bannedLabel),
-              trailing: IconButton(
-                icon: Icon(Icons.close, color: theme.colorScheme.error),
+              trailing: ShadIconButton.ghost(
+                width: 34,
+                height: 34,
+                icon: Icon(
+                  Icons.close,
+                  color: theme.colorScheme.error,
+                  size: 18,
+                ),
                 onPressed: () async {
                   try {
                     await _groupService.unbanUser(widget.roomId, member.userId);
@@ -1236,7 +1311,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(l10n.userUnbanned)),
                     );
-                  } catch (e) {
+                  } on Object catch (e) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(l10n.genericError(e.toString()))),
@@ -1298,14 +1373,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.error,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
+                    child: ShadButton(
                       onPressed: _showDeleteConfirmation,
-                      icon: const Icon(Icons.delete_forever),
-                      label: Text(
+                      leading: const Icon(Icons.delete_forever, size: 18),
+                      child: Text(
                         l10n.deleteGroupLabel,
                         style: TextStyle(
                           color: theme.colorScheme.onError,
@@ -1328,54 +1399,54 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(l10n.changeRoleTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            RadioListTile<GroupRole>(
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: member.role == GroupRole.admin
+                  ? const Icon(Icons.radio_button_checked_rounded)
+                  : const Icon(Icons.radio_button_off_rounded),
               title: Text(l10n.adminRole),
-              value: GroupRole.admin,
-              groupValue: member.role,
-              onChanged: (role) async {
-                Navigator.pop(context);
-                if (role != null) {
-                  try {
-                    await _groupService.setUserRole(
-                      widget.roomId,
-                      member.userId,
-                      role,
-                    );
-                    await _loadGroupData();
-                  } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.genericError(e.toString()))),
-                    );
-                  }
+              onTap: () async {
+                Navigator.pop(dialogContext);
+                try {
+                  await _groupService.setUserRole(
+                    widget.roomId,
+                    member.userId,
+                    GroupRole.admin,
+                  );
+                  await _loadGroupData();
+                } on Object catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l10n.genericError(e.toString()))),
+                  );
                 }
               },
             ),
-            RadioListTile<GroupRole>(
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: member.role == GroupRole.member
+                  ? const Icon(Icons.radio_button_checked_rounded)
+                  : const Icon(Icons.radio_button_off_rounded),
               title: Text(l10n.memberRole),
-              value: GroupRole.member,
-              groupValue: member.role,
-              onChanged: (role) async {
-                Navigator.pop(context);
-                if (role != null) {
-                  try {
-                    await _groupService.setUserRole(
-                      widget.roomId,
-                      member.userId,
-                      role,
-                    );
-                    await _loadGroupData();
-                  } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.genericError(e.toString()))),
-                    );
-                  }
+              onTap: () async {
+                Navigator.pop(dialogContext);
+                try {
+                  await _groupService.setUserRole(
+                    widget.roomId,
+                    member.userId,
+                    GroupRole.member,
+                  );
+                  await _loadGroupData();
+                } on Object catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l10n.genericError(e.toString()))),
+                  );
                 }
               },
             ),
@@ -1389,7 +1460,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(l10n.freezeUserTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1400,9 +1471,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               MapEntry(l10n.sevenDays, const Duration(days: 7)),
             ])
               ListTile(
+                contentPadding: EdgeInsets.zero,
                 title: Text(entry.key),
                 onTap: () async {
-                  Navigator.pop(context);
+                  Navigator.pop(dialogContext);
                   try {
                     await _groupService.freezeUser(
                       widget.roomId,
@@ -1410,7 +1482,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       duration: entry.value,
                     );
                     await _loadGroupData();
-                  } catch (e) {
+                  } on Object catch (e) {
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(l10n.genericError(e.toString()))),
@@ -1433,7 +1505,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.userBanned)),
       );
-    } catch (e) {
+    } on Object catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.genericError(e.toString()))),
@@ -1445,42 +1517,42 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(l10n.confirmDeleteTitle),
         content: Text(l10n.confirmDeleteContent),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(l10n.cancel),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               try {
                 await _groupService.deleteGroup(widget.roomId);
                 if (!mounted) return;
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.groupDeleted)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.groupDeleted)));
               } on AegisFeatureInDevelopmentException {
                 if (!mounted) return;
                 await showFeatureInDevelopmentDialog(
                   context,
                   feature: l10n.delete,
                 );
-              } catch (e) {
+              } on Object catch (e) {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(l10n.genericError(e.toString()))),
                 );
               }
             },
-            child: Text(
-              l10n.delete,
-              style: TextStyle(color: Theme.of(context).colorScheme.onError),
-            ),
+            child: Text(l10n.delete),
           ),
         ],
       ),

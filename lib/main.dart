@@ -25,27 +25,29 @@ Future<void> main() async {
   _setupErrorHandlers();
   ErrorWidget.builder = _buildErrorWidget;
 
-  runApp(
-    const ProviderScope(
-      child: AppBootstrapper(),
-    ),
-  );
+  runApp(const ProviderScope(child: AppBootstrapper()));
 }
 
 Widget _buildShadShell({
   required ThemeMode themeMode,
   required WidgetBuilder appBuilder,
+  ShadThemeData? theme,
+  ShadThemeData? darkTheme,
 }) {
   return ShadApp.custom(
     themeMode: themeMode,
-    theme: ShadThemeData(
-      brightness: Brightness.light,
-      colorScheme: const ShadSlateColorScheme.light(),
-    ),
-    darkTheme: ShadThemeData(
-      brightness: Brightness.dark,
-      colorScheme: const ShadSlateColorScheme.dark(),
-    ),
+    theme:
+        theme ??
+        ShadThemeData(
+          brightness: Brightness.light,
+          colorScheme: const ShadSlateColorScheme.light(),
+        ),
+    darkTheme:
+        darkTheme ??
+        ShadThemeData(
+          brightness: Brightness.dark,
+          colorScheme: const ShadSlateColorScheme.dark(),
+        ),
     appBuilder: appBuilder,
   );
 }
@@ -71,11 +73,10 @@ class AppBootstrapperState extends State<AppBootstrapper> {
     WidgetsBinding.instance.addObserver(_lifecycleObserver);
     BackgroundEffectsPerformanceService.start();
     SettingsService.applyDeferredSettingsDefaults();
-    _startInit();
+    unawaited(_startInit());
   }
 
   final WidgetsBindingObserver _lifecycleObserver = _AppLifecycleObserver();
-
 
   Future<void> _startInit() async {
     final result = await InitializationService.initialize(
@@ -83,7 +84,8 @@ class AppBootstrapperState extends State<AppBootstrapper> {
         final now = DateTime.now();
         final canUpdateByTime =
             now.difference(_lastProgressUiUpdate) >= _progressUiThrottle;
-        final shouldForceUpdate = progress >= 1.0 ||
+        final shouldForceUpdate =
+            progress >= 1.0 ||
             (_currentStep != stepName && progress > _progress);
         if (!canUpdateByTime && !shouldForceUpdate) {
           return;
@@ -122,10 +124,7 @@ class AppBootstrapperState extends State<AppBootstrapper> {
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) =>
               ShadAppBuilder(child: child ?? const SizedBox()),
-          home: SplashScreen(
-            currentStep: _currentStep,
-            progress: _progress,
-          ),
+          home: const SplashScreen(),
         ),
       );
     }
@@ -134,7 +133,7 @@ class AppBootstrapperState extends State<AppBootstrapper> {
 }
 
 void _setupErrorHandlers() {
-  FlutterError.onError = (FlutterErrorDetails details) {
+  FlutterError.onError = (details) {
     FlutterError.presentError(details);
     SentryService.captureException(
       details.exception,
@@ -202,10 +201,7 @@ Widget _buildErrorWidget(FlutterErrorDetails details) {
 }
 
 class TwoSpaceApp extends ConsumerWidget {
-  const TwoSpaceApp({
-    required this.initializationResult,
-    super.key,
-  });
+  const TwoSpaceApp({required this.initializationResult, super.key});
   final InitializationResult initializationResult;
 
   @override
@@ -317,12 +313,22 @@ class _ThemeBuilder extends StatelessWidget {
         final themeMode = SettingsService.themeModeNotifier.value;
         final textScale = SettingsService.textScaleNotifier.value;
 
-        final lightTheme = AppThemeBuilder.build(
+        final lightTheme = AppThemeBuilder.buildMaterial(
           settings,
           paleVioletEnabled,
           brightnessOverride: Brightness.light,
         );
-        final darkTheme = AppThemeBuilder.build(
+        final darkTheme = AppThemeBuilder.buildMaterial(
+          settings,
+          paleVioletEnabled,
+          brightnessOverride: Brightness.dark,
+        );
+        final lightShadTheme = AppThemeBuilder.buildShadcn(
+          settings,
+          paleVioletEnabled,
+          brightnessOverride: Brightness.light,
+        );
+        final darkShadTheme = AppThemeBuilder.buildShadcn(
           settings,
           paleVioletEnabled,
           brightnessOverride: Brightness.dark,
@@ -330,6 +336,8 @@ class _ThemeBuilder extends StatelessWidget {
 
         final app = _buildShadShell(
           themeMode: themeMode,
+          theme: lightShadTheme,
+          darkTheme: darkShadTheme,
           appBuilder: (_) => MaterialApp.router(
             title: 'TwoSpace',
             onGenerateTitle: (context) =>
@@ -350,9 +358,7 @@ class _ThemeBuilder extends StatelessWidget {
                   data: mediaQuery.copyWith(
                     textScaler: TextScaler.linear(textScale),
                   ),
-                  child: AuthListener(
-                    child: child ?? const SizedBox(),
-                  ),
+                  child: AuthListener(child: child ?? const SizedBox()),
                 ),
               );
             },

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/update_service.dart';
@@ -128,23 +129,47 @@ class _UpdateScreenState extends State<UpdateScreen> {
         final horizontalInset = (width * 0.08).clamp(12.0, 28.0);
         final openSettings = await showDialog<bool>(
           context: context,
-          builder: (dialogContext) => AlertDialog(
+          builder: (dialogContext) => Dialog(
+            backgroundColor: Colors.transparent,
             insetPadding: EdgeInsets.symmetric(
               horizontal: horizontalInset,
               vertical: 24,
             ),
-            title: Text(l10n.installPermissionTitle),
-            content: Text(l10n.installPermissionContent),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: Text(l10n.cancel),
+            child: GlassCard(
+              borderRadius: 24,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.installPermissionTitle,
+                    style: Theme.of(dialogContext).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(l10n.installPermissionContent),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ShadButton.outline(
+                          onPressed: () => Navigator.of(dialogContext).pop(false),
+                          child: Text(l10n.cancel),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ShadButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(true),
+                          child: Text(l10n.openSettingsButton),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(l10n.openSettingsButton),
-              ),
-            ],
+            ),
           ),
         );
         if (openSettings ?? false) {
@@ -464,7 +489,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                   children: [
                     Row(
                       children: [
-                        IconButton(
+                        ShadIconButton.ghost(
                           onPressed: widget.info.forceUpdate
                               ? null
                               : () => Navigator.of(context).maybePop(),
@@ -693,7 +718,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton(
+                          child: ShadButton.outline(
                             onPressed: widget.info.forceUpdate ||
                                     _downloading ||
                                     _verifying ||
@@ -710,7 +735,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           flex: 2,
-                          child: FilledButton(
+                          child: ShadButton(
                             onPressed:
                                 _downloading || _verifying || _installing
                                     ? null

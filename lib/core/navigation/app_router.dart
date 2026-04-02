@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
-import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/navigation/app_route_observer.dart';
 import 'package:two_space_app/core/navigation/app_transitions.dart';
 import 'package:two_space_app/core/navigation/title_observer.dart';
@@ -49,7 +48,7 @@ NoTransitionPage<void> _buildStaticPage(GoRouterState state, Widget child) {
 final routerProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = _RouterRefreshNotifier();
   ref.onDispose(refreshNotifier.dispose);
-  ref.listen(authProvider, (_, __) => refreshNotifier.refresh());
+  ref.listen(authProvider, (_, _) => refreshNotifier.refresh());
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -58,7 +57,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authState = ref.read(authProvider);
-      final isAuthRoute = state.matchedLocation == AppStrings.routeLogin ||
+      final isAuthRoute =
+          state.matchedLocation == AppStrings.routeLogin ||
           state.matchedLocation == AppStrings.routeRegister ||
           state.matchedLocation == AppStrings.routeForgot;
       final isSplashRoute = state.matchedLocation == AppStrings.routeSplash;
@@ -79,7 +79,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return null;
         },
         loading: () => null,
-        error: (_, __) {
+        error: (_, _) {
           if (FeatureFlags.ignoreServerOffline.value && !isSplashRoute) {
             return null;
           }
@@ -121,33 +121,32 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppStrings.routeCustomization,
         pageBuilder: (context, state) =>
-          _buildStaticPage(state, const CustomizationScreen()),
+            _buildStaticPage(state, const CustomizationScreen()),
       ),
       GoRoute(
         path: AppStrings.routePrivacy,
         pageBuilder: (context, state) =>
-          _buildStaticPage(state, const PrivacyScreen()),
+            _buildStaticPage(state, const PrivacyScreen()),
       ),
       GoRoute(
         path: AppStrings.routeAccountSettings,
         pageBuilder: (context, state) =>
-          _buildStaticPage(state, const AccountSettingsScreen()),
+            _buildStaticPage(state, const AccountSettingsScreen()),
       ),
       GoRoute(
         path: AppStrings.routeFeedback,
         pageBuilder: (context, state) =>
-          _buildStaticPage(state, const FeedbackScreen()),
+            _buildStaticPage(state, const FeedbackScreen()),
       ),
       GoRoute(
         path: AppStrings.routeSettingsSearch,
         pageBuilder: (context, state) =>
-          _buildStaticPage(state, const SettingsSearchScreen()),
+            _buildStaticPage(state, const SettingsSearchScreen()),
       ),
       GoRoute(
         path: AppStrings.routeProfile,
         pageBuilder: (context, state) {
-          final id = state.extra as String? ?? '';
-          return _buildPage(state, ProfileScreen(userId: id));
+          return _buildPage(state, const ProfileScreen());
         },
       ),
       GoRoute(
@@ -173,24 +172,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppStrings.routeNotifications,
         pageBuilder: (context, state) =>
-          _buildStaticPage(state, const NotificationsScreen()),
+            _buildStaticPage(state, const NotificationsScreen()),
       ),
       GoRoute(
         path: AppStrings.routeStorage,
         pageBuilder: (context, state) =>
-          _buildStaticPage(state, const StorageScreen()),
+            _buildStaticPage(state, const StorageScreen()),
       ),
       GoRoute(
-        path: AppStrings.routeChat,
+        path: '${AppStrings.routeChat}/:chatId',
         pageBuilder: (context, state) {
-          final chat = state.extra as Chat?;
-          if (chat == null) {
-            return _buildPage(
-              state,
-              const Scaffold(body: Center(child: Text('Chat not found'))),
-            );
-          }
-          return _buildPage(state, ChatScreen(chat: chat));
+          final chatId = state.pathParameters['chatId'] ?? '';
+          return _buildPage(state, ChatScreen(chatId: chatId));
         },
       ),
     ],
@@ -244,13 +237,6 @@ class _WelcomeRouteLoaderState extends State<_WelcomeRouteLoader> {
     if (info == null) {
       return const SplashScreen();
     }
-    return WelcomeScreen(
-      name: (info['displayName'] as String?) ??
-          (info['username'] as String?) ??
-          '',
-      username: info['username'] as String?,
-      avatarUrl: info['avatarUrl'] as String?,
-      description: info['bio'] as String?,
-    );
+    return const WelcomeScreen();
   }
 }

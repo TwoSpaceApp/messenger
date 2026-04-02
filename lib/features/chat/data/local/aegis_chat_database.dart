@@ -114,8 +114,10 @@ class AegisPeopleEntries extends Table {
   TextColumn get displayName => text()();
   TextColumn get username => text().nullable()();
   TextColumn get remoteUserId => text().nullable()();
-  BoolColumn get isTwoSpaceUser => boolean().withDefault(const Constant(false))();
-  BoolColumn get isDeviceContact => boolean().withDefault(const Constant(false))();
+  BoolColumn get isTwoSpaceUser =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get isDeviceContact =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
   BoolColumn get isOnline => boolean().withDefault(const Constant(false))();
   TextColumn get presenceStatus => text().nullable()();
@@ -157,7 +159,12 @@ class AegisPeopleCallHistory extends Table {
   ],
 )
 class AegisChatDatabase extends _$AegisChatDatabase {
-  AegisChatDatabase() : super(_openConnection());
+  factory AegisChatDatabase() => _shared;
+  AegisChatDatabase._internal() : super(_openConnection());
+
+  static final AegisChatDatabase _shared = AegisChatDatabase._internal();
+
+  static AegisChatDatabase get instance => _shared;
 
   AegisChatDatabase.forExecutor(super.executor);
 
@@ -166,40 +173,40 @@ class AegisChatDatabase extends _$AegisChatDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (migrator) async {
-          await migrator.createAll();
-          await _createIndexes();
-        },
-        onUpgrade: (migrator, from, to) async {
-          if (from < 1) {
-            await migrator.createAll();
-          }
-          if (from < 2) {
-            await migrator.createTable(aegisOfflineQueue);
-          }
-          if (from < 3) {
-            await migrator.createTable(aegisPeopleFavorites);
-            await migrator.createTable(aegisPeopleEntries);
-            await migrator.createTable(aegisPeopleCallHistory);
-          }
-          if (from < 4) {
-            await migrator.addColumn(aegisMessages, aegisMessages.isDelivered);
-            await migrator.addColumn(aegisMessages, aegisMessages.isRead);
-            await migrator.addColumn(
-              aegisMessages,
-              aegisMessages.deliveredAtEpochMs,
-            );
-            await migrator.addColumn(aegisMessages, aegisMessages.readAtEpochMs);
-          }
-          if (from < 5) {
-            await migrator.addColumn(
-              aegisMessages,
-              aegisMessages.replyToMessageId,
-            );
-          }
-          await _createIndexes();
-        },
-      );
+    onCreate: (migrator) async {
+      await migrator.createAll();
+      await _createIndexes();
+    },
+    onUpgrade: (migrator, from, to) async {
+      if (from < 1) {
+        await migrator.createAll();
+      }
+      if (from < 2) {
+        await migrator.createTable(aegisOfflineQueue);
+      }
+      if (from < 3) {
+        await migrator.createTable(aegisPeopleFavorites);
+        await migrator.createTable(aegisPeopleEntries);
+        await migrator.createTable(aegisPeopleCallHistory);
+      }
+      if (from < 4) {
+        await migrator.addColumn(aegisMessages, aegisMessages.isDelivered);
+        await migrator.addColumn(aegisMessages, aegisMessages.isRead);
+        await migrator.addColumn(
+          aegisMessages,
+          aegisMessages.deliveredAtEpochMs,
+        );
+        await migrator.addColumn(aegisMessages, aegisMessages.readAtEpochMs);
+      }
+      if (from < 5) {
+        await migrator.addColumn(
+          aegisMessages,
+          aegisMessages.replyToMessageId,
+        );
+      }
+      await _createIndexes();
+    },
+  );
 
   Future<void> _createIndexes() async {
     await customStatement(

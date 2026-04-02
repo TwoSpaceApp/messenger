@@ -15,7 +15,7 @@
 
 > Примечание: проект использует `envied`. Рабочие значения берутся из локального `.env`, а [.env.example](.env.example) служит только шаблоном без секретов.
 
-> Для Aegis не нужно добавлять старые signed-handshake переменные. Актуальная схема для клиента опирается на адрес/порт/transport masking key, а `api_id` и `api_hash` передаются самим клиентом в handshake.
+> Для Aegis не нужно добавлять старые signed-handshake переменные. Обычно клиенту достаточно адреса и порта, а `api_id` и `api_hash` передаются самим клиентом в handshake. `AEGIS_TRANSPORT_MASKING_KEY` указывайте только если сервер явно включает `Server:EnableTransportMasking`.
 
 ### Установка
 

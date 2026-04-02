@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/features/auth/data/services/biometric_auth_service.dart';
+import 'package:two_space_app/features/auth/presentation/widgets/auth_surface.dart';
 
 class BiometricSetupScreen extends StatefulWidget {
   const BiometricSetupScreen({super.key});
@@ -18,99 +20,81 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.biometricSetupTitle),
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.authMethodsLabel,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
+      body: AuthSurface(
+        icon: Icons.security_rounded,
+        title: l10n.biometricSetupTitle,
+        subtitle: l10n.authMethodsLabel,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FutureBuilder<bool>(
+              future: biometricService.canAuthenticate(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || !snapshot.data!) {
+                  return const SizedBox.shrink();
+                }
 
-              // Biometric option
-              FutureBuilder<bool>(
-                future: biometricService.canAuthenticate(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData || !snapshot.data!) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.fingerprint),
-                      title: Text(l10n.biometricAuthLabel),
-                      subtitle: Text(l10n.biometricAuthSubtitle),
-                      trailing: Switch(
-                        value: true,
-                        onChanged: (value) async {
-                          if (value) {
-                            final authenticated =
-                                await biometricService.authenticate();
-                            if (authenticated) {
-                              await biometricService.setBiometricEnabled(true);
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.biometricEnabledLabel),
-                                  ),
-                                );
-                              }
+                return ShadCard(
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.fingerprint),
+                    title: Text(l10n.biometricAuthLabel),
+                    subtitle: Text(l10n.biometricAuthSubtitle),
+                    trailing: ShadSwitch(
+                      value: true,
+                      onChanged: (value) async {
+                        if (value) {
+                          final authenticated = await biometricService
+                              .authenticate();
+                          if (authenticated) {
+                            await biometricService.setBiometricEnabled(true);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.biometricEnabledLabel),
+                                ),
+                              );
                             }
                           }
-                        },
-                      ),
+                        }
+                      },
                     ),
-                  );
-                },
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            ShadCard(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.pin_outlined),
+                title: Text(l10n.pinCodeLabel),
+                subtitle: Text(l10n.pinCodeSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => _showPinDialog(context, biometricService),
               ),
-              const SizedBox(height: 16),
-
-              // PIN code option
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.lock),
-                  title: Text(l10n.pinCodeLabel),
-                  subtitle: Text(l10n.pinCodeSubtitle),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    _showPinDialog(context, biometricService);
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Info section
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.aboutSecurityLabel,
-                      style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 12),
+            ShadCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.aboutSecurityLabel,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.aboutSecurityContent,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.aboutSecurityContent,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -134,39 +118,31 @@ class PinInputDialog extends StatefulWidget {
 
 class _PinInputDialogState extends State<PinInputDialog> {
   final _pinController = TextEditingController();
-  String? _errorText;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
       title: Text(l10n.setPinCode),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _pinController,
-            keyboardType: TextInputType.number,
-            obscureText: true,
-            maxLength: 6,
-            decoration: InputDecoration(
-              labelText: l10n.pinHint,
-              errorText: _errorText,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-        ],
+      content: ShadInput(
+        controller: _pinController,
+        keyboardType: TextInputType.number,
+        obscureText: true,
+        placeholder: Text(l10n.pinHint),
+        leading: const Icon(Icons.lock_outline_rounded, size: 18),
       ),
       actions: [
-        TextButton(
+        ShadButton.outline(
           onPressed: () => Navigator.pop(context),
           child: Text(l10n.cancel),
         ),
-        ElevatedButton(
+        ShadButton(
           onPressed: () async {
             final pin = _pinController.text.trim();
             if (pin.length < 4 || pin.length > 6) {
-              setState(() => _errorText = l10n.pinLengthError);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.pinLengthError)),
+              );
               return;
             }
 
@@ -175,7 +151,8 @@ class _PinInputDialogState extends State<PinInputDialog> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                    content: Text(AppLocalizations.of(context)!.pinSetSuccess)),
+                  content: Text(AppLocalizations.of(context)!.pinSetSuccess),
+                ),
               );
             }
           },

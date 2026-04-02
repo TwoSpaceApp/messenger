@@ -18,7 +18,7 @@ import 'package:two_space_app/core/config/environment.dart';
 /// // Capture an exception
 /// try {
 ///   // ... some operation that might fail
-/// } catch (e, stackTrace) {
+/// } on Object catch (e, stackTrace) {
 ///   SentryService.captureException(e, stackTrace: stackTrace);
 /// }
 ///
@@ -56,7 +56,7 @@ class SentryService {
       if (kDebugMode) {
         print('Sentry initialized successfully.');
       }
-    } catch (e, stackTrace) {
+    } on Object catch (e, stackTrace) {
       if (kDebugMode) {
         print('Failed to initialize Sentry: $e\n$stackTrace');
       }
@@ -120,7 +120,7 @@ class SentryService {
         stackTrace: stackTrace,
         hint: hint,
       );
-    } catch (e) {
+    } on Object catch (e) {
       if (kDebugMode) {
         print('Failed to capture exception in Sentry: $e');
       }
@@ -152,7 +152,7 @@ class SentryService {
       if (kDebugMode) {
         print('Sentry message captured: $message');
       }
-    } catch (e) {
+    } on Object catch (e) {
       if (kDebugMode) {
         print('Failed to capture message in Sentry: $e');
       }

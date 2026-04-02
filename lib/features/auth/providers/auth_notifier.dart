@@ -1,49 +1,47 @@
 import 'dart:typed_data';
 
-import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 import 'package:two_space_app/features/settings/presentation/screens/dev_menu_screen.dart';
 
-part 'auth_notifier.freezed.dart';
-part 'auth_notifier.g.dart';
+enum AuthStatus { authenticated, unauthenticated, error }
 
-@freezed
-class AuthState with _$AuthState {
-  const AuthState._();
+class AuthState {
+  const AuthState._({
+    required this.status,
+    this.userId,
+    this.token,
+    this.message,
+  });
 
-  const factory AuthState.authenticated({
+  const AuthState.authenticated({
     required String userId,
     required String token,
-  }) = _Authenticated;
+  }) : this._(
+         status: AuthStatus.authenticated,
+         userId: userId,
+         token: token,
+       );
 
-  const factory AuthState.unauthenticated() = _Unauthenticated;
+  const AuthState.unauthenticated()
+    : this._(status: AuthStatus.unauthenticated);
 
-  const factory AuthState.error({required String message}) = _Error;
+  const AuthState.error({required String message})
+    : this._(status: AuthStatus.error, message: message);
 
-  bool get isAuthenticated => maybeMap(
-        authenticated: (_) => true,
-        orElse: () => false,
-      );
+  final AuthStatus status;
+  final String? userId;
+  final String? token;
+  final String? message;
 
-  String? get userId => maybeMap(
-        authenticated: (s) => s.userId,
-        orElse: () => null,
-      );
-
-  String? get token => maybeMap(
-        authenticated: (s) => s.token,
-        orElse: () => null,
-      );
+  bool get isAuthenticated => status == AuthStatus.authenticated;
 }
 
-@Riverpod(keepAlive: true)
-AuthService authService(Ref ref) {
+final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
-}
+});
 
-@Riverpod(keepAlive: true)
-class AuthNotifier extends _$AuthNotifier {
+class AuthNotifier extends AsyncNotifier<AuthState> {
   AuthService? _authServiceInstance;
 
   AuthService get _authService {
@@ -71,7 +69,7 @@ class AuthNotifier extends _$AuthNotifier {
         }
       }
       return const AuthState.unauthenticated();
-    } catch (e) {
+    } on Object catch (e) {
       if (FeatureFlags.ignoreServerOffline.value) {
         final previousState = state.asData?.value;
         if (previousState?.isAuthenticated ?? false) {
@@ -115,7 +113,18 @@ class AuthNotifier extends _$AuthNotifier {
     try {
       await _authService.logout();
       state = const AsyncValue.data(AuthState.unauthenticated());
-    } catch (e) {
+    } on Object catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+    }
+  }
+
+  Future<void> resetPassword(String email) async {
+    // This is a mock implementation - replace with actual service call
+    try {
+      // In a real app, this would call:
+      // await _authService.requestPasswordReset(email);
+      print('Password reset requested for: $email');
+    } on Object catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
     }
   }
@@ -129,22 +138,22 @@ class AuthNotifier extends _$AuthNotifier {
     try {
       final currentState = await future;
       return currentState.isAuthenticated;
-    } catch (e) {
+    } on Object catch (_) {
       return false;
     }
   }
 }
 
-@riverpod
-Future<bool> isAuthenticated(Ref ref) async {
-  // Since we are using riverpod_generator, the provider is generated.
-  // We need to use `authProvider` manually here.
+final authProvider = AsyncNotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);
+
+final isAuthenticatedProvider = FutureProvider<bool>((ref) async {
   final authState = await ref.watch(authProvider.future);
   return authState.isAuthenticated;
-}
+});
 
-@riverpod
-Future<String?> currentUserId(Ref ref) async {
+final currentUserIdProvider = FutureProvider<String?>((ref) async {
   final authState = await ref.watch(authProvider.future);
   return authState.userId;
-}
+});

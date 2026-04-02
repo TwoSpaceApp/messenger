@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/features/auth/presentation/widgets/auth_surface.dart';
 // import 'dart:async';
 // import 'package:webview_flutter/webview_flutter.dart';
 // import 'package:two_space_app/core/config/environment.dart';
@@ -17,22 +19,42 @@ class SsoWebviewScreen extends StatefulWidget {
 class _SsoWebviewScreenState extends State<SsoWebviewScreen> {
   // WebViewController not available, using placeholder
 
+  void _close() {
+    if (!mounted) return;
+    Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text('SSO — ${widget.idpId}')),
-      body: Center(
+      body: AuthSurface(
+        icon: Icons.language_rounded,
+        title: l10n.ssoLoginVia(widget.idpId),
+        subtitle: l10n.ssoFeatureRequired,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.web, size: 64, color: Colors.grey),
+            const Center(child: CircularProgressIndicator()),
             const SizedBox(height: 16),
-            Text(l10n.ssoLoginVia(widget.idpId)),
-            const SizedBox(height: 24),
-            const CircularProgressIndicator(),
+            Center(
+              child: ShadBadge.secondary(
+                child: Text(widget.idpId.toUpperCase()),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.ssoFeatureRequired,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: 16),
-            Text(l10n.ssoFeatureRequired),
+            ShadButton.outline(
+              onPressed: _close,
+              width: double.infinity,
+              child: Text(l10n.cancel),
+            ),
           ],
         ),
       ),

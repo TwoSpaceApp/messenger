@@ -1,632 +1,231 @@
-import 'dart:async';
-
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:two_space_app/core/config/app_colors.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
-import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/core/utils/message_time_formatter.dart';
-import 'package:two_space_app/core/widgets/app_logo.dart';
-import 'package:two_space_app/core/widgets/app_state_views.dart';
-import 'package:two_space_app/core/widgets/glass_card.dart';
-import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/core/widgets/unread_badge.dart';
-import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
-import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
-import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
-import 'package:two_space_app/features/chat/presentation/widgets/start_chat_bottom_sheet.dart';
-import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
-import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
-import 'package:two_space_app/features/settings/presentation/screens/settings_screen.dart';
+import 'package:two_space_app/features/chat/providers/chat_provider.dart';
 
-class HomeScreen extends ConsumerStatefulWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final AegisChatService _chat = AegisChatService();
-  List<Map<String, dynamic>> _rooms = [];
-  bool _loading = true;
-  String? _errorMessage;
-  StreamSubscription<List<Chat>>? _roomsSub;
-  Future<void>? _roomRefreshInFlight;
-
-  final String _searchQuery = '';
-
-  List<Map<String, dynamic>> get _filteredRooms {
-    if (_searchQuery.isEmpty) return _rooms;
-    return _rooms.where((r) {
-      final name = (r['name'] as String?)?.toLowerCase() ?? '';
-      return name.contains(_searchQuery.toLowerCase());
-    }).toList();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _subscribeToRooms();
-    unawaited(_loadUserAndRooms());
-  }
-
-  @override
-  void dispose() {
-    _roomsSub?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _loadUserAndRooms() async {
-    final inFlight = _roomRefreshInFlight;
-    if (inFlight != null) {
-      await inFlight;
-      return;
-    }
-
-    final future = _refreshRoomIndex();
-    _roomRefreshInFlight = future;
-    try {
-      await future;
-    } finally {
-      if (identical(_roomRefreshInFlight, future)) {
-        _roomRefreshInFlight = null;
-      }
-    }
-  }
-
-  Future<void> _refreshRoomIndex() async {
-    if (!mounted) return;
-    if (_rooms.isEmpty) {
-      setState(() {
-        _loading = true;
-        _errorMessage = null;
-      });
-    } else {
-      setState(() => _errorMessage = null);
-    }
-
-    try {
-      await _chat.refreshChatIndex(
-        preloadRooms: 0,
-        messageLimit: 0,
-      );
-    } catch (e) {
-      if (mounted) {
-        setState(() => _errorMessage = e.toString());
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  void _subscribeToRooms() {
-    _roomsSub?.cancel();
-    _roomsSub = _chat.watchChats().listen(
-      (chats) {
-        final nextRooms = chats.map(_roomFromChat).toList(growable: false);
-        if (!mounted) return;
-        if (_roomListsEqual(_rooms, nextRooms) && !_loading && _errorMessage == null) {
-          return;
-        }
-        setState(() {
-          _rooms = nextRooms;
-          _loading = false;
-          _errorMessage = null;
-        });
-      },
-      onError: (Object error) {
-        if (!mounted) return;
-        setState(() {
-          _errorMessage = error.toString();
-          _loading = false;
-        });
-      },
-    );
-  }
-
-  Map<String, dynamic> _roomFromChat(Chat chat) {
-    return {
-      'id': chat.id,
-      'name': chat.name.isNotEmpty ? chat.name : chat.id,
-      'avatar': chat.avatarUrl,
-      'lastMessage': chat.lastMessage,
-      'time': chat.lastMessageTime,
-      'unreadCount': chat.unreadCount,
-      'roomType': chat.roomType,
-      'isOnline': chat.isOnline,
-      'presenceStatus': chat.presenceStatus,
-      'lastSeenAt': chat.lastSeenAt,
-    };
-  }
-
-  bool _roomListsEqual(
-    List<Map<String, dynamic>> left,
-    List<Map<String, dynamic>> right,
-  ) {
-    if (identical(left, right)) return true;
-    if (left.length != right.length) return false;
-    for (var index = 0; index < left.length; index++) {
-      final leftItem = left[index];
-      final rightItem = right[index];
-      if (leftItem['id'] != rightItem['id'] ||
-          leftItem['name'] != rightItem['name'] ||
-          leftItem['avatar'] != rightItem['avatar'] ||
-          leftItem['lastMessage'] != rightItem['lastMessage'] ||
-          leftItem['time'] != rightItem['time'] ||
-          leftItem['unreadCount'] != rightItem['unreadCount'] ||
-          leftItem['roomType'] != rightItem['roomType'] ||
-          leftItem['isOnline'] != rightItem['isOnline'] ||
-          leftItem['presenceStatus'] != rightItem['presenceStatus'] ||
-          leftItem['lastSeenAt'] != rightItem['lastSeenAt']) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  String? _presenceLabel(Map<String, dynamic> room) {
-    final l10n = AppLocalizations.of(context)!;
-    final roomType = room['roomType'] as String?;
-    if (roomType != 'direct') return null;
-
-    final presenceStatus = room['presenceStatus'] as String?;
-    final lastSeenAt = room['lastSeenAt'] as DateTime?;
-
-    switch (presenceStatus) {
-      case 'online':
-        return l10n.onlineLabel;
-      case 'recently':
-        return l10n.statusLastSeenRecently;
-      case 'long_ago':
-        return l10n.offlineLabel;
-      case 'was_online':
-      case 'offline':
-        if (lastSeenAt != null) {
-          return MessageTimeFormatter.formatConversationTime(lastSeenAt);
-        }
-        return l10n.offlineLabel;
-      default:
-        if (room['isOnline'] == true) return l10n.onlineLabel;
-        return null;
-    }
-  }
-
-  Color _presenceColor(Map<String, dynamic> room) {
-    final presenceStatus = room['presenceStatus'] as String?;
-    if (presenceStatus == 'online' || room['isOnline'] == true) {
-      return AppColors.onlineStatus(context);
-    }
-    if (presenceStatus == 'recently') {
-      return AppColors.recentlyStatus(context);
-    }
-    return AppColors.offlineStatus(context);
-  }
-
-  bool _showPresenceBadge(Map<String, dynamic> room) {
-    final presenceStatus = room['presenceStatus'] as String?;
-    return room['isOnline'] == true ||
-        presenceStatus == 'online' ||
-        presenceStatus == 'recently';
-  }
-
-  String _roomSubtitle(Map<String, dynamic> room) {
-    final l10n = AppLocalizations.of(context)!;
-    final lastMessage = ((room['lastMessage'] as String?)?.isNotEmpty ?? false)
-        ? room['lastMessage'] as String
-        : l10n.noMessages;
-    final presence = _presenceLabel(room);
-    if (presence == null || presence.isEmpty) {
-      return lastMessage;
-    }
-    return '$presence • $lastMessage';
-  }
-
-  String _formatRoomTime(DateTime? time) {
-    return MessageTimeFormatter.formatConversationTime(time);
-  }
-
-  void _openSearch() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SearchContactsScreen()),
-    );
-  }
-
-  void _openSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SettingsScreen()),
-    );
-  }
-
-  void _openCreateGroup() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CreateChatScreen(
-          initialMode: CreateChatMode.group,
-        ),
-      ),
-    ).then((result) {
-      if (result != null) {
-        unawaited(_chat.refreshChatsQuietly());
-      }
-    });
-  }
-
-  void _openJoinByCode() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CreateChatScreen(
-          initialMode: CreateChatMode.join,
-        ),
-      ),
-    ).then((result) {
-      if (result != null) {
-        unawaited(_chat.refreshChatsQuietly());
-      }
-    });
-  }
-
-  Future<void> _showStartChatSheet() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => StartChatBottomSheet(
-        onCreateGroup: _openCreateGroup,
-        onInviteUser: _openSearch,
-        onJoinByAddress: _openJoinByCode,
-      ),
-    );
-  }
-
-  Widget _buildHeroHeader(ThemeData theme, AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        child: Row(
-          children: [
-            const AppLogo(large: false),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                l10n.chatsTitle,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.search,
-                color: theme.colorScheme.onSurface,
-              ),
-              onPressed: _openSearch,
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.settings_outlined,
-                color: theme.colorScheme.onSurface,
-              ),
-              onPressed: _openSettings,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final chatsAsync = ref.watch(joinedChatsProvider);
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
-      body: ScreenBackground(
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final maxWidth = constraints.maxWidth >= UITokens.desktopBreakpoint
-                  ? 920.0
-                  : double.infinity;
-              return Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxWidth),
-                  child: Column(
-                    children: [
-                      _buildHeroHeader(theme, l10n),
-                      Expanded(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 260),
-                          child: _loading
-                              ? _buildShimmerLoading()
-                              : RefreshIndicator.adaptive(
-                                  onRefresh: _loadUserAndRooms,
-                                  child: _buildChatList(),
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
+      appBar: AppBar(
+        title: const Text('Messages'),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => context.push('/search-chats'),
           ),
-        ),
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            onPressed: () => context.push('/create-chat'),
+          ),
+        ],
       ),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).padding.bottom + 88,
-        ),
-        child: FloatingActionButton(
-          onPressed: _showStartChatSheet,
-          child: const Icon(Icons.add_comment_outlined),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShimmerLoading() {
-    final baseColor = AppColors.skeletonBase(context);
-    final highlightColor = AppColors.skeletonHighlight(context);
-    final bottomInset = MediaQuery.of(context).padding.bottom + 124;
-    return ListView.builder(
-      padding: EdgeInsets.fromLTRB(8, 8, 8, bottomInset),
-      itemCount: 6,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Shimmer.fromColors(
-            baseColor: baseColor,
-            highlightColor: highlightColor,
-            child: Container(
-              height: 72,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.all(12),
-              child: Row(
+      body: chatsAsync.when(
+        data: (chats) {
+          if (chats.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No conversations yet',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Start a new conversation to begin',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(width: 150, height: 16, color: Colors.white),
-                        const SizedBox(height: 8),
-                        Container(width: 100, height: 12, color: Colors.white),
-                      ],
-                    ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () => context.push('/create-chat'),
+                    icon: const Icon(Icons.add),
+                    label: const Text('New Chat'),
                   ),
                 ],
               ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+            );
+          }
 
-  Widget _buildChatList() {
-    final rooms = _filteredRooms;
-    if (_errorMessage != null) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
-        ),
-        padding: const EdgeInsets.all(12),
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.55,
-            child: Center(
-              child: AppErrorState(
-                title: AppLocalizations.of(context)!.errorGeneric,
-                message: _errorMessage!,
-                actionLabel: AppLocalizations.of(context)!.retry,
-                onAction: _loadUserAndRooms,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    if (rooms.isEmpty) {
-      final l10n = AppLocalizations.of(context)!;
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
-        ),
-        padding: const EdgeInsets.all(12),
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.5,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 220),
-                child: GlassCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.forum_outlined,
-                        size: 36,
-                        color: AppColors.iconMuted(context),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        l10n.noChats,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(
-        parent: BouncingScrollPhysics(),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        8,
-        8,
-        8,
-        MediaQuery.of(context).padding.bottom + 124,
-      ),
-      cacheExtent: 500,
-      itemCount: rooms.length,
-      itemBuilder: (c, i) {
-        final r = rooms[i];
-        final id = r['id'] as String;
-        final unreadCount = r['unreadCount'] as int? ?? 0;
-
-        final item = Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: GlassCard(
-            onTap: () => _openChat(id),
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Hero(
-                  tag: 'avatar_$id',
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      UserAvatar(
-                        avatarUrl: r['avatar'],
-                        name: r['name'],
-                      ),
-                      if ((r['roomType'] as String?) == 'direct' &&
-                          _showPresenceBadge(r))
-                        Positioned(
-                          right: -1,
-                          bottom: -1,
-                          child: Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: _presenceColor(r),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppColors.presenceRing(context),
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        r['name'],
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _roomSubtitle(r),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.subtitleText(context),
-                            ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      _formatRoomTime(r['time'] as DateTime?),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppColors.hintText(context),
-                          ),
-                    ),
-                    if (unreadCount > 0) ...[
-                      const SizedBox(height: 8),
-                      UnreadBadge(count: unreadCount),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-
-        return item;
-      },
-    );
-  }
-
-  void _openChat(String id) {
-    final room = _rooms.firstWhere(
-      (e) => e['id'] == id,
-      orElse: () => {'id': id, 'name': id},
-    );
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => ChatScreen(
-          chat: Chat(
-            id: id,
-            name: (room['name'] as String?) ?? id,
-            avatarUrl: room['avatar'] as String?,
-            roomType: room['roomType'] as String?,
-            members: const [],
-            isOnline: room['isOnline'] == true,
-            presenceStatus: room['presenceStatus'] as String?,
-            lastSeenAt: room['lastSeenAt'] as DateTime?,
-          ),
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SharedAxisTransition(
-            animation: animation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.horizontal,
-            child: child,
+          return ListView.builder(
+            itemCount: chats.length,
+            itemBuilder: (context, index) {
+              final chat = chats[index];
+              return _ChatListTile(chat: chat);
+            },
           );
         },
+        loading: () => const _ChatListShimmer(),
+        error: (error, stackTrace) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load chats',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () => ref.refresh(joinedChatsProvider),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+}
+
+class _ChatListTile extends StatelessWidget {
+  final Chat chat;
+
+  const _ChatListTile({required this.chat});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      leading: CircleAvatar(
+        radius: 28,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        child: Text(
+          chat.name.isNotEmpty ? chat.name[0].toUpperCase() : 'U',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+        ),
+      ),
+      title: Text(
+        chat.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      subtitle: Text(
+        chat.lastMessage,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            _formatTime(chat.lastMessageTime),
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+          if (chat.unreadCount > 0) ...[
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${chat.unreadCount}',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      onTap: () => context.push('/chat/${chat.id}'),
+    );
+  }
+
+  String _formatTime(DateTime? dateTime) {
+    if (dateTime == null) return '';
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inMinutes < 1) return 'Now';
+    if (difference.inHours < 1) return '${difference.inMinutes}m';
+    if (difference.inDays < 1) return '${difference.inHours}h';
+    if (difference.inDays < 7) return '${difference.inDays}d';
+
+    return '${dateTime.month}/${dateTime.day}';
+  }
+}
+
+class _ChatListShimmer extends StatelessWidget {
+  const _ChatListShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: 6,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: 200,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

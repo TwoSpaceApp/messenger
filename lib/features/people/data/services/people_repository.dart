@@ -11,6 +11,7 @@ import 'package:two_space_app/features/people/data/services/call_history_service
 import 'package:two_space_app/features/people/data/services/people_local_store.dart';
 
 enum PeopleSegment { all, twospace, phonebook, recent }
+
 enum DeviceContactsPermission { granted, denied, permanentlyDenied }
 
 class DeviceContactsResult {
@@ -61,9 +62,9 @@ class PeopleRepository {
     AegisChatService? chatService,
     PeopleLocalStore? localStore,
     CallHistoryService? callHistoryService,
-  })  : _chatService = chatService ?? AegisChatService(),
-        _localStore = localStore ?? PeopleLocalStore.instance,
-        _callHistoryService = callHistoryService ?? CallHistoryService.instance;
+  }) : _chatService = chatService ?? AegisChatService(),
+       _localStore = localStore ?? PeopleLocalStore.instance,
+       _callHistoryService = callHistoryService ?? CallHistoryService.instance;
 
   final AegisChatService _chatService;
   final PeopleLocalStore _localStore;
@@ -115,7 +116,9 @@ class PeopleRepository {
     final invitePeople = _sortPeople(
       _mergePeople(
         _applyFavoriteIds(
-          contactsResult.contacts.where((person) => person.isInvitable).toList(),
+          contactsResult.contacts
+              .where((person) => person.isInvitable)
+              .toList(),
           favorites,
         ),
       ),
@@ -206,8 +209,9 @@ class PeopleRepository {
           }
         }
       } catch (_) {
-        remoteMatches =
-            localMatches.where((person) => person.isTwoSpaceUser).toList();
+        remoteMatches = localMatches
+            .where((person) => person.isTwoSpaceUser)
+            .toList();
       }
     }
 
@@ -281,7 +285,9 @@ class PeopleRepository {
       return inFlight;
     }
 
-    final future = _loadDeviceContactsInternal(requestPermission: requestPermission);
+    final future = _loadDeviceContactsInternal(
+      requestPermission: requestPermission,
+    );
     _deviceContactsInFlight = future;
     try {
       return await future;
@@ -363,8 +369,12 @@ class PeopleRepository {
 
   Future<List<PersonEntry>> _fetchDeviceContacts() async {
     try {
-      final contacts = await FlutterContacts.getContacts(
-        withProperties: true,
+      final contacts = await FlutterContacts.getAll(
+        properties: const <ContactProperty>{
+          ContactProperty.phone,
+          ContactProperty.photoThumbnail,
+          ContactProperty.photoFullRes,
+        },
       );
       final cachedPeople = await _readCachedPeople();
       final cachedByPhone = <String, PersonEntry>{};
@@ -388,8 +398,8 @@ class PeopleRepository {
 
         return PersonEntry(
           id: _devicePersonId(contact, phones),
-            displayName: contact.displayName.isNotEmpty
-              ? contact.displayName
+          displayName: (contact.displayName?.trim().isNotEmpty ?? false)
+              ? contact.displayName!.trim()
               : 'Unknown',
           phones: phones,
           photoBytes: _photoBytes(contact),
@@ -402,8 +412,10 @@ class PeopleRepository {
           lastSeenAt: matchedRemote?.lastSeenAt,
           note: matchedRemote != null ? 'twospace' : null,
         );
-      }).toList()
-        ..sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+      }).toList()..sort(
+        (a, b) =>
+            a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()),
+      );
     } catch (_) {
       return <PersonEntry>[];
     }
@@ -424,8 +436,9 @@ class PeopleRepository {
       ..sort((a, b) {
         final countCompare = (counts[b.id] ?? 0).compareTo(counts[a.id] ?? 0);
         if (countCompare != 0) return countCompare;
-        return (b.lastInteractionAt ?? DateTime(1970))
-            .compareTo(a.lastInteractionAt ?? DateTime(1970));
+        return (b.lastInteractionAt ?? DateTime(1970)).compareTo(
+          a.lastInteractionAt ?? DateTime(1970),
+        );
       });
 
     return people.take(8).toList();
@@ -440,8 +453,8 @@ class PeopleRepository {
     final displayName = (rawName != null && rawName.trim().isNotEmpty)
         ? rawName.trim()
         : (nickname != null && nickname.isNotEmpty)
-            ? '@$nickname'
-            : data['email']?.toString() ?? 'User';
+        ? '@$nickname'
+        : data['email']?.toString() ?? 'User';
     final remoteId = (data[r'$id'] ?? data['id'])?.toString() ?? displayName;
     final phone = data['phone']?.toString() ?? prefs['phone']?.toString();
 
@@ -450,13 +463,16 @@ class PeopleRepository {
       displayName: displayName,
       username: nickname,
       avatarUrl: prefs['avatarUrl']?.toString() ?? data['avatar']?.toString(),
-      phones: phone == null || phone.isEmpty ? const <String>[] : <String>[phone],
+      phones: phone == null || phone.isEmpty
+          ? const <String>[]
+          : <String>[phone],
       remoteUserId: remoteId,
       isTwoSpaceUser: true,
-      isOnline: (data['presenceStatus'] ?? prefs['presenceStatus']) == 'online' ||
+      isOnline:
+          (data['presenceStatus'] ?? prefs['presenceStatus']) == 'online' ||
           prefs['online'] == true,
-      presenceStatus:
-          (data['presenceStatus'] ?? prefs['presenceStatus'])?.toString(),
+      presenceStatus: (data['presenceStatus'] ?? prefs['presenceStatus'])
+          ?.toString(),
       lastSeenAt: DateTime.tryParse(
         (data['lastSeenAt'] ??
                 data['lastSeen'] ??
@@ -474,7 +490,8 @@ class PeopleRepository {
   ) {
     return people
         .map(
-          (person) => person.copyWith(isFavorite: favorites.contains(person.id)),
+          (person) =>
+              person.copyWith(isFavorite: favorites.contains(person.id)),
         )
         .toList();
   }
@@ -504,8 +521,10 @@ class PeopleRepository {
         isOnline: current.isOnline || person.isOnline,
         presenceStatus: person.presenceStatus ?? current.presenceStatus,
         lastSeenAt: _latestDate(current.lastSeenAt, person.lastSeenAt),
-        lastInteractionAt:
-            _latestDate(current.lastInteractionAt, person.lastInteractionAt),
+        lastInteractionAt: _latestDate(
+          current.lastInteractionAt,
+          person.lastInteractionAt,
+        ),
         note: person.note ?? current.note,
       );
     }
@@ -524,7 +543,9 @@ class PeopleRepository {
         if (aTime != null || bTime != null) {
           return (bTime ?? DateTime(1970)).compareTo(aTime ?? DateTime(1970));
         }
-        return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
+        return a.displayName.toLowerCase().compareTo(
+          b.displayName.toLowerCase(),
+        );
       });
     return items;
   }
@@ -548,12 +569,14 @@ class PeopleRepository {
   String _devicePersonId(Contact contact, List<String> phones) {
     final signature = phones.isNotEmpty
         ? phones.map(_normalizePhone).join('_')
-        : contact.displayName.trim().toLowerCase().replaceAll(' ', '_');
+        : ((contact.displayName?.trim().isNotEmpty ?? false)
+              ? contact.displayName!.trim().toLowerCase().replaceAll(' ', '_')
+              : 'unknown');
     return 'device_$signature';
   }
 
   Uint8List? _photoBytes(Contact contact) {
-    final bytes = contact.photoOrThumbnail;
+    final bytes = contact.photo?.fullSize ?? contact.photo?.thumbnail;
     if (bytes == null || bytes.isEmpty) return null;
     return bytes;
   }

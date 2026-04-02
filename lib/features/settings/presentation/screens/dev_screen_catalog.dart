@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/services/update_service.dart';
 import 'package:two_space_app/features/auth/presentation/screens/biometric_setup_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/change_email_screen.dart';
@@ -101,13 +100,8 @@ abstract final class DevScreenCatalog {
       title: 'ChatScreen',
       source: 'chat/chat_screen.dart',
       group: 'Chat',
-      builder: (_) => ChatScreen(
-        chat: Chat(
-          id: '!debug-chat:twospace.dev',
-          name: 'Debug Chat',
-          members: const ['@debug:twospace.dev'],
-          lastMessage: 'Preview message',
-        ),
+      builder: (_) => const ChatScreen(
+        chatId: '!debug-chat:twospace.dev',
       ),
     ),
     DevScreenEntry(
@@ -191,7 +185,7 @@ abstract final class DevScreenCatalog {
       title: 'OtpScreen',
       source: 'auth/otp_screen.dart',
       group: 'Auth',
-      builder: (_) => const OtpScreen(phone: '+79990000000'),
+      builder: (_) => const OtpScreen(email: 'user@example.com'),
     ),
     DevScreenEntry(
       title: 'PrivacyScreen',
@@ -203,10 +197,7 @@ abstract final class DevScreenCatalog {
       title: 'ProfileScreen',
       source: 'profile/profile_screen.dart',
       group: 'Profile',
-      builder: (_) => const ProfileScreen(
-        userId: '@debug:twospace.dev',
-        initialName: 'Debug User',
-      ),
+      builder: (_) => const ProfileScreen(),
     ),
     DevScreenEntry(
       title: 'RegisterScreen',
@@ -230,10 +221,7 @@ abstract final class DevScreenCatalog {
       title: 'SplashScreen',
       source: 'auth/splash_screen.dart',
       group: 'Auth',
-      builder: (_) => const SplashScreen(
-        currentStep: 'Settings Service',
-        progress: 0.6,
-      ),
+      builder: (_) => const SplashScreen(),
     ),
     DevScreenEntry(
       title: 'SsoWebviewScreen',
@@ -269,7 +257,7 @@ abstract final class DevScreenCatalog {
       title: 'WelcomeScreen',
       source: 'auth/welcome_screen.dart',
       group: 'Auth',
-      builder: (_) => const WelcomeScreen(name: 'Developer'),
+      builder: (_) => const WelcomeScreen(),
     ),
   ]..sort((a, b) => a.title.compareTo(b.title));
 }

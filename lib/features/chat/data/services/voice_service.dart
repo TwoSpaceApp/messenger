@@ -28,7 +28,7 @@ class VoiceService {
     }
     try {
       _isInitialized = await _recorder.hasPermission();
-    } catch (e) {
+    } on Object catch (_) {
       _isInitialized = false;
     }
   }
@@ -53,7 +53,7 @@ class VoiceService {
         return true;
       }
       return false;
-    } catch (e) {
+    } on Object catch (_) {
       return false;
     }
   }
@@ -78,7 +78,7 @@ class VoiceService {
       await _recorder.start(config, path: _currentRecordingPath!);
       _isRecording = true;
       return _currentRecordingPath;
-    } catch (e) {
+    } on Object catch (_) {
       _isRecording = false;
       return null;
     }
@@ -100,7 +100,7 @@ class VoiceService {
         }
       }
       return null;
-    } catch (e) {
+    } on Object catch (_) {
       _isRecording = false;
       return null;
     }

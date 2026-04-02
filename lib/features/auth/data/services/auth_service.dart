@@ -43,13 +43,13 @@ class AuthService {
     try {
       await _aegis.logout();
       _logger.info('✓ Aegis сессия завершена');
-    } catch (e) {
+    } on Object catch (e) {
       _logger.debug('⚠️ Aegis logout ошибка: $e');
     }
     try {
       await clearStoredSession();
       _logger.info('✓ Токены очищены');
-    } catch (e) {
+    } on Object catch (e) {
       _logger.debug('❌ Ошибка очистки: $e');
     }
   }
@@ -61,7 +61,7 @@ class AuthService {
       await _aegis.login(identifier: identifier, password: password);
       _logger.info('✓ Вход через Aegis успешен');
       return;
-    } catch (e) {
+    } on Object catch (e) {
       _logger.warning('❌ Aegis вход не удался: $e');
       rethrow;
     }
@@ -88,12 +88,8 @@ class AuthService {
         );
       }
       _logger.info('✓ Зарегистрирован: ${user.username}');
-      return {
-        'id': user.id.toString(),
-        'name': user.username,
-        'email': user.email
-      };
-    } catch (e) {
+      return {'id': user.id.toString(), 'name': user.username, 'email': email};
+    } on Object catch (e) {
       _logger.warning('❌ Ошибка регистрации: $e');
       rethrow;
     }
@@ -127,7 +123,7 @@ class AuthService {
       if (token != null && token.isNotEmpty) {
         await _aegis.logout();
       }
-    } catch (e) {
+    } on Object catch (e) {
       _logger.debug('Не удалось очистить токен: $e');
     }
   }
@@ -159,7 +155,7 @@ class AuthService {
         _logger.info('✓ Aegis сессия восстановлена');
         return true;
       }
-    } catch (e) {
+    } on Object catch (e) {
       _logger.debug('Не удалось восстановить Aegis-сессию: $e');
     }
     return false;

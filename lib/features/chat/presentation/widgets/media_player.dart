@@ -2,13 +2,16 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:video_player/video_player.dart';
 
 class MediaPlayer extends StatefulWidget {
   const MediaPlayer({super.key, this.localPath, this.networkUrl})
-      : assert(localPath != null || networkUrl != null,
-            'Either localPath or networkUrl must be provided');
+    : assert(
+        localPath != null || networkUrl != null,
+        'Either localPath or networkUrl must be provided',
+      );
   final String? localPath;
   final String? networkUrl;
 
@@ -78,7 +81,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
         });
       }
       _showControlsTemporarily();
-    } catch (e) {
+    } on Object catch (e) {
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -111,7 +114,10 @@ class _MediaPlayerState extends State<MediaPlayer> {
       _showControlsTemporarily();
     }
 
-    _persistPlaybackPosition(controller.value.position, controller.value.duration);
+    _persistPlaybackPosition(
+      controller.value.position,
+      controller.value.duration,
+    );
   }
 
   Future<void> _restorePlaybackState() async {
@@ -213,8 +219,8 @@ class _MediaPlayerState extends State<MediaPlayer> {
     final bounded = target < Duration.zero
         ? Duration.zero
         : (value.duration > Duration.zero && target > value.duration)
-            ? value.duration
-            : target;
+        ? value.duration
+        : target;
     await controller.seekTo(bounded);
     _showControlsTemporarily();
   }
@@ -249,8 +255,8 @@ class _MediaPlayerState extends State<MediaPlayer> {
         clamped <= 0.001
             ? Icons.volume_off_rounded
             : (clamped < 0.5
-                ? Icons.volume_down_rounded
-                : Icons.volume_up_rounded),
+                  ? Icons.volume_down_rounded
+                  : Icons.volume_up_rounded),
         '${(clamped * 100).round()}%',
       );
     }
@@ -265,7 +271,10 @@ class _MediaPlayerState extends State<MediaPlayer> {
       _brightnessLevel = clamped;
     });
     if (showHud) {
-      _showGestureHud(Icons.brightness_6_rounded, '${(clamped * 100).round()}%');
+      _showGestureHud(
+        Icons.brightness_6_rounded,
+        '${(clamped * 100).round()}%',
+      );
     }
   }
 
@@ -338,8 +347,11 @@ class _MediaPlayerState extends State<MediaPlayer> {
     final controller = _controller;
     if (controller == null) return;
     final currentSpeed = controller.value.playbackSpeed;
-    final currentIndex = _playbackSpeeds.indexWhere((value) => value == currentSpeed);
-    final nextIndex = currentIndex < 0 || currentIndex == _playbackSpeeds.length - 1
+    final currentIndex = _playbackSpeeds.indexWhere(
+      (value) => value == currentSpeed,
+    );
+    final nextIndex =
+        currentIndex < 0 || currentIndex == _playbackSpeeds.length - 1
         ? 0
         : currentIndex + 1;
     await controller.setPlaybackSpeed(_playbackSpeeds[nextIndex]);
@@ -510,12 +522,13 @@ class _MediaPlayerState extends State<MediaPlayer> {
 
     final value = controller.value;
     final duration = value.duration;
-    final effectivePosition = _scrubbingPosition != null && _scrubbingPosition! <= duration
-      ? _scrubbingPosition!
-      : (value.position > duration ? duration : value.position);
+    final effectivePosition =
+        _scrubbingPosition != null && _scrubbingPosition! <= duration
+        ? _scrubbingPosition!
+        : (value.position > duration ? duration : value.position);
     final progress = duration.inMilliseconds == 0
         ? 0.0
-      : effectivePosition.inMilliseconds / duration.inMilliseconds;
+        : effectivePosition.inMilliseconds / duration.inMilliseconds;
 
     return IgnorePointer(
       ignoring: !_controlsVisible,
@@ -541,13 +554,16 @@ class _MediaPlayerState extends State<MediaPlayer> {
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(
                     children: [
-                      IconButton(
+                      ShadIconButton.ghost(
+                        width: 40,
+                        height: 40,
                         onPressed: () => Navigator.of(context).maybePop(),
                         icon: const Icon(Icons.arrow_back_ios_new),
-                        color: Colors.white,
                       ),
                       const Spacer(),
-                      IconButton(
+                      ShadIconButton.ghost(
+                        width: 40,
+                        height: 40,
                         onPressed: () {
                           setState(() {
                             _videoFit = _videoFit == BoxFit.contain
@@ -561,7 +577,6 @@ class _MediaPlayerState extends State<MediaPlayer> {
                               ? Icons.fullscreen
                               : Icons.fullscreen_exit,
                         ),
-                        color: Colors.white,
                       ),
                     ],
                   ),
@@ -572,7 +587,8 @@ class _MediaPlayerState extends State<MediaPlayer> {
                       Expanded(
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                          onDoubleTap: () => _seekRelative(const Duration(seconds: -10)),
+                          onDoubleTap: () =>
+                              _seekRelative(const Duration(seconds: -10)),
                         ),
                       ),
                       SizedBox(
@@ -588,27 +604,33 @@ class _MediaPlayerState extends State<MediaPlayer> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  IconButton(
-                                    onPressed: () => _seekRelative(const Duration(seconds: -10)),
+                                  ShadIconButton.ghost(
+                                    width: 42,
+                                    height: 42,
+                                    onPressed: () => _seekRelative(
+                                      const Duration(seconds: -10),
+                                    ),
                                     icon: const Icon(Icons.replay_10_rounded),
-                                    color: Colors.white,
                                   ),
                                   const SizedBox(width: 4),
-                                  IconButton(
+                                  ShadIconButton.secondary(
+                                    width: 62,
+                                    height: 62,
                                     onPressed: _togglePlayback,
                                     icon: Icon(
                                       value.isPlaying
                                           ? Icons.pause_circle_filled_rounded
                                           : Icons.play_circle_fill_rounded,
                                     ),
-                                    iconSize: 54,
-                                    color: Colors.white,
                                   ),
                                   const SizedBox(width: 4),
-                                  IconButton(
-                                    onPressed: () => _seekRelative(const Duration(seconds: 10)),
+                                  ShadIconButton.ghost(
+                                    width: 42,
+                                    height: 42,
+                                    onPressed: () => _seekRelative(
+                                      const Duration(seconds: 10),
+                                    ),
                                     icon: const Icon(Icons.forward_10_rounded),
-                                    color: Colors.white,
                                   ),
                                 ],
                               ),
@@ -619,7 +641,8 @@ class _MediaPlayerState extends State<MediaPlayer> {
                       Expanded(
                         child: GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                          onDoubleTap: () => _seekRelative(const Duration(seconds: 10)),
+                          onDoubleTap: () =>
+                              _seekRelative(const Duration(seconds: 10)),
                         ),
                       ),
                     ],
@@ -643,8 +666,12 @@ class _MediaPlayerState extends State<MediaPlayer> {
                           SliderTheme(
                             data: SliderTheme.of(context).copyWith(
                               trackHeight: 3,
-                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                              thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 6,
+                              ),
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 12,
+                              ),
                               activeTrackColor: theme.colorScheme.primary,
                               inactiveTrackColor: Colors.white24,
                               thumbColor: Colors.white,
@@ -656,8 +683,10 @@ class _MediaPlayerState extends State<MediaPlayer> {
                                   : (currentValue) {
                                       setState(() {
                                         _scrubbingPosition = Duration(
-                                          milliseconds: (duration.inMilliseconds * currentValue)
-                                              .round(),
+                                          milliseconds:
+                                              (duration.inMilliseconds *
+                                                      currentValue)
+                                                  .round(),
                                         );
                                       });
                                       _showControlsTemporarily();
@@ -666,7 +695,10 @@ class _MediaPlayerState extends State<MediaPlayer> {
                                   ? null
                                   : (nextValue) {
                                       final target = Duration(
-                                        milliseconds: (duration.inMilliseconds * nextValue).round(),
+                                        milliseconds:
+                                            (duration.inMilliseconds *
+                                                    nextValue)
+                                                .round(),
                                       );
                                       setState(() {
                                         _scrubbingPosition = target;
@@ -678,7 +710,10 @@ class _MediaPlayerState extends State<MediaPlayer> {
                                   ? null
                                   : (nextValue) async {
                                       final target = Duration(
-                                        milliseconds: (duration.inMilliseconds * nextValue).round(),
+                                        milliseconds:
+                                            (duration.inMilliseconds *
+                                                    nextValue)
+                                                .round(),
                                       );
                                       _scrubSeekTimer?.cancel();
                                       _scrubSeekTimer = null;
@@ -698,39 +733,49 @@ class _MediaPlayerState extends State<MediaPlayer> {
                             children: [
                               Text(
                                 _formatDuration(effectivePosition),
-                                style: theme.textTheme.bodySmall?.copyWith(color: Colors.white),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: Colors.white,
+                                ),
                               ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   _formatDuration(duration),
                                   textAlign: TextAlign.center,
-                                  style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: Colors.white70,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              TextButton(
+                              ShadButton.secondary(
                                 onPressed: _cyclePlaybackSpeed,
                                 child: Text(
                                   '${controller.value.playbackSpeed.toStringAsFixed(controller.value.playbackSpeed.truncateToDouble() == controller.value.playbackSpeed ? 0 : 2)}x',
-                                  style: theme.textTheme.labelLarge?.copyWith(color: Colors.white),
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
-                              IconButton(
+                              ShadIconButton.ghost(
+                                width: 40,
+                                height: 40,
                                 onPressed: _toggleMute,
                                 icon: Icon(
-                                  _muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+                                  _muted
+                                      ? Icons.volume_off_rounded
+                                      : Icons.volume_up_rounded,
                                 ),
-                                color: Colors.white,
                               ),
-                              IconButton(
+                              ShadIconButton.ghost(
+                                width: 40,
+                                height: 40,
                                 onPressed: () async {
                                   await controller.seekTo(Duration.zero);
                                   await controller.play();
                                   _showControlsTemporarily();
                                 },
                                 icon: const Icon(Icons.replay_rounded),
-                                color: Colors.white,
                               ),
                             ],
                           ),
@@ -754,7 +799,10 @@ class _MediaPlayerState extends State<MediaPlayer> {
     _scrubSeekTimer?.cancel();
     final controller = _controller;
     if (controller != null) {
-      _persistPlaybackPosition(controller.value.position, controller.value.duration);
+      _persistPlaybackPosition(
+        controller.value.position,
+        controller.value.duration,
+      );
     }
     _controller?.removeListener(_onPlayerChanged);
     _controller?.pause();
@@ -770,8 +818,10 @@ class _MediaPlayerState extends State<MediaPlayer> {
       backgroundColor: Colors.black,
       body: Center(
         child: _error != null
-            ? Text(l10n.videoLoadError(_error!),
-                style: TextStyle(color: theme.colorScheme.error))
+            ? Text(
+                l10n.videoLoadError(_error!),
+                style: TextStyle(color: theme.colorScheme.error),
+              )
             : GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: _toggleControlsVisibility,

@@ -72,7 +72,7 @@ class _MediaPreviewState extends State<MediaPreview> {
           });
         }
       }
-    } catch (e) {
+    } on Object catch (e) {
       if (mounted) setState(() => _error = e.toString());
     }
   }
@@ -114,7 +114,7 @@ class _MediaPreviewState extends State<MediaPreview> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.fileDownloaded(path))));
-    } catch (e) {
+    } on Object catch (e) {
       setState(() => _error = e.toString());
     } finally {
       if (mounted) {
@@ -136,7 +136,7 @@ class _MediaPreviewState extends State<MediaPreview> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(l10n.fileSavedTemp(temp))));
-    } catch (e) {
+    } on Object catch (e) {
       setState(() => _error = e.toString());
     } finally {
       if (mounted) {
@@ -155,7 +155,7 @@ class _MediaPreviewState extends State<MediaPreview> {
     try {
       final temp = await _ensureResolvedPath();
       await Share.shareXFiles([XFile(temp)], text: widget.filename);
-    } catch (e) {
+    } on Object catch (e) {
       setState(() => _error = e.toString());
     } finally {
       if (mounted) {

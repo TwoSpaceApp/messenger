@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/sound/audio_player_service.dart';
@@ -121,7 +122,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Column(
                 children: [
                   ValueListenableBuilder<bool>(
-                    valueListenable: SettingsService.notificationsEnabledNotifier,
+                    valueListenable:
+                        SettingsService.notificationsEnabledNotifier,
                     builder: (context, enabled, _) {
                       return _ToggleTile(
                         icon: Icons.notifications_rounded,
@@ -134,11 +136,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                   const Divider(height: 18),
                   ValueListenableBuilder<bool>(
-                    valueListenable: SettingsService.notificationsEnabledNotifier,
+                    valueListenable:
+                        SettingsService.notificationsEnabledNotifier,
                     builder: (context, notificationsEnabled, _) {
                       return ValueListenableBuilder<bool>(
                         valueListenable: SettingsService.soundEnabledNotifier,
-                        builder: (context, enabled, __) {
+                        builder: (context, enabled, _) {
                           return _ToggleTile(
                             icon: Icons.volume_up_rounded,
                             title: l10n.soundLabel,
@@ -179,7 +182,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               builder: (context, tonePath, _) {
                 return ValueListenableBuilder<String?>(
                   valueListenable: SettingsService.notificationToneNameNotifier,
-                  builder: (context, toneName, __) {
+                  builder: (context, toneName, _) {
                     return _SoundCard(
                       icon: Icons.music_note_rounded,
                       title: l10n.notificationToneTitle,
@@ -207,7 +210,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               builder: (context, ringtonePath, _) {
                 return ValueListenableBuilder<String?>(
                   valueListenable: SettingsService.ringtoneNameNotifier,
-                  builder: (context, ringtoneName, __) {
+                  builder: (context, ringtoneName, _) {
                     return _SoundCard(
                       icon: Icons.ring_volume_rounded,
                       title: l10n.ringtoneTitle,
@@ -274,7 +277,9 @@ class _SoundCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.56),
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: 0.56,
+                  ),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 alignment: Alignment.center,
@@ -325,8 +330,9 @@ class _SoundCard extends StatelessWidget {
                   child: Text(
                     fileName ?? l10n.customSoundNotSelected,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight:
-                          fileName == null ? FontWeight.w500 : FontWeight.w700,
+                      fontWeight: fileName == null
+                          ? FontWeight.w500
+                          : FontWeight.w700,
                     ),
                   ),
                 ),
@@ -347,29 +353,32 @@ class _SoundCard extends StatelessWidget {
             children: [
               SizedBox(
                 width: onClear == null ? double.infinity : null,
-                child: OutlinedButton.icon(
+                child: ShadButton.outline(
                   onPressed: onPick,
-                  icon: const Icon(Icons.library_music_rounded),
-                  label: Text(l10n.chooseSoundLabel),
+                  height: 44,
+                  leading: const Icon(Icons.library_music_rounded),
+                  child: Text(l10n.chooseSoundLabel),
                 ),
               ),
               SizedBox(
                 width: onClear == null ? double.infinity : null,
-                child: FilledButton.icon(
+                child: ShadButton(
                   onPressed: onPreview,
-                  icon: Icon(
+                  height: 44,
+                  leading: Icon(
                     previewActive
                         ? Icons.stop_circle_outlined
                         : Icons.play_arrow_rounded,
                   ),
-                  label: Text(previewLabel),
+                  child: Text(previewLabel),
                 ),
               ),
               if (onClear != null)
-                OutlinedButton.icon(
+                ShadButton.outline(
                   onPressed: onClear,
-                  icon: const Icon(Icons.delete_outline_rounded),
-                  label: Text(l10n.clearCustomSoundLabel),
+                  height: 44,
+                  leading: const Icon(Icons.delete_outline_rounded),
+                  child: Text(l10n.clearCustomSoundLabel),
                 ),
             ],
           ),
@@ -398,22 +407,29 @@ class _ToggleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SwitchListTile.adaptive(
-      contentPadding: EdgeInsets.zero,
-      secondary: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.42),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        alignment: Alignment.center,
-        child: Icon(icon, color: theme.colorScheme.primary),
-      ),
-      title: Text(title),
-      subtitle: Text(subtitle),
+    return ShadSwitch(
       value: value,
       onChanged: onChanged,
+      label: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.42),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(title)),
+        ],
+      ),
+      sublabel: Padding(
+        padding: const EdgeInsets.only(left: 52),
+        child: Text(subtitle),
+      ),
     );
   }
 }

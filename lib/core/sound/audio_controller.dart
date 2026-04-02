@@ -31,7 +31,7 @@ class AudioController extends ChangeNotifier {
     notifyListeners();
     try {
       await _player.play(url);
-    } catch (e) {
+    } on Object catch (_) {
       _state = AudioState.idle;
       notifyListeners();
     }

@@ -26,7 +26,7 @@ class JwtHelper {
       final decoded = utf8.decode(payload);
       final map = jsonDecode(decoded) as Map<String, dynamic>?;
       return map;
-    } catch (e, stack) {
+    } on Object catch (e, stack) {
       if (kDebugMode) {
         print('Failed to decode JWT: $e');
         print(stack);
@@ -70,7 +70,7 @@ class JwtHelper {
       // Add small buffer (30 seconds) to account for clock skew
       final now = DateTime.now().toUtc().add(const Duration(seconds: 30));
       return now.isAfter(expiryDate);
-    } catch (e) {
+    } on Object catch (e) {
       if (kDebugMode) {
         print('Failed to parse expiry: $e');
       }
@@ -92,7 +92,7 @@ class JwtHelper {
         expiryTimestamp * 1000,
         isUtc: true,
       );
-    } catch (e) {
+    } on Object catch (e) {
       if (kDebugMode) {
         print('Failed to parse expiry date: $e');
       }
@@ -160,7 +160,7 @@ class JwtHelper {
       }
 
       return base64Url.decode(normalized);
-    } catch (e) {
+    } on Object catch (e) {
       if (kDebugMode) {
         print('Base64 decode error: $e');
       }

@@ -58,8 +58,8 @@ class AegisHandshakeCrypto {
       );
 
     final keyPair = generator.generateKeyPair();
-    final privateKey = keyPair.privateKey as ECPrivateKey;
-    final publicKey = keyPair.publicKey as ECPublicKey;
+    final privateKey = keyPair.privateKey;
+    final publicKey = keyPair.publicKey;
 
     return AegisHandshakeResult(
       privateKey: privateKey,
@@ -147,8 +147,9 @@ class AegisHandshakeCrypto {
     }
 
     final agreement = ECDHBasicAgreement()..init(clientPrivateKey);
-    final sharedSecret =
-        agreement.calculateAgreement(ECPublicKey(point, _domain));
+    final sharedSecret = agreement.calculateAgreement(
+      ECPublicKey(point, _domain),
+    );
     final sharedSecretBytes = _bigIntToBytes(sharedSecret, 32);
     final derivedBytes = _hkdfSha256(
       inputKeyMaterial: sharedSecretBytes,
