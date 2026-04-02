@@ -46,7 +46,7 @@ jobs:
         run: |
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             build_mode="${{ inputs.build_mode }}"
-          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" && ( "${GITHUB_REF_NAME}" == "main" || "${GITHUB_REF_NAME}" == "master" ) ]]; then
             build_mode="release"
           else
             build_mode="debug"

@@ -50,6 +50,10 @@ class AegisAuthService {
   String? get username => _username;
   int? get userId => _userId;
 
+  bool get _usingEnvAppCredentials =>
+      Environment.aegisAppId != null ||
+      (Environment.aegisAppHash?.isNotEmpty ?? false);
+
   Future<String?> getStoredToken() async {
     _token ??= await _secure.read(key: _kAegisTokenKey);
     return _token;
@@ -88,7 +92,8 @@ class AegisAuthService {
 
   String _classifyConnectionError(Object error) {
     final text = error.toString().toLowerCase();
-    if (text.contains('app credentials required')) {
+    if (text.contains('app credentials required') ||
+        text.contains('invalid app credentials')) {
       return 'handshake_rejected_app_credentials';
     }
     if (text.contains('handshake') && text.contains('failed')) {
@@ -157,6 +162,12 @@ class AegisAuthService {
           useTls: configuredTls,
         );
       } on Object catch (e) {
+        if (_usingEnvAppCredentials &&
+            e.toString().toLowerCase().contains('app credentials')) {
+          _log.warning(
+            'Server rejected configured app credentials, official fallback was attempted automatically: $e',
+          );
+        }
         if (_shouldTryTlsFallback(e, configuredTls: configuredTls)) {
           final fallbackTls = !configuredTls;
           _log.warning(
@@ -401,11 +412,11 @@ class AegisAuthService {
       await _client.login(identifier, password);
     } on Object catch (e) {
       _log.error('Login failed [${_classifyConnectionError(e)}]: $e');
-      final errorText = e.toString();
-      if (errorText.contains('App credentials required')) {
+      final errorText = e.toString().toLowerCase();
+      if (errorText.contains('app credentials required') ||
+          errorText.contains('invalid app credentials')) {
         throw Exception(
-          'Сервер требует app credentials. Укажите AEGIS_APP_ID и '
-          'AEGIS_APP_HASH в .env и пересоберите приложение.',
+          'Сервер отклонил app credentials. Клиент уже пробует встроенные official credentials автоматически; если ошибка сохраняется, проблема уже на стороне сервера или в несовместимом handshake.',
         );
       }
       rethrow;

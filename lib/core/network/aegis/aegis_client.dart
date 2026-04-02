@@ -13,6 +13,22 @@ import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/session_crypto.dart';
 import 'package:two_space_app/core/network/aegis/transport.dart';
 
+bool _isAppCredentialHandshakeError(Object error) {
+  final text = error.toString().toLowerCase();
+  return text.contains('app credentials required') ||
+      text.contains('invalid app credentials');
+}
+
+bool _isOfficialApiCredentials(AegisApiCredentials? credentials) {
+  if (credentials == null) {
+    return false;
+  }
+
+  const official = AegisOfficialApiCredentials.credentials;
+  return credentials.appId == official.appId &&
+      credentials.appHash == official.appHash;
+}
+
 extension _ChannelMessageResponseCompat on ChannelMessageResponse {
   MediaSendResponse toMediaSendResponse() => MediaSendResponse(
     success: success,
@@ -162,37 +178,79 @@ class AegisClient {
   }) async {
     final hasMaskingKey =
         transportMaskingKey != null && transportMaskingKey.trim().isNotEmpty;
+    const officialApiCredentials = AegisOfficialApiCredentials.credentials;
 
-    if (!hasMaskingKey || !enableMaskingAutoFallback) {
+    Future<void> connectAndHandshake({
+      required bool useMaskedTransport,
+      required AegisApiCredentials? handshakeCredentials,
+    }) async {
       await _transport.connect(
         host,
         port,
         timeout: timeout,
-        transportMaskingKey: transportMaskingKey,
+        transportMaskingKey: useMaskedTransport ? transportMaskingKey : null,
         useTls: useTls,
       );
       await _performHandshake(
+        apiCredentials: handshakeCredentials,
         trustedServerHandshakeSigningPublicKeyBase64:
             trustedServerHandshakeSigningPublicKeyBase64,
         requireSignedHandshake: requireSignedHandshake,
       );
+    }
+
+    Future<bool> tryOfficialCredentialFallback({
+      required Object error,
+      required bool useMaskedTransport,
+      required AegisApiCredentials? attemptedCredentials,
+    }) async {
+      if (!_isAppCredentialHandshakeError(error) ||
+          _isOfficialApiCredentials(attemptedCredentials)) {
+        return false;
+      }
+
+      await _transport.disconnect();
+      await connectAndHandshake(
+        useMaskedTransport: useMaskedTransport,
+        handshakeCredentials: officialApiCredentials,
+      );
+      return true;
+    }
+
+    if (!hasMaskingKey || !enableMaskingAutoFallback) {
+      try {
+        await connectAndHandshake(
+          useMaskedTransport: hasMaskingKey,
+          handshakeCredentials: _apiCredentials,
+        );
+      } on Object catch (error) {
+        final recovered = await tryOfficialCredentialFallback(
+          error: error,
+          useMaskedTransport: hasMaskingKey,
+          attemptedCredentials: _apiCredentials,
+        );
+        if (!recovered) {
+          rethrow;
+        }
+      }
       return;
     }
 
     try {
-      await _transport.connect(
-        host,
-        port,
-        timeout: timeout,
-        transportMaskingKey: transportMaskingKey,
-        useTls: useTls,
-      );
-      await _performHandshake(
-        trustedServerHandshakeSigningPublicKeyBase64:
-            trustedServerHandshakeSigningPublicKeyBase64,
-        requireSignedHandshake: requireSignedHandshake,
+      await connectAndHandshake(
+        useMaskedTransport: true,
+        handshakeCredentials: _apiCredentials,
       );
     } on Object catch (firstError) {
+      final recovered = await tryOfficialCredentialFallback(
+        error: firstError,
+        useMaskedTransport: true,
+        attemptedCredentials: _apiCredentials,
+      );
+      if (recovered) {
+        return;
+      }
+
       await _transport.disconnect();
 
       // Server explicitly rejected credentials on masked transport.
@@ -204,18 +262,20 @@ class AegisClient {
       }
 
       try {
-        await _transport.connect(
-          host,
-          port,
-          timeout: timeout,
-          useTls: useTls,
-        );
-        await _performHandshake(
-          trustedServerHandshakeSigningPublicKeyBase64:
-              trustedServerHandshakeSigningPublicKeyBase64,
-          requireSignedHandshake: requireSignedHandshake,
+        await connectAndHandshake(
+          useMaskedTransport: false,
+          handshakeCredentials: _apiCredentials,
         );
       } on Object catch (secondError) {
+        final recovered = await tryOfficialCredentialFallback(
+          error: secondError,
+          useMaskedTransport: false,
+          attemptedCredentials: _apiCredentials,
+        );
+        if (recovered) {
+          return;
+        }
+
         throw Exception(
           'Failed connect with masking and fallback. maskedError: $firstError; plainError: $secondError',
         );
@@ -1525,24 +1585,19 @@ class AegisClient {
 
   /// Send the initial handshake after connect.
   Future<void> _performHandshake({
+    required AegisApiCredentials? apiCredentials,
     required bool requireSignedHandshake,
     String? trustedServerHandshakeSigningPublicKeyBase64,
   }) async {
-    AegisHandshakeContext? handshake;
-    try {
-      handshake = await AegisHandshakeContext.create();
-    } on UnimplementedError {
-      handshake = null;
-    }
+    final handshake = await AegisHandshakeContext.create();
 
     final handshakePayload = <String, Object>{
-      'ClientVersion': ProtocolConstants.versionMajor,
+      'PublicKey': base64Encode(handshake.publicKey),
+      'ClientVersion':
+          ProtocolConstants.versionMajor * 1000 +
+          ProtocolConstants.versionMinor,
     };
-    if (handshake != null) {
-      handshakePayload['PublicKey'] = base64Encode(handshake.publicKey);
-    }
 
-    final apiCredentials = _apiCredentials;
     if (apiCredentials != null) {
       handshakePayload['AppId'] = apiCredentials.appId;
       handshakePayload['AppHash'] = apiCredentials.appHash;
@@ -1567,11 +1622,6 @@ class AegisClient {
     if (!success) {
       final error = decoded['Message']?.toString() ?? 'Handshake failed';
       throw Exception(error);
-    }
-
-    // Legacy fallback: handshake succeeded without ECDH support on this client.
-    if (handshake == null) {
-      return;
     }
 
     final serverPublicKeyBase64 = decoded['ServerPublicKey']?.toString();
