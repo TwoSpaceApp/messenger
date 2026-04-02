@@ -450,9 +450,11 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       };
       const encoder = JsonEncoder.withIndent('  ');
       await file.writeAsString(encoder.convert(payload));
-      await share.Share.shareXFiles(
-        [share.XFile(file.path)],
-        subject: overview['name']?.toString() ?? widget.initialName,
+      await share.SharePlus.instance.share(
+        share.ShareParams(
+          files: [share.XFile(file.path)],
+          subject: overview['name']?.toString() ?? widget.initialName,
+        ),
       );
     } on Object catch (e) {
       if (!mounted) return;

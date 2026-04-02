@@ -154,7 +154,12 @@ class _MediaPreviewState extends State<MediaPreview> {
     });
     try {
       final temp = await _ensureResolvedPath();
-      await Share.shareXFiles([XFile(temp)], text: widget.filename);
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(temp)],
+          text: widget.filename,
+        ),
+      );
     } on Object catch (e) {
       setState(() => _error = e.toString());
     } finally {

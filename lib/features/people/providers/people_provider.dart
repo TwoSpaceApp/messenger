@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/src/providers/future_provider.dart';
 import 'package:two_space_app/features/people/data/models/person_entry.dart';
 

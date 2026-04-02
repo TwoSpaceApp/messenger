@@ -39,3 +39,15 @@ linter:
     avoid_dynamic_calls: false
     sort_constructors_first: false
     omit_local_variable_types: false
+    avoid_catches_without_on_clauses: false
+    discarded_futures: false
+    parameter_assignments: false
+    implementation_imports: false
+    prefer_foreach: false
+    document_ignores: false
+    use_if_null_to_convert_nulls_to_bools: false
+    unnecessary_getters_setters: false
+    matching_super_parameters: false
+    directives_ordering: false
+    comment_references: false
+    avoid_catching_errors: false

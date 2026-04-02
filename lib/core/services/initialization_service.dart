@@ -249,7 +249,6 @@ class InitializationService {
               'critical': step.critical,
             },
           );
-          // ignore: avoid_catches_without_on_clauses
         } catch (_) {
           // Ignore Sentry errors during initialization
         }
