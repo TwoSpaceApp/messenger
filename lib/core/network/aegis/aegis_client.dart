@@ -355,7 +355,7 @@ class AegisClient {
     final msg = Message.withType(MessageType.auth, payload);
     final response = await _sendAndWaitResponse(
       msg,
-      expectedTypes: {MessageType.auth},
+      expectedTypes: {MessageType.auth, MessageType.ack},
     );
 
     final decoded = msgpack.deserialize(response.payload);
@@ -385,7 +385,7 @@ class AegisClient {
     final msg = Message.withType(MessageType.auth, payload);
     final response = await _sendAndWaitResponse(
       msg,
-      expectedTypes: {MessageType.auth},
+      expectedTypes: {MessageType.auth, MessageType.ack},
     );
 
     final decoded = msgpack.deserialize(response.payload);
@@ -1202,6 +1202,8 @@ class AegisClient {
     String? avatarUrl,
     String? bio,
     String? username,
+    String? location,
+    String? birthDate,
   }) async {
     _requireAuthenticated();
 
@@ -1210,6 +1212,8 @@ class AegisClient {
       avatarUrl: avatarUrl,
       bio: bio,
       username: username,
+      location: location,
+      birthDate: birthDate,
     );
 
     final msg = Message.withType(MessageType.profileUpdate, request.toBytes());
@@ -1417,7 +1421,7 @@ class AegisClient {
     Timer? timeoutTimer;
 
     subscription = messages.listen((msg) {
-      if (msg.type == MessageType.ack) {
+      if (msg.type == MessageType.ack && !expectedTypes.contains(MessageType.ack)) {
         return;
       }
 

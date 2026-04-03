@@ -1732,6 +1732,8 @@ class ProfileData {
   final List<ProfileAvatarData> avatars;
   final String? presenceStatus;
   final String? bio;
+  final String? location;
+  final String? birthDate;
   final String? email;
   final DateTime createdAt;
   final DateTime? lastSeenAt;
@@ -1745,6 +1747,8 @@ class ProfileData {
     this.avatars = const <ProfileAvatarData>[],
     this.presenceStatus,
     this.bio,
+    this.location,
+    this.birthDate,
     this.email,
     this.lastSeenAt,
   });
@@ -1757,6 +1761,8 @@ class ProfileData {
     'Avatars': avatars.map((item) => item.toJson()).toList(),
     if (presenceStatus != null) 'PresenceStatus': presenceStatus,
     if (bio != null) 'Bio': bio,
+    if (location != null) 'Location': location,
+    if (birthDate != null) 'BirthDate': birthDate,
     if (email != null) 'Email': email,
     'CreatedAt': createdAt.toIso8601String(),
     if (lastSeenAt != null) 'LastSeenAt': lastSeenAt!.toIso8601String(),
@@ -1772,6 +1778,8 @@ class ProfileData {
         .toList(),
     presenceStatus: json['PresenceStatus'] as String?,
     bio: json['Bio'] as String?,
+    location: json['Location'] as String?,
+    birthDate: json['BirthDate']?.toString(),
     email: json['Email'] as String?,
     createdAt: _parseDateTimeValue(json['CreatedAt']),
     lastSeenAt: _parseNullableDateTimeValue(json['LastSeenAt']),
@@ -2004,12 +2012,16 @@ class ProfileUpdateRequest {
   final String? avatarUrl;
   final String? bio;
   final String? username;
+  final String? location;
+  final String? birthDate;
 
   ProfileUpdateRequest({
     this.displayName,
     this.avatarUrl,
     this.bio,
     this.username,
+    this.location,
+    this.birthDate,
   });
 
   Map<String, dynamic> toJson() => {
@@ -2017,6 +2029,8 @@ class ProfileUpdateRequest {
     if (avatarUrl != null) 'AvatarUrl': avatarUrl,
     if (bio != null) 'Bio': bio,
     if (username != null) 'Username': username,
+    if (location != null) 'Location': location,
+    if (birthDate != null) 'BirthDate': birthDate,
   };
 
   List<int> toBytes() => msgpack.serialize(toJson());

@@ -79,6 +79,64 @@ void main() {
             '8f4c1db0e7c2456d9ab31f4e6d8c9a0137f2c4b56d8e1a903bc7d52e6f194a3c',
       });
     });
+
+    test('profile payload preserves location and birth date fields', () {
+      final request = ProfileUpdateRequest(
+        displayName: 'Alice Dev',
+        bio: 'hello',
+        username: 'alice',
+        location: 'Moscow',
+        birthDate: '1990-01-15',
+      );
+
+      expect(request.toJson(), {
+        'DisplayName': 'Alice Dev',
+        'Bio': 'hello',
+        'Username': 'alice',
+        'Location': 'Moscow',
+        'BirthDate': '1990-01-15',
+      });
+
+      final response = ProfileGetResponse.fromJson({
+        'Success': true,
+        'Profile': {
+          'Id': 1002,
+          'Username': 'bob',
+          'DisplayName': 'Bob',
+          'AvatarUrl': null,
+          'Avatars': <Map<String, dynamic>>[],
+          'PresenceStatus': 'online',
+          'Bio': '...',
+          'Location': 'SPb',
+          'BirthDate': '1995-05-20',
+          'Email': null,
+          'CreatedAt': '2026-01-01T00:00:00Z',
+          'LastSeenAt': '2026-03-30T09:59:00Z',
+        },
+      });
+
+      expect(response.profile, isNotNull);
+      expect(response.profile!.location, 'SPb');
+      expect(response.profile!.birthDate, '1995-05-20');
+    });
+
+    test('leave room payloads and responses match server contract', () {
+      final channelRequest = ChannelLeaveRequest(channelId: 5001);
+      final groupRequest = GroupLeaveRequest(groupId: 6001);
+
+      expect(channelRequest.toJson(), {'ChannelId': 5001});
+      expect(groupRequest.toJson(), {'GroupId': 6001});
+
+      final channelResponse = ChannelLeaveResponse.fromBytes(
+        msgpack.serialize({'Success': true, 'Message': null}),
+      );
+      final groupResponse = GroupLeaveResponse.fromBytes(
+        msgpack.serialize({'Success': true, 'Message': null}),
+      );
+
+      expect(channelResponse.success, isTrue);
+      expect(groupResponse.success, isTrue);
+    });
   });
 
   group('AegisEventDispatcher', () {

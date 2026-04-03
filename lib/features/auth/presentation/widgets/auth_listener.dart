@@ -60,11 +60,13 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
   Future<void> _navigateToWelcome(String? userId) async {
     if (!mounted) return;
 
+    Map<String, dynamic>? userInfo;
+
     // Get user info - not used but can be extended later
     if (userId != null) {
       try {
         final chatService = AegisChatService();
-        await chatService.getOwnUserInfo(forceRefresh: true);
+        userInfo = await chatService.getOwnUserInfo(forceRefresh: true);
       } catch (_) {
         // Ignore errors
       }
@@ -73,7 +75,18 @@ class _AuthListenerState extends ConsumerState<AuthListener> {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => const WelcomeScreen(),
+        builder: (_) => WelcomeScreen(
+          name: (userInfo?['displayName'] ??
+                  userInfo?['username'] ??
+                  userId ??
+                  'User')
+              .toString(),
+          username: userInfo?['username']?.toString(),
+          avatarUrl: userInfo?['avatarUrl']?.toString(),
+          avatarFileId: userInfo?['avatarFileId']?.toString(),
+          description: userInfo?['bio']?.toString(),
+          phone: userInfo?['phone']?.toString(),
+        ),
       ),
     );
   }

@@ -31,23 +31,17 @@ Future<void> main() async {
 Widget _buildShadShell({
   required ThemeMode themeMode,
   required WidgetBuilder appBuilder,
-  ShadThemeData? theme,
-  ShadThemeData? darkTheme,
 }) {
   return ShadApp.custom(
     themeMode: themeMode,
-    theme:
-        theme ??
-        ShadThemeData(
-          brightness: Brightness.light,
-          colorScheme: const ShadSlateColorScheme.light(),
-        ),
-    darkTheme:
-        darkTheme ??
-        ShadThemeData(
-          brightness: Brightness.dark,
-          colorScheme: const ShadSlateColorScheme.dark(),
-        ),
+    theme: ShadThemeData(
+      brightness: Brightness.light,
+      colorScheme: const ShadSlateColorScheme.light(),
+    ),
+    darkTheme: ShadThemeData(
+      brightness: Brightness.dark,
+      colorScheme: const ShadSlateColorScheme.dark(),
+    ),
     appBuilder: appBuilder,
   );
 }
@@ -323,21 +317,8 @@ class _ThemeBuilder extends StatelessWidget {
           paleVioletEnabled,
           brightnessOverride: Brightness.dark,
         );
-        final lightShadTheme = AppThemeBuilder.buildShadcn(
-          settings,
-          paleVioletEnabled,
-          brightnessOverride: Brightness.light,
-        );
-        final darkShadTheme = AppThemeBuilder.buildShadcn(
-          settings,
-          paleVioletEnabled,
-          brightnessOverride: Brightness.dark,
-        );
-
         final app = _buildShadShell(
           themeMode: themeMode,
-          theme: lightShadTheme,
-          darkTheme: darkShadTheme,
           appBuilder: (_) => MaterialApp.router(
             title: 'TwoSpace',
             onGenerateTitle: (context) =>

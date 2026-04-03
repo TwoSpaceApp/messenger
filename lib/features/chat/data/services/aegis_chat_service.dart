@@ -699,6 +699,8 @@ class AegisChatService {
       'presenceStatus': profile.presenceStatus,
       'isOnline': profile.presenceStatus == 'online',
       'bio': profile.bio,
+      'location': profile.location,
+      'birthday': profile.birthDate,
       'email': profile.email,
       'lastSeenAt': profile.lastSeenAt?.toIso8601String(),
     };
@@ -1252,17 +1254,36 @@ class AegisChatService {
   }
 
   Future<void> leaveRoom(String roomId) async {
-    await _init();
+    await ensureReady();
     final room = _conversations[roomId];
-    if (room != null && room.kind != 'direct') {
-      throw const AegisFeatureInDevelopmentException(
-        'Room leave is not supported by the server yet',
-      );
+    if (room != null && room.kind != 'direct' && room.channelId != null) {
+      if (room.kind == 'group') {
+        final response = await _auth.rawClient.leaveGroup(room.channelId!);
+        if (!response.success) {
+          throw Exception(response.message ?? 'Unable to leave group');
+        }
+      } else {
+        final response = await _auth.rawClient.leaveChannel(room.channelId!);
+        if (!response.success) {
+          throw Exception(response.message ?? 'Unable to leave room');
+        }
+      }
+    }
+    if (room?.peerUserId != null) {
+      final peerUserId = room!.peerUserId!;
+      final roomIds = _peerUserIdToRoomIds[peerUserId];
+      roomIds?.remove(roomId);
+      if (roomIds != null && roomIds.isEmpty) {
+        _peerUserIdToRoomIds.remove(peerUserId);
+      }
     }
     if (_conversations.remove(roomId) != null) {
       _markConversationsDirty();
     }
     _messages.remove(roomId);
+    _roomReactions.remove(roomId);
+    _pinnedEventIdsByRoom.remove(roomId);
+    _messageAccessOrder.remove(roomId);
     _dirtyMessagesByRoom.remove(roomId);
     _deletedMessageIdsByRoom.remove(roomId);
     _deletedRoomIds.add(roomId);
@@ -2422,6 +2443,8 @@ class AegisChatService {
     String? bio,
     String? username,
     String? avatarUrl,
+    String? location,
+    String? birthDate,
   }) async {
     await ensureReady();
     final response = await _auth.rawClient.updateProfile(
@@ -2429,32 +2452,15 @@ class AegisChatService {
       bio: bio,
       username: username,
       avatarUrl: avatarUrl,
+      location: location,
+      birthDate: birthDate,
     );
     if (!response.success) {
       throw Exception(response.message ?? 'Unable to update profile');
     }
     if (response.profile != null) {
-      _storeProfile(response.profile!.id, {
-        'id': response.profile!.id.toString(),
-        'username': response.profile!.username,
-        'displayName': response.profile!.displayName,
-        'avatarUrl': normalizeAegisAvatarUrl(response.profile!.avatarUrl),
-        'avatars': response.profile!.avatars
-            .map(
-              (avatar) => <String, dynamic>{
-                'id': avatar.id,
-                'avatarUrl': normalizeAegisAvatarUrl(avatar.avatarUrl),
-                'isPrimary': avatar.isPrimary,
-                'createdAt': avatar.createdAt.toIso8601String(),
-              },
-            )
-            .toList(growable: false),
-        'presenceStatus': response.profile!.presenceStatus,
-        'isOnline': response.profile!.presenceStatus == 'online',
-        'bio': response.profile!.bio,
-        'email': response.profile!.email,
-        'lastSeenAt': response.profile!.lastSeenAt?.toIso8601String(),
-      });
+      final profile = response.profile!;
+      _storeProfile(profile.id, _profileToInfo(profile));
       await _persist();
       _emitChanged();
     }
@@ -2482,27 +2488,7 @@ class AegisChatService {
       return getUserInfo(currentUserId);
     }
 
-    final info = <String, dynamic>{
-      'id': profile.id.toString(),
-      'username': profile.username,
-      'displayName': profile.displayName ?? profile.username,
-      'avatarUrl': normalizeAegisAvatarUrl(profile.avatarUrl),
-      'avatars': profile.avatars
-          .map(
-            (avatar) => <String, dynamic>{
-              'id': avatar.id,
-              'avatarUrl': normalizeAegisAvatarUrl(avatar.avatarUrl),
-              'isPrimary': avatar.isPrimary,
-              'createdAt': avatar.createdAt.toIso8601String(),
-            },
-          )
-          .toList(growable: false),
-      'presenceStatus': profile.presenceStatus,
-      'isOnline': profile.presenceStatus == 'online',
-      'bio': profile.bio,
-      'email': profile.email,
-      'lastSeenAt': profile.lastSeenAt?.toIso8601String(),
-    };
+    final info = _profileToInfo(profile);
     _storeProfile(profile.id, info);
     await _persist();
     _emitChanged();

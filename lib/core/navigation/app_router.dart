@@ -5,6 +5,7 @@ import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/navigation/app_route_observer.dart';
 import 'package:two_space_app/core/navigation/app_transitions.dart';
 import 'package:two_space_app/core/navigation/title_observer.dart';
+import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/features/auth/presentation/screens/biometric_setup_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/change_email_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/change_phone_screen.dart';
@@ -146,7 +147,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppStrings.routeProfile,
         pageBuilder: (context, state) {
-          return _buildPage(state, const ProfileScreen());
+          final userIdFromExtra = state.extra is String ? state.extra! as String : null;
+          final authState = ref.read(authProvider).whenOrNull(data: (value) => value);
+          final userId = userIdFromExtra ?? authState?.userId ?? '';
+          return _buildPage(
+            state,
+            ProfileScreen(userId: userId),
+          );
         },
       ),
       GoRoute(
@@ -183,7 +190,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '${AppStrings.routeChat}/:chatId',
         pageBuilder: (context, state) {
           final chatId = state.pathParameters['chatId'] ?? '';
-          return _buildPage(state, ChatScreen(chatId: chatId));
+          final extra = state.extra;
+          final chat = extra is Chat
+              ? extra
+              : Chat(
+                  id: chatId,
+                  name: chatId,
+                  members: const <String>[],
+                );
+          return _buildPage(state, ChatScreen(chat: chat));
         },
       ),
     ],
@@ -237,6 +252,14 @@ class _WelcomeRouteLoaderState extends State<_WelcomeRouteLoader> {
     if (info == null) {
       return const SplashScreen();
     }
-    return const WelcomeScreen();
+    return WelcomeScreen(
+      name: (info['displayName'] ?? info['username'] ?? info['id'] ?? 'User')
+          .toString(),
+      username: info['username']?.toString(),
+      avatarUrl: info['avatarUrl']?.toString(),
+      avatarFileId: info['avatarFileId']?.toString(),
+      description: info['bio']?.toString(),
+      phone: info['phone']?.toString(),
+    );
   }
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, unnecessary_underscores
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -5,7 +7,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:share_plus/share_plus.dart' as share;
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
@@ -32,6 +33,7 @@ class _RoomSettingsSection {
   final IconData icon;
   final _RoomSettingsStatus status;
 }
+
 
 class ChatSettingsScreen extends StatefulWidget {
   const ChatSettingsScreen({
@@ -85,7 +87,11 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const ProfileScreen(),
+        builder: (_) => ProfileScreen(
+          userId: userId,
+          initialName: data['name']?.toString() ?? widget.initialName,
+          initialAvatar: data['avatar']?.toString(),
+        ),
       ),
     );
   }
@@ -212,66 +218,6 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     }
   }
 
-  Future<void> _pickJoinRule() async {
-    final l10n = AppLocalizations.of(context)!;
-    final selected = await showModalBottomSheet<int>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final value in [0, 1, 2])
-                ListTile(
-                  title: Text(_joinRuleTitle(l10n, value)),
-                  subtitle: Text(_joinRuleSubtitle(l10n, value)),
-                  trailing: _joinRule == value
-                      ? const Icon(Icons.check_rounded)
-                      : null,
-                  onTap: () => Navigator.of(sheetContext).pop(value),
-                ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-    if (!mounted || selected == null) return;
-    setState(() => _joinRule = selected);
-  }
-
-  Future<void> _pickHistoryVisibility() async {
-    final l10n = AppLocalizations.of(context)!;
-    final selected = await showModalBottomSheet<int>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final value in [0, 1, 2])
-                ListTile(
-                  title: Text(_historyVisibilityTitle(l10n, value)),
-                  subtitle: Text(_historyVisibilitySubtitle(l10n, value)),
-                  trailing: _historyVisibility == value
-                      ? const Icon(Icons.check_rounded)
-                      : null,
-                  onTap: () => Navigator.of(sheetContext).pop(value),
-                ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-    if (!mounted || selected == null) return;
-    setState(() => _historyVisibility = selected);
-  }
-
   Future<Map<String, dynamic>> _loadOverview() async {
     final roomMeta = await _svc.getRoomNameAndAvatar(widget.roomId);
 
@@ -286,10 +232,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
 
       final userInfo = await _svc.getUserInfo(peerUserId);
       return {
-        'name':
-            userInfo['displayName'] ??
-            userInfo['username'] ??
-            widget.initialName,
+        'name': userInfo['displayName'] ?? userInfo['username'] ?? widget.initialName,
         'avatar': userInfo['avatarUrl'] ?? roomMeta['avatar'],
         'userId': userInfo['id']?.toString() ?? peerUserId,
         'presenceStatus': userInfo['presenceStatus']?.toString(),
@@ -322,10 +265,8 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   }
 
   Future<List<AegisRoomMessage>> _loadRoomMessages() {
-    return _roomMessagesFuture ??= _svc.loadMessages(
-      roomId: widget.roomId,
-      limit: 500,
-    );
+    return _roomMessagesFuture ??=
+      _svc.loadMessages(roomId: widget.roomId, limit: 500);
   }
 
   Future<void> _loadMembers() async {
@@ -338,7 +279,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       final list = await _svc.getRoomMembers(widget.roomId, forceRefresh: true);
       if (!mounted) return;
       setState(() => _members = list);
-    } on Object catch (e) {
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -362,18 +303,13 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     setState(() => _saving = true);
     try {
       final bytes = await File(path).readAsBytes();
-      await _svc.setRoomAvatar(
-        widget.roomId,
-        bytes,
-        fileName: path.split('/').last,
-      );
+      await _svc.setRoomAvatar(widget.roomId, bytes, fileName: path.split('/').last);
       _overviewFuture = _loadOverview();
       if (!mounted) return;
       setState(() {});
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.roomAvatarUpdated)));
-    } on Object catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.roomAvatarUpdated)));
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.roomAvatarUploadError(_friendlyError(e)))),
@@ -396,10 +332,9 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       _overviewFuture = _loadOverview();
       if (!mounted) return;
       setState(() {});
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.roomSettingsSaved)));
-    } on Object catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.roomSettingsSaved)));
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.roomSettingsSaveError(_friendlyError(e)))),
@@ -420,10 +355,9 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       }
       await Clipboard.setData(ClipboardData(text: link));
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.textCopied)));
-    } on Object catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.textCopied)));
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.genericError(_friendlyError(e)))),
@@ -450,13 +384,11 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       };
       const encoder = JsonEncoder.withIndent('  ');
       await file.writeAsString(encoder.convert(payload));
-      await share.SharePlus.instance.share(
-        share.ShareParams(
-          files: [share.XFile(file.path)],
-          subject: overview['name']?.toString() ?? widget.initialName,
-        ),
+      await share.Share.shareXFiles(
+        [share.XFile(file.path)],
+        subject: overview['name']?.toString() ?? widget.initialName,
       );
-    } on Object catch (e) {
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.genericError(_friendlyError(e)))),
@@ -470,21 +402,20 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: Text(l10n.leaveRoomTitle),
         content: Text(l10n.leaveRoomContent),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
+            onPressed: () => Navigator.pop(context, false),
             child: Text(l10n.cancelButton),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              l10n.leaveAction,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.leaveAction),
           ),
         ],
       ),
@@ -495,17 +426,16 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     try {
       await _svc.leaveRoom(widget.roomId);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.leftRoom)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.leftRoom)));
       Navigator.pop(context);
-    } on AegisFeatureInDevelopmentException {
-      if (!mounted) return;
-      await showFeatureInDevelopmentDialog(
-        context,
-        feature: l10n.leaveAction,
-      );
-    } on Object catch (e) {
+      } on AegisFeatureInDevelopmentException {
+        if (!mounted) return;
+        await showFeatureInDevelopmentDialog(
+          context,
+          feature: l10n.leaveAction,
+        );
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.leaveRoomError(_friendlyError(e)))),
@@ -560,50 +490,39 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     return raw.split('/').last;
   }
 
-  Future<void> _handleSectionTap(
-    _RoomSettingsSection section,
-    bool isMobile,
-  ) async {
-    final l10n = AppLocalizations.of(context)!;
+  Future<void> _handleSectionTap(_RoomSettingsSection section, bool isMobile) async {
     switch (section.key) {
+      case 'members':
+        await _loadMembers();
       case 'copylink':
-        if (_saving) return;
         await _copyRoomLink();
         return;
       case 'export':
-        if (_saving) return;
         await _exportChat();
         return;
       case 'leave':
-        if (_saving) return;
         await _showLeaveConfirmation();
         return;
       default:
         break;
     }
 
-    final sections = _sections(l10n);
+    final sections = _sections(AppLocalizations.of(context)!);
     final nextIndex = sections.indexWhere((item) => item.key == section.key);
-    if (nextIndex < 0) return;
-
-    if (section.key == 'members' && _members.isEmpty && !_loadingMembers) {
-      await _loadMembers();
+    if (nextIndex >= 0) {
+      setState(() => _selectedIndex = nextIndex);
     }
 
     if (isMobile) {
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
           builder: (_) => _ChatSettingDetailPage(
             title: section.title,
             child: _buildSectionContent(section.key),
           ),
         ),
       );
-      return;
-    }
-
-    if (mounted) {
-      setState(() => _selectedIndex = nextIndex);
     }
   }
 
@@ -617,7 +536,6 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
         }
         final data = snapshot.data!;
         final presence = _isDirectChat ? _presenceLabel(l10n, data) : null;
-
         return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -643,8 +561,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                           const SizedBox(height: 4),
                           Text(
                             presence ?? _chatTypeLabel(l10n),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                           ),
@@ -671,16 +588,12 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                     if (_isDirectChat)
                       _InfoRow(
                         label: l10n.contactIdLabel,
-                        value:
-                            data['userId']?.toString() ??
-                            (_directPeerUserId ?? widget.roomId),
+                        value: data['userId']?.toString() ?? (_directPeerUserId ?? widget.roomId),
                       ),
                     if (!_isDirectChat)
                       _InfoRow(
                         label: l10n.membersLabel,
-                        value: l10n.membersCount(
-                          (data['memberCount'] as int?) ?? 0,
-                        ),
+                        value: l10n.membersCount((data['memberCount'] as int?) ?? 0),
                       ),
                   ],
                 ),
@@ -718,13 +631,10 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
 
     return ListView.separated(
       itemCount: _members.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final member = _members[index];
-        final title =
-            member['displayName']?.toString() ??
-            member['userId']?.toString() ??
-            '';
+        final title = member['displayName']?.toString() ?? member['userId']?.toString() ?? '';
         return GlassCard(
           child: ListTile(
             contentPadding: EdgeInsets.zero,
@@ -736,7 +646,11 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const ProfileScreen(),
+                  builder: (_) => ProfileScreen(
+                    userId: userId,
+                    initialName: title,
+                    initialAvatar: member['avatarUrl']?.toString(),
+                  ),
                 ),
               );
             },
@@ -772,24 +686,20 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
           return AppEmptyState(
             title: mediaOnly ? l10n.mediaLabel : l10n.filesLabel,
             message: mediaOnly ? l10n.noSharedMedia : l10n.noSharedFiles,
-            icon: mediaOnly
-                ? Icons.perm_media_outlined
-                : Icons.insert_drive_file_outlined,
+            icon: mediaOnly ? Icons.perm_media_outlined : Icons.insert_drive_file_outlined,
           );
         }
 
         return ListView.separated(
           itemCount: messages.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 8),
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             final message = messages[index];
             return GlassCard(
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(
-                  mediaOnly
-                      ? Icons.perm_media_outlined
-                      : Icons.insert_drive_file_outlined,
+                  mediaOnly ? Icons.perm_media_outlined : Icons.insert_drive_file_outlined,
                 ),
                 title: Text(
                   _messageTitle(message, l10n),
@@ -822,42 +732,34 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
-                ShadInput(
+                TextField(
                   controller: _nameController,
-                  placeholder: Text(l10n.roomNameLabel),
-                  leading: const Icon(Icons.edit_outlined, size: 18),
+                  decoration: InputDecoration(labelText: l10n.roomNameLabel),
                 ),
                 const SizedBox(height: 12),
-                ShadButton.outline(
+                ElevatedButton.icon(
                   onPressed: _saving ? null : _pickAndUploadAvatar,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.image_outlined, size: 18),
-                      const SizedBox(width: 8),
-                      Text(l10n.uploadAvatarButton),
-                    ],
-                  ),
+                  icon: const Icon(Icons.image_outlined),
+                  label: Text(l10n.uploadAvatarButton),
                 ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ShadButton.outline(
-                    onPressed: _saving ? null : _pickJoinRule,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${l10n.roomJoinRuleLabel}: ${_joinRuleTitle(l10n, _joinRule)}',
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                DropdownButtonFormField<int>(
+                  initialValue: _joinRule,
+                  decoration: InputDecoration(labelText: l10n.roomJoinRuleLabel),
+                  items: [0, 1, 2]
+                      .map(
+                        (value) => DropdownMenuItem<int>(
+                          value: value,
+                          child: Text(_joinRuleTitle(l10n, value)),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.expand_more_rounded, size: 18),
-                      ],
-                    ),
-                  ),
+                      )
+                      .toList(growable: false),
+                  onChanged: _saving
+                      ? null
+                      : (value) {
+                          if (value == null) return;
+                          setState(() => _joinRule = value);
+                        },
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -865,24 +767,25 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ShadButton.outline(
-                    onPressed: _saving ? null : _pickHistoryVisibility,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${l10n.roomHistoryVisibilityLabel}: ${_historyVisibilityTitle(l10n, _historyVisibility)}',
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.expand_more_rounded, size: 18),
-                      ],
-                    ),
+                DropdownButtonFormField<int>(
+                  initialValue: _historyVisibility,
+                  decoration: InputDecoration(
+                    labelText: l10n.roomHistoryVisibilityLabel,
                   ),
+                  items: [0, 1, 2]
+                      .map(
+                        (value) => DropdownMenuItem<int>(
+                          value: value,
+                          child: Text(_historyVisibilityTitle(l10n, value)),
+                        ),
+                      )
+                      .toList(growable: false),
+                  onChanged: _saving
+                      ? null
+                      : (value) {
+                          if (value == null) return;
+                          setState(() => _historyVisibility = value);
+                        },
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -890,7 +793,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),
-                ShadButton(
+                FilledButton(
                   onPressed: _saving ? null : _saveSettings,
                   child: _saving
                       ? const SizedBox(
@@ -939,8 +842,8 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
               l10n.featureInDevelopmentMessage(feature),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
             ),
           ],
         ),
@@ -981,201 +884,163 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       appBar: AppBar(title: Text(widget.initialName)),
       body: ScreenBackground(
         child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isMobile = constraints.maxWidth < 900;
-            final leftWidth = isMobile
-                ? constraints.maxWidth
-                : constraints.maxWidth * 0.3;
-            final currentSection = sections[_selectedIndex];
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 900;
+          final leftWidth = isMobile ? constraints.maxWidth : constraints.maxWidth * 0.3;
+          final currentSection = sections[_selectedIndex];
 
-            final navigation = Container(
-              width: isMobile ? null : leftWidth.clamp(220, 360),
-              color: Theme.of(
-                context,
-              ).colorScheme.surface.withValues(alpha: 0.02),
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: FutureBuilder<Map<String, dynamic>>(
-                      future: _overviewFuture,
-                      builder: (context, snapshot) {
-                        final data = snapshot.data;
-                        final name =
-                            data?['name']?.toString() ?? widget.initialName;
-                        final avatar = data?['avatar']?.toString();
-                        return GlassCard(
-                          onTap: _isDirectChat && data != null
-                              ? () => _openDirectProfile(data)
+          final navigation = Container(
+            width: isMobile ? null : leftWidth.clamp(220, 360),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.02),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: FutureBuilder<Map<String, dynamic>>(
+                    future: _overviewFuture,
+                    builder: (context, snapshot) {
+                      final data = snapshot.data;
+                      final name = data?['name']?.toString() ?? widget.initialName;
+                      final avatar = data?['avatar']?.toString();
+                      return GlassCard(
+                        onTap: _isDirectChat && data != null
+                            ? () => _openDirectProfile(data)
+                            : null,
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: UserAvatar(
+                            avatarUrl: avatar,
+                            name: name,
+                            radius: 22,
+                          ),
+                          title: Text(name),
+                          subtitle: Text(_chatTypeLabel(l10n)),
+                          trailing: !_isDirectChat && !_isGroupRoom
+                              ? IconButton(
+                                  icon: const Icon(Icons.edit_outlined),
+                                  onPressed: _saving ? null : _pickAndUploadAvatar,
+                                )
                               : null,
-                          child: ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: UserAvatar(
-                              avatarUrl: avatar,
-                              name: name,
-                              radius: 22,
-                            ),
-                            title: Text(name),
-                            subtitle: Text(_chatTypeLabel(l10n)),
-                            trailing: !_isDirectChat && !_isGroupRoom
-                                ? ShadIconButton.ghost(
-                                    width: 36,
-                                    height: 36,
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                    ),
-                                    onPressed: _saving
-                                        ? null
-                                        : _pickAndUploadAvatar,
-                                  )
-                                : null,
-                          ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: sections.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 6),
-                      itemBuilder: (context, index) {
-                        final section = sections[index];
-                        final isSelected = _selectedIndex == index;
-                        final isDanger =
-                            section.status == _RoomSettingsStatus.destructive;
-                        final isWip =
-                            section.status == _RoomSettingsStatus.inDevelopment;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Theme.of(
-                                    context,
-                                  ).colorScheme.surfaceContainerHighest
-                                : Colors.transparent,
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(8),
+                    itemCount: sections.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 6),
+                    itemBuilder: (context, index) {
+                      final section = sections[index];
+                      final isSelected = _selectedIndex == index;
+                      final isDanger = section.status == _RoomSettingsStatus.destructive;
+                      final isWip = section.status == _RoomSettingsStatus.inDevelopment;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.surfaceContainerHighest
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
                             borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(12),
-                              onTap: () => _handleSectionTap(section, isMobile),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 10,
-                                ),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundColor: isDanger
-                                          ? Theme.of(context).colorScheme.error
+                            onTap: () => _handleSectionTap(section, isMobile),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: isDanger
+                                        ? Theme.of(context).colorScheme.error
+                                        : isSelected
+                                            ? Theme.of(context).colorScheme.primary
+                                            : Theme.of(context).colorScheme.surface,
+                                    child: Icon(
+                                      section.icon,
+                                      size: 18,
+                                      color: isDanger
+                                          ? Colors.white
                                           : isSelected
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.surface,
-                                      child: Icon(
-                                        section.icon,
-                                        size: 18,
+                                              ? Theme.of(context).colorScheme.onPrimary
+                                              : Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      section.title,
+                                      style: TextStyle(
                                         color: isDanger
-                                            ? Colors.white
+                                            ? Theme.of(context).colorScheme.error
                                             : isSelected
-                                            ? Theme.of(
-                                                context,
-                                              ).colorScheme.onPrimary
-                                            : Theme.of(
-                                                context,
-                                              ).colorScheme.onSurface,
+                                                ? Theme.of(context).colorScheme.primary
+                                                : null,
+                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
+                                  ),
+                                  if (isWip)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondaryContainer,
+                                        borderRadius: BorderRadius.circular(999),
+                                      ),
                                       child: Text(
-                                        section.title,
+                                        l10n.featureInDevelopmentLabel,
                                         style: TextStyle(
-                                          color: isDanger
-                                              ? Theme.of(
-                                                  context,
-                                                ).colorScheme.error
-                                              : isSelected
-                                              ? Theme.of(
-                                                  context,
-                                                ).colorScheme.primary
-                                              : null,
-                                          fontWeight: isSelected
-                                              ? FontWeight.w700
-                                              : FontWeight.w500,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSecondaryContainer,
                                         ),
                                       ),
                                     ),
-                                    if (isWip)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.secondaryContainer,
-                                          borderRadius: BorderRadius.circular(
-                                            999,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          l10n.featureInDevelopmentLabel,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSecondaryContainer,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                                ],
                               ),
                             ),
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            );
-
-            if (isMobile) {
-              return navigation;
-            }
-
-            return Row(
-              children: [
-                SizedBox(width: leftWidth.clamp(220, 360), child: navigation),
-                const VerticalDivider(width: 12, thickness: 1),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: GlassCard(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
-                        child: _buildSectionContent(currentSection.key),
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
-            );
-          },
-        ),
+            ),
+          );
+
+          if (isMobile) {
+            return navigation;
+          }
+
+          return Row(
+            children: [
+              SizedBox(width: leftWidth.clamp(220, 360), child: navigation),
+              const VerticalDivider(width: 12, thickness: 1),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: GlassCard(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      child: _buildSectionContent(currentSection.key),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
       ),
     );
   }
@@ -1198,8 +1063,8 @@ class _InfoRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
             ),
           ),
           const SizedBox(width: 12),
@@ -1208,8 +1073,8 @@ class _InfoRow extends StatelessWidget {
               value,
               textAlign: TextAlign.right,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ),
         ],
@@ -1217,6 +1082,7 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
+
 
 class _ChatSettingDetailPage extends StatelessWidget {
   const _ChatSettingDetailPage({required this.title, required this.child});

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
@@ -15,6 +14,8 @@ class FeedbackScreen extends StatefulWidget {
 }
 
 class _FeedbackScreenState extends State<FeedbackScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   final _titleController = TextEditingController();
   final _detailsController = TextEditingController();
 
@@ -38,16 +39,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       default:
         return _category;
     }
-  }
-
-  List<(String, String)> _categoryItems(AppLocalizations l10n) {
-    return [
-      ('features', l10n.feedbackCategoryFeatures),
-      ('ux_design', l10n.feedbackCategoryUxDesign),
-      ('performance', l10n.feedbackCategoryPerformance),
-      ('security', l10n.feedbackCategorySecurity),
-      ('network', l10n.feedbackCategoryNetworkSync),
-    ];
   }
 
   @override
@@ -91,19 +82,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     ].join('\n');
   }
 
-  bool _hasFeedbackContent() {
-    return _titleController.text.trim().isNotEmpty ||
-        _detailsController.text.trim().isNotEmpty;
-  }
-
   Future<void> _copy() async {
+    if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context)!;
-    if (!_hasFeedbackContent()) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.feedbackValidation)));
-      return;
-    }
     final text = _buildMessage(l10n);
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
@@ -113,13 +94,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   }
 
   Future<void> _send() async {
+    if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context)!;
-    if (!_hasFeedbackContent()) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.feedbackValidation)));
-      return;
-    }
     setState(() => _sending = true);
     try {
       final text = _buildMessage(l10n);
@@ -146,41 +122,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     }
   }
 
-  Future<void> _pickCategory() async {
-    final l10n = AppLocalizations.of(context)!;
-    final items = _categoryItems(l10n);
-    final selected = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(sheetContext).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final item in items)
-                  ListTile(
-                    title: Text(item.$2),
-                    trailing: item.$1 == _category
-                        ? const Icon(Icons.check_rounded)
-                        : null,
-                    onTap: () => Navigator.of(sheetContext).pop(item.$1),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-    if (!mounted || selected == null) return;
-    setState(() => _category = selected);
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -199,6 +140,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             padding: const EdgeInsets.all(16),
             children: [
               Form(
+                key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -209,35 +151,63 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                       ),
                       child: Column(
                         children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: ShadButton.outline(
-                              onPressed: _pickCategory,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(_categoryLabel(l10n)),
-                                  const Icon(
-                                    Icons.expand_more_rounded,
-                                    size: 18,
-                                  ),
-                                ],
-                              ),
+                          DropdownButtonFormField<String>(
+                            initialValue: _category,
+                            decoration: InputDecoration(
+                              labelText: l10n.categoryLabel,
                             ),
+                            items: [
+                              DropdownMenuItem(
+                                value: 'features',
+                                child: Text(l10n.feedbackCategoryFeatures),
+                              ),
+                              DropdownMenuItem(
+                                value: 'ux_design',
+                                child: Text(l10n.feedbackCategoryUxDesign),
+                              ),
+                              DropdownMenuItem(
+                                value: 'performance',
+                                child: Text(l10n.feedbackCategoryPerformance),
+                              ),
+                              DropdownMenuItem(
+                                value: 'security',
+                                child: Text(l10n.feedbackCategorySecurity),
+                              ),
+                              DropdownMenuItem(
+                                value: 'network',
+                                child: Text(l10n.feedbackCategoryNetworkSync),
+                              ),
+                            ],
+                            onChanged: (v) =>
+                                setState(() => _category = v ?? 'features'),
                           ),
                           const SizedBox(height: 12),
-                          ShadInput(
+                          TextFormField(
                             controller: _titleController,
                             textInputAction: TextInputAction.next,
-                            placeholder: Text(l10n.shortDescriptionHint),
+                            decoration: InputDecoration(
+                              labelText: l10n.shortDescriptionLabel,
+                              hintText: l10n.shortDescriptionHint,
+                            ),
+                            validator: (v) {
+                              final hasTitle = (v ?? '').trim().isNotEmpty;
+                              final hasDetails =
+                                  _detailsController.text.trim().isNotEmpty;
+                              if (!hasTitle && !hasDetails) {
+                                return l10n.feedbackValidation;
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 12),
-                          ShadInput(
+                          TextFormField(
                             controller: _detailsController,
                             minLines: 3,
                             maxLines: 8,
-                            placeholder: Text(l10n.detailsHint),
+                            decoration: InputDecoration(
+                              labelText: l10n.detailsOptionalLabel,
+                              hintText: l10n.detailsHint,
+                            ),
                           ),
                         ],
                       ),
@@ -246,36 +216,23 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final isCompact = constraints.maxWidth < 420;
-                        final copyButton = ShadButton.outline(
+                        final copyButton = OutlinedButton.icon(
                           onPressed: _sending ? null : _copy,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.copy, size: 18),
-                              const SizedBox(width: 8),
-                              Text(l10n.copyButton),
-                            ],
-                          ),
+                          icon: const Icon(Icons.copy),
+                          label: Text(l10n.copyButton),
                         );
-                        final sendButton = ShadButton(
+                        final sendButton = ElevatedButton.icon(
                           onPressed: _sending ? null : _send,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (_sending)
-                                const SizedBox(
+                          icon: _sending
+                              ? const SizedBox(
                                   width: 18,
                                   height: 18,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                   ),
                                 )
-                              else
-                                const Icon(Icons.send, size: 18),
-                              const SizedBox(width: 8),
-                              Text(l10n.sendButton),
-                            ],
-                          ),
+                              : const Icon(Icons.send),
+                          label: Text(l10n.sendButton),
                         );
 
                         if (isCompact) {
