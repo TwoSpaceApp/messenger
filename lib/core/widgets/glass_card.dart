@@ -11,7 +11,7 @@ class GlassCard extends StatelessWidget {
   const GlassCard({
     required this.child,
     super.key,
-    this.borderRadius = 16.0,
+    this.borderRadius = 20.0,
     this.padding = const EdgeInsets.all(16),
     this.margin,
     this.onTap,
@@ -29,19 +29,19 @@ class GlassCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Tonal surface: blend shadcn card colour with the app glass surface
+    // Blend the existing glass language into a calmer MD3 tonal surface.
     final cardBg = Color.alphaBlend(
-      shadTheme.colorScheme.card.withValues(alpha: isDark ? 0.82 : 0.92),
-      AppColors.glassSurface(context),
+      shadTheme.colorScheme.card.withValues(alpha: isDark ? 0.78 : 0.88),
+      cs.surfaceContainerHigh.withValues(alpha: isDark ? 0.92 : 0.96),
     );
 
     final border = Border.all(
-      color: cs.outlineVariant.withValues(alpha: 0.6),
+      color: cs.outlineVariant.withValues(alpha: isDark ? 0.72 : 0.82),
     );
     final shadow = BoxShadow(
-      color: AppColors.glassShadow(context),
-      blurRadius: 20,
-      offset: const Offset(0, 8),
+      color: AppColors.glassShadow(context).withValues(alpha: isDark ? 0.16 : 0.08),
+      blurRadius: isDark ? 18 : 12,
+      offset: const Offset(0, 6),
     );
 
     final Widget card = Material(

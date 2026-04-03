@@ -6,10 +6,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
-import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/loading_skeletons.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
@@ -19,16 +20,19 @@ import 'package:two_space_app/features/people/presentation/controllers/people_co
 import 'package:two_space_app/features/people/presentation/widgets/people_search_field.dart';
 import 'package:two_space_app/features/people/presentation/widgets/person_tile.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
-import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
 
 class PeopleScreen extends StatefulWidget {
   const PeopleScreen({
     super.key,
     this.autofocusSearch = false,
     this.simplified = false,
+    this.titleOverride,
+    this.searchHintOverride,
   });
   final bool autofocusSearch;
   final bool simplified;
+  final String? titleOverride;
+  final String? searchHintOverride;
 
   @override
   State<PeopleScreen> createState() => _PeopleScreenState();
@@ -62,6 +66,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final canPop = Navigator.of(context).canPop();
+    final title = widget.titleOverride ?? l10n.peopleTitle;
+    final searchHint = widget.searchHintOverride ?? l10n.peopleSearchHint;
     const pad = EdgeInsets.symmetric(horizontal: 16);
 
     return AnimatedBuilder(
@@ -79,19 +85,19 @@ class _PeopleScreenState extends State<PeopleScreen> {
                       padding: pad.copyWith(top: 10, bottom: 2),
                       child: Row(
                         children: [
-                          if (canPop)
+                          if (canPop && !widget.simplified)
                             _HeaderIcon(
                               icon: Icons.arrow_back_rounded,
                               tooltip: l10n.back,
                               onTap: () => Navigator.of(context).maybePop(),
                             ),
-                          if (canPop) const SizedBox(width: 4),
+                          if (canPop && !widget.simplified) const SizedBox(width: 4),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  l10n.peopleTitle,
+                                  title,
                                   style: theme.textTheme.titleLarge?.copyWith(
                                     color: theme.colorScheme.onSurface,
                                     fontWeight: FontWeight.w700,
@@ -100,7 +106,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                 if (widget.simplified) ...[
                                   const SizedBox(height: 2),
                                   Text(
-                                    l10n.peopleSubtitle,
+                                    widget.autofocusSearch
+                                        ? l10n.searchContactsHint
+                                        : l10n.peopleSubtitle,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.bodySmall?.copyWith(
@@ -111,62 +119,26 @@ class _PeopleScreenState extends State<PeopleScreen> {
                               ],
                             ),
                           ),
-                          if (widget.simplified) ...[
+                          if (widget.simplified)
                             _HeaderIcon(
-                              icon: Icons.sync_rounded,
-                              tooltip: l10n.peopleQuickSync,
-                              onTap: _controller.loading ? null : _controller.refresh,
+                              icon: Icons.close_rounded,
+                              tooltip: l10n.closeButton,
+                              onTap: canPop ? () => Navigator.of(context).maybePop() : null,
                             ),
-                            _HeaderIcon(
-                              icon: Icons.share_outlined,
-                              tooltip: l10n.peopleQuickInvite,
-                              onTap: _shareInviteText,
-                            ),
-                          ],
                         ],
                       ),
                     ),
-                    if (!widget.simplified) ...[
-                      Padding(
-                        padding: pad.copyWith(top: 6, bottom: 8),
-                        child: SettingsHeroCard(
-                          icon: Icons.people_alt_rounded,
-                          title: l10n.peopleTitle,
-                          subtitle: l10n.peopleSubtitle,
-                          child: Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: [
-                              _QuickActionButton(
-                                icon: Icons.search_rounded,
-                                label: l10n.peopleQuickNewChat,
-                                onTap: () => _searchFocusNode.requestFocus(),
-                              ),
-                              _QuickActionButton(
-                                icon: Icons.share_outlined,
-                                label: l10n.peopleQuickInvite,
-                                onTap: _shareInviteText,
-                              ),
-                              _QuickActionButton(
-                                icon: Icons.sync_rounded,
-                                label: l10n.peopleQuickSync,
-                                onTap: _controller.loading ? null : _controller.refresh,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
                     Padding(
                       padding: pad.copyWith(top: 4, bottom: 8),
-                      child: GlassCard(
+                      child: SectionCard(
+                        radius: UITokens.cornerXL,
                         child: Column(
                           children: [
                             PeopleSearchField(
                               controller: _searchController,
                               focusNode: _searchFocusNode,
                               autofocus: widget.autofocusSearch,
-                              hintText: l10n.peopleSearchHint,
+                              hintText: searchHint,
                               onChanged: _controller.updateQuery,
                               onClear: () {
                                 _searchController.clear();
@@ -175,25 +147,39 @@ class _PeopleScreenState extends State<PeopleScreen> {
                             ),
                             if (!widget.simplified) ...[
                               const SizedBox(height: 14),
-                              SizedBox(
-                                height: 36,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  keyboardDismissBehavior:
-                                      ScrollViewKeyboardDismissBehavior.onDrag,
-                                  children: [
-                                    _chip(PeopleSegment.all, l10n.peopleSegmentAll),
-                                    _chip(
-                                      PeopleSegment.twospace,
-                                      l10n.peopleSegmentTwoSpace,
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                keyboardDismissBehavior:
+                                    ScrollViewKeyboardDismissBehavior.onDrag,
+                                child: SegmentedButton<PeopleSegment>(
+                                  showSelectedIcon: false,
+                                  selected: <PeopleSegment>{_controller.segment},
+                                  onSelectionChanged: (selection) {
+                                    final segment = selection.firstOrNull;
+                                    if (segment != null) {
+                                      _controller.setSegment(segment);
+                                    }
+                                  },
+                                  segments: [
+                                    ButtonSegment(
+                                      value: PeopleSegment.all,
+                                      label: Text(l10n.peopleSegmentAll),
+                                      icon: const Icon(Icons.grid_view_rounded),
                                     ),
-                                    _chip(
-                                      PeopleSegment.phonebook,
-                                      l10n.peopleSegmentPhonebook,
+                                    ButtonSegment(
+                                      value: PeopleSegment.twospace,
+                                      label: Text(l10n.peopleSegmentTwoSpace),
+                                      icon: const Icon(Icons.alternate_email_rounded),
                                     ),
-                                    _chip(
-                                      PeopleSegment.recent,
-                                      l10n.peopleSegmentRecent,
+                                    ButtonSegment(
+                                      value: PeopleSegment.phonebook,
+                                      label: Text(l10n.peopleSegmentPhonebook),
+                                      icon: const Icon(Icons.contact_phone_outlined),
+                                    ),
+                                    ButtonSegment(
+                                      value: PeopleSegment.recent,
+                                      label: Text(l10n.peopleSegmentRecent),
+                                      icon: const Icon(Icons.schedule_rounded),
                                     ),
                                   ],
                                 ),
@@ -216,38 +202,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _chip(PeopleSegment segment, String label) {
-    final selected = _controller.segment == segment;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: selected,
-        showCheckmark: false,
-        onSelected: (_) => _controller.setSegment(segment),
-        padding: const EdgeInsets.symmetric(horizontal: 6),
-        backgroundColor: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withValues(alpha: 0.56),
-        selectedColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.28),
-        labelStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontSize: 12,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-        ),
-        side: BorderSide(
-          color: selected
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.55)
-              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.25),
-        ),
-        visualDensity: VisualDensity.compact,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
@@ -492,11 +446,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
     );
   }
 
-  Future<void> _shareInviteText() async {
-    final l10n = AppLocalizations.of(context)!;
-    await Share.share(l10n.peopleInviteShareText);
-  }
-
   Future<void> _invitePerson(PersonEntry person) async {
     final l10n = AppLocalizations.of(context)!;
     await _controller.rememberPerson(person);
@@ -646,54 +595,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
   }
 }
 
-class _QuickActionButton extends StatelessWidget {
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withValues(alpha: 0.44),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.12),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 18, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ══════════════════════ Private widgets ══════════════════════
 
 class _HeaderIcon extends StatelessWidget {
@@ -773,7 +674,7 @@ class _PermissionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
+    return SectionCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: LayoutBuilder(
         builder: (context, constraints) {

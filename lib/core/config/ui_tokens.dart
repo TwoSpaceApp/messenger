@@ -6,13 +6,16 @@ class UITokens {
   static const double spaceXS = 4;
   static const double spaceSm = 8;
   static const double space = 12;
+  static const double spaceMd = 16;
   static const double spaceLg = 20;
+  static const double spaceXLg = 24;
   static const double spaceXL = 32;
 
   // Radii
   static const double cornerSm = 8;
   static const double corner = 12;
   static const double cornerLg = 16;
+  static const double cornerXL = 24;
 
   // Common Card elevation
   static const double cardElevation = 2;
@@ -21,6 +24,8 @@ class UITokens {
   static const double mobileBreakpoint = 540;
   static const double tabletBreakpoint = 760;
   static const double desktopBreakpoint = 1100;
+  static const double contentMaxWidth = 1200;
+  static const double readableContentMaxWidth = 920;
 
   // Helper to create a slightly emphasized text style based on theme
   static TextStyle emphasized(BuildContext context) => Theme.of(context)

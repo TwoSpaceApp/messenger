@@ -19,10 +19,15 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen(
-      {required this.userId, super.key, this.initialName, this.initialAvatar});
+      {required this.userId,
+      super.key,
+      this.initialName,
+      this.initialAvatar,
+      this.startInEdit = false});
   final String userId;
   final String? initialName;
   final String? initialAvatar;
+  final bool startInEdit;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -34,7 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _loading = true;
   bool _actionLoading = false;
   bool _isMe = false;
-  bool _isEditing = false;
   final ValueNotifier<double> _avatarStretch = ValueNotifier(0);
 
   final _nameController = TextEditingController();
@@ -255,7 +259,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (!mounted) return;
       setState(() {
-        _isEditing = false;
         _user = {
           ...?_user,
           'name': displayName.isEmpty ? (_user?['name'] ?? '') : displayName,
@@ -279,6 +282,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.profileSaved)),
       );
+      if (widget.startInEdit && mounted) {
+        Navigator.of(context).pop(true);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -387,6 +393,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '${value.day}.${value.month.toString().padLeft(2, '0')}';
   }
 
+  Future<void> _openEditScreen() async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(
+          userId: widget.userId,
+          initialName: widget.initialName,
+          initialAvatar: widget.initialAvatar,
+          startInEdit: true,
+        ),
+      ),
+    );
+    if (changed == true && mounted) {
+      setState(() => _loading = true);
+      await _loadUser();
+    }
+  }
+
   bool _updateAvatarStretch(double next) {
     final normalized = next.clamp(0.0, 72.0);
     if ((_avatarStretch.value - normalized).abs() < 0.5) {
@@ -407,16 +430,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(l10n.profileTitle),
+        title: Text(widget.startInEdit ? l10n.editTooltip : l10n.profileTitle),
         centerTitle: false,
         actions: [
           if (_isMe)
             IconButton(
-              icon: Icon(_isEditing ? Icons.check : Icons.edit),
-              onPressed: _isEditing
-                  ? _saveProfile
-                  : () => setState(() => _isEditing = true),
-              tooltip: _isEditing ? l10n.saveTooltip : l10n.editTooltip,
+              icon: Icon(widget.startInEdit ? Icons.check_rounded : Icons.edit_rounded),
+              onPressed: widget.startInEdit ? _saveProfile : _openEditScreen,
+              tooltip: widget.startInEdit ? l10n.saveTooltip : l10n.editTooltip,
             ),
         ],
       ),
@@ -601,7 +622,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
-                    if (_isMe && _isEditing)
+                    if (_isMe && widget.startInEdit)
                       Positioned(
                         right: -4,
                         bottom: -4,
@@ -837,20 +858,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _isEditing ? l10n.editTooltip : l10n.profileTitle,
+              widget.startInEdit ? l10n.editTooltip : l10n.profileTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              _isEditing ? l10n.profileSubtitle : l10n.peopleViewProfileAction,
+              widget.startInEdit ? l10n.profileSubtitle : l10n.peopleViewProfileAction,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 20),
-            if (_isEditing)
+            if (widget.startInEdit)
               Column(
                 children: [
                   _buildEditableField(l10n.nameField, _nameController, Icons.person),

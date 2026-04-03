@@ -11,8 +11,8 @@ import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
-import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/unread_badge.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
@@ -286,24 +286,85 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildHeroHeader(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildHeroHeader(
+    ThemeData theme,
+    AppLocalizations l10n,
+    int roomCount,
+  ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+      child: SectionCard(
+        radius: UITokens.cornerXL,
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const AppLogo(large: false),
-            const SizedBox(width: 10),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              alignment: Alignment.center,
+              child: const AppLogo(large: false),
+            ),
+            const SizedBox(width: 14),
             Expanded(
-              child: Text(
-                l10n.chatsTitle,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.chatsTitle,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          '$roomCount',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        l10n.noMessages,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
+            const SizedBox(width: 8),
+            FilledButton.icon(
+              onPressed: _showStartChatSheet,
+              icon: const Icon(Icons.add_comment_outlined),
+              label: const SizedBox.shrink(),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(52, 52),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+            ),
+            const SizedBox(width: 4),
             IconButton(
               icon: Icon(
                 Icons.search,
@@ -339,12 +400,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               final maxWidth = constraints.maxWidth >= UITokens.desktopBreakpoint
                   ? 920.0
                   : double.infinity;
+
               return Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: maxWidth),
                   child: Column(
                     children: [
-                      _buildHeroHeader(theme, l10n),
+                      _buildHeroHeader(theme, l10n, _rooms.length),
                       Expanded(
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 260),
@@ -362,15 +424,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               );
             },
           ),
-        ),
-      ),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).padding.bottom + 88,
-        ),
-        child: FloatingActionButton(
-          onPressed: _showStartChatSheet,
-          child: const Icon(Icons.add_comment_outlined),
         ),
       ),
     );
@@ -462,30 +515,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.5,
             child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 220),
-                child: GlassCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.forum_outlined,
-                        size: 36,
-                        color: AppColors.iconMuted(context),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        l10n.noChats,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
+              child: AppEmptyState(
+                title: l10n.noChats,
+                message: l10n.peopleSubtitle,
+                icon: Icons.forum_outlined,
+                actionLabel: l10n.peopleQuickNewChat,
+                onAction: _showStartChatSheet,
               ),
             ),
           ),
@@ -512,9 +547,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         final item = Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: GlassCard(
+          child: SectionCard(
             onTap: () => _openChat(id),
-            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 Hero(

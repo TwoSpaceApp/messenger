@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/unread_badge.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
@@ -62,6 +63,8 @@ class _FloatingNavBarState extends State<FloatingNavBar>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.of(context).padding.bottom;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final expandedWidth = (screenWidth - 24).clamp(280.0, _widthExpanded);
     return Positioned(
       left: 0,
       right: 0,
@@ -78,17 +81,21 @@ class _FloatingNavBarState extends State<FloatingNavBar>
             child: ValueListenableBuilder<bool>(
               valueListenable: _isExpanded,
               builder: (context, expanded, child) {
+                final colorScheme = Theme.of(context).colorScheme;
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOutBack,
-                  width: expanded ? _widthExpanded : _widthCollapsed,
+                  width: expanded ? expandedWidth : _widthCollapsed,
                   height: _height,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(35),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.75),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.shadow(context),
-                        blurRadius: 16,
+                        color: AppColors.shadow(context).withValues(alpha: 0.14),
+                        blurRadius: 18,
                         offset: const Offset(0, 8),
                       ),
                     ],
@@ -98,10 +105,7 @@ class _FloatingNavBarState extends State<FloatingNavBar>
                     child: BackdropFilter(
                       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: ColoredBox(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surface
-                            .withValues(alpha: 0.7),
+                        color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.82),
                         child: expanded
                             ? Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -166,16 +170,17 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
           color: selected
-              ? Theme.of(context).primaryColor.withValues(alpha: 0.2)
+              ? colorScheme.primaryContainer.withValues(alpha: 0.92)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(UITokens.cornerLg),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -186,8 +191,8 @@ class _NavItem extends StatelessWidget {
                 Icon(
                   icon,
                   color: selected
-                      ? Theme.of(context).primaryColor
-                      : Theme.of(context).iconTheme.color,
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
                   size: 24,
                 ),
                 if (badge > 0)
@@ -205,8 +210,8 @@ class _NavItem extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: selected
-                        ? Theme.of(context).primaryColor
-                        : Theme.of(context).iconTheme.color,
+                        ? colorScheme.onPrimaryContainer
+                        : colorScheme.onSurfaceVariant,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
             ),

@@ -21,6 +21,7 @@ import 'package:two_space_app/core/sound/waveform_painter.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/utils/storage_service.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
 import 'package:two_space_app/features/chat/data/services/draft_service.dart';
@@ -503,6 +504,104 @@ class _ChatScreenState extends State<ChatScreen>
       default:
         return AppColors.offlineStatus(context);
     }
+  }
+
+  String _chatHeaderMetaLabel(AppLocalizations l10n) {
+    if (widget.chat.roomType == 'direct') {
+      return l10n.peopleTitle;
+    }
+    return l10n.chatsTitle;
+  }
+
+  Widget _buildChatHeroCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    String headerName,
+    String? headerAvatarUrl,
+    String? presenceLabel,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+      child: SectionCard(
+        radius: UITokens.cornerXL,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            UserAvatar(
+              avatarUrl: headerAvatarUrl,
+              name: headerName,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    headerName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          _chatHeaderMetaLabel(l10n),
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (presenceLabel != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _headerPresenceColor(context).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.circle, size: 8, color: _headerPresenceColor(context)),
+                              const SizedBox(width: 8),
+                              Text(
+                                presenceLabel,
+                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                  color: _headerPresenceColor(context),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton.filledTonal(
+              onPressed: _openChatSettings,
+              icon: const Icon(Icons.tune_rounded),
+              tooltip: l10n.settingsTitle,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _handleListScroll() {
@@ -2065,7 +2164,8 @@ class _ChatScreenState extends State<ChatScreen>
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         title: InkWell(
           onTap: _directPeerUserId != null
               ? () => _openUserProfile(
@@ -2110,6 +2210,13 @@ class _ChatScreenState extends State<ChatScreen>
             ],
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: _openChatSettings,
+            icon: const Icon(Icons.tune_rounded),
+            tooltip: l10n.settingsTitle,
+          ),
+        ],
       ),
       body: ScreenBackground(
         child: SafeArea(
@@ -2141,6 +2248,14 @@ class _ChatScreenState extends State<ChatScreen>
                     child: Stack(
                       children: [
                         Column(children: [
+                          _buildChatHeroCard(
+                            context,
+                            l10n,
+                            colorScheme,
+                            headerName,
+                            headerAvatarUrl,
+                            presenceLabel,
+                          ),
                           Expanded(child: bodyWidget),
                           if (_isTyping)
                             Padding(
@@ -2163,10 +2278,20 @@ class _ChatScreenState extends State<ChatScreen>
                             _buildUploadProgressCard(colorScheme),
                           Padding(
                             padding: const EdgeInsets.all(8),
-                            child: Container(
+                            child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: colorScheme.surface,
-                                borderRadius: BorderRadius.circular(30),
+                                color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.96),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: colorScheme.outlineVariant.withValues(alpha: 0.72),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: colorScheme.shadow.withValues(alpha: 0.08),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
                               ),
                               child: Row(children: [
                                 IconButton(
@@ -3648,6 +3773,10 @@ class _SquishyBubbleState extends State<_SquishyBubble> with SingleTickerProvide
 
   @override
   Widget build(BuildContext context) {
+    final borderColor = widget.highlighted
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.35);
+
     return GestureDetector(
       onTapDown: (_) {
          if (widget.dynamicBubbles) _controller.forward();
@@ -3661,15 +3790,16 @@ class _SquishyBubbleState extends State<_SquishyBubble> with SingleTickerProvide
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          margin: const EdgeInsets.symmetric(vertical: 6),
+          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.68),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          margin: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: widget.isOwn ? AppColors.ownBubble(context) : AppColors.otherBubble(context),
             borderRadius: BorderRadius.circular(widget.bubbleRounding),
-             border: widget.highlighted 
-              ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2)
-              : null,
+            border: Border.all(
+              color: borderColor,
+              width: widget.highlighted ? 2 : 1,
+            ),
           ),
           child: widget.child,
         ),

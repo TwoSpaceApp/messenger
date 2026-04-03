@@ -637,8 +637,8 @@ Checklist:
 - shell / primary navigation
 
 Статус:
-- [x] Backlog
-- [ ] In progress
+- [ ] Backlog
+- [x] In progress
 - [ ] UI ready
 - [ ] QA passed
 
@@ -659,8 +659,8 @@ Checklist:
 - Type B. List Screen
 
 Статус:
-- [x] Backlog
-- [ ] In progress
+- [ ] Backlog
+- [x] In progress
 - [ ] UI ready
 - [ ] QA passed
 
@@ -681,8 +681,8 @@ Checklist:
 - Type C. Detail Screen
 
 Статус:
-- [x] Backlog
-- [ ] In progress
+- [ ] Backlog
+- [x] In progress
 - [ ] UI ready
 - [ ] QA passed
 
@@ -861,8 +861,8 @@ Checklist:
 - Type B. List Screen
 
 Статус:
-- [x] Backlog
-- [ ] In progress
+- [ ] Backlog
+- [x] In progress
 - [ ] UI ready
 - [ ] QA passed
 
@@ -883,8 +883,8 @@ Checklist:
 - Type B. List Screen
 
 Статус:
-- [x] Backlog
-- [ ] In progress
+- [ ] Backlog
+- [x] In progress
 - [ ] UI ready
 - [ ] QA passed
 
@@ -905,8 +905,8 @@ Checklist:
 - Type B. List Screen
 
 Статус:
-- [x] Backlog
-- [ ] In progress
+- [ ] Backlog
+- [x] In progress
 - [ ] UI ready
 - [ ] QA passed
 
@@ -927,8 +927,8 @@ Checklist:
 - Type C. Detail Screen
 
 Статус:
-- [x] Backlog
-- [ ] In progress
+- [ ] Backlog
+- [x] In progress
 - [ ] UI ready
 - [ ] QA passed
 
@@ -975,8 +975,8 @@ Checklist:
 - Type E. Settings Screen
 
 Статус:
-- [x] Backlog
-- [ ] In progress
+- [ ] Backlog
+- [x] In progress
 - [ ] UI ready
 - [ ] QA passed
 
