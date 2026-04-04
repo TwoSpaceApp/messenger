@@ -29,6 +29,7 @@ Status legend:
 | AEGIS-009 | done | replies | Reply send ignores `replyToId` | Client now sends, syncs, and persists `ReplyToMessageId` |
 | AEGIS-010 | in_progress | reactions | Reactions and pinned messages were stubbed | Mutation flow and live events are wired, but cold-start hydration is still incomplete for channels/reactions |
 | AEGIS-011 | done | receipts | Delivery/read state is not persisted locally | Drift schema, migration, UTC-safe round-trip, and test added |
+| AEGIS-027 | done | offline | Pending outgoing messages stayed in local storage without reconnect replay | Client now stores replay metadata and flushes the offline queue automatically after session restore |
 
 ## Group And Membership Management
 
@@ -53,8 +54,8 @@ Status legend:
 
 | ID | Status | Area | Problem | Notes |
 | --- | --- | --- | --- | --- |
-| AEGIS-020 | todo | auth | Session restore stores `identifier:password` fallback token | Remove insecure credential-as-token storage once safe alternative exists |
-| AEGIS-021 | blocked_server | auth | Server auth response still returns empty `SessionToken` | `Aegis-main-new` now generates opaque session tokens in the auth service, but `AuthHandler` still sends an empty token back to the client |
+| AEGIS-020 | done | auth | Session restore stored `identifier:password` fallback token | Client now persists and restores the real opaque `SessionToken` returned by auth |
+| AEGIS-021 | done | auth | Client did not yet rely on the current server `SessionToken` contract | Password auth and token re-auth now consume the server-issued session token end-to-end |
 | AEGIS-022 | done | account | Password reset/account deletion are unfinished in UI | Password reset and account deletion now use localized WIP dialog instead of silent/no-op flows |
 
 ## Quality
@@ -68,6 +69,5 @@ Status legend:
 
 This section must be updated as client work progresses.
 
-- `SERVER-001` Return the already-generated opaque `SessionToken` from `AuthHandler` on password auth and token re-auth flows so the client can stop storing `identifier:password` fallback tokens.
 - `SERVER-004` Provide explicit leave operations for channels/groups if the enum values are intended to be usable.
 - `SERVER-005` Add a query path to hydrate existing reactions/pins on cold start, especially for channels where current history payloads do not expose pin/reaction snapshots.

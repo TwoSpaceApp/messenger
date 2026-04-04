@@ -750,6 +750,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get callsTitle => '通話';
 
   @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
   String get searchByNameHint => '名前で検索...';
 
   @override
@@ -1837,6 +1840,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get startChatTitle => 'チャットを開始';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Open a private conversation with one person';
+
+  @override
   String get createRoomSubtitle => 'プライベートまたはパブリックグループ';
 
   @override
@@ -2279,6 +2286,17 @@ class AppLocalizationsJa extends AppLocalizations {
   String get callsSubtitle => '最近の通話、すばやい折り返し、相手中心の履歴';
 
   @override
+  String get widgetsSubtitle =>
+      'A warm space for new ways to stay close will appear here soon.';
+
+  @override
+  String get widgetsComingTitle => 'New connection formats are on the way';
+
+  @override
+  String get widgetsComingBody =>
+      'In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.';
+
+  @override
   String get callsStartCallAction => '通話を開始';
 
   @override
@@ -2497,4 +2515,80 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get roomHistoryVisibilityInvitedDescription =>
       '招待されたユーザーのみ以前のメッセージを閲覧できます。';
+
+  @override
+  String get loginUsernameOnlyError => 'サインインには TwoSpace のユーザー名を使用してください。';
+
+  @override
+  String get twoFactorInvalidCodeMessage =>
+      '2FA コードまたは復旧フレーズが無効です。もう一度お試しください。';
+
+  @override
+  String get twoFactorCodeRequiredMessage => '認証アプリのコードを入力するか、復旧フレーズを使用してください。';
+
+  @override
+  String get twoFactorEnabledMessage => '二要素認証が有効になりました。';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return '2FA を有効にできませんでした: $error';
+  }
+
+  @override
+  String get twoFactorSetupTitle => '二要素認証を設定';
+
+  @override
+  String get twoFactorSetupDescription =>
+      '認証アプリで QR コードをスキャンし、復旧フレーズを保存してから、新しい TOTP コードで確認してください。';
+
+  @override
+  String get twoFactorSecretTitle => 'またはこの秘密鍵を手動で入力';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle =>
+      '復旧フレーズ。2FA を有効にする前に安全な場所へ保存してください。';
+
+  @override
+  String get twoFactorVerificationCodeLabel => '確認コード';
+
+  @override
+  String get twoFactorVerificationCodeHint => '認証アプリの現在のコードを入力してください';
+
+  @override
+  String get twoFactorVerifyEnableAction => '確認して 2FA を有効化';
+
+  @override
+  String get twoFactorDisableSectionTitle => '二要素認証を無効化';
+
+  @override
+  String get twoFactorDisableSectionDescription =>
+      '有効な認証コード、または一度限りの復旧フレーズで 2FA を無効にします。';
+
+  @override
+  String get twoFactorDisableCodeHint => '現在の認証コードを入力してください';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => '復旧フレーズ';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint =>
+      '認証アプリにアクセスできない場合は復旧フレーズを貼り付けてください';
+
+  @override
+  String get twoFactorDisableAction => '2FA を無効化';
+
+  @override
+  String get twoFactorDisableCredentialsRequired =>
+      '2FA を無効にするには認証コードまたは復旧フレーズを入力してください。';
+
+  @override
+  String get twoFactorDisabledMessage => '二要素認証が無効になりました。';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return '2FA を無効にできませんでした: $error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint => 'またはコードの代わりに復旧フレーズを貼り付けてください';
 }

@@ -761,6 +761,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get callsTitle => 'Chiamate';
 
   @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
   String get searchByNameHint => 'Cerca per nome...';
 
   @override
@@ -1872,6 +1875,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get startChatTitle => 'Avvia chat';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Open a private conversation with one person';
+
+  @override
   String get createRoomSubtitle => 'Gruppo privato o pubblico';
 
   @override
@@ -2323,6 +2330,17 @@ class AppLocalizationsIt extends AppLocalizations {
       'Chiamate recenti, richiamo rapido e cronologia centrata sulle persone';
 
   @override
+  String get widgetsSubtitle =>
+      'A warm space for new ways to stay close will appear here soon.';
+
+  @override
+  String get widgetsComingTitle => 'New connection formats are on the way';
+
+  @override
+  String get widgetsComingBody =>
+      'In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.';
+
+  @override
   String get callsStartCallAction => 'Avvia chiamata';
 
   @override
@@ -2558,4 +2576,89 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get roomHistoryVisibilityInvitedDescription =>
       'Solo gli utenti invitati possono vedere i messaggi precedenti.';
+
+  @override
+  String get loginUsernameOnlyError =>
+      'Usa il tuo nome utente TwoSpace per accedere.';
+
+  @override
+  String get twoFactorInvalidCodeMessage =>
+      'Il codice 2FA o la frase di recupero non sono validi. Riprova.';
+
+  @override
+  String get twoFactorCodeRequiredMessage =>
+      'Inserisci un codice dalla tua app di autenticazione oppure usa la frase di recupero.';
+
+  @override
+  String get twoFactorEnabledMessage =>
+      'L\'autenticazione a due fattori è attiva.';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return 'Impossibile attivare 2FA: $error';
+  }
+
+  @override
+  String get twoFactorSetupTitle => 'Configura l\'autenticazione a due fattori';
+
+  @override
+  String get twoFactorSetupDescription =>
+      'Scansiona il codice QR nella tua app di autenticazione, salva la frase di recupero e poi conferma con un codice TOTP aggiornato.';
+
+  @override
+  String get twoFactorSecretTitle =>
+      'Oppure inserisci manualmente questa chiave segreta';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle =>
+      'Frase di recupero. Salvala in un luogo sicuro prima di attivare la 2FA.';
+
+  @override
+  String get twoFactorVerificationCodeLabel => 'Codice di verifica';
+
+  @override
+  String get twoFactorVerificationCodeHint =>
+      'Inserisci il codice attuale della tua app di autenticazione';
+
+  @override
+  String get twoFactorVerifyEnableAction => 'Verifica e attiva 2FA';
+
+  @override
+  String get twoFactorDisableSectionTitle =>
+      'Disattiva autenticazione a due fattori';
+
+  @override
+  String get twoFactorDisableSectionDescription =>
+      'Disattiva la 2FA con un codice valido dell\'autenticatore o con la tua frase di recupero monouso.';
+
+  @override
+  String get twoFactorDisableCodeHint =>
+      'Inserisci un codice attuale dell\'autenticatore';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => 'Frase di recupero';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint =>
+      'Incolla la frase di recupero se non hai più accesso all\'app di autenticazione';
+
+  @override
+  String get twoFactorDisableAction => 'Disattiva 2FA';
+
+  @override
+  String get twoFactorDisableCredentialsRequired =>
+      'Inserisci un codice dell\'autenticatore o una frase di recupero per disattivare la 2FA.';
+
+  @override
+  String get twoFactorDisabledMessage =>
+      'L\'autenticazione a due fattori è disattivata.';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return 'Impossibile disattivare 2FA: $error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint =>
+      'Oppure incolla la frase di recupero invece del codice';
 }

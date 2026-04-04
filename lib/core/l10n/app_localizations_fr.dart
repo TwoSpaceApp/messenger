@@ -767,6 +767,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get callsTitle => 'Appels';
 
   @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
   String get searchByNameHint => 'Rechercher par nom...';
 
   @override
@@ -1883,6 +1886,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get startChatTitle => 'Démarrer le chat';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Open a private conversation with one person';
+
+  @override
   String get createRoomSubtitle => 'Groupe privé ou public';
 
   @override
@@ -2334,6 +2341,17 @@ class AppLocalizationsFr extends AppLocalizations {
       'Appels récents, rappel rapide et historique centré sur les personnes';
 
   @override
+  String get widgetsSubtitle =>
+      'A warm space for new ways to stay close will appear here soon.';
+
+  @override
+  String get widgetsComingTitle => 'New connection formats are on the way';
+
+  @override
+  String get widgetsComingBody =>
+      'In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.';
+
+  @override
   String get callsStartCallAction => 'Démarrer un appel';
 
   @override
@@ -2571,4 +2589,89 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get roomHistoryVisibilityInvitedDescription =>
       'Seuls les utilisateurs invités peuvent voir les messages précédents.';
+
+  @override
+  String get loginUsernameOnlyError =>
+      'Utilisez votre nom d\'utilisateur TwoSpace pour vous connecter.';
+
+  @override
+  String get twoFactorInvalidCodeMessage =>
+      'Le code 2FA ou la phrase de récupération est invalide. Réessayez.';
+
+  @override
+  String get twoFactorCodeRequiredMessage =>
+      'Saisissez un code depuis votre application d\'authentification ou utilisez la phrase de récupération.';
+
+  @override
+  String get twoFactorEnabledMessage =>
+      'L\'authentification à deux facteurs est activée.';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return 'Impossible d\'activer la 2FA : $error';
+  }
+
+  @override
+  String get twoFactorSetupTitle =>
+      'Configurer l\'authentification à deux facteurs';
+
+  @override
+  String get twoFactorSetupDescription =>
+      'Scannez le QR code dans votre application d\'authentification, enregistrez la phrase de récupération, puis confirmez avec un code TOTP récent.';
+
+  @override
+  String get twoFactorSecretTitle => 'Ou saisir cette clé secrète manuellement';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle =>
+      'Phrase de récupération. Enregistrez-la dans un endroit sûr avant d\'activer la 2FA.';
+
+  @override
+  String get twoFactorVerificationCodeLabel => 'Code de vérification';
+
+  @override
+  String get twoFactorVerificationCodeHint =>
+      'Saisissez le code actuel de votre application d\'authentification';
+
+  @override
+  String get twoFactorVerifyEnableAction => 'Vérifier et activer la 2FA';
+
+  @override
+  String get twoFactorDisableSectionTitle =>
+      'Désactiver l\'authentification à deux facteurs';
+
+  @override
+  String get twoFactorDisableSectionDescription =>
+      'Désactivez la 2FA avec un code valide de l\'application d\'authentification ou votre phrase de récupération à usage unique.';
+
+  @override
+  String get twoFactorDisableCodeHint =>
+      'Saisissez un code actuel de l\'application d\'authentification';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => 'Phrase de récupération';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint =>
+      'Collez la phrase de récupération si vous n\'avez plus accès à l\'application d\'authentification';
+
+  @override
+  String get twoFactorDisableAction => 'Désactiver la 2FA';
+
+  @override
+  String get twoFactorDisableCredentialsRequired =>
+      'Saisissez un code d\'authentification ou une phrase de récupération pour désactiver la 2FA.';
+
+  @override
+  String get twoFactorDisabledMessage =>
+      'L\'authentification à deux facteurs est désactivée.';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return 'Impossible de désactiver la 2FA : $error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint =>
+      'Ou collez la phrase de récupération à la place du code';
 }

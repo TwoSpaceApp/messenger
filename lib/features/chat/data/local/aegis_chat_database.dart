@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:ffi';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sqlite3/open.dart' as sqlite_open;
 
 part 'aegis_chat_database.g.dart';
 
@@ -89,6 +91,9 @@ class AegisOfflineQueue extends Table {
   TextColumn get chatId => text()();
   TextColumn get content => text()();
   TextColumn get type => text()();
+  TextColumn get localMessageId => text().nullable()();
+  TextColumn get mediaFileId => text().nullable()();
+  IntColumn get replyToMessageId => integer().nullable()();
   IntColumn get createdAtEpochMs => integer()();
   BoolColumn get sent => boolean().withDefault(const Constant(false))();
   TextColumn get errorMessage => text().nullable()();
@@ -169,7 +174,7 @@ class AegisChatDatabase extends _$AegisChatDatabase {
   AegisChatDatabase.forExecutor(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -204,6 +209,20 @@ class AegisChatDatabase extends _$AegisChatDatabase {
           aegisMessages.replyToMessageId,
         );
       }
+      if (from < 6) {
+        await migrator.addColumn(
+          aegisOfflineQueue,
+          aegisOfflineQueue.localMessageId,
+        );
+        await migrator.addColumn(
+          aegisOfflineQueue,
+          aegisOfflineQueue.mediaFileId,
+        );
+        await migrator.addColumn(
+          aegisOfflineQueue,
+          aegisOfflineQueue.replyToMessageId,
+        );
+      }
       await _createIndexes();
     },
   );
@@ -230,8 +249,38 @@ class AegisChatDatabase extends _$AegisChatDatabase {
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
+    _configureSqliteRuntime();
     final directory = await getApplicationSupportDirectory();
     final file = File(p.join(directory.path, 'aegis_chat.sqlite'));
     return NativeDatabase.createInBackground(file);
   });
+}
+
+bool _sqliteRuntimeConfigured = false;
+
+void _configureSqliteRuntime() {
+  if (_sqliteRuntimeConfigured) {
+    return;
+  }
+  _sqliteRuntimeConfigured = true;
+
+  if (!Platform.isLinux) {
+    return;
+  }
+
+  sqlite_open.open.overrideFor(
+    sqlite_open.OperatingSystem.linux,
+    _openSqliteDynamicLibrary,
+  );
+}
+
+DynamicLibrary _openSqliteDynamicLibrary() {
+  for (final candidate in const ['libsqlite3.so.0', 'libsqlite3.so']) {
+    try {
+      return DynamicLibrary.open(candidate);
+    } catch (_) {
+      // Try the next known soname.
+    }
+  }
+  return DynamicLibrary.process();
 }

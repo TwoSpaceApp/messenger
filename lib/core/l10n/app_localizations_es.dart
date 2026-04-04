@@ -760,6 +760,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get callsTitle => 'Llamadas';
 
   @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
   String get searchByNameHint => 'Buscar por nombre...';
 
   @override
@@ -1871,6 +1874,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get startChatTitle => 'Iniciar chat';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Open a private conversation with one person';
+
+  @override
   String get createRoomSubtitle => 'Grupo privado o público';
 
   @override
@@ -2322,6 +2329,17 @@ class AppLocalizationsEs extends AppLocalizations {
       'Llamadas recientes, rellamada rápida e historial centrado en personas';
 
   @override
+  String get widgetsSubtitle =>
+      'A warm space for new ways to stay close will appear here soon.';
+
+  @override
+  String get widgetsComingTitle => 'New connection formats are on the way';
+
+  @override
+  String get widgetsComingBody =>
+      'In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.';
+
+  @override
   String get callsStartCallAction => 'Iniciar llamada';
 
   @override
@@ -2556,4 +2574,89 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get roomHistoryVisibilityInvitedDescription =>
       'Solo los usuarios invitados pueden ver los mensajes anteriores.';
+
+  @override
+  String get loginUsernameOnlyError =>
+      'Usa tu nombre de usuario de TwoSpace para iniciar sesión.';
+
+  @override
+  String get twoFactorInvalidCodeMessage =>
+      'El código 2FA o la frase de recuperación no son válidos. Inténtalo de nuevo.';
+
+  @override
+  String get twoFactorCodeRequiredMessage =>
+      'Introduce un código de tu aplicación autenticadora o usa la frase de recuperación.';
+
+  @override
+  String get twoFactorEnabledMessage =>
+      'La autenticación en dos pasos está activada.';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return 'No se pudo activar 2FA: $error';
+  }
+
+  @override
+  String get twoFactorSetupTitle => 'Configurar autenticación en dos pasos';
+
+  @override
+  String get twoFactorSetupDescription =>
+      'Escanea el código QR en tu aplicación autenticadora, guarda la frase de recuperación y luego confirma con un código TOTP reciente.';
+
+  @override
+  String get twoFactorSecretTitle =>
+      'O introduce esta clave secreta manualmente';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle =>
+      'Frase de recuperación. Guárdala en un lugar seguro antes de activar 2FA.';
+
+  @override
+  String get twoFactorVerificationCodeLabel => 'Código de verificación';
+
+  @override
+  String get twoFactorVerificationCodeHint =>
+      'Introduce el código actual de tu aplicación autenticadora';
+
+  @override
+  String get twoFactorVerifyEnableAction => 'Verificar y activar 2FA';
+
+  @override
+  String get twoFactorDisableSectionTitle =>
+      'Desactivar autenticación en dos pasos';
+
+  @override
+  String get twoFactorDisableSectionDescription =>
+      'Desactiva 2FA con un código válido del autenticador o con tu frase de recuperación de un solo uso.';
+
+  @override
+  String get twoFactorDisableCodeHint =>
+      'Introduce un código actual del autenticador';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => 'Frase de recuperación';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint =>
+      'Pega la frase de recuperación si ya no tienes acceso a la aplicación autenticadora';
+
+  @override
+  String get twoFactorDisableAction => 'Desactivar 2FA';
+
+  @override
+  String get twoFactorDisableCredentialsRequired =>
+      'Introduce un código del autenticador o una frase de recuperación para desactivar 2FA.';
+
+  @override
+  String get twoFactorDisabledMessage =>
+      'La autenticación en dos pasos está desactivada.';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return 'No se pudo desactivar 2FA: $error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint =>
+      'O pega la frase de recuperación en lugar del código';
 }

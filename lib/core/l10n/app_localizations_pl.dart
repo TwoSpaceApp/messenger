@@ -758,6 +758,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get callsTitle => 'Połączenia';
 
   @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
   String get searchByNameHint => 'Szukaj po nazwie...';
 
   @override
@@ -1870,6 +1873,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get startChatTitle => 'Rozpocznij czat';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Open a private conversation with one person';
+
+  @override
   String get createRoomSubtitle => 'Prywatna lub publiczna grupa';
 
   @override
@@ -2319,6 +2326,17 @@ class AppLocalizationsPl extends AppLocalizations {
       'Ostatnie połączenia, szybkie oddzwanianie i historia skupiona na osobach';
 
   @override
+  String get widgetsSubtitle =>
+      'A warm space for new ways to stay close will appear here soon.';
+
+  @override
+  String get widgetsComingTitle => 'New connection formats are on the way';
+
+  @override
+  String get widgetsComingBody =>
+      'In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.';
+
+  @override
   String get callsStartCallAction => 'Rozpocznij połączenie';
 
   @override
@@ -2552,4 +2570,89 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get roomHistoryVisibilityInvitedDescription =>
       'Tylko zaproszeni użytkownicy mogą zobaczyć wcześniejsze wiadomości.';
+
+  @override
+  String get loginUsernameOnlyError =>
+      'Do logowania użyj swojej nazwy użytkownika TwoSpace.';
+
+  @override
+  String get twoFactorInvalidCodeMessage =>
+      'Kod 2FA lub fraza odzyskiwania są nieprawidłowe. Spróbuj ponownie.';
+
+  @override
+  String get twoFactorCodeRequiredMessage =>
+      'Wpisz kod z aplikacji uwierzytelniającej lub użyj frazy odzyskiwania.';
+
+  @override
+  String get twoFactorEnabledMessage =>
+      'Uwierzytelnianie dwuskładnikowe zostało włączone.';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return 'Nie udało się włączyć 2FA: $error';
+  }
+
+  @override
+  String get twoFactorSetupTitle =>
+      'Skonfiguruj uwierzytelnianie dwuskładnikowe';
+
+  @override
+  String get twoFactorSetupDescription =>
+      'Zeskanuj kod QR w aplikacji uwierzytelniającej, zapisz frazę odzyskiwania, a następnie potwierdź świeżym kodem TOTP.';
+
+  @override
+  String get twoFactorSecretTitle => 'Lub wpisz ten tajny klucz ręcznie';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle =>
+      'Fraza odzyskiwania. Zapisz ją w bezpiecznym miejscu przed włączeniem 2FA.';
+
+  @override
+  String get twoFactorVerificationCodeLabel => 'Kod weryfikacyjny';
+
+  @override
+  String get twoFactorVerificationCodeHint =>
+      'Wpisz bieżący kod z aplikacji uwierzytelniającej';
+
+  @override
+  String get twoFactorVerifyEnableAction => 'Zweryfikuj i włącz 2FA';
+
+  @override
+  String get twoFactorDisableSectionTitle =>
+      'Wyłącz uwierzytelnianie dwuskładnikowe';
+
+  @override
+  String get twoFactorDisableSectionDescription =>
+      'Wyłącz 2FA za pomocą poprawnego kodu z aplikacji uwierzytelniającej lub jednorazowej frazy odzyskiwania.';
+
+  @override
+  String get twoFactorDisableCodeHint =>
+      'Wpisz bieżący kod z aplikacji uwierzytelniającej';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => 'Fraza odzyskiwania';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint =>
+      'Wklej frazę odzyskiwania, jeśli nie masz już dostępu do aplikacji uwierzytelniającej';
+
+  @override
+  String get twoFactorDisableAction => 'Wyłącz 2FA';
+
+  @override
+  String get twoFactorDisableCredentialsRequired =>
+      'Aby wyłączyć 2FA, wpisz kod z aplikacji uwierzytelniającej lub frazę odzyskiwania.';
+
+  @override
+  String get twoFactorDisabledMessage =>
+      'Uwierzytelnianie dwuskładnikowe zostało wyłączone.';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return 'Nie udało się wyłączyć 2FA: $error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint =>
+      'Lub wklej frazę odzyskiwania zamiast kodu';
 }

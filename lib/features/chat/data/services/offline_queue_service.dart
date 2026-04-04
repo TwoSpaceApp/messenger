@@ -11,6 +11,9 @@ class OfflineMessage {
     required this.type,
     required this.createdAt,
     this.id,
+    this.localMessageId,
+    this.mediaFileId,
+    this.replyToMessageId,
     this.sent = false,
     this.errorMessage,
   });
@@ -20,6 +23,9 @@ class OfflineMessage {
         content: map['content'] as String,
         type: map['type'] as String,
         createdAt: DateTime.parse(map['createdAt'] as String),
+        localMessageId: map['localMessageId'] as String?,
+        mediaFileId: map['mediaFileId'] as String?,
+        replyToMessageId: map['replyToMessageId'] as int?,
         sent: map['sent'] as bool? ?? false,
         errorMessage: map['errorMessage'] as String?,
       );
@@ -28,6 +34,9 @@ class OfflineMessage {
   final String content;
   final String type; // 'm.text', 'm.image', etc
   final DateTime createdAt;
+  final String? localMessageId;
+  final String? mediaFileId;
+  final int? replyToMessageId;
   final bool sent;
   final String? errorMessage;
 
@@ -36,6 +45,9 @@ class OfflineMessage {
         'content': content,
         'type': type,
         'createdAt': createdAt.toIso8601String(),
+        'localMessageId': localMessageId,
+        'mediaFileId': mediaFileId,
+        'replyToMessageId': replyToMessageId,
         'sent': sent,
         'errorMessage': errorMessage,
       };
@@ -58,6 +70,9 @@ class OfflineQueueService {
             chatId: message.chatId,
             content: message.content,
             type: message.type,
+            localMessageId: Value(message.localMessageId),
+            mediaFileId: Value(message.mediaFileId),
+            replyToMessageId: Value(message.replyToMessageId),
             createdAtEpochMs: message.createdAt.millisecondsSinceEpoch,
             sent: Value(message.sent),
             errorMessage: Value(message.errorMessage),
@@ -84,6 +99,16 @@ class OfflineQueueService {
     return rows.map(_messageFromRow).toList(growable: false);
   }
 
+  Future<List<OfflineMessage>> getPendingMessages() async {
+    final rows = await (_database.select(_database.aegisOfflineQueue)
+          ..where((table) => table.sent.equals(false))
+          ..orderBy([
+            (table) => OrderingTerm.asc(table.createdAtEpochMs),
+          ]))
+        .get();
+    return rows.map(_messageFromRow).toList(growable: false);
+  }
+
   Future<void> markAsSent(int recordId) async {
     await (_database.update(_database.aegisOfflineQueue)
           ..where((table) => table.id.equals(recordId)))
@@ -91,6 +116,16 @@ class OfflineQueueService {
           const AegisOfflineQueueCompanion(
             sent: Value(true),
             errorMessage: Value(null),
+          ),
+        );
+  }
+
+  Future<void> updateErrorMessage(int recordId, String? errorMessage) async {
+    await (_database.update(_database.aegisOfflineQueue)
+          ..where((table) => table.id.equals(recordId)))
+        .write(
+          AegisOfflineQueueCompanion(
+            errorMessage: Value(errorMessage),
           ),
         );
   }
@@ -113,6 +148,9 @@ class OfflineQueueService {
       chatId: row.chatId,
       content: row.content,
       type: row.type,
+      localMessageId: row.localMessageId,
+      mediaFileId: row.mediaFileId,
+      replyToMessageId: row.replyToMessageId,
       createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAtEpochMs),
       sent: row.sent,
       errorMessage: row.errorMessage,

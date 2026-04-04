@@ -118,8 +118,8 @@ class _FloatingNavBarState extends State<FloatingNavBar>
                                       badge: widget.chatUnreadCount,
                                       onTap: () => widget.onItemSelected(0)),
                                   _NavItem(
-                                      icon: Icons.call_outlined,
-                                    label: l10n.callsTitle,
+                                      icon: Icons.widgets_outlined,
+                                    label: l10n.widgetsTitle,
                                       index: 1,
                                       selected: widget.selectedIndex == 1,
                                       onTap: () => widget.onItemSelected(1)),

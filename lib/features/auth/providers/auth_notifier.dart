@@ -80,12 +80,25 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     }
   }
 
-  Future<void> login(String username, String password) async {
+  Future<void> login(
+    String username,
+    String password, {
+    String? twoFactorCode,
+    String? recoveryPhrase,
+  }) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await _authService.login(username, password);
-      return _loadAuthState();
-    });
+    try {
+      await _authService.login(
+        username,
+        password,
+        twoFactorCode: twoFactorCode,
+        recoveryPhrase: recoveryPhrase,
+      );
+      state = AsyncValue.data(await _loadAuthState());
+    } on Object catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> register(

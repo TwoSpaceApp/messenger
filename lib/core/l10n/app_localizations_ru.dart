@@ -757,6 +757,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callsTitle => 'Звонки';
 
   @override
+  String get widgetsTitle => 'Виджеты';
+
+  @override
   String get searchByNameHint => 'Поиск по имени...';
 
   @override
@@ -1870,6 +1873,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get startChatTitle => 'Начать чат';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Открыть приватный диалог с одним человеком';
+
+  @override
   String get createRoomSubtitle => 'Приватная или публичная группа';
 
   @override
@@ -2320,6 +2327,17 @@ class AppLocalizationsRu extends AppLocalizations {
       'Недавние звонки, быстрый перезвон и история вокруг людей';
 
   @override
+  String get widgetsSubtitle =>
+      'Скоро здесь появятся тёплые новые способы оставаться ближе друг к другу.';
+
+  @override
+  String get widgetsComingTitle => 'Новые форматы общения уже в пути';
+
+  @override
+  String get widgetsComingBody =>
+      'В одном из следующих обновлений здесь появятся спокойные совместные виджеты и лёгкие способы держать связь с близкими.';
+
+  @override
   String get callsStartCallAction => 'Начать звонок';
 
   @override
@@ -2553,4 +2571,88 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get roomHistoryVisibilityInvitedDescription =>
       'Предыдущие сообщения видят только приглашённые пользователи.';
+
+  @override
+  String get loginUsernameOnlyError =>
+      'Для входа используйте username TwoSpace.';
+
+  @override
+  String get twoFactorInvalidCodeMessage =>
+      'Код 2FA или recovery phrase неверны. Попробуйте ещё раз.';
+
+  @override
+  String get twoFactorCodeRequiredMessage =>
+      'Введите код из приложения-аутентификатора или используйте recovery phrase.';
+
+  @override
+  String get twoFactorEnabledMessage =>
+      'Двухфакторная аутентификация включена.';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return 'Не удалось включить 2FA: $error';
+  }
+
+  @override
+  String get twoFactorSetupTitle => 'Настройка двухфакторной аутентификации';
+
+  @override
+  String get twoFactorSetupDescription =>
+      'Сканируйте QR-код в приложении-аутентификаторе, сохраните recovery phrase и затем подтвердите включение свежим TOTP-кодом.';
+
+  @override
+  String get twoFactorSecretTitle => 'Или введите этот секретный ключ вручную';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle =>
+      'Recovery phrase. Сохраните её в безопасном месте перед включением 2FA.';
+
+  @override
+  String get twoFactorVerificationCodeLabel => 'Код подтверждения';
+
+  @override
+  String get twoFactorVerificationCodeHint =>
+      'Введите текущий код из приложения-аутентификатора';
+
+  @override
+  String get twoFactorVerifyEnableAction => 'Подтвердить и включить 2FA';
+
+  @override
+  String get twoFactorDisableSectionTitle =>
+      'Отключить двухфакторную аутентификацию';
+
+  @override
+  String get twoFactorDisableSectionDescription =>
+      'Выключите 2FA с помощью актуального кода из аутентификатора или одноразовой recovery phrase.';
+
+  @override
+  String get twoFactorDisableCodeHint =>
+      'Введите актуальный код из аутентификатора';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => 'Recovery phrase';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint =>
+      'Вставьте recovery phrase, если доступа к приложению-аутентификатору больше нет';
+
+  @override
+  String get twoFactorDisableAction => 'Отключить 2FA';
+
+  @override
+  String get twoFactorDisableCredentialsRequired =>
+      'Чтобы отключить 2FA, введите код из аутентификатора или recovery phrase.';
+
+  @override
+  String get twoFactorDisabledMessage =>
+      'Двухфакторная аутентификация отключена.';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return 'Не удалось отключить 2FA: $error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint =>
+      'Или вставьте recovery phrase вместо кода';
 }

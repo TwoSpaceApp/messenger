@@ -2366,6 +2366,39 @@ class $AegisOfflineQueueTable extends AegisOfflineQueue
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _localMessageIdMeta = const VerificationMeta(
+    'localMessageId',
+  );
+  @override
+  late final GeneratedColumn<String> localMessageId = GeneratedColumn<String>(
+    'local_message_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _mediaFileIdMeta = const VerificationMeta(
+    'mediaFileId',
+  );
+  @override
+  late final GeneratedColumn<String> mediaFileId = GeneratedColumn<String>(
+    'media_file_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _replyToMessageIdMeta = const VerificationMeta(
+    'replyToMessageId',
+  );
+  @override
+  late final GeneratedColumn<int> replyToMessageId = GeneratedColumn<int>(
+    'reply_to_message_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtEpochMsMeta = const VerificationMeta(
     'createdAtEpochMs',
   );
@@ -2407,6 +2440,9 @@ class $AegisOfflineQueueTable extends AegisOfflineQueue
     chatId,
     content,
     type,
+    localMessageId,
+    mediaFileId,
+    replyToMessageId,
     createdAtEpochMs,
     sent,
     errorMessage,
@@ -2449,6 +2485,33 @@ class $AegisOfflineQueueTable extends AegisOfflineQueue
       );
     } else if (isInserting) {
       context.missing(_typeMeta);
+    }
+    if (data.containsKey('local_message_id')) {
+      context.handle(
+        _localMessageIdMeta,
+        localMessageId.isAcceptableOrUnknown(
+          data['local_message_id']!,
+          _localMessageIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('media_file_id')) {
+      context.handle(
+        _mediaFileIdMeta,
+        mediaFileId.isAcceptableOrUnknown(
+          data['media_file_id']!,
+          _mediaFileIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reply_to_message_id')) {
+      context.handle(
+        _replyToMessageIdMeta,
+        replyToMessageId.isAcceptableOrUnknown(
+          data['reply_to_message_id']!,
+          _replyToMessageIdMeta,
+        ),
+      );
     }
     if (data.containsKey('created_at_epoch_ms')) {
       context.handle(
@@ -2501,6 +2564,18 @@ class $AegisOfflineQueueTable extends AegisOfflineQueue
         DriftSqlType.string,
         data['${effectivePrefix}type'],
       )!,
+      localMessageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_message_id'],
+      ),
+      mediaFileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_file_id'],
+      ),
+      replyToMessageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reply_to_message_id'],
+      ),
       createdAtEpochMs: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at_epoch_ms'],
@@ -2528,6 +2603,9 @@ class AegisOfflineQueueData extends DataClass
   final String chatId;
   final String content;
   final String type;
+  final String? localMessageId;
+  final String? mediaFileId;
+  final int? replyToMessageId;
   final int createdAtEpochMs;
   final bool sent;
   final String? errorMessage;
@@ -2536,6 +2614,9 @@ class AegisOfflineQueueData extends DataClass
     required this.chatId,
     required this.content,
     required this.type,
+    this.localMessageId,
+    this.mediaFileId,
+    this.replyToMessageId,
     required this.createdAtEpochMs,
     required this.sent,
     this.errorMessage,
@@ -2547,6 +2628,15 @@ class AegisOfflineQueueData extends DataClass
     map['chat_id'] = Variable<String>(chatId);
     map['content'] = Variable<String>(content);
     map['type'] = Variable<String>(type);
+    if (!nullToAbsent || localMessageId != null) {
+      map['local_message_id'] = Variable<String>(localMessageId);
+    }
+    if (!nullToAbsent || mediaFileId != null) {
+      map['media_file_id'] = Variable<String>(mediaFileId);
+    }
+    if (!nullToAbsent || replyToMessageId != null) {
+      map['reply_to_message_id'] = Variable<int>(replyToMessageId);
+    }
     map['created_at_epoch_ms'] = Variable<int>(createdAtEpochMs);
     map['sent'] = Variable<bool>(sent);
     if (!nullToAbsent || errorMessage != null) {
@@ -2561,6 +2651,15 @@ class AegisOfflineQueueData extends DataClass
       chatId: Value(chatId),
       content: Value(content),
       type: Value(type),
+      localMessageId: localMessageId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localMessageId),
+      mediaFileId: mediaFileId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mediaFileId),
+      replyToMessageId: replyToMessageId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(replyToMessageId),
       createdAtEpochMs: Value(createdAtEpochMs),
       sent: Value(sent),
       errorMessage: errorMessage == null && nullToAbsent
@@ -2579,6 +2678,9 @@ class AegisOfflineQueueData extends DataClass
       chatId: serializer.fromJson<String>(json['chatId']),
       content: serializer.fromJson<String>(json['content']),
       type: serializer.fromJson<String>(json['type']),
+      localMessageId: serializer.fromJson<String?>(json['localMessageId']),
+      mediaFileId: serializer.fromJson<String?>(json['mediaFileId']),
+      replyToMessageId: serializer.fromJson<int?>(json['replyToMessageId']),
       createdAtEpochMs: serializer.fromJson<int>(json['createdAtEpochMs']),
       sent: serializer.fromJson<bool>(json['sent']),
       errorMessage: serializer.fromJson<String?>(json['errorMessage']),
@@ -2592,6 +2694,9 @@ class AegisOfflineQueueData extends DataClass
       'chatId': serializer.toJson<String>(chatId),
       'content': serializer.toJson<String>(content),
       'type': serializer.toJson<String>(type),
+      'localMessageId': serializer.toJson<String?>(localMessageId),
+      'mediaFileId': serializer.toJson<String?>(mediaFileId),
+      'replyToMessageId': serializer.toJson<int?>(replyToMessageId),
       'createdAtEpochMs': serializer.toJson<int>(createdAtEpochMs),
       'sent': serializer.toJson<bool>(sent),
       'errorMessage': serializer.toJson<String?>(errorMessage),
@@ -2603,6 +2708,9 @@ class AegisOfflineQueueData extends DataClass
     String? chatId,
     String? content,
     String? type,
+    Value<String?> localMessageId = const Value.absent(),
+    Value<String?> mediaFileId = const Value.absent(),
+    Value<int?> replyToMessageId = const Value.absent(),
     int? createdAtEpochMs,
     bool? sent,
     Value<String?> errorMessage = const Value.absent(),
@@ -2611,6 +2719,13 @@ class AegisOfflineQueueData extends DataClass
     chatId: chatId ?? this.chatId,
     content: content ?? this.content,
     type: type ?? this.type,
+    localMessageId: localMessageId.present
+        ? localMessageId.value
+        : this.localMessageId,
+    mediaFileId: mediaFileId.present ? mediaFileId.value : this.mediaFileId,
+    replyToMessageId: replyToMessageId.present
+        ? replyToMessageId.value
+        : this.replyToMessageId,
     createdAtEpochMs: createdAtEpochMs ?? this.createdAtEpochMs,
     sent: sent ?? this.sent,
     errorMessage: errorMessage.present ? errorMessage.value : this.errorMessage,
@@ -2621,6 +2736,15 @@ class AegisOfflineQueueData extends DataClass
       chatId: data.chatId.present ? data.chatId.value : this.chatId,
       content: data.content.present ? data.content.value : this.content,
       type: data.type.present ? data.type.value : this.type,
+      localMessageId: data.localMessageId.present
+          ? data.localMessageId.value
+          : this.localMessageId,
+      mediaFileId: data.mediaFileId.present
+          ? data.mediaFileId.value
+          : this.mediaFileId,
+      replyToMessageId: data.replyToMessageId.present
+          ? data.replyToMessageId.value
+          : this.replyToMessageId,
       createdAtEpochMs: data.createdAtEpochMs.present
           ? data.createdAtEpochMs.value
           : this.createdAtEpochMs,
@@ -2638,6 +2762,9 @@ class AegisOfflineQueueData extends DataClass
           ..write('chatId: $chatId, ')
           ..write('content: $content, ')
           ..write('type: $type, ')
+          ..write('localMessageId: $localMessageId, ')
+          ..write('mediaFileId: $mediaFileId, ')
+          ..write('replyToMessageId: $replyToMessageId, ')
           ..write('createdAtEpochMs: $createdAtEpochMs, ')
           ..write('sent: $sent, ')
           ..write('errorMessage: $errorMessage')
@@ -2651,6 +2778,9 @@ class AegisOfflineQueueData extends DataClass
     chatId,
     content,
     type,
+    localMessageId,
+    mediaFileId,
+    replyToMessageId,
     createdAtEpochMs,
     sent,
     errorMessage,
@@ -2663,6 +2793,9 @@ class AegisOfflineQueueData extends DataClass
           other.chatId == this.chatId &&
           other.content == this.content &&
           other.type == this.type &&
+          other.localMessageId == this.localMessageId &&
+          other.mediaFileId == this.mediaFileId &&
+          other.replyToMessageId == this.replyToMessageId &&
           other.createdAtEpochMs == this.createdAtEpochMs &&
           other.sent == this.sent &&
           other.errorMessage == this.errorMessage);
@@ -2674,6 +2807,9 @@ class AegisOfflineQueueCompanion
   final Value<String> chatId;
   final Value<String> content;
   final Value<String> type;
+  final Value<String?> localMessageId;
+  final Value<String?> mediaFileId;
+  final Value<int?> replyToMessageId;
   final Value<int> createdAtEpochMs;
   final Value<bool> sent;
   final Value<String?> errorMessage;
@@ -2682,6 +2818,9 @@ class AegisOfflineQueueCompanion
     this.chatId = const Value.absent(),
     this.content = const Value.absent(),
     this.type = const Value.absent(),
+    this.localMessageId = const Value.absent(),
+    this.mediaFileId = const Value.absent(),
+    this.replyToMessageId = const Value.absent(),
     this.createdAtEpochMs = const Value.absent(),
     this.sent = const Value.absent(),
     this.errorMessage = const Value.absent(),
@@ -2691,6 +2830,9 @@ class AegisOfflineQueueCompanion
     required String chatId,
     required String content,
     required String type,
+    this.localMessageId = const Value.absent(),
+    this.mediaFileId = const Value.absent(),
+    this.replyToMessageId = const Value.absent(),
     required int createdAtEpochMs,
     this.sent = const Value.absent(),
     this.errorMessage = const Value.absent(),
@@ -2703,6 +2845,9 @@ class AegisOfflineQueueCompanion
     Expression<String>? chatId,
     Expression<String>? content,
     Expression<String>? type,
+    Expression<String>? localMessageId,
+    Expression<String>? mediaFileId,
+    Expression<int>? replyToMessageId,
     Expression<int>? createdAtEpochMs,
     Expression<bool>? sent,
     Expression<String>? errorMessage,
@@ -2712,6 +2857,9 @@ class AegisOfflineQueueCompanion
       if (chatId != null) 'chat_id': chatId,
       if (content != null) 'content': content,
       if (type != null) 'type': type,
+      if (localMessageId != null) 'local_message_id': localMessageId,
+      if (mediaFileId != null) 'media_file_id': mediaFileId,
+      if (replyToMessageId != null) 'reply_to_message_id': replyToMessageId,
       if (createdAtEpochMs != null) 'created_at_epoch_ms': createdAtEpochMs,
       if (sent != null) 'sent': sent,
       if (errorMessage != null) 'error_message': errorMessage,
@@ -2723,6 +2871,9 @@ class AegisOfflineQueueCompanion
     Value<String>? chatId,
     Value<String>? content,
     Value<String>? type,
+    Value<String?>? localMessageId,
+    Value<String?>? mediaFileId,
+    Value<int?>? replyToMessageId,
     Value<int>? createdAtEpochMs,
     Value<bool>? sent,
     Value<String?>? errorMessage,
@@ -2732,6 +2883,9 @@ class AegisOfflineQueueCompanion
       chatId: chatId ?? this.chatId,
       content: content ?? this.content,
       type: type ?? this.type,
+      localMessageId: localMessageId ?? this.localMessageId,
+      mediaFileId: mediaFileId ?? this.mediaFileId,
+      replyToMessageId: replyToMessageId ?? this.replyToMessageId,
       createdAtEpochMs: createdAtEpochMs ?? this.createdAtEpochMs,
       sent: sent ?? this.sent,
       errorMessage: errorMessage ?? this.errorMessage,
@@ -2753,6 +2907,15 @@ class AegisOfflineQueueCompanion
     if (type.present) {
       map['type'] = Variable<String>(type.value);
     }
+    if (localMessageId.present) {
+      map['local_message_id'] = Variable<String>(localMessageId.value);
+    }
+    if (mediaFileId.present) {
+      map['media_file_id'] = Variable<String>(mediaFileId.value);
+    }
+    if (replyToMessageId.present) {
+      map['reply_to_message_id'] = Variable<int>(replyToMessageId.value);
+    }
     if (createdAtEpochMs.present) {
       map['created_at_epoch_ms'] = Variable<int>(createdAtEpochMs.value);
     }
@@ -2772,6 +2935,9 @@ class AegisOfflineQueueCompanion
           ..write('chatId: $chatId, ')
           ..write('content: $content, ')
           ..write('type: $type, ')
+          ..write('localMessageId: $localMessageId, ')
+          ..write('mediaFileId: $mediaFileId, ')
+          ..write('replyToMessageId: $replyToMessageId, ')
           ..write('createdAtEpochMs: $createdAtEpochMs, ')
           ..write('sent: $sent, ')
           ..write('errorMessage: $errorMessage')
@@ -5555,6 +5721,9 @@ typedef $$AegisOfflineQueueTableCreateCompanionBuilder =
       required String chatId,
       required String content,
       required String type,
+      Value<String?> localMessageId,
+      Value<String?> mediaFileId,
+      Value<int?> replyToMessageId,
       required int createdAtEpochMs,
       Value<bool> sent,
       Value<String?> errorMessage,
@@ -5565,6 +5734,9 @@ typedef $$AegisOfflineQueueTableUpdateCompanionBuilder =
       Value<String> chatId,
       Value<String> content,
       Value<String> type,
+      Value<String?> localMessageId,
+      Value<String?> mediaFileId,
+      Value<int?> replyToMessageId,
       Value<int> createdAtEpochMs,
       Value<bool> sent,
       Value<String?> errorMessage,
@@ -5596,6 +5768,21 @@ class $$AegisOfflineQueueTableFilterComposer
 
   ColumnFilters<String> get type => $composableBuilder(
     column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localMessageId => $composableBuilder(
+    column: $table.localMessageId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mediaFileId => $composableBuilder(
+    column: $table.mediaFileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get replyToMessageId => $composableBuilder(
+    column: $table.replyToMessageId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5644,6 +5831,21 @@ class $$AegisOfflineQueueTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get localMessageId => $composableBuilder(
+    column: $table.localMessageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mediaFileId => $composableBuilder(
+    column: $table.mediaFileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get replyToMessageId => $composableBuilder(
+    column: $table.replyToMessageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAtEpochMs => $composableBuilder(
     column: $table.createdAtEpochMs,
     builder: (column) => ColumnOrderings(column),
@@ -5680,6 +5882,21 @@ class $$AegisOfflineQueueTableAnnotationComposer
 
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get localMessageId => $composableBuilder(
+    column: $table.localMessageId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get mediaFileId => $composableBuilder(
+    column: $table.mediaFileId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get replyToMessageId => $composableBuilder(
+    column: $table.replyToMessageId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get createdAtEpochMs => $composableBuilder(
     column: $table.createdAtEpochMs,
@@ -5739,6 +5956,9 @@ class $$AegisOfflineQueueTableTableManager
                 Value<String> chatId = const Value.absent(),
                 Value<String> content = const Value.absent(),
                 Value<String> type = const Value.absent(),
+                Value<String?> localMessageId = const Value.absent(),
+                Value<String?> mediaFileId = const Value.absent(),
+                Value<int?> replyToMessageId = const Value.absent(),
                 Value<int> createdAtEpochMs = const Value.absent(),
                 Value<bool> sent = const Value.absent(),
                 Value<String?> errorMessage = const Value.absent(),
@@ -5747,6 +5967,9 @@ class $$AegisOfflineQueueTableTableManager
                 chatId: chatId,
                 content: content,
                 type: type,
+                localMessageId: localMessageId,
+                mediaFileId: mediaFileId,
+                replyToMessageId: replyToMessageId,
                 createdAtEpochMs: createdAtEpochMs,
                 sent: sent,
                 errorMessage: errorMessage,
@@ -5757,6 +5980,9 @@ class $$AegisOfflineQueueTableTableManager
                 required String chatId,
                 required String content,
                 required String type,
+                Value<String?> localMessageId = const Value.absent(),
+                Value<String?> mediaFileId = const Value.absent(),
+                Value<int?> replyToMessageId = const Value.absent(),
                 required int createdAtEpochMs,
                 Value<bool> sent = const Value.absent(),
                 Value<String?> errorMessage = const Value.absent(),
@@ -5765,6 +5991,9 @@ class $$AegisOfflineQueueTableTableManager
                 chatId: chatId,
                 content: content,
                 type: type,
+                localMessageId: localMessageId,
+                mediaFileId: mediaFileId,
+                replyToMessageId: replyToMessageId,
                 createdAtEpochMs: createdAtEpochMs,
                 sent: sent,
                 errorMessage: errorMessage,

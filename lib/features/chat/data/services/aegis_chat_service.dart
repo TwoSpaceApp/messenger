@@ -11,9 +11,11 @@ import 'package:two_space_app/core/models/group.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
+import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/chat/data/local/aegis_chat_local_store.dart';
+import 'package:two_space_app/features/chat/data/services/offline_queue_service.dart';
 
 class AegisFeatureInDevelopmentException implements Exception {
   const AegisFeatureInDevelopmentException(this.message);
@@ -219,6 +221,8 @@ class AegisChatService {
   static final AegisChatService _instance = AegisChatService._internal();
 
   final AegisAuthService _auth = AegisAuthService();
+  final DevLogger _log = DevLogger('AegisChatService');
+  final OfflineQueueService _offlineQueue = OfflineQueueService();
   final StreamController<void> _chatChanges =
       StreamController<void>.broadcast();
   final Map<String, StreamController<void>> _roomChanges =
@@ -229,11 +233,13 @@ class AegisChatService {
   Future<bool>? _bootstrapFuture;
   StreamSubscription<Message>? _incomingSub;
   StreamSubscription<MessageStatusEvent>? _messageStatusSub;
+  StreamSubscription<void>? _sessionRestoredSub;
   late Directory _storeDir;
   final AegisChatLocalStore _localStore = AegisChatLocalStore();
   Timer? _persistTimer;
   Future<void>? _persistInFlight;
   Future<bool>? _chatRefreshInFlight;
+  Future<void>? _offlineFlushInFlight;
   final Map<String, Map<String, AegisRoomMessage>> _dirtyMessagesByRoom =
       <String, Map<String, AegisRoomMessage>>{};
   final Map<String, Set<String>> _deletedMessageIdsByRoom =
@@ -290,6 +296,7 @@ class AegisChatService {
     Future.delayed(const Duration(seconds: 30), _cleanupMediaCache);
 
     final bootstrap = await _localStore.initialize();
+    await OfflineQueueService.initialize();
     for (final item in bootstrap.conversations) {
       final conversation = _StoredConversation.fromJson(item);
       _conversations[conversation.id] = conversation;
@@ -302,6 +309,9 @@ class AegisChatService {
     }
     _profileCache.addAll(bootstrap.profiles);
     _storedRoomIds.addAll(bootstrap.storedRoomIds);
+    _sessionRestoredSub ??= _auth.sessionRestored.listen((_) {
+      unawaited(_handleSessionRestored());
+    });
     _initialized = true;
   }
 
@@ -346,6 +356,13 @@ class AegisChatService {
     await _init();
     await _auth.ensureSession();
     _ensureIncomingAttached();
+    unawaited(_flushOfflineQueue());
+  }
+
+  Future<void> _handleSessionRestored() async {
+    _ensureIncomingAttached();
+    await _flushOfflineQueue();
+    unawaited(_refreshChatsQuietly());
   }
 
   void _markConversationsDirty() {
@@ -421,6 +438,7 @@ class AegisChatService {
     await _flushPersistNow();
     await _incomingSub?.cancel();
     await _messageStatusSub?.cancel();
+    await _sessionRestoredSub?.cancel();
     await _localStore.close();
     _attached = false;
     for (final timer in _roomEmitTimers.values) {
@@ -886,7 +904,51 @@ class AegisChatService {
     int? replyToMessageId,
     void Function(double progress)? onMediaSendProgress,
   }) async {
-    await ensureReady();
+    await _init();
+    final conversation = _conversations[roomId];
+    if (conversation == null) {
+      throw Exception('Unknown conversation');
+    }
+
+    try {
+      await ensureReady();
+      final sentMessage = await _sendMessageNow(
+        roomId: roomId,
+        text: text,
+        type: type,
+        mediaFileId: mediaFileId,
+        replyToMessageId: replyToMessageId,
+        onMediaSendProgress: onMediaSendProgress,
+      );
+      unawaited(_refreshChatsFromServer());
+      return sentMessage.id;
+    } on Object catch (error) {
+      if (!_shouldQueueSendFailure(error)) {
+        rethrow;
+      }
+
+      final queuedMessage = await _queueOfflineMessage(
+        roomId: roomId,
+        text: text,
+        type: type,
+        mediaFileId: mediaFileId,
+        replyToMessageId: replyToMessageId,
+        error: error,
+      );
+      _log.warning('Message queued for offline delivery in $roomId: $error');
+      return queuedMessage.id;
+    }
+  }
+
+  Future<AegisRoomMessage> _sendMessageNow({
+    required String roomId,
+    required String text,
+    required String type,
+    String? mediaFileId,
+    int? replyToMessageId,
+    void Function(double progress)? onMediaSendProgress,
+    String? replacingLocalMessageId,
+  }) async {
     final conversation = _conversations[roomId];
     if (conversation == null) {
       throw Exception('Unknown conversation');
@@ -921,9 +983,10 @@ class AegisChatService {
         caption: text,
         messageType: type,
         onProgress: onMediaSendProgress,
+        replacingLocalMessageId: replacingLocalMessageId,
       );
       onMediaSendProgress?.call(1);
-      return sentMessage.id;
+      return sentMessage;
     }
 
     int? messageId;
@@ -973,9 +1036,16 @@ class AegisChatService {
       mediaId: mediaFileId,
       replyToMessageId: replyToMessageId,
     );
-    await _appendMessage(roomId, message);
-    unawaited(_refreshChatsFromServer());
-    return message.id;
+    if (replacingLocalMessageId != null) {
+      await _replaceQueuedMessage(
+        roomId,
+        localMessageId: replacingLocalMessageId,
+        sentMessage: message,
+      );
+    } else {
+      await _appendMessage(roomId, message);
+    }
+    return message;
   }
 
   Future<AegisRoomMessage> _sendMediaMessage({
@@ -986,6 +1056,7 @@ class AegisChatService {
     required String messageType,
     String? caption,
     void Function(double progress)? onProgress,
+    String? replacingLocalMessageId,
   }) async {
     final conversation = _conversations[roomId];
     if (conversation == null) {
@@ -1033,8 +1104,203 @@ class AegisChatService {
       type: messageType,
       mediaId: storedPath,
     );
-    await _appendMessage(roomId, message);
+    if (replacingLocalMessageId != null) {
+      await _replaceQueuedMessage(
+        roomId,
+        localMessageId: replacingLocalMessageId,
+        sentMessage: message,
+      );
+    } else {
+      await _appendMessage(roomId, message);
+    }
     return message;
+  }
+
+  Future<AegisRoomMessage> _queueOfflineMessage({
+    required String roomId,
+    required String text,
+    required String type,
+    required Object error,
+    String? mediaFileId,
+    int? replyToMessageId,
+  }) async {
+    final localMessageId =
+        'local:${DateTime.now().microsecondsSinceEpoch}:${math.Random().nextInt(1 << 20)}';
+    final queuedAt = DateTime.now();
+    final roomMessage = AegisRoomMessage(
+      id: localMessageId,
+      senderId: (_auth.userId ?? 0).toString(),
+      content: text,
+      time: queuedAt,
+      type: type,
+      mediaId: mediaFileId,
+      replyToMessageId: replyToMessageId,
+    );
+
+    await _appendMessage(roomId, roomMessage);
+    await _offlineQueue.queueMessage(
+      OfflineMessage(
+        chatId: roomId,
+        content: text,
+        type: type,
+        createdAt: queuedAt,
+        localMessageId: localMessageId,
+        mediaFileId: mediaFileId,
+        replyToMessageId: replyToMessageId,
+        errorMessage: error.toString(),
+      ),
+    );
+    return roomMessage;
+  }
+
+  bool _shouldQueueSendFailure(Object error) {
+    final text = error.toString().toLowerCase();
+    return text.contains('notauthenticated') ||
+        text.contains('not connected') ||
+        text.contains('socket') ||
+        text.contains('connection') ||
+        text.contains('timeout') ||
+        text.contains('timed out') ||
+        text.contains('handshake') ||
+        text.contains('broken pipe') ||
+        text.contains('connection reset') ||
+        text.contains('closed');
+  }
+
+  bool _isTransientQueueFailure(Object error) => _shouldQueueSendFailure(error);
+
+  Future<void> _flushOfflineQueue() async {
+    final inFlight = _offlineFlushInFlight;
+    if (inFlight != null) {
+      await inFlight;
+      return;
+    }
+
+    final future = _flushOfflineQueueInternal();
+    _offlineFlushInFlight = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_offlineFlushInFlight, future)) {
+        _offlineFlushInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _flushOfflineQueueInternal() async {
+    try {
+      await _auth.ensureSession();
+    } on Object catch (_) {
+      return;
+    }
+
+    final pendingMessages = await _offlineQueue.getPendingMessages();
+    if (pendingMessages.isEmpty) {
+      return;
+    }
+
+    for (final queued in pendingMessages) {
+      final recordId = queued.id;
+      if (recordId == null) {
+        continue;
+      }
+
+      try {
+        final sentMessage = await _sendMessageNow(
+          roomId: queued.chatId,
+          text: queued.content,
+          type: queued.type,
+          mediaFileId: queued.mediaFileId,
+          replyToMessageId: queued.replyToMessageId,
+          replacingLocalMessageId: queued.localMessageId,
+        );
+        await _offlineQueue.removeMessage(recordId);
+        _log.info(
+          'Flushed offline message ${queued.localMessageId} -> ${sentMessage.id}',
+        );
+      } on Object catch (error) {
+        await _offlineQueue.updateErrorMessage(recordId, error.toString());
+        if (_isTransientQueueFailure(error)) {
+          break;
+        }
+
+        final text = error.toString().toLowerCase();
+        if (text.contains('unknown conversation') ||
+            text.contains('media file not found') ||
+            text.contains('missing chat target id') ||
+            text.contains('missing peer user id') ||
+            text.contains('missing channel id') ||
+            text.contains('missing group id')) {
+          _log.warning(
+            'Dropping permanently failed offline message ${queued.localMessageId}: $error',
+          );
+          await _offlineQueue.removeMessage(recordId);
+          if (queued.localMessageId != null) {
+            await _removeLocalQueuedMessage(
+              queued.chatId,
+              queued.localMessageId!,
+            );
+          }
+          continue;
+        }
+
+        break;
+      }
+    }
+  }
+
+  Future<void> _replaceQueuedMessage(
+    String roomId, {
+    required String localMessageId,
+    required AegisRoomMessage sentMessage,
+  }) async {
+    final list = _messages.putIfAbsent(roomId, () => <AegisRoomMessage>[]);
+    final existingIndex = list.indexWhere(
+      (element) => element.id == localMessageId,
+    );
+    if (existingIndex >= 0) {
+      list[existingIndex] = sentMessage;
+    } else {
+      list.add(sentMessage);
+    }
+    if (list.length > 1) {
+      list.sort((a, b) => a.time.compareTo(b.time));
+    }
+
+    final room = _conversations[roomId];
+    if (room != null) {
+      _storeConversation(
+        room.copyWith(
+          updatedAt: sentMessage.time,
+          lastMessage: sentMessage.content,
+        ),
+      );
+    }
+
+    _markMessageDirty(roomId, sentMessage);
+    final deletedIds = _deletedMessageIdsByRoom[roomId];
+    deletedIds?.remove(localMessageId);
+    if (deletedIds != null && deletedIds.isEmpty) {
+      _deletedMessageIdsByRoom.remove(roomId);
+    }
+    await _persist();
+    _emitRoomChanged(roomId);
+    _emitChanged();
+  }
+
+  Future<void> _removeLocalQueuedMessage(
+    String roomId,
+    String localMessageId,
+  ) async {
+    final list = _messages[roomId];
+    if (list == null) {
+      return;
+    }
+    list.removeWhere((message) => message.id == localMessageId);
+    _markMessageDeleted(roomId, localMessageId);
+    await _persist();
+    _emitRoomChanged(roomId);
+    _emitChanged();
   }
 
   Future<Uint8List> _readMediaFileWithProgress(

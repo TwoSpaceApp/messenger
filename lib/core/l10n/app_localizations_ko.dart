@@ -750,6 +750,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get callsTitle => '통화';
 
   @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
   String get searchByNameHint => '이름으로 검색...';
 
   @override
@@ -1837,6 +1840,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get startChatTitle => '채팅 시작';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Open a private conversation with one person';
+
+  @override
   String get createRoomSubtitle => '비공개 또는 공개 그룹';
 
   @override
@@ -2278,6 +2285,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get callsSubtitle => '최근 통화, 빠른 재통화, 사람 중심의 기록';
 
   @override
+  String get widgetsSubtitle =>
+      'A warm space for new ways to stay close will appear here soon.';
+
+  @override
+  String get widgetsComingTitle => 'New connection formats are on the way';
+
+  @override
+  String get widgetsComingBody =>
+      'In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.';
+
+  @override
   String get callsStartCallAction => '통화 시작';
 
   @override
@@ -2498,4 +2516,80 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get roomHistoryVisibilityInvitedDescription =>
       '초대된 사용자만 이전 메시지를 볼 수 있습니다.';
+
+  @override
+  String get loginUsernameOnlyError => '로그인하려면 TwoSpace 사용자 이름을 사용하세요.';
+
+  @override
+  String get twoFactorInvalidCodeMessage =>
+      '2FA 코드 또는 복구 문구가 올바르지 않습니다. 다시 시도하세요.';
+
+  @override
+  String get twoFactorCodeRequiredMessage => '인증 앱의 코드를 입력하거나 복구 문구를 사용하세요.';
+
+  @override
+  String get twoFactorEnabledMessage => '2단계 인증이 활성화되었습니다.';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return '2FA를 활성화하지 못했습니다: $error';
+  }
+
+  @override
+  String get twoFactorSetupTitle => '2단계 인증 설정';
+
+  @override
+  String get twoFactorSetupDescription =>
+      '인증 앱에서 QR 코드를 스캔하고 복구 문구를 저장한 뒤, 새 TOTP 코드로 확인하세요.';
+
+  @override
+  String get twoFactorSecretTitle => '또는 이 비밀 키를 직접 입력하세요';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle =>
+      '복구 문구입니다. 2FA를 활성화하기 전에 안전한 곳에 저장하세요.';
+
+  @override
+  String get twoFactorVerificationCodeLabel => '인증 코드';
+
+  @override
+  String get twoFactorVerificationCodeHint => '인증 앱의 현재 코드를 입력하세요';
+
+  @override
+  String get twoFactorVerifyEnableAction => '확인 후 2FA 활성화';
+
+  @override
+  String get twoFactorDisableSectionTitle => '2단계 인증 비활성화';
+
+  @override
+  String get twoFactorDisableSectionDescription =>
+      '유효한 인증 코드 또는 1회용 복구 문구로 2FA를 비활성화하세요.';
+
+  @override
+  String get twoFactorDisableCodeHint => '현재 인증 코드를 입력하세요';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => '복구 문구';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint =>
+      '인증 앱에 접근할 수 없으면 복구 문구를 붙여 넣으세요';
+
+  @override
+  String get twoFactorDisableAction => '2FA 비활성화';
+
+  @override
+  String get twoFactorDisableCredentialsRequired =>
+      '2FA를 비활성화하려면 인증 코드 또는 복구 문구를 입력하세요.';
+
+  @override
+  String get twoFactorDisabledMessage => '2단계 인증이 비활성화되었습니다.';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return '2FA를 비활성화하지 못했습니다: $error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint => '또는 코드 대신 복구 문구를 붙여 넣으세요';
 }

@@ -1,7 +1,7 @@
 name: two_space_app
 description: "A secure and feature-rich messenger for the TwoSpace ecosystem."
 publish_to: 'none'
-version: 2.0.5+30
+version: 2.0.5+32
 
 environment:
   sdk: ^3.8.0
@@ -58,6 +58,7 @@ dependencies:
   # ===== Database =====
   sqflite: ^2.3.3+1
   drift: ^2.31.0
+  sqlite3: ^2.9.4
   sqlite3_flutter_libs: ^0.6.0+eol
 
   # ===== Media =====
@@ -90,7 +91,6 @@ dev_dependencies:
   build_runner: ^2.4.13
   riverpod_generator: ^3.0.3
   drift_dev: ^2.31.0
-  sqlite3: ^2.9.4
   flutter_launcher_icons: ^0.14.4
   freezed: ^3.2.3
   json_serializable: ^6.11.2

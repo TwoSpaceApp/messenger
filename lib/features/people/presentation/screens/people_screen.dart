@@ -82,68 +82,73 @@ class _PeopleScreenState extends State<PeopleScreen> {
                 child: Column(
                   children: [
                     Padding(
-                      padding: pad.copyWith(top: 10, bottom: 2),
-                      child: Row(
-                        children: [
-                          if (canPop && !widget.simplified)
-                            _HeaderIcon(
-                              icon: Icons.arrow_back_rounded,
-                              tooltip: l10n.back,
-                              onTap: () => Navigator.of(context).maybePop(),
-                            ),
-                          if (canPop && !widget.simplified) const SizedBox(width: 4),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  title,
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    color: theme.colorScheme.onSurface,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                if (widget.simplified) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    widget.autofocusSearch
-                                        ? l10n.searchContactsHint
-                                        : l10n.peopleSubtitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: AppColors.subtitleText(context),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                          if (widget.simplified)
-                            _HeaderIcon(
-                              icon: Icons.close_rounded,
-                              tooltip: l10n.closeButton,
-                              onTap: canPop ? () => Navigator.of(context).maybePop() : null,
-                            ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: pad.copyWith(top: 4, bottom: 8),
+                      padding: pad.copyWith(top: 10, bottom: 8),
                       child: SectionCard(
                         radius: UITokens.cornerXL,
+                        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            PeopleSearchField(
-                              controller: _searchController,
-                              focusNode: _searchFocusNode,
-                              autofocus: widget.autofocusSearch,
-                              hintText: searchHint,
-                              onChanged: _controller.updateQuery,
-                              onClear: () {
-                                _searchController.clear();
-                                _controller.clearSearch();
-                              },
+                            Row(
+                              children: [
+                                if (canPop)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 10),
+                                    child: _HeaderIcon(
+                                      icon: Icons.arrow_back_rounded,
+                                      tooltip: l10n.back,
+                                      onTap: () => Navigator.of(context).maybePop(),
+                                    ),
+                                  ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        title,
+                                        style: theme.textTheme.headlineSmall?.copyWith(
+                                          color: theme.colorScheme.onSurface,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        widget.autofocusSearch
+                                            ? l10n.searchContactsHint
+                                            : l10n.peopleSubtitle,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                          color: AppColors.subtitleText(context),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 2,
+                              ),
+                              child: PeopleSearchField(
+                                controller: _searchController,
+                                focusNode: _searchFocusNode,
+                                autofocus: widget.autofocusSearch,
+                                hintText: searchHint,
+                                embedded: true,
+                                onChanged: _controller.updateQuery,
+                                onClear: () {
+                                  _searchController.clear();
+                                  _controller.clearSearch();
+                                },
+                              ),
                             ),
                             if (!widget.simplified) ...[
                               const SizedBox(height: 14),

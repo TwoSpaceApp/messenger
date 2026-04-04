@@ -32,7 +32,7 @@ class AegisHandshakeContext {
     );
   }
 
-  Future<Uint8List> deriveSessionKey(Uint8List remotePublicKeyBytes) async {
+  Future<Uint8List> deriveSharedSecret(Uint8List remotePublicKeyBytes) async {
     final sharedSecret = await _ecdh.sharedSecretKey(
       keyPair: _keyPair,
       remotePublicKey: EcPublicKey(
@@ -42,8 +42,14 @@ class AegisHandshakeContext {
       ),
     );
 
+    return Uint8List.fromList(await sharedSecret.extractBytes());
+  }
+
+  Future<Uint8List> deriveSessionKey(Uint8List remotePublicKeyBytes) async {
+    final sharedSecretBytes = await deriveSharedSecret(remotePublicKeyBytes);
+
     final sessionKey = await _hkdf.deriveKey(
-      secretKey: sharedSecret,
+      secretKey: SecretKey(sharedSecretBytes),
       info: utf8.encode('AegisKeyDerivation'),
     );
 
@@ -100,6 +106,114 @@ class AegisHandshakeVerifier {
   static Uint8List _int32(int value) {
     final bytes = ByteData(4)..setInt32(0, value, Endian.little);
     return bytes.buffer.asUint8List();
+  }
+}
+
+class AegisV2SessionKeys {
+  final Uint8List clientToServerKey;
+  final Uint8List serverToClientKey;
+  final Uint8List ackKey;
+
+  const AegisV2SessionKeys({
+    required this.clientToServerKey,
+    required this.serverToClientKey,
+    required this.ackKey,
+  });
+}
+
+class AegisSecureProtocolV2 {
+  static final Hkdf _hkdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
+  static final Hmac _hmac = Hmac.sha256();
+
+  static Uint8List secureRandomBytes(int length) {
+    return SecureBufferUtils.secureRandomBytes(length);
+  }
+
+  static Future<Uint8List> sha256(Uint8List payload) async {
+    final digest = await Sha256().hash(payload);
+    return Uint8List.fromList(digest.bytes);
+  }
+
+  static Future<AegisV2SessionKeys> deriveSessionKeys({
+    required Uint8List sharedSecret,
+    required Uint8List clientNonce,
+    required Uint8List serverNonce,
+    required Uint8List transcriptHash,
+  }) async {
+    final salt = Uint8List(clientNonce.length + serverNonce.length)
+      ..setRange(0, clientNonce.length, clientNonce)
+      ..setRange(
+        clientNonce.length,
+        clientNonce.length + serverNonce.length,
+        serverNonce,
+      );
+
+    final handshakeSecret = await _deriveHkdf(
+      keyMaterial: sharedSecret,
+      salt: salt,
+      info: Uint8List.fromList(utf8.encode('aegis-v2/hs')),
+    );
+
+    final clientToServer = await _deriveHkdf(
+      keyMaterial: handshakeSecret,
+      salt: Uint8List(0),
+      info: Uint8List(transcriptHash.length + 1)
+        ..setRange(0, transcriptHash.length, transcriptHash)
+        ..[transcriptHash.length] = 0x01,
+    );
+
+    final serverToClient = await _deriveHkdf(
+      keyMaterial: handshakeSecret,
+      salt: Uint8List(0),
+      info: Uint8List(transcriptHash.length + 1)
+        ..setRange(0, transcriptHash.length, transcriptHash)
+        ..[transcriptHash.length] = 0x02,
+    );
+
+    final ackKey = await _deriveHkdf(
+      keyMaterial: handshakeSecret,
+      salt: Uint8List(0),
+      info: Uint8List(transcriptHash.length + 1)
+        ..setRange(0, transcriptHash.length, transcriptHash)
+        ..[transcriptHash.length] = 0x03,
+    );
+
+    return AegisV2SessionKeys(
+      clientToServerKey: clientToServer,
+      serverToClientKey: serverToClient,
+      ackKey: ackKey,
+    );
+  }
+
+  static Future<Uint8List> computeClientFinishProof({
+    required Uint8List ackKey,
+    required Uint8List transcriptHash,
+  }) async {
+    final material = Uint8List(transcriptHash.length + 6)
+      ..setRange(0, transcriptHash.length, transcriptHash)
+      ..setRange(
+        transcriptHash.length,
+        transcriptHash.length + 6,
+        ascii.encode('finish'),
+      );
+    final mac = await _hmac.calculateMac(
+      material,
+      secretKey: SecretKey(ackKey),
+    );
+    return Uint8List.fromList(mac.bytes);
+  }
+
+  static Future<Uint8List> _deriveHkdf({
+    required Uint8List keyMaterial,
+    required Uint8List salt,
+    required Uint8List info,
+  }) async {
+    final result = await _hkdf.deriveKey(
+      secretKey: SecretKey(keyMaterial),
+      nonce: salt,
+      info: info,
+    );
+    return Uint8List.fromList(await result.extractBytes());
   }
 }
 

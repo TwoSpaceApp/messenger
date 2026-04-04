@@ -5,6 +5,7 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
+import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_background.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
@@ -47,6 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _errorMessage = null);
     if (!_formKey.currentState!.validate()) return;
 
@@ -59,7 +61,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (_emailLikePattern.hasMatch(identifier)) {
       setState(() {
         _loading = false;
-        _errorMessage = 'Use your Aegis username to sign in.';
+        _errorMessage = l10n.loginUsernameOnlyError;
       });
       return;
     }
@@ -71,6 +73,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Standard email + password login
       await notifier.login(identifier, password);
       // Navigation happens automatically via auth listener
+    } on TwoFactorRequiredException {
+      await _completeTwoFactorLogin(identifier, password);
+    } on TwoFactorInvalidException {
+      await _completeTwoFactorLogin(identifier, password, invalidCode: true);
     } catch (e, stackTrace) {
       SentryService.captureException(
         e,
@@ -83,6 +89,126 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _completeTwoFactorLogin(
+    String identifier,
+    String password, {
+    bool invalidCode = false,
+  }) async {
+    while (mounted) {
+      final credentials = await _promptForTwoFactorCredentials(
+        invalidCode: invalidCode,
+      );
+      if (!mounted || credentials == null) {
+        return;
+      }
+
+      try {
+        await ref.read(authProvider.notifier).login(
+              identifier,
+              password,
+              twoFactorCode: credentials.$1?.isEmpty ?? true
+                  ? null
+                  : credentials.$1,
+              recoveryPhrase: credentials.$2?.isEmpty ?? true
+                  ? null
+                  : credentials.$2,
+            );
+        return;
+      } on TwoFactorInvalidException {
+        invalidCode = true;
+        continue;
+      } catch (e, stackTrace) {
+        SentryService.captureException(
+          e,
+          stackTrace: stackTrace,
+          hint: {'screen': 'login-2fa'},
+        );
+        if (!mounted) {
+          return;
+        }
+        setState(
+          () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+        );
+        return;
+      }
+    }
+  }
+
+  Future<(String?, String?)?> _promptForTwoFactorCredentials({
+    bool invalidCode = false,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final codeController = TextEditingController();
+    final recoveryController = TextEditingController();
+    try {
+      return await showDialog<(String?, String?)>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(l10n.twoFactorLabel),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.twoFactorSubtitle),
+                const SizedBox(height: 12),
+                if (invalidCode)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      l10n.twoFactorInvalidCodeMessage,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                TextField(
+                  controller: codeController,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: l10n.twoFactorVerificationCodeLabel,
+                    hintText: l10n.twoFactorVerificationCodeHint,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: recoveryController,
+                  decoration: InputDecoration(
+                    labelText: l10n.twoFactorRecoveryPhraseFieldLabel,
+                    hintText: l10n.twoFactorLoginRecoveryHint,
+                  ),
+                  minLines: 2,
+                  maxLines: 4,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(
+                  (
+                    codeController.text.trim(),
+                    recoveryController.text.trim(),
+                  ),
+                ),
+                child: Text(l10n.loginButton),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      codeController.dispose();
+      recoveryController.dispose();
     }
   }
 

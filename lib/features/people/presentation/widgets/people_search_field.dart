@@ -13,6 +13,7 @@ class PeopleSearchField extends StatelessWidget {
     this.focusNode,
     this.onClear,
     this.autofocus = false,
+    this.embedded = false,
   });
 
   final TextEditingController controller;
@@ -21,6 +22,7 @@ class PeopleSearchField extends StatelessWidget {
   final FocusNode? focusNode;
   final VoidCallback? onClear;
   final bool autofocus;
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
@@ -28,39 +30,45 @@ class PeopleSearchField extends StatelessWidget {
     final iconSize = 20.s(context);
     final theme = Theme.of(context);
 
+    final input = ShadInput(
+      controller: controller,
+      focusNode: focusNode,
+      autofocus: autofocus,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontSize: 15.s(context),
+      ),
+      onChanged: onChanged,
+      placeholder: Text(
+        hintText,
+        style: TextStyle(color: AppColors.hintText(context)),
+      ),
+      leading: Icon(
+        Icons.search_rounded,
+        color: AppColors.iconMuted(context),
+        size: iconSize,
+      ),
+      trailing: controller.text.isNotEmpty
+          ? ShadIconButton.ghost(
+              width: 32.s(context),
+              height: 32.s(context),
+              onPressed: onClear,
+              icon: Icon(
+                Icons.close_rounded,
+                color: AppColors.iconMuted(context),
+                size: iconSize,
+              ),
+            )
+          : null,
+    );
+
+    if (embedded) {
+      return input;
+    }
+
     return GlassCard(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-      child: ShadInput(
-        controller: controller,
-        focusNode: focusNode,
-        autofocus: autofocus,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: theme.colorScheme.onSurface,
-          fontSize: 15.s(context),
-        ),
-        onChanged: onChanged,
-        placeholder: Text(
-          hintText,
-          style: TextStyle(color: AppColors.hintText(context)),
-        ),
-        leading: Icon(
-          Icons.search_rounded,
-          color: AppColors.iconMuted(context),
-          size: iconSize,
-        ),
-        trailing: controller.text.isNotEmpty
-            ? ShadIconButton.ghost(
-                width: 32.s(context),
-                height: 32.s(context),
-                onPressed: onClear,
-                icon: Icon(
-                  Icons.close_rounded,
-                  color: AppColors.iconMuted(context),
-                  size: iconSize,
-                ),
-              )
-            : null,
-      ),
+      child: input,
     );
   }
 }

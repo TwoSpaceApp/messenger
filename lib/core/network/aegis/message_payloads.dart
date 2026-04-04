@@ -483,19 +483,31 @@ class AuthResponse {
   final bool success;
   final int? userId;
   final String? username;
+  final String? sessionToken;
+  final String? error;
 
-  AuthResponse({required this.success, this.userId, this.username});
+  AuthResponse({
+    required this.success,
+    this.userId,
+    this.username,
+    this.sessionToken,
+    this.error,
+  });
 
   Map<String, dynamic> toJson() => {
     'Success': success,
     if (userId != null) 'UserId': userId,
     if (username != null) 'Username': username,
+    if (sessionToken != null) 'SessionToken': sessionToken,
+    if (error != null) 'Error': error,
   };
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) => AuthResponse(
     success: json['Success'] as bool,
     userId: json['UserId'] as int?,
     username: json['Username'] as String?,
+    sessionToken: json['SessionToken'] as String?,
+    error: json['Error'] as String?,
   );
 
   factory AuthResponse.fromBytes(List<int> bytes) {

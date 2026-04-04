@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/biometric_service.dart';
+import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/floating_nav_bar.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
-import 'package:two_space_app/features/chat/presentation/screens/calls_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/home_screen.dart';
-import 'package:two_space_app/features/profile/presentation/screens/contacts_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/widgets_screen.dart';
+import 'package:two_space_app/features/people/presentation/screens/people_screen.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:two_space_app/features/settings/presentation/screens/settings_screen.dart';
 
@@ -51,9 +52,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         label: l10n.chatsTitle,
       ),
       (
-        icon: const Icon(Icons.call_outlined),
-        selectedIcon: const Icon(Icons.call_rounded),
-        label: l10n.callsTitle,
+        icon: const Icon(Icons.widgets_outlined),
+        selectedIcon: const Icon(Icons.widgets_rounded),
+        label: l10n.widgetsTitle,
       ),
       (
         icon: const Icon(Icons.groups_2_outlined),
@@ -71,8 +72,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Widget _buildScreen(int index) {
     return switch (index) {
       0 => const HomeScreen(),
-      1 => const CallsScreen(),
-      2 => const ContactsScreen(),
+      1 => const WidgetsScreen(),
+      2 => const PeopleScreen(),
       3 => const SettingsScreen(),
       _ => const SizedBox.shrink(),
     };
@@ -219,16 +220,30 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                     padding: const EdgeInsets.fromLTRB(16, 16, 0, 16),
                     child: SectionCard(
                       radius: UITokens.cornerXL,
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.34),
+                      borderColor: Theme.of(context)
+                          .colorScheme
+                          .outlineVariant
+                          .withValues(alpha: 0.42),
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 6),
                       child: NavigationRail(
                         selectedIndex: _currentIndex,
                         onDestinationSelected: _onTabChanged,
                         labelType: NavigationRailLabelType.all,
-                        leading: Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Icon(
-                            Icons.forum_rounded,
-                            color: Theme.of(context).colorScheme.primary,
+                        minWidth: 88,
+                        minExtendedWidth: 88,
+                        groupAlignment: -0.2,
+                        useIndicator: true,
+                        leading: const Padding(
+                          padding: EdgeInsets.fromLTRB(6, 4, 6, 18),
+                          child: SizedBox(
+                            width: 92,
+                            child: Center(
+                              child: Opacity(
+                                opacity: 0.96,
+                                child: AppLogo(large: false),
+                              ),
+                            ),
                           ),
                         ),
                         destinations: [

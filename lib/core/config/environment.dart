@@ -14,6 +14,7 @@ class Environment {
   static bool? _cachedAegisUseTls;
   static int? _cachedAegisAppId;
   static String? _cachedAegisAppHash;
+  static String? _cachedAegisBotApiBaseUrl;
   static String? _cachedSentryDsn;
   static String? _cachedAppEnv;
   static bool? _cachedEnableDevTools;
@@ -47,6 +48,7 @@ class Environment {
       _cachedAegisUseTls = null;
       _cachedAegisAppId = null;
       _cachedAegisAppHash = null;
+      _cachedAegisBotApiBaseUrl = null;
       _cachedSentryDsn = null;
       _cachedAppEnv = null;
       _cachedEnableDevTools = null;
@@ -109,6 +111,19 @@ class Environment {
     return value.isEmpty ? null : value;
   }
 
+  static String get aegisBotApiBaseUrl {
+    final configured = _cachedAegisBotApiBaseUrl ??= _string(
+      'AEGIS_BOT_API_BASE_URL',
+      '',
+    ).trim();
+    if (configured.isNotEmpty) {
+      return configured;
+    }
+
+    final scheme = aegisUseTls ? 'https' : 'http';
+    return '$scheme://$aegisHost:5000';
+  }
+
   static String get sentryDsn =>
       _cachedSentryDsn ??= _string('SENTRY_DSN', Env.sentryDsn);
   static String get appEnv => _cachedAppEnv ??= _string('APP_ENV', Env.appEnv);
@@ -135,6 +150,7 @@ class Environment {
     print('AEGIS_USE_TLS: $aegisUseTls');
     print('AEGIS_APP_ID: ${aegisAppId ?? '(default)'}');
     print('AEGIS_APP_HASH: ${aegisAppHash == null ? '(default)' : '(set)'}');
+    print('AEGIS_BOT_API_BASE_URL: $aegisBotApiBaseUrl');
     print('APP_ENV: $appEnv');
     print('ENABLE_DEV_TOOLS: $enableDevTools');
   }

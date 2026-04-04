@@ -1500,6 +1500,12 @@ abstract class AppLocalizations {
   /// **'Calls'**
   String get callsTitle;
 
+  /// Widgets section title in main navigation
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets'**
+  String get widgetsTitle;
+
   /// Search by name hint
   ///
   /// In en, this message translates to:
@@ -3516,6 +3522,12 @@ abstract class AppLocalizations {
   /// **'Start chat'**
   String get startChatTitle;
 
+  /// Direct chat option subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Open a private conversation with one person'**
+  String get startDirectChatSubtitle;
+
   /// Create room subtitle
   ///
   /// In en, this message translates to:
@@ -4344,6 +4356,24 @@ abstract class AppLocalizations {
   /// **'Recent calls, quick redial and people-first history'**
   String get callsSubtitle;
 
+  /// Widgets placeholder subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'A warm space for new ways to stay close will appear here soon.'**
+  String get widgetsSubtitle;
+
+  /// Widgets placeholder title
+  ///
+  /// In en, this message translates to:
+  /// **'New connection formats are on the way'**
+  String get widgetsComingTitle;
+
+  /// Widgets placeholder body text
+  ///
+  /// In en, this message translates to:
+  /// **'In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.'**
+  String get widgetsComingBody;
+
   /// Action to start a call
   ///
   /// In en, this message translates to:
@@ -4757,6 +4787,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only invited users can view earlier messages.'**
   String get roomHistoryVisibilityInvitedDescription;
+
+  /// No description provided for @loginUsernameOnlyError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your TwoSpace username to sign in.'**
+  String get loginUsernameOnlyError;
+
+  /// No description provided for @twoFactorInvalidCodeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The 2FA code or recovery phrase is invalid. Try again.'**
+  String get twoFactorInvalidCodeMessage;
+
+  /// No description provided for @twoFactorCodeRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a code from your authenticator app or use your recovery phrase.'**
+  String get twoFactorCodeRequiredMessage;
+
+  /// No description provided for @twoFactorEnabledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication is enabled.'**
+  String get twoFactorEnabledMessage;
+
+  /// Error shown when enabling 2FA fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not enable 2FA: {error}'**
+  String twoFactorEnableFailed(String error);
+
+  /// No description provided for @twoFactorSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up two-factor authentication'**
+  String get twoFactorSetupTitle;
+
+  /// No description provided for @twoFactorSetupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the QR code in your authenticator app, save the recovery phrase, then confirm with a fresh TOTP code.'**
+  String get twoFactorSetupDescription;
+
+  /// No description provided for @twoFactorSecretTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Or enter this secret key manually'**
+  String get twoFactorSecretTitle;
+
+  /// No description provided for @twoFactorRecoveryPhraseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery phrase. Save it somewhere safe before enabling 2FA.'**
+  String get twoFactorRecoveryPhraseTitle;
+
+  /// No description provided for @twoFactorVerificationCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code'**
+  String get twoFactorVerificationCodeLabel;
+
+  /// No description provided for @twoFactorVerificationCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the current code from your authenticator app'**
+  String get twoFactorVerificationCodeHint;
+
+  /// No description provided for @twoFactorVerifyEnableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify and enable 2FA'**
+  String get twoFactorVerifyEnableAction;
+
+  /// No description provided for @twoFactorDisableSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable two-factor authentication'**
+  String get twoFactorDisableSectionTitle;
+
+  /// No description provided for @twoFactorDisableSectionDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off 2FA with either a valid authenticator code or your one-time recovery phrase.'**
+  String get twoFactorDisableSectionDescription;
+
+  /// No description provided for @twoFactorDisableCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a current authenticator code'**
+  String get twoFactorDisableCodeHint;
+
+  /// No description provided for @twoFactorRecoveryPhraseFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery phrase'**
+  String get twoFactorRecoveryPhraseFieldLabel;
+
+  /// No description provided for @twoFactorRecoveryPhraseFieldHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the recovery phrase if you no longer have access to the authenticator app'**
+  String get twoFactorRecoveryPhraseFieldHint;
+
+  /// No description provided for @twoFactorDisableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable 2FA'**
+  String get twoFactorDisableAction;
+
+  /// No description provided for @twoFactorDisableCredentialsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an authenticator code or a recovery phrase to disable 2FA.'**
+  String get twoFactorDisableCredentialsRequired;
+
+  /// No description provided for @twoFactorDisabledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication is disabled.'**
+  String get twoFactorDisabledMessage;
+
+  /// Error shown when disabling 2FA fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not disable 2FA: {error}'**
+  String twoFactorDisableFailed(String error);
+
+  /// No description provided for @twoFactorLoginRecoveryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Or paste the recovery phrase instead of a code'**
+  String get twoFactorLoginRecoveryHint;
 }
 
 class _AppLocalizationsDelegate

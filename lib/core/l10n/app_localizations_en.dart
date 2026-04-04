@@ -758,6 +758,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callsTitle => 'Calls';
 
   @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
   String get searchByNameHint => 'Search by name...';
 
   @override
@@ -1867,6 +1870,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startChatTitle => 'Start chat';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Open a private conversation with one person';
+
+  @override
   String get createRoomSubtitle => 'Private or public group';
 
   @override
@@ -2315,6 +2322,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Recent calls, quick redial and people-first history';
 
   @override
+  String get widgetsSubtitle =>
+      'A warm space for new ways to stay close will appear here soon.';
+
+  @override
+  String get widgetsComingTitle => 'New connection formats are on the way';
+
+  @override
+  String get widgetsComingBody =>
+      'In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.';
+
+  @override
   String get callsStartCallAction => 'Start call';
 
   @override
@@ -2547,4 +2565,85 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get roomHistoryVisibilityInvitedDescription =>
       'Only invited users can view earlier messages.';
+
+  @override
+  String get loginUsernameOnlyError => 'Use your TwoSpace username to sign in.';
+
+  @override
+  String get twoFactorInvalidCodeMessage =>
+      'The 2FA code or recovery phrase is invalid. Try again.';
+
+  @override
+  String get twoFactorCodeRequiredMessage =>
+      'Enter a code from your authenticator app or use your recovery phrase.';
+
+  @override
+  String get twoFactorEnabledMessage => 'Two-factor authentication is enabled.';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return 'Could not enable 2FA: $error';
+  }
+
+  @override
+  String get twoFactorSetupTitle => 'Set up two-factor authentication';
+
+  @override
+  String get twoFactorSetupDescription =>
+      'Scan the QR code in your authenticator app, save the recovery phrase, then confirm with a fresh TOTP code.';
+
+  @override
+  String get twoFactorSecretTitle => 'Or enter this secret key manually';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle =>
+      'Recovery phrase. Save it somewhere safe before enabling 2FA.';
+
+  @override
+  String get twoFactorVerificationCodeLabel => 'Verification code';
+
+  @override
+  String get twoFactorVerificationCodeHint =>
+      'Enter the current code from your authenticator app';
+
+  @override
+  String get twoFactorVerifyEnableAction => 'Verify and enable 2FA';
+
+  @override
+  String get twoFactorDisableSectionTitle =>
+      'Disable two-factor authentication';
+
+  @override
+  String get twoFactorDisableSectionDescription =>
+      'Turn off 2FA with either a valid authenticator code or your one-time recovery phrase.';
+
+  @override
+  String get twoFactorDisableCodeHint => 'Enter a current authenticator code';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => 'Recovery phrase';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint =>
+      'Paste the recovery phrase if you no longer have access to the authenticator app';
+
+  @override
+  String get twoFactorDisableAction => 'Disable 2FA';
+
+  @override
+  String get twoFactorDisableCredentialsRequired =>
+      'Enter an authenticator code or a recovery phrase to disable 2FA.';
+
+  @override
+  String get twoFactorDisabledMessage =>
+      'Two-factor authentication is disabled.';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return 'Could not disable 2FA: $error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint =>
+      'Or paste the recovery phrase instead of a code';
 }

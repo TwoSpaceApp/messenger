@@ -137,15 +137,28 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> requestTotpSetup() async {
-    throw UnsupportedError('TOTP setup is not supported in Aegis mode');
+    return _aegis.requestTotpSetup();
   }
 
-  Future<void> verifyTotpSetup(String code, {bool disable = false}) async {
-    throw UnsupportedError('TOTP setup is not supported in Aegis mode');
+  Future<void> verifyTotpSetup(
+    String code, {
+    bool disable = false,
+    String? recoveryPhrase,
+  }) async {
+    return _aegis.verifyTotpSetup(
+      code,
+      disable: disable,
+      recoveryPhrase: recoveryPhrase,
+    );
   }
 
   Future<void> createSessionFromToken(String userId, String secret) async {
-    throw UnsupportedError('Token session flow is not supported in Aegis mode');
+    final parsedUserId = int.tryParse(userId);
+    await _aegis.createSessionFromToken(
+      secret,
+      userId: parsedUserId,
+      username: parsedUserId == null ? userId : null,
+    );
   }
 
   Future<bool> restoreSessionFromToken() async {
@@ -162,8 +175,26 @@ class AuthService {
   }
 
   // Backwards-compatible method names for Riverpod providers
-  Future<void> login(String identifier, String password) async {
-    return loginUser(identifier, password);
+  Future<void> login(
+    String identifier,
+    String password, {
+    String? twoFactorCode,
+    String? recoveryPhrase,
+  }) async {
+    _logger.info('🔐 Вход: $identifier');
+    try {
+      await _aegis.login(
+        identifier: identifier,
+        password: password,
+        twoFactorCode: twoFactorCode,
+        recoveryPhrase: recoveryPhrase,
+      );
+      _logger.info('✓ Вход через Aegis успешен');
+      return;
+    } on Object catch (e) {
+      _logger.warning('❌ Aegis вход не удался: $e');
+      rethrow;
+    }
   }
 
   Future<void> logout() async {

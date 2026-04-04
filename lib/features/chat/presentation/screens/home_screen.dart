@@ -9,7 +9,6 @@ import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
-import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
@@ -18,9 +17,7 @@ import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dar
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/start_chat_bottom_sheet.dart';
-import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
-import 'package:two_space_app/features/settings/presentation/screens/settings_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -229,18 +226,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return MessageTimeFormatter.formatConversationTime(time);
   }
 
-  void _openSearch() {
+  void _openDirectChat() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const SearchContactsScreen()),
-    );
-  }
-
-  void _openSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SettingsScreen()),
-    );
+      MaterialPageRoute(
+        builder: (_) => const CreateChatScreen(),
+      ),
+    ).then((result) {
+      if (result != null) {
+        unawaited(_chat.refreshChatsQuietly());
+      }
+    });
   }
 
   void _openCreateGroup() {
@@ -279,8 +275,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => StartChatBottomSheet(
+        onStartDirectChat: _openDirectChat,
         onCreateGroup: _openCreateGroup,
-        onInviteUser: _openSearch,
         onJoinByAddress: _openJoinByCode,
       ),
     );
@@ -299,17 +295,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              alignment: Alignment.center,
-              child: const AppLogo(large: false),
-            ),
-            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,62 +307,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          '$roomCount',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        l10n.noMessages,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    roomCount > 0
+                        ? l10n.chatsSubtitle
+                        : l10n.chatsQuickStartTitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            FilledButton.icon(
+            const SizedBox(width: 12),
+            IconButton.filled(
               onPressed: _showStartChatSheet,
               icon: const Icon(Icons.add_comment_outlined),
-              label: const SizedBox.shrink(),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(52, 52),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              tooltip: l10n.peopleQuickNewChat,
+              style: IconButton.styleFrom(
+                minimumSize: const Size(56, 56),
               ),
-            ),
-            const SizedBox(width: 4),
-            IconButton(
-              icon: Icon(
-                Icons.search,
-                color: theme.colorScheme.onSurface,
-              ),
-              onPressed: _openSearch,
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.settings_outlined,
-                color: theme.colorScheme.onSurface,
-              ),
-              onPressed: _openSettings,
             ),
           ],
         ),
@@ -517,7 +465,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Center(
               child: AppEmptyState(
                 title: l10n.noChats,
-                message: l10n.peopleSubtitle,
+                message: l10n.chatsSubtitle,
                 icon: Icons.forum_outlined,
                 actionLabel: l10n.peopleQuickNewChat,
                 onAction: _showStartChatSheet,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -6,6 +7,7 @@ import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/network/aegis/aegis_client.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/official_api_credentials.dart';
+import 'package:two_space_app/core/services/dev_http_client.dart' as http;
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_identity_service.dart';
 
@@ -15,6 +17,16 @@ export 'package:two_space_app/core/network/aegis/message_payloads.dart'
 const _kAegisTokenKey = 'aegis_auth_token';
 const _kAegisUsernameKey = 'aegis_username';
 const _kAegisUserIdKey = 'aegis_user_id';
+
+class TwoFactorRequiredException implements Exception {
+  @override
+  String toString() => 'TwoFactorRequiredException';
+}
+
+class TwoFactorInvalidException implements Exception {
+  @override
+  String toString() => 'TwoFactorInvalidException';
+}
 
 /// Обёртка над [AegisClient] для аутентификации в приложении.
 ///
@@ -26,6 +38,9 @@ class AegisAuthService {
     _client.disconnects.listen((_) {
       _stopKeepAlive();
       _log.warning('Соединение с Aegis-сервером разорвано');
+      if (!_logoutInProgress && (_token?.isNotEmpty ?? false)) {
+        unawaited(_recoverSessionAfterKeepAliveFailure());
+      }
     });
   }
   static final AegisAuthService _instance = AegisAuthService._internal();
@@ -34,6 +49,8 @@ class AegisAuthService {
   final FlutterSecureStorage _secure = const FlutterSecureStorage();
   final AegisClient _client = _buildClient();
   final AegisIdentityService _identity = AegisIdentityService();
+  final StreamController<void> _sessionRestoredController =
+      StreamController<void>.broadcast();
 
   String? _token;
   String? _username;
@@ -43,12 +60,14 @@ class AegisAuthService {
   Future<void>? _connectFuture;
   Future<void>? _ensureSessionFuture;
   Future<void>? _sessionRecoveryFuture;
+  bool _logoutInProgress = false;
 
   bool get isConnected => _client.isConnected;
   bool get isAuthenticated => _client.isAuthenticated;
   String? get token => _token;
   String? get username => _username;
   int? get userId => _userId;
+  Stream<void> get sessionRestored => _sessionRestoredController.stream;
 
   bool get _usingEnvAppCredentials =>
       Environment.aegisAppId != null ||
@@ -284,20 +303,13 @@ class AegisAuthService {
       if (_token == null) return false;
 
       await connect();
-      if (_token!.contains(':')) {
-        final separatorIndex = _token!.indexOf(':');
-        final identifier = _token!.substring(0, separatorIndex);
-        final password = _token!.substring(separatorIndex + 1);
-        await _client.login(identifier, password);
-        _username = _client.username ?? identifier;
-        _userId = _client.userId;
-      } else {
-        await _client.loginWithToken(_token!);
-        _username = _client.username;
-        _userId = _client.userId;
-      }
+      await _client.loginWithToken(_token!);
+      _token = _client.sessionToken ?? _token;
+      _username = _client.username;
+      _userId = _client.userId;
       await _saveSession();
       _ensureKeepAlive();
+      _sessionRestoredController.add(null);
       _log.info('Сессия восстановлена для $_username');
       return true;
     } on Object catch (e) {
@@ -398,18 +410,19 @@ class AegisAuthService {
   Future<void> login({
     required String identifier,
     required String password,
+    String? twoFactorCode,
+    String? recoveryPhrase,
   }) async {
     _log.info('Вход: $identifier');
     await connect();
 
-    // TODO(security): сервер текущей версии принимает токен в формате
-    //   «identifier:password» и самостоятельно валидирует его.
-    //   В будущих версиях сервер должен возвращать непрозрачный сессионный
-    //   токен (UUID / JWT), который и нужно сохранять вместо пароля.
-    //   До этого момента plain-текст пароля попадает в FlutterSecureStorage
-    //   (шифруется Keystore/Keychain) и в память клиента.
     try {
-      await _client.login(identifier, password);
+      await _client.login(
+        identifier,
+        password,
+        twoFactorCode: twoFactorCode,
+        recoveryPhrase: recoveryPhrase,
+      );
     } on Object catch (e) {
       _log.error('Login failed [${_classifyConnectionError(e)}]: $e');
       final errorText = e.toString().toLowerCase();
@@ -419,30 +432,114 @@ class AegisAuthService {
           'Сервер отклонил app credentials. Клиент уже пробует встроенные official credentials автоматически; если ошибка сохраняется, проблема уже на стороне сервера или в несовместимом handshake.',
         );
       }
+      if (errorText.contains('two-factor code required')) {
+        throw TwoFactorRequiredException();
+      }
+      if (errorText.contains('invalid two-factor code')) {
+        throw TwoFactorInvalidException();
+      }
       rethrow;
     }
 
-    _token = '$identifier:$password';
+    _token = _client.sessionToken;
     _username = (_client.username?.isNotEmpty ?? false)
         ? _client.username
         : identifier;
     _userId = _client.userId;
 
+    if (_token == null || _token!.isEmpty) {
+      throw Exception('Сервер не вернул session token');
+    }
+
     await _saveSession();
     _ensureKeepAlive();
+    _sessionRestoredController.add(null);
     _log.info('Вход выполнен: $_username');
+  }
+
+  Future<void> createSessionFromToken(
+    String token, {
+    String? username,
+    int? userId,
+  }) async {
+    _token = token;
+    _username = username;
+    _userId = userId;
+
+    await connect();
+    await _client.loginWithToken(token);
+
+    _token = _client.sessionToken ?? token;
+    _username = _client.username ?? username;
+    _userId = _client.userId ?? userId;
+
+    await _saveSession();
+    _ensureKeepAlive();
+    _sessionRestoredController.add(null);
+  }
+
+  Future<Map<String, dynamic>> requestTotpSetup() async {
+    await ensureSession();
+    final response = await http.post(
+      _botApiUri('/api/auth/2fa/setup'),
+      headers: _authHeaders(),
+    );
+
+    final payload = _decodeJsonResponse(response);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(_extractApiError(payload, fallback: 'Не удалось подготовить 2FA'));
+    }
+
+    return <String, dynamic>{
+      'secret': payload['secret'] ?? payload['Secret'],
+      'otpauth_uri': payload['otpAuthUri'] ?? payload['OtpauthUri'],
+      'recovery_phrase': payload['recoveryPhrase'] ?? payload['RecoveryPhrase'],
+    };
+  }
+
+  Future<void> verifyTotpSetup(
+    String code, {
+    bool disable = false,
+    String? recoveryPhrase,
+  }) async {
+    await ensureSession();
+    final response = await http.post(
+      _botApiUri(disable ? '/api/auth/2fa/disable' : '/api/auth/2fa/enable'),
+      headers: _authHeaders(),
+      body: jsonEncode({
+        'Code': code,
+        if (disable && recoveryPhrase != null) 'RecoveryPhrase': recoveryPhrase,
+      }),
+    );
+
+    final payload = _decodeJsonResponse(response);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        _extractApiError(
+          payload,
+          fallback: disable
+              ? 'Не удалось отключить 2FA'
+              : 'Не удалось подтвердить 2FA',
+        ),
+      );
+    }
   }
 
   // ─── Выход ────────────────────────────────────────────────────────────────
 
   Future<void> logout() async {
     _log.info('Выход...');
+    _logoutInProgress = true;
     _stopKeepAlive();
-    await clearSession();
     try {
-      await _client.disconnect();
-    } on Object catch (e) {
-      _log.debug('Ошибка при disconnect: $e');
+      await clearSession();
+      try {
+        await _client.disconnect();
+      } on Object catch (e) {
+        _log.debug('Ошибка при disconnect: $e');
+      }
+    } finally {
+      _logoutInProgress = false;
     }
   }
 
@@ -540,6 +637,54 @@ class AegisAuthService {
     if (!_client.isAuthenticated) {
       throw NotAuthenticatedException();
     }
+  }
+
+  Uri _botApiUri(String path) {
+    final base = Uri.parse(Environment.aegisBotApiBaseUrl);
+    return base.resolve(path);
+  }
+
+  Map<String, String> _authHeaders() {
+    final token = _token;
+    if (token == null || token.isEmpty) {
+      throw NotAuthenticatedException();
+    }
+
+    return <String, String>{
+      'Content-Type': 'application/json',
+      'X-Session-Token': token,
+    };
+  }
+
+  Map<String, dynamic> _decodeJsonResponse(http.Response response) {
+    if (response.body.isEmpty) {
+      return <String, dynamic>{};
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+
+    if (decoded is Map) {
+      return decoded.map<String, dynamic>(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+    }
+
+    return <String, dynamic>{'value': decoded};
+  }
+
+  String _extractApiError(
+    Map<String, dynamic> payload, {
+    required String fallback,
+  }) {
+    final error = payload['error'] ?? payload['Error'] ?? payload['message'] ?? payload['Message'];
+    final text = error?.toString().trim();
+    if (text == null || text.isEmpty) {
+      return fallback;
+    }
+    return text;
   }
 
   AegisClient get rawClient => _client;

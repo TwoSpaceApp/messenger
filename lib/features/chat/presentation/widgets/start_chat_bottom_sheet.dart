@@ -5,13 +5,13 @@ import 'package:two_space_app/core/widgets/glass_card.dart';
 
 class StartChatBottomSheet extends StatelessWidget {
   const StartChatBottomSheet({
+    required this.onStartDirectChat,
     required this.onCreateGroup,
-    required this.onInviteUser,
     required this.onJoinByAddress,
     super.key,
   });
+  final VoidCallback onStartDirectChat;
   final VoidCallback onCreateGroup;
-  final VoidCallback onInviteUser;
   final VoidCallback onJoinByAddress;
 
   @override
@@ -45,23 +45,23 @@ class StartChatBottomSheet extends StatelessWidget {
             const SizedBox(height: 24),
             _buildMenuItem(
               context,
-              icon: Icons.add_circle_outline,
-              title: l10n.createNewRoomTitle,
-              subtitle: l10n.createRoomSubtitle,
+              icon: Icons.chat_bubble_outline_rounded,
+              title: l10n.startDirectChatTitle,
+              subtitle: l10n.startDirectChatSubtitle,
               onTap: () {
                 Navigator.pop(context);
-                onCreateGroup();
+                onStartDirectChat();
               },
             ),
             const SizedBox(height: 12),
             _buildMenuItem(
               context,
-              icon: Icons.person_add_alt_1_outlined,
-              title: l10n.inviteUserTitle,
-              subtitle: l10n.inviteUserSubtitle,
+              icon: Icons.group_add_outlined,
+              title: l10n.createNewRoomTitle,
+              subtitle: l10n.createRoomSubtitle,
               onTap: () {
                 Navigator.pop(context);
-                onInviteUser();
+                onCreateGroup();
               },
             ),
             const SizedBox(height: 12),

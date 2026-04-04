@@ -72,6 +72,7 @@ class AegisClient {
   bool _isAuthenticated = false;
   int? _userId;
   String? _username;
+  String? _sessionToken;
   late final AegisEventDispatcher events;
   late final AegisChannelFacade channels;
   late final AegisGroupFacade groups;
@@ -125,6 +126,9 @@ class AegisClient {
   /// The authenticated user's username, available after [login] or [loginWithToken]
   String? get username => _username;
 
+  /// The authenticated session token returned by the server.
+  String? get sessionToken => _sessionToken;
+
   /// The app credentials that will be sent during handshake.
   ///
   /// When null, the client will not include `AppId` / `AppHash` in the
@@ -173,6 +177,7 @@ class AegisClient {
     String? transportMaskingKey,
     bool useTls = false,
     bool enableMaskingAutoFallback = true,
+    bool allowLegacyHandshakeFallback = false,
     String? trustedServerHandshakeSigningPublicKeyBase64,
     bool requireSignedHandshake = false,
   }) async {
@@ -192,6 +197,7 @@ class AegisClient {
         useTls: useTls,
       );
       await _performHandshake(
+        allowLegacyHandshakeFallback: allowLegacyHandshakeFallback,
         apiCredentials: handshakeCredentials,
         trustedServerHandshakeSigningPublicKeyBase64:
             trustedServerHandshakeSigningPublicKeyBase64,
@@ -293,6 +299,7 @@ class AegisClient {
     _isAuthenticated = false;
     _userId = null;
     _username = null;
+    _sessionToken = null;
   }
 
   /// Release all resources.
@@ -311,12 +318,20 @@ class AegisClient {
     String username,
     String password, {
     String clientInfo = 'aegis-dart-client',
+    String? twoFactorCode,
+    String? recoveryPhrase,
   }) async {
     _requireConnected();
     final payload = msgpack.serialize({
       'Username': username,
       'Password': password,
       'ClientInfo': clientInfo,
+      ...?twoFactorCode == null
+          ? null
+          : <String, String>{'TwoFactorCode': twoFactorCode},
+      ...?recoveryPhrase == null
+          ? null
+          : <String, String>{'RecoveryPhrase': recoveryPhrase},
     });
     await _doAuthenticate(payload);
   }
@@ -360,12 +375,16 @@ class AegisClient {
 
     final decoded = msgpack.deserialize(response.payload);
     if (decoded == null || decoded['Success'] != true) {
-      throw Exception('Authentication failed');
+      final error = decoded is Map ? decoded['Error']?.toString() : null;
+      throw Exception(
+        'Authentication failed${error != null && error.isNotEmpty ? ': $error' : ''}',
+      );
     }
 
     _isAuthenticated = true;
     _userId = decoded['UserId'] as int?;
     _username = decoded['Username'] as String?;
+    _sessionToken = decoded['SessionToken'] as String?;
 
     await _publishPresence(isOnline: true);
   }
@@ -375,12 +394,20 @@ class AegisClient {
     required String username,
     required String password,
     String clientInfo = 'aegis-dart-client',
+    String? twoFactorCode,
+    String? recoveryPhrase,
   }) async {
     _requireConnected();
     final payload = msgpack.serialize({
       'Username': username,
       'Password': password,
       'ClientInfo': clientInfo,
+      ...?twoFactorCode == null
+          ? null
+          : <String, String>{'TwoFactorCode': twoFactorCode},
+      ...?recoveryPhrase == null
+          ? null
+          : <String, String>{'RecoveryPhrase': recoveryPhrase},
     });
     final msg = Message.withType(MessageType.auth, payload);
     final response = await _sendAndWaitResponse(
@@ -390,12 +417,16 @@ class AegisClient {
 
     final decoded = msgpack.deserialize(response.payload);
     if (decoded == null || decoded['Success'] != true) {
-      throw Exception('Authentication failed');
+      final error = decoded is Map ? decoded['Error']?.toString() : null;
+      throw Exception(
+        'Authentication failed${error != null && error.isNotEmpty ? ': $error' : ''}',
+      );
     }
 
     _isAuthenticated = true;
     _userId = decoded['UserId'] as int?;
     _username = decoded['Username'] as String?;
+    _sessionToken = decoded['SessionToken'] as String?;
 
     await _publishPresence(isOnline: true);
 
@@ -403,6 +434,7 @@ class AegisClient {
       success: true,
       userId: _userId,
       username: _username,
+      sessionToken: _sessionToken,
     );
   }
 
@@ -1589,12 +1621,189 @@ class AegisClient {
 
   /// Send the initial handshake after connect.
   Future<void> _performHandshake({
+    required bool allowLegacyHandshakeFallback,
     required AegisApiCredentials? apiCredentials,
     required bool requireSignedHandshake,
     String? trustedServerHandshakeSigningPublicKeyBase64,
   }) async {
     final handshake = await AegisHandshakeContext.create();
 
+    final v2Completed = await _tryPerformV2Handshake(
+      handshake: handshake,
+      apiCredentials: apiCredentials,
+      trustedServerHandshakeSigningPublicKeyBase64:
+          trustedServerHandshakeSigningPublicKeyBase64,
+      requireSignedHandshake: requireSignedHandshake,
+    );
+
+    if (v2Completed) {
+      return;
+    }
+
+    if (!allowLegacyHandshakeFallback) {
+      throw Exception(
+        'Server did not return a V2 handshake stage. '
+        'Use allowLegacyHandshakeFallback=true only for migration.',
+      );
+    }
+
+    await _performLegacyHandshake(
+      handshake: handshake,
+      apiCredentials: apiCredentials,
+      trustedServerHandshakeSigningPublicKeyBase64:
+          trustedServerHandshakeSigningPublicKeyBase64,
+      requireSignedHandshake: requireSignedHandshake,
+    );
+  }
+
+  Future<bool> _tryPerformV2Handshake({
+    required AegisHandshakeContext handshake,
+    required AegisApiCredentials? apiCredentials,
+    required bool requireSignedHandshake,
+    String? trustedServerHandshakeSigningPublicKeyBase64,
+  }) async {
+    final clientNonce = AegisSecureProtocolV2.secureRandomBytes(32);
+    final clientHello = <String, Object>{
+      'ApiId': apiCredentials?.appId ?? 0,
+      'AppHash': apiCredentials?.appHash ?? '',
+      'ClientEphemeralPublicKey': handshake.publicKey,
+      'ClientNonce': clientNonce,
+      'ClientUnixTimeMs': DateTime.now().toUtc().millisecondsSinceEpoch,
+      'TransportHint': 'obfs+tls',
+    };
+
+    final helloEnvelope = <String, Object>{
+      'Stage': 'client_hello_v2',
+      'ClientHello': clientHello,
+    };
+    final helloPayload = msgpack.serialize(helloEnvelope);
+    final helloMsg = Message.withType(MessageType.handshake, helloPayload);
+    final helloResponse = await _sendAndWaitResponse(
+      helloMsg,
+      expectedTypes: {MessageType.handshake},
+    );
+
+    final decodedHello = msgpack.deserialize(helloResponse.payload);
+    if (decodedHello is! Map) {
+      throw Exception('Invalid V2 handshake response payload');
+    }
+
+    final stage = decodedHello['Stage']?.toString();
+    if (stage == null || stage.isEmpty) {
+      return false;
+    }
+
+    final isSuccess = decodedHello['Success'] == true;
+    if (!isSuccess) {
+      final error = decodedHello['Message']?.toString() ?? 'Handshake V2 failed';
+      throw Exception(error);
+    }
+
+    if (stage != 'server_hello_v2') {
+      throw Exception('Unexpected V2 handshake stage: $stage');
+    }
+
+    final serverHelloMap = decodedHello['ServerHello'];
+    if (serverHelloMap is! Map) {
+      throw Exception('V2 handshake response is missing ServerHello');
+    }
+
+    final serverPublicKey = _readBytesField(
+      serverHelloMap,
+      'ServerEphemeralPublicKey',
+      'ServerHello.ServerEphemeralPublicKey',
+    );
+    final serverNonce = _readBytesField(
+      serverHelloMap,
+      'ServerNonce',
+      'ServerHello.ServerNonce',
+    );
+    final cookie = _readBytesField(
+      serverHelloMap,
+      'Cookie',
+      'ServerHello.Cookie',
+    );
+    final signature = _readOptionalBytesField(serverHelloMap, 'Signature');
+
+    if (requireSignedHandshake) {
+      if (trustedServerHandshakeSigningPublicKeyBase64 == null ||
+          trustedServerHandshakeSigningPublicKeyBase64.isEmpty) {
+        throw Exception('Trusted handshake signing public key is required');
+      }
+
+      if (signature == null || signature.isEmpty) {
+        throw Exception('Handshake response signature is missing');
+      }
+
+      final signatureOk =
+          await AegisHandshakeVerifier.verifyServerHandshakeSignature(
+            trustedSigningPublicKey: Uint8List.fromList(
+              base64Decode(trustedServerHandshakeSigningPublicKeyBase64),
+            ),
+            serverEphemeralPublicKey: serverPublicKey,
+            clientEphemeralPublicKey: handshake.publicKey,
+            signature: signature,
+          );
+
+      if (!signatureOk) {
+        throw Exception('Handshake signature verification failed');
+      }
+    }
+
+    final transcriptHash = await AegisSecureProtocolV2.sha256(helloPayload);
+    final sharedSecret = await handshake.deriveSharedSecret(serverPublicKey);
+    final keys = await AegisSecureProtocolV2.deriveSessionKeys(
+      sharedSecret: sharedSecret,
+      clientNonce: clientNonce,
+      serverNonce: serverNonce,
+      transcriptHash: transcriptHash,
+    );
+    final proof = await AegisSecureProtocolV2.computeClientFinishProof(
+      ackKey: keys.ackKey,
+      transcriptHash: transcriptHash,
+    );
+
+    final finishEnvelope = <String, Object>{
+      'Stage': 'client_finish_v2',
+      'ClientFinish': {
+        'Cookie': cookie,
+        'Proof': proof,
+      },
+    };
+    final finishPayload = msgpack.serialize(finishEnvelope);
+    final finishMsg = Message.withType(MessageType.handshake, finishPayload);
+    final finishResponse = await _sendAndWaitResponse(
+      finishMsg,
+      expectedTypes: {MessageType.handshake},
+    );
+
+    final decodedFinish = msgpack.deserialize(finishResponse.payload);
+    if (decodedFinish is! Map) {
+      throw Exception('Invalid V2 handshake finish response payload');
+    }
+
+    final finishStage = decodedFinish['Stage']?.toString();
+    final finishSuccess = decodedFinish['Success'] == true;
+    if (!finishSuccess) {
+      final error =
+          decodedFinish['Message']?.toString() ?? 'Handshake V2 finish failed';
+      throw Exception(error);
+    }
+
+    if (finishStage != 'server_finish_v2') {
+      throw Exception('Unexpected V2 handshake finish stage: $finishStage');
+    }
+
+    _transport.setSessionKey(keys.clientToServerKey);
+    return true;
+  }
+
+  Future<void> _performLegacyHandshake({
+    required AegisHandshakeContext handshake,
+    required AegisApiCredentials? apiCredentials,
+    required bool requireSignedHandshake,
+    String? trustedServerHandshakeSigningPublicKeyBase64,
+  }) async {
     final handshakePayload = <String, Object>{
       'PublicKey': base64Encode(handshake.publicKey),
       'ClientVersion':
@@ -1665,6 +1874,40 @@ class AegisClient {
       Uint8List.fromList(base64Decode(serverPublicKeyBase64)),
     );
     _transport.setSessionKey(sessionKey);
+  }
+
+  Uint8List _readBytesField(Map source, String key, String fieldName) {
+    final value = source[key];
+    if (value is Uint8List) {
+      return Uint8List.fromList(value);
+    }
+
+    if (value is List) {
+      return Uint8List.fromList(value.cast<int>());
+    }
+
+    throw Exception('Invalid $fieldName in handshake payload');
+  }
+
+  Uint8List? _readOptionalBytesField(Map source, String key) {
+    if (!source.containsKey(key)) {
+      return null;
+    }
+
+    final value = source[key];
+    if (value == null) {
+      return null;
+    }
+
+    if (value is Uint8List) {
+      return Uint8List.fromList(value);
+    }
+
+    if (value is List) {
+      return Uint8List.fromList(value.cast<int>());
+    }
+
+    return null;
   }
 
   // ─── Group History and Members (SERVER-002, SERVER-003) ──────────────────

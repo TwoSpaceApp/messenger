@@ -1044,6 +1044,10 @@
   "@callsTitle": {
     "description": "Calls screen title"
   },
+  "widgetsTitle": "Widgets",
+  "@widgetsTitle": {
+    "description": "Widgets section title in main navigation"
+  },
   "searchByNameHint": "Search by name...",
   "@searchByNameHint": {
     "description": "Search by name hint"
@@ -2490,6 +2494,10 @@
   "@startChatTitle": {
     "description": "Start chat bottom sheet title"
   },
+  "startDirectChatSubtitle": "Open a private conversation with one person",
+  "@startDirectChatSubtitle": {
+    "description": "Direct chat option subtitle"
+  },
   "createRoomSubtitle": "Private or public group",
   "@createRoomSubtitle": {
     "description": "Create room subtitle"
@@ -3092,6 +3100,18 @@
   "@callsSubtitle": {
     "description": "Calls screen subtitle"
   },
+  "widgetsSubtitle": "A warm space for new ways to stay close will appear here soon.",
+  "@widgetsSubtitle": {
+    "description": "Widgets placeholder subtitle"
+  },
+  "widgetsComingTitle": "New connection formats are on the way",
+  "@widgetsComingTitle": {
+    "description": "Widgets placeholder title"
+  },
+  "widgetsComingBody": "In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.",
+  "@widgetsComingBody": {
+    "description": "Widgets placeholder body text"
+  },
   "callsStartCallAction": "Start call",
   "@callsStartCallAction": {
     "description": "Action to start a call"
@@ -3257,5 +3277,43 @@
   "roomHistoryVisibilityJoined": "Joined members",
   "roomHistoryVisibilityJoinedDescription": "Only joined members can view earlier messages.",
   "roomHistoryVisibilityInvited": "Invited users only",
-  "roomHistoryVisibilityInvitedDescription": "Only invited users can view earlier messages."
+  "roomHistoryVisibilityInvitedDescription": "Only invited users can view earlier messages.",
+  "loginUsernameOnlyError": "Use your TwoSpace username to sign in.",
+  "twoFactorInvalidCodeMessage": "The 2FA code or recovery phrase is invalid. Try again.",
+  "twoFactorCodeRequiredMessage": "Enter a code from your authenticator app or use your recovery phrase.",
+  "twoFactorEnabledMessage": "Two-factor authentication is enabled.",
+  "twoFactorEnableFailed": "Could not enable 2FA: {error}",
+  "@twoFactorEnableFailed": {
+    "description": "Error shown when enabling 2FA fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "twoFactorSetupTitle": "Set up two-factor authentication",
+  "twoFactorSetupDescription": "Scan the QR code in your authenticator app, save the recovery phrase, then confirm with a fresh TOTP code.",
+  "twoFactorSecretTitle": "Or enter this secret key manually",
+  "twoFactorRecoveryPhraseTitle": "Recovery phrase. Save it somewhere safe before enabling 2FA.",
+  "twoFactorVerificationCodeLabel": "Verification code",
+  "twoFactorVerificationCodeHint": "Enter the current code from your authenticator app",
+  "twoFactorVerifyEnableAction": "Verify and enable 2FA",
+  "twoFactorDisableSectionTitle": "Disable two-factor authentication",
+  "twoFactorDisableSectionDescription": "Turn off 2FA with either a valid authenticator code or your one-time recovery phrase.",
+  "twoFactorDisableCodeHint": "Enter a current authenticator code",
+  "twoFactorRecoveryPhraseFieldLabel": "Recovery phrase",
+  "twoFactorRecoveryPhraseFieldHint": "Paste the recovery phrase if you no longer have access to the authenticator app",
+  "twoFactorDisableAction": "Disable 2FA",
+  "twoFactorDisableCredentialsRequired": "Enter an authenticator code or a recovery phrase to disable 2FA.",
+  "twoFactorDisabledMessage": "Two-factor authentication is disabled.",
+  "twoFactorDisableFailed": "Could not disable 2FA: {error}",
+  "@twoFactorDisableFailed": {
+    "description": "Error shown when disabling 2FA fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "twoFactorLoginRecoveryHint": "Or paste the recovery phrase instead of a code"
 }

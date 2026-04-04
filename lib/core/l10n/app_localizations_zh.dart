@@ -750,6 +750,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callsTitle => '通话';
 
   @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
   String get searchByNameHint => '按姓名搜索...';
 
   @override
@@ -1837,6 +1840,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get startChatTitle => '开始聊天';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Open a private conversation with one person';
+
+  @override
   String get createRoomSubtitle => '私人或公开群组';
 
   @override
@@ -2276,6 +2283,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callsSubtitle => '最近通话、快速回拨以及以联系人为中心的记录';
 
   @override
+  String get widgetsSubtitle =>
+      'A warm space for new ways to stay close will appear here soon.';
+
+  @override
+  String get widgetsComingTitle => 'New connection formats are on the way';
+
+  @override
+  String get widgetsComingBody =>
+      'In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.';
+
+  @override
   String get callsStartCallAction => '开始通话';
 
   @override
@@ -2488,4 +2506,75 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get roomHistoryVisibilityInvitedDescription => '只有受邀用户可以查看之前的消息。';
+
+  @override
+  String get loginUsernameOnlyError => '请使用你的 TwoSpace 用户名登录。';
+
+  @override
+  String get twoFactorInvalidCodeMessage => '2FA 代码或恢复短语无效。请重试。';
+
+  @override
+  String get twoFactorCodeRequiredMessage => '请输入认证器应用中的代码，或使用恢复短语。';
+
+  @override
+  String get twoFactorEnabledMessage => '两步验证已启用。';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return '无法启用 2FA：$error';
+  }
+
+  @override
+  String get twoFactorSetupTitle => '设置两步验证';
+
+  @override
+  String get twoFactorSetupDescription =>
+      '在认证器应用中扫描二维码，保存恢复短语，然后使用新的 TOTP 代码完成确认。';
+
+  @override
+  String get twoFactorSecretTitle => '或者手动输入此密钥';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle => '恢复短语。启用 2FA 前请将其保存在安全的位置。';
+
+  @override
+  String get twoFactorVerificationCodeLabel => '验证码';
+
+  @override
+  String get twoFactorVerificationCodeHint => '输入认证器应用中的当前代码';
+
+  @override
+  String get twoFactorVerifyEnableAction => '验证并启用 2FA';
+
+  @override
+  String get twoFactorDisableSectionTitle => '关闭两步验证';
+
+  @override
+  String get twoFactorDisableSectionDescription => '使用有效的认证器代码或一次性恢复短语关闭 2FA。';
+
+  @override
+  String get twoFactorDisableCodeHint => '输入当前认证器代码';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => '恢复短语';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint => '如果无法访问认证器应用，请粘贴恢复短语';
+
+  @override
+  String get twoFactorDisableAction => '关闭 2FA';
+
+  @override
+  String get twoFactorDisableCredentialsRequired => '请输入认证器代码或恢复短语以关闭 2FA。';
+
+  @override
+  String get twoFactorDisabledMessage => '两步验证已关闭。';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return '无法关闭 2FA：$error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint => '或者粘贴恢复短语而不是验证码';
 }
