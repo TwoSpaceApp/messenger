@@ -1,59 +1,43 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:cryptography/cryptography.dart';
+import 'package:pointycastle/ecc/api.dart' show ECPrivateKey;
 
+import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/security_utils.dart';
 
 class AegisHandshakeContext {
-  static final Ecdh _ecdh = Ecdh.p256(length: 32);
-  static final Hkdf _hkdf = Hkdf(
-    hmac: Hmac.sha256(),
-    outputLength: 32,
-  );
-
-  final KeyPair _keyPair;
+  final ECPrivateKey _privateKey;
   final Uint8List publicKey;
 
-  AegisHandshakeContext._(this._keyPair, this.publicKey);
+  AegisHandshakeContext._(this._privateKey, this.publicKey);
 
   static Future<AegisHandshakeContext> create() async {
-    final keyPair = await _ecdh.newKeyPair();
-    final publicKey = await keyPair.extractPublicKey();
-    final rawPublicKey = Uint8List(65)
-      ..[0] = 0x04
-      ..setRange(1, 33, publicKey.x)
-      ..setRange(33, 65, publicKey.y);
+    final handshake = await AegisHandshakeCrypto.createHandshake();
     return AegisHandshakeContext._(
-      keyPair,
-      rawPublicKey,
+      handshake.privateKey,
+      Uint8List.fromList(handshake.publicKeyRaw),
     );
   }
 
   Future<Uint8List> deriveSharedSecret(Uint8List remotePublicKeyBytes) async {
-    final sharedSecret = await _ecdh.sharedSecretKey(
-      keyPair: _keyPair,
-      remotePublicKey: EcPublicKey(
-        x: remotePublicKeyBytes.sublist(1, 33),
-        y: remotePublicKeyBytes.sublist(33, 65),
-        type: KeyPairType.p256,
-      ),
+    final sharedSecret = AegisHandshakeCrypto.deriveSharedSecret(
+      clientPrivateKey: _privateKey,
+      serverPublicKeySpki: remotePublicKeyBytes,
     );
-
-    return Uint8List.fromList(await sharedSecret.extractBytes());
+    return Uint8List.fromList(sharedSecret);
   }
 
   Future<Uint8List> deriveSessionKey(Uint8List remotePublicKeyBytes) async {
-    final sharedSecretBytes = await deriveSharedSecret(remotePublicKeyBytes);
-
-    final sessionKey = await _hkdf.deriveKey(
-      secretKey: SecretKey(sharedSecretBytes),
-      info: utf8.encode('AegisKeyDerivation'),
+    final sessionKey = await AegisHandshakeCrypto.deriveSessionKey(
+      clientPrivateKey: _privateKey,
+      serverPublicKeySpki: remotePublicKeyBytes,
     );
-
-    return Uint8List.fromList(await sessionKey.extractBytes());
+    return Uint8List.fromList(sessionKey);
   }
 }
 
@@ -122,16 +106,12 @@ class AegisV2SessionKeys {
 }
 
 class AegisSecureProtocolV2 {
-  static final Hkdf _hkdf = Hkdf(hmac: Hmac.sha256(), outputLength: 32);
-  static final Hmac _hmac = Hmac.sha256();
-
   static Uint8List secureRandomBytes(int length) {
     return SecureBufferUtils.secureRandomBytes(length);
   }
 
   static Future<Uint8List> sha256(Uint8List payload) async {
-    final digest = await Sha256().hash(payload);
-    return Uint8List.fromList(digest.bytes);
+    return Uint8List.fromList(crypto.sha256.convert(payload).bytes);
   }
 
   static Future<AegisV2SessionKeys> deriveSessionKeys({
@@ -196,11 +176,9 @@ class AegisSecureProtocolV2 {
         transcriptHash.length + 6,
         ascii.encode('finish'),
       );
-    final mac = await _hmac.calculateMac(
-      material,
-      secretKey: SecretKey(ackKey),
+    return Uint8List.fromList(
+      crypto.Hmac(crypto.sha256, ackKey).convert(material).bytes,
     );
-    return Uint8List.fromList(mac.bytes);
   }
 
   static Future<Uint8List> _deriveHkdf({
@@ -208,12 +186,24 @@ class AegisSecureProtocolV2 {
     required Uint8List salt,
     required Uint8List info,
   }) async {
-    final result = await _hkdf.deriveKey(
-      secretKey: SecretKey(keyMaterial),
-      nonce: salt,
-      info: info,
-    );
-    return Uint8List.fromList(await result.extractBytes());
+    const hashLength = 32;
+    final effectiveSalt = salt.isEmpty ? Uint8List(hashLength) : salt;
+    final prk = crypto.Hmac(
+      crypto.sha256,
+      effectiveSalt,
+    ).convert(keyMaterial).bytes;
+
+    final output = <int>[];
+    var previous = List<int>.filled(hashLength, 0);
+    var counter = 1;
+    while (output.length < hashLength) {
+      final blockInput = <int>[...previous, ...info, counter];
+      previous = crypto.Hmac(crypto.sha256, prk).convert(blockInput).bytes;
+      output.addAll(previous);
+      counter++;
+    }
+
+    return Uint8List.fromList(output.sublist(0, hashLength));
   }
 }
 

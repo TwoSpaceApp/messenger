@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 import 'package:two_space_app/core/network/aegis/event_dispatcher.dart';
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
+import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
@@ -27,6 +28,10 @@ bool _isOfficialApiCredentials(AegisApiCredentials? credentials) {
   const official = AegisOfficialApiCredentials.credentials;
   return credentials.appId == official.appId &&
       credentials.appHash == official.appHash;
+}
+
+bool _isLocalV2HandshakeUnsupportedError(Object error) {
+  return error is UnimplementedError || error is UnsupportedError;
 }
 
 extension _ChannelMessageResponseCompat on ChannelMessageResponse {
@@ -1626,15 +1631,46 @@ class AegisClient {
     required bool requireSignedHandshake,
     String? trustedServerHandshakeSigningPublicKeyBase64,
   }) async {
-    final handshake = await AegisHandshakeContext.create();
+    final AegisHandshakeContext handshake;
+    try {
+      handshake = await AegisHandshakeContext.create();
+    } on Object catch (error) {
+      if (!_isLocalV2HandshakeUnsupportedError(error)) {
+        rethrow;
+      }
 
-    final v2Completed = await _tryPerformV2Handshake(
-      handshake: handshake,
-      apiCredentials: apiCredentials,
-      trustedServerHandshakeSigningPublicKeyBase64:
-          trustedServerHandshakeSigningPublicKeyBase64,
-      requireSignedHandshake: requireSignedHandshake,
-    );
+      await _performLegacyHandshakeWithPointyCastle(
+        apiCredentials: apiCredentials,
+        requireSignedHandshake: requireSignedHandshake,
+        trustedServerHandshakeSigningPublicKeyBase64:
+            trustedServerHandshakeSigningPublicKeyBase64,
+      );
+      return;
+    }
+
+    final bool v2Completed;
+    try {
+      v2Completed = await _tryPerformV2Handshake(
+        handshake: handshake,
+        apiCredentials: apiCredentials,
+        trustedServerHandshakeSigningPublicKeyBase64:
+            trustedServerHandshakeSigningPublicKeyBase64,
+        requireSignedHandshake: requireSignedHandshake,
+      );
+    } on Object catch (error) {
+      if (!_isLocalV2HandshakeUnsupportedError(error)) {
+        rethrow;
+      }
+
+      await _performLegacyHandshake(
+        handshake: handshake,
+        apiCredentials: apiCredentials,
+        trustedServerHandshakeSigningPublicKeyBase64:
+            trustedServerHandshakeSigningPublicKeyBase64,
+        requireSignedHandshake: requireSignedHandshake,
+      );
+      return;
+    }
 
     if (v2Completed) {
       return;
@@ -1874,6 +1910,83 @@ class AegisClient {
       Uint8List.fromList(base64Decode(serverPublicKeyBase64)),
     );
     _transport.setSessionKey(sessionKey);
+  }
+
+  Future<void> _performLegacyHandshakeWithPointyCastle({
+    required AegisApiCredentials? apiCredentials,
+    required bool requireSignedHandshake,
+    String? trustedServerHandshakeSigningPublicKeyBase64,
+  }) async {
+    final handshake = await AegisHandshakeCrypto.createHandshake();
+    final handshakePayload = <String, Object>{
+      'PublicKey': base64Encode(handshake.publicKeyRaw),
+      'ClientVersion':
+          ProtocolConstants.versionMajor * 1000 +
+          ProtocolConstants.versionMinor,
+    };
+
+    if (apiCredentials != null) {
+      handshakePayload['AppId'] = apiCredentials.appId;
+      handshakePayload['AppHash'] = apiCredentials.appHash;
+    }
+
+    final payload = msgpack.serialize(handshakePayload);
+    final msg = Message.withType(MessageType.handshake, payload);
+    final response = await _sendAndWaitResponse(
+      msg,
+      expectedTypes: {MessageType.handshake},
+      allowSeqZeroForExpectedTypes: true,
+      allowAnySequenceForExpectedTypes: true,
+    );
+
+    final decoded = msgpack.deserialize(response.payload);
+    if (decoded is! Map) {
+      throw Exception('Invalid handshake response payload');
+    }
+
+    final success = decoded['Success'] == true;
+    if (!success) {
+      final error = decoded['Message']?.toString() ?? 'Handshake failed';
+      throw Exception(error);
+    }
+
+    final serverPublicKeyBase64 = decoded['ServerPublicKey']?.toString();
+    if (serverPublicKeyBase64 == null || serverPublicKeyBase64.isEmpty) {
+      throw Exception('Handshake response is missing server public key');
+    }
+
+    final signatureBase64 = decoded['Signature']?.toString();
+    if (requireSignedHandshake) {
+      if (trustedServerHandshakeSigningPublicKeyBase64 == null ||
+          trustedServerHandshakeSigningPublicKeyBase64.isEmpty) {
+        throw Exception('Trusted handshake signing public key is required');
+      }
+
+      if (signatureBase64 == null || signatureBase64.isEmpty) {
+        throw Exception('Handshake response signature is missing');
+      }
+
+      final signatureOk = await AegisHandshakeVerifier.verifyServerHandshakeSignature(
+        trustedSigningPublicKey: Uint8List.fromList(
+          base64Decode(trustedServerHandshakeSigningPublicKeyBase64),
+        ),
+        serverEphemeralPublicKey: Uint8List.fromList(
+          base64Decode(serverPublicKeyBase64),
+        ),
+        clientEphemeralPublicKey: handshake.publicKeyRaw,
+        signature: Uint8List.fromList(base64Decode(signatureBase64)),
+      );
+
+      if (!signatureOk) {
+        throw Exception('Handshake signature verification failed');
+      }
+    }
+
+    final sessionKey = await AegisHandshakeCrypto.deriveSessionKey(
+      clientPrivateKey: handshake.privateKey,
+      serverPublicKeySpki: base64Decode(serverPublicKeyBase64),
+    );
+    _transport.setSessionKey(Uint8List.fromList(sessionKey));
   }
 
   Uint8List _readBytesField(Map source, String key, String fieldName) {

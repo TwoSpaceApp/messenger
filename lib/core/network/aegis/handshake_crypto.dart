@@ -82,6 +82,23 @@ class AegisHandshakeCrypto {
     return derivedBytes.sublist(32, 64);
   }
 
+  static List<int> deriveSharedSecret({
+    required ECPrivateKey clientPrivateKey,
+    required List<int> serverPublicKeySpki,
+  }) {
+    final rawServerKey = _normalizePeerPublicKey(serverPublicKeySpki);
+    final point = _domain.curve.decodePoint(Uint8List.fromList(rawServerKey));
+    if (point == null) {
+      throw const FormatException('Invalid server public key');
+    }
+
+    final agreement = ECDHBasicAgreement()..init(clientPrivateKey);
+    final sharedSecret = agreement.calculateAgreement(
+      ECPublicKey(point, _domain),
+    );
+    return _bigIntToBytes(sharedSecret, 32);
+  }
+
   static Future<List<int>> deriveSessionKey({
     required ECPrivateKey clientPrivateKey,
     required List<int> serverPublicKeySpki,
@@ -140,17 +157,10 @@ class AegisHandshakeCrypto {
     required ECPrivateKey clientPrivateKey,
     required List<int> serverPublicKeySpki,
   }) {
-    final rawServerKey = _normalizePeerPublicKey(serverPublicKeySpki);
-    final point = _domain.curve.decodePoint(Uint8List.fromList(rawServerKey));
-    if (point == null) {
-      throw const FormatException('Invalid server public key');
-    }
-
-    final agreement = ECDHBasicAgreement()..init(clientPrivateKey);
-    final sharedSecret = agreement.calculateAgreement(
-      ECPublicKey(point, _domain),
+    final sharedSecretBytes = deriveSharedSecret(
+      clientPrivateKey: clientPrivateKey,
+      serverPublicKeySpki: serverPublicKeySpki,
     );
-    final sharedSecretBytes = _bigIntToBytes(sharedSecret, 32);
     final derivedBytes = _hkdfSha256(
       inputKeyMaterial: sharedSecretBytes,
       info: utf8.encode('AegisKeyDerivation'),

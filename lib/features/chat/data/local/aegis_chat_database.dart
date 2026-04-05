@@ -252,7 +252,10 @@ LazyDatabase _openConnection() {
     _configureSqliteRuntime();
     final directory = await getApplicationSupportDirectory();
     final file = File(p.join(directory.path, 'aegis_chat.sqlite'));
-    return NativeDatabase.createInBackground(file);
+    return NativeDatabase.createInBackground(
+      file,
+      isolateSetup: _configureSqliteRuntime,
+    );
   });
 }
 
@@ -275,12 +278,20 @@ void _configureSqliteRuntime() {
 }
 
 DynamicLibrary _openSqliteDynamicLibrary() {
-  for (final candidate in const ['libsqlite3.so.0', 'libsqlite3.so']) {
+  for (final candidate in const [
+    'libsqlite3.so.0',
+    '/lib/x86_64-linux-gnu/libsqlite3.so.0',
+    '/usr/lib/x86_64-linux-gnu/libsqlite3.so.0',
+    'libsqlite3.so',
+  ]) {
     try {
       return DynamicLibrary.open(candidate);
     } catch (_) {
       // Try the next known soname.
     }
   }
-  return DynamicLibrary.process();
+  throw ArgumentError(
+    'Failed to load sqlite3 dynamic library on Linux. '
+    'Tried libsqlite3.so.0, libsqlite3.so, and common distro paths.',
+  );
 }

@@ -455,10 +455,7 @@ class RegistrationResponse {
       );
 
   factory RegistrationResponse.fromBytes(List<int> bytes) {
-    final decoded = msgpack.deserialize(
-      bytes is Uint8List ? bytes : Uint8List.fromList(bytes),
-    );
-    return RegistrationResponse.fromJson(Map<String, dynamic>.from(decoded));
+    return RegistrationResponse.fromJson(_decodePayloadMap(bytes));
   }
 }
 
@@ -511,10 +508,7 @@ class AuthResponse {
   );
 
   factory AuthResponse.fromBytes(List<int> bytes) {
-    final decoded = msgpack.deserialize(
-      bytes is Uint8List ? bytes : Uint8List.fromList(bytes),
-    );
-    return AuthResponse.fromJson(Map<String, dynamic>.from(decoded));
+    return AuthResponse.fromJson(_decodePayloadMap(bytes));
   }
 }
 
@@ -564,10 +558,7 @@ class UserSearchResponse {
       );
 
   factory UserSearchResponse.fromBytes(List<int> bytes) {
-    final decoded = msgpack.deserialize(
-      bytes is Uint8List ? bytes : Uint8List.fromList(bytes),
-    );
-    return UserSearchResponse.fromJson(Map<String, dynamic>.from(decoded));
+    return UserSearchResponse.fromJson(_decodePayloadMap(bytes));
   }
 }
 
@@ -749,10 +740,7 @@ class ChannelMessageResponse {
       );
 
   factory ChannelMessageResponse.fromBytes(List<int> bytes) {
-    final decoded = msgpack.deserialize(
-      bytes is Uint8List ? bytes : Uint8List.fromList(bytes),
-    );
-    return ChannelMessageResponse.fromJson(Map<String, dynamic>.from(decoded));
+    return ChannelMessageResponse.fromJson(_decodePayloadMap(bytes));
   }
 }
 
@@ -863,10 +851,7 @@ class ChannelCreateResponse {
       );
 
   factory ChannelCreateResponse.fromBytes(List<int> bytes) {
-    final decoded = msgpack.deserialize(
-      bytes is Uint8List ? bytes : Uint8List.fromList(bytes),
-    );
-    return ChannelCreateResponse.fromJson(Map<String, dynamic>.from(decoded));
+    return ChannelCreateResponse.fromJson(_decodePayloadMap(bytes));
   }
 }
 
