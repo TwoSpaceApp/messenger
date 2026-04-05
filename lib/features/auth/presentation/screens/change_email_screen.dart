@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/feature_in_development_dialog.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class ChangeEmailScreen extends StatefulWidget {
-  const ChangeEmailScreen({super.key});
+  const ChangeEmailScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<ChangeEmailScreen> createState() => _ChangeEmailScreenState();
@@ -64,9 +68,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.changeEmailTitle)),
-      body: Padding(
+    final body = Padding(
         padding: const EdgeInsets.all(16),
         child: ValueListenableBuilder<bool>(
           valueListenable: SettingsService.paleVioletNotifier,
@@ -84,6 +86,17 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (widget.embedded) ...[
+                    SectionPageHeader(
+                      title: l10n.changeEmailTitle,
+                      subtitle: l10n.changeEmailDescription,
+                      leading: IconButton(
+                        onPressed: () => context.pop(),
+                        icon: const Icon(Icons.arrow_back_rounded),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   Text(l10n.changeEmailDescription),
                   if (_currentEmail != null) ...[
                     const SizedBox(height: 8),
@@ -119,7 +132,15 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
             );
           },
         ),
-      ),
+      );
+
+    if (widget.embedded) {
+      return body;
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.changeEmailTitle)),
+      body: body,
     );
   }
 }

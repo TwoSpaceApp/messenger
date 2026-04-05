@@ -378,18 +378,18 @@ class AegisClient {
       expectedTypes: {MessageType.auth, MessageType.ack},
     );
 
-    final decoded = msgpack.deserialize(response.payload);
-    if (decoded == null || decoded['Success'] != true) {
-      final error = decoded is Map ? decoded['Error']?.toString() : null;
+    final authResponse = AuthResponse.fromBytes(response.payload);
+    if (!authResponse.success) {
+      final error = authResponse.error;
       throw Exception(
         'Authentication failed${error != null && error.isNotEmpty ? ': $error' : ''}',
       );
     }
 
     _isAuthenticated = true;
-    _userId = decoded['UserId'] as int?;
-    _username = decoded['Username'] as String?;
-    _sessionToken = decoded['SessionToken'] as String?;
+    _userId = authResponse.userId;
+    _username = authResponse.username;
+    _sessionToken = authResponse.sessionToken;
 
     await _publishPresence(isOnline: true);
   }
@@ -420,26 +420,27 @@ class AegisClient {
       expectedTypes: {MessageType.auth, MessageType.ack},
     );
 
-    final decoded = msgpack.deserialize(response.payload);
-    if (decoded == null || decoded['Success'] != true) {
-      final error = decoded is Map ? decoded['Error']?.toString() : null;
+    final authResponse = AuthResponse.fromBytes(response.payload);
+    if (!authResponse.success) {
+      final error = authResponse.error;
       throw Exception(
         'Authentication failed${error != null && error.isNotEmpty ? ': $error' : ''}',
       );
     }
 
     _isAuthenticated = true;
-    _userId = decoded['UserId'] as int?;
-    _username = decoded['Username'] as String?;
-    _sessionToken = decoded['SessionToken'] as String?;
+    _userId = authResponse.userId;
+    _username = authResponse.username;
+    _sessionToken = authResponse.sessionToken;
 
     await _publishPresence(isOnline: true);
 
     return AuthResponse(
-      success: true,
-      userId: _userId,
-      username: _username,
-      sessionToken: _sessionToken,
+      success: authResponse.success,
+      userId: authResponse.userId,
+      username: authResponse.username,
+      sessionToken: authResponse.sessionToken,
+      error: authResponse.error,
     );
   }
 

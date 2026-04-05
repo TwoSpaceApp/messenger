@@ -10,6 +10,7 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/services/navigation_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
@@ -23,11 +24,13 @@ class ProfileScreen extends StatefulWidget {
       super.key,
       this.initialName,
       this.initialAvatar,
-      this.startInEdit = false});
+      this.startInEdit = false,
+      this.embedded = false});
   final String userId;
   final String? initialName;
   final String? initialAvatar;
   final bool startInEdit;
+    final bool embedded;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -427,6 +430,147 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final username = _username();
     final profileId = _profileId();
     final presenceLabel = _presenceLabel(l10n);
+    final body = _loading
+        ? const AppLoadingState()
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= UITokens.desktopBreakpoint;
+              final isTablet = constraints.maxWidth >= UITokens.tabletBreakpoint;
+              final horizontalPadding = constraints.maxWidth >= 1400
+                  ? 40.0
+                  : isWide
+                      ? 28.0
+                      : isTablet
+                          ? 20.0
+                          : 14.0;
+              final heroPanelWidth =
+                  (constraints.maxWidth * 0.34).clamp(320.0, 420.0);
+              final heroPanel = ValueListenableBuilder<double>(
+                valueListenable: _avatarStretch,
+                builder: (context, stretch, _) => _buildHeroPanel(
+                  context: context,
+                  l10n: l10n,
+                  name: name,
+                  avatar: avatar,
+                  username: username,
+                  profileId: profileId,
+                  presenceLabel: presenceLabel,
+                  isWide: isWide,
+                  avatarStretch: stretch,
+                ),
+              );
+              final detailsPanel = _buildDetailsPanel(
+                context: context,
+                l10n: l10n,
+                username: username,
+                profileId: profileId,
+              );
+
+              return Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1280),
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification.metrics.axis != Axis.vertical) {
+                        return false;
+                      }
+
+                      if (notification is OverscrollNotification &&
+                          notification.metrics.pixels <=
+                              notification.metrics.minScrollExtent &&
+                          notification.overscroll < 0) {
+                        _updateAvatarStretch(
+                          _avatarStretch.value + (-notification.overscroll * 0.6),
+                        );
+                      } else if (notification is ScrollUpdateNotification &&
+                          notification.metrics.pixels >
+                              notification.metrics.minScrollExtent &&
+                          _avatarStretch.value > 0) {
+                        _updateAvatarStretch(0);
+                      } else if (notification is ScrollEndNotification &&
+                          _avatarStretch.value > 0) {
+                        _updateAvatarStretch(0);
+                      }
+                      return false;
+                    },
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        isWide ? 24 : 16,
+                        horizontalPadding,
+                        24,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (widget.embedded) ...[
+                            SectionPageHeader(
+                              title: widget.startInEdit
+                                  ? l10n.editTooltip
+                                  : l10n.profileTitle,
+                              subtitle: widget.startInEdit
+                                  ? l10n.profileSubtitle
+                                  : l10n.peopleViewProfileAction,
+                              leading: IconButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                icon: const Icon(Icons.arrow_back_rounded),
+                              ),
+                              actions: [
+                                if (_isMe)
+                                  IconButton(
+                                    icon: Icon(
+                                      widget.startInEdit
+                                          ? Icons.check_rounded
+                                          : Icons.edit_rounded,
+                                    ),
+                                    onPressed: widget.startInEdit
+                                        ? _saveProfile
+                                        : _openEditScreen,
+                                    tooltip: widget.startInEdit
+                                        ? l10n.saveTooltip
+                                        : l10n.editTooltip,
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          if (isWide)
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(width: heroPanelWidth, child: heroPanel),
+                                const SizedBox(width: 24),
+                                Expanded(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(maxWidth: 760),
+                                    child: detailsPanel,
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                heroPanel,
+                                const SizedBox(height: 16),
+                                detailsPanel,
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+
+    if (widget.embedded) {
+      return body;
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
@@ -441,107 +585,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
         ],
       ),
-      body: ScreenBackground(
-        child: _loading
-          ? const AppLoadingState()
-          : LayoutBuilder(
-              builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= UITokens.desktopBreakpoint;
-            final isTablet = constraints.maxWidth >= UITokens.tabletBreakpoint;
-                final horizontalPadding = constraints.maxWidth >= 1400
-                    ? 40.0
-                    : isWide
-                        ? 28.0
-                        : isTablet
-                            ? 20.0
-                  : 14.0;
-              final heroPanelWidth =
-                (constraints.maxWidth * 0.34).clamp(320.0, 420.0);
-                final heroPanel = ValueListenableBuilder<double>(
-                  valueListenable: _avatarStretch,
-                  builder: (context, stretch, _) => _buildHeroPanel(
-                    context: context,
-                    l10n: l10n,
-                    name: name,
-                    avatar: avatar,
-                    username: username,
-                    profileId: profileId,
-                    presenceLabel: presenceLabel,
-                    isWide: isWide,
-                    avatarStretch: stretch,
-                  ),
-                );
-                final detailsPanel = _buildDetailsPanel(
-                  context: context,
-                  l10n: l10n,
-                  username: username,
-                  profileId: profileId,
-                );
-
-                return Align(
-                  alignment: Alignment.topCenter,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1280),
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: (notification) {
-                        if (notification.metrics.axis != Axis.vertical) {
-                          return false;
-                        }
-
-                        if (notification is OverscrollNotification &&
-                            notification.metrics.pixels <=
-                                notification.metrics.minScrollExtent &&
-                            notification.overscroll < 0) {
-                          _updateAvatarStretch(
-                            _avatarStretch.value + (-notification.overscroll * 0.6),
-                          );
-                        } else if (notification is ScrollUpdateNotification &&
-                            notification.metrics.pixels >
-                                notification.metrics.minScrollExtent &&
-                            _avatarStretch.value > 0) {
-                          _updateAvatarStretch(0);
-                        } else if (notification is ScrollEndNotification &&
-                            _avatarStretch.value > 0) {
-                          _updateAvatarStretch(0);
-                        }
-                        return false;
-                      },
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          isWide ? 24 : 16,
-                          horizontalPadding,
-                          24,
-                        ),
-                        child: isWide
-                            ? Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(width: heroPanelWidth, child: heroPanel),
-                                  const SizedBox(width: 24),
-                                  Expanded(
-                                    child: ConstrainedBox(
-                                      constraints: const BoxConstraints(maxWidth: 760),
-                                      child: detailsPanel,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  heroPanel,
-                                  const SizedBox(height: 16),
-                                  detailsPanel,
-                                ],
-                              ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-      ),
+      body: ScreenBackground(child: body),
     );
   }
 

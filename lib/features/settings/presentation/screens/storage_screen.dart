@@ -6,10 +6,13 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/storage_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 
 class StorageScreen extends StatefulWidget {
-  const StorageScreen({super.key});
+  const StorageScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<StorageScreen> createState() => _StorageScreenState();
@@ -356,22 +359,7 @@ class _StorageScreenState extends State<StorageScreen> {
     final l10n = AppLocalizations.of(context)!;
     final snapshot = _snapshot;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(l10n.storageMemoryTitle),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: _loading || _clearing ? null : _loadStorage,
-            icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
-      ),
-      body: ScreenBackground(
-        child: _loading
+    final body = _loading
             ? const AppLoadingState()
             : snapshot == null
                 ? AppEmptyState(
@@ -411,8 +399,51 @@ class _StorageScreenState extends State<StorageScreen> {
                         onClearPressed: _clearSelected,
                       ),
                     ],
-                  ),
+                  );
+
+    final content = Column(
+      children: [
+        if (widget.embedded)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: SectionPageHeader(
+              title: l10n.storageMemoryTitle,
+              subtitle: l10n.storageCleanupSubtitle,
+              leading: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+              ),
+              actions: [
+                IconButton(
+                  onPressed: _loading || _clearing ? null : _loadStorage,
+                  icon: const Icon(Icons.refresh_rounded),
+                ),
+              ],
+            ),
+          ),
+        Expanded(child: body),
+      ],
+    );
+
+    if (widget.embedded) {
+      return content;
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(l10n.storageMemoryTitle),
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        actions: [
+          IconButton(
+            onPressed: _loading || _clearing ? null : _loadStorage,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
       ),
+      body: ScreenBackground(child: body),
     );
   }
 }

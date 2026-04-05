@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/navigation/app_route_observer.dart';
 import 'package:two_space_app/core/navigation/app_transitions.dart';
 import 'package:two_space_app/core/navigation/title_observer.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/widgets/app_shell_frame.dart';
 import 'package:two_space_app/features/auth/presentation/screens/biometric_setup_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/change_email_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/change_phone_screen.dart';
@@ -39,10 +41,36 @@ CustomTransitionPage<void> _buildPage(GoRouterState state, Widget child) {
   return buildAppTransitionPage(state: state, child: child);
 }
 
-NoTransitionPage<void> _buildStaticPage(GoRouterState state, Widget child) {
+NoTransitionPage<void> _buildShellPage(
+  GoRouterState state,
+  Widget child, {
+  required int selectedIndex,
+  bool constrainBody = true,
+  double maxBodyWidth = UITokens.readableContentMaxWidth,
+}) {
   return NoTransitionPage<void>(
     key: state.pageKey,
-    child: child,
+    child: AppShellFrame(
+      selectedIndex: selectedIndex,
+      onItemSelected: (index) {
+        final context = rootNavigatorKey.currentContext;
+        if (context == null) {
+          return;
+        }
+        context.go(
+          switch (index) {
+            0 => AppStrings.routeHome,
+            1 => AppStrings.routeWidgets,
+            2 => AppStrings.routePeople,
+            3 => AppStrings.routeSettingsRoot,
+            _ => AppStrings.routeHome,
+          },
+        );
+      },
+      constrainBody: constrainBody,
+      maxBodyWidth: maxBodyWidth,
+      child: child,
+    ),
   );
 }
 
@@ -113,6 +141,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _buildPage(state, const MainScreen()),
       ),
       GoRoute(
+        path: AppStrings.routeWidgets,
+        pageBuilder: (context, state) =>
+            _buildPage(state, const MainScreen(initialIndex: 1)),
+      ),
+      GoRoute(
+        path: AppStrings.routePeople,
+        pageBuilder: (context, state) =>
+            _buildPage(state, const MainScreen(initialIndex: 2)),
+      ),
+      GoRoute(
+        path: AppStrings.routeSettingsRoot,
+        pageBuilder: (context, state) =>
+            _buildPage(state, const MainScreen(initialIndex: 3)),
+      ),
+      GoRoute(
         path: AppStrings.routeWelcome,
         pageBuilder: (context, state) => _buildPage(
           state,
@@ -122,27 +165,47 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppStrings.routeCustomization,
         pageBuilder: (context, state) =>
-            _buildStaticPage(state, const CustomizationScreen()),
+            _buildShellPage(
+              state,
+              const CustomizationScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: AppStrings.routePrivacy,
         pageBuilder: (context, state) =>
-            _buildStaticPage(state, const PrivacyScreen()),
+            _buildShellPage(
+              state,
+              const PrivacyScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: AppStrings.routeAccountSettings,
         pageBuilder: (context, state) =>
-            _buildStaticPage(state, const AccountSettingsScreen()),
+            _buildShellPage(
+              state,
+              const AccountSettingsScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: AppStrings.routeFeedback,
         pageBuilder: (context, state) =>
-            _buildStaticPage(state, const FeedbackScreen()),
+            _buildShellPage(
+              state,
+              const FeedbackScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: AppStrings.routeSettingsSearch,
         pageBuilder: (context, state) =>
-            _buildStaticPage(state, const SettingsSearchScreen()),
+            _buildShellPage(
+              state,
+              const SettingsSearchScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: AppStrings.routeProfile,
@@ -150,41 +213,66 @@ final routerProvider = Provider<GoRouter>((ref) {
           final userIdFromExtra = state.extra is String ? state.extra! as String : null;
           final authState = ref.read(authProvider).whenOrNull(data: (value) => value);
           final userId = userIdFromExtra ?? authState?.userId ?? '';
-          return _buildPage(
+          return _buildShellPage(
             state,
-            ProfileScreen(userId: userId),
+            ProfileScreen(userId: userId, embedded: true),
+            selectedIndex: 3,
           );
         },
       ),
       GoRoute(
         path: AppStrings.routeChangeEmail,
         pageBuilder: (context, state) =>
-            _buildPage(state, const ChangeEmailScreen()),
+            _buildShellPage(
+              state,
+              const ChangeEmailScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: AppStrings.routeChangePhone,
         pageBuilder: (context, state) =>
-            _buildPage(state, const ChangePhoneScreen()),
+            _buildShellPage(
+              state,
+              const ChangePhoneScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: AppStrings.routeTfaSetup,
         pageBuilder: (context, state) =>
-            _buildPage(state, const TfaSetupScreen()),
+            _buildShellPage(
+              state,
+              const TfaSetupScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: AppStrings.routeBiometricSetup,
         pageBuilder: (context, state) =>
-            _buildPage(state, const BiometricSetupScreen()),
+            _buildShellPage(
+              state,
+              const BiometricSetupScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: AppStrings.routeNotifications,
         pageBuilder: (context, state) =>
-            _buildStaticPage(state, const NotificationsScreen()),
+            _buildShellPage(
+              state,
+              const NotificationsScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: AppStrings.routeStorage,
         pageBuilder: (context, state) =>
-            _buildStaticPage(state, const StorageScreen()),
+            _buildShellPage(
+              state,
+              const StorageScreen(embedded: true),
+              selectedIndex: 3,
+            ),
       ),
       GoRoute(
         path: '${AppStrings.routeChat}/:chatId',
@@ -198,7 +286,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                   name: chatId,
                   members: const <String>[],
                 );
-          return _buildPage(state, ChatScreen(chat: chat));
+          return _buildShellPage(
+            state,
+            ChatScreen(chat: chat),
+            selectedIndex: 0,
+            constrainBody: false,
+            maxBodyWidth: UITokens.contentMaxWidth,
+          );
         },
       ),
     ],

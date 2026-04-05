@@ -8,6 +8,7 @@ import 'package:two_space_app/core/config/theme_options.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
@@ -51,7 +52,9 @@ class _ThemePreset {
 }
 
 class CustomizationScreen extends StatefulWidget {
-  const CustomizationScreen({super.key});
+  const CustomizationScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<CustomizationScreen> createState() => _CustomizationScreenState();
@@ -555,9 +558,36 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: ScreenBackground(
-        child: SafeArea(
-          child: SingleChildScrollView(
+      body: widget.embedded
+          ? SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  12,
+                  16,
+                  MediaQuery.of(context).padding.bottom + 32,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionPageHeader(
+                      title: l10n.customizationTitle,
+                      subtitle: l10n.customizationHeroSubtitle,
+                      leading: IconButton(
+                        onPressed: _closeScreen,
+                        icon: const Icon(Icons.arrow_back_rounded),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildScreenBody(context, theme, l10n),
+                  ],
+                ),
+              ),
+            )
+          : ScreenBackground(
+              child: SafeArea(
+                child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               16,
               12,
@@ -585,7 +615,24 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                SettingsHeroCard(
+                _buildScreenBody(context, theme, l10n),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScreenBody(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SettingsHeroCard(
                   icon: Icons.auto_awesome_rounded,
                   title: l10n.customizationHeroTitle,
                   subtitle: l10n.customizationHeroSubtitle,
@@ -900,11 +947,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

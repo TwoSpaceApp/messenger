@@ -1,14 +1,18 @@
 // ignore_for_file: unnecessary_underscores
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/highlighted_text.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/presentation/models/settings_catalog.dart';
 
 class SettingsSearchScreen extends StatefulWidget {
-  const SettingsSearchScreen({super.key});
+  const SettingsSearchScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<SettingsSearchScreen> createState() => _SettingsSearchScreenState();
@@ -54,18 +58,22 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
     final entries = _filteredEntries(l10n);
     final sections = _sections(l10n);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(l10n.settingsTitle),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-      ),
-      body: ScreenBackground(
-        child: SafeArea(
-          child: Column(
+    final content = SafeArea(
+      top: !widget.embedded,
+      child: Column(
             children: [
+              if (widget.embedded)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: SectionPageHeader(
+                    title: l10n.settingsTitle,
+                    subtitle: l10n.searchTypeLabel,
+                    leading: IconButton(
+                      onPressed: () => context.pop(),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: TextField(
@@ -195,9 +203,22 @@ class _SettingsSearchScreenState extends State<SettingsSearchScreen> {
                       ),
               ),
             ],
-          ),
-        ),
-      ),
+                ),
+          );
+
+          if (widget.embedded) {
+            return content;
+          }
+
+          return Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              title: Text(l10n.settingsTitle),
+              centerTitle: false,
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+            ),
+            body: ScreenBackground(child: content),
     );
   }
 }

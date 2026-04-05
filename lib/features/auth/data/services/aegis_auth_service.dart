@@ -20,12 +20,17 @@ const _kAegisUserIdKey = 'aegis_user_id';
 
 class TwoFactorRequiredException implements Exception {
   @override
-  String toString() => 'TwoFactorRequiredException';
+  String toString() => 'Two-factor code required';
 }
 
 class TwoFactorInvalidException implements Exception {
   @override
-  String toString() => 'TwoFactorInvalidException';
+  String toString() => 'Invalid two-factor code';
+}
+
+class EmailNotVerifiedException implements Exception {
+  @override
+  String toString() => 'Email is not verified';
 }
 
 /// Обёртка над [AegisClient] для аутентификации в приложении.
@@ -366,9 +371,15 @@ class AegisAuthService {
     final user = response.user!;
     _log.info('Зарегистрирован: ${user.username} (id=${user.id})');
 
-    // После регистрации сервер может вернуть токен — используем username как token
-    // (реальный auth-flow: после Register → Auth)
-    await _loginAfterRegister(username: username, password: password);
+    try {
+      await _loginAfterRegister(username: username, password: password);
+    } on EmailNotVerifiedException {
+      throw Exception('Регистрация завершена. Подтвердите email перед входом.');
+    } on Object catch (e) {
+      throw Exception(
+        'Аккаунт создан, но автоматический вход не выполнен: ${e.toString().replaceAll('Exception: ', '')}',
+      );
+    }
 
     return user;
   }
@@ -434,6 +445,9 @@ class AegisAuthService {
       }
       if (errorText.contains('two-factor code required')) {
         throw TwoFactorRequiredException();
+      }
+      if (errorText.contains('email is not verified')) {
+        throw EmailNotVerifiedException();
       }
       if (errorText.contains('invalid two-factor code')) {
         throw TwoFactorInvalidException();

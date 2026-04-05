@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/auth/data/services/biometric_auth_service.dart';
 
 class BiometricSetupScreen extends StatefulWidget {
-  const BiometricSetupScreen({super.key});
+  const BiometricSetupScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<BiometricSetupScreen> createState() => _BiometricSetupScreenState();
@@ -15,18 +19,24 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.biometricSetupTitle),
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
+    final body = SafeArea(
+      top: !widget.embedded,
+      child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (widget.embedded) ...[
+                SectionPageHeader(
+                  title: l10n.biometricSetupTitle,
+                  subtitle: l10n.biometricAuthSubtitle,
+                  leading: IconButton(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               Text(
                 l10n.authMethodsLabel,
                 style: Theme.of(context).textTheme.titleLarge,
@@ -112,7 +122,19 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
             ],
           ),
         ),
+    );
+
+    if (widget.embedded) {
+      return body;
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.biometricSetupTitle),
+        elevation: 0,
+        backgroundColor: Theme.of(context).colorScheme.surface,
       ),
+      body: body,
     );
   }
 

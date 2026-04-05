@@ -9,12 +9,15 @@ import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/sound/audio_player_service.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
 
 class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({super.key});
+  const NotificationsScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
@@ -87,17 +90,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(l10n.settingsNotificationNew),
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-      ),
-      body: ScreenBackground(
-        child: ListView(
+    final list = ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
+            if (widget.embedded) ...[
+              SectionPageHeader(
+                title: l10n.settingsNotificationNew,
+                subtitle: l10n.notificationsHeroSubtitle,
+                leading: IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             ValueListenableBuilder<bool>(
               valueListenable: SettingsService.notificationsEnabledNotifier,
               builder: (context, enabled, _) {
@@ -232,8 +238,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               },
             ),
           ],
-        ),
+        );
+
+    if (widget.embedded) {
+      return list;
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(l10n.settingsNotificationNew),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
       ),
+      body: ScreenBackground(child: list),
     );
   }
 }

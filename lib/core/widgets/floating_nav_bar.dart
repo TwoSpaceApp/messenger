@@ -26,8 +26,8 @@ class _FloatingNavBarState extends State<FloatingNavBar>
     with SingleTickerProviderStateMixin {
   late final ValueNotifier<bool> _isExpanded;
   Timer? _hideTimer;
+  Offset? _dragOffset;
 
-  // To handle drag limits
   final double _widthExpanded = 344;
   final double _widthCollapsed = 60;
   final double _height = 70;
@@ -53,6 +53,35 @@ class _FloatingNavBarState extends State<FloatingNavBar>
     _resetTimer();
   }
 
+  Offset _defaultOffset({
+    required Size viewport,
+    required double width,
+    required EdgeInsets padding,
+  }) {
+    return Offset(
+      (viewport.width - width) / 2,
+      viewport.height - padding.bottom - _height - 10,
+    );
+  }
+
+  Offset _clampOffset({
+    required Offset offset,
+    required Size viewport,
+    required double width,
+    required EdgeInsets padding,
+  }) {
+    const minLeft = 8.0;
+    final maxLeft = (viewport.width - width - 8).clamp(minLeft, double.infinity);
+    final minTop = padding.top + 8;
+    final maxTop = (viewport.height - padding.bottom - _height - 8)
+        .clamp(minTop, double.infinity);
+
+    return Offset(
+      offset.dx.clamp(minLeft, maxLeft),
+      offset.dy.clamp(minTop, maxTop),
+    );
+  }
+
   @override
   void dispose() {
     _hideTimer?.cancel();
@@ -62,90 +91,120 @@ class _FloatingNavBarState extends State<FloatingNavBar>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final bottomInset = MediaQuery.of(context).padding.bottom;
-    final screenWidth = MediaQuery.of(context).size.width;
+    final mediaQuery = MediaQuery.of(context);
+    final viewport = mediaQuery.size;
+    final screenWidth = viewport.width;
     final expandedWidth = (screenWidth - 24).clamp(280.0, _widthExpanded);
+    final currentWidth = _isExpanded.value ? expandedWidth : _widthCollapsed;
+    final resolvedOffset = _clampOffset(
+      offset: _dragOffset ??
+          _defaultOffset(
+            viewport: viewport,
+            width: currentWidth,
+            padding: mediaQuery.padding,
+          ),
+      viewport: viewport,
+      width: currentWidth,
+      padding: mediaQuery.padding,
+    );
+
     return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 10 + bottomInset,
-      child: Center(
-        child: GestureDetector(
-          onTap: () {
-            if (!_isExpanded.value) {
-              _onInteraction();
-            }
-          },
-          child: Listener(
-            onPointerDown: (_) => _onInteraction(),
-            child: ValueListenableBuilder<bool>(
-              valueListenable: _isExpanded,
-              builder: (context, expanded, child) {
-                final colorScheme = Theme.of(context).colorScheme;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOutBack,
-                  width: expanded ? expandedWidth : _widthCollapsed,
-                  height: _height,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(35),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.75),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.shadow(context).withValues(alpha: 0.14),
-                        blurRadius: 18,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(35),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                      child: ColoredBox(
-                        color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.82),
-                        child: expanded
-                            ? Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  _NavItem(
-                                      icon: Icons.chat_bubble_outline,
-                                    label: l10n.chatsTitle,
-                                      index: 0,
-                                      selected: widget.selectedIndex == 0,
-                                      badge: widget.chatUnreadCount,
-                                      onTap: () => widget.onItemSelected(0)),
-                                  _NavItem(
-                                      icon: Icons.widgets_outlined,
-                                    label: l10n.widgetsTitle,
-                                      index: 1,
-                                      selected: widget.selectedIndex == 1,
-                                      onTap: () => widget.onItemSelected(1)),
-                                  _NavItem(
-                                    icon: Icons.groups_2_outlined,
-                                    label: l10n.peopleTitle,
-                                      index: 2,
-                                      selected: widget.selectedIndex == 2,
-                                      onTap: () => widget.onItemSelected(2)),
-                                  _NavItem(
-                                      icon: Icons.settings_outlined,
-                                    label: l10n.settingsTitle,
-                                      index: 3,
-                                      selected: widget.selectedIndex == 3,
-                                      onTap: () => widget.onItemSelected(3)),
-                                ],
-                              )
-                            : const Center(
-                                child: Icon(Icons.more_horiz, size: 30),
-                              ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+      left: resolvedOffset.dx,
+      top: resolvedOffset.dy,
+      child: GestureDetector(
+        onTap: () {
+          if (!_isExpanded.value) {
+            _onInteraction();
+          }
+        },
+        onPanStart: (_) => _onInteraction(),
+        onPanUpdate: (details) {
+          final current = _clampOffset(
+            offset: _dragOffset ?? resolvedOffset,
+            viewport: viewport,
+            width: currentWidth,
+            padding: mediaQuery.padding,
+          );
+          setState(
+            () => _dragOffset = _clampOffset(
+              offset: current + details.delta,
+              viewport: viewport,
+              width: currentWidth,
+              padding: mediaQuery.padding,
             ),
+          );
+        },
+        child: Listener(
+          onPointerDown: (_) => _onInteraction(),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _isExpanded,
+            builder: (context, expanded, child) {
+              final colorScheme = Theme.of(context).colorScheme;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOutBack,
+                width: expanded ? expandedWidth : _widthCollapsed,
+                height: _height,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(35),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.75),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.shadow(context).withValues(alpha: 0.14),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(35),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: ColoredBox(
+                      color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.82),
+                      child: expanded
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _NavItem(
+                                  icon: Icons.chat_bubble_outline,
+                                  label: l10n.chatsTitle,
+                                  index: 0,
+                                  selected: widget.selectedIndex == 0,
+                                  badge: widget.chatUnreadCount,
+                                  onTap: () => widget.onItemSelected(0),
+                                ),
+                                _NavItem(
+                                  icon: Icons.widgets_outlined,
+                                  label: l10n.widgetsTitle,
+                                  index: 1,
+                                  selected: widget.selectedIndex == 1,
+                                  onTap: () => widget.onItemSelected(1),
+                                ),
+                                _NavItem(
+                                  icon: Icons.groups_2_outlined,
+                                  label: l10n.peopleTitle,
+                                  index: 2,
+                                  selected: widget.selectedIndex == 2,
+                                  onTap: () => widget.onItemSelected(2),
+                                ),
+                                _NavItem(
+                                  icon: Icons.settings_outlined,
+                                  label: l10n.settingsTitle,
+                                  index: 3,
+                                  selected: widget.selectedIndex == 3,
+                                  onTap: () => widget.onItemSelected(3),
+                                ),
+                              ],
+                            )
+                          : const Center(child: Icon(Icons.more_horiz, size: 30)),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -155,14 +214,16 @@ class _FloatingNavBarState extends State<FloatingNavBar>
 
 class _NavItem extends StatelessWidget {
   const _NavItem(
-      {required this.icon,
+      {
+      required this.icon,
       required this.label,
       required this.index,
       required this.selected,
       required this.onTap,
-      this.badge = 0});
+      this.badge = 0,
+      });
   final IconData icon;
-    final String label;
+  final String label;
   final int index;
   final bool selected;
   final VoidCallback onTap;

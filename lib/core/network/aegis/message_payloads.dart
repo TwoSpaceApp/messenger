@@ -194,6 +194,50 @@ Map<String, dynamic> _decodePayloadMap(List<int> bytes) {
   return Map<String, dynamic>.from(_normalizeMsgPack(raw) as Map);
 }
 
+int _parseIntValue(dynamic value, {required String fieldName}) {
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value is String) {
+    final parsed = int.tryParse(value);
+    if (parsed != null) {
+      return parsed;
+    }
+  }
+
+  throw FormatException('Unsupported int value for $fieldName: $value');
+}
+
+int? _parseNullableIntValue(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value is String) {
+    return int.tryParse(value);
+  }
+  return null;
+}
+
+List<int> _parseIntList(dynamic value) {
+  if (value is! List) {
+    return const <int>[];
+  }
+
+  return value
+      .map(_parseNullableIntValue)
+      .whereType<int>()
+      .toList(growable: false);
+}
+
 DateTime _parseDateTimeValue(dynamic value) {
   if (value is DateTime) {
     return value.toUtc();
@@ -470,7 +514,7 @@ class RegisteredUserInfo {
 
   factory RegisteredUserInfo.fromJson(Map<String, dynamic> json) =>
       RegisteredUserInfo(
-        id: json['Id'] as int,
+        id: _parseIntValue(json['Id'], fieldName: 'RegisteredUserInfo.Id'),
         username: json['Username'] as String,
       );
 }
@@ -501,7 +545,7 @@ class AuthResponse {
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) => AuthResponse(
     success: json['Success'] as bool,
-    userId: json['UserId'] as int?,
+    userId: _parseNullableIntValue(json['UserId']),
     username: json['Username'] as String?,
     sessionToken: json['SessionToken'] as String?,
     error: json['Error'] as String?,
@@ -691,12 +735,15 @@ class ChannelMessageRequest {
 
   factory ChannelMessageRequest.fromJson(Map<String, dynamic> json) =>
       ChannelMessageRequest(
-        channelId: json['ChannelId'] as int,
+        channelId: _parseIntValue(
+          json['ChannelId'],
+          fieldName: 'ChannelMessageRequest.ChannelId',
+        ),
         content: json['Content'] as String?,
         contentType: MessageContentType.fromValue(
-          json['ContentType'] as int? ?? 0,
+          _parseNullableIntValue(json['ContentType']) ?? 0,
         ),
-        replyToMessageId: json['ReplyToMessageId'] as int?,
+        replyToMessageId: _parseNullableIntValue(json['ReplyToMessageId']),
         attachment: json['Attachment'] != null
             ? MediaAttachmentPayload.fromJson(
                 json['Attachment'] as Map<String, dynamic>,
@@ -735,7 +782,7 @@ class ChannelMessageResponse {
   factory ChannelMessageResponse.fromJson(Map<String, dynamic> json) =>
       ChannelMessageResponse(
         success: json['Success'] as bool,
-        messageId: json['MessageId'] as int? ?? 0,
+        messageId: _parseNullableIntValue(json['MessageId']) ?? 0,
         messageText: json['MessageText'] as String?,
       );
 
@@ -784,15 +831,23 @@ class ChannelMessage {
   };
 
   factory ChannelMessage.fromJson(Map<String, dynamic> json) => ChannelMessage(
-    id: json['Id'] as int,
-    channelId: json['ChannelId'] as int,
-    fromUserId: json['FromUserId'] as int,
+    id: _parseIntValue(json['Id'], fieldName: 'ChannelMessage.Id'),
+    channelId: _parseIntValue(
+      json['ChannelId'],
+      fieldName: 'ChannelMessage.ChannelId',
+    ),
+    fromUserId: _parseIntValue(
+      json['FromUserId'],
+      fieldName: 'ChannelMessage.FromUserId',
+    ),
     content: json['Content'] as String,
-    contentType: MessageContentType.fromValue(json['ContentType'] as int),
+    contentType: MessageContentType.fromValue(
+      _parseIntValue(json['ContentType'], fieldName: 'ChannelMessage.ContentType'),
+    ),
     createdAt: _parseDateTimeValue(json['CreatedAt']),
     editedAt: _parseNullableDateTimeValue(json['EditedAt']),
     isEdited: json['IsEdited'] as bool? ?? false,
-    replyToMessageId: json['ReplyToMessageId'] as int?,
+    replyToMessageId: _parseNullableIntValue(json['ReplyToMessageId']),
     isPinned: json['IsPinned'] as bool? ?? false,
   );
 }
@@ -819,7 +874,7 @@ class ChannelCreateRequest {
       ChannelCreateRequest(
         name: json['Name'] as String,
         description: json['Description'] as String?,
-        type: ChannelType.fromValue(json['Type'] as int? ?? 0),
+        type: ChannelType.fromValue(_parseNullableIntValue(json['Type']) ?? 0),
       );
 
   List<int> toBytes() => msgpack.serialize(toJson());
@@ -846,7 +901,7 @@ class ChannelCreateResponse {
   factory ChannelCreateResponse.fromJson(Map<String, dynamic> json) =>
       ChannelCreateResponse(
         success: json['Success'] as bool,
-        channelId: json['ChannelId'] as int? ?? 0,
+        channelId: _parseNullableIntValue(json['ChannelId']) ?? 0,
         message: json['Message'] as String?,
       );
 
@@ -898,17 +953,25 @@ class Channel {
   };
 
   factory Channel.fromJson(Map<String, dynamic> json) => Channel(
-    id: json['Id'] as int,
+    id: _parseIntValue(json['Id'], fieldName: 'Channel.Id'),
     name: json['Name'] as String,
     description: json['Description'] as String?,
-    type: ChannelType.fromValue(json['Type'] as int),
-    createdByUserId: json['CreatedByUserId'] as int,
+    type: ChannelType.fromValue(
+      _parseIntValue(json['Type'], fieldName: 'Channel.Type'),
+    ),
+    createdByUserId: _parseIntValue(
+      json['CreatedByUserId'],
+      fieldName: 'Channel.CreatedByUserId',
+    ),
     createdAt: _parseDateTimeValue(json['CreatedAt']),
     updatedAt: _parseDateTimeValue(json['UpdatedAt']),
     isActive: json['IsActive'] as bool,
     inviteCode: json['InviteCode'] as String?,
     publicAlias: json['PublicAlias'] as String?,
-    memberCount: json['MemberCount'] as int,
+    memberCount: _parseIntValue(
+      json['MemberCount'],
+      fieldName: 'Channel.MemberCount',
+    ),
   );
 }
 
@@ -937,11 +1000,11 @@ class ChannelSummary {
   };
 
   factory ChannelSummary.fromJson(Map<String, dynamic> json) => ChannelSummary(
-    id: json['Id'] as int,
+    id: _parseIntValue(json['Id'], fieldName: 'ChannelSummary.Id'),
     name: json['Name'] as String,
     description: json['Description'] as String?,
-    type: ChannelType.fromValue(json['Type'] as int? ?? 0),
-    memberCount: json['MemberCount'] as int? ?? 0,
+    type: ChannelType.fromValue(_parseNullableIntValue(json['Type']) ?? 0),
+    memberCount: _parseNullableIntValue(json['MemberCount']) ?? 0,
   );
 }
 
@@ -954,7 +1017,12 @@ class ChannelJoinRequest {
   Map<String, dynamic> toJson() => {'ChannelId': channelId};
 
   factory ChannelJoinRequest.fromJson(Map<String, dynamic> json) =>
-      ChannelJoinRequest(channelId: json['ChannelId'] as int);
+      ChannelJoinRequest(
+        channelId: _parseIntValue(
+          json['ChannelId'],
+          fieldName: 'ChannelJoinRequest.ChannelId',
+        ),
+      );
 
   List<int> toBytes() => msgpack.serialize(toJson());
 }
@@ -1102,17 +1170,19 @@ class ChatListItem {
   });
 
   factory ChatListItem.fromJson(Map<String, dynamic> json) => ChatListItem(
-    chatId: json['ChatId'] as int,
+    chatId: _parseIntValue(json['ChatId'], fieldName: 'ChatListItem.ChatId'),
     type: json['Type'] as String,
     title: json['Title'] as String,
     avatarUrl: json['AvatarUrl'] as String?,
     presenceStatus: json['PresenceStatus'] as String?,
     lastMessage: json['LastMessage'] as String?,
     lastMessageAt: _parseNullableDateTimeValue(json['LastMessageAt']),
-    unreadCount: json['UnreadCount'] as int? ?? 0,
-    peerUserId: json['PeerUserId'] as int?,
-    channelId: json['ChannelId'] as int?,
+    unreadCount: _parseNullableIntValue(json['UnreadCount']) ?? 0,
+    peerUserId: _parseNullableIntValue(json['PeerUserId']),
+    channelId: _parseNullableIntValue(json['ChannelId']),
   );
+
+  int get roomTargetId => peerUserId ?? channelId ?? chatId;
 }
 
 /// Chat list response payload
@@ -1190,20 +1260,22 @@ class PrivateChatHistoryItem {
   factory PrivateChatHistoryItem.fromJson(Map<String, dynamic> json) {
     final parsed = parseRichTextContent(json['Content'] as String);
     return PrivateChatHistoryItem(
-      id: json['Id'] as int,
-      fromUserId: json['FromUserId'] as int,
-      toUserId: json['ToUserId'] as int,
+      id: _parseIntValue(json['Id'], fieldName: 'PrivateChatHistoryItem.Id'),
+      fromUserId: _parseIntValue(
+        json['FromUserId'],
+        fieldName: 'PrivateChatHistoryItem.FromUserId',
+      ),
+      toUserId: _parseIntValue(
+        json['ToUserId'],
+        fieldName: 'PrivateChatHistoryItem.ToUserId',
+      ),
       content: parsed.text,
       contentType: MessageContentType.fromValue(
-        json['ContentType'] as int? ?? 0,
+        _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
       createdAt: _parseDateTimeValue(json['CreatedAt']),
-      deliveredTo: (json['DeliveredTo'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
-      readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
+      deliveredTo: _parseIntList(json['DeliveredTo']),
+      readBy: _parseIntList(json['ReadBy']),
       parseMode: parsed.parseMode,
       fromUsername: json['FromUsername'] as String?,
       username: json['Username'] as String?,
@@ -1302,20 +1374,22 @@ class ChannelHistoryItem {
   factory ChannelHistoryItem.fromJson(Map<String, dynamic> json) {
     final parsed = parseRichTextContent(json['Content'] as String);
     return ChannelHistoryItem(
-      id: json['Id'] as int,
-      channelId: json['ChannelId'] as int,
-      fromUserId: json['FromUserId'] as int,
+      id: _parseIntValue(json['Id'], fieldName: 'ChannelHistoryItem.Id'),
+      channelId: _parseIntValue(
+        json['ChannelId'],
+        fieldName: 'ChannelHistoryItem.ChannelId',
+      ),
+      fromUserId: _parseIntValue(
+        json['FromUserId'],
+        fieldName: 'ChannelHistoryItem.FromUserId',
+      ),
       content: parsed.text,
       contentType: MessageContentType.fromValue(
-        json['ContentType'] as int? ?? 0,
+        _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
       createdAt: _parseDateTimeValue(json['CreatedAt']),
-      deliveredTo: (json['DeliveredTo'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
-      readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
+      deliveredTo: _parseIntList(json['DeliveredTo']),
+      readBy: _parseIntList(json['ReadBy']),
       parseMode: parsed.parseMode,
       fromUsername: json['FromUsername'] as String?,
       channelName: json['ChannelName'] as String?,
@@ -1349,7 +1423,7 @@ class ChannelHistoryResponse {
   factory ChannelHistoryResponse.fromJson(Map<String, dynamic> json) =>
       ChannelHistoryResponse(
         success: json['Success'] as bool,
-        channelId: json['ChannelId'] as int? ?? 0,
+        channelId: _parseNullableIntValue(json['ChannelId']) ?? 0,
         channelName: json['ChannelName'] as String?,
         messages: (json['Messages'] as List<dynamic>? ?? const <dynamic>[])
             .map(
@@ -1385,11 +1459,9 @@ class MessageStatusEvent {
     final processedAtRaw = json['ProcessedAt'];
     return MessageStatusEvent(
       success: json['Success'] as bool? ?? false,
-      messageIds: (json['MessageIds'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
-      deliveredTo: (json['DeliveredTo'] as num?)?.toInt(),
-      readBy: (json['ReadBy'] as num?)?.toInt(),
+      messageIds: _parseIntList(json['MessageIds']),
+      deliveredTo: _parseNullableIntValue(json['DeliveredTo']),
+      readBy: _parseNullableIntValue(json['ReadBy']),
       processedAt: _parseNullableDateTimeValue(processedAtRaw),
     );
   }
@@ -1498,21 +1570,23 @@ class PrivateChatMessageEvent {
   factory PrivateChatMessageEvent.fromJson(Map<String, dynamic> json) {
     final parsed = parseRichTextContent(json['Content'] as String);
     return PrivateChatMessageEvent(
-      id: json['Id'] as int,
-      fromUserId: json['FromUserId'] as int,
-      toUserId: json['ToUserId'] as int,
+      id: _parseIntValue(json['Id'], fieldName: 'PrivateChatMessageEvent.Id'),
+      fromUserId: _parseIntValue(
+        json['FromUserId'],
+        fieldName: 'PrivateChatMessageEvent.FromUserId',
+      ),
+      toUserId: _parseIntValue(
+        json['ToUserId'],
+        fieldName: 'PrivateChatMessageEvent.ToUserId',
+      ),
       content: parsed.text,
       contentType: MessageContentType.fromValue(
-        json['ContentType'] as int? ?? 0,
+        _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
       createdAt: _parseDateTimeValue(json['CreatedAt']),
-      replyToMessageId: (json['ReplyToMessageId'] as num?)?.toInt(),
-      deliveredTo: (json['DeliveredTo'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
-      readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
+      replyToMessageId: _parseNullableIntValue(json['ReplyToMessageId']),
+      deliveredTo: _parseIntList(json['DeliveredTo']),
+      readBy: _parseIntList(json['ReadBy']),
       parseMode: parsed.parseMode,
       fromUsername: json['FromUsername'] as String?,
       username: json['Username'] as String?,
@@ -1565,21 +1639,23 @@ class ChannelMessageEvent {
   factory ChannelMessageEvent.fromJson(Map<String, dynamic> json) {
     final parsed = parseRichTextContent(json['Content'] as String);
     return ChannelMessageEvent(
-      id: json['Id'] as int,
-      channelId: json['ChannelId'] as int,
-      fromUserId: json['FromUserId'] as int,
+      id: _parseIntValue(json['Id'], fieldName: 'ChannelMessageEvent.Id'),
+      channelId: _parseIntValue(
+        json['ChannelId'],
+        fieldName: 'ChannelMessageEvent.ChannelId',
+      ),
+      fromUserId: _parseIntValue(
+        json['FromUserId'],
+        fieldName: 'ChannelMessageEvent.FromUserId',
+      ),
       content: parsed.text,
       contentType: MessageContentType.fromValue(
-        json['ContentType'] as int? ?? 0,
+        _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
       createdAt: _parseDateTimeValue(json['CreatedAt']),
-      replyToMessageId: (json['ReplyToMessageId'] as num?)?.toInt(),
-      deliveredTo: (json['DeliveredTo'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
-      readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
+      replyToMessageId: _parseNullableIntValue(json['ReplyToMessageId']),
+      deliveredTo: _parseIntList(json['DeliveredTo']),
+      readBy: _parseIntList(json['ReadBy']),
       parseMode: parsed.parseMode,
       fromUsername: json['FromUsername'] as String?,
       channelName: json['ChannelName'] as String?,
@@ -1647,12 +1723,23 @@ class ChatMessage {
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     final parsed = parseRichTextContent(json['Content'] as String);
     return ChatMessage(
-      id: json['Id'] as int,
-      fromUserId: json['FromUserId'] as int,
-      toUserId: json['ToUserId'] as int,
+      id: _parseIntValue(json['Id'], fieldName: 'ChatMessage.Id'),
+      fromUserId: _parseIntValue(
+        json['FromUserId'],
+        fieldName: 'ChatMessage.FromUserId',
+      ),
+      toUserId: _parseIntValue(
+        json['ToUserId'],
+        fieldName: 'ChatMessage.ToUserId',
+      ),
       content: parsed.text,
-      contentType: MessageContentType.fromValue(json['ContentType'] as int),
-      sequenceNumber: json['SequenceNumber'] as int,
+      contentType: MessageContentType.fromValue(
+        _parseIntValue(json['ContentType'], fieldName: 'ChatMessage.ContentType'),
+      ),
+      sequenceNumber: _parseIntValue(
+        json['SequenceNumber'],
+        fieldName: 'ChatMessage.SequenceNumber',
+      ),
       isDelivered: json['IsDelivered'] as bool? ?? false,
       isRead: json['IsRead'] as bool? ?? false,
       parseMode: parsed.parseMode,
@@ -1705,12 +1792,12 @@ class PrivateChat {
   };
 
   factory PrivateChat.fromJson(Map<String, dynamic> json) => PrivateChat(
-    id: json['Id'] as int,
-    user1Id: json['User1Id'] as int,
-    user2Id: json['User2Id'] as int,
+    id: _parseIntValue(json['Id'], fieldName: 'PrivateChat.Id'),
+    user1Id: _parseIntValue(json['User1Id'], fieldName: 'PrivateChat.User1Id'),
+    user2Id: _parseIntValue(json['User2Id'], fieldName: 'PrivateChat.User2Id'),
     createdAt: _parseDateTimeValue(json['CreatedAt']),
     lastActivityAt: _parseNullableDateTimeValue(json['LastActivityAt']),
-    lastMessageId: json['LastMessageId'] as int?,
+    lastMessageId: _parseNullableIntValue(json['LastMessageId']),
     isActive: json['IsActive'] as bool? ?? true,
     lastMessage: json['LastMessage'] != null
         ? ChatMessage.fromJson(json['LastMessage'] as Map<String, dynamic>)
@@ -1766,7 +1853,7 @@ class ProfileData {
   };
 
   factory ProfileData.fromJson(Map<String, dynamic> json) => ProfileData(
-    id: json['Id'] as int,
+    id: _parseIntValue(json['Id'], fieldName: 'ProfileData.Id'),
     username: json['Username'] as String,
     displayName: json['DisplayName'] as String?,
     avatarUrl: json['AvatarUrl'] as String?,
@@ -2298,20 +2385,22 @@ class GroupHistoryItem {
   factory GroupHistoryItem.fromJson(Map<String, dynamic> json) {
     final parsed = parseRichTextContent(json['Content'] as String);
     return GroupHistoryItem(
-      id: json['Id'] as int,
-      groupId: json['GroupId'] as int,
-      fromUserId: json['FromUserId'] as int,
+      id: _parseIntValue(json['Id'], fieldName: 'GroupHistoryItem.Id'),
+      groupId: _parseIntValue(
+        json['GroupId'],
+        fieldName: 'GroupHistoryItem.GroupId',
+      ),
+      fromUserId: _parseIntValue(
+        json['FromUserId'],
+        fieldName: 'GroupHistoryItem.FromUserId',
+      ),
       content: parsed.text,
       contentType: MessageContentType.fromValue(
-        json['ContentType'] as int? ?? 0,
+        _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
       createdAt: _parseDateTimeValue(json['CreatedAt']),
-      deliveredTo: (json['DeliveredTo'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
-      readBy: (json['ReadBy'] as List<dynamic>? ?? const <dynamic>[])
-          .map((item) => (item as num).toInt())
-          .toList(),
+      deliveredTo: _parseIntList(json['DeliveredTo']),
+      readBy: _parseIntList(json['ReadBy']),
       isPinned: json['IsPinned'] as bool? ?? false,
       parseMode: parsed.parseMode,
       fromUsername: json['FromUsername'] as String?,
@@ -2346,7 +2435,7 @@ class GroupHistoryResponse {
   factory GroupHistoryResponse.fromJson(Map<String, dynamic> json) =>
       GroupHistoryResponse(
         success: json['Success'] as bool,
-        groupId: json['GroupId'] as int? ?? 0,
+        groupId: _parseNullableIntValue(json['GroupId']) ?? 0,
         groupName: json['GroupName'] as String?,
         messages: (json['Messages'] as List<dynamic>? ?? const <dynamic>[])
             .map(
@@ -2369,6 +2458,8 @@ class GroupMessageEvent {
   final String content;
   final MessageContentType contentType;
   final DateTime createdAt;
+  final List<int> deliveredTo;
+  final List<int> readBy;
   final String? fromUsername;
   final String? groupName;
   final String? parseMode;
@@ -2380,6 +2471,8 @@ class GroupMessageEvent {
     required this.content,
     required this.contentType,
     required this.createdAt,
+    this.deliveredTo = const <int>[],
+    this.readBy = const <int>[],
     this.fromUsername,
     this.groupName,
     this.parseMode,
@@ -2388,14 +2481,22 @@ class GroupMessageEvent {
   factory GroupMessageEvent.fromJson(Map<String, dynamic> json) {
     final parsed = parseRichTextContent(json['Content'] as String);
     return GroupMessageEvent(
-      id: json['Id'] as int,
-      groupId: json['GroupId'] as int,
-      fromUserId: json['FromUserId'] as int,
+      id: _parseIntValue(json['Id'], fieldName: 'GroupMessageEvent.Id'),
+      groupId: _parseIntValue(
+        json['GroupId'],
+        fieldName: 'GroupMessageEvent.GroupId',
+      ),
+      fromUserId: _parseIntValue(
+        json['FromUserId'],
+        fieldName: 'GroupMessageEvent.FromUserId',
+      ),
       content: parsed.text,
       contentType: MessageContentType.fromValue(
-        json['ContentType'] as int? ?? 0,
+        _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
       createdAt: _parseDateTimeValue(json['CreatedAt']),
+      deliveredTo: _parseIntList(json['DeliveredTo']),
+      readBy: _parseIntList(json['ReadBy']),
       fromUsername: json['FromUsername'] as String?,
       groupName: json['GroupName'] as String?,
       parseMode: parsed.parseMode,
@@ -2403,10 +2504,7 @@ class GroupMessageEvent {
   }
 
   factory GroupMessageEvent.fromBytes(List<int> bytes) {
-    final raw = msgpack.deserialize(Uint8List.fromList(bytes));
-    return GroupMessageEvent.fromJson(
-      _normalizeMsgPack(raw) as Map<String, dynamic>,
-    );
+    return GroupMessageEvent.fromJson(_decodePayloadMap(bytes));
   }
 
   ParsedMediaAttachment? get attachment =>
@@ -2444,7 +2542,7 @@ class MemberSummary {
   });
 
   factory MemberSummary.fromJson(Map<String, dynamic> json) => MemberSummary(
-    userId: json['UserId'] as int,
+    userId: _parseIntValue(json['UserId'], fieldName: 'MemberSummary.UserId'),
     username: json['Username'] as String,
     role: json['Role'] as String,
     joinedAt: _parseDateTimeValue(json['JoinedAt']),
@@ -2482,7 +2580,7 @@ class ChannelMembersResponse {
   factory ChannelMembersResponse.fromJson(Map<String, dynamic> json) =>
       ChannelMembersResponse(
         success: json['Success'] as bool,
-        channelId: json['ChannelId'] as int? ?? 0,
+        channelId: _parseNullableIntValue(json['ChannelId']) ?? 0,
         members: (json['Members'] as List<dynamic>? ?? const <dynamic>[])
             .map((item) => MemberSummary.fromJson(item as Map<String, dynamic>))
             .toList(),
@@ -2490,10 +2588,7 @@ class ChannelMembersResponse {
       );
 
   factory ChannelMembersResponse.fromBytes(List<int> bytes) {
-    final raw = msgpack.deserialize(Uint8List.fromList(bytes));
-    return ChannelMembersResponse.fromJson(
-      _normalizeMsgPack(raw) as Map<String, dynamic>,
-    );
+    return ChannelMembersResponse.fromJson(_decodePayloadMap(bytes));
   }
 }
 
@@ -2524,7 +2619,7 @@ class GroupMembersResponse {
   factory GroupMembersResponse.fromJson(Map<String, dynamic> json) =>
       GroupMembersResponse(
         success: json['Success'] as bool,
-        groupId: json['GroupId'] as int? ?? 0,
+        groupId: _parseNullableIntValue(json['GroupId']) ?? 0,
         members: (json['Members'] as List<dynamic>? ?? const <dynamic>[])
             .map((item) => MemberSummary.fromJson(item as Map<String, dynamic>))
             .toList(),
@@ -2532,10 +2627,7 @@ class GroupMembersResponse {
       );
 
   factory GroupMembersResponse.fromBytes(List<int> bytes) {
-    final raw = msgpack.deserialize(Uint8List.fromList(bytes));
-    return GroupMembersResponse.fromJson(
-      _normalizeMsgPack(raw) as Map<String, dynamic>,
-    );
+    return GroupMembersResponse.fromJson(_decodePayloadMap(bytes));
   }
 }
 
@@ -2619,7 +2711,7 @@ class ReactionCount {
 
   factory ReactionCount.fromJson(Map<String, dynamic> json) => ReactionCount(
     emoji: json['Emoji'] as String,
-    count: json['Count'] as int,
+    count: _parseIntValue(json['Count'], fieldName: 'ReactionCount.Count'),
     byMe: json['ByMe'] as bool? ?? false,
   );
 }
@@ -2735,8 +2827,14 @@ class MessageReactionEvent {
   factory MessageReactionEvent.fromJson(Map<String, dynamic> json) =>
       MessageReactionEvent(
         scope: json['Scope'] as String,
-        messageId: json['MessageId'] as int,
-        userId: json['UserId'] as int,
+        messageId: _parseIntValue(
+          json['MessageId'],
+          fieldName: 'MessageReactionEvent.MessageId',
+        ),
+        userId: _parseIntValue(
+          json['UserId'],
+          fieldName: 'MessageReactionEvent.UserId',
+        ),
         emoji: json['Emoji'] as String,
         removed: json['Removed'] as bool? ?? false,
         reactions: (json['Reactions'] as List<dynamic>? ?? const <dynamic>[])
@@ -2745,10 +2843,7 @@ class MessageReactionEvent {
       );
 
   factory MessageReactionEvent.fromBytes(List<int> bytes) {
-    final raw = msgpack.deserialize(Uint8List.fromList(bytes));
-    return MessageReactionEvent.fromJson(
-      _normalizeMsgPack(raw) as Map<String, dynamic>,
-    );
+    return MessageReactionEvent.fromJson(_decodePayloadMap(bytes));
   }
 }
 
@@ -2846,10 +2941,19 @@ class MessagePinEvent {
   factory MessagePinEvent.fromJson(Map<String, dynamic> json) =>
       MessagePinEvent(
         scope: json['Scope'] as String,
-        messageId: json['MessageId'] as int,
-        targetId: json['TargetId'] as int,
+        messageId: _parseIntValue(
+          json['MessageId'],
+          fieldName: 'MessagePinEvent.MessageId',
+        ),
+        targetId: _parseIntValue(
+          json['TargetId'],
+          fieldName: 'MessagePinEvent.TargetId',
+        ),
         pinned: json['Pinned'] as bool? ?? false,
-        actorUserId: json['ActorUserId'] as int,
+        actorUserId: _parseIntValue(
+          json['ActorUserId'],
+          fieldName: 'MessagePinEvent.ActorUserId',
+        ),
       );
 
   factory MessagePinEvent.fromBytes(List<int> bytes) {
@@ -2903,9 +3007,10 @@ class RoomSettingsGetResponse {
       RoomSettingsGetResponse(
         success: json['Success'] as bool,
         scope: json['Scope'] as String? ?? '',
-        targetId: json['TargetId'] as int? ?? 0,
-        joinRule: json['JoinRule'] as int? ?? 0,
-        historyVisibility: json['HistoryVisibility'] as int? ?? 1,
+        targetId: _parseNullableIntValue(json['TargetId']) ?? 0,
+        joinRule: _parseNullableIntValue(json['JoinRule']) ?? 0,
+        historyVisibility:
+            _parseNullableIntValue(json['HistoryVisibility']) ?? 1,
         message: json['Message'] as String?,
       );
 

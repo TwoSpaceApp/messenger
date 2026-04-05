@@ -3,11 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/biometric_service.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class PrivacyScreen extends StatefulWidget {
-  const PrivacyScreen({super.key});
+  const PrivacyScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<PrivacyScreen> createState() => _PrivacyScreenState();
@@ -19,13 +22,20 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(title: Text(l10n.privacyTitle)),
-      body: ScreenBackground(
-        child: ListView(
+    final list = ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          if (widget.embedded) ...[
+            SectionPageHeader(
+              title: l10n.privacyTitle,
+              subtitle: l10n.biometricsSetup,
+              leading: IconButton(
+                onPressed: () => context.pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           ValueListenableBuilder<bool>(
             valueListenable: SettingsService.biometricsNotifier,
             builder: (context, isEnabled, child) {
@@ -153,8 +163,16 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             ),
           ),
         ],
-      ),
-      ),
+      );
+
+    if (widget.embedded) {
+      return list;
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(title: Text(l10n.privacyTitle)),
+      body: ScreenBackground(child: list),
     );
   }
 }

@@ -3,11 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class FeedbackScreen extends StatefulWidget {
-  const FeedbackScreen({super.key});
+  const FeedbackScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<FeedbackScreen> createState() => _FeedbackScreenState();
@@ -126,19 +129,22 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(l10n.suggestImprovementLabel),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-      ),
-      body: ScreenBackground(
-        child: SafeArea(
-          child: ListView(
+    final list = SafeArea(
+      top: !widget.embedded,
+      child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (widget.embedded) ...[
+                SectionPageHeader(
+                  title: l10n.suggestImprovementLabel,
+                  subtitle: l10n.feedbackCategoryNetworkSync,
+                  leading: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               Form(
                 key: _formKey,
                 child: Column(
@@ -265,8 +271,21 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               ),
             ],
           ),
-        ),
+    );
+
+    if (widget.embedded) {
+      return list;
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(l10n.suggestImprovementLabel),
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
       ),
+      body: ScreenBackground(child: list),
     );
   }
 }
