@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/constants/greeting_constants.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/features/chat/presentation/screens/main_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -62,9 +63,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   void _transitionToMain() {
     _ctrl.reverse().then((_) {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-        );
+        context.go(AppStrings.routeHome);
       }
     });
   }

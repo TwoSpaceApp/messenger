@@ -109,7 +109,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     Uint8List? avatarBytes,
   }) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       await _authService.registerUser(
         username,
         email,
@@ -117,8 +117,15 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         displayName: displayName,
         avatarBytes: avatarBytes,
       );
-      return _loadAuthState();
-    });
+      final nextState = await _loadAuthState();
+      if (!nextState.isAuthenticated) {
+        throw Exception('Регистрация завершена, но вход не выполнен');
+      }
+      state = AsyncValue.data(nextState);
+    } on Object catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> logout() async {

@@ -75,7 +75,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             return AppStrings.routeLogin;
           }
           if (auth.isAuthenticated && isAuthRoute) {
-            return AppStrings.routeHome;
+            return AppStrings.routeWelcome;
           }
           return null;
         },

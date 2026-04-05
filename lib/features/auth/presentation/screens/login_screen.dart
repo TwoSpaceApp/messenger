@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
@@ -482,7 +483,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextButton(
                   onPressed: () async {
                     setState(() => _isCovering = true);
-                    if (mounted) context.go('/register');
+                    if (mounted) context.go(AppStrings.routeRegister);
                   },
                   child: Text(
                     l10n.registerTitle,

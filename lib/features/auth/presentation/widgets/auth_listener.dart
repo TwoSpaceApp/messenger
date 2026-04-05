@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
-import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 
 /// Listens to authentication state changes and handles automatic navigation
 ///
@@ -31,76 +28,15 @@ class AuthListener extends ConsumerStatefulWidget {
 
 class _AuthListenerState extends ConsumerState<AuthListener> {
   void _handleAuthStateChange(
-    AsyncValue<AuthState>? previous,
+    AsyncValue<AuthState>? _,
     AsyncValue<AuthState> next,
   ) {
     next.whenOrNull(
-      data: (state) {
-        // Only navigate if state actually changed
-        final previousState = previous?.value;
-        if (previousState?.isAuthenticated == state.isAuthenticated) {
-          return; // No change, skip navigation
-        }
-
-        if (state.isAuthenticated) {
-          // User just logged in - show welcome screen first
-          _navigateToWelcome(state.userId);
-        } else if (previousState?.isAuthenticated ?? false) {
-          // User just logged out
-          _navigateToLogin();
-        }
-      },
       error: (error, stackTrace) {
         // Show error message
         _showErrorSnackBar(error.toString());
       },
     );
-  }
-
-  Future<void> _navigateToWelcome(String? userId) async {
-    if (!mounted) return;
-
-    Map<String, dynamic>? userInfo;
-
-    // Get user info - not used but can be extended later
-    if (userId != null) {
-      try {
-        final chatService = AegisChatService();
-        userInfo = await chatService.getOwnUserInfo(forceRefresh: true);
-      } catch (_) {
-        // Ignore errors
-      }
-    }
-
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => WelcomeScreen(
-          name: (userInfo?['displayName'] ??
-                  userInfo?['username'] ??
-                  userId ??
-                  'User')
-              .toString(),
-          username: userInfo?['username']?.toString(),
-          avatarUrl: userInfo?['avatarUrl']?.toString(),
-          avatarFileId: userInfo?['avatarFileId']?.toString(),
-          description: userInfo?['bio']?.toString(),
-          phone: userInfo?['phone']?.toString(),
-        ),
-      ),
-    );
-  }
-
-  void _navigateToLogin() {
-    if (!mounted) return;
-
-    // Get current route
-    final currentRoute = ModalRoute.of(context)?.settings.name;
-
-    // Only navigate if not already on login
-    if (currentRoute != '/login' && currentRoute != null) {
-      context.go('/login');
-    }
   }
 
   void _showErrorSnackBar(String message) {

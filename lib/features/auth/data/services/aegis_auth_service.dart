@@ -556,12 +556,7 @@ class AegisAuthService {
     required String username,
     required String password,
   }) async {
-    try {
-      await login(identifier: username, password: password);
-    } on Object catch (e) {
-      _log.warning('Автологин после регистрации не удался: $e');
-      // Не бросаем — регистрация прошла успешно
-    }
+    await login(identifier: username, password: password);
   }
 
   Future<void> _saveSession() async {

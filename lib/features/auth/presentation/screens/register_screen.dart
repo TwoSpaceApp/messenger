@@ -6,13 +6,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
-import 'package:two_space_app/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_background.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
@@ -193,7 +193,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     } else {
       // Navigate back to Login with animation
       setState(() => _isCovering = true);
-      if (mounted) context.go('/login');
+      if (mounted) context.go(AppStrings.routeLogin);
     }
   }
 
@@ -259,19 +259,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       SentryService.addBreadcrumb('Регистрация успешна', category: 'auth');
 
       if (!mounted) return;
-
-      // Navigate to Welcome Screen instead of direct Home
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => WelcomeScreen(
-            name: _nameCtl.text.trim(),
-            description: _nicknameCtl.text.trim(),
-            // Pass avatar logic if available, currently just bytes in _avatarBytes
-            // Ideally we upload it first, but for now passing null to use Initials
-          ),
-        ),
-      );
+      context.go(AppStrings.routeWelcome);
     } catch (e, stackTrace) {
       SentryService.captureException(
         e,
