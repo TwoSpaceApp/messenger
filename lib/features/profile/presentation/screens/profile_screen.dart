@@ -3,12 +3,13 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/core/services/navigation_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
@@ -397,15 +398,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _openEditScreen() async {
-    final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          userId: widget.userId,
-          initialName: widget.initialName,
-          initialAvatar: widget.initialAvatar,
-          startInEdit: true,
-        ),
-      ),
+    final changed = await context.push<bool>(
+      AppStrings.routeProfile,
+      extra: <String, dynamic>{
+        'userId': widget.userId,
+        'initialName': widget.initialName,
+        'initialAvatar': widget.initialAvatar,
+        'startInEdit': true,
+      },
     );
     if (changed == true && mounted) {
       setState(() => _loading = true);
@@ -742,8 +742,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _buildMetaChip(
                   context,
-                  icon: Icons.badge_outlined,
-                  label: 'ID: $profileId',
+                  icon: Icons.alternate_email,
+                  label: '@$username',
                 ),
                 if (_user?['email'] is String && (_user!['email'] as String).isNotEmpty)
                   _buildMetaChip(
@@ -771,13 +771,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               : () async {
                                   setState(() => _actionLoading = true);
                                   final messenger = ScaffoldMessenger.of(context);
-                                  final navState = appNavigatorKey.currentState;
                                   try {
                                     final cs = createChatBackend();
                                     final m = await cs.getOrCreateDirectChat(widget.userId);
                                     final chat = Chat.fromMap(m);
                                     if (!mounted) return;
-                                    navState?.pop(chat);
+                                    await context.push(
+                                      '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
+                                      extra: chat,
+                                    );
                                   } catch (e) {
                                     messenger.showSnackBar(
                                       SnackBar(
@@ -828,13 +830,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               : () async {
                                   setState(() => _actionLoading = true);
                                   final messenger = ScaffoldMessenger.of(context);
-                                  final navState = appNavigatorKey.currentState;
                                   try {
                                     final cs = createChatBackend();
                                     final m = await cs.getOrCreateDirectChat(widget.userId);
                                     final chat = Chat.fromMap(m);
                                     if (!mounted) return;
-                                    navState?.pop(chat);
+                                    await context.push(
+                                      '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
+                                      extra: chat,
+                                    );
                                   } catch (e) {
                                     messenger.showSnackBar(
                                       SnackBar(
@@ -1056,7 +1060,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     values.addAll([
       (label: l10n.nicknameField, value: username),
-      (label: l10n.contactIdLabel, value: profileId),
       (
         label: l10n.locationField,
         value: (_user != null) ? (_user!['location'] as String?) ?? '' : '',
@@ -1066,6 +1069,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         value: (_user != null) ? (_user!['birthday'] as String?) ?? '' : '',
       ),
     ]);
+    if (profileId.isNotEmpty && profileId != username) {
+      values.add((label: l10n.contactIdLabel, value: profileId));
+    }
     return values;
   }
 

@@ -1,8 +1,10 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
@@ -13,13 +15,11 @@ import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
-import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/people/data/services/people_repository.dart';
 import 'package:two_space_app/features/people/presentation/controllers/people_controller.dart';
 import 'package:two_space_app/features/people/presentation/widgets/people_search_field.dart';
 import 'package:two_space_app/features/people/presentation/widgets/person_tile.dart';
-import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 
 class PeopleScreen extends StatefulWidget {
   const PeopleScreen({
@@ -410,28 +410,31 @@ class _PeopleScreenState extends State<PeopleScreen> {
   // ──────────────────────── Actions ──────────────────────────
 
   Future<void> _openChat(PersonEntry person) async {
-    if (person.remoteUserId == null) return;
+    final remoteUserId = person.remoteUserId;
+    if (remoteUserId == null) return;
     await _controller.rememberPerson(person);
     final backend = createChatBackend();
-    final map = await backend.getOrCreateDirectChat(person.remoteUserId!);
+    final map = await backend.getOrCreateDirectChat(remoteUserId);
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ChatScreen(chat: Chat.fromMap(map))),
+    final chat = Chat.fromMap(map);
+    await context.push(
+      '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
+      extra: chat,
     );
   }
 
   Future<void> _openProfile(PersonEntry person) async {
-    if (person.remoteUserId == null) return;
+    final remoteUserId = person.remoteUserId;
+    if (remoteUserId == null) return;
     await _controller.rememberPerson(person);
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          userId: person.remoteUserId!,
-          initialName: person.displayName,
-          initialAvatar: person.avatarUrl,
-        ),
-      ),
+    await context.push(
+      AppStrings.routeProfile,
+      extra: <String, dynamic>{
+        'userId': remoteUserId,
+        'initialName': person.displayName,
+        'initialAvatar': person.avatarUrl,
+      },
     );
   }
 

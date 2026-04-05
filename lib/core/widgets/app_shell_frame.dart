@@ -107,7 +107,7 @@ class _ConstrainedShellBody extends StatelessWidget {
     final bottomPadding = useWideNav
         ? 24.0
         : mediaQuery.padding.bottom + 112.0;
-    final leftPadding = useWideNav ? 132.0 : horizontalPadding;
+    final leftPadding = useWideNav ? 148.0 : horizontalPadding;
 
     return Positioned.fill(
       child: Padding(
@@ -151,7 +151,7 @@ class _WideNavBar extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
-          width: 112,
+          width: 124,
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.72),
             borderRadius: BorderRadius.circular(34),
@@ -173,10 +173,10 @@ class _WideNavBar extends StatelessWidget {
                 children: [
                   const SizedBox(
                     width: double.infinity,
-                    height: 34,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: AppLogo(large: false),
+                    height: 30,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      child: Center(child: AppLogo(large: false)),
                     ),
                   ),
                   const SizedBox(height: 18),

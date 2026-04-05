@@ -23,13 +23,14 @@ class _AppLogoState extends State<AppLogo> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final fontSize = widget.large ? 40.0 : 24.0;
+    final fontSize = widget.large ? 40.0 : 20.0;
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textStyle = TextStyle(
       fontSize: fontSize,
       fontWeight: FontWeight.bold,
-      letterSpacing: 1.2,
+      letterSpacing: widget.large ? 1.2 : 0.35,
+      height: 1,
     );
 
     return AnimatedBuilder(

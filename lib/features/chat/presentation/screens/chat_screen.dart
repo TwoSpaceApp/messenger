@@ -10,8 +10,10 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:share_plus/share_plus.dart' as share;
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -30,7 +32,6 @@ import 'package:two_space_app/features/chat/presentation/screens/group_settings_
 import 'package:two_space_app/features/chat/presentation/widgets/media_player.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/message_status_icon.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/typing_indicator.dart';
-import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -916,16 +917,7 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          userId: userId,
-          initialName: initialName,
-          initialAvatar: initialAvatar,
-        ),
-      ),
-    );
+    context.push(AppStrings.routeProfile, extra: userId);
   }
 
   /// Load draft message for this chat
@@ -1148,6 +1140,71 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     ];
 
+    const quickReactions = ['👍', '❤️', '😂', '🔥', '😮', '🎉'];
+    final useDesktopMenu = MediaQuery.of(context).size.width >=
+        UITokens.tabletBreakpoint;
+
+    if (useDesktopMenu) {
+      final selected = await showMenu<String>(
+        context: context,
+        position: RelativeRect.fromLTRB(
+          globalPos.dx,
+          globalPos.dy,
+          globalPos.dx,
+          globalPos.dy,
+        ),
+        items: [
+          for (final emoji in quickReactions)
+            PopupMenuItem<String>(
+              value: 'reaction:$emoji',
+              child: Row(
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 18)),
+                  const SizedBox(width: 10),
+                  Text(emoji),
+                ],
+              ),
+            ),
+          const PopupMenuDivider(),
+          for (var index = 0; index < actions.length; index++)
+            PopupMenuItem<String>(
+              value: 'action:$index',
+              child: Row(
+                children: [
+                  Icon(actions[index].icon, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(actions[index].label)),
+                ],
+              ),
+            ),
+        ],
+      );
+
+      if (selected == null) {
+        return;
+      }
+      if (selected.startsWith('reaction:')) {
+        final emoji = selected.substring('reaction:'.length);
+        try {
+          _showEmojiBurst(context, emoji, globalPos);
+          await _svc.sendReaction(
+            roomId: widget.chat.id,
+            eventId: m.id,
+            reaction: emoji,
+          );
+          _toggleReactionLocally(m.id, emoji);
+        } catch (_) {}
+        return;
+      }
+      if (selected.startsWith('action:')) {
+        final index = int.tryParse(selected.substring('action:'.length));
+        if (index != null && index >= 0 && index < actions.length) {
+          await actions[index].run();
+        }
+      }
+      return;
+    }
+
     await showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
@@ -1197,7 +1254,7 @@ class _ChatScreenState extends State<ChatScreen>
                             spacing: 10,
                             runSpacing: 10,
                             children: [
-                              for (final emoji in ['👍', '❤️', '😂', '🔥', '😮', '🎉'])
+                              for (final emoji in quickReactions)
                                 InkWell(
                                   borderRadius: BorderRadius.circular(999),
                                   onTap: () async {
@@ -1811,14 +1868,9 @@ class _ChatScreenState extends State<ChatScreen>
                     members: [],
                   );
                   if (!context.mounted) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        chat: chat,
-                        scrollToEventId: ev['event_id']?.toString(),
-                      ),
-                    ),
+                  context.push(
+                    '${AppStrings.routeChat}/${Uri.encodeComponent(roomId)}',
+                    extra: chat,
                   );
                 },
               );
@@ -1959,13 +2011,40 @@ class _ChatScreenState extends State<ChatScreen>
                           }
                         } catch (_) {}
                       },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: AppColors.reactionBackground(context), borderRadius: BorderRadius.circular(12)),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 160),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: ((entry.value as Map)['myEventId'] != null)
+                              ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.92)
+                              : AppColors.reactionBackground(context),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: ((entry.value as Map)['myEventId'] != null)
+                                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.34)
+                                : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.35),
+                          ),
+                        ),
                         child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          Text(entry.key, style: TextStyle(fontSize: 14, color: ((entry.value as Map)['myEventId'] != null) ? Theme.of(context).colorScheme.primary : AppColors.subtitleText(context))),
+                          Text(
+                            entry.key,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: ((entry.value as Map)['myEventId'] != null)
+                                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                                  : AppColors.subtitleText(context),
+                            ),
+                          ),
                           const SizedBox(width: 6),
-                          Text('${(entry.value as Map)['count']}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.subtitleText(context))),
+                          Text(
+                            '${(entry.value as Map)['count']}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: ((entry.value as Map)['myEventId'] != null)
+                                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                                  : AppColors.subtitleText(context),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ]),
                       ),
                     ),
@@ -2016,6 +2095,8 @@ class _ChatScreenState extends State<ChatScreen>
                       Flexible(
                         child: GestureDetector(
                           onLongPressStart: (details) =>
+                              _showMessageActions(m, details.globalPosition),
+                          onSecondaryTapDown: (details) =>
                               _showMessageActions(m, details.globalPosition),
                           child: _SquishyBubble(
                             isOwn: m.isOwn,

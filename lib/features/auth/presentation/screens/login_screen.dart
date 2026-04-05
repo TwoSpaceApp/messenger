@@ -56,7 +56,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _loading = true);
 
     final identifier = _emailCtl.text.trim();
-    final password = _passCtl.text.trim();
+    final password = _passCtl.text;
     final notifier = ref.read(authProvider.notifier);
 
     if (_emailLikePattern.hasMatch(identifier)) {
@@ -482,7 +482,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    setState(() => _isCovering = true);
                     if (mounted) context.go(AppStrings.routeRegister);
                   },
                   child: Text(

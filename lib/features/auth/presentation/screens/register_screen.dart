@@ -192,7 +192,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       });
     } else {
       // Navigate back to Login with animation
-      setState(() => _isCovering = true);
       if (mounted) context.go(AppStrings.routeLogin);
     }
   }
@@ -251,7 +250,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       await notifier.register(
         _nicknameCtl.text.trim(),
         _emailCtl.text.trim(),
-        _passCtl.text.trim(),
+        _passCtl.text,
         displayName: _nameCtl.text.trim(),
         avatarBytes: _avatarBytes,
       );

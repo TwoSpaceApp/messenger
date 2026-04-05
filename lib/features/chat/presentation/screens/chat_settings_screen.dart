@@ -6,6 +6,8 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart' as share;
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -15,7 +17,6 @@ import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/feature_in_development_dialog.dart';
-import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
 enum _RoomSettingsStatus { ready, inDevelopment, destructive, action }
@@ -84,15 +85,13 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          userId: userId,
-          initialName: data['name']?.toString() ?? widget.initialName,
-          initialAvatar: data['avatar']?.toString(),
-        ),
-      ),
+    context.push(
+      AppStrings.routeProfile,
+      extra: <String, dynamic>{
+        'userId': userId,
+        'initialName': data['name']?.toString() ?? widget.initialName,
+        'initialAvatar': data['avatar']?.toString(),
+      },
     );
   }
 
@@ -643,15 +642,13 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
               if (userId.isEmpty) {
                 return;
               }
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ProfileScreen(
-                    userId: userId,
-                    initialName: title,
-                    initialAvatar: member['avatarUrl']?.toString(),
-                  ),
-                ),
+              context.push(
+                AppStrings.routeProfile,
+                extra: <String, dynamic>{
+                  'userId': userId,
+                  'initialName': title,
+                  'initialAvatar': member['avatarUrl']?.toString(),
+                },
               );
             },
             leading: UserAvatar(

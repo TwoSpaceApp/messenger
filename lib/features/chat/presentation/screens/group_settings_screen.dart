@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/group.dart';
@@ -13,7 +15,6 @@ import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/feature_in_development_dialog.dart';
-import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
 class _GroupSettingsSection {
@@ -80,15 +81,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          userId: member.userId,
-          initialName: member.displayName,
-          initialAvatar: member.avatarUrl,
-        ),
-      ),
+    context.push(
+      AppStrings.routeProfile,
+      extra: <String, dynamic>{
+        'userId': member.userId,
+        'initialName': member.displayName,
+        'initialAvatar': member.avatarUrl,
+      },
     );
   }
 

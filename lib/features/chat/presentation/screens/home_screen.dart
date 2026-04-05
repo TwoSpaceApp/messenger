@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -14,7 +15,6 @@ import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/unread_badge.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
-import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/start_chat_bottom_sheet.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
@@ -92,6 +92,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         messageLimit: 0,
       );
     } catch (e) {
+      final text = e.toString().toLowerCase();
+      if (text.contains('notauthenticatedexception') ||
+          text.contains('необходима аутентификация')) {
+        if (mounted) {
+          setState(() {
+            _rooms = const <Map<String, dynamic>>[];
+            _errorMessage = null;
+          });
+        }
+        return;
+      }
       if (mounted) {
         setState(() => _errorMessage = e.toString());
       }
@@ -224,6 +235,127 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   String _formatRoomTime(DateTime? time) {
     return MessageTimeFormatter.formatConversationTime(time);
+  }
+
+  String? _directUserIdForRoom(Map<String, dynamic> room) {
+    if (room['roomType'] != 'direct') {
+      return null;
+    }
+    final roomId = room['id']?.toString() ?? '';
+    if (!roomId.startsWith('dm:')) {
+      return null;
+    }
+    final userId = roomId.substring(3).trim();
+    return userId.isEmpty ? null : userId;
+  }
+
+  Future<void> _openRoomProfile(Map<String, dynamic> room) async {
+    final userId = _directUserIdForRoom(room);
+    if (userId == null || !mounted) {
+      return;
+    }
+    await context.push(
+      AppStrings.routeProfile,
+      extra: <String, dynamic>{
+        'userId': userId,
+        'initialName': room['name']?.toString(),
+        'initialAvatar': room['avatar']?.toString(),
+      },
+    );
+  }
+
+  Future<void> _leaveOrRemoveRoom(Map<String, dynamic> room) async {
+    final l10n = AppLocalizations.of(context)!;
+    final roomId = room['id']?.toString() ?? '';
+    if (roomId.isEmpty) {
+      return;
+    }
+    final isDirect = room['roomType'] == 'direct';
+    var confirmed = true;
+    if (!isDirect) {
+      confirmed = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: Text(l10n.leaveRoomTitle),
+              content: Text(l10n.leaveRoomContent),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: Text(l10n.cancelButton),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: Text(l10n.leaveRoomAction),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+    }
+    if (!confirmed) {
+      return;
+    }
+    try {
+      if (isDirect) {
+        await _chat.clearRoomCache(roomId);
+      } else {
+        await _chat.leaveRoom(roomId);
+      }
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString().replaceAll('Exception: ', ''),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _showRoomQuickActions(
+    Map<String, dynamic> room,
+    Offset globalPosition,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final canOpenProfile = _directUserIdForRoom(room) != null;
+    final isDirect = room['roomType'] == 'direct';
+    final action = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        globalPosition.dx,
+        globalPosition.dy,
+        globalPosition.dx,
+        globalPosition.dy,
+      ),
+      items: [
+        PopupMenuItem<String>(
+          value: 'open',
+          child: Text(l10n.writeMessageButton),
+        ),
+        if (canOpenProfile)
+          PopupMenuItem<String>(
+            value: 'profile',
+            child: Text(l10n.peopleViewProfileAction),
+          ),
+        const PopupMenuDivider(),
+        PopupMenuItem<String>(
+          value: 'remove',
+          child: Text(isDirect ? l10n.deleteButton : l10n.leaveRoomAction),
+        ),
+      ],
+    );
+
+    switch (action) {
+      case 'open':
+        _openChat(room['id']?.toString() ?? '');
+      case 'profile':
+        await _openRoomProfile(room);
+      case 'remove':
+        await _leaveOrRemoveRoom(room);
+    }
   }
 
   void _openDirectChat() {
@@ -575,7 +707,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         );
 
-        return item;
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onLongPressStart: (details) =>
+              _showRoomQuickActions(r, details.globalPosition),
+          onSecondaryTapDown: (details) =>
+              _showRoomQuickActions(r, details.globalPosition),
+          child: item,
+        );
       },
     );
   }
@@ -585,29 +724,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       (e) => e['id'] == id,
       orElse: () => {'id': id, 'name': id},
     );
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => ChatScreen(
-          chat: Chat(
-            id: id,
-            name: (room['name'] as String?) ?? id,
-            avatarUrl: room['avatar'] as String?,
-            roomType: room['roomType'] as String?,
-            members: const [],
-            isOnline: room['isOnline'] == true,
-            presenceStatus: room['presenceStatus'] as String?,
-            lastSeenAt: room['lastSeenAt'] as DateTime?,
-          ),
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SharedAxisTransition(
-            animation: animation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.horizontal,
-            child: child,
-          );
-        },
+    context.push(
+      '${AppStrings.routeChat}/${Uri.encodeComponent(id)}',
+      extra: Chat(
+        id: id,
+        name: (room['name'] as String?) ?? id,
+        avatarUrl: room['avatar'] as String?,
+        roomType: room['roomType'] as String?,
+        members: const [],
+        isOnline: room['isOnline'] == true,
+        presenceStatus: room['presenceStatus'] as String?,
+        lastSeenAt: room['lastSeenAt'] as DateTime?,
       ),
     );
   }

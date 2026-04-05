@@ -112,6 +112,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (FeatureFlags.ignoreServerOffline.value && !isSplashRoute) {
             return null;
           }
+          if (isAuthRoute || isSplashRoute) {
+            return null;
+          }
           return AppStrings.routeLogin;
         },
       );
@@ -210,12 +213,31 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppStrings.routeProfile,
         pageBuilder: (context, state) {
-          final userIdFromExtra = state.extra is String ? state.extra! as String : null;
+          final extra = state.extra;
+          String? userIdFromExtra;
+          String? initialName;
+          String? initialAvatar;
+          var startInEdit = false;
+          if (extra is String) {
+            userIdFromExtra = extra;
+          } else if (extra is Map) {
+            final map = Map<String, dynamic>.from(extra);
+            userIdFromExtra = map['userId']?.toString();
+            initialName = map['initialName']?.toString();
+            initialAvatar = map['initialAvatar']?.toString();
+            startInEdit = map['startInEdit'] == true;
+          }
           final authState = ref.read(authProvider).whenOrNull(data: (value) => value);
           final userId = userIdFromExtra ?? authState?.userId ?? '';
           return _buildShellPage(
             state,
-            ProfileScreen(userId: userId, embedded: true),
+            ProfileScreen(
+              userId: userId,
+              initialName: initialName,
+              initialAvatar: initialAvatar,
+              startInEdit: startInEdit,
+              embedded: true,
+            ),
             selectedIndex: 3,
           );
         },
