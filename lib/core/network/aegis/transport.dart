@@ -188,6 +188,12 @@ class AegisTransport {
         message.sequenceId = _getNextSequenceId();
       }
 
+      AegisLogger.traceFrame(
+        'transport.send',
+        message,
+        direction: 'outbound',
+      );
+
       final wireMessage = await _prepareOutboundMessage(message);
       final data = MessageEncoder.encode(wireMessage);
       final outgoing = _applyOutboundMask(data);
@@ -220,6 +226,7 @@ class AegisTransport {
         if (!_disconnectController.isClosed) _disconnectController.add(null);
       },
       onDone: () {
+        AegisLogger.info('Socket closed by remote peer');
         _isConnected = false;
         if (!_disconnectController.isClosed) _disconnectController.add(null);
       },
@@ -294,6 +301,11 @@ class AegisTransport {
         await _unwrapInboundMessage(frame, message);
         AegisLogger.debug(
           'Received message: ${message.type} (seq: ${message.sequenceId})',
+        );
+        AegisLogger.traceFrame(
+          'transport.receive',
+          message,
+          direction: 'inbound',
         );
         if (!_messageController.isClosed) {
           _messageController.add(message);

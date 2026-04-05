@@ -260,6 +260,13 @@ DateTime? _parseNullableDateTimeValue(dynamic value) {
     return null;
   }
 
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized.isEmpty || normalized == 'null') {
+      return null;
+    }
+  }
+
   return _parseDateTimeValue(value);
 }
 
@@ -1819,13 +1826,13 @@ class ProfileData {
   final String? location;
   final String? birthDate;
   final String? email;
-  final DateTime createdAt;
+  final DateTime? createdAt;
   final DateTime? lastSeenAt;
 
   ProfileData({
     required this.id,
     required this.username,
-    required this.createdAt,
+    this.createdAt,
     this.displayName,
     this.avatarUrl,
     this.avatars = const <ProfileAvatarData>[],
@@ -1848,7 +1855,7 @@ class ProfileData {
     if (location != null) 'Location': location,
     if (birthDate != null) 'BirthDate': birthDate,
     if (email != null) 'Email': email,
-    'CreatedAt': createdAt.toIso8601String(),
+    if (createdAt != null) 'CreatedAt': createdAt!.toIso8601String(),
     if (lastSeenAt != null) 'LastSeenAt': lastSeenAt!.toIso8601String(),
   };
 
@@ -1865,7 +1872,7 @@ class ProfileData {
     location: json['Location'] as String?,
     birthDate: json['BirthDate']?.toString(),
     email: json['Email'] as String?,
-    createdAt: _parseDateTimeValue(json['CreatedAt']),
+    createdAt: _parseNullableDateTimeValue(json['CreatedAt']),
     lastSeenAt: _parseNullableDateTimeValue(json['LastSeenAt']),
   );
 }

@@ -6,6 +6,7 @@ import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 import 'package:two_space_app/core/network/aegis/event_dispatcher.dart';
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
 import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
+import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
@@ -13,6 +14,7 @@ import 'package:two_space_app/core/network/aegis/official_api_credentials.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/session_crypto.dart';
 import 'package:two_space_app/core/network/aegis/transport.dart';
+import 'package:two_space_app/core/services/dev_network_logger.dart';
 
 bool _isAppCredentialHandshakeError(Object error) {
   final text = error.toString().toLowerCase();
@@ -379,6 +381,11 @@ class AegisClient {
     );
 
     final authResponse = AuthResponse.fromBytes(response.payload);
+    AegisLogger.info(
+      'Auth response success=${authResponse.success} '
+      'userId=${authResponse.userId} username=${authResponse.username} '
+      'error=${authResponse.error}',
+    );
     if (!authResponse.success) {
       final error = authResponse.error;
       throw Exception(
@@ -1453,10 +1460,13 @@ class AegisClient {
     message.flags |= ProtocolConstants.flagRequiresAck;
 
     final seqId = message.sequenceId;
+    final stopwatch = Stopwatch()..start();
 
     final completer = Completer<Message>();
     late final StreamSubscription<Message> subscription;
     Timer? timeoutTimer;
+    Message? matchedResponse;
+    Object? roundTripError;
 
     subscription = messages.listen((msg) {
       if (msg.type == MessageType.ack && !expectedTypes.contains(MessageType.ack)) {
@@ -1492,6 +1502,7 @@ class AegisClient {
       }
 
       if (!completer.isCompleted) {
+        matchedResponse = msg;
         completer.complete(msg);
       }
     });
@@ -1504,14 +1515,82 @@ class AegisClient {
       }
     });
 
-    await _transport.sendMessage(message);
-
     try {
-      return await completer.future;
+      await _transport.sendMessage(message);
+      matchedResponse = await completer.future;
+      return matchedResponse!;
+    } on Object catch (error) {
+      roundTripError = error;
+      rethrow;
     } finally {
+      stopwatch.stop();
       timeoutTimer.cancel();
+      _logProtocolRoundTrip(
+        request: message,
+        expectedTypes: expectedTypes,
+        response: matchedResponse,
+        latencyMs: stopwatch.elapsedMilliseconds,
+        error: roundTripError,
+        allowSeqZeroForExpectedTypes: allowSeqZeroForExpectedTypes,
+        allowAnySequenceForExpectedTypes: allowAnySequenceForExpectedTypes,
+      );
       await subscription.cancel();
     }
+  }
+
+  void _logProtocolRoundTrip({
+    required Message request,
+    required Set<MessageType> expectedTypes,
+    required int latencyMs,
+    required bool allowSeqZeroForExpectedTypes,
+    required bool allowAnySequenceForExpectedTypes,
+    Message? response,
+    Object? error,
+  }) {
+    final requestType = request.type.name;
+    DevNetworkLogger.instance.logRequest(
+      method: requestType.toUpperCase(),
+      url: 'aegis://protocol/$requestType',
+      statusCode: error == null ? 200 : _mapProtocolErrorStatus(error),
+      latencyMs: latencyMs,
+      requestHeaders: <String, dynamic>{
+        'sequenceId': request.sequenceId,
+        'flagsHex': '0x${request.flags.toRadixString(16)}',
+        'payloadLength': request.payloadLength,
+        'expectedTypes': expectedTypes.map((item) => item.name).toList(),
+        'allowSeqZeroForExpectedTypes': allowSeqZeroForExpectedTypes,
+        'allowAnySequenceForExpectedTypes': allowAnySequenceForExpectedTypes,
+        'authenticated': _isAuthenticated,
+      },
+      responseHeaders: response == null
+          ? const <String, dynamic>{}
+          : <String, dynamic>{
+              'type': response.type.name,
+              'sequenceId': response.sequenceId,
+              'flagsHex': '0x${response.flags.toRadixString(16)}',
+              'payloadLength': response.payloadLength,
+            },
+      requestBody: AegisLogger.decodePayload(request.payload),
+      responseBody: response == null
+          ? null
+          : AegisLogger.decodePayload(response.payload),
+      errorMessage: error?.toString(),
+    );
+  }
+
+  int _mapProtocolErrorStatus(Object? error) {
+    if (error is TimeoutException) {
+      return 504;
+    }
+
+    final text = error?.toString().toLowerCase() ?? '';
+    if (text.contains('not authenticated') || text.contains('unauthorized')) {
+      return 401;
+    }
+    if (text.contains('invalid') || text.contains('failed')) {
+      return 400;
+    }
+    return 500;
   }
 
   String _extractProtocolErrorMessage(Message message) {

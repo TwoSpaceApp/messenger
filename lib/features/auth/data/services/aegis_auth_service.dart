@@ -354,6 +354,7 @@ class AegisAuthService {
     _log.info('Регистрация: $username / $email');
     await connect();
     final publicKey = await _identity.getOrCreatePublicKey();
+    _log.debug('Публичный ключ для регистрации получен, длина=${publicKey.length}');
 
     final response = await _client.register(
       username,
@@ -369,7 +370,9 @@ class AegisAuthService {
     }
 
     final user = response.user!;
-    _log.info('Зарегистрирован: ${user.username} (id=${user.id})');
+    _log.info(
+      'Зарегистрирован: ${user.username} (id=${user.id}), запускаю auto-login',
+    );
 
     try {
       await _loginAfterRegister(username: username, password: password);
@@ -394,6 +397,11 @@ class AegisAuthService {
     final normalizedDisplayName = displayName?.trim();
     final normalizedBio = bio?.trim();
 
+    _log.info(
+      'Завершение профиля: displayName=${normalizedDisplayName?.isNotEmpty ?? false}, '
+      'bio=${normalizedBio?.isNotEmpty ?? false}, avatarBytes=${avatarBytes?.length ?? 0}',
+    );
+
     final response = await _client.updateProfile(
       displayName: (normalizedDisplayName?.isNotEmpty ?? false)
           ? normalizedDisplayName
@@ -405,11 +413,18 @@ class AegisAuthService {
       throw Exception(response.message ?? 'Не удалось обновить профиль');
     }
 
+    _log.debug(
+      'Profile update success message=${response.message} '
+      'profileId=${response.profile?.id} createdAt=${response.profile?.createdAt}',
+    );
+
     if (avatarBytes != null) {
+      _log.info('Загрузка аватара после регистрации, bytes=${avatarBytes.length}');
       final avatarResponse = await _client.uploadUserAvatar(avatarBytes);
       if (!avatarResponse.success) {
         throw Exception(avatarResponse.message ?? 'Не удалось обновить аватар');
       }
+      _log.debug('Avatar update success message=${avatarResponse.message}');
     }
   }
 
