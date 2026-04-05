@@ -151,7 +151,7 @@ class _WideNavBar extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
-          width: 124,
+          width: 136,
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.72),
             borderRadius: BorderRadius.circular(34),
@@ -173,10 +173,15 @@ class _WideNavBar extends StatelessWidget {
                 children: [
                   const SizedBox(
                     width: double.infinity,
-                    height: 30,
+                    height: 34,
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: Center(child: AppLogo(large: false)),
+                      padding: EdgeInsets.symmetric(horizontal: 6),
+                      child: Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: AppLogo(large: false),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 18),

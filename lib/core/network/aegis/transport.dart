@@ -3,12 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:es_compression/brotli.dart';
-
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_encoder.dart';
+import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/ring_buffer.dart';
@@ -22,8 +21,6 @@ import 'package:two_space_app/core/network/aegis/session_crypto.dart';
 ///
 /// See: `src/Aegis.Transport/TcpServer.cs` (server counterpart).
 class AegisTransport {
-  static final BrotliCodec _brotli = BrotliCodec();
-
   late Socket _socket;
   bool _isConnected = false;
   int _nextSequenceId = 1;
@@ -395,12 +392,10 @@ class AegisTransport {
     if (!alreadyCompressed &&
         preparedMessage.payload.length >
             ProtocolConstants.compressionThreshold) {
-      final compressed = _brotli.encode(preparedMessage.payload);
-      final compressedBytes = compressed is Uint8List
-          ? compressed
-          : Uint8List.fromList(compressed);
+      final compressedBytes = AegisSafeBrotli.tryEncode(preparedMessage.payload);
 
-      if (compressedBytes.length < preparedMessage.payload.length) {
+      if (compressedBytes != null &&
+        compressedBytes.length < preparedMessage.payload.length) {
         preparedMessage = Message()
           ..magic = preparedMessage.magic
           ..versionMajor = preparedMessage.versionMajor
@@ -432,10 +427,7 @@ class AegisTransport {
     }
 
     if ((message.flags & ProtocolConstants.flagCompressed) != 0) {
-      final decompressed = _brotli.decode(message.payload);
-      message.payload = decompressed is Uint8List
-          ? decompressed
-          : Uint8List.fromList(decompressed);
+      message.payload = AegisSafeBrotli.decode(message.payload);
       message.payloadLength = message.payload.length;
       message.flags &= ~ProtocolConstants.flagCompressed;
     }

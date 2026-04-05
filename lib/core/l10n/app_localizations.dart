@@ -4919,6 +4919,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Or paste the recovery phrase instead of a code'**
   String get twoFactorLoginRecoveryHint;
+
+  /// Title shown when chat list refresh times out
+  ///
+  /// In en, this message translates to:
+  /// **'The server is taking too long to respond'**
+  String get chatListTimeoutTitle;
+
+  /// Message shown when chat list refresh times out
+  ///
+  /// In en, this message translates to:
+  /// **'Saved chats are still available. Try refreshing again.\n{error}'**
+  String chatListTimeoutMessage(String error);
+
+  /// Title shown when chat list refresh fails due to network issues
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to the server'**
+  String get chatListOfflineTitle;
+
+  /// Message shown when chat list refresh fails due to network issues
+  ///
+  /// In en, this message translates to:
+  /// **'Your local cache is still available. The list will refresh automatically when the connection returns.\n{error}'**
+  String chatListOfflineMessage(String error);
+
+  /// Title for group avatar section on create group screen
+  ///
+  /// In en, this message translates to:
+  /// **'Group avatar'**
+  String get groupAvatarTitle;
+
+  /// Subtitle for group avatar section on create group screen
+  ///
+  /// In en, this message translates to:
+  /// **'You can add an avatar right when creating the group.'**
+  String get groupAvatarSubtitle;
+
+  /// Generic choose file button label
+  ///
+  /// In en, this message translates to:
+  /// **'Choose file'**
+  String get chooseFileButton;
+
+  /// Title for group history visibility toggle on create group screen
+  ///
+  /// In en, this message translates to:
+  /// **'Keep history for new members'**
+  String get groupHistoryTitle;
+
+  /// Error detail for blocked access to a selected file
+  ///
+  /// In en, this message translates to:
+  /// **'Access to the selected file is blocked.'**
+  String get fileAccessDeniedMessage;
+
+  /// Error shown when avatar file access is denied
+  ///
+  /// In en, this message translates to:
+  /// **'Access to the avatar file is blocked. Try another file.'**
+  String get avatarFileAccessDeniedMessage;
+
+  /// Hint shown on the self profile screen when most profile fields are empty
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile is still sparse. Add a name, bio, or location so it looks complete.'**
+  String get profileEmptySelfHint;
+
+  /// Hint shown on another user's profile screen when most profile fields are empty
+  ///
+  /// In en, this message translates to:
+  /// **'This user has not filled out their profile yet, or the server did not return the detailed fields.'**
+  String get profileEmptyOtherHint;
+
+  /// Confirmation content before disabling two-factor authentication
+  ///
+  /// In en, this message translates to:
+  /// **'Disable two-factor authentication for this account? You will need to set it up again to restore extra protection.'**
+  String get twoFactorDisableConfirmContent;
+
+  /// Badge label for beta-test notices
+  ///
+  /// In en, this message translates to:
+  /// **'Beta test'**
+  String get betaTestLabel;
+
+  /// Title of the beta notice on the home screen
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to the TwoSpace beta test'**
+  String get homeBetaWelcomeTitle;
+
+  /// Body of the beta notice on the home screen
+  ///
+  /// In en, this message translates to:
+  /// **'Features may change often. Send us your suggestions.'**
+  String get homeBetaWelcomeBody;
+
+  /// Loading label in debug menu info tab
+  ///
+  /// In en, this message translates to:
+  /// **'Collecting device information…'**
+  String get devMenuInfoLoading;
+
+  /// Label for app name in debug menu info tab
+  ///
+  /// In en, this message translates to:
+  /// **'App name'**
+  String get devMenuAppNameLabel;
+
+  /// Label for version in debug menu info tab
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get devMenuVersionLabel;
+
+  /// Label for package name in debug menu info tab
+  ///
+  /// In en, this message translates to:
+  /// **'Package name'**
+  String get devMenuPackageNameLabel;
+
+  /// Label for device details in debug menu info tab
+  ///
+  /// In en, this message translates to:
+  /// **'Device'**
+  String get devMenuDeviceLabel;
 }
 
 class _AppLocalizationsDelegate

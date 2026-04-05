@@ -3315,5 +3315,99 @@
       }
     }
   },
-  "twoFactorLoginRecoveryHint": "Or paste the recovery phrase instead of a code"
+  "twoFactorLoginRecoveryHint": "Or paste the recovery phrase instead of a code",
+  "chatListTimeoutTitle": "The server is taking too long to respond",
+  "@chatListTimeoutTitle": {
+    "description": "Title shown when chat list refresh times out"
+  },
+  "chatListTimeoutMessage": "Saved chats are still available. Try refreshing again.\n{error}",
+  "@chatListTimeoutMessage": {
+    "description": "Message shown when chat list refresh times out",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "chatListOfflineTitle": "No connection to the server",
+  "@chatListOfflineTitle": {
+    "description": "Title shown when chat list refresh fails due to network issues"
+  },
+  "chatListOfflineMessage": "Your local cache is still available. The list will refresh automatically when the connection returns.\n{error}",
+  "@chatListOfflineMessage": {
+    "description": "Message shown when chat list refresh fails due to network issues",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "groupAvatarTitle": "Group avatar",
+  "@groupAvatarTitle": {
+    "description": "Title for group avatar section on create group screen"
+  },
+  "groupAvatarSubtitle": "You can add an avatar right when creating the group.",
+  "@groupAvatarSubtitle": {
+    "description": "Subtitle for group avatar section on create group screen"
+  },
+  "chooseFileButton": "Choose file",
+  "@chooseFileButton": {
+    "description": "Generic choose file button label"
+  },
+  "groupHistoryTitle": "Keep history for new members",
+  "@groupHistoryTitle": {
+    "description": "Title for group history visibility toggle on create group screen"
+  },
+  "fileAccessDeniedMessage": "Access to the selected file is blocked.",
+  "@fileAccessDeniedMessage": {
+    "description": "Error detail for blocked access to a selected file"
+  },
+  "avatarFileAccessDeniedMessage": "Access to the avatar file is blocked. Try another file.",
+  "@avatarFileAccessDeniedMessage": {
+    "description": "Error shown when avatar file access is denied"
+  },
+  "profileEmptySelfHint": "Your profile is still sparse. Add a name, bio, or location so it looks complete.",
+  "@profileEmptySelfHint": {
+    "description": "Hint shown on the self profile screen when most profile fields are empty"
+  },
+  "profileEmptyOtherHint": "This user has not filled out their profile yet, or the server did not return the detailed fields.",
+  "@profileEmptyOtherHint": {
+    "description": "Hint shown on another user's profile screen when most profile fields are empty"
+  },
+  "twoFactorDisableConfirmContent": "Disable two-factor authentication for this account? You will need to set it up again to restore extra protection.",
+  "@twoFactorDisableConfirmContent": {
+    "description": "Confirmation content before disabling two-factor authentication"
+  },
+  "betaTestLabel": "Beta test",
+  "@betaTestLabel": {
+    "description": "Badge label for beta-test notices"
+  },
+  "homeBetaWelcomeTitle": "Welcome to the TwoSpace beta test",
+  "@homeBetaWelcomeTitle": {
+    "description": "Title of the beta notice on the home screen"
+  },
+  "homeBetaWelcomeBody": "Features may change often. Send us your suggestions.",
+  "@homeBetaWelcomeBody": {
+    "description": "Body of the beta notice on the home screen"
+  },
+  "devMenuInfoLoading": "Collecting device information…",
+  "@devMenuInfoLoading": {
+    "description": "Loading label in debug menu info tab"
+  },
+  "devMenuAppNameLabel": "App name",
+  "@devMenuAppNameLabel": {
+    "description": "Label for app name in debug menu info tab"
+  },
+  "devMenuVersionLabel": "Version",
+  "@devMenuVersionLabel": {
+    "description": "Label for version in debug menu info tab"
+  },
+  "devMenuPackageNameLabel": "Package name",
+  "@devMenuPackageNameLabel": {
+    "description": "Label for package name in debug menu info tab"
+  },
+  "devMenuDeviceLabel": "Device",
+  "@devMenuDeviceLabel": {
+    "description": "Label for device details in debug menu info tab"
+  }
 }

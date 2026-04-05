@@ -491,7 +491,8 @@ class AegisChatService {
     _roomChanges.clear();
   }
 
-  bool get _shouldExposeChatCache => _auth.isAuthenticated;
+  bool get _shouldExposeChatCache =>
+      _auth.isAuthenticated || _conversations.isNotEmpty;
 
   Stream<List<Chat>> watchChats() async* {
     await _init();
@@ -2459,16 +2460,15 @@ class AegisChatService {
     String? avatarFileName,
   }) async {
     await ensureReady();
-    final response = await _auth.rawClient.createChannel(
+    final response = await _auth.rawClient.createGroup(
       name,
       description: description,
-      type: ChannelType.group,
     );
-    final channelId = response.channelId > 0 ? response.channelId : null;
-    if (!response.success || channelId == null) {
-      throw Exception(response.message ?? 'Unable to create group');
+    final groupId = response.groupId > 0 ? response.groupId : null;
+    if (!response.success || groupId == null) {
+      throw Exception(response.message ?? '');
     }
-    final roomId = 'channel:$channelId';
+    final roomId = 'channel:$groupId';
     final me = (_auth.userId ?? 0).toString();
     _storeConversation(
       _StoredConversation(
@@ -2477,7 +2477,7 @@ class AegisChatService {
         kind: 'group',
         updatedAt: DateTime.now(),
         description: description,
-        channelId: channelId,
+        channelId: groupId,
         isPublic: visibility == GroupVisibility.public,
         showMessageHistory: showMessageHistory,
         memberUserIds: <String>[me],
@@ -2485,7 +2485,7 @@ class AegisChatService {
     );
     final settingsResponse = await _auth.rawClient.updateRoomSettings(
       'group',
-      channelId,
+      groupId,
       joinRule: visibility == GroupVisibility.public ? 0 : 1,
       historyVisibility: showMessageHistory ? 1 : 2,
     );
@@ -2988,8 +2988,8 @@ class AegisChatService {
           roomId,
           () => _StoredConversation(
             id: roomId,
-            title: event.channelName ?? 'Channel $channelId',
-            kind: 'group',
+            title: event.channelName ?? channelId.toString(),
+            kind: 'channel',
             updatedAt: event.createdAt,
             channelId: channelId,
             memberUserIds: <String>[event.fromUserId.toString()],
@@ -3028,7 +3028,7 @@ class AegisChatService {
           roomId,
           () => _StoredConversation(
             id: roomId,
-            title: event.groupName ?? 'Group ${event.groupId}',
+            title: event.groupName ?? event.groupId.toString(),
             kind: 'group',
             updatedAt: event.createdAt,
             channelId: event.groupId,
@@ -3184,7 +3184,9 @@ class AegisChatService {
           description: existing?.description,
           peerUserId: item.peerUserId ?? existing?.peerUserId,
           peerUsername: existing?.peerUsername,
-          channelId: item.channelId ?? existing?.channelId,
+          channelId: item.peerUserId != null
+              ? existing?.channelId
+              : (item.channelId ?? item.chatId),
           isPublic: existing?.isPublic ?? item.type == 'channel',
           showMessageHistory: existing?.showMessageHistory ?? false,
           memberUserIds: (existing?.memberUserIds.isNotEmpty ?? false)

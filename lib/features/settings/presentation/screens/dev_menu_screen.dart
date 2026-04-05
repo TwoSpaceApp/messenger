@@ -9,12 +9,14 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/services/dev_network_logger.dart';
 import 'package:two_space_app/core/services/dev_tools_service.dart';
 import 'package:two_space_app/core/services/update_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/highlighted_text.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:two_space_app/features/settings/presentation/screens/dev_screen_catalog.dart';
 
@@ -67,16 +69,18 @@ class _DevMenuScreenState extends State<DevMenuScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _DevMenuActionsTab(logger: _logger),
-          const _DevMenuUIInspectorTab(),
-          const _DevMenuLogsTab(),
-          const _DevMenuNetworkTab(),
-          const _DevMenuFeatureFlagsTab(),
-          const _DevMenuInfoTab(),
-        ],
+      body: ScreenBackground(
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _DevMenuActionsTab(logger: _logger),
+            const _DevMenuUIInspectorTab(),
+            const _DevMenuLogsTab(),
+            const _DevMenuNetworkTab(),
+            const _DevMenuFeatureFlagsTab(),
+            const _DevMenuInfoTab(),
+          ],
+        ),
       ),
     );
   }
@@ -853,11 +857,25 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
 
     if (Platform.isAndroid) {
       final androidInfo = await deviceInfoPlugin.androidInfo;
-      devInfo =
-          '${androidInfo.manufacturer} ${androidInfo.model} (Android ${androidInfo.version.release})';
+      final abis = androidInfo.supportedAbis.where((abi) => abi.isNotEmpty).join(', ');
+      devInfo = [
+        '${androidInfo.manufacturer} ${androidInfo.model}'.trim(),
+        'Android ${androidInfo.version.release} • SDK ${androidInfo.version.sdkInt}',
+        '${androidInfo.device} • ${androidInfo.product}',
+        if (abis.isNotEmpty) abis,
+      ].where((line) => line.trim().isNotEmpty).join('\n');
     } else if (Platform.isIOS) {
       final iosInfo = await deviceInfoPlugin.iosInfo;
-      devInfo = '${iosInfo.name} (iOS ${iosInfo.systemVersion})';
+      devInfo = [
+        iosInfo.name,
+        '${iosInfo.model} • ${iosInfo.systemName} ${iosInfo.systemVersion}',
+      ].where((line) => line.trim().isNotEmpty).join('\n');
+    } else {
+      devInfo = [
+        Platform.localHostname,
+        Platform.operatingSystem,
+        Platform.operatingSystemVersion,
+      ].where((line) => line.trim().isNotEmpty).join('\n');
     }
 
     if (!mounted) return;
@@ -869,8 +887,9 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_packageInfo == null) {
-      return const AppLoadingState(label: 'Собираем сведения об устройстве…');
+      return AppLoadingState(label: l10n.devMenuInfoLoading);
     }
 
     return ListView(
@@ -878,24 +897,24 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
       children: [
         ListTile(
           leading: const Icon(Icons.info_outline),
-          title: const Text('App Name'),
+          title: Text(l10n.devMenuAppNameLabel),
           subtitle: Text(_packageInfo!.appName),
         ),
         ListTile(
           leading: const Icon(Icons.numbers),
-          title: const Text('Version'),
+          title: Text(l10n.devMenuVersionLabel),
           subtitle:
               Text('${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})'),
         ),
         ListTile(
           leading: const Icon(Icons.code),
-          title: const Text('Package Name'),
+          title: Text(l10n.devMenuPackageNameLabel),
           subtitle: Text(_packageInfo!.packageName),
         ),
         ListTile(
           leading: const Icon(Icons.phone_android),
-          title: const Text('Device'),
-          subtitle: Text(_deviceInfo),
+          title: Text(l10n.devMenuDeviceLabel),
+          subtitle: Text(_deviceInfo.isEmpty ? l10n.noData : _deviceInfo),
         ),
       ],
     );

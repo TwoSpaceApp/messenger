@@ -11,6 +11,7 @@ import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/unread_badge.dart';
@@ -109,6 +110,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  ({IconData icon, String title, String message}) _describeRoomError(String raw) {
+    final l10n = AppLocalizations.of(context)!;
+    final text = raw.toLowerCase();
+    final clean = raw.replaceFirst(RegExp('^Exception: '), '').trim();
+
+    if (text.contains('timeout') || text.contains('timed out') || text.contains('no response for seq')) {
+      return (
+        icon: Icons.schedule_rounded,
+        title: l10n.chatListTimeoutTitle,
+        message: l10n.chatListTimeoutMessage(
+          clean.isEmpty ? l10n.errorGeneric : clean,
+        ),
+      );
+    }
+    if (text.contains('notauthenticatedexception') ||
+        text.contains('authentication') ||
+        text.contains('session') ||
+        text.contains('unauthorized')) {
+      return (
+        icon: Icons.lock_outline_rounded,
+        title: l10n.loginRequired,
+        message: l10n.loginRequiredContent,
+      );
+    }
+    if (text.contains('socket') ||
+        text.contains('connection') ||
+        text.contains('network') ||
+        text.contains('handshake')) {
+      return (
+        icon: Icons.wifi_off_rounded,
+        title: l10n.chatListOfflineTitle,
+        message: l10n.chatListOfflineMessage(
+          clean.isEmpty ? l10n.errorGeneric : clean,
+        ),
+      );
+    }
+    return (
+      icon: Icons.cloud_off_rounded,
+      title: l10n.errorGeneric,
+      message: clean.isEmpty ? l10n.errorGeneric : clean,
+    );
   }
 
   void _subscribeToRooms() {
@@ -487,6 +531,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Column(
                     children: [
                       _buildHeroHeader(theme, l10n, _rooms.length),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        child: InlineNoticeCard(
+                          icon: Icons.science_outlined,
+                          badge: l10n.betaTestLabel,
+                          title: l10n.homeBetaWelcomeTitle,
+                          message: l10n.homeBetaWelcomeBody,
+                        ),
+                      ),
                       Expanded(
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 260),
@@ -562,7 +615,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildChatList() {
     final rooms = _filteredRooms;
-    if (_errorMessage != null) {
+    if (_errorMessage != null && rooms.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
@@ -619,9 +672,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         MediaQuery.of(context).padding.bottom + 124,
       ),
       cacheExtent: 500,
-      itemCount: rooms.length,
+      itemCount: rooms.length + (_errorMessage != null ? 1 : 0),
       itemBuilder: (c, i) {
-        final r = rooms[i];
+        if (_errorMessage != null && i == 0) {
+          final error = _describeRoomError(_errorMessage!);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: SectionCard(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    error.icon,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          error.title,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          error.message,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.subtitleText(context),
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _loadUserAndRooms,
+                    child: Text(AppLocalizations.of(context)!.retry),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        final roomIndex = i - (_errorMessage != null ? 1 : 0);
+        final r = rooms[roomIndex];
         final id = r['id'] as String;
         final unreadCount = r['unreadCount'] as int? ?? 0;
 

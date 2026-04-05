@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/auth/data/services/biometric_auth_service.dart';
 
@@ -19,9 +20,10 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final body = SafeArea(
-      top: !widget.embedded,
-      child: SingleChildScrollView(
+    final body = ScreenBackground(
+      child: SafeArea(
+        top: !widget.embedded,
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,6 +124,7 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
             ],
           ),
         ),
+      ),
     );
 
     if (widget.embedded) {
@@ -129,10 +132,11 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.biometricSetupTitle),
         elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Colors.transparent,
       ),
       body: body,
     );

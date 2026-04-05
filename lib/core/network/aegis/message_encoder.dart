@@ -1,13 +1,12 @@
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:es_compression/brotli.dart';
-
 import 'package:two_space_app/core/network/aegis/buffer_pool.dart';
 import 'package:two_space_app/core/network/aegis/crc32.dart';
 import 'package:two_space_app/core/network/aegis/errors.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
+import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 
@@ -35,9 +34,6 @@ export 'errors.dart'
 ///
 /// See: `src/Aegis.Protocol/MessageEncoder.cs`
 class MessageEncoder {
-  /// Shared [BrotliCodec] instance for compression/decompression.
-  static final BrotliCodec _brotli = BrotliCodec();
-
   /// Shared buffer pool used by [encode] to avoid repeated allocations.
   static final BufferPool _pool = BufferPool(maxPoolSize: 64);
 
@@ -62,11 +58,11 @@ class MessageEncoder {
     if (!isEncrypted &&
         !isCompressed &&
         payload.length > ProtocolConstants.compressionThreshold) {
-      final compressed = _brotli.encode(payload);
-      payload = compressed is Uint8List
-          ? compressed
-          : Uint8List.fromList(compressed);
-      flags |= ProtocolConstants.flagCompressed;
+      final compressed = AegisSafeBrotli.tryEncode(payload);
+      if (compressed != null && compressed.length < payload.length) {
+        payload = compressed;
+        flags |= ProtocolConstants.flagCompressed;
+      }
     }
 
     final totalSize = ProtocolConstants.headerSize + payload.length;
@@ -202,10 +198,7 @@ class MessageEncoder {
           data.offsetInBytes + ProtocolConstants.headerSize,
           payloadLength,
         );
-        final decompressed = _brotli.decode(compressed);
-        message.payload = decompressed is Uint8List
-            ? decompressed
-            : Uint8List.fromList(decompressed);
+        message.payload = AegisSafeBrotli.decode(compressed);
         // Clear the compressed flag — the payload is now decompressed.
         message.flags &= ~ProtocolConstants.flagCompressed;
       } else {

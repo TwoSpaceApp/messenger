@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
@@ -10,6 +13,7 @@ import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dar
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
 import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
+import 'package:two_space_app/core/models/group.dart';
 
 enum CreateChatMode { direct, group, join }
 
@@ -32,9 +36,12 @@ class _CreateChatScreenState extends State<CreateChatScreen>
   final _roomTopicController = TextEditingController();
   final _joinLinkController = TextEditingController();
   late TabController _tabController;
+  Uint8List? _groupAvatarBytes;
+  String? _groupAvatarFileName;
 
   bool _loading = false;
   bool _isPrivate = true;
+  bool _showGroupHistory = false;
   String? _errorMessage;
   final AegisChatService _chatService = AegisChatService();
 
@@ -60,6 +67,41 @@ class _CreateChatScreenState extends State<CreateChatScreen>
 
   String _friendlyError(Object error) {
     return error.toString().replaceFirst(RegExp('^Exception: '), '');
+  }
+
+  Future<void> _pickGroupAvatar() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) {
+        return;
+      }
+      final file = result.files.single;
+      if (file.bytes == null || file.bytes!.isEmpty) {
+        return;
+      }
+      setState(() {
+        _groupAvatarBytes = file.bytes;
+        _groupAvatarFileName = file.name;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.filePickError(_friendlyError(error)))),
+      );
+    }
+  }
+
+  void _clearGroupAvatar() {
+    setState(() {
+      _groupAvatarBytes = null;
+      _groupAvatarFileName = null;
+    });
   }
 
   Future<void> _openContacts() async {
@@ -131,12 +173,26 @@ class _CreateChatScreenState extends State<CreateChatScreen>
     });
 
     try {
-      final roomId = await _chatService.createRoom(
+      final group = await _chatService.createGroupRoom(
         name: roomName,
-        topic: _roomTopicController.text.trim(),
-        isPublic: !_isPrivate,
+        description: _roomTopicController.text.trim().isEmpty
+            ? null
+            : _roomTopicController.text.trim(),
+        visibility: _isPrivate
+            ? GroupVisibility.private
+            : GroupVisibility.public,
+        showMessageHistory: _showGroupHistory,
+        avatarBytes: _groupAvatarBytes,
+        avatarFileName: _groupAvatarFileName,
       );
-      await _openChat(Chat(id: roomId, name: roomName, members: const []));
+      await _openChat(
+        Chat(
+          id: group.roomId,
+          name: group.name,
+          members: group.members.map((member) => member.userId).toList(),
+          roomType: 'group',
+        ),
+      );
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -578,6 +634,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
 
   Widget _buildGroupChatTab() {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -612,6 +669,65 @@ class _CreateChatScreenState extends State<CreateChatScreen>
               ),
               const SizedBox(height: 14),
               Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.12),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 26,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      foregroundImage: _groupAvatarBytes != null
+                          ? MemoryImage(_groupAvatarBytes!)
+                          : null,
+                      child: _groupAvatarBytes == null
+                          ? Icon(
+                              Icons.groups_rounded,
+                              color: theme.colorScheme.primary,
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.groupAvatarTitle,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _groupAvatarFileName ?? l10n.groupAvatarSubtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.subtitleText(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: _loading ? null : _pickGroupAvatar,
+                      child: Text(l10n.chooseFileButton),
+                    ),
+                    if (_groupAvatarBytes != null)
+                      IconButton(
+                        onPressed: _loading ? null : _clearGroupAvatar,
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.38),
                   borderRadius: BorderRadius.circular(18),
@@ -630,6 +746,28 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   ),
                   value: _isPrivate,
                   onChanged: (v) => setState(() => _isPrivate = v),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                  title: Text(
+                    l10n.groupHistoryTitle,
+                    style: TextStyle(color: theme.colorScheme.onSurface),
+                  ),
+                  subtitle: Text(
+                    _showGroupHistory
+                        ? l10n.showHistorySubtitle
+                        : l10n.roomHistoryVisibilityJoinedDescription,
+                    style: TextStyle(color: AppColors.subtitleText(context)),
+                  ),
+                  value: _showGroupHistory,
+                  onChanged: (v) => setState(() => _showGroupHistory = v),
                 ),
               ),
               if (_errorMessage != null && _tabController.index == 1) ...[

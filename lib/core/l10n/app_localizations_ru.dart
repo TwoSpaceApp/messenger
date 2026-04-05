@@ -2655,4 +2655,77 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get twoFactorLoginRecoveryHint =>
       'Или вставьте recovery phrase вместо кода';
+
+  @override
+  String get chatListTimeoutTitle => 'Сервер отвечает слишком долго';
+
+  @override
+  String chatListTimeoutMessage(String error) {
+    return 'Сохранённые чаты остаются доступными. Попробуйте обновить список ещё раз.\n$error';
+  }
+
+  @override
+  String get chatListOfflineTitle => 'Нет соединения с сервером';
+
+  @override
+  String chatListOfflineMessage(String error) {
+    return 'Локальный кэш по-прежнему доступен. Список обновится автоматически, когда соединение вернётся.\n$error';
+  }
+
+  @override
+  String get groupAvatarTitle => 'Аватар группы';
+
+  @override
+  String get groupAvatarSubtitle =>
+      'Аватар можно добавить сразу при создании группы.';
+
+  @override
+  String get chooseFileButton => 'Выбрать файл';
+
+  @override
+  String get groupHistoryTitle => 'Сохранять историю для новых участников';
+
+  @override
+  String get fileAccessDeniedMessage => 'Нет доступа к выбранному файлу.';
+
+  @override
+  String get avatarFileAccessDeniedMessage =>
+      'Нет доступа к файлу аватара. Попробуйте выбрать другой файл.';
+
+  @override
+  String get profileEmptySelfHint =>
+      'Профиль пока выглядит пустым. Добавьте имя, описание или локацию, чтобы он выглядел полноценно.';
+
+  @override
+  String get profileEmptyOtherHint =>
+      'Пользователь ещё не заполнил профиль или сервер не вернул подробные поля.';
+
+  @override
+  String get twoFactorDisableConfirmContent =>
+      'Отключить двухфакторную аутентификацию для этого аккаунта? Чтобы вернуть дополнительную защиту, её придётся настроить заново.';
+
+  @override
+  String get betaTestLabel => 'Бета-тест';
+
+  @override
+  String get homeBetaWelcomeTitle => 'Приветствуем в бета-тесте TwoSpace!';
+
+  @override
+  String get homeBetaWelcomeBody =>
+      'Функционал может часто меняться. Отправляйте предложения.';
+
+  @override
+  String get devMenuInfoLoading => 'Собираем сведения об устройстве…';
+
+  @override
+  String get devMenuAppNameLabel => 'Название приложения';
+
+  @override
+  String get devMenuVersionLabel => 'Версия';
+
+  @override
+  String get devMenuPackageNameLabel => 'Имя пакета';
+
+  @override
+  String get devMenuDeviceLabel => 'Устройство';
 }

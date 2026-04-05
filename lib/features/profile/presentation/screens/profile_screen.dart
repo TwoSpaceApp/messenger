@@ -70,15 +70,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUser() async {
     try {
-      final results = await Future.wait<dynamic>([
-        _chatService.getCurrentUserId(),
-        _chatService.getUserInfo(widget.userId),
-      ]);
-      final currentUserId = results[0] as String?;
-      final userInfo = Map<String, dynamic>.from(results[1] as Map<String, dynamic>);
+      final currentUserId = await _chatService.getCurrentUserId();
+      var userInfo = Map<String, dynamic>.from(
+        await _chatService.getUserInfo(widget.userId),
+      );
 
-      // Determine if this is my profile
-      _isMe = currentUserId != null && widget.userId == currentUserId;
+      _isMe = _matchesCurrentUser(currentUserId, userInfo);
+      if (_isMe) {
+        userInfo = <String, dynamic>{
+          ...userInfo,
+          ...Map<String, dynamic>.from(
+            await _chatService.getOwnUserInfo(forceRefresh: true),
+          ),
+        };
+      }
 
       if (mounted) {
         setState(() {
@@ -87,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'name': userInfo['displayName'] ??
                 widget.initialName ??
                 userInfo['username'] ??
-                widget.userId,
+                _fallbackProfileName(),
             'username': userInfo['username'] ?? '',
             'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
             'avatars': userInfo['avatars'] ?? const <Map<String, dynamic>>[],
@@ -113,10 +118,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _loading = false;
           _user = {
             'id': widget.userId,
-            'name': widget.initialName ?? widget.userId,
-            'username': widget.userId.replaceAll('@', '').split(':').first,
+            'name': _fallbackProfileName(),
+            'username': _fallbackUsername(),
             'prefs': {
-              'nickname': widget.userId.replaceAll('@', '').split(':').first,
+              'nickname': _fallbackUsername(),
               'about': '',
             },
           };
@@ -124,6 +129,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _initializeControllers();
       }
     }
+  }
+
+  bool _matchesCurrentUser(String? currentUserId, Map<String, dynamic> userInfo) {
+    final candidates = <String>{
+      _normalizeProfileToken(widget.userId),
+      _normalizeProfileToken(userInfo['id']?.toString()),
+      _normalizeProfileToken(userInfo['username']?.toString()),
+    }..removeWhere((value) => value.isEmpty);
+
+    final current = _normalizeProfileToken(currentUserId);
+    if (current.isEmpty) {
+      return false;
+    }
+    return candidates.contains(current);
+  }
+
+  String _normalizeProfileToken(String? value) {
+    if (value == null) {
+      return '';
+    }
+    return value.trim().replaceFirst('@', '').split(':').first.toLowerCase();
+  }
+
+  String _fallbackUsername() {
+    final normalized = widget.userId.replaceAll('@', '').split(':').first.trim();
+    return normalized.isEmpty ? widget.userId.trim() : normalized;
+  }
+
+  String _fallbackProfileName() {
+    final initial = widget.initialName?.trim();
+    if (initial != null && initial.isNotEmpty) {
+      return initial;
+    }
+    return _fallbackUsername();
   }
 
   void _initializeControllers() {
@@ -186,7 +225,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: Text(
               denied
-                  ? l10n.filePickError('Нет доступа к выбранному файлу')
+                  ? l10n.filePickError(l10n.fileAccessDeniedMessage)
                   : l10n.filePickError(e.toString()),
             ),
           ),
@@ -234,7 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBar(
           content: Text(
             denied
-                ? 'Нет доступа к файлу аватара. Попробуйте выбрать другой файл.'
+                ? l10n.avatarFileAccessDeniedMessage
                 : e.toString().replaceAll('Exception: ', ''),
           ),
         ),
@@ -310,7 +349,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final email = (_user!['email'] as String?) ?? '';
       if (email.isNotEmpty) return email.split('@').first;
     } catch (_) {}
-    return widget.initialName ?? widget.userId;
+    return _fallbackProfileName();
+  }
+
+  bool _hasReadableProfileData() {
+    if (_user == null) {
+      return false;
+    }
+    final name = (_user!['name'] as String?)?.trim() ?? '';
+    final bio = (_user!['bio'] as String?)?.trim() ?? '';
+    final location = (_user!['location'] as String?)?.trim() ?? '';
+    final birthday = (_user!['birthday'] as String?)?.trim() ?? '';
+    return name.isNotEmpty || bio.isNotEmpty || location.isNotEmpty || birthday.isNotEmpty;
+  }
+
+  String _emptyProfileHint(AppLocalizations l10n) {
+    if (_isMe) {
+      return l10n.profileEmptySelfHint;
+    }
+    return l10n.profileEmptyOtherHint;
   }
 
   String? _avatarUrl() {
@@ -919,6 +976,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 20),
+            if (!widget.startInEdit && !_hasReadableProfileData()) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _emptyProfileHint(l10n),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             if (widget.startInEdit)
               Column(
                 children: [
@@ -993,6 +1083,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildTelegramInfoRow(String title, String? value) {
     final theme = Theme.of(context);
+    final normalizedValue = value?.trim() ?? '';
+    final isEmpty = normalizedValue.isEmpty;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
@@ -1011,10 +1103,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Expanded(
             flex: 6,
             child: Text(
-              value?.isNotEmpty ?? false ? value! : '-',
+              isEmpty ? AppLocalizations.of(context)!.noData : normalizedValue,
               textAlign: TextAlign.right,
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w600,
+                color: isEmpty ? theme.colorScheme.onSurfaceVariant : null,
               ),
             ),
           ),
@@ -1069,7 +1162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         value: (_user != null) ? (_user!['birthday'] as String?) ?? '' : '',
       ),
     ]);
-    if (profileId.isNotEmpty && profileId != username) {
+    if (_isMe || (profileId.isNotEmpty && profileId != username)) {
       values.add((label: l10n.contactIdLabel, value: profileId));
     }
     return values;

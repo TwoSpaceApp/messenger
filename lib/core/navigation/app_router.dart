@@ -312,7 +312,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             state,
             ChatScreen(chat: chat),
             selectedIndex: 0,
-            constrainBody: false,
             maxBodyWidth: UITokens.contentMaxWidth,
           );
         },

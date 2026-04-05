@@ -2286,14 +2286,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get widgetsSubtitle =>
-      'A warm space for new ways to stay close will appear here soon.';
+      'Home, lock-screen, and glanceable surfaces for your conversations';
 
   @override
-  String get widgetsComingTitle => 'New connection formats are on the way';
+  String get widgetsComingTitle => 'Widgets are on the way';
 
   @override
   String get widgetsComingBody =>
-      'In one of the next updates, this section will bring calm shared widgets and lightweight touch points for staying close.';
+      'We are preparing flexible widget layouts for quick actions, unread counters, and compact conversation previews.';
 
   @override
   String get callsStartCallAction => '통화 시작';
@@ -2592,4 +2592,78 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get twoFactorLoginRecoveryHint => '또는 코드 대신 복구 문구를 붙여 넣으세요';
+
+  @override
+  String get chatListTimeoutTitle => 'The server is taking too long to respond';
+
+  @override
+  String chatListTimeoutMessage(String error) {
+    return 'Saved chats are still available. Try refreshing again.\n$error';
+  }
+
+  @override
+  String get chatListOfflineTitle => 'No connection to the server';
+
+  @override
+  String chatListOfflineMessage(String error) {
+    return 'Your local cache is still available. The list will refresh automatically when the connection returns.\n$error';
+  }
+
+  @override
+  String get groupAvatarTitle => 'Group avatar';
+
+  @override
+  String get groupAvatarSubtitle =>
+      'You can add an avatar right when creating the group.';
+
+  @override
+  String get chooseFileButton => 'Choose file';
+
+  @override
+  String get groupHistoryTitle => 'Keep history for new members';
+
+  @override
+  String get fileAccessDeniedMessage =>
+      'Access to the selected file is blocked.';
+
+  @override
+  String get avatarFileAccessDeniedMessage =>
+      'Access to the avatar file is blocked. Try another file.';
+
+  @override
+  String get profileEmptySelfHint =>
+      'Your profile is still sparse. Add a name, bio, or location so it looks complete.';
+
+  @override
+  String get profileEmptyOtherHint =>
+      'This user has not filled out their profile yet, or the server did not return the detailed fields.';
+
+  @override
+  String get twoFactorDisableConfirmContent =>
+      'Disable two-factor authentication for this account? You will need to set it up again to restore extra protection.';
+
+  @override
+  String get betaTestLabel => 'Beta test';
+
+  @override
+  String get homeBetaWelcomeTitle => 'Welcome to the TwoSpace beta test';
+
+  @override
+  String get homeBetaWelcomeBody =>
+      'Features may change often. Send us your suggestions.';
+
+  @override
+  String get devMenuInfoLoading => 'Collecting device information…';
+
+  @override
+  String get devMenuAppNameLabel => 'App name';
+
+  @override
+  String get devMenuVersionLabel => 'Version';
+
+  @override
+  String get devMenuPackageNameLabel => 'Package name';
+
+  @override
+  String get devMenuDeviceLabel => 'Device';
 }

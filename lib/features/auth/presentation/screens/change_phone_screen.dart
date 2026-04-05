@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/feature_in_development_dialog.dart';
+import 'package:two_space_app/core/widgets/inline_notice_card.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class ChangePhoneScreen extends StatefulWidget {
@@ -68,9 +70,13 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final body = Padding(
-        padding: const EdgeInsets.all(16),
-        child: ValueListenableBuilder<bool>(
+    final body = ScreenBackground(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: ValueListenableBuilder<bool>(
           valueListenable: SettingsService.paleVioletNotifier,
           builder: (c, pale, _) {
             final theme = Theme.of(context).copyWith(
@@ -98,6 +104,15 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
                     const SizedBox(height: 16),
                   ],
                   Text(l10n.changePhoneDescription),
+                  const SizedBox(height: 12),
+                  InlineNoticeCard(
+                    icon: Icons.construction_rounded,
+                    badge: l10n.featureInDevelopmentLabel,
+                    title: l10n.changePhoneTitle,
+                    message: l10n.featureInDevelopmentMessage(
+                      l10n.changePhoneTitle,
+                    ),
+                  ),
                   if (_currentPhone != null) ...[
                     const SizedBox(height: 8),
                     Text(l10n.currentPrefix,
@@ -132,13 +147,17 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
             );
           },
         ),
-      );
+          ),
+        ),
+      ),
+    );
 
     if (widget.embedded) {
       return body;
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.changePhoneTitle)),
       body: body,
     );
