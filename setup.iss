@@ -3,7 +3,7 @@
 #define MyAppName "TwoSpace"
 #define MyAppExeName "two_space_app.exe"
 #ifndef MyAppVersion
-#define MyAppVersion "1.0.6"
+#define MyAppVersion "2.0.6-beta"
 #endif
 #define MyAppPublisher "Synapse Corp"
 #define MyAppURL "https://twospace.ru"
