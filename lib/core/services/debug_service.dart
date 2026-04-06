@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:path_provider/path_provider.dart';
+import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
 
 /// Simple in-app debug logger used by the UI to collect and display recent
 /// diagnostic messages. Kept intentionally small and dependency-free.
@@ -19,7 +21,8 @@ class DebugService {
 
   void append(String tag, String message) {
     final ts = DateTime.now().toIso8601String();
-    final line = '[$ts] [$tag] $message';
+    final safeMessage = DebugDataSanitizer.sanitizeText(message);
+    final line = '[$ts] [$tag] $safeMessage';
     _logs.add(line);
     if (_logs.length > maxEntries)
       _logs.removeRange(0, _logs.length - maxEntries);

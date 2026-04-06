@@ -750,6 +750,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get callsTitle => '通話';
 
   @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
   String get searchByNameHint => '名前で検索...';
 
   @override
@@ -996,6 +999,261 @@ class AppLocalizationsJa extends AppLocalizations {
   String get customizationTitle => 'カスタマイズ';
 
   @override
+  String get customizationHeroTitle => 'Shape the app around your rhythm';
+
+  @override
+  String get customizationHeroSubtitle =>
+      'Build a distinct look with live preview, curated presets, motion, and density controls.';
+
+  @override
+  String get notificationsHeroSubtitle =>
+      'Tune alerts, sound behavior, and custom previews so incoming activity feels calm and readable.';
+
+  @override
+  String get livePreviewBadge => 'Live preview';
+
+  @override
+  String get stylePresetsTitle => 'Style presets';
+
+  @override
+  String get stylePresetsSubtitle =>
+      'Start with a strong visual direction, then tune the details.';
+
+  @override
+  String get moodSectionTitle => 'Mood';
+
+  @override
+  String get moodSectionSubtitle =>
+      'Choose the accent that drives surfaces, highlights, and the background atmosphere.';
+
+  @override
+  String get typeSectionTitle => 'Type';
+
+  @override
+  String get typeSectionSubtitle =>
+      'Pair a font family with the weight and size that feels right across the whole UI.';
+
+  @override
+  String get motionSectionTitle => 'Motion';
+
+  @override
+  String get motionSectionSubtitle =>
+      'Control how much the interface breathes, drifts, and reacts in the background.';
+
+  @override
+  String get densitySectionTitle => 'Density';
+
+  @override
+  String get densitySectionSubtitle =>
+      'Tighten spacing, bubble geometry, and navigation timing for a sharper layout.';
+
+  @override
+  String get themeModeLabel => 'Light balance';
+
+  @override
+  String get dynamicBubblesLabel => 'Dynamic bubbles';
+
+  @override
+  String get dynamicBubblesSubtitle =>
+      'Give chat bubbles directional corners for a more conversational rhythm.';
+
+  @override
+  String get bubbleRoundingLabel => 'Bubble rounding';
+
+  @override
+  String get bubbleRoundingCompact => 'Sharper';
+
+  @override
+  String get bubbleRoundingSoft => 'Softer';
+
+  @override
+  String get navBarTimeoutLabel => 'Navigation auto-hide';
+
+  @override
+  String navBarTimeoutValue(int seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String get navBarTimeoutShort => 'Fast';
+
+  @override
+  String get navBarTimeoutLong => 'Relaxed';
+
+  @override
+  String get presetQuietGlass => 'Quiet Glass';
+
+  @override
+  String get presetQuietGlassSubtitle =>
+      'Balanced contrast with cool depth and steady motion.';
+
+  @override
+  String get presetNightSignal => 'Night Signal';
+
+  @override
+  String get presetNightSignalSubtitle =>
+      'Tighter density, stronger highlights, and a darker pulse.';
+
+  @override
+  String get presetEditorial => 'Editorial';
+
+  @override
+  String get presetEditorialSubtitle =>
+      'Calmer motion, restrained color, and a more reading-focused tone.';
+
+  @override
+  String get presetSolarFlare => 'Solar Flare';
+
+  @override
+  String get presetSolarFlareSubtitle =>
+      'Warm highlights and brighter surfaces with energetic movement.';
+
+  @override
+  String get presetRetroPulse => 'Retro Pulse';
+
+  @override
+  String get presetRetroPulseSubtitle =>
+      'Compact, playful, and intentionally stylized.';
+
+  @override
+  String get previewRoomsLabel => 'Rooms';
+
+  @override
+  String get previewConversationLabel => 'Conversation';
+
+  @override
+  String get previewSettingsLabel => 'Settings';
+
+  @override
+  String get previewRoomsTitle => 'Room list preview';
+
+  @override
+  String get previewRoomsSubtitle =>
+      'A compact room list with real-sounding snippets and cleaner status markers.';
+
+  @override
+  String get previewConversationTitle => 'Chat bubble preview';
+
+  @override
+  String get previewConversationSubtitle =>
+      'Check how tone, spacing, and bubble shape read in a short live dialog.';
+
+  @override
+  String get previewSettingsTitle => 'Controls at hand';
+
+  @override
+  String get previewSettingsSubtitle =>
+      'Preview how the settings stack feels before applying anything globally.';
+
+  @override
+  String get previewLiveLabel => 'Live';
+
+  @override
+  String get previewRoomDesignSync => 'Design Sync';
+
+  @override
+  String get previewRoomDesignSyncSubtitle => 'Hero card is ready for review.';
+
+  @override
+  String get previewRoomReleaseCheck => 'Release Check';
+
+  @override
+  String get previewRoomReleaseCheckSubtitle =>
+      'Notes are grouped by security and fixes.';
+
+  @override
+  String get previewRoomAlphaOps => 'Alpha Ops';
+
+  @override
+  String get previewRoomAlphaOpsSubtitle =>
+      'Motion is tuned for a calmer startup.';
+
+  @override
+  String get previewIncomingMessage =>
+      'The preview should feel like the real app, not a generic demo.';
+
+  @override
+  String get previewOutgoingMessage =>
+      'Agreed. Let the color, density, and type speak immediately.';
+
+  @override
+  String get previewTypingStatus =>
+      'Typing indicator, spacing, and corners update here in real time.';
+
+  @override
+  String get previewSettingsAppearanceSubtitle =>
+      'Pick a template, adjust motion, and keep the whole shell consistent.';
+
+  @override
+  String get previewSettingsNotificationsSubtitle =>
+      'Preview how secondary settings cards will stack.';
+
+  @override
+  String get previewSettingsPrivacySubtitle =>
+      'Check hierarchy, contrast, and icon weight before applying.';
+
+  @override
+  String get themeColorAegisViolet => 'Aegis Violet';
+
+  @override
+  String get themeColorIndigoSignal => 'Indigo Signal';
+
+  @override
+  String get themeColorAmethyst => 'Amethyst';
+
+  @override
+  String get themeColorRosePulse => 'Rose Pulse';
+
+  @override
+  String get themeColorSolarAmber => 'Solar Amber';
+
+  @override
+  String get themeColorPaleViolet => 'Pale Violet';
+
+  @override
+  String get themeColorSignalCoral => 'Signal Coral';
+
+  @override
+  String get themeColorMintRelay => 'Mint Relay';
+
+  @override
+  String get themeColorCyanAir => 'Cyan Air';
+
+  @override
+  String get themeColorLimeCurrent => 'Lime Current';
+
+  @override
+  String get themeColorAuroraMint => 'Aurora Mint';
+
+  @override
+  String get themeColorSlateMono => 'Slate Mono';
+
+  @override
+  String get backgroundMotionToggleLabel => 'Animated background';
+
+  @override
+  String get backgroundMotionOnSubtitle =>
+      'The atmosphere layer stays alive behind the UI.';
+
+  @override
+  String get backgroundMotionOffSubtitle =>
+      'Use a still backdrop for a quieter, flatter surface.';
+
+  @override
+  String get motionModeCircles => 'Orbit';
+
+  @override
+  String get motionModeCirclesSubtitle =>
+      'Floating light blobs with soft parallax drift.';
+
+  @override
+  String get motionModeWaves => 'Waves';
+
+  @override
+  String get motionModeWavesSubtitle =>
+      'Layered bottom waves that move more like ambient light.';
+
+  @override
   String get colorsTab => 'カラー';
 
   @override
@@ -1214,6 +1472,117 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get updateAvailableTitle => 'アップデートが利用可能';
+
+  @override
+  String get updateHeroTitle => 'Release ready to install';
+
+  @override
+  String get updateHeroSubtitle =>
+      'Review the release, verify its integrity, and move through installation with a clear step-by-step flow.';
+
+  @override
+  String get updateStatusRequired => 'Required';
+
+  @override
+  String get updateStatusRecommended => 'Recommended';
+
+  @override
+  String get updatePipelineTitle => 'Update pipeline';
+
+  @override
+  String get updatePipelineSubtitle =>
+      'Each stage exposes what is happening now and what comes next.';
+
+  @override
+  String get updateStageDownloadTitle => 'Download package';
+
+  @override
+  String get updateStageDownloadSubtitle =>
+      'Fetch the installer package to local storage.';
+
+  @override
+  String get updateStageVerifyTitle => 'Verify integrity';
+
+  @override
+  String get updateStageVerifySubtitle =>
+      'Check the downloaded file against the published SHA-256 digest.';
+
+  @override
+  String get updateStageInstallTitle => 'Install release';
+
+  @override
+  String get updateStageInstallSubtitle =>
+      'Request permission if needed and hand the package to the system installer.';
+
+  @override
+  String get releaseSummaryTitle => 'Release summary';
+
+  @override
+  String get releaseSummarySubtitle =>
+      'Important changes are grouped to make scanning faster than reading a raw changelog.';
+
+  @override
+  String get releaseSectionNew => 'New';
+
+  @override
+  String get releaseSectionImproved => 'Improved';
+
+  @override
+  String get releaseSectionFixed => 'Fixed';
+
+  @override
+  String get releaseSectionSecurity => 'Security';
+
+  @override
+  String get updateTrustTitle => 'Trust and compatibility';
+
+  @override
+  String get updateTrustSubtitle =>
+      'See where the package comes from, how it is verified, and what build you are about to install.';
+
+  @override
+  String get updateTrustSource => 'Source';
+
+  @override
+  String get updateTrustIntegrity => 'Integrity';
+
+  @override
+  String get updateTrustPlatform => 'Platform';
+
+  @override
+  String get updateTrustAbi => 'ABI';
+
+  @override
+  String get updateTrustVerified => 'Verified';
+
+  @override
+  String get updateTrustPending => 'Pending';
+
+  @override
+  String get updateTrustFailed => 'Failed';
+
+  @override
+  String get updateTrustUnavailable => 'Unavailable';
+
+  @override
+  String get updateTrustUnknown => 'Unknown';
+
+  @override
+  String get updatePreviewModeTitle => 'Preview release card';
+
+  @override
+  String get updatePreviewModeSubtitle =>
+      'This entry was opened from the debug catalog, so it shows a styled placeholder instead of real release notes.';
+
+  @override
+  String get updatePreviewModeEmptyNotes =>
+      'Preview notes were not provided for this mock release.';
+
+  @override
+  String get updateCurrentVersionLabel => 'Current';
+
+  @override
+  String get updateIncomingVersionLabel => 'Incoming';
 
   @override
   String get whatsNewLabel => '新機能';
@@ -1471,6 +1840,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get startChatTitle => 'チャットを開始';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Open a private conversation with one person';
+
+  @override
   String get createRoomSubtitle => 'プライベートまたはパブリックグループ';
 
   @override
@@ -1660,6 +2033,35 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsSoundOptions => 'Sound Settings';
 
   @override
+  String get notificationToneTitle => 'Notification sound';
+
+  @override
+  String get notificationToneSubtitle =>
+      'Choose a local audio file for message and alert previews.';
+
+  @override
+  String get ringtoneTitle => 'Ringtone';
+
+  @override
+  String get ringtoneSubtitle =>
+      'Use a separate local audio file for incoming call previews.';
+
+  @override
+  String get chooseSoundLabel => 'Choose file';
+
+  @override
+  String get playPreviewLabel => 'Play preview';
+
+  @override
+  String get stopPreviewLabel => 'Stop preview';
+
+  @override
+  String get customSoundNotSelected => 'No custom file selected yet.';
+
+  @override
+  String get clearCustomSoundLabel => 'Reset custom file';
+
+  @override
   String get settingsStorageManagement => 'Storage Management';
 
   @override
@@ -1678,6 +2080,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get storageTotalLabel => '合計';
 
   @override
+  String get storageSelectedLabel => 'Selected';
+
+  @override
   String get storagePhotosLabel => '写真';
 
   @override
@@ -1694,6 +2099,54 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get storageCleanupSubtitle => '安全に削除できる項目を確認します。';
+
+  @override
+  String get storageAutoCleanTitle => 'Auto-clean';
+
+  @override
+  String get storageAutoCleanSubtitle =>
+      'Run cleanup automatically on a schedule or when storage grows beyond the selected limit.';
+
+  @override
+  String get storageAutoCleanPeriodLabel => 'Cleanup period';
+
+  @override
+  String get storageAutoCleanPeriodDaily => 'Daily';
+
+  @override
+  String get storageAutoCleanPeriodWeekly => 'Weekly';
+
+  @override
+  String get storageAutoCleanPeriodMonthly => 'Monthly';
+
+  @override
+  String get storageAutoCleanThresholdLabel => 'Run instantly above';
+
+  @override
+  String get storageAutoCleanTypesLabel => 'Clear data types';
+
+  @override
+  String get storageAutoCleanStatusTitle => 'Automation status';
+
+  @override
+  String get storageAutoCleanStatusEnabled =>
+      'Auto-clean is active and will run when the schedule arrives or the storage threshold is exceeded.';
+
+  @override
+  String get storageAutoCleanStatusDisabled =>
+      'Auto-clean is off. Only manual cleanup will run until you enable it again.';
+
+  @override
+  String get storageAutoCleanLastRunLabel => 'Last run';
+
+  @override
+  String get storageAutoCleanLastRunNever => 'Never';
+
+  @override
+  String get storageAutoCleanSelectAll => 'Select all';
+
+  @override
+  String get storageAutoCleanSelectNone => 'Clear selection';
 
   @override
   String get settingsStorageKeepChat => 'Keep Chat Data';
@@ -1831,6 +2284,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get callsSubtitle => '最近の通話、すばやい折り返し、相手中心の履歴';
+
+  @override
+  String get widgetsSubtitle =>
+      'Home, lock-screen, and glanceable surfaces for your conversations';
+
+  @override
+  String get widgetsComingTitle => 'Widgets are on the way';
+
+  @override
+  String get widgetsComingBody =>
+      'We are preparing flexible widget layouts for quick actions, unread counters, and compact conversation previews.';
 
   @override
   String get callsStartCallAction => '通話を開始';
@@ -2006,4 +2470,199 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get backgroundOptimizationOpenSettings => '表示設定を開く';
+
+  @override
+  String get roomJoinRuleLabel => '参加できる人';
+
+  @override
+  String get roomJoinRulePublic => '全員に公開';
+
+  @override
+  String get roomJoinRulePublicDescription => '誰でもこのルームを見つけて参加できます。';
+
+  @override
+  String get roomJoinRuleInviteOnly => '招待制';
+
+  @override
+  String get roomJoinRuleInviteOnlyDescription => '招待されたユーザーのみこのルームに参加できます。';
+
+  @override
+  String get roomJoinRuleApproval => '承認が必要';
+
+  @override
+  String get roomJoinRuleApprovalDescription => 'ユーザーは参加を申請でき、参加前に承認が必要です。';
+
+  @override
+  String get roomHistoryVisibilityLabel => '履歴を見られる人';
+
+  @override
+  String get roomHistoryVisibilityWorldReadable => '全員';
+
+  @override
+  String get roomHistoryVisibilityWorldReadableDescription =>
+      '誰でも以前のメッセージを閲覧できます。';
+
+  @override
+  String get roomHistoryVisibilityJoined => '参加済みメンバー';
+
+  @override
+  String get roomHistoryVisibilityJoinedDescription =>
+      '参加済みメンバーのみ以前のメッセージを閲覧できます。';
+
+  @override
+  String get roomHistoryVisibilityInvited => '招待ユーザーのみ';
+
+  @override
+  String get roomHistoryVisibilityInvitedDescription =>
+      '招待されたユーザーのみ以前のメッセージを閲覧できます。';
+
+  @override
+  String get loginUsernameOnlyError => 'サインインには TwoSpace のユーザー名を使用してください。';
+
+  @override
+  String get twoFactorInvalidCodeMessage =>
+      '2FA コードまたは復旧フレーズが無効です。もう一度お試しください。';
+
+  @override
+  String get twoFactorCodeRequiredMessage => '認証アプリのコードを入力するか、復旧フレーズを使用してください。';
+
+  @override
+  String get twoFactorEnabledMessage => '二要素認証が有効になりました。';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return '2FA を有効にできませんでした: $error';
+  }
+
+  @override
+  String get twoFactorSetupTitle => '二要素認証を設定';
+
+  @override
+  String get twoFactorSetupDescription =>
+      '認証アプリで QR コードをスキャンし、復旧フレーズを保存してから、新しい TOTP コードで確認してください。';
+
+  @override
+  String get twoFactorSecretTitle => 'またはこの秘密鍵を手動で入力';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle =>
+      '復旧フレーズ。2FA を有効にする前に安全な場所へ保存してください。';
+
+  @override
+  String get twoFactorVerificationCodeLabel => '確認コード';
+
+  @override
+  String get twoFactorVerificationCodeHint => '認証アプリの現在のコードを入力してください';
+
+  @override
+  String get twoFactorVerifyEnableAction => '確認して 2FA を有効化';
+
+  @override
+  String get twoFactorDisableSectionTitle => '二要素認証を無効化';
+
+  @override
+  String get twoFactorDisableSectionDescription =>
+      '有効な認証コード、または一度限りの復旧フレーズで 2FA を無効にします。';
+
+  @override
+  String get twoFactorDisableCodeHint => '現在の認証コードを入力してください';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => '復旧フレーズ';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint =>
+      '認証アプリにアクセスできない場合は復旧フレーズを貼り付けてください';
+
+  @override
+  String get twoFactorDisableAction => '2FA を無効化';
+
+  @override
+  String get twoFactorDisableCredentialsRequired =>
+      '2FA を無効にするには認証コードまたは復旧フレーズを入力してください。';
+
+  @override
+  String get twoFactorDisabledMessage => '二要素認証が無効になりました。';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return '2FA を無効にできませんでした: $error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint => 'またはコードの代わりに復旧フレーズを貼り付けてください';
+
+  @override
+  String get chatListTimeoutTitle => 'The server is taking too long to respond';
+
+  @override
+  String chatListTimeoutMessage(String error) {
+    return 'Saved chats are still available. Try refreshing again.\n$error';
+  }
+
+  @override
+  String get chatListOfflineTitle => 'No connection to the server';
+
+  @override
+  String chatListOfflineMessage(String error) {
+    return 'Your local cache is still available. The list will refresh automatically when the connection returns.\n$error';
+  }
+
+  @override
+  String get groupAvatarTitle => 'Group avatar';
+
+  @override
+  String get groupAvatarSubtitle =>
+      'You can add an avatar right when creating the group.';
+
+  @override
+  String get chooseFileButton => 'Choose file';
+
+  @override
+  String get groupHistoryTitle => 'Keep history for new members';
+
+  @override
+  String get fileAccessDeniedMessage =>
+      'Access to the selected file is blocked.';
+
+  @override
+  String get avatarFileAccessDeniedMessage =>
+      'Access to the avatar file is blocked. Try another file.';
+
+  @override
+  String get profileEmptySelfHint =>
+      'Your profile is still sparse. Add a name, bio, or location so it looks complete.';
+
+  @override
+  String get profileEmptyOtherHint =>
+      'This user has not filled out their profile yet, or the server did not return the detailed fields.';
+
+  @override
+  String get twoFactorDisableConfirmContent =>
+      'Disable two-factor authentication for this account? You will need to set it up again to restore extra protection.';
+
+  @override
+  String get betaTestLabel => 'Beta test';
+
+  @override
+  String get homeBetaWelcomeTitle => 'Welcome to the TwoSpace beta test';
+
+  @override
+  String get homeBetaWelcomeBody =>
+      'Features may change often. Send us your suggestions.';
+
+  @override
+  String get devMenuInfoLoading => 'Collecting device information…';
+
+  @override
+  String get devMenuAppNameLabel => 'App name';
+
+  @override
+  String get devMenuVersionLabel => 'Version';
+
+  @override
+  String get devMenuPackageNameLabel => 'Package name';
+
+  @override
+  String get devMenuDeviceLabel => 'Device';
 }

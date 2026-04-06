@@ -89,7 +89,7 @@ class UpdateService {
         },
       );
       return savePath;
-    } catch (e) {
+    } on Object catch (e) {
       if (kDebugMode) debugPrint('APK download failed: $e');
       return null;
     }
@@ -102,7 +102,7 @@ class UpdateService {
       final bytes = await f.readAsBytes();
       final digest = sha256.convert(bytes);
       return digest.toString().toLowerCase() == expectedHex.toLowerCase();
-    } catch (e) {
+    } on Object catch (e) {
       if (kDebugMode) debugPrint('sha256 verify failed: $e');
       return false;
     }
@@ -114,7 +114,7 @@ class UpdateService {
       final res =
           await _channel.invokeMethod<bool>('installApk', {'path': apkPath});
       return res ?? false;
-    } catch (e) {
+    } on Object catch (e) {
       if (kDebugMode) debugPrint('installApk failed: $e');
       return false;
     }

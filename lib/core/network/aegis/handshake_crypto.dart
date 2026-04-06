@@ -9,10 +9,12 @@ class AegisHandshakeResult {
   AegisHandshakeResult({
     required this.privateKey,
     required this.publicKeySpki,
+    required this.publicKeyRaw,
   });
 
   final ECPrivateKey privateKey;
   final List<int> publicKeySpki;
+  final Uint8List publicKeyRaw;
 }
 
 class AegisHandshakeCrypto {
@@ -56,8 +58,8 @@ class AegisHandshakeCrypto {
       );
 
     final keyPair = generator.generateKeyPair();
-    final privateKey = keyPair.privateKey as ECPrivateKey;
-    final publicKey = keyPair.publicKey as ECPublicKey;
+    final privateKey = keyPair.privateKey;
+    final publicKey = keyPair.publicKey;
 
     return AegisHandshakeResult(
       privateKey: privateKey,
@@ -65,6 +67,7 @@ class AegisHandshakeCrypto {
         ..._p256SpkiPrefix,
         ...publicKey.Q!.getEncoded(false),
       ],
+      publicKeyRaw: Uint8List.fromList(publicKey.Q!.getEncoded(false)),
     );
   }
 
@@ -77,6 +80,23 @@ class AegisHandshakeCrypto {
       serverPublicKeySpki: serverPublicKeySpki,
     );
     return derivedBytes.sublist(32, 64);
+  }
+
+  static List<int> deriveSharedSecret({
+    required ECPrivateKey clientPrivateKey,
+    required List<int> serverPublicKeySpki,
+  }) {
+    final rawServerKey = _normalizePeerPublicKey(serverPublicKeySpki);
+    final point = _domain.curve.decodePoint(Uint8List.fromList(rawServerKey));
+    if (point == null) {
+      throw const FormatException('Invalid server public key');
+    }
+
+    final agreement = ECDHBasicAgreement()..init(clientPrivateKey);
+    final sharedSecret = agreement.calculateAgreement(
+      ECPublicKey(point, _domain),
+    );
+    return _bigIntToBytes(sharedSecret, 32);
   }
 
   static Future<List<int>> deriveSessionKey({
@@ -94,6 +114,7 @@ class AegisHandshakeCrypto {
     required List<int> plaintext,
     required List<int> sessionKey,
     required List<int> nonce,
+    List<int> aad = const <int>[],
   }) {
     final cipher = GCMBlockCipher(AESEngine())
       ..init(
@@ -102,7 +123,7 @@ class AegisHandshakeCrypto {
           KeyParameter(Uint8List.fromList(sessionKey)),
           128,
           Uint8List.fromList(nonce),
-          Uint8List(0),
+          Uint8List.fromList(aad),
         ),
       );
     return cipher.process(Uint8List.fromList(plaintext));
@@ -111,6 +132,7 @@ class AegisHandshakeCrypto {
   static List<int> decryptPayload({
     required List<int> encryptedPayload,
     required List<int> sessionKey,
+    List<int> aad = const <int>[],
   }) {
     if (encryptedPayload.length < 12 + 16) {
       throw const FormatException('Encrypted payload is too short');
@@ -125,7 +147,7 @@ class AegisHandshakeCrypto {
           KeyParameter(Uint8List.fromList(sessionKey)),
           128,
           Uint8List.fromList(nonce),
-          Uint8List(0),
+          Uint8List.fromList(aad),
         ),
       );
     return cipher.process(Uint8List.fromList(ciphertextWithTag));
@@ -135,15 +157,10 @@ class AegisHandshakeCrypto {
     required ECPrivateKey clientPrivateKey,
     required List<int> serverPublicKeySpki,
   }) {
-    final rawServerKey = _decodeSpki(serverPublicKeySpki);
-    final point = _domain.curve.decodePoint(Uint8List.fromList(rawServerKey));
-    if (point == null) {
-      throw const FormatException('Invalid server public key');
-    }
-
-    final agreement = ECDHBasicAgreement()..init(clientPrivateKey);
-    final sharedSecret = agreement.calculateAgreement(ECPublicKey(point, _domain));
-    final sharedSecretBytes = _bigIntToBytes(sharedSecret, 32);
+    final sharedSecretBytes = deriveSharedSecret(
+      clientPrivateKey: clientPrivateKey,
+      serverPublicKeySpki: serverPublicKeySpki,
+    );
     final derivedBytes = _hkdfSha256(
       inputKeyMaterial: sharedSecretBytes,
       info: utf8.encode('AegisKeyDerivation'),
@@ -180,6 +197,13 @@ class AegisHandshakeCrypto {
     }
 
     return spkiBytes.sublist(_p256SpkiPrefix.length);
+  }
+
+  static List<int> _normalizePeerPublicKey(List<int> peerPublicKey) {
+    if (peerPublicKey.length == 65 && peerPublicKey.first == 0x04) {
+      return peerPublicKey;
+    }
+    return _decodeSpki(peerPublicKey);
   }
 
   static List<int> _bigIntToBytes(BigInt value, int length) {

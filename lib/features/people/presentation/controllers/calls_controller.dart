@@ -77,6 +77,11 @@ class CallsController extends ChangeNotifier {
     await load();
   }
 
+  Future<void> deleteEntries(List<String> ids) async {
+    await _service.deleteEntries(ids);
+    await load();
+  }
+
   List<PersonEntry> get topContacts {
     final grouped = _groupedThreads;
     final values = grouped.values.toList()

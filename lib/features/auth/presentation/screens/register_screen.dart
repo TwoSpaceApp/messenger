@@ -1,18 +1,34 @@
+// ignore_for_file: unnecessary_underscores
+
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
+import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
-import 'package:two_space_app/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_background.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+
+class _RegisterStylePreset {
+  const _RegisterStylePreset({
+    required this.id,
+    required this.color,
+    required this.fontFamily,
+  });
+
+  final String id;
+  final int color;
+  final String fontFamily;
+}
 
 /// Modern RegisterScreen including Customization Step
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -24,12 +40,35 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen>
     with SingleTickerProviderStateMixin {
-  static final RegExp _aegisUsernamePattern =
-      RegExp(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{2,31}$');
+  static final RegExp _aegisUsernamePattern = RegExp(
+    r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{2,31}$',
+  );
+  static const List<_RegisterStylePreset> _stylePresets = [
+    _RegisterStylePreset(
+      id: 'quietGlass',
+      color: 0xFF5263FF,
+      fontFamily: 'Inter',
+    ),
+    _RegisterStylePreset(
+      id: 'nightSignal',
+      color: 0xFF651FFF,
+      fontFamily: 'Oswald',
+    ),
+    _RegisterStylePreset(
+      id: 'editorial',
+      color: 0xFF5C6B73,
+      fontFamily: 'OpenSans',
+    ),
+    _RegisterStylePreset(
+      id: 'solarFlare',
+      color: 0xFFFFB300,
+      fontFamily: 'Roboto',
+    ),
+  ];
 
   late final _avatarAnimController = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 300),
+    duration: UITokens.durationLgSm,
     lowerBound: 0.9,
   )..value = 1.0;
 
@@ -38,6 +77,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _passCtl = TextEditingController();
   final _nicknameCtl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _nameFocus = FocusNode();
+  final _nicknameFocus = FocusNode();
 
   // String? _avatarPath;
   Uint8List? _avatarBytes;
@@ -53,8 +96,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   // Customization State
   late int _selectedColor;
   late String _selectedFont;
-
-  final List<Map<String, dynamic>> _colorChoices = ThemeOptions.colors;
 
   final List<String> _fontChoices = ThemeOptions.fonts;
 
@@ -79,7 +120,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     _emailCtl.dispose();
     _passCtl.dispose();
     _nicknameCtl.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
+    _nameFocus.dispose();
+    _nicknameFocus.dispose();
     super.dispose();
+  }
+
+  void _focusForStep(int step) {
+    if (!mounted) return;
+    switch (step) {
+      case 0:
+        _emailFocus.requestFocus();
+        return;
+      case 1:
+        _nameFocus.requestFocus();
+        return;
+      default:
+        FocusScope.of(context).unfocus();
+    }
   }
 
   Future<void> _nextStep() async {
@@ -105,10 +164,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
     // Change Content
     if (_step < 3) {
+      final nextStep = _step + 1;
       setState(() {
-        _step++;
+        _step = nextStep;
         _swapBlobs = !_swapBlobs;
         _isCovering = false; // Reveal new content
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusForStep(nextStep);
       });
     } else {
       // Final step, proceed to registration
@@ -119,16 +182,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   Future<void> _prevStep() async {
     if (_step > 0) {
+      final prevStep = _step - 1;
       setState(() => _isCovering = true);
       setState(() {
-        _step--;
+        _step = prevStep;
         _swapBlobs = !_swapBlobs;
         _isCovering = false;
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusForStep(prevStep);
+      });
     } else {
       // Navigate back to Login with animation
-      setState(() => _isCovering = true);
-      if (mounted) context.go('/login');
+      if (mounted) context.go(AppStrings.routeLogin);
     }
   }
 
@@ -186,7 +252,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       await notifier.register(
         _nicknameCtl.text.trim(),
         _emailCtl.text.trim(),
-        _passCtl.text.trim(),
+        _passCtl.text,
         displayName: _nameCtl.text.trim(),
         avatarBytes: _avatarBytes,
       );
@@ -194,19 +260,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       SentryService.addBreadcrumb('Регистрация успешна', category: 'auth');
 
       if (!mounted) return;
-
-      // Navigate to Welcome Screen instead of direct Home
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => WelcomeScreen(
-            name: _nameCtl.text.trim(),
-            description: _nicknameCtl.text.trim(),
-            // Pass avatar logic if available, currently just bytes in _avatarBytes
-            // Ideally we upload it first, but for now passing null to use Initials
-          ),
-        ),
-      );
+      context.go(AppStrings.routeWelcome);
     } catch (e, stackTrace) {
       SentryService.captureException(
         e,
@@ -216,7 +270,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
       if (mounted) {
         setState(
-            () => _errorMessage = e.toString().replaceAll('Exception: ', ''));
+          () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -228,8 +283,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(message),
-          backgroundColor: Theme.of(context).colorScheme.error),
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
     );
   }
 
@@ -258,6 +314,167 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     return null;
   }
 
+  String _presetTitle(AppLocalizations l10n, String id) {
+    switch (id) {
+      case 'quietGlass':
+        return l10n.presetQuietGlass;
+      case 'nightSignal':
+        return l10n.presetNightSignal;
+      case 'editorial':
+        return l10n.presetEditorial;
+      case 'solarFlare':
+        return l10n.presetSolarFlare;
+      default:
+        return l10n.stylePresetsTitle;
+    }
+  }
+
+  String _presetSubtitle(AppLocalizations l10n, String id) {
+    switch (id) {
+      case 'quietGlass':
+        return l10n.presetQuietGlassSubtitle;
+      case 'nightSignal':
+        return l10n.presetNightSignalSubtitle;
+      case 'editorial':
+        return l10n.presetEditorialSubtitle;
+      case 'solarFlare':
+        return l10n.presetSolarFlareSubtitle;
+      default:
+        return l10n.themeAppliesEverywhere;
+    }
+  }
+
+  Future<void> _applyRegisterPreset(_RegisterStylePreset preset) async {
+    setState(() {
+      _selectedColor = preset.color;
+      _selectedFont = preset.fontFamily;
+    });
+    await SettingsService.updateTheme(
+      primaryColorValue: preset.color,
+      fontFamily: preset.fontFamily,
+    );
+  }
+
+  Future<void> _openFontPicker() async {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(UITokens.corner2XL),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: UITokens.space),
+                  width: UITokens.dragHandleWidth,
+                  height: UITokens.dragHandleHeight,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(UITokens.corner2XS),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    UITokens.spaceLg,
+                    0,
+                    UITokens.spaceLg,
+                    UITokens.spaceSm,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(UITokens.spaceSm),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(UITokens.corner),
+                        ),
+                        child: Icon(
+                          Icons.text_fields_rounded,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: UITokens.spaceMd),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.fontLabel,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: UITokens.spaceXS),
+                            Text(
+                              l10n.selectFontFamily,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _fontChoices.length,
+                    itemBuilder: (context, index) {
+                      final font = _fontChoices[index];
+                      final selected = font == _selectedFont;
+                      return ListTile(
+                        leading: Icon(
+                          selected
+                              ? Icons.radio_button_checked_rounded
+                              : Icons.radio_button_off_rounded,
+                          color: selected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.outline,
+                        ),
+                        title: Text(
+                          font,
+                          style: TextStyle(fontFamily: font),
+                        ),
+                        subtitle: Text(
+                          'Аа',
+                          style: TextStyle(
+                            fontFamily: font,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        onTap: () async {
+                          setState(() => _selectedFont = font);
+                          await SettingsService.updateTheme(fontFamily: font);
+                          if (sheetContext.mounted) {
+                            Navigator.of(sheetContext).pop();
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -278,42 +495,49 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               alignment: Alignment.topRight,
               child: LanguageSwitcherButton(),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UITokens.spaceSm),
             const Padding(
-              padding: EdgeInsets.only(bottom: 24),
+              padding: EdgeInsets.only(bottom: UITokens.spaceXLg),
               child: AppLogo(large: false),
             ),
 
             if (_errorMessage != null)
               Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.symmetric(vertical: UITokens.space),
+                padding: const EdgeInsets.all(UITokens.space),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(UITokens.corner),
                   border: Border.all(
-                      color: theme.colorScheme.error.withValues(alpha: 0.5)),
+                    color: theme.colorScheme.error.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.error_outline, color: theme.colorScheme.error),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: UITokens.space),
                     Expanded(
                       child: Text(
                         _errorMessage!,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            color: theme.colorScheme.error,
-                            fontWeight: FontWeight.w500),
+                          color: theme.colorScheme.error,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.close,
-                          size: 20, color: theme.colorScheme.error),
+                      icon: Icon(
+                        Icons.close,
+                        size: 20,
+                        color: theme.colorScheme.error,
+                      ),
                       onPressed: () => setState(() => _errorMessage = null),
-                      constraints:
-                          const BoxConstraints(minWidth: 40, minHeight: 40),
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
                     ),
                   ],
                 ),
@@ -321,7 +545,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
             // Step Indicator
             Container(
-              margin: const EdgeInsets.only(bottom: 24),
+              margin: const EdgeInsets.only(bottom: UITokens.spaceXLg),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -338,14 +562,35 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
             // Content
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: KeyedSubtree(
+              duration: UITokens.durationLgSm,
+              child: Container(
                 key: ValueKey<int>(_step),
+                width: double.infinity,
+                constraints: const BoxConstraints(minHeight: 392),
+                padding: const EdgeInsets.all(UITokens.spaceLg),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(
+                    alpha: isDark ? 0.36 : 0.68,
+                  ),
+                  borderRadius: BorderRadius.circular(UITokens.corner2XL),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.12),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.22 : 0.08,
+                      ),
+                      blurRadius: 32,
+                      offset: const Offset(0, 20),
+                    ),
+                  ],
+                ),
                 child: _buildCurrentStep(theme, isDark),
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: UITokens.spaceXL),
 
             // Navigation Buttons
             Row(
@@ -355,8 +600,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   child: Text(
                     _step == 0 ? l10n.backToLogin : l10n.back,
                     style: TextStyle(
-                      color:
-                          isDark ? Colors.white70 : theme.colorScheme.primary,
+                      color: isDark
+                          ? Colors.white70
+                          : theme.colorScheme.primary,
                     ),
                   ),
                 ),
@@ -365,9 +611,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   onPressed: (_loading || _isCovering) ? null : _nextStep,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 16),
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(UITokens.cornerLg),
+                    ),
                     backgroundColor: theme.colorScheme.primary,
                     foregroundColor: theme.colorScheme.onPrimary,
                   ),
@@ -376,7 +625,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : Text(
                           _step == 3 ? l10n.finishButton : l10n.next,
                           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -411,42 +663,56 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       children: [
         TextFormField(
           controller: _emailCtl,
+          focusNode: _emailFocus,
           validator: _validateEmail,
           keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-          decoration:
-              _inputDecoration(theme, 'Email', Icons.email_outlined, isDark),
+          decoration: _inputDecoration(
+            theme,
+            'Email',
+            Icons.email_outlined,
+            isDark,
+          ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: UITokens.spaceMd),
         TextFormField(
           controller: _passCtl,
+          focusNode: _passwordFocus,
           validator: _validatePassword,
           obscureText: _obscurePassword,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           onChanged: (_) => setState(() {}),
-          decoration: _inputDecoration(
-                  theme, l10n.passwordLabel, Icons.lock_outline, isDark)
-              .copyWith(
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                color: theme.colorScheme.primary,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _nextStep(),
+          decoration:
+              _inputDecoration(
+                theme,
+                l10n.passwordLabel,
+                Icons.lock_outline,
+                isDark,
+              ).copyWith(
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                ),
               ),
-              onPressed: () =>
-                  setState(() => _obscurePassword = !_obscurePassword),
-            ),
-          ),
         ),
         if (_passCtl.text.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: UITokens.space),
             child: Row(
               children: [
                 Expanded(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(UITokens.cornerXS),
                     child: LinearProgressIndicator(
                       value: _getPasswordStrength(_passCtl.text) / 4,
                       minHeight: 4,
@@ -455,20 +721,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           : Colors.grey.withValues(alpha: 0.2),
                       valueColor: AlwaysStoppedAnimation<Color>(
                         _getPasswordStrengthColor(
-                            _getPasswordStrength(_passCtl.text)),
+                          _getPasswordStrength(_passCtl.text),
+                        ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UITokens.space),
                 Text(
                   _getPasswordStrengthLabel(
-                      _getPasswordStrength(_passCtl.text), l10n),
+                    _getPasswordStrength(_passCtl.text),
+                    l10n,
+                  ),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: _getPasswordStrengthColor(
-                        _getPasswordStrength(_passCtl.text)),
+                      _getPasswordStrength(_passCtl.text),
+                    ),
                   ),
                 ),
               ],
@@ -484,20 +754,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       children: [
         TextFormField(
           controller: _nameCtl,
+          focusNode: _nameFocus,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+          textInputAction: TextInputAction.next,
+          onFieldSubmitted: (_) => _nicknameFocus.requestFocus(),
           decoration: _inputDecoration(
-              theme, l10n.fullNameLabel, Icons.person_outline, isDark),
+            theme,
+            l10n.fullNameLabel,
+            Icons.person_outline,
+            isDark,
+          ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: UITokens.spaceMd),
         TextFormField(
           controller: _nicknameCtl,
+          focusNode: _nicknameFocus,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: _validateAegisUsername,
+          textInputAction: TextInputAction.done,
+          onFieldSubmitted: (_) => _nextStep(),
           decoration: _inputDecoration(
-              theme, l10n.nicknameAtLabel, Icons.alternate_email, isDark),
+            theme,
+            l10n.nicknameAtLabel,
+            Icons.alternate_email,
+            isDark,
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: UITokens.spaceSm),
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
@@ -540,7 +824,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           child: ScaleTransition(
             scale: _avatarAnimController,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: UITokens.durationLgSm,
               width: 140,
               height: 140,
               decoration: BoxDecoration(
@@ -553,8 +837,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 boxShadow: _avatarBytes != null
                     ? [
                         BoxShadow(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.3),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.3,
+                          ),
                           blurRadius: 15,
                           spreadRadius: 5,
                         ),
@@ -568,13 +853,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     : null,
               ),
               child: _avatarBytes == null
-                  ? Icon(Icons.add_a_photo_outlined,
-                      size: 40, color: theme.colorScheme.primary)
+                  ? Icon(
+                      Icons.add_a_photo_outlined,
+                      size: 40,
+                      color: theme.colorScheme.primary,
+                    )
                   : null,
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: UITokens.spaceXLg),
         Text(
           _avatarBytes != null ? l10n.photoLooksGreat : l10n.uploadPhotoPrompt,
           style: TextStyle(
@@ -583,7 +871,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             color: isDark ? Colors.white : Colors.black87,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: UITokens.spaceSm),
         Text(
           l10n.helpFriendsFind,
           style: TextStyle(
@@ -610,87 +898,194 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             ),
           ),
         ),
-        const SizedBox(height: 24),
-
-        // Color Picker
-        Text(l10n.colorThemeLabel, style: TextStyle(color: theme.hintColor)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: _colorChoices.map((choice) {
-            final colorValue = choice['value'] as int;
-            final isSelected = _selectedColor == colorValue;
-
-            return GestureDetector(
-              onTap: () async {
-                setState(() => _selectedColor = colorValue);
-                await SettingsService.updateTheme(
-                    primaryColorValue: colorValue);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Color(colorValue),
-                  shape: BoxShape.circle,
-                  border: isSelected
-                      ? Border.all(
-                          color: isDark ? Colors.white : Colors.black, width: 3)
-                      : null,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(colorValue).withValues(alpha: 0.4),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: isSelected
-                    ? const Icon(Icons.check, color: Colors.white)
-                    : null,
-              ),
-            );
-          }).toList(),
+        const SizedBox(height: UITokens.spaceXLg),
+        Text(
+          l10n.stylePresetsTitle,
+          style: TextStyle(color: theme.hintColor),
         ),
-
-        const SizedBox(height: 24),
-
-        // Font Picker
-        Text(l10n.fontLabel, style: TextStyle(color: theme.hintColor)),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withAlpha(50),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.2)),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedFont,
-              isExpanded: true,
-              dropdownColor: theme.colorScheme.surface,
-              items: _fontChoices.map((font) {
-                return DropdownMenuItem(
-                  value: font,
-                  child: Text(
-                    font,
-                    style: TextStyle(
-                      fontFamily: font,
-                      color: isDark ? Colors.white : Colors.black87,
+        const SizedBox(height: UITokens.space),
+        SizedBox(
+          height: 174,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _stylePresets.length,
+            separatorBuilder: (_, __) => const SizedBox(width: UITokens.space),
+            itemBuilder: (context, index) {
+              final preset = _stylePresets[index];
+              final selected =
+                  _selectedColor == preset.color &&
+                  _selectedFont == preset.fontFamily;
+              final color = Color(preset.color);
+              return SizedBox(
+                width: 208,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(UITokens.corner2XLg),
+                    onTap: () => _applyRegisterPreset(preset),
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          UITokens.corner2XLg,
+                        ),
+                        border: Border.all(
+                          color: selected
+                              ? color.withValues(alpha: 0.95)
+                              : theme.colorScheme.outline.withValues(
+                                  alpha: 0.14,
+                                ),
+                          width: selected ? 2 : 1,
+                        ),
+                        gradient: LinearGradient(
+                          colors: [
+                            color.withValues(alpha: 0.18),
+                            theme.colorScheme.surface.withValues(alpha: 0.92),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(UITokens.spaceMd),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    height: 56,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        UITokens.cornerLg,
+                                      ),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          color,
+                                          color.withValues(alpha: 0.3),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: UITokens.spaceSmMd),
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(
+                                      UITokens.cornerLg,
+                                    ),
+                                    color: theme.colorScheme.surface.withValues(
+                                      alpha: 0.76,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'Аа',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontFamily: preset.fontFamily,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: UITokens.spaceMdSm),
+                            Text(
+                              _presetTitle(l10n, preset.id),
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: UITokens.spaceXSm),
+                            Expanded(
+                              child: Text(
+                                _presetSubtitle(l10n, preset.id),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.subtitleText(context),
+                                  height: 1.28,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                );
-              }).toList(),
-              onChanged: (v) {
-                if (v != null) {
-                  setState(() => _selectedFont = v);
-                  SettingsService.updateTheme(fontFamily: v);
-                }
-              },
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: UITokens.spaceXLg),
+        Text(l10n.fontLabel, style: TextStyle(color: theme.hintColor)),
+        const SizedBox(height: UITokens.space),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+            onTap: _openFontPicker,
+            child: Ink(
+              padding: const EdgeInsets.all(UITokens.spaceMd),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface.withValues(alpha: 0.46),
+                borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withValues(alpha: 0.18),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withValues(
+                        alpha: 0.56,
+                      ),
+                      borderRadius: BorderRadius.circular(UITokens.cornerLg),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      'Аа',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontFamily: _selectedFont,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: UITokens.spaceMdSm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedFont,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontFamily: _selectedFont,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: UITokens.spaceXS),
+                        Text(
+                          l10n.selectFontFamily,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.subtitleText(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: UITokens.space),
+                  Icon(
+                    Icons.expand_more_rounded,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -699,7 +1094,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   }
 
   InputDecoration _inputDecoration(
-      ThemeData theme, String label, IconData icon, bool isDark) {
+    ThemeData theme,
+    String label,
+    IconData icon,
+    bool isDark,
+  ) {
     return InputDecoration(
       labelText: label,
       labelStyle: TextStyle(
@@ -707,19 +1106,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       ),
       prefixIcon: Icon(icon, color: theme.colorScheme.primary),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
         borderSide: BorderSide.none,
       ),
       filled: true,
       fillColor: theme.colorScheme.surface.withAlpha(50),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
         borderSide: BorderSide(
           color: theme.colorScheme.primary.withValues(alpha: 0.1),
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
         borderSide: BorderSide(
           color: theme.colorScheme.primary,
           width: 2,

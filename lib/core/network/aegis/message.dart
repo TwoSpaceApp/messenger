@@ -1,54 +1,63 @@
+import 'dart:typed_data';
+
+import 'package:two_space_app/core/network/aegis/message_encoder.dart'
+    show MessageEncoder;
+
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 
-/// Represents an Aegis protocol message
+/// Represents a single Aegis protocol frame (header + payload).
+///
+/// Create a message with [Message.withType] for outgoing frames, or
+/// obtain one from [MessageEncoder.decode] for incoming frames.
+///
+/// See: `src/Aegis.Protocol/Message.cs`
 class Message {
-  /// Create empty message
+  /// Protocol magic — must equal [ProtocolConstants.magic].
+  int magic = ProtocolConstants.magic;
+
+  /// Major protocol version. Must match [ProtocolConstants.versionMajor].
+  int versionMajor = ProtocolConstants.versionMajor;
+
+  /// Minor protocol version.
+  int versionMinor = ProtocolConstants.versionMinor;
+
+  /// Bitmask of [ProtocolConstants] flag* constants.
+  int flags = ProtocolConstants.flagNone;
+
+  /// Discriminator that tells the server which handler should process
+  /// this frame. See [MessageType].
+  MessageType type = MessageType.unknown;
+
+  /// Monotonically increasing ID used to match requests with responses
+  /// and detect duplicate/replayed frames.
+  int sequenceId = 0;
+
+  /// Length of [payload] in bytes (wire value — may differ from
+  /// `payload.length` after decompression).
+  int payloadLength = 0;
+
+  /// MessagePack-encoded body. Empty for control frames (ping, ack, …).
+  Uint8List payload = Uint8List(0);
+
   Message();
 
-  /// Create message with specific type and payload
-  Message.withType(this.type, [List<int>? payload]) : payload = payload ?? [] {
+  /// Create a message with the given [type] and optional [payload].
+  Message.withType(this.type, [List<int>? payload])
+    : payload = payload != null ? Uint8List.fromList(payload) : Uint8List(0) {
     payloadLength = this.payload.length;
   }
 
-  /// Magic number for protocol identification
-  int magic = ProtocolConstants.magic;
-
-  /// Protocol version major
-  int versionMajor = ProtocolConstants.versionMajor;
-
-  /// Protocol version minor
-  int versionMinor = ProtocolConstants.versionMinor;
-
-  /// Message flags
-  int flags = ProtocolConstants.flagNone;
-
-  /// Message type
-  MessageType type = MessageType.unknown;
-
-  /// Sequence ID for ordering
-  int sequenceId = 0;
-
-  /// Payload length
-  int payloadLength = 0;
-
-  /// Message payload data
-  List<int> payload = [];
-
-  /// Message authentication code
-  List<int> mac = List.filled(ProtocolConstants.macSize, 0);
-
-  /// Calculate total message size in bytes
+  /// Total frame size on the wire (header + payload + MAC).
   int get totalSize =>
       ProtocolConstants.headerSize + payloadLength + ProtocolConstants.macSize;
 
-  /// Validate message structure
+  /// Basic validity check against protocol constants.
   bool get isValid {
     return magic == ProtocolConstants.magic &&
         versionMajor == ProtocolConstants.versionMajor &&
         versionMinor == ProtocolConstants.versionMinor &&
-        payloadLength <= ProtocolConstants.maxPayloadSize &&
-        mac.length == ProtocolConstants.macSize;
+        payloadLength <= ProtocolConstants.maxPayloadSize;
   }
 
   @override
@@ -59,7 +68,7 @@ class Message {
         'type: $type, '
         'sequenceId: $sequenceId, '
         'payloadLength: $payloadLength, '
-        'flags: $flags'
+        'flags: 0x${flags.toRadixString(16)}'
         ')';
   }
 }

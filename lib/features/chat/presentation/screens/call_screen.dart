@@ -101,8 +101,7 @@ class _CallScreenState extends State<CallScreen> {
     if (!widget.isVideo || kIsWeb) return;
 
     final platform = defaultTargetPlatform;
-    if (platform != TargetPlatform.android &&
-        platform != TargetPlatform.iOS) {
+    if (platform != TargetPlatform.android && platform != TargetPlatform.iOS) {
       if (mounted) {
         setState(() {
           _cameraError = 'unsupported';
@@ -141,8 +140,9 @@ class _CallScreenState extends State<CallScreen> {
         return;
       }
 
-      final preferredLens =
-          _frontCamera ? CameraLensDirection.front : CameraLensDirection.back;
+      final preferredLens = _frontCamera
+          ? CameraLensDirection.front
+          : CameraLensDirection.back;
       final selectedCamera = _availableCameras.firstWhere(
         (camera) => camera.lensDirection == preferredLens,
         orElse: () => _availableCameras.first,
@@ -212,15 +212,17 @@ class _CallScreenState extends State<CallScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final title = _person.displayName.isNotEmpty
-      ? _person.displayName
-      : l10n.userDefault;
+        ? _person.displayName
+        : l10n.userDefault;
     final width = MediaQuery.sizeOf(context).width;
     final isCompact = width < 390;
     final isTablet = width >= UITokens.tabletBreakpoint;
     final isDesktop = width >= UITokens.desktopBreakpoint;
     final sidePadding = 20.s(context);
     final controlsGap = 18.s(context);
-    final contentMaxWidth = isDesktop ? 880.0 : (isTablet ? 720.0 : double.infinity);
+    final contentMaxWidth = isDesktop
+        ? 880.0
+        : (isTablet ? 720.0 : double.infinity);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -238,158 +240,161 @@ class _CallScreenState extends State<CallScreen> {
                     ),
                     child: Column(
                       children: [
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: _endCall,
-                            icon: Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              color: Colors.white,
-                              size: 28.s(context),
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                Text(
-                                  widget.isVideo
-                                      ? l10n.videoCallLabel
-                                      : l10n.voiceCallLabel,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelLarge
-                                      ?.copyWith(
-                                        color: Colors.white70,
-                                        fontSize: 14.s(context),
-                                      ),
-                                ),
-                                SizedBox(height: 4.s(context)),
-                                Text(
-                                  _statusLabel(l10n),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: Colors.white60,
-                                        fontSize: 12.s(context),
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 48.s(context)),
-                        ],
-                      ),
-                      SizedBox(height: 16.s(context)),
-                      _DemoBanner(
-                        title: l10n.callsDemoBannerTitle,
-                        message: widget.isVideo
-                            ? l10n.callsDemoBannerVideoMessage
-                            : l10n.callsDemoBannerVoiceMessage,
-                      ),
-                      SizedBox(height: 22.s(context)),
-                      if (widget.isVideo)
-                        _VideoPreviewStack(
-                          person: _person,
-                          cameraEnabled: _cameraEnabled,
-                          frontCamera: _frontCamera,
-                          controller: _cameraController,
-                          initializing: _cameraInitializing,
-                          permission: _cameraPermission,
-                          errorCode: _cameraError,
-                          onRequestPermission: () =>
-                              _prepareCamera(requestPermission: true),
-                        )
-                      else
-                        Padding(
-                          padding: EdgeInsets.only(top: 12.s(context)),
-                          child: PersonAvatar(
-                            name: title,
-                            avatarUrl: _person.avatarUrl,
-                            photoBytes: _person.photoBytes,
-                            radius: 56.s(context),
-                            showOnline: _person.isOnline,
-                          ),
-                        ),
-                      SizedBox(height: 24.s(context)),
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                      ),
-                      SizedBox(height: 10.s(context)),
-                      Text(
-                        _statusDetail(l10n),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                      ),
-                      SizedBox(height: 24.s(context)),
-                      GlassCard(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.s(context),
-                          vertical: 16.s(context),
-                        ),
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: (isCompact ? 10 : (isTablet ? 14 : 18)).s(context),
-                          runSpacing: 14.s(context),
+                        Row(
                           children: [
-                            _CallActionButton(
-                              icon:
-                                  _muted ? Icons.mic_off_rounded : Icons.mic_none_rounded,
-                              active: _muted,
-                              label: l10n.callsMuteAction,
-                              compact: isCompact,
-                              onTap: () => setState(() => _muted = !_muted),
-                            ),
-                            _CallActionButton(
-                              icon: _speaker
-                                  ? Icons.volume_up_rounded
-                                  : Icons.hearing_rounded,
-                              active: _speaker,
-                              label: l10n.callsSpeakerAction,
-                              compact: isCompact,
-                              onTap: () => setState(() => _speaker = !_speaker),
-                            ),
-                            if (widget.isVideo)
-                              _CallActionButton(
-                                icon: _cameraEnabled
-                                    ? Icons.videocam_outlined
-                                    : Icons.videocam_off_outlined,
-                                active: _cameraEnabled,
-                                label: l10n.callsCameraAction,
-                                compact: isCompact,
-                                onTap: _toggleCameraEnabled,
+                            IconButton(
+                              onPressed: _endCall,
+                              icon: Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: Colors.white,
+                                size: 28.s(context),
                               ),
-                            if (widget.isVideo)
-                              _CallActionButton(
-                                icon: Icons.cameraswitch_outlined,
-                                label: l10n.callsSwitchCameraAction,
-                                compact: isCompact,
-                                onTap: _switchCamera,
+                            ),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  Text(
+                                    widget.isVideo
+                                        ? l10n.videoCallLabel
+                                        : l10n.voiceCallLabel,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(
+                                          color: Colors.white70,
+                                          fontSize: 14.s(context),
+                                        ),
+                                  ),
+                                  SizedBox(height: 4.s(context)),
+                                  Text(
+                                    _statusLabel(l10n),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Colors.white60,
+                                          fontSize: 12.s(context),
+                                        ),
+                                  ),
+                                ],
                               ),
+                            ),
+                            SizedBox(width: 48.s(context)),
                           ],
                         ),
-                      ),
-                      SizedBox(height: controlsGap),
-                      FilledButton.icon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          minimumSize: Size(double.infinity, 56.s(context)),
+                        SizedBox(height: 16.s(context)),
+                        _DemoBanner(
+                          title: l10n.callsDemoBannerTitle,
+                          message: widget.isVideo
+                              ? l10n.callsDemoBannerVideoMessage
+                              : l10n.callsDemoBannerVoiceMessage,
                         ),
-                        onPressed: _endCall,
-                        icon: const Icon(Icons.call_end_rounded),
-                        label: Text(l10n.callsEndAction),
-                      ),
-                    ],
+                        SizedBox(height: 22.s(context)),
+                        if (widget.isVideo)
+                          _VideoPreviewStack(
+                            person: _person,
+                            cameraEnabled: _cameraEnabled,
+                            frontCamera: _frontCamera,
+                            controller: _cameraController,
+                            initializing: _cameraInitializing,
+                            permission: _cameraPermission,
+                            errorCode: _cameraError,
+                            onRequestPermission: () =>
+                                _prepareCamera(requestPermission: true),
+                          )
+                        else
+                          Padding(
+                            padding: EdgeInsets.only(top: 12.s(context)),
+                            child: PersonAvatar(
+                              name: title,
+                              avatarUrl: _person.avatarUrl,
+                              photoBytes: _person.photoBytes,
+                              radius: 56.s(context),
+                              showOnline: _person.isOnline,
+                            ),
+                          ),
+                        SizedBox(height: 24.s(context)),
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        SizedBox(height: 10.s(context)),
+                        Text(
+                          _statusDetail(l10n),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
+                        ),
+                        SizedBox(height: 24.s(context)),
+                        GlassCard(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.s(context),
+                            vertical: 16.s(context),
+                          ),
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: (isCompact ? 10 : (isTablet ? 14 : 18)).s(
+                              context,
+                            ),
+                            runSpacing: 14.s(context),
+                            children: [
+                              _CallActionButton(
+                                icon: _muted
+                                    ? Icons.mic_off_rounded
+                                    : Icons.mic_none_rounded,
+                                active: _muted,
+                                label: l10n.callsMuteAction,
+                                compact: isCompact,
+                                onTap: () => setState(() => _muted = !_muted),
+                              ),
+                              _CallActionButton(
+                                icon: _speaker
+                                    ? Icons.volume_up_rounded
+                                    : Icons.hearing_rounded,
+                                active: _speaker,
+                                label: l10n.callsSpeakerAction,
+                                compact: isCompact,
+                                onTap: () =>
+                                    setState(() => _speaker = !_speaker),
+                              ),
+                              if (widget.isVideo)
+                                _CallActionButton(
+                                  icon: _cameraEnabled
+                                      ? Icons.videocam_outlined
+                                      : Icons.videocam_off_outlined,
+                                  active: _cameraEnabled,
+                                  label: l10n.callsCameraAction,
+                                  compact: isCompact,
+                                  onTap: _toggleCameraEnabled,
+                                ),
+                              if (widget.isVideo)
+                                _CallActionButton(
+                                  icon: Icons.cameraswitch_outlined,
+                                  label: l10n.callsSwitchCameraAction,
+                                  compact: isCompact,
+                                  onTap: _switchCamera,
+                                ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: controlsGap),
+                        FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            minimumSize: Size(double.infinity, 56.s(context)),
+                          ),
+                          onPressed: _endCall,
+                          icon: const Icon(Icons.call_end_rounded),
+                          label: Text(l10n.callsEndAction),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -493,17 +498,17 @@ class _DemoBanner extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 SizedBox(height: 4.s(context)),
                 Text(
                   message,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white70,
-                        height: 1.4,
-                      ),
+                    color: Colors.white70,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -542,7 +547,9 @@ class _CallActionButton extends StatelessWidget {
             height: 52.s(context),
             decoration: BoxDecoration(
               color: active
-                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.28)
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.28)
                   : Colors.white.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
@@ -556,8 +563,8 @@ class _CallActionButton extends StatelessWidget {
           maxLines: compact ? 2 : 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Colors.white70,
-              ),
+            color: Colors.white70,
+          ),
         ),
       ],
     );
@@ -594,8 +601,8 @@ class _VideoPreviewStack extends StatelessWidget {
     final isTablet = width >= UITokens.tabletBreakpoint;
     final isDesktop = width >= UITokens.desktopBreakpoint;
     final double previewHeight = isDesktop
-      ? math.min(height * 0.48, 420)
-      : isTablet
+        ? math.min(height * 0.48, 420)
+        : isTablet
         ? math.min(height * 0.44, 380)
         : (height < 760 ? 260.s(context) : 320.s(context));
 
@@ -611,7 +618,9 @@ class _VideoPreviewStack extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.75),
+                    Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.75),
                     Colors.black.withValues(alpha: 0.5),
                   ],
                 ),
@@ -629,23 +638,31 @@ class _VideoPreviewStack extends StatelessWidget {
             bottom: 16.s(context),
             child: Container(
               width: isDesktop
-                ? 150.s(context)
-                : (isTablet ? 132.s(context) : (isCompact ? 96.s(context) : 120.s(context))),
+                  ? 150.s(context)
+                  : (isTablet
+                        ? 132.s(context)
+                        : (isCompact ? 96.s(context) : 120.s(context))),
               height: isDesktop
-                ? 210.s(context)
-                : (isTablet ? 196.s(context) : (isCompact ? 144.s(context) : 180.s(context))),
+                  ? 210.s(context)
+                  : (isTablet
+                        ? 196.s(context)
+                        : (isCompact ? 144.s(context) : 180.s(context))),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24.s(context)),
                 color: Colors.black.withValues(alpha: 0.35),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
               ),
               child: Center(
-                child: cameraEnabled && controller != null && controller!.value.isInitialized
+                child:
+                    cameraEnabled &&
+                        controller != null &&
+                        controller!.value.isInitialized
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(24.s(context)),
                         child: Transform(
                           alignment: Alignment.center,
-                          transform: Matrix4.identity()..rotateY(frontCamera ? 3.1415926535897932 : 0),
+                          transform: Matrix4.identity()
+                            ..rotateY(frontCamera ? 3.1415926535897932 : 0),
                           child: AspectRatio(
                             aspectRatio: controller!.value.aspectRatio,
                             child: CameraPreview(controller!),
@@ -702,7 +719,8 @@ class _VideoPreviewStack extends StatelessWidget {
         children: [
           Transform(
             alignment: Alignment.center,
-            transform: Matrix4.identity()..rotateY(frontCamera ? 3.1415926535897932 : 0),
+            transform: Matrix4.identity()
+              ..rotateY(frontCamera ? 3.1415926535897932 : 0),
             child: FittedBox(
               fit: BoxFit.cover,
               child: SizedBox(
@@ -722,16 +740,16 @@ class _VideoPreviewStack extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(UITokens.cornerPill),
               ),
               child: Text(
                 frontCamera
                     ? l10n.callsFrontCameraLabel
                     : l10n.callsRearCameraLabel,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -770,9 +788,9 @@ class _VideoPreviewStack extends StatelessWidget {
             message,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                  height: 1.45,
-                ),
+              color: Colors.white,
+              height: 1.45,
+            ),
           ),
           SizedBox(height: 14.s(context)),
           FilledButton(
@@ -827,18 +845,18 @@ class _VideoPreviewStack extends StatelessWidget {
                 title,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               SizedBox(height: 6.s(context)),
               Text(
                 subtitle,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white70,
-                      height: 1.4,
-                    ),
+                  color: Colors.white70,
+                  height: 1.4,
+                ),
               ),
             ],
           ),

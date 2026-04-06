@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -54,51 +56,70 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final primaryColor =
-        Color(SettingsService.themeNotifier.value.primaryColorValue);
+    final primaryColor = Color(
+      SettingsService.themeNotifier.value.primaryColorValue,
+    );
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.confirmCodeTitle)),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(l10n.codeSentTo(widget.phone),
-                style: Theme.of(context).textTheme.bodyLarge),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _controller,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              autofocus: true,
-              decoration: InputDecoration(hintText: l10n.enterCodeHint),
-              onSubmitted: (_) => _submit(),
+      body: ScreenBackground(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: UITokens.compactFormMaxWidth,
             ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
-              onPressed: _loading ? null : _submit,
-              child: _loading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
-                  : Text(l10n.confirmButton),
+            child: Padding(
+              padding: const EdgeInsets.all(UITokens.spaceMd),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.codeSentTo(widget.phone),
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: UITokens.space),
+                  TextField(
+                    controller: _controller,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    autofocus: true,
+                    decoration: InputDecoration(hintText: l10n.enterCodeHint),
+                    onSubmitted: (_) => _submit(),
+                  ),
+                  const SizedBox(height: UITokens.spaceSm),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                    ),
+                    onPressed: _loading ? null : _submit,
+                    child: _loading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(l10n.confirmButton),
+                  ),
+                  const SizedBox(height: UITokens.spaceSm),
+                  TextButton(
+                    onPressed: _secondsLeft > 0
+                        ? null
+                        : () {
+                            Navigator.of(context).pop();
+                          },
+                    child: Text(
+                      _secondsLeft > 0
+                          ? l10n.resendCountdown(_secondsLeft)
+                          : l10n.resendCodeButton,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: _secondsLeft > 0
-                  ? null
-                  : () {
-                      // Signal caller to resend by popping null and letting caller re-send token
-                      Navigator.of(context).pop();
-                    },
-              child: Text(_secondsLeft > 0
-                  ? l10n.resendCountdown(_secondsLeft)
-                  : l10n.resendCodeButton),
-            ),
-          ],
+          ),
         ),
       ),
     );

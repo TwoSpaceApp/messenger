@@ -18,7 +18,7 @@ class GroupBackgroundWidget extends StatelessWidget {
     if (backgroundColor != null) {
       try {
         bgColor = Color(int.parse(backgroundColor!.replaceFirst('#', '0xff')));
-      } catch (e) {
+      } on Object catch (_) {
         bgColor = null;
       }
     }
@@ -40,7 +40,9 @@ class GroupBackgroundWidget extends StatelessWidget {
             fit: BoxFit.cover,
             colorFilter: bgColor != null
                 ? ColorFilter.mode(
-                    bgColor.withValues(alpha: 0.3), BlendMode.overlay)
+                    bgColor.withValues(alpha: 0.3),
+                    BlendMode.overlay,
+                  )
                 : null,
           ),
         ),

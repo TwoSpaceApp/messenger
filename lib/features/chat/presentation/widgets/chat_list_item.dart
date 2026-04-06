@@ -122,7 +122,7 @@ class ChatListItem extends StatelessWidget {
             bottom: 0,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              transitionBuilder: (Widget child, Animation<double> animation) {
+              transitionBuilder: (child, animation) {
                 return ScaleTransition(scale: animation, child: child);
               },
               child: chat.unreadCount > 0
@@ -134,8 +134,9 @@ class ChatListItem extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                theme.colorScheme.error.withValues(alpha: 0.4),
+                            color: theme.colorScheme.error.withValues(
+                              alpha: 0.4,
+                            ),
                             blurRadius: 4,
                             spreadRadius: 1,
                           ),
@@ -161,8 +162,9 @@ class ChatListItem extends StatelessWidget {
       title: Text(
         chat.name,
         style: theme.textTheme.bodyLarge?.copyWith(
-          fontWeight:
-              chat.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+          fontWeight: chat.unreadCount > 0
+              ? FontWeight.bold
+              : FontWeight.normal,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -171,8 +173,9 @@ class ChatListItem extends StatelessWidget {
         preview,
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.outline,
-          fontWeight:
-              chat.unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
+          fontWeight: chat.unreadCount > 0
+              ? FontWeight.w500
+              : FontWeight.normal,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,

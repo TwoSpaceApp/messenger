@@ -16,8 +16,8 @@ class BiometricService {
       return await _auth.authenticate(
         localizedReason: localizedReason,
         persistAcrossBackgrounding: true,
-              );
-    } catch (e) {
+      );
+    } on Object catch (_) {
       return false;
     }
   }

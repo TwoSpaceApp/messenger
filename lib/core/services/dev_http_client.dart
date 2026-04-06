@@ -6,9 +6,12 @@ import 'package:two_space_app/core/services/dev_network_logger.dart';
 
 // Симуляция классов пакета http
 class Response {
-  Response(this.body, this.statusCode,
-      {this.headers = const {}, Uint8List? bytes})
-      : bodyBytes = bytes ?? Uint8List.fromList(utf8.encode(body));
+  Response(
+    this.body,
+    this.statusCode, {
+    this.headers = const {},
+    Uint8List? bytes,
+  }) : bodyBytes = bytes ?? Uint8List.fromList(utf8.encode(body));
   final String body;
   final int statusCode;
   final Map<String, String> headers;
@@ -108,16 +111,17 @@ dynamic _parseBody(Object? body) {
   if (body is String) {
     try {
       return jsonDecode(body);
-      // ignore: empty_catches
-    } catch (_) {}
+    } on FormatException catch (_) {}
   }
   return body;
 }
 
 Future<Response> get(Uri url, {Map<String, String>? headers}) async {
   try {
-    final res =
-        await _dio.getUri(url, options: dio_pkg.Options(headers: headers));
+    final res = await _dio.getUri(
+      url,
+      options: dio_pkg.Options(headers: headers),
+    );
     return _mapDioResponse(res);
   } on dio_pkg.DioException catch (e) {
     if (e.response != null) return _mapDioResponse(e.response!);
@@ -125,11 +129,18 @@ Future<Response> get(Uri url, {Map<String, String>? headers}) async {
   }
 }
 
-Future<Response> post(Uri url,
-    {Map<String, String>? headers, Object? body, Encoding? encoding}) async {
+Future<Response> post(
+  Uri url, {
+  Map<String, String>? headers,
+  Object? body,
+  Encoding? encoding,
+}) async {
   try {
-    final res = await _dio.postUri(url,
-        data: _parseBody(body), options: dio_pkg.Options(headers: headers));
+    final res = await _dio.postUri(
+      url,
+      data: _parseBody(body),
+      options: dio_pkg.Options(headers: headers),
+    );
     return _mapDioResponse(res);
   } on dio_pkg.DioException catch (e) {
     if (e.response != null) return _mapDioResponse(e.response!);
@@ -137,11 +148,18 @@ Future<Response> post(Uri url,
   }
 }
 
-Future<Response> put(Uri url,
-    {Map<String, String>? headers, Object? body, Encoding? encoding}) async {
+Future<Response> put(
+  Uri url, {
+  Map<String, String>? headers,
+  Object? body,
+  Encoding? encoding,
+}) async {
   try {
-    final res = await _dio.putUri(url,
-        data: _parseBody(body), options: dio_pkg.Options(headers: headers));
+    final res = await _dio.putUri(
+      url,
+      data: _parseBody(body),
+      options: dio_pkg.Options(headers: headers),
+    );
     return _mapDioResponse(res);
   } on dio_pkg.DioException catch (e) {
     if (e.response != null) return _mapDioResponse(e.response!);
@@ -149,11 +167,18 @@ Future<Response> put(Uri url,
   }
 }
 
-Future<Response> patch(Uri url,
-    {Map<String, String>? headers, Object? body, Encoding? encoding}) async {
+Future<Response> patch(
+  Uri url, {
+  Map<String, String>? headers,
+  Object? body,
+  Encoding? encoding,
+}) async {
   try {
-    final res = await _dio.patchUri(url,
-        data: _parseBody(body), options: dio_pkg.Options(headers: headers));
+    final res = await _dio.patchUri(
+      url,
+      data: _parseBody(body),
+      options: dio_pkg.Options(headers: headers),
+    );
     return _mapDioResponse(res);
   } on dio_pkg.DioException catch (e) {
     if (e.response != null) return _mapDioResponse(e.response!);
@@ -161,11 +186,18 @@ Future<Response> patch(Uri url,
   }
 }
 
-Future<Response> delete(Uri url,
-    {Map<String, String>? headers, Object? body, Encoding? encoding}) async {
+Future<Response> delete(
+  Uri url, {
+  Map<String, String>? headers,
+  Object? body,
+  Encoding? encoding,
+}) async {
   try {
-    final res = await _dio.deleteUri(url,
-        data: _parseBody(body), options: dio_pkg.Options(headers: headers));
+    final res = await _dio.deleteUri(
+      url,
+      data: _parseBody(body),
+      options: dio_pkg.Options(headers: headers),
+    );
     return _mapDioResponse(res);
   } on dio_pkg.DioException catch (e) {
     if (e.response != null) return _mapDioResponse(e.response!);

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/auth/data/services/biometric_auth_service.dart';
 
 class BiometricSetupScreen extends StatefulWidget {
-  const BiometricSetupScreen({super.key});
+  const BiometricSetupScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<BiometricSetupScreen> createState() => _BiometricSetupScreenState();
@@ -15,23 +21,30 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.biometricSetupTitle),
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-      ),
-      body: SafeArea(
+    final body = ScreenBackground(
+      child: SafeArea(
+        top: !widget.embedded,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(UITokens.spaceMd),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (widget.embedded) ...[
+                SectionPageHeader(
+                  title: l10n.biometricSetupTitle,
+                  subtitle: l10n.biometricAuthSubtitle,
+                  leading: IconButton(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                  ),
+                ),
+                const SizedBox(height: UITokens.spaceMd),
+              ],
               Text(
                 l10n.authMethodsLabel,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: UITokens.spaceMd),
 
               // Biometric option
               FutureBuilder<bool>(
@@ -50,8 +63,8 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                         value: true,
                         onChanged: (value) async {
                           if (value) {
-                            final authenticated =
-                                await biometricService.authenticate();
+                            final authenticated = await biometricService
+                                .authenticate();
                             if (authenticated) {
                               await biometricService.setBiometricEnabled(true);
                               if (context.mounted) {
@@ -69,7 +82,7 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                   );
                 },
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: UITokens.spaceMd),
 
               // PIN code option
               Card(
@@ -83,14 +96,14 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                   },
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: UITokens.spaceXLg),
 
               // Info section
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(UITokens.space),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(UITokens.corner),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,12 +112,12 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                       l10n.aboutSecurityLabel,
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: UITokens.spaceSm),
                     Text(
                       l10n.aboutSecurityContent,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                     ),
                   ],
                 ),
@@ -113,6 +126,20 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
           ),
         ),
       ),
+    );
+
+    if (widget.embedded) {
+      return body;
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(l10n.biometricSetupTitle),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
+      body: body,
     );
   }
 
@@ -175,7 +202,8 @@ class _PinInputDialogState extends State<PinInputDialog> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                    content: Text(AppLocalizations.of(context)!.pinSetSuccess)),
+                  content: Text(AppLocalizations.of(context)!.pinSetSuccess),
+                ),
               );
             }
           },

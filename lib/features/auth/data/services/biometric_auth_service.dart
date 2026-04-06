@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:two_space_app/core/utils/secure_store.dart';
 
 class BiometricAuthService {
   factory BiometricAuthService() => _instance;
@@ -8,13 +9,13 @@ class BiometricAuthService {
   static final BiometricAuthService _instance =
       BiometricAuthService._internal();
   final LocalAuthentication _auth = LocalAuthentication();
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage _secureStorage = AppSecureStorage.instance;
 
   /// Check if device supports biometric authentication
   Future<bool> canAuthenticate() async {
     try {
       return await _auth.canCheckBiometrics;
-    } catch (e) {
+    } on Object catch (_) {
       return false;
     }
   }
@@ -23,7 +24,7 @@ class BiometricAuthService {
   Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       return await _auth.getAvailableBiometrics();
-    } catch (e) {
+    } on Object catch (_) {
       return [];
     }
   }
@@ -36,7 +37,7 @@ class BiometricAuthService {
         biometricOnly: true,
         persistAcrossBackgrounding: true,
       );
-    } catch (e) {
+    } on Object catch (_) {
       return false;
     }
   }
@@ -66,7 +67,9 @@ class BiometricAuthService {
   /// Enable/disable biometric authentication for app access
   Future<void> setBiometricEnabled(bool enabled) async {
     await _secureStorage.write(
-        key: 'biometric_enabled', value: enabled.toString());
+      key: 'biometric_enabled',
+      value: enabled.toString(),
+    );
   }
 
   /// Check if biometric is enabled

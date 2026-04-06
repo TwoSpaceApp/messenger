@@ -1,9 +1,9 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/config/theme_builder.dart';
 import 'package:two_space_app/core/constants/app_colors.dart';
@@ -25,10 +25,24 @@ Future<void> main() async {
   _setupErrorHandlers();
   ErrorWidget.builder = _buildErrorWidget;
 
-  runApp(
-    const ProviderScope(
-      child: AppBootstrapper(),
+  runApp(const ProviderScope(child: AppBootstrapper()));
+}
+
+Widget _buildShadShell({
+  required ThemeMode themeMode,
+  required WidgetBuilder appBuilder,
+}) {
+  return ShadApp.custom(
+    themeMode: themeMode,
+    theme: ShadThemeData(
+      brightness: Brightness.light,
+      colorScheme: const ShadSlateColorScheme.light(),
     ),
+    darkTheme: ShadThemeData(
+      brightness: Brightness.dark,
+      colorScheme: const ShadSlateColorScheme.dark(),
+    ),
+    appBuilder: appBuilder,
   );
 }
 
@@ -53,11 +67,10 @@ class AppBootstrapperState extends State<AppBootstrapper> {
     WidgetsBinding.instance.addObserver(_lifecycleObserver);
     BackgroundEffectsPerformanceService.start();
     SettingsService.applyDeferredSettingsDefaults();
-    _startInit();
+    unawaited(_startInit());
   }
 
   final WidgetsBindingObserver _lifecycleObserver = _AppLifecycleObserver();
-
 
   Future<void> _startInit() async {
     final result = await InitializationService.initialize(
@@ -65,7 +78,8 @@ class AppBootstrapperState extends State<AppBootstrapper> {
         final now = DateTime.now();
         final canUpdateByTime =
             now.difference(_lastProgressUiUpdate) >= _progressUiThrottle;
-        final shouldForceUpdate = progress >= 1.0 ||
+        final shouldForceUpdate =
+            progress >= 1.0 ||
             (_currentStep != stepName && progress > _progress);
         if (!canUpdateByTime && !shouldForceUpdate) {
           return;
@@ -93,16 +107,18 @@ class AppBootstrapperState extends State<AppBootstrapper> {
   @override
   Widget build(BuildContext context) {
     if (_initResult == null) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
+      return _buildShadShell(
         themeMode: ThemeMode.dark,
-        darkTheme: ThemeData.dark(),
-        locale: Locale(SettingsService.languageNotifier.value),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: SplashScreen(
-          currentStep: _currentStep,
-          progress: _progress,
+        appBuilder: (_) => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          themeMode: ThemeMode.dark,
+          darkTheme: ThemeData.dark(),
+          locale: Locale(SettingsService.languageNotifier.value),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) =>
+              ShadAppBuilder(child: child ?? const SizedBox()),
+          home: const SplashScreen(),
         ),
       );
     }
@@ -111,7 +127,7 @@ class AppBootstrapperState extends State<AppBootstrapper> {
 }
 
 void _setupErrorHandlers() {
-  FlutterError.onError = (FlutterErrorDetails details) {
+  FlutterError.onError = (details) {
     FlutterError.presentError(details);
     SentryService.captureException(
       details.exception,
@@ -134,37 +150,42 @@ void _setupErrorHandlers() {
 /// Build custom error widget (with hardcoded English text for reliability)
 Widget _buildErrorWidget(FlutterErrorDetails details) {
   final msg = details.exceptionAsString();
-  return MaterialApp(
-    home: Scaffold(
-      backgroundColor: AppColors.backgroundError,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: AppColors.error,
-                  size: 48,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Application Error', // Hardcoded English text
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+  return _buildShadShell(
+    themeMode: ThemeMode.dark,
+    appBuilder: (_) => MaterialApp(
+      builder: (context, child) =>
+          ShadAppBuilder(child: child ?? const SizedBox()),
+      home: Scaffold(
+        backgroundColor: AppColors.backgroundError,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: AppColors.error,
+                    size: 48,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  msg,
-                  style: const TextStyle(color: AppColors.textSecondary),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Application Error',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    msg,
+                    style: const TextStyle(color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -174,10 +195,7 @@ Widget _buildErrorWidget(FlutterErrorDetails details) {
 }
 
 class TwoSpaceApp extends ConsumerWidget {
-  const TwoSpaceApp({
-    required this.initializationResult,
-    super.key,
-  });
+  const TwoSpaceApp({required this.initializationResult, super.key});
   final InitializationResult initializationResult;
 
   @override
@@ -213,41 +231,46 @@ class TwoSpaceApp extends ConsumerWidget {
   }
 
   Widget _buildInitializationErrorApp(List<InitStepResult> failures) {
-    return MaterialApp(
-      home: Scaffold(
-        backgroundColor: AppColors.backgroundError,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: AppColors.error,
-                  size: 48,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Critical Initialization Failure', // Hardcoded English text
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+    return _buildShadShell(
+      themeMode: ThemeMode.dark,
+      appBuilder: (_) => MaterialApp(
+        builder: (context, child) =>
+            ShadAppBuilder(child: child ?? const SizedBox()),
+        home: Scaffold(
+          backgroundColor: AppColors.backgroundError,
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: AppColors.error,
+                    size: 48,
                   ),
-                ),
-                const SizedBox(height: 16),
-                ...failures.map(
-                  (f) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      '${f.stepName}: ${f.error}',
-                      style: const TextStyle(color: AppColors.textSecondary),
-                      textAlign: TextAlign.center,
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Critical Initialization Failure',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  ...failures.map(
+                    (f) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '${f.stepName}: ${f.error}',
+                        style: const TextStyle(color: AppColors.textSecondary),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -284,41 +307,43 @@ class _ThemeBuilder extends StatelessWidget {
         final themeMode = SettingsService.themeModeNotifier.value;
         final textScale = SettingsService.textScaleNotifier.value;
 
-        final lightTheme = AppThemeBuilder.build(
+        final lightTheme = AppThemeBuilder.buildMaterial(
           settings,
           paleVioletEnabled,
           brightnessOverride: Brightness.light,
         );
-        final darkTheme = AppThemeBuilder.build(
+        final darkTheme = AppThemeBuilder.buildMaterial(
           settings,
           paleVioletEnabled,
           brightnessOverride: Brightness.dark,
         );
-
-        final app = MaterialApp.router(
-          title: 'TwoSpace',
-          onGenerateTitle: (context) =>
-              AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
-          debugShowCheckedModeBanner: false,
-          showPerformanceOverlay: showPerformanceOverlay,
-          theme: lightTheme,
-          darkTheme: darkTheme,
+        final app = _buildShadShell(
           themeMode: themeMode,
-          locale: Locale(languageCode),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          routerConfig: goRouter,
-          builder: (context, child) {
-            final mediaQuery = MediaQuery.of(context);
-            return MediaQuery(
-              data: mediaQuery.copyWith(
-                textScaler: TextScaler.linear(textScale),
-              ),
-              child: AuthListener(
-                child: child ?? const SizedBox(),
-              ),
-            );
-          },
+          appBuilder: (_) => MaterialApp.router(
+            title: 'TwoSpace',
+            onGenerateTitle: (context) =>
+                AppLocalizations.of(context)?.appTitle ?? 'TwoSpace',
+            debugShowCheckedModeBanner: false,
+            showPerformanceOverlay: showPerformanceOverlay,
+            theme: lightTheme,
+            darkTheme: darkTheme,
+            themeMode: themeMode,
+            locale: Locale(languageCode),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: goRouter,
+            builder: (context, child) {
+              final mediaQuery = MediaQuery.of(context);
+              return ShadAppBuilder(
+                child: MediaQuery(
+                  data: mediaQuery.copyWith(
+                    textScaler: TextScaler.linear(textScale),
+                  ),
+                  child: AuthListener(child: child ?? const SizedBox()),
+                ),
+              );
+            },
+          ),
         );
 
         if (kDebugMode || Environment.enableDevTools) {

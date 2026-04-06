@@ -1,170 +1,265 @@
+import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:two_space_app/core/network/aegis/buffer_pool.dart';
+import 'package:two_space_app/core/network/aegis/crc32.dart';
+import 'package:two_space_app/core/network/aegis/errors.dart';
+import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
+import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 
-/// Exception thrown for protocol-related errors
-class ProtocolError implements Exception {
-  ProtocolError(this.message);
-  final String message;
+// Re-export error types so callers that import only this file still see them.
+export 'errors.dart'
+    show ProtocolDecodeError, ProtocolEncodeError, ProtocolError;
 
-  @override
-  String toString() => 'ProtocolError: $message';
-}
-
-/// Encoder/Decoder for Aegis protocol messages
+/// Encoder / Decoder for Aegis protocol frames.
+///
+/// All header fields use **big-endian** byte order, matching the C# server's
+/// `MessageEncoder` (which uses `System.Buffers.Binary`).
+///
+/// ### Frame layout (21-byte header + variable payload)
+///
+/// | Offset | Size | Field           | Notes                              |
+/// |--------|------|-----------------|------------------------------------|
+/// |   0    |  4   | Magic           | `0x0AE6C5D7`                       |
+/// |   4    |  1   | Version Major   | Currently `1`                      |
+/// |   5    |  1   | Version Minor   | Currently `0`                      |
+/// |   6    |  1   | Flags           | Bitmask (see [MessageFlag])        |
+/// |   7    |  2   | Message Type    | See [MessageType]                  |
+/// |   9    |  8   | Sequence ID     | Monotonically increasing per conn  |
+/// |  17    |  4   | Payload Length   | 0 … [ProtocolConstants.maxPayloadSize] |
+/// |  21    |  N   | Payload         | MessagePack-encoded body           |
+///
+/// See: `src/Aegis.Protocol/MessageEncoder.cs`
 class MessageEncoder {
-  /// Encode a message to byte buffer
-  static Uint8List encode(Message message) {
-    if (!message.isValid) {
-      throw ProtocolError('Invalid message structure');
+  /// Shared buffer pool used by [encode] to avoid repeated allocations.
+  static final BufferPool _pool = BufferPool(maxPoolSize: 64);
+
+  // ── Encoding ─────────────────────────────────────────────────────────
+
+  /// Encode [message] into a binary frame.
+  ///
+  /// * Payload is Brotli-compressed when its size exceeds
+  ///   [ProtocolConstants.compressionThreshold].
+  /// * If [bufferPool] is provided, the backing buffer is acquired from it;
+  ///   the caller is responsible for returning it via [BufferPool.release].
+  ///
+  /// Throws [ProtocolEncodeError] if the message fails validation.
+  static Uint8List encode(Message message, {BufferPool? bufferPool}) {
+    _validateForEncode(message);
+
+    // Brotli-compress when payload exceeds threshold (per server spec).
+    Uint8List payload = message.payload;
+    int flags = message.flags;
+    final isEncrypted = (flags & ProtocolConstants.flagEncrypted) != 0;
+    final isCompressed = (flags & ProtocolConstants.flagCompressed) != 0;
+    if (!isEncrypted &&
+        !isCompressed &&
+        payload.length > ProtocolConstants.compressionThreshold) {
+      final compressed = AegisSafeBrotli.tryEncode(payload);
+      if (compressed != null && compressed.length < payload.length) {
+        payload = compressed;
+        flags |= ProtocolConstants.flagCompressed;
+      }
     }
 
-    final buffer = Uint8List(message.totalSize);
-    var offset = 0;
+    final totalSize = ProtocolConstants.headerSize + payload.length;
+    final pool = bufferPool ?? _pool;
+    final buffer = pool.acquire(totalSize);
 
-    // Write magic (4 bytes, big-endian)
-    _writeUint32BigEndian(buffer, offset, message.magic);
-    offset += 4;
+    // ByteData view for zero-copy big-endian writes (no manual bit-shifting).
+    final bd = ByteData.view(
+      buffer.buffer,
+      buffer.offsetInBytes,
+      buffer.length,
+    );
 
-    // Write version and flags
-    buffer[offset++] = message.versionMajor;
-    buffer[offset++] = message.versionMinor;
-    buffer[offset++] = message.flags;
+    bd.setUint32(0, message.magic);
+    buffer[4] = message.versionMajor;
+    buffer[5] = message.versionMinor;
+    buffer[6] = flags;
+    bd.setUint16(7, message.type.value);
+    bd.setUint64(9, message.sequenceId);
+    bd.setUint32(17, payload.length);
 
-    // Write message type (2 bytes, big-endian)
-    _writeUint16BigEndian(buffer, offset, message.type.value);
-    offset += 2;
-
-    // Write sequence ID (8 bytes, big-endian)
-    _writeUint64BigEndian(buffer, offset, message.sequenceId);
-    offset += 8;
-
-    // Write payload length (4 bytes, big-endian)
-    _writeUint32BigEndian(buffer, offset, message.payloadLength);
-    offset += 4;
-
-    // Write payload if present
-    if (message.payloadLength > 0) {
-      buffer.setRange(offset, offset + message.payloadLength, message.payload);
-      offset += message.payloadLength;
+    if (payload.isNotEmpty) {
+      buffer.setRange(ProtocolConstants.headerSize, totalSize, payload);
     }
 
-    // Write MAC (32 bytes)
-    buffer.setRange(offset, offset + ProtocolConstants.macSize, message.mac);
-
-    return buffer;
+    // Return an exact-sized view (pool buffers may be larger).
+    return Uint8List.view(buffer.buffer, buffer.offsetInBytes, totalSize);
   }
 
-  /// Decode a message from byte buffer
+  /// Encode [message] in a background isolate to avoid blocking the
+  /// main event loop on large payloads.
+  static Future<Uint8List> encodeAsync(Message message) {
+    return Isolate.run(() => encode(message));
+  }
+
+  // ── Decoding ─────────────────────────────────────────────────────────
+
+  /// Decode a binary frame into a [Message].
+  ///
+  /// Validates all header fields and payload length **before** allocating
+  /// the payload buffer.  Throws [ProtocolDecodeError] with a hex dump of
+  /// the problematic frame on failure.
   static Message decode(Uint8List data) {
     if (data.length < ProtocolConstants.headerSize) {
-      throw ProtocolError('Message too short: ${data.length}');
+      throw ProtocolDecodeError(
+        'Frame too short: ${data.length} bytes '
+        '(minimum ${ProtocolConstants.headerSize})',
+        data,
+      );
     }
 
-    var offset = 0;
+    // Zero-copy ByteData view over the incoming buffer.
+    final bd = ByteData.view(data.buffer, data.offsetInBytes, data.length);
     final message = Message();
 
-    // Read magic (4 bytes, big-endian)
-    message.magic = _readUint32BigEndian(data, offset);
-    offset += 4;
-
+    // ── Magic ──────────────────────────────────────────────────────
+    message.magic = bd.getUint32(0);
     if (message.magic != ProtocolConstants.magic) {
-      throw ProtocolError(
-          'Invalid magic: 0x${message.magic.toRadixString(16)}');
+      throw ProtocolDecodeError(
+        'Invalid magic: 0x${message.magic.toRadixString(16).padLeft(8, '0')} '
+        '(expected 0x${ProtocolConstants.magic.toRadixString(16).padLeft(8, '0')})',
+        data,
+      );
     }
 
-    // Read version and flags
-    message.versionMajor = data[offset++];
-    message.versionMinor = data[offset++];
-    message.flags = data[offset++];
+    // ── Version ────────────────────────────────────────────────────
+    message.versionMajor = data[data.offsetInBytes + 4];
+    message.versionMinor = data[data.offsetInBytes + 5];
+    if (message.versionMajor != ProtocolConstants.versionMajor) {
+      throw ProtocolDecodeError(
+        'Unsupported protocol version: '
+        '${message.versionMajor}.${message.versionMinor} '
+        '(expected ${ProtocolConstants.versionMajor}.x)',
+        data,
+      );
+    }
 
-    // Read message type (2 bytes, big-endian)
-    final typeValue = _readUint16BigEndian(data, offset);
+    // ── Flags ──────────────────────────────────────────────────────
+    message.flags = data[data.offsetInBytes + 6];
+    const knownFlagsMask =
+        ProtocolConstants.flagRequiresAck |
+        ProtocolConstants.flagIsRetransmit |
+        ProtocolConstants.flagCompressed |
+        ProtocolConstants.flagEncrypted |
+        ProtocolConstants.flagPriority;
+    if ((message.flags & ~knownFlagsMask) != 0) {
+      AegisLogger.warning(
+        'Unknown flags in frame: 0x${message.flags.toRadixString(16)} '
+        '(unknown bits: 0x${(message.flags & ~knownFlagsMask).toRadixString(16)})',
+      );
+    }
+
+    // ── Message type ───────────────────────────────────────────────
+    final typeValue = bd.getUint16(7);
     message.type = MessageType.fromValue(typeValue);
-    offset += 2;
-
-    // Read sequence ID (8 bytes, big-endian)
-    message.sequenceId = _readUint64BigEndian(data, offset);
-    offset += 8;
-
-    // Read payload length (4 bytes, big-endian)
-    message.payloadLength = _readUint32BigEndian(data, offset);
-    offset += 4;
-
-    if (message.payloadLength > ProtocolConstants.maxPayloadSize) {
-      throw ProtocolError('Payload too large: ${message.payloadLength}');
+    if (message.type == MessageType.unknown && typeValue != 0) {
+      AegisLogger.warning('Unknown message type value: $typeValue');
     }
 
-    final expectedSize = ProtocolConstants.headerSize +
-        message.payloadLength +
-        ProtocolConstants.macSize;
+    // ── Sequence ID ────────────────────────────────────────────────
+    message.sequenceId = bd.getUint64(9);
 
+    // ── Payload length (validated BEFORE allocation) ───────────────
+    final payloadLength = bd.getUint32(17);
+    if (payloadLength > ProtocolConstants.maxPayloadSize) {
+      throw ProtocolDecodeError(
+        'Payload length exceeds maximum: '
+        '$payloadLength > ${ProtocolConstants.maxPayloadSize}',
+        data,
+      );
+    }
+    message.payloadLength = payloadLength;
+
+    final expectedSize = ProtocolConstants.headerSize + payloadLength;
     if (data.length != expectedSize) {
-      throw ProtocolError(
-          'Incomplete message: expected $expectedSize, got ${data.length}');
+      throw ProtocolDecodeError(
+        'Frame size mismatch: expected $expectedSize bytes, '
+        'got ${data.length}',
+        data,
+      );
     }
 
-    // Read payload if present
-    if (message.payloadLength > 0) {
-      message.payload = data.sublist(offset, offset + message.payloadLength);
-      offset += message.payloadLength;
+    // ── Payload ────────────────────────────────────────────────────
+    if (payloadLength > 0) {
+      final isEncryptedPayload =
+          (message.flags & ProtocolConstants.flagEncrypted) != 0;
+      if (!isEncryptedPayload &&
+          (message.flags & ProtocolConstants.flagCompressed) != 0) {
+        // Compressed — create a view for the decompressor input, then
+        // decompress into a new allocation.
+        final compressed = Uint8List.view(
+          data.buffer,
+          data.offsetInBytes + ProtocolConstants.headerSize,
+          payloadLength,
+        );
+        message.payload = AegisSafeBrotli.decode(compressed);
+        // Clear the compressed flag — the payload is now decompressed.
+        message.flags &= ~ProtocolConstants.flagCompressed;
+      } else {
+        // Uncompressed — zero-copy view over the original buffer.
+        message.payload = Uint8List.view(
+          data.buffer,
+          data.offsetInBytes + ProtocolConstants.headerSize,
+          payloadLength,
+        );
+      }
     }
-
-    // Read MAC (32 bytes).
-    // TODO(security): MAC читается, но не верифицируется на клиенте.
-    //   Для проверки HMAC-SHA256 требуется общий секретный ключ, который
-    //   устанавливается в процессе handshake (будущая реализация X3DH).
-    //   До реализации E2E-шифрования клиент доверяет интегритету сервера.
-    message.mac = data.sublist(offset, offset + ProtocolConstants.macSize);
 
     return message;
   }
 
-  // Helper methods for big-endian operations
-  static void _writeUint32BigEndian(Uint8List buffer, int offset, int value) {
-    buffer[offset] = (value >> 24) & 0xFF;
-    buffer[offset + 1] = (value >> 16) & 0xFF;
-    buffer[offset + 2] = (value >> 8) & 0xFF;
-    buffer[offset + 3] = value & 0xFF;
+  /// Decode a frame in a background isolate.
+  static Future<Message> decodeAsync(Uint8List data) {
+    return Isolate.run(() => decode(data));
   }
 
-  static void _writeUint16BigEndian(Uint8List buffer, int offset, int value) {
-    buffer[offset] = (value >> 8) & 0xFF;
-    buffer[offset + 1] = value & 0xFF;
+  // ── CRC-32 header integrity (optional) ───────────────────────────
+
+  /// Compute CRC-32 over the header portion of [data].
+  ///
+  /// This is an **optional** integrity check — the wire format does not
+  /// include a header checksum field.  Use it for local validation or
+  /// transport-level integrity layers.
+  static int computeHeaderCrc32(Uint8List data) {
+    if (data.length < ProtocolConstants.headerSize) {
+      throw ProtocolDecodeError(
+        'Frame too short for CRC-32 computation',
+        data,
+      );
+    }
+    return Crc32.compute(data, 0, ProtocolConstants.headerSize);
   }
 
-  static void _writeUint64BigEndian(Uint8List buffer, int offset, int value) {
-    buffer[offset] = (value >> 56) & 0xFF;
-    buffer[offset + 1] = (value >> 48) & 0xFF;
-    buffer[offset + 2] = (value >> 40) & 0xFF;
-    buffer[offset + 3] = (value >> 32) & 0xFF;
-    buffer[offset + 4] = (value >> 24) & 0xFF;
-    buffer[offset + 5] = (value >> 16) & 0xFF;
-    buffer[offset + 6] = (value >> 8) & 0xFF;
-    buffer[offset + 7] = value & 0xFF;
+  /// Check whether the header CRC-32 of [data] equals [expectedCrc32].
+  static bool verifyHeaderCrc32(Uint8List data, int expectedCrc32) {
+    return computeHeaderCrc32(data) == expectedCrc32;
   }
 
-  static int _readUint32BigEndian(Uint8List buffer, int offset) {
-    return (buffer[offset] << 24) |
-        (buffer[offset + 1] << 16) |
-        (buffer[offset + 2] << 8) |
-        buffer[offset + 3];
-  }
+  // ── Validation ───────────────────────────────────────────────────
 
-  static int _readUint16BigEndian(Uint8List buffer, int offset) {
-    return (buffer[offset] << 8) | buffer[offset + 1];
-  }
-
-  static int _readUint64BigEndian(Uint8List buffer, int offset) {
-    return (buffer[offset] << 56) |
-        (buffer[offset + 1] << 48) |
-        (buffer[offset + 2] << 40) |
-        (buffer[offset + 3] << 32) |
-        (buffer[offset + 4] << 24) |
-        (buffer[offset + 5] << 16) |
-        (buffer[offset + 6] << 8) |
-        buffer[offset + 7];
+  static void _validateForEncode(Message message) {
+    if (message.magic != ProtocolConstants.magic) {
+      throw ProtocolEncodeError(
+        'Invalid magic: 0x${message.magic.toRadixString(16)}',
+      );
+    }
+    if (message.versionMajor != ProtocolConstants.versionMajor) {
+      throw ProtocolEncodeError(
+        'Unsupported version: '
+        '${message.versionMajor}.${message.versionMinor}',
+      );
+    }
+    if (message.payload.length > ProtocolConstants.maxPayloadSize) {
+      throw ProtocolEncodeError(
+        'Payload too large: '
+        '${message.payload.length} > ${ProtocolConstants.maxPayloadSize}',
+      );
+    }
   }
 }

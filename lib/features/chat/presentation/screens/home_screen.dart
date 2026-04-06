@@ -1,25 +1,23 @@
 import 'dart:async';
 
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
-import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
-import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_card.dart';
+import 'package:two_space_app/core/widgets/unread_badge.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
-import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
-import 'package:two_space_app/features/chat/presentation/widgets/start_chat_bottom_sheet.dart';
-import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
-import 'package:two_space_app/features/settings/presentation/screens/settings_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -94,6 +92,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         messageLimit: 0,
       );
     } catch (e) {
+      final text = e.toString().toLowerCase();
+      if (text.contains('notauthenticatedexception') ||
+          text.contains('необходима аутентификация')) {
+        if (mounted) {
+          setState(() {
+            _rooms = const <Map<String, dynamic>>[];
+            _errorMessage = null;
+          });
+        }
+        return;
+      }
       if (mounted) {
         setState(() => _errorMessage = e.toString());
       }
@@ -102,13 +111,62 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  ({IconData icon, String title, String message}) _describeRoomError(
+    String raw,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final text = raw.toLowerCase();
+    final clean = raw.replaceFirst(RegExp('^Exception: '), '').trim();
+
+    if (text.contains('timeout') ||
+        text.contains('timed out') ||
+        text.contains('no response for seq')) {
+      return (
+        icon: Icons.schedule_rounded,
+        title: l10n.chatListTimeoutTitle,
+        message: l10n.chatListTimeoutMessage(
+          clean.isEmpty ? l10n.errorGeneric : clean,
+        ),
+      );
+    }
+    if (text.contains('notauthenticatedexception') ||
+        text.contains('authentication') ||
+        text.contains('session') ||
+        text.contains('unauthorized')) {
+      return (
+        icon: Icons.lock_outline_rounded,
+        title: l10n.loginRequired,
+        message: l10n.loginRequiredContent,
+      );
+    }
+    if (text.contains('socket') ||
+        text.contains('connection') ||
+        text.contains('network') ||
+        text.contains('handshake')) {
+      return (
+        icon: Icons.wifi_off_rounded,
+        title: l10n.chatListOfflineTitle,
+        message: l10n.chatListOfflineMessage(
+          clean.isEmpty ? l10n.errorGeneric : clean,
+        ),
+      );
+    }
+    return (
+      icon: Icons.cloud_off_rounded,
+      title: l10n.errorGeneric,
+      message: clean.isEmpty ? l10n.errorGeneric : clean,
+    );
+  }
+
   void _subscribeToRooms() {
     _roomsSub?.cancel();
     _roomsSub = _chat.watchChats().listen(
       (chats) {
         final nextRooms = chats.map(_roomFromChat).toList(growable: false);
         if (!mounted) return;
-        if (_roomListsEqual(_rooms, nextRooms) && !_loading && _errorMessage == null) {
+        if (_roomListsEqual(_rooms, nextRooms) &&
+            !_loading &&
+            _errorMessage == null) {
           return;
         }
         setState(() {
@@ -156,6 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           leftItem['avatar'] != rightItem['avatar'] ||
           leftItem['lastMessage'] != rightItem['lastMessage'] ||
           leftItem['time'] != rightItem['time'] ||
+          leftItem['unreadCount'] != rightItem['unreadCount'] ||
           leftItem['roomType'] != rightItem['roomType'] ||
           leftItem['isOnline'] != rightItem['isOnline'] ||
           leftItem['presenceStatus'] != rightItem['presenceStatus'] ||
@@ -227,94 +286,187 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return MessageTimeFormatter.formatConversationTime(time);
   }
 
-  void _openSearch() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SearchContactsScreen()),
+  String? _directUserIdForRoom(Map<String, dynamic> room) {
+    if (room['roomType'] != 'direct') {
+      return null;
+    }
+    final roomId = room['id']?.toString() ?? '';
+    if (!roomId.startsWith('dm:')) {
+      return null;
+    }
+    final userId = roomId.substring(3).trim();
+    return userId.isEmpty ? null : userId;
+  }
+
+  Future<void> _openRoomProfile(Map<String, dynamic> room) async {
+    final userId = _directUserIdForRoom(room);
+    if (userId == null || !mounted) {
+      return;
+    }
+    await context.push(
+      AppStrings.routeProfile,
+      extra: <String, dynamic>{
+        'userId': userId,
+        'initialName': room['name']?.toString(),
+        'initialAvatar': room['avatar']?.toString(),
+      },
     );
   }
 
-  void _openSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+  Future<void> _leaveOrRemoveRoom(Map<String, dynamic> room) async {
+    final l10n = AppLocalizations.of(context)!;
+    final roomId = room['id']?.toString() ?? '';
+    if (roomId.isEmpty) {
+      return;
+    }
+    final isDirect = room['roomType'] == 'direct';
+    var confirmed = true;
+    if (!isDirect) {
+      confirmed =
+          await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: Text(l10n.leaveRoomTitle),
+              content: Text(l10n.leaveRoomContent),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: Text(l10n.cancelButton),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: Text(l10n.leaveRoomAction),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+    }
+    if (!confirmed || !mounted) {
+      return;
+    }
+
+    try {
+      await _chat.leaveRoom(roomId);
+      if (!mounted) {
+        return;
+      }
+      await _loadUserAndRooms();
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    }
+  }
+
+  Future<void> _showRoomQuickActions(
+    Map<String, dynamic> room,
+    Offset globalPosition,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isDirect = room['roomType'] == 'direct';
+    final overlay = Overlay.maybeOf(context);
+    final overlayBox = overlay?.context.findRenderObject();
+    if (overlayBox is! RenderBox) {
+      return;
+    }
+    final action = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(globalPosition.dx, globalPosition.dy, 1, 1),
+        Offset.zero & overlayBox.size,
+      ),
+      items: <PopupMenuEntry<String>>[
+        if (isDirect)
+          PopupMenuItem<String>(
+            value: 'profile',
+            child: Text(l10n.peopleViewProfileAction),
+          ),
+        if (isDirect) const PopupMenuDivider(),
+        PopupMenuItem<String>(
+          value: 'remove',
+          child: Text(isDirect ? l10n.deleteButton : l10n.leaveRoomAction),
+        ),
+      ],
     );
-  }
 
-  void _openCreateGroup() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CreateChatScreen(
-          initialMode: CreateChatMode.group,
-        ),
-      ),
-    ).then((result) {
-      if (result != null) {
-        unawaited(_chat.refreshChatsQuietly());
-      }
-    });
-  }
-
-  void _openJoinByCode() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CreateChatScreen(
-          initialMode: CreateChatMode.join,
-        ),
-      ),
-    ).then((result) {
-      if (result != null) {
-        unawaited(_chat.refreshChatsQuietly());
-      }
-    });
+    switch (action) {
+      case 'profile':
+        await _openRoomProfile(room);
+      case 'remove':
+        await _leaveOrRemoveRoom(room);
+      case null:
+        return;
+    }
   }
 
   Future<void> _showStartChatSheet() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => StartChatBottomSheet(
-        onCreateGroup: _openCreateGroup,
-        onInviteUser: _openSearch,
-        onJoinByAddress: _openJoinByCode,
-      ),
+    final result = await Navigator.push<Object?>(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateChatScreen()),
     );
+    if (result != null) {
+      unawaited(_chat.refreshChatsQuietly());
+    }
   }
 
-  Widget _buildHeroHeader(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildHeroHeader(
+    ThemeData theme,
+    AppLocalizations l10n,
+    int roomCount,
+  ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        UITokens.spaceMd,
+        UITokens.spaceMd,
+        UITokens.spaceSmMd,
+      ),
+      child: SectionCard(
+        radius: UITokens.cornerXL,
+        padding: const EdgeInsets.fromLTRB(
+          UITokens.spaceMdLg,
+          UITokens.spaceMdLg,
+          UITokens.spaceMdLg,
+          UITokens.spaceMd,
+        ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const AppLogo(large: false),
-            const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                l10n.chatsTitle,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.chatsTitle,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: UITokens.spaceXSm),
+                  Text(
+                    roomCount > 0
+                        ? l10n.chatsSubtitle
+                        : l10n.chatsQuickStartTitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
-            IconButton(
-              icon: Icon(
-                Icons.search,
-                color: theme.colorScheme.onSurface,
+            const SizedBox(width: UITokens.space),
+            IconButton.filled(
+              onPressed: _showStartChatSheet,
+              icon: const Icon(Icons.add_comment_outlined),
+              tooltip: l10n.peopleQuickNewChat,
+              style: IconButton.styleFrom(
+                minimumSize: const Size(56, 56),
               ),
-              onPressed: _openSearch,
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.settings_outlined,
-                color: theme.colorScheme.onSurface,
-              ),
-              onPressed: _openSettings,
             ),
           ],
         ),
@@ -334,18 +486,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final maxWidth = constraints.maxWidth >= UITokens.desktopBreakpoint
+              final maxWidth =
+                  constraints.maxWidth >= UITokens.desktopBreakpoint
                   ? 920.0
                   : double.infinity;
+
               return Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: maxWidth),
                   child: Column(
                     children: [
-                      _buildHeroHeader(theme, l10n),
+                      _buildHeroHeader(theme, l10n, _rooms.length),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          UITokens.spaceMd,
+                          0,
+                          UITokens.spaceMd,
+                          UITokens.spaceSm,
+                        ),
+                        child: InlineNoticeCard(
+                          icon: Icons.science_outlined,
+                          badge: l10n.betaTestLabel,
+                          title: l10n.homeBetaWelcomeTitle,
+                          message: l10n.homeBetaWelcomeBody,
+                        ),
+                      ),
                       Expanded(
                         child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 260),
+                          duration: UITokens.durationMd,
                           child: _loading
                               ? _buildShimmerLoading()
                               : RefreshIndicator.adaptive(
@@ -362,15 +530,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).padding.bottom + 88,
-        ),
-        child: FloatingActionButton(
-          onPressed: _showStartChatSheet,
-          child: const Icon(Icons.add_comment_outlined),
-        ),
-      ),
     );
   }
 
@@ -379,11 +538,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final highlightColor = AppColors.skeletonHighlight(context);
     final bottomInset = MediaQuery.of(context).padding.bottom + 124;
     return ListView.builder(
-      padding: EdgeInsets.fromLTRB(8, 8, 8, bottomInset),
+      padding: EdgeInsets.fromLTRB(
+        UITokens.spaceSm,
+        UITokens.spaceSm,
+        UITokens.spaceSm,
+        bottomInset,
+      ),
       itemCount: 6,
       itemBuilder: (context, index) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: UITokens.spaceSm),
           child: Shimmer.fromColors(
             baseColor: baseColor,
             highlightColor: highlightColor,
@@ -391,9 +555,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               height: 72,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(UITokens.cornerLg),
               ),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(UITokens.space),
               child: Row(
                 children: [
                   Container(
@@ -404,14 +568,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: UITokens.space),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(width: 150, height: 16, color: Colors.white),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: UITokens.spaceSm),
                         Container(width: 100, height: 12, color: Colors.white),
                       ],
                     ),
@@ -427,12 +591,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildChatList() {
     final rooms = _filteredRooms;
-    if (_errorMessage != null) {
+    if (_errorMessage != null && rooms.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(UITokens.space),
         children: [
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.55,
@@ -455,35 +619,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(UITokens.space),
         children: [
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.5,
             child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 220),
-                child: GlassCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.forum_outlined,
-                        size: 36,
-                        color: AppColors.iconMuted(context),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        l10n.noChats,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
+              child: AppEmptyState(
+                title: l10n.noChats,
+                message: l10n.chatsSubtitle,
+                icon: Icons.forum_outlined,
+                actionLabel: l10n.peopleQuickNewChat,
+                onAction: _showStartChatSheet,
               ),
             ),
           ),
@@ -502,17 +648,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         MediaQuery.of(context).padding.bottom + 124,
       ),
       cacheExtent: 500,
-      itemCount: rooms.length,
+      itemCount: rooms.length + (_errorMessage != null ? 1 : 0),
       itemBuilder: (c, i) {
-        final r = rooms[i];
+        if (_errorMessage != null && i == 0) {
+          final error = _describeRoomError(_errorMessage!);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: UITokens.spaceSm),
+            child: SectionCard(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    error.icon,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(width: UITokens.space),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          error.title,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        const SizedBox(height: UITokens.spaceXS),
+                        Text(
+                          error.message,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppColors.subtitleText(context),
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _loadUserAndRooms,
+                    child: Text(AppLocalizations.of(context)!.retry),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        final roomIndex = i - (_errorMessage != null ? 1 : 0);
+        final r = rooms[roomIndex];
         final id = r['id'] as String;
         final unreadCount = r['unreadCount'] as int? ?? 0;
 
         final item = Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: GlassCard(
+          padding: const EdgeInsets.only(bottom: UITokens.spaceSm),
+          child: SectionCard(
             onTap: () => _openChat(id),
-            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 Hero(
@@ -545,26 +735,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UITokens.space),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         r['name'],
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: UITokens.spaceXS),
                       Text(
                         _roomSubtitle(r),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.subtitleText(context),
-                            ),
+                          color: AppColors.subtitleText(context),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -577,28 +768,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Text(
                       _formatRoomTime(r['time'] as DateTime?),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppColors.hintText(context),
-                          ),
+                        color: AppColors.hintText(context),
+                      ),
                     ),
                     if (unreadCount > 0) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          unreadCount > 99 ? '99+' : '$unreadCount',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                      ),
+                      const SizedBox(height: UITokens.spaceSm),
+                      UnreadBadge(count: unreadCount),
                     ],
                   ],
                 ),
@@ -607,7 +782,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         );
 
-        return item;
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onLongPressStart: (details) =>
+              _showRoomQuickActions(r, details.globalPosition),
+          onSecondaryTapDown: (details) =>
+              _showRoomQuickActions(r, details.globalPosition),
+          child: item,
+        );
       },
     );
   }
@@ -617,29 +799,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       (e) => e['id'] == id,
       orElse: () => {'id': id, 'name': id},
     );
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => ChatScreen(
-          chat: Chat(
-            id: id,
-            name: (room['name'] as String?) ?? id,
-            avatarUrl: room['avatar'] as String?,
-            roomType: room['roomType'] as String?,
-            members: const [],
-            isOnline: room['isOnline'] == true,
-            presenceStatus: room['presenceStatus'] as String?,
-            lastSeenAt: room['lastSeenAt'] as DateTime?,
-          ),
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SharedAxisTransition(
-            animation: animation,
-            secondaryAnimation: secondaryAnimation,
-            transitionType: SharedAxisTransitionType.horizontal,
-            child: child,
-          );
-        },
+    context.push(
+      '${AppStrings.routeChat}/${Uri.encodeComponent(id)}',
+      extra: Chat(
+        id: id,
+        name: (room['name'] as String?) ?? id,
+        avatarUrl: room['avatar'] as String?,
+        roomType: room['roomType'] as String?,
+        members: const [],
+        isOnline: room['isOnline'] == true,
+        presenceStatus: room['presenceStatus'] as String?,
+        lastSeenAt: room['lastSeenAt'] as DateTime?,
       ),
     );
   }

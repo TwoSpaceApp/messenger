@@ -3,11 +3,11 @@ import 'dart:async';
 /// Represents a cancellable asynchronous operation
 class CancellableOperation<T> {
   CancellableOperation(Future<T> Function(CancelToken token) operation)
-      : _future = Future(() async {
-          final token = CancelToken();
-          final result = operation(token);
-          return result;
-        });
+    : _future = Future(() async {
+        final token = CancelToken();
+        final result = operation(token);
+        return result;
+      });
   final Future<T> _future;
   final Completer<void> _cancelCompleter = Completer<void>();
   bool _isCancelled = false;
@@ -34,7 +34,7 @@ class CancellableOperation<T> {
       }
 
       return result;
-    } catch (e) {
+    } on Object catch (_) {
       _isCompleted = true;
       if (_isCancelled) {
         return null;

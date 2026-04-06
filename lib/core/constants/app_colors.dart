@@ -15,16 +15,16 @@ class AppColors {
   static const inputLight = Color(0xFFF7F4FF);
 
   // Text colors
-  static const textPrimary = Colors.white;
-  static const textSecondary = Colors.white70;
-  static const textPrimaryLight = Colors.black87;
-  static const textError = Colors.red;
+  static const Color textPrimary = Colors.white;
+  static const Color textSecondary = Colors.white70;
+  static const Color textPrimaryLight = Colors.black87;
+  static const MaterialColor textError = Colors.red;
 
   // Status colors
-  static const success = Colors.green;
-  static const warning = Colors.orange;
-  static const error = Colors.red;
-  static const info = Colors.blue;
+  static const MaterialColor success = Colors.green;
+  static const MaterialColor warning = Colors.orange;
+  static const MaterialColor error = Colors.red;
+  static const MaterialColor info = Colors.blue;
 
   // Helper methods
   static Color getBackgroundColor(bool isPaleViolet) {

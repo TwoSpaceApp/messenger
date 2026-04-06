@@ -33,15 +33,12 @@ class EnvironmentValidator {
       if (Environment.appEnv.isNotEmpty &&
           !validEnvironments.contains(Environment.appEnv)) {
         errors.add(
-            '❌ APP_ENV должен быть одним из: ${validEnvironments.join(", ")}');
+          '❌ APP_ENV должен быть одним из: ${validEnvironments.join(", ")}',
+        );
       }
 
-      for (final warning in warnings) {
-        _logger.warning(warning);
-      }
-      for (final error in errors) {
-        _logger.error(error);
-      }
+      warnings.forEach(_logger.warning);
+      errors.forEach(_logger.error);
 
       final isValid = errors.isEmpty;
       if (isValid) {
@@ -51,10 +48,15 @@ class EnvironmentValidator {
       }
 
       return ValidationResult(
-          isValid: isValid, errors: errors, warnings: warnings);
-    } catch (e) {
+        isValid: isValid,
+        errors: errors,
+        warnings: warnings,
+      );
+    } on Object catch (error) {
       return ValidationResult(
-          isValid: false, errors: ['Неожиданная ошибка при валидации: $e']);
+        isValid: false,
+        errors: ['Неожиданная ошибка при валидации: $error'],
+      );
     }
   }
 
@@ -74,10 +76,11 @@ class EnvironmentValidator {
 }
 
 class ValidationResult {
-  ValidationResult(
-      {required this.isValid,
-      this.errors = const [],
-      this.warnings = const []});
+  ValidationResult({
+    required this.isValid,
+    this.errors = const [],
+    this.warnings = const [],
+  });
   final bool isValid;
   final List<String> errors;
   final List<String> warnings;

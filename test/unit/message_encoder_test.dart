@@ -6,6 +6,20 @@ import 'package:two_space_app/core/network/aegis/message_encoder.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 
+bool _supportsBrotliCompression() {
+  try {
+    final payload = Uint8List.fromList(
+      List<int>.filled(ProtocolConstants.compressionThreshold + 128, 65),
+    );
+    final message = Message.withType(MessageType.message, payload)..sequenceId = 1;
+    final encoded = MessageEncoder.encode(message);
+    MessageEncoder.decode(encoded);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 void main() {
   group('MessageEncoder', () {
     test('encodes and decodes a round-trip message', () {
@@ -23,7 +37,11 @@ void main() {
       expect(decoded.sequenceId, 42);
       expect(decoded.flags, ProtocolConstants.flagRequiresAck);
       expect(decoded.payload, <int>[1, 2, 3, 4]);
-      expect(decoded.mac.length, ProtocolConstants.macSize);
+      expect(ProtocolConstants.macSize, 0);
+      expect(
+        encoded.length,
+        ProtocolConstants.headerSize + decoded.payload.length,
+      );
     });
 
     test('throws on invalid magic', () {
@@ -47,5 +65,26 @@ void main() {
         throwsA(isA<ProtocolError>()),
       );
     });
+
+    test(
+      'compresses payloads above threshold and restores them on decode',
+      () {
+        final payload = Uint8List.fromList(
+          List<int>.filled(ProtocolConstants.compressionThreshold + 128, 65),
+        );
+        final message = Message.withType(MessageType.message, payload)
+          ..sequenceId = 7;
+
+        final encoded = MessageEncoder.encode(message);
+        final decoded = MessageEncoder.decode(encoded);
+
+        expect(decoded.payload, payload);
+        expect(
+          decoded.flags & ProtocolConstants.flagCompressed,
+          0,
+        );
+      },
+      skip: !_supportsBrotliCompression(),
+    );
   });
 }

@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/group.dart';
@@ -12,7 +14,7 @@ import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
-import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:two_space_app/features/chat/presentation/widgets/feature_in_development_dialog.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
 class _GroupSettingsSection {
@@ -50,6 +52,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   int _selectedTabIndex = 0;
   bool _isLoading = false;
   bool _isSavingGroupInfo = false;
+  int _joinRule = 1;
+  int _historyVisibility = 1;
   GroupRoom? _currentGroup;
 
   @override
@@ -77,15 +81,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          userId: member.userId,
-          initialName: member.displayName,
-          initialAvatar: member.avatarUrl,
-        ),
-      ),
+    context.push(
+      AppStrings.routeProfile,
+      extra: <String, dynamic>{
+        'userId': member.userId,
+        'initialName': member.displayName,
+        'initialAvatar': member.avatarUrl,
+      },
     );
   }
 
@@ -94,11 +96,15 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     setState(() => _isLoading = true);
     try {
       final group = await _groupService.getGroupRoom(widget.roomId);
+      final settings = await _groupService.getRoomSettingsState(widget.roomId);
       if (!mounted) return;
       setState(() {
         _currentGroup = group;
         _nameController.text = group?.name ?? '';
         _descriptionController.text = group?.description ?? '';
+        _joinRule = (settings['joinRule'] as int?) ?? _joinRule;
+        _historyVisibility =
+            (settings['historyVisibility'] as int?) ?? _historyVisibility;
       });
     } catch (e) {
       if (!mounted) return;
@@ -201,8 +207,87 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       }
       await Clipboard.setData(ClipboardData(text: link));
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.textCopied)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.textCopied)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    }
+  }
+
+  String _joinRuleTitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomJoinRulePublic;
+      case 2:
+        return l10n.roomJoinRuleApproval;
+      default:
+        return l10n.roomJoinRuleInviteOnly;
+    }
+  }
+
+  String _joinRuleSubtitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomJoinRulePublicDescription;
+      case 2:
+        return l10n.roomJoinRuleApprovalDescription;
+      default:
+        return l10n.roomJoinRuleInviteOnlyDescription;
+    }
+  }
+
+  String _historyVisibilityTitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomHistoryVisibilityWorldReadable;
+      case 2:
+        return l10n.roomHistoryVisibilityInvited;
+      default:
+        return l10n.roomHistoryVisibilityJoined;
+    }
+  }
+
+  String _historyVisibilitySubtitle(AppLocalizations l10n, int value) {
+    switch (value) {
+      case 0:
+        return l10n.roomHistoryVisibilityWorldReadableDescription;
+      case 2:
+        return l10n.roomHistoryVisibilityInvitedDescription;
+      default:
+        return l10n.roomHistoryVisibilityJoinedDescription;
+    }
+  }
+
+  Future<void> _updateJoinRule(int value) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await _groupService.setJoinRuleValue(widget.roomId, value);
+      await _loadGroupData();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settingSaved)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    }
+  }
+
+  Future<void> _updateHistoryVisibility(int value) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await _groupService.setHistoryVisibility(widget.roomId, value);
+      await _loadGroupData();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settingSaved)),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -279,8 +364,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         final horizontalPadding = isWideScreen
             ? 28.0
             : isTablet
-                ? 20.0
-                : 12.0;
+            ? 20.0
+            : 12.0;
 
         return Scaffold(
           backgroundColor: Colors.transparent,
@@ -290,57 +375,59 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
           ),
           body: ScreenBackground(
             child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1320),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  16,
-                  horizontalPadding,
-                  24,
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: UITokens.wideContentMaxWidth,
                 ),
-                child: isWideScreen
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 300,
-                            child: _buildNavigationPane(
-                              sections: sections,
-                              compact: false,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    16,
+                    horizontalPadding,
+                    24,
+                  ),
+                  child: isWideScreen
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 300,
+                              child: _buildNavigationPane(
+                                sections: sections,
+                                compact: false,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            child: _buildContentPane(
-                              sections: sections,
-                              compact: false,
+                            const SizedBox(width: UITokens.spaceXLg),
+                            Expanded(
+                              child: _buildContentPane(
+                                sections: sections,
+                                compact: false,
+                              ),
                             ),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildTopSummaryCard(),
-                          const SizedBox(height: 16),
-                          _buildNavigationPane(
-                            sections: sections,
-                            compact: true,
-                          ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            child: _buildContentPane(
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildTopSummaryCard(),
+                            const SizedBox(height: UITokens.spaceMd),
+                            _buildNavigationPane(
                               sections: sections,
                               compact: true,
                             ),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(height: UITokens.spaceMd),
+                            Expanded(
+                              child: _buildContentPane(
+                                sections: sections,
+                                compact: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
               ),
             ),
-          ),
           ),
         );
       },
@@ -385,7 +472,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     _currentGroup!,
                     dense: false,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: UITokens.spaceLg),
                   Text(
                     l10n.roomSettingsLabel,
                     style: theme.textTheme.labelLarge?.copyWith(
@@ -393,10 +480,11 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: UITokens.spaceSmMd),
                   for (var i = 0; i < sections.length; i++) ...[
                     _buildSectionTile(i, sections[i]),
-                    if (i != sections.length - 1) const SizedBox(height: 6),
+                    if (i != sections.length - 1)
+                      const SizedBox(height: UITokens.spaceXSm),
                   ],
                 ],
               ),
@@ -411,7 +499,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         borderRadius: BorderRadius.circular(UITokens.cornerLg),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(UITokens.spaceMd),
         child: _buildGroupIdentity(
           Theme.of(context),
           _currentGroup!,
@@ -428,8 +516,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }) {
     final l10n = AppLocalizations.of(context)!;
     return Column(
-      crossAxisAlignment:
-          dense ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      crossAxisAlignment: dense
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
       children: [
         UserAvatar(
           avatarUrl: group.avatarUrl,
@@ -445,7 +534,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
           ),
         ),
         if ((group.description ?? '').trim().isNotEmpty) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: UITokens.spaceSm),
           Text(
             group.description!.trim(),
             textAlign: dense ? TextAlign.start : TextAlign.center,
@@ -456,7 +545,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
             overflow: TextOverflow.ellipsis,
           ),
         ],
-        const SizedBox(height: 14),
+        const SizedBox(height: UITokens.spaceMdSm),
         Wrap(
           alignment: dense ? WrapAlignment.start : WrapAlignment.center,
           spacing: 8,
@@ -492,14 +581,16 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(999),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.75,
+        ),
+        borderRadius: BorderRadius.circular(UITokens.cornerPill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
+          const SizedBox(width: UITokens.spaceSm),
           Text(label, style: theme.textTheme.bodySmall),
         ],
       ),
@@ -518,16 +609,16 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         color: isSelected
             ? theme.colorScheme.onPrimaryContainer
             : section.destructive
-                ? theme.colorScheme.error
-                : theme.colorScheme.onSurfaceVariant,
+            ? theme.colorScheme.error
+            : theme.colorScheme.onSurfaceVariant,
       ),
       label: Text(section.title),
       labelStyle: TextStyle(
         color: isSelected
             ? theme.colorScheme.onPrimaryContainer
             : section.destructive
-                ? theme.colorScheme.error
-                : theme.colorScheme.onSurface,
+            ? theme.colorScheme.error
+            : theme.colorScheme.onSurface,
         fontWeight: FontWeight.w600,
       ),
       selectedColor: section.destructive
@@ -543,13 +634,16 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       onTap: () => setState(() => _selectedTabIndex = index),
       borderRadius: BorderRadius.circular(UITokens.corner),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        duration: UITokens.durationSmMd,
+        padding: const EdgeInsets.symmetric(
+          horizontal: UITokens.spaceMdSm,
+          vertical: UITokens.space,
+        ),
         decoration: BoxDecoration(
           color: isSelected
               ? section.destructive
-                  ? theme.colorScheme.errorContainer.withValues(alpha: 0.7)
-                  : theme.colorScheme.primaryContainer.withValues(alpha: 0.78)
+                    ? theme.colorScheme.errorContainer.withValues(alpha: 0.7)
+                    : theme.colorScheme.primaryContainer.withValues(alpha: 0.78)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(UITokens.corner),
           border: Border.all(
@@ -564,13 +658,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               section.icon,
               color: isSelected
                   ? section.destructive
-                      ? theme.colorScheme.onErrorContainer
-                      : theme.colorScheme.onPrimaryContainer
+                        ? theme.colorScheme.onErrorContainer
+                        : theme.colorScheme.onPrimaryContainer
                   : section.destructive
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.onSurfaceVariant,
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: UITokens.space),
             Expanded(
               child: Text(
                 section.title,
@@ -578,11 +672,11 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   fontWeight: FontWeight.w600,
                   color: isSelected
                       ? section.destructive
-                          ? theme.colorScheme.onErrorContainer
-                          : theme.colorScheme.onPrimaryContainer
+                            ? theme.colorScheme.onErrorContainer
+                            : theme.colorScheme.onPrimaryContainer
                       : section.destructive
-                          ? theme.colorScheme.error
-                          : null,
+                      ? theme.colorScheme.error
+                      : null,
                 ),
               ),
             ),
@@ -612,7 +706,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
             decoration: BoxDecoration(
               color: section.destructive
                   ? theme.colorScheme.errorContainer.withValues(alpha: 0.55)
-                  : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+                  : theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.55,
+                    ),
             ),
             child: Row(
               children: [
@@ -622,7 +718,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       ? theme.colorScheme.error
                       : theme.colorScheme.primary,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UITokens.space),
                 Expanded(
                   child: Text(
                     section.title,
@@ -646,13 +742,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     final group = _currentGroup!;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(UITokens.spaceMd),
       children: [
         Card(
           elevation: 0,
           color: theme.colorScheme.surfaceContainerLow,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(UITokens.spaceMd),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -705,21 +801,21 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: UITokens.spaceLg),
                 _buildInfoBlock(
                   label: l10n.descriptionOptionalLabel,
                   value: group.description ?? l10n.noDescription,
                   fullWidth: true,
                 ),
                 if (_canManageMembers) ...[
-                  const SizedBox(height: 24),
+                  const SizedBox(height: UITokens.spaceXLg),
                   TextField(
                     controller: _nameController,
                     decoration: InputDecoration(
                       labelText: l10n.roomNameLabel,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UITokens.space),
                   TextField(
                     controller: _descriptionController,
                     minLines: 3,
@@ -728,13 +824,15 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       labelText: l10n.descriptionOptionalLabel,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UITokens.spaceMd),
                   Wrap(
                     spacing: 12,
                     runSpacing: 12,
                     children: [
                       FilledButton.icon(
-                        onPressed: _isSavingGroupInfo ? null : _pickAndUploadAvatar,
+                        onPressed: _isSavingGroupInfo
+                            ? null
+                            : _pickAndUploadAvatar,
                         icon: const Icon(Icons.image_outlined),
                         label: Text(l10n.uploadAvatarButton),
                       ),
@@ -744,7 +842,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: UITokens.borderThick,
+                                ),
                               )
                             : const Icon(Icons.save_outlined),
                         label: Text(l10n.saveButton),
@@ -752,8 +852,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     ],
                   ),
                 ],
-                if (group.visibility == GroupVisibility.public) ...[
-                  const SizedBox(height: 24),
+                ...[
+                  const SizedBox(height: UITokens.spaceXLg),
                   FilledButton.icon(
                     onPressed: _copyGroupLink,
                     icon: const Icon(Icons.link_outlined),
@@ -761,41 +861,66 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   ),
                 ],
                 if (_canManageMembers) ...[
-                  const SizedBox(height: 24),
+                  const SizedBox(height: UITokens.spaceXLg),
                   _buildInfoBlock(
-                    label: l10n.messageHistoryToggle,
-                    value: l10n.showHistorySubtitle,
-                    trailing: SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.showHistoryToggleLabel),
-                      subtitle: Text(l10n.showHistorySubtitle),
-                      value: group.showMessageHistory,
-                      onChanged: (value) async {
-                        try {
-                          await _groupService.setShowMessageHistory(
-                            widget.roomId,
-                            value,
-                          );
-                          await _loadGroupData();
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.settingSaved)),
-                          );
-                        } catch (e) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.genericError(e.toString())),
-                            ),
-                          );
-                        }
-                      },
+                    label: l10n.roomJoinRuleLabel,
+                    value: _joinRuleSubtitle(l10n, _joinRule),
+                    trailing: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DropdownButtonFormField<int>(
+                          initialValue: _joinRule,
+                          decoration: InputDecoration(
+                            labelText: l10n.roomJoinRuleLabel,
+                          ),
+                          items: [0, 1, 2]
+                              .map(
+                                (value) => DropdownMenuItem<int>(
+                                  value: value,
+                                  child: Text(_joinRuleTitle(l10n, value)),
+                                ),
+                              )
+                              .toList(growable: false),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() => _joinRule = value);
+                            _updateJoinRule(value);
+                          },
+                        ),
+                        const SizedBox(height: UITokens.space),
+                        DropdownButtonFormField<int>(
+                          initialValue: _historyVisibility,
+                          decoration: InputDecoration(
+                            labelText: l10n.roomHistoryVisibilityLabel,
+                          ),
+                          items: [0, 1, 2]
+                              .map(
+                                (value) => DropdownMenuItem<int>(
+                                  value: value,
+                                  child: Text(
+                                    _historyVisibilityTitle(l10n, value),
+                                  ),
+                                ),
+                              )
+                              .toList(growable: false),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() => _historyVisibility = value);
+                            _updateHistoryVisibility(value);
+                          },
+                        ),
+                        const SizedBox(height: UITokens.spaceSm),
+                        Text(
+                          _historyVisibilitySubtitle(l10n, _historyVisibility),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                     ),
                     fullWidth: true,
                   ),
                 ],
                 if (group.backgroundColor != null) ...[
-                  const SizedBox(height: 24),
+                  const SizedBox(height: UITokens.spaceXLg),
                   _buildInfoBlock(
                     label: l10n.backgroundColorLabel,
                     value: group.backgroundColor,
@@ -804,9 +929,11 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: _parseColor(group.backgroundColor),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(UITokens.cornerSm),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.3,
+                          ),
                         ),
                       ),
                     ),
@@ -838,12 +965,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(UITokens.space),
       itemCount: members.length + (_canManageMembers ? 1 : 0),
       itemBuilder: (context, index) {
         if (_canManageMembers && index == 0) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: UITokens.spaceSm),
             child: Card(
               margin: EdgeInsets.zero,
               child: ListTile(
@@ -859,7 +986,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
 
         final member = members[index - (_canManageMembers ? 1 : 0)];
         return Card(
-          margin: const EdgeInsets.symmetric(vertical: 6),
+          margin: const EdgeInsets.symmetric(vertical: UITokens.spaceXSm),
           child: ListTile(
             onTap: () => _openMemberProfile(member),
             leading: UserAvatar(
@@ -882,11 +1009,15 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     member.role.toString().split('.').last.toUpperCase(),
                     style: const TextStyle(fontSize: 10),
                   ),
-                  backgroundColor:
-                      _getRoleColor(member.role, theme).withValues(alpha: 0.2),
+                  backgroundColor: _getRoleColor(
+                    member.role,
+                    theme,
+                  ).withValues(alpha: 0.2),
                   side: BorderSide(
-                    color:
-                        _getRoleColor(member.role, theme).withValues(alpha: 0.5),
+                    color: _getRoleColor(
+                      member.role,
+                      theme,
+                    ).withValues(alpha: 0.5),
                   ),
                 ),
                 if (member.userId.isNotEmpty)
@@ -911,7 +1042,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                         child: Row(
                           children: [
                             const Icon(Icons.admin_panel_settings, size: 18),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: UITokens.spaceSm),
                             Text(l10n.roleAction),
                           ],
                         ),
@@ -921,7 +1052,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                         child: Row(
                           children: [
                             const Icon(Icons.lock, size: 18),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: UITokens.spaceSm),
                             Text(l10n.freezeAction),
                           ],
                         ),
@@ -931,7 +1062,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                         child: Row(
                           children: [
                             const Icon(Icons.block, size: 18),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: UITokens.spaceSm),
                             Text(l10n.banAction),
                           ],
                         ),
@@ -954,7 +1085,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     final regular = members.where((m) => m.role == GroupRole.member).toList();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(UITokens.spaceMd),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -963,13 +1094,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
             owners,
             _getRoleColor(GroupRole.owner, theme),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UITokens.spaceMd),
           _buildRoleSection(
             l10n.administratorsLabel,
             admins,
             _getRoleColor(GroupRole.admin, theme),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UITokens.spaceMd),
           _buildRoleSection(
             '👤 ${l10n.membersLabel}',
             regular,
@@ -991,7 +1122,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     return Card(
       elevation: 1,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(UITokens.spaceMd),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1002,10 +1133,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   height: 24,
                   decoration: BoxDecoration(
                     color: roleColor,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(UITokens.corner2XS),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UITokens.space),
                 Expanded(
                   child: Text(
                     '$title (${members.length})',
@@ -1016,10 +1147,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: UITokens.space),
             if (members.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: UITokens.spaceMd),
                 child: Center(
                   child: Text(
                     l10n.noMembers,
@@ -1033,46 +1164,48 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               ...members.map(
                 (member) => InkWell(
                   onTap: () => _openMemberProfile(member),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(UITokens.corner),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: UITokens.spaceSm,
+                    ),
                     child: Row(
-                    children: [
-                      UserAvatar(
-                        avatarUrl: member.avatarUrl,
-                        name: member.displayName,
-                        radius: 16,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              member.displayName,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            if (member.userId.isNotEmpty)
-                              Text(
-                                member.userId,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.outline,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                          ],
+                      children: [
+                        UserAvatar(
+                          avatarUrl: member.avatarUrl,
+                          name: member.displayName,
+                          radius: 16,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: UITokens.space),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                member.displayName,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (member.userId.isNotEmpty)
+                                Text(
+                                  member.userId,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.outline,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -1094,12 +1227,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(UITokens.space),
       child: Column(
         children: List.generate(banned.length, (index) {
           final member = banned[index];
           return Card(
-            margin: const EdgeInsets.symmetric(vertical: 6),
+            margin: const EdgeInsets.symmetric(vertical: UITokens.spaceXSm),
             color: theme.colorScheme.error.withValues(alpha: 0.05),
             child: ListTile(
               onTap: () => _openMemberProfile(member),
@@ -1146,18 +1279,18 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     final theme = Theme.of(context);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(UITokens.spaceMd),
       child: Column(
         children: [
           Card(
             color: theme.colorScheme.error.withValues(alpha: 0.1),
             elevation: 2,
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(UITokens.spaceXLg),
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(UITokens.space),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.error.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
@@ -1168,7 +1301,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       size: 40,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UITokens.spaceMd),
                   Text(
                     l10n.deleteGroupLabel,
                     style: theme.textTheme.headlineSmall?.copyWith(
@@ -1177,7 +1310,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UITokens.space),
                   Text(
                     l10n.deleteGroupWarning,
                     textAlign: TextAlign.center,
@@ -1185,13 +1318,15 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       color: theme.colorScheme.outline,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: UITokens.spaceXLg),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.error,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: UITokens.spaceMd,
+                        ),
                       ),
                       onPressed: _showDeleteConfirmation,
                       icon: const Icon(Icons.delete_forever),
@@ -1344,7 +1479,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
             child: Text(l10n.cancel),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: () async {
               Navigator.pop(context);
               try {
@@ -1353,6 +1490,12 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(l10n.groupDeleted)),
+                );
+              } on AegisFeatureInDevelopmentException {
+                if (!mounted) return;
+                await showFeatureInDevelopmentDialog(
+                  context,
+                  feature: l10n.delete,
                 );
               } catch (e) {
                 if (!mounted) return;
@@ -1380,7 +1523,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     final theme = Theme.of(context);
     return Container(
       width: fullWidth ? double.infinity : null,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(UITokens.spaceMdSm),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(UITokens.corner),
@@ -1398,13 +1541,13 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: UITokens.spaceSm),
           Text(
             (value?.trim().isNotEmpty ?? false) ? value!.trim() : '-',
             style: theme.textTheme.bodyLarge,
           ),
           if (trailing != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: UITokens.space),
             trailing,
           ],
         ],

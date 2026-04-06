@@ -1,6 +1,3 @@
-// ignore: uri_does_not_exist
-// ignore: uri_does_not_exist
-
 class ContactEntry {
   ContactEntry({required this.displayName, required this.phones});
   final String displayName;

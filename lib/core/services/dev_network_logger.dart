@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
+
 enum DevNetworkLogKind {
   success,
   redirect,
@@ -140,18 +142,27 @@ class DevNetworkLogger {
     Map<String, dynamic> responseHeaders = const {},
     String? errorMessage,
   }) {
+    final safeUrl = DebugDataSanitizer.sanitizeText(url);
+    final safeRequestHeaders = DebugDataSanitizer.sanitizeMap(requestHeaders);
+    final safeResponseHeaders = DebugDataSanitizer.sanitizeMap(responseHeaders);
+    final safeRequestBody = DebugDataSanitizer.sanitizeStructured(requestBody);
+    final safeResponseBody = DebugDataSanitizer.sanitizeStructured(responseBody);
+    final safeErrorMessage = errorMessage == null
+        ? null
+        : DebugDataSanitizer.sanitizeText(errorMessage);
+
     final log = DevNetworkLog(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       timestamp: DateTime.now(),
       method: method.toUpperCase(),
-      url: url,
+      url: safeUrl,
       statusCode: statusCode,
       latencyMs: latencyMs,
-      requestBody: requestBody,
-      responseBody: responseBody,
-      requestHeaders: requestHeaders,
-      responseHeaders: responseHeaders,
-      errorMessage: errorMessage,
+      requestBody: safeRequestBody,
+      responseBody: safeResponseBody,
+      requestHeaders: safeRequestHeaders,
+      responseHeaders: safeResponseHeaders,
+      errorMessage: safeErrorMessage,
     );
 
     _logs.insert(0, log);

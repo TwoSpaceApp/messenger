@@ -1,15 +1,12 @@
 import 'dart:async';
 
+import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 
 /// Unified dispatcher that splits raw protocol messages into typed streams.
 class AegisEventDispatcher {
-  AegisEventDispatcher(Stream<Message> source) {
-    _subscription = source.listen(_route);
-  }
-
   late final StreamSubscription<Message> _subscription;
 
   final StreamController<Message> _ackController =
@@ -20,12 +17,26 @@ class AegisEventDispatcher {
       StreamController<PrivateChatMessageEvent>.broadcast();
   final StreamController<ChannelMessageEvent> _channelEventController =
       StreamController<ChannelMessageEvent>.broadcast();
+  final StreamController<MessageStatusEvent> _messageStatusController =
+      StreamController<MessageStatusEvent>.broadcast();
   final StreamController<ChatListResponse> _chatListController =
       StreamController<ChatListResponse>.broadcast();
   final StreamController<PrivateChatHistoryResponse> _privateHistoryController =
       StreamController<PrivateChatHistoryResponse>.broadcast();
   final StreamController<ChannelHistoryResponse> _channelHistoryController =
       StreamController<ChannelHistoryResponse>.broadcast();
+  final StreamController<GroupHistoryResponse> _groupHistoryController =
+      StreamController<GroupHistoryResponse>.broadcast();
+  final StreamController<GroupMessageEvent> _groupEventController =
+      StreamController<GroupMessageEvent>.broadcast();
+  final StreamController<MessageReactionEvent> _reactionEventController =
+      StreamController<MessageReactionEvent>.broadcast();
+  final StreamController<MessagePinEvent> _pinEventController =
+      StreamController<MessagePinEvent>.broadcast();
+
+  AegisEventDispatcher(Stream<Message> source) {
+    _subscription = source.listen(_route);
+  }
 
   Stream<Message> get ackMessages => _ackController.stream;
   Stream<Message> get errorMessages => _errorController.stream;
@@ -33,11 +44,48 @@ class AegisEventDispatcher {
       _privateEventController.stream;
   Stream<ChannelMessageEvent> get channelMessageEvents =>
       _channelEventController.stream;
+  Stream<MessageStatusEvent> get messageStatusEvents =>
+      _messageStatusController.stream;
   Stream<ChatListResponse> get chatListResponses => _chatListController.stream;
   Stream<PrivateChatHistoryResponse> get privateHistoryResponses =>
       _privateHistoryController.stream;
   Stream<ChannelHistoryResponse> get channelHistoryResponses =>
       _channelHistoryController.stream;
+
+  StreamSubscription<GroupHistoryResponse> onGroupHistoryResponse(
+    void Function(GroupHistoryResponse response) handler,
+  ) {
+    return groupHistoryResponses.listen(handler);
+  }
+
+  Stream<GroupHistoryResponse> get groupHistoryResponses =>
+      _groupHistoryController.stream;
+
+  StreamSubscription<GroupMessageEvent> onGroupMessageEvent(
+    void Function(GroupMessageEvent event) handler,
+  ) {
+    return groupMessageEvents.listen(handler);
+  }
+
+  Stream<GroupMessageEvent> get groupMessageEvents =>
+      _groupEventController.stream;
+
+  StreamSubscription<MessageReactionEvent> onMessageReactionEvent(
+    void Function(MessageReactionEvent event) handler,
+  ) {
+    return messageReactionEvents.listen(handler);
+  }
+
+  Stream<MessageReactionEvent> get messageReactionEvents =>
+      _reactionEventController.stream;
+
+  StreamSubscription<MessagePinEvent> onMessagePinEvent(
+    void Function(MessagePinEvent event) handler,
+  ) {
+    return messagePinEvents.listen(handler);
+  }
+
+  Stream<MessagePinEvent> get messagePinEvents => _pinEventController.stream;
 
   StreamSubscription<Message> onAck(void Function(Message message) handler) {
     return ackMessages.listen(handler);
@@ -59,115 +107,111 @@ class AegisEventDispatcher {
     return channelMessageEvents.listen(handler);
   }
 
+  StreamSubscription<MessageStatusEvent> onMessageStatusEvent(
+    void Function(MessageStatusEvent event) handler,
+  ) {
+    return messageStatusEvents.listen(handler);
+  }
+
+  StreamSubscription<PrivateChatHistoryResponse> onPrivateHistoryResponse(
+    void Function(PrivateChatHistoryResponse response) handler,
+  ) {
+    return privateHistoryResponses.listen(handler);
+  }
+
+  StreamSubscription<ChannelHistoryResponse> onChannelHistoryResponse(
+    void Function(ChannelHistoryResponse response) handler,
+  ) {
+    return channelHistoryResponses.listen(handler);
+  }
+
+  StreamSubscription<ChatListResponse> onChatListResponse(
+    void Function(ChatListResponse response) handler,
+  ) {
+    return chatListResponses.listen(handler);
+  }
+
   Future<void> dispose() async {
     await _subscription.cancel();
     await _ackController.close();
     await _errorController.close();
     await _privateEventController.close();
     await _channelEventController.close();
+    await _messageStatusController.close();
     await _chatListController.close();
     await _privateHistoryController.close();
     await _channelHistoryController.close();
+    await _groupHistoryController.close();
+    await _groupEventController.close();
+    await _reactionEventController.close();
+    await _pinEventController.close();
   }
 
   void _route(Message message) {
-    switch (message.type) {
-      case MessageType.ack:
-        _ackController.add(message);
-      case MessageType.error:
-        _errorController.add(message);
-      case MessageType.privateChatMessageEvent:
-        _tryEmit(
-          () => PrivateChatMessageEvent.fromBytes(message.payload),
-          _privateEventController,
-        );
-      case MessageType.channelMessageEvent:
-        _tryEmit(
-          () => ChannelMessageEvent.fromBytes(message.payload),
-          _channelEventController,
-        );
-      case MessageType.chatListResponse:
-        _tryEmit(
-          () => ChatListResponse.fromBytes(message.payload),
-          _chatListController,
-        );
-      case MessageType.privateChatHistoryResponse:
-        _tryEmit(
-          () => PrivateChatHistoryResponse.fromBytes(message.payload),
-          _privateHistoryController,
-        );
-      case MessageType.channelHistoryResponse:
-        _tryEmit(
-          () => ChannelHistoryResponse.fromBytes(message.payload),
-          _channelHistoryController,
-        );
-      case MessageType.unknown:
-      case MessageType.auth:
-      case MessageType.ping:
-      case MessageType.message:
-      case MessageType.handshake:
-      case MessageType.nack:
-      case MessageType.retransmitRequest:
-      case MessageType.userPresence:
-      case MessageType.groupMessage:
-      case MessageType.groupCreate:
-      case MessageType.groupLeave:
-      case MessageType.channelMessage:
-      case MessageType.channelCreate:
-      case MessageType.channelJoin:
-      case MessageType.channelLeave:
-      case MessageType.privateChatMessage:
-      case MessageType.userSearch:
-      case MessageType.userSearchResult:
-      case MessageType.register:
-      case MessageType.registerResponse:
-      case MessageType.profileUpdate:
-      case MessageType.profileUpdateResponse:
-      case MessageType.profileGet:
-      case MessageType.profileGetResponse:
-      case MessageType.messageEdit:
-      case MessageType.messageEditResponse:
-      case MessageType.messageDelete:
-      case MessageType.messageDeleteResponse:
-      case MessageType.channelEdit:
-      case MessageType.channelEditResponse:
-      case MessageType.groupEdit:
-      case MessageType.groupEditResponse:
-      case MessageType.memberRoleUpdate:
-      case MessageType.memberRoleUpdateResponse:
-      case MessageType.memberPermissionUpdate:
-      case MessageType.memberPermissionUpdateResponse:
-      case MessageType.groupMessageSend:
-      case MessageType.groupMessageResponse:
-      case MessageType.groupCreateResponse:
-      case MessageType.chatListRequest:
-      case MessageType.privateChatHistoryRequest:
-      case MessageType.channelHistoryRequest:
-      case MessageType.profileAvatarAdd:
-      case MessageType.profileAvatarAddResponse:
-      case MessageType.profileAvatarList:
-      case MessageType.profileAvatarListResponse:
-      case MessageType.profileAvatarDelete:
-      case MessageType.profileAvatarDeleteResponse:
-      case MessageType.profileAvatarSetPrimary:
-      case MessageType.profileAvatarSetPrimaryResponse:
-      case MessageType.channelLinkUpdate:
-      case MessageType.channelLinkUpdateResponse:
-      case MessageType.channelLinkGet:
-      case MessageType.channelLinkGetResponse:
-      case MessageType.channelResolve:
-      case MessageType.channelResolveResponse:
-      case MessageType.channelJoinByLink:
-      case MessageType.channelJoinByLinkResponse:
-        break;
+    if (message.type == MessageType.ack) {
+      _ackController.add(message);
+    } else if (message.type == MessageType.error) {
+      _errorController.add(message);
+    } else if (message.type == MessageType.privateChatMessageEvent) {
+      _tryEmit(
+        () => PrivateChatMessageEvent.fromBytes(message.payload),
+        _privateEventController,
+      );
+    } else if (message.type == MessageType.channelMessageEvent) {
+      _tryEmit(
+        () => ChannelMessageEvent.fromBytes(message.payload),
+        _channelEventController,
+      );
+    } else if (message.type == MessageType.messageStatusEvent) {
+      _tryEmit(
+        () => MessageStatusEvent.fromBytes(message.payload),
+        _messageStatusController,
+      );
+    } else if (message.type == MessageType.chatListResponse) {
+      _tryEmit(
+        () => ChatListResponse.fromBytes(message.payload),
+        _chatListController,
+      );
+    } else if (message.type == MessageType.privateChatHistoryResponse) {
+      _tryEmit(
+        () => PrivateChatHistoryResponse.fromBytes(message.payload),
+        _privateHistoryController,
+      );
+    } else if (message.type == MessageType.channelHistoryResponse) {
+      _tryEmit(
+        () => ChannelHistoryResponse.fromBytes(message.payload),
+        _channelHistoryController,
+      );
+    } else if (message.type == MessageType.groupHistoryResponse) {
+      _tryEmit(
+        () => GroupHistoryResponse.fromBytes(message.payload),
+        _groupHistoryController,
+      );
+    } else if (message.type == MessageType.groupMessageEvent) {
+      _tryEmit(
+        () => GroupMessageEvent.fromBytes(message.payload),
+        _groupEventController,
+      );
+    } else if (message.type == MessageType.messageReactionEvent) {
+      _tryEmit(
+        () => MessageReactionEvent.fromBytes(message.payload),
+        _reactionEventController,
+      );
+    } else if (message.type == MessageType.messagePinEvent) {
+      _tryEmit(
+        () => MessagePinEvent.fromBytes(message.payload),
+        _pinEventController,
+      );
     }
   }
 
   void _tryEmit<T>(T Function() parse, StreamController<T> controller) {
     try {
       controller.add(parse());
-    } catch (_) {
-      // Ignore payload parse errors so dispatcher never breaks message flow.
+    } on Object catch (error) {
+      AegisLogger.warning(
+        'Dropped protocol payload due to parse error: $error',
+      );
     }
   }
 }

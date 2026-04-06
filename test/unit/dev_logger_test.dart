@@ -47,7 +47,7 @@ void main() {
       final logger = DevLogger('Exception');
       try {
         throw Exception('тестовое исключение');
-      } catch (e, st) {
+      } on Object catch (e, st) {
         logger.exception('поймали исключение', e, st);
       }
       final logs = DevLogger.all;

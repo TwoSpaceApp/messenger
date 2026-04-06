@@ -1,12 +1,12 @@
-name: Build Desktop (Windows & Linux)
+name: Build Desktop
 
 on:
   workflow_dispatch:
     inputs:
       build_mode:
-        description: 'Build mode'
+        description: Build mode
         required: true
-        default: 'release'
+        default: release
         type: choice
         options:
           - debug
@@ -23,25 +23,22 @@ on:
       - 'assets/**'
       - 'pubspec.yaml'
       - '.env.example'
+      - 'analysis_options.yaml'
+      - 'l10n.yaml'
+      - 'setup.iss'
       - '.github/workflows/build-desktop.yml'
-  pull_request:
-    paths:
-      - 'lib/**'
-      - 'linux/**'
-      - 'windows/**'
-      - 'assets/**'
-      - 'pubspec.yaml'
-      - '.env.example'
-      - '.github/workflows/build-desktop.yml'
+
+concurrency:
+  group: desktop-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     name: Build ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     permissions:
       contents: read
-    env:
-      BUILD_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.build_mode || 'debug' }}
 
     strategy:
       fail-fast: false
@@ -56,11 +53,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Determine build mode
+        id: meta
+        shell: bash
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            build_mode="${{ inputs.build_mode }}"
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" && ( "${GITHUB_REF_NAME}" == "main" || "${GITHUB_REF_NAME}" == "master" ) ]]; then
+            build_mode="release"
+          else
+            build_mode="debug"
+          fi
+
+          echo "build_mode=${build_mode}" >> "$GITHUB_OUTPUT"
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.38.8'
-          channel: 'stable'
+          channel: stable
           cache: true
 
       - name: Install Linux build dependencies
@@ -84,9 +95,7 @@ jobs:
             liblzma-dev
 
       - name: Flutter doctor
-        run: |
-          flutter --version
-          flutter doctor -v
+        run: flutter doctor -v
 
       - name: Enable Linux desktop
         if: matrix.platform == 'linux'
@@ -96,38 +105,73 @@ jobs:
         if: matrix.platform == 'windows'
         run: flutter config --enable-windows-desktop
 
-      - name: Get dependencies
+      - name: Prepare validation env
+        run: cp .env.example .env
+
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: Get dependencies V2
-        run: flutter pub get --enforce-lockfile
-
-      - name: Prepare env for CI
-        shell: bash
-        run: |
-          cat > .env <<EOF
-          ENABLE_DEV_TOOLS=false
-          APP_ENV=development
-          SENTRY_DSN=${{ secrets.SENTRY_DSN }}
-          AEGIS_HOST=${{ secrets.AEGIS_HOST }}
-          AEGIS_PORT=8888
-          AEGIS_CONNECT_TIMEOUT_SECONDS=10
-          AEGIS_TRANSPORT_MASKING_KEY=${{ secrets.AEGIS_TRANSPORT_MASKING_KEY }}
-          EOF
-
-      - name: Codegen (build_runner)
+      - name: Regenerate code
         run: dart run build_runner build --delete-conflicting-outputs
 
+      - name: Verify generated files are up to date
+        run: git diff --exit-code
+
+      - name: Prepare build env from GitHub secrets
+        shell: bash
+        env:
+          APP_ENV_VALUE: ${{ secrets.APP_ENV }}
+          ENABLE_DEV_TOOLS_VALUE: ${{ secrets.ENABLE_DEV_TOOLS }}
+          SENTRY_DSN_VALUE: ${{ secrets.SENTRY_DSN }}
+          AEGIS_HOST_VALUE: ${{ secrets.AEGIS_HOST }}
+          AEGIS_PORT_VALUE: ${{ secrets.AEGIS_PORT }}
+          AEGIS_CONNECT_TIMEOUT_SECONDS_VALUE: ${{ secrets.AEGIS_CONNECT_TIMEOUT_SECONDS }}
+          AEGIS_TRANSPORT_MASKING_KEY_VALUE: ${{ secrets.AEGIS_TRANSPORT_MASKING_KEY }}
+          AEGIS_USE_TLS_VALUE: ${{ secrets.AEGIS_USE_TLS }}
+          AEGIS_APP_ID_VALUE: ${{ secrets.AEGIS_APP_ID }}
+          AEGIS_APP_HASH_VALUE: ${{ secrets.AEGIS_APP_HASH }}
+        run: |
+          if [[ -z "${AEGIS_HOST_VALUE}" ]]; then
+            echo "::error::AEGIS_HOST secret is missing or unavailable for this workflow event. Desktop build artifacts are only produced for push/workflow_dispatch runs with repository secrets access."
+            exit 1
+          fi
+
+          cat > .env <<EOF
+          APP_ENV=${APP_ENV_VALUE:-development}
+          ENABLE_DEV_TOOLS=${ENABLE_DEV_TOOLS_VALUE:-false}
+          SENTRY_DSN=${SENTRY_DSN_VALUE:-}
+          AEGIS_HOST=${AEGIS_HOST_VALUE:-}
+          AEGIS_PORT=${AEGIS_PORT_VALUE:-8888}
+          AEGIS_CONNECT_TIMEOUT_SECONDS=${AEGIS_CONNECT_TIMEOUT_SECONDS_VALUE:-10}
+          AEGIS_TRANSPORT_MASKING_KEY=${AEGIS_TRANSPORT_MASKING_KEY_VALUE:-}
+          AEGIS_USE_TLS=${AEGIS_USE_TLS_VALUE:-false}
+          AEGIS_APP_ID=${AEGIS_APP_ID_VALUE:-}
+          AEGIS_APP_HASH=${AEGIS_APP_HASH_VALUE:-}
+          EOF
+
+      - name: Force regenerate code for build env
+        run: |
+          dart run build_runner clean
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Verify build env values are embedded
+        shell: bash
+        run: |
+          if grep -q "static const String aegisHost = '';" lib/core/config/env.g.dart; then
+            echo "::error::Generated env.g.dart still contains an empty AEGIS_HOST. Check GitHub secrets and the build env generation step."
+            exit 1
+          fi
+
       - name: Build Linux (debug)
-        if: env.BUILD_MODE == 'debug' && matrix.platform == 'linux'
+        if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'linux'
         run: flutter build linux --debug
 
       - name: Build Linux (release)
-        if: env.BUILD_MODE == 'release' && matrix.platform == 'linux'
+        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'linux'
         run: flutter build linux --release
 
       - name: Upload Linux artifact (debug)
-        if: env.BUILD_MODE == 'debug' && matrix.platform == 'linux'
+        if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'linux'
         uses: actions/upload-artifact@v4
         id: upload_linux_debug
         with:
@@ -136,7 +180,7 @@ jobs:
           path: build/linux/x64/debug/bundle
 
       - name: Upload Linux artifact (release)
-        if: env.BUILD_MODE == 'release' && matrix.platform == 'linux'
+        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'linux'
         uses: actions/upload-artifact@v4
         id: upload_linux_release
         with:
@@ -145,31 +189,31 @@ jobs:
           path: build/linux/x64/release/bundle
 
       - name: Summary (Linux debug)
-        if: env.BUILD_MODE == 'debug' && matrix.platform == 'linux'
+        if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'linux'
         run: |
           {
-            echo "### Linux (debug)";
-            echo "- Download (zip artifact): [twospace-linux-debug](${{ steps.upload_linux_debug.outputs.artifact-url }})";
+            echo "### Linux (debug)"
+            echo "- Download (zip artifact): [twospace-linux-debug](${{ steps.upload_linux_debug.outputs.artifact-url }})"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Summary (Linux release)
-        if: env.BUILD_MODE == 'release' && matrix.platform == 'linux'
+        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'linux'
         run: |
           {
-            echo "### Linux (release)";
-            echo "- Download (zip artifact): [twospace-linux-release](${{ steps.upload_linux_release.outputs.artifact-url }})";
+            echo "### Linux (release)"
+            echo "- Download (zip artifact): [twospace-linux-release](${{ steps.upload_linux_release.outputs.artifact-url }})"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build Windows (debug)
-        if: env.BUILD_MODE == 'debug' && matrix.platform == 'windows'
+        if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'windows'
         run: flutter build windows --debug
 
       - name: Build Windows (release)
-        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
+        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
         run: flutter build windows --release
 
       - name: Upload Windows artifact (debug)
-        if: env.BUILD_MODE == 'debug' && matrix.platform == 'windows'
+        if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'windows'
         uses: actions/upload-artifact@v4
         id: upload_windows_debug
         with:
@@ -178,7 +222,7 @@ jobs:
           path: build/windows/x64/runner/Debug
 
       - name: Upload Windows artifact (release)
-        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
+        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
         uses: actions/upload-artifact@v4
         id: upload_windows_release
         with:
@@ -187,20 +231,19 @@ jobs:
           path: build/windows/x64/runner/Release
 
       - name: Summary (Windows debug)
-        if: env.BUILD_MODE == 'debug' && matrix.platform == 'windows'
+        if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'windows'
         run: |
           "### Windows (debug)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
           "- Download (zip artifact): [twospace-windows-debug](${{ steps.upload_windows_debug.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
         shell: pwsh
 
       - name: Install Inno Setup (Windows)
-        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
-        run: |
-          choco install innosetup -y --no-progress
+        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
+        run: choco install innosetup -y --no-progress
         shell: pwsh
 
       - name: Build Windows installer (Inno Setup)
-        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
+        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
         run: |
           $verLine = (Get-Content pubspec.yaml | Select-String -Pattern '^version:' | Select-Object -First 1).Line
           if (-not $verLine) { throw 'pubspec.yaml: version not found' }
@@ -220,8 +263,8 @@ jobs:
           Write-Host "Built installer: $($out.FullName)"
         shell: pwsh
 
-      - name: Upload Windows installer artifact (push/manual, release)
-        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
+      - name: Upload Windows installer artifact (release)
+        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
         uses: actions/upload-artifact@v4
         id: upload_windows_installer_release
         with:
@@ -230,7 +273,7 @@ jobs:
           path: dist/*_setup_v*.exe
 
       - name: Summary (Windows release)
-        if: env.BUILD_MODE == 'release' && matrix.platform == 'windows'
+        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
         run: |
           "### Windows (release)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
           "- Download (zip artifact): [twospace-windows-release](${{ steps.upload_windows_release.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append

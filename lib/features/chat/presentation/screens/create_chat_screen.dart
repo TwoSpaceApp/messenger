@@ -1,4 +1,6 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -7,8 +9,13 @@ import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
+import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/group_settings_screen.dart';
+import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
+import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
+import 'package:two_space_app/core/models/group.dart';
 
 enum CreateChatMode { direct, group, join }
 
@@ -31,9 +38,13 @@ class _CreateChatScreenState extends State<CreateChatScreen>
   final _roomTopicController = TextEditingController();
   final _joinLinkController = TextEditingController();
   late TabController _tabController;
+  Uint8List? _groupAvatarBytes;
+  String? _groupAvatarFileName;
 
   bool _loading = false;
   bool _isPrivate = true;
+  bool _showGroupHistory = false;
+  bool _openGroupSettingsAfterCreate = true;
   String? _errorMessage;
   final AegisChatService _chatService = AegisChatService();
 
@@ -61,11 +72,73 @@ class _CreateChatScreenState extends State<CreateChatScreen>
     return error.toString().replaceFirst(RegExp('^Exception: '), '');
   }
 
+  Future<void> _pickGroupAvatar() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) {
+        return;
+      }
+      final file = result.files.single;
+      if (file.bytes == null || file.bytes!.isEmpty) {
+        return;
+      }
+      setState(() {
+        _groupAvatarBytes = file.bytes;
+        _groupAvatarFileName = file.name;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.filePickError(_friendlyError(error)))),
+      );
+    }
+  }
+
+  void _clearGroupAvatar() {
+    setState(() {
+      _groupAvatarBytes = null;
+      _groupAvatarFileName = null;
+    });
+  }
+
   Future<void> _openContacts() async {
-    await Navigator.push(
+    final selected = await Navigator.push<PersonEntry>(
       context,
-      MaterialPageRoute(builder: (_) => const SearchContactsScreen()),
+      MaterialPageRoute(
+        builder: (_) => const SearchContactsScreen(
+          purpose: SearchContactsPurpose.newChat,
+        ),
+      ),
     );
+    if (selected == null || selected.remoteUserId == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+      _userIdController.text = selected.remoteUserId!;
+    });
+
+    try {
+      final backend = createChatBackend();
+      final map = await backend.getOrCreateDirectChat(selected.remoteUserId!);
+      await _openChat(Chat.fromMap(map));
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _loading = false;
+        _errorMessage = _friendlyError(error);
+      });
+    }
   }
 
   Future<void> _openChat(Chat chat) async {
@@ -130,12 +203,38 @@ class _CreateChatScreenState extends State<CreateChatScreen>
     });
 
     try {
-      final roomId = await _chatService.createRoom(
+      final group = await _chatService.createGroupRoom(
         name: roomName,
-        topic: _roomTopicController.text.trim(),
-        isPublic: !_isPrivate,
+        description: _roomTopicController.text.trim().isEmpty
+            ? null
+            : _roomTopicController.text.trim(),
+        visibility: _isPrivate
+            ? GroupVisibility.private
+            : GroupVisibility.public,
+        showMessageHistory: _showGroupHistory,
+        avatarBytes: _groupAvatarBytes,
+        avatarFileName: _groupAvatarFileName,
       );
-      await _openChat(Chat(id: roomId, name: roomName, members: const []));
+      if (!mounted) {
+        return;
+      }
+      if (_openGroupSettingsAfterCreate) {
+        await Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GroupSettingsScreen(roomId: group.roomId),
+          ),
+        );
+        return;
+      }
+      await _openChat(
+        Chat(
+          id: group.roomId,
+          name: group.name,
+          members: group.members.map((member) => member.userId).toList(),
+          roomType: 'group',
+        ),
+      );
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -149,8 +248,9 @@ class _CreateChatScreenState extends State<CreateChatScreen>
   Future<void> _joinRoomByLink() async {
     final linkOrAlias = _joinLinkController.text.trim();
     if (linkOrAlias.isEmpty) {
-      setState(() =>
-          _errorMessage = AppLocalizations.of(context)!.joinLinkHint);
+      setState(
+        () => _errorMessage = AppLocalizations.of(context)!.joinLinkHint,
+      );
       return;
     }
 
@@ -172,6 +272,201 @@ class _CreateChatScreenState extends State<CreateChatScreen>
     }
   }
 
+  Future<void> _pasteJoinLink() async {
+    final l10n = AppLocalizations.of(context)!;
+    final data = await Clipboard.getData('text/plain');
+    final value = data?.text?.trim() ?? '';
+    if (value.isEmpty) {
+      return;
+    }
+    setState(() {
+      _joinLinkController.text = value;
+      _errorMessage = null;
+    });
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.textCopied)),
+    );
+  }
+
+  InputDecoration _fieldDecoration({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    String? hint,
+  }) {
+    final theme = Theme.of(context);
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      labelStyle: TextStyle(color: AppColors.subtitleText(context)),
+      hintStyle: TextStyle(color: AppColors.hintText(context)),
+      prefixIcon: Icon(icon, color: AppColors.subtitleText(context)),
+      filled: true,
+      fillColor: theme.colorScheme.surface.withValues(alpha: 0.46),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+        borderSide: BorderSide(
+          color: theme.colorScheme.outline.withValues(alpha: 0.16),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.4),
+      ),
+    );
+  }
+
+  Widget _buildErrorBanner() {
+    final message = _errorMessage;
+    if (message == null) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(UITokens.spaceMdSm),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+        border: Border.all(
+          color: theme.colorScheme.error.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.error_outline_rounded,
+            size: 18,
+            color: theme.colorScheme.error,
+          ),
+          const SizedBox(width: UITokens.spaceSmMd),
+          Expanded(
+            child: Text(
+              message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrimaryAction({
+    required VoidCallback? onPressed,
+    required Widget label,
+    IconData? icon,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        icon: icon == null ? const SizedBox.shrink() : Icon(icon),
+        label: label,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(54),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModeCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return GlassCard(
+      padding: const EdgeInsets.all(UITokens.spaceLg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SettingsSectionHeader(
+            title: title,
+            subtitle: subtitle,
+            trailing: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(UITokens.cornerLg),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
+            ),
+          ),
+          const SizedBox(height: UITokens.spaceMdLg),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInlineInfo({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(UITokens.spaceMdSm),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(alpha: 0.38),
+        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(UITokens.cornerMd),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 18, color: theme.colorScheme.primary),
+          ),
+          const SizedBox(width: UITokens.space),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: UITokens.spaceXS),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.subtitleText(context),
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -184,7 +479,9 @@ class _CreateChatScreenState extends State<CreateChatScreen>
           child: LayoutBuilder(
             builder: (context, constraints) {
               final maxWidth =
-                  constraints.maxWidth >= UITokens.desktopBreakpoint ? 920.0 : double.infinity;
+                  constraints.maxWidth >= UITokens.desktopBreakpoint
+                  ? 920.0
+                  : double.infinity;
               final isNarrow = constraints.maxWidth < UITokens.mobileBreakpoint;
               return Align(
                 alignment: Alignment.topCenter,
@@ -193,7 +490,12 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.fromLTRB(
+                          UITokens.spaceMd,
+                          UITokens.space,
+                          UITokens.spaceMd,
+                          0,
+                        ),
                         child: Row(
                           children: [
                             IconButton(
@@ -203,51 +505,135 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                               ),
                               onPressed: () => Navigator.pop(context),
                             ),
-                            const AppLogo(large: false),
-                            const SizedBox(width: 8),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.newChatTitle,
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: theme.colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  Text(
-                                    l10n.chatsSubtitle,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: AppColors.subtitleText(context),
-                                    ),
-                                  ),
-                                ],
+                              child: Text(
+                                l10n.newChatTitle,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: theme.colorScheme.onSurface,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      GlassCard(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        padding: EdgeInsets.zero,
-                        child: TabBar(
-                          controller: _tabController,
-                          isScrollable: isNarrow,
-                          labelColor: theme.colorScheme.onSurface,
-                          unselectedLabelColor: AppColors.hintText(context),
-                          indicatorColor: theme.colorScheme.primary,
-                          tabs: [
-                            Tab(text: l10n.directChatTab),
-                            Tab(text: l10n.groupChatTab),
-                            Tab(text: l10n.joinByCodeTitle),
-                          ],
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          UITokens.spaceMd,
+                          UITokens.space,
+                          UITokens.spaceMd,
+                          0,
+                        ),
+                        child: GlassCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 54,
+                                    height: 54,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        UITokens.cornerXLg,
+                                      ),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          theme.colorScheme.primary,
+                                          theme.colorScheme.tertiary,
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const AppLogo(large: false),
+                                  ),
+                                  const SizedBox(width: UITokens.spaceMd),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          l10n.newChatTitle,
+                                          style: theme.textTheme.headlineSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w800,
+                                                color:
+                                                    theme.colorScheme.onSurface,
+                                              ),
+                                        ),
+                                        const SizedBox(
+                                          height: UITokens.spaceXSm,
+                                        ),
+                                        Text(
+                                          l10n.chatsSubtitle,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                color: AppColors.subtitleText(
+                                                  context,
+                                                ),
+                                                height: 1.35,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: UITokens.spaceMdLg),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface.withValues(
+                                    alpha: 0.46,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.corner2Lg,
+                                  ),
+                                  border: Border.all(
+                                    color: theme.colorScheme.outline.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                  ),
+                                ),
+                                child: TabBar(
+                                  controller: _tabController,
+                                  isScrollable: isNarrow,
+                                  labelColor: theme.colorScheme.onPrimary,
+                                  unselectedLabelColor: AppColors.hintText(
+                                    context,
+                                  ),
+                                  indicator: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(
+                                      UITokens.cornerLg,
+                                    ),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        theme.colorScheme.primary,
+                                        theme.colorScheme.tertiary,
+                                      ],
+                                    ),
+                                  ),
+                                  dividerColor: Colors.transparent,
+                                  padding: const EdgeInsets.all(
+                                    UITokens.spaceXSm,
+                                  ),
+                                  tabs: [
+                                    Tab(text: l10n.directChatTab),
+                                    Tab(text: l10n.groupChatTab),
+                                    Tab(text: l10n.joinByCodeTitle),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: UITokens.spaceMd),
                       Expanded(
                         child: TabBarView(
                           controller: _tabController,
@@ -272,150 +658,71 @@ class _CreateChatScreenState extends State<CreateChatScreen>
   Widget _buildDirectChatTab() {
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(UITokens.spaceMd),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.searchContactsTitle,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.inviteUserSubtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.subtitleText(context),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _loading ? null : _openContacts,
-                    icon: const Icon(Icons.search),
-                    label: Text(l10n.searchContactsTitle),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          _buildModeCard(
+            title: l10n.searchContactsTitle,
+            subtitle: l10n.inviteUserSubtitle,
+            icon: Icons.person_search_rounded,
+            children: [
+              _buildInlineInfo(
+                icon: Icons.bolt_rounded,
+                title: l10n.directChatTab,
+                subtitle: l10n.contactIdExplanation,
+              ),
+              const SizedBox(height: UITokens.spaceMdSm),
+              _buildPrimaryAction(
+                onPressed: _loading ? null : _openContacts,
+                icon: Icons.search_rounded,
+                label: Text(l10n.searchContactsTitle),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.contactIdLabel,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+          const SizedBox(height: UITokens.spaceMd),
+          _buildModeCard(
+            title: l10n.contactIdLabel,
+            subtitle: l10n.contactIdDescription,
+            icon: Icons.alternate_email_rounded,
+            children: [
+              TextField(
+                controller: _userIdController,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.contactIdDescription,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.subtitleText(context),
-                  ),
+                decoration: _fieldDecoration(
+                  context: context,
+                  label: l10n.contactIdLabel,
+                  hint: l10n.contactIdExplanation,
+                  icon: Icons.person_outline_rounded,
                 ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _userIdController,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                  decoration: InputDecoration(
-                    labelText: l10n.contactIdLabel,
-                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
-                    hintStyle: TextStyle(color: AppColors.hintText(context)),
-                    prefixIcon: Icon(Icons.person, color: AppColors.subtitleText(context)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.divider(context)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary),
-                    ),
-                  ),
-                ),
-                if (_errorMessage != null && _tabController.index == 0) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(color: AppColors.danger(context)),
-                  ),
-                ],
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _loading ? null : _createDirectChat,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _loading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.startChatButton),
-                  ),
-                ),
+              ),
+              if (_errorMessage != null && _tabController.index == 0) ...[
+                const SizedBox(height: UITokens.space),
+                _buildErrorBanner(),
               ],
-            ),
+              const SizedBox(height: UITokens.spaceMd),
+              _buildPrimaryAction(
+                onPressed: _loading ? null : _createDirectChat,
+                icon: Icons.send_rounded,
+                label: _loading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: UITokens.borderThick,
+                        ),
+                      )
+                    : Text(l10n.startChatButton),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          GlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.info_outline,
-                        color: AppColors.subtitleText(context)),
-                    const SizedBox(width: 12),
-                    Text(
-                      l10n.hintCardTitle,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.contactIdExplanation,
-                  style: TextStyle(
-                    color: AppColors.subtitleText(context),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: UITokens.spaceXLg),
+          _buildInlineInfo(
+            icon: Icons.info_outline_rounded,
+            title: l10n.hintCardTitle,
+            subtitle: l10n.contactIdExplanation,
           ),
         ],
       ),
@@ -424,70 +731,119 @@ class _CreateChatScreenState extends State<CreateChatScreen>
 
   Widget _buildGroupChatTab() {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(UITokens.spaceMd),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.createNewRoomTitle,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+          _buildModeCard(
+            title: l10n.createNewRoomTitle,
+            subtitle: _isPrivate
+                ? l10n.privateGroupSubtitle
+                : l10n.publicRoomSubtitle,
+            icon: Icons.groups_rounded,
+            children: [
+              TextField(
+                controller: _roomNameController,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                decoration: _fieldDecoration(
+                  context: context,
+                  label: l10n.roomNameLabel,
+                  icon: Icons.group_outlined,
+                ),
+              ),
+              const SizedBox(height: UITokens.spaceMdSm),
+              TextField(
+                controller: _roomTopicController,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                maxLines: 2,
+                decoration: _fieldDecoration(
+                  context: context,
+                  label: l10n.descriptionOptionalLabel,
+                  icon: Icons.edit_note_rounded,
+                ),
+              ),
+              const SizedBox(height: UITokens.spaceMdSm),
+              Container(
+                padding: const EdgeInsets.all(UITokens.spaceMdSm),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.12),
                   ),
                 ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _roomNameController,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                  decoration: InputDecoration(
-                    labelText: l10n.roomNameLabel,
-                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
-                    prefixIcon: Icon(Icons.group, color: AppColors.subtitleText(context)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.divider(context)),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 26,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      foregroundImage: _groupAvatarBytes != null
+                          ? MemoryImage(_groupAvatarBytes!)
+                          : null,
+                      child: _groupAvatarBytes == null
+                          ? Icon(
+                              Icons.groups_rounded,
+                              color: theme.colorScheme.primary,
+                            )
+                          : null,
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: UITokens.space),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.groupAvatarTitle,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: UITokens.spaceXS),
+                          Text(
+                            _groupAvatarFileName ?? l10n.groupAvatarSubtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.subtitleText(context),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: UITokens.spaceSm),
+                    TextButton(
+                      onPressed: _loading ? null : _pickGroupAvatar,
+                      child: Text(l10n.chooseFileButton),
+                    ),
+                    if (_groupAvatarBytes != null)
+                      IconButton(
+                        onPressed: _loading ? null : _clearGroupAvatar,
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _roomTopicController,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    labelText: l10n.descriptionOptionalLabel,
-                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
-                    prefixIcon:
-                        Icon(Icons.description, color: AppColors.subtitleText(context)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.divider(context)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary),
-                    ),
-                  ),
+              ),
+              const SizedBox(height: UITokens.spaceMdSm),
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(UITokens.cornerXLg),
                 ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: UITokens.spaceMdSm,
+                  ),
                   title: Text(
                     l10n.privateGroupLabel,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   subtitle: Text(
                     _isPrivate
@@ -498,35 +854,73 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   value: _isPrivate,
                   onChanged: (v) => setState(() => _isPrivate = v),
                 ),
-                if (_errorMessage != null && _tabController.index == 1) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(color: AppColors.danger(context)),
-                  ),
-                ],
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _loading ? null : _createGroupChat,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _loading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.createRoomButton),
-                  ),
+              ),
+              const SizedBox(height: UITokens.spaceMdSm),
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(UITokens.cornerXLg),
                 ),
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: UITokens.spaceMdSm,
+                  ),
+                  title: Text(
+                    l10n.groupHistoryTitle,
+                    style: TextStyle(color: theme.colorScheme.onSurface),
+                  ),
+                  subtitle: Text(
+                    _showGroupHistory
+                        ? l10n.showHistorySubtitle
+                        : l10n.roomHistoryVisibilityJoinedDescription,
+                    style: TextStyle(color: AppColors.subtitleText(context)),
+                  ),
+                  value: _showGroupHistory,
+                  onChanged: (v) => setState(() => _showGroupHistory = v),
+                ),
+              ),
+              const SizedBox(height: UITokens.spaceMdSm),
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+                ),
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: UITokens.spaceMdSm,
+                  ),
+                  title: Text(
+                    l10n.settingsTitle,
+                    style: TextStyle(color: theme.colorScheme.onSurface),
+                  ),
+                  subtitle: Text(
+                    l10n.inviteUserSubtitle,
+                    style: TextStyle(color: AppColors.subtitleText(context)),
+                  ),
+                  value: _openGroupSettingsAfterCreate,
+                  onChanged: (v) =>
+                      setState(() => _openGroupSettingsAfterCreate = v),
+                ),
+              ),
+              if (_errorMessage != null && _tabController.index == 1) ...[
+                const SizedBox(height: UITokens.space),
+                _buildErrorBanner(),
               ],
-            ),
+              const SizedBox(height: UITokens.spaceMd),
+              _buildPrimaryAction(
+                onPressed: _loading ? null : _createGroupChat,
+                icon: Icons.add_comment_rounded,
+                label: _loading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: UITokens.borderThick,
+                        ),
+                      )
+                    : Text(l10n.createRoomButton),
+              ),
+            ],
           ),
         ],
       ),
@@ -536,83 +930,79 @@ class _CreateChatScreenState extends State<CreateChatScreen>
   Widget _buildJoinChatTab() {
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(UITokens.spaceMd),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.joinByCodeTitle,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+          _buildModeCard(
+            title: l10n.joinByCodeTitle,
+            subtitle: l10n.joinByCodeSubtitle,
+            icon: Icons.key_rounded,
+            children: [
+              _buildInlineInfo(
+                icon: Icons.link_rounded,
+                title: l10n.joinByCodeTitle,
+                subtitle: l10n.joinLinkHint,
+              ),
+              const SizedBox(height: UITokens.spaceMdSm),
+              TextField(
+                controller: _joinLinkController,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.joinByCodeSubtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.subtitleText(context),
-                  ),
+                decoration: _fieldDecoration(
+                  context: context,
+                  label: l10n.joinByCodeTitle,
+                  hint: l10n.joinLinkHint,
+                  icon: Icons.link_rounded,
                 ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _joinLinkController,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                  decoration: InputDecoration(
-                    labelText: l10n.joinByCodeTitle,
-                    hintText: l10n.joinLinkHint,
-                    labelStyle: TextStyle(color: AppColors.subtitleText(context)),
-                    hintStyle: TextStyle(color: AppColors.hintText(context)),
-                    prefixIcon: Icon(Icons.link, color: AppColors.subtitleText(context)),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.divider(context)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+              ),
+              const SizedBox(height: UITokens.spaceMdSm),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _loading ? null : _pasteJoinLink,
+                      icon: const Icon(Icons.content_paste_go_rounded),
+                      label: Text(l10n.copyLinkAction),
                     ),
                   ),
-                ),
-                if (_errorMessage != null && _tabController.index == 2) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _errorMessage!,
-                    style: TextStyle(color: AppColors.danger(context)),
+                  const SizedBox(width: UITokens.spaceSmMd),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _loading
+                          ? null
+                          : () {
+                              setState(() {
+                                _joinLinkController.clear();
+                                _errorMessage = null;
+                              });
+                            },
+                      icon: const Icon(Icons.close_rounded),
+                      label: Text(l10n.storageAutoCleanSelectNone),
+                    ),
                   ),
                 ],
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _loading ? null : _joinRoomByLink,
-                    icon: const Icon(Icons.login),
-                    label: _loading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.joinByCodeTitle),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
+              ),
+              if (_errorMessage != null && _tabController.index == 2) ...[
+                const SizedBox(height: UITokens.space),
+                _buildErrorBanner(),
               ],
-            ),
+              const SizedBox(height: UITokens.spaceMd),
+              _buildPrimaryAction(
+                onPressed: _loading ? null : _joinRoomByLink,
+                icon: Icons.login_rounded,
+                label: _loading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: UITokens.borderThick,
+                        ),
+                      )
+                    : Text(l10n.joinByCodeTitle),
+              ),
+            ],
           ),
         ],
       ),

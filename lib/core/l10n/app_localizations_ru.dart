@@ -757,6 +757,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callsTitle => 'Звонки';
 
   @override
+  String get widgetsTitle => 'Виджеты';
+
+  @override
   String get searchByNameHint => 'Поиск по имени...';
 
   @override
@@ -1009,6 +1012,262 @@ class AppLocalizationsRu extends AppLocalizations {
   String get customizationTitle => 'Кастомизация';
 
   @override
+  String get customizationHeroTitle => 'Соберите интерфейс под свой ритм';
+
+  @override
+  String get customizationHeroSubtitle =>
+      'Настраивайте стиль через живое превью, готовые пресеты, движение и плотность интерфейса.';
+
+  @override
+  String get notificationsHeroSubtitle =>
+      'Настройте оповещения, звук и пользовательские превью так, чтобы всё ощущалось спокойно и аккуратно.';
+
+  @override
+  String get livePreviewBadge => 'Живое превью';
+
+  @override
+  String get stylePresetsTitle => 'Пресеты стиля';
+
+  @override
+  String get stylePresetsSubtitle =>
+      'Начните с готового визуального направления, затем доведите детали вручную.';
+
+  @override
+  String get moodSectionTitle => 'Характер';
+
+  @override
+  String get moodSectionSubtitle =>
+      'Выберите акцент, который задаёт фон, подсветки и общий тон интерфейса.';
+
+  @override
+  String get typeSectionTitle => 'Типографика';
+
+  @override
+  String get typeSectionSubtitle =>
+      'Подберите семейство шрифта, насыщенность и размер для всего приложения.';
+
+  @override
+  String get motionSectionTitle => 'Движение';
+
+  @override
+  String get motionSectionSubtitle =>
+      'Управляйте тем, насколько живо ведут себя фон и световые слои.';
+
+  @override
+  String get densitySectionTitle => 'Плотность';
+
+  @override
+  String get densitySectionSubtitle =>
+      'Настройте отступы, форму пузырей и скорость исчезновения навигации.';
+
+  @override
+  String get themeModeLabel => 'Баланс света';
+
+  @override
+  String get dynamicBubblesLabel => 'Динамические пузыри';
+
+  @override
+  String get dynamicBubblesSubtitle =>
+      'Добавляет направленные углы пузырям сообщений для более живого ритма диалога.';
+
+  @override
+  String get bubbleRoundingLabel => 'Скругление пузырей';
+
+  @override
+  String get bubbleRoundingCompact => 'Резче';
+
+  @override
+  String get bubbleRoundingSoft => 'Мягче';
+
+  @override
+  String get navBarTimeoutLabel => 'Автоскрытие навигации';
+
+  @override
+  String navBarTimeoutValue(int seconds) {
+    return '$seconds с';
+  }
+
+  @override
+  String get navBarTimeoutShort => 'Быстро';
+
+  @override
+  String get navBarTimeoutLong => 'Спокойно';
+
+  @override
+  String get presetQuietGlass => 'Quiet Glass';
+
+  @override
+  String get presetQuietGlassSubtitle =>
+      'Холодная глубина, ровный контраст и спокойное движение.';
+
+  @override
+  String get presetNightSignal => 'Night Signal';
+
+  @override
+  String get presetNightSignalSubtitle =>
+      'Более плотная компоновка, яркие акценты и тёмный пульс.';
+
+  @override
+  String get presetEditorial => 'Editorial';
+
+  @override
+  String get presetEditorialSubtitle =>
+      'Сдержанное движение, спокойный цвет и акцент на чтении.';
+
+  @override
+  String get presetSolarFlare => 'Solar Flare';
+
+  @override
+  String get presetSolarFlareSubtitle =>
+      'Тёплые акценты, светлее поверхности и более энергичный фон.';
+
+  @override
+  String get presetRetroPulse => 'Retro Pulse';
+
+  @override
+  String get presetRetroPulseSubtitle =>
+      'Компактно, игриво и намеренно стилизовано.';
+
+  @override
+  String get previewRoomsLabel => 'Комнаты';
+
+  @override
+  String get previewConversationLabel => 'Диалог';
+
+  @override
+  String get previewSettingsLabel => 'Настройки';
+
+  @override
+  String get previewRoomsTitle => 'Утренний обзор';
+
+  @override
+  String get previewRoomsSubtitle =>
+      'Компактный список комнат с живыми фразами и более понятными статусами.';
+
+  @override
+  String get previewConversationTitle => 'Короткий диалог';
+
+  @override
+  String get previewConversationSubtitle =>
+      'Проверьте, как в небольшом разговоре читаются ритм, отступы и форма пузырей.';
+
+  @override
+  String get previewSettingsTitle => 'Настройки под рукой';
+
+  @override
+  String get previewSettingsSubtitle =>
+      'Сразу видно, как будут собираться карточки параметров до применения ко всему приложению.';
+
+  @override
+  String get previewLiveLabel => 'Live';
+
+  @override
+  String get previewRoomDesignSync => 'Design Sync';
+
+  @override
+  String get previewRoomDesignSyncSubtitle =>
+      'Доброе утро. Свежие макеты уже лежат в закрепе.';
+
+  @override
+  String get previewRoomReleaseCheck => 'Release Check';
+
+  @override
+  String get previewRoomReleaseCheckSubtitle =>
+      'Знаешь, который час стартуем релиз? Я собираю чек-лист.';
+
+  @override
+  String get previewRoomAlphaOps => 'Alpha Ops';
+
+  @override
+  String get previewRoomAlphaOpsSubtitle =>
+      'В Токио уже утро. Ночные логи выглядят спокойно.';
+
+  @override
+  String get previewIncomingMessage =>
+      'Доброе утро. Фон уже перестал ощущаться как тестовый экран?';
+
+  @override
+  String get previewOutgoingMessage =>
+      'Почти. Теперь это больше похоже на живой чат: спокойнее ритм, чище типографика.';
+
+  @override
+  String get previewTypingStatus =>
+      'Набор, углы и ритм сообщений меняются здесь сразу.';
+
+  @override
+  String get previewSettingsAppearanceSubtitle =>
+      'Выберите шаблон, подкрутите движение и проверьте цельность оболочки.';
+
+  @override
+  String get previewSettingsNotificationsSubtitle =>
+      'Так будет выглядеть стек вторичных карточек настроек.';
+
+  @override
+  String get previewSettingsPrivacySubtitle =>
+      'Проверьте иерархию, контраст и вес иконок до применения.';
+
+  @override
+  String get themeColorAegisViolet => 'Aegis Violet';
+
+  @override
+  String get themeColorIndigoSignal => 'Indigo Signal';
+
+  @override
+  String get themeColorAmethyst => 'Amethyst';
+
+  @override
+  String get themeColorRosePulse => 'Rose Pulse';
+
+  @override
+  String get themeColorSolarAmber => 'Solar Amber';
+
+  @override
+  String get themeColorPaleViolet => 'Pale Violet';
+
+  @override
+  String get themeColorSignalCoral => 'Signal Coral';
+
+  @override
+  String get themeColorMintRelay => 'Mint Relay';
+
+  @override
+  String get themeColorCyanAir => 'Cyan Air';
+
+  @override
+  String get themeColorLimeCurrent => 'Lime Current';
+
+  @override
+  String get themeColorAuroraMint => 'Aurora Mint';
+
+  @override
+  String get themeColorSlateMono => 'Slate Mono';
+
+  @override
+  String get backgroundMotionToggleLabel => 'Анимированный фон';
+
+  @override
+  String get backgroundMotionOnSubtitle =>
+      'Световые слои продолжают мягко двигаться за интерфейсом.';
+
+  @override
+  String get backgroundMotionOffSubtitle =>
+      'Фон становится статичным и спокойным без лишнего движения.';
+
+  @override
+  String get motionModeCircles => 'Орбиты';
+
+  @override
+  String get motionModeCirclesSubtitle =>
+      'Плавающие световые сферы с мягким параллаксом.';
+
+  @override
+  String get motionModeWaves => 'Волны';
+
+  @override
+  String get motionModeWavesSubtitle =>
+      'Слоистые нижние волны, похожие на мягкое атмосферное свечение.';
+
+  @override
   String get colorsTab => 'Цвета';
 
   @override
@@ -1232,6 +1491,117 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get updateAvailableTitle => 'Доступно обновление';
+
+  @override
+  String get updateHeroTitle => 'Релиз готов к установке';
+
+  @override
+  String get updateHeroSubtitle =>
+      'Посмотрите состав релиза, проверьте целостность и пройдите установку по понятным шагам.';
+
+  @override
+  String get updateStatusRequired => 'Обязательно';
+
+  @override
+  String get updateStatusRecommended => 'Рекомендуется';
+
+  @override
+  String get updatePipelineTitle => 'Пайплайн обновления';
+
+  @override
+  String get updatePipelineSubtitle =>
+      'Каждый этап показывает, что происходит сейчас и что будет следующим шагом.';
+
+  @override
+  String get updateStageDownloadTitle => 'Скачать пакет';
+
+  @override
+  String get updateStageDownloadSubtitle =>
+      'Сохранить установочный пакет в локальное хранилище.';
+
+  @override
+  String get updateStageVerifyTitle => 'Проверить целостность';
+
+  @override
+  String get updateStageVerifySubtitle =>
+      'Сверить скачанный файл с опубликованным SHA-256 хэшем.';
+
+  @override
+  String get updateStageInstallTitle => 'Установить релиз';
+
+  @override
+  String get updateStageInstallSubtitle =>
+      'При необходимости запросить разрешение и передать пакет системному установщику.';
+
+  @override
+  String get releaseSummaryTitle => 'Сводка релиза';
+
+  @override
+  String get releaseSummarySubtitle =>
+      'Изменения сгруппированы так, чтобы их было проще просканировать, чем читать сырой changelog.';
+
+  @override
+  String get releaseSectionNew => 'Новое';
+
+  @override
+  String get releaseSectionImproved => 'Улучшено';
+
+  @override
+  String get releaseSectionFixed => 'Исправлено';
+
+  @override
+  String get releaseSectionSecurity => 'Безопасность';
+
+  @override
+  String get updateTrustTitle => 'Доверие и совместимость';
+
+  @override
+  String get updateTrustSubtitle =>
+      'Откуда пришёл пакет, как он проверяется и какую именно сборку вы собираетесь установить.';
+
+  @override
+  String get updateTrustSource => 'Источник';
+
+  @override
+  String get updateTrustIntegrity => 'Целостность';
+
+  @override
+  String get updateTrustPlatform => 'Платформа';
+
+  @override
+  String get updateTrustAbi => 'ABI';
+
+  @override
+  String get updateTrustVerified => 'Проверено';
+
+  @override
+  String get updateTrustPending => 'Ожидается';
+
+  @override
+  String get updateTrustFailed => 'Ошибка';
+
+  @override
+  String get updateTrustUnavailable => 'Недоступно';
+
+  @override
+  String get updateTrustUnknown => 'Неизвестно';
+
+  @override
+  String get updatePreviewModeTitle => 'Карточка превью релиза';
+
+  @override
+  String get updatePreviewModeSubtitle =>
+      'Этот экран открыт из debug-каталога, поэтому здесь показан оформленный плейсхолдер вместо реальных заметок релиза.';
+
+  @override
+  String get updatePreviewModeEmptyNotes =>
+      'Для этого тестового релиза заметки пока не заданы.';
+
+  @override
+  String get updateCurrentVersionLabel => 'Текущая';
+
+  @override
+  String get updateIncomingVersionLabel => 'Новая';
 
   @override
   String get whatsNewLabel => 'Что нового';
@@ -1503,6 +1873,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get startChatTitle => 'Начать чат';
 
   @override
+  String get startDirectChatSubtitle =>
+      'Открыть приватный диалог с одним человеком';
+
+  @override
   String get createRoomSubtitle => 'Приватная или публичная группа';
 
   @override
@@ -1696,6 +2070,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsSoundOptions => 'Настройки звука';
 
   @override
+  String get notificationToneTitle => 'Звук уведомлений';
+
+  @override
+  String get notificationToneSubtitle =>
+      'Выберите локальный аудиофайл для превью сообщений и оповещений.';
+
+  @override
+  String get ringtoneTitle => 'Рингтон';
+
+  @override
+  String get ringtoneSubtitle =>
+      'Используйте отдельный локальный файл для превью входящих звонков.';
+
+  @override
+  String get chooseSoundLabel => 'Выбрать файл';
+
+  @override
+  String get playPreviewLabel => 'Прослушать';
+
+  @override
+  String get stopPreviewLabel => 'Остановить';
+
+  @override
+  String get customSoundNotSelected => 'Пользовательский файл пока не выбран.';
+
+  @override
+  String get clearCustomSoundLabel => 'Сбросить файл';
+
+  @override
   String get settingsStorageManagement => 'Управление хранилищем';
 
   @override
@@ -1714,6 +2117,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get storageTotalLabel => 'Всего';
 
   @override
+  String get storageSelectedLabel => 'Выбрано';
+
+  @override
   String get storagePhotosLabel => 'Фото';
 
   @override
@@ -1730,6 +2136,54 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get storageCleanupSubtitle => 'Посмотри, что можно безопасно удалить.';
+
+  @override
+  String get storageAutoCleanTitle => 'Автоочистка';
+
+  @override
+  String get storageAutoCleanSubtitle =>
+      'Запускайте очистку по расписанию или сразу, когда объём данных превысит выбранный порог.';
+
+  @override
+  String get storageAutoCleanPeriodLabel => 'Период очистки';
+
+  @override
+  String get storageAutoCleanPeriodDaily => 'Каждый день';
+
+  @override
+  String get storageAutoCleanPeriodWeekly => 'Раз в неделю';
+
+  @override
+  String get storageAutoCleanPeriodMonthly => 'Раз в месяц';
+
+  @override
+  String get storageAutoCleanThresholdLabel => 'Сразу при объёме больше';
+
+  @override
+  String get storageAutoCleanTypesLabel => 'Что очищать';
+
+  @override
+  String get storageAutoCleanStatusTitle => 'Статус автоочистки';
+
+  @override
+  String get storageAutoCleanStatusEnabled =>
+      'Автоочистка активна и запустится по расписанию или при превышении порога хранилища.';
+
+  @override
+  String get storageAutoCleanStatusDisabled =>
+      'Автоочистка выключена. Сейчас будет работать только ручная очистка.';
+
+  @override
+  String get storageAutoCleanLastRunLabel => 'Последний запуск';
+
+  @override
+  String get storageAutoCleanLastRunNever => 'Никогда';
+
+  @override
+  String get storageAutoCleanSelectAll => 'Выбрать всё';
+
+  @override
+  String get storageAutoCleanSelectNone => 'Сбросить выбор';
 
   @override
   String get settingsStorageKeepChat => 'Хранить данные чатов';
@@ -1871,6 +2325,17 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get callsSubtitle =>
       'Недавние звонки, быстрый перезвон и история вокруг людей';
+
+  @override
+  String get widgetsSubtitle =>
+      'Скоро здесь появятся тёплые новые способы оставаться ближе друг к другу.';
+
+  @override
+  String get widgetsComingTitle => 'Новые форматы общения уже в пути';
+
+  @override
+  String get widgetsComingBody =>
+      'В одном из следующих обновлений здесь появятся спокойные совместные виджеты и лёгкие способы держать связь с близкими.';
 
   @override
   String get callsStartCallAction => 'Начать звонок';
@@ -2058,4 +2523,209 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get backgroundOptimizationOpenSettings =>
       'Открыть настройки оформления';
+
+  @override
+  String get roomJoinRuleLabel => 'Кто может вступить';
+
+  @override
+  String get roomJoinRulePublic => 'Открыто для всех';
+
+  @override
+  String get roomJoinRulePublicDescription =>
+      'Любой пользователь может найти и вступить в эту комнату.';
+
+  @override
+  String get roomJoinRuleInviteOnly => 'Только по приглашению';
+
+  @override
+  String get roomJoinRuleInviteOnlyDescription =>
+      'Вступить в эту комнату могут только приглашённые пользователи.';
+
+  @override
+  String get roomJoinRuleApproval => 'Требуется одобрение';
+
+  @override
+  String get roomJoinRuleApprovalDescription =>
+      'Пользователи могут запросить доступ, но вступление требует одобрения.';
+
+  @override
+  String get roomHistoryVisibilityLabel => 'Кто видит историю';
+
+  @override
+  String get roomHistoryVisibilityWorldReadable => 'Все';
+
+  @override
+  String get roomHistoryVisibilityWorldReadableDescription =>
+      'Любой пользователь может просматривать предыдущие сообщения.';
+
+  @override
+  String get roomHistoryVisibilityJoined => 'Вступившие участники';
+
+  @override
+  String get roomHistoryVisibilityJoinedDescription =>
+      'Предыдущие сообщения видят только вступившие участники.';
+
+  @override
+  String get roomHistoryVisibilityInvited => 'Только приглашённые';
+
+  @override
+  String get roomHistoryVisibilityInvitedDescription =>
+      'Предыдущие сообщения видят только приглашённые пользователи.';
+
+  @override
+  String get loginUsernameOnlyError =>
+      'Для входа используйте username TwoSpace.';
+
+  @override
+  String get twoFactorInvalidCodeMessage =>
+      'Код 2FA или recovery phrase неверны. Попробуйте ещё раз.';
+
+  @override
+  String get twoFactorCodeRequiredMessage =>
+      'Введите код из приложения-аутентификатора или используйте recovery phrase.';
+
+  @override
+  String get twoFactorEnabledMessage =>
+      'Двухфакторная аутентификация включена.';
+
+  @override
+  String twoFactorEnableFailed(String error) {
+    return 'Не удалось включить 2FA: $error';
+  }
+
+  @override
+  String get twoFactorSetupTitle => 'Настройка двухфакторной аутентификации';
+
+  @override
+  String get twoFactorSetupDescription =>
+      'Сканируйте QR-код в приложении-аутентификаторе, сохраните recovery phrase и затем подтвердите включение свежим TOTP-кодом.';
+
+  @override
+  String get twoFactorSecretTitle => 'Или введите этот секретный ключ вручную';
+
+  @override
+  String get twoFactorRecoveryPhraseTitle =>
+      'Recovery phrase. Сохраните её в безопасном месте перед включением 2FA.';
+
+  @override
+  String get twoFactorVerificationCodeLabel => 'Код подтверждения';
+
+  @override
+  String get twoFactorVerificationCodeHint =>
+      'Введите текущий код из приложения-аутентификатора';
+
+  @override
+  String get twoFactorVerifyEnableAction => 'Подтвердить и включить 2FA';
+
+  @override
+  String get twoFactorDisableSectionTitle =>
+      'Отключить двухфакторную аутентификацию';
+
+  @override
+  String get twoFactorDisableSectionDescription =>
+      'Выключите 2FA с помощью актуального кода из аутентификатора или одноразовой recovery phrase.';
+
+  @override
+  String get twoFactorDisableCodeHint =>
+      'Введите актуальный код из аутентификатора';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldLabel => 'Recovery phrase';
+
+  @override
+  String get twoFactorRecoveryPhraseFieldHint =>
+      'Вставьте recovery phrase, если доступа к приложению-аутентификатору больше нет';
+
+  @override
+  String get twoFactorDisableAction => 'Отключить 2FA';
+
+  @override
+  String get twoFactorDisableCredentialsRequired =>
+      'Чтобы отключить 2FA, введите код из аутентификатора или recovery phrase.';
+
+  @override
+  String get twoFactorDisabledMessage =>
+      'Двухфакторная аутентификация отключена.';
+
+  @override
+  String twoFactorDisableFailed(String error) {
+    return 'Не удалось отключить 2FA: $error';
+  }
+
+  @override
+  String get twoFactorLoginRecoveryHint =>
+      'Или вставьте recovery phrase вместо кода';
+
+  @override
+  String get chatListTimeoutTitle => 'Сервер отвечает слишком долго';
+
+  @override
+  String chatListTimeoutMessage(String error) {
+    return 'Сохранённые чаты остаются доступными. Попробуйте обновить список ещё раз.\n$error';
+  }
+
+  @override
+  String get chatListOfflineTitle => 'Нет соединения с сервером';
+
+  @override
+  String chatListOfflineMessage(String error) {
+    return 'Локальный кэш по-прежнему доступен. Список обновится автоматически, когда соединение вернётся.\n$error';
+  }
+
+  @override
+  String get groupAvatarTitle => 'Аватар группы';
+
+  @override
+  String get groupAvatarSubtitle =>
+      'Аватар можно добавить сразу при создании группы.';
+
+  @override
+  String get chooseFileButton => 'Выбрать файл';
+
+  @override
+  String get groupHistoryTitle => 'Сохранять историю для новых участников';
+
+  @override
+  String get fileAccessDeniedMessage => 'Нет доступа к выбранному файлу.';
+
+  @override
+  String get avatarFileAccessDeniedMessage =>
+      'Нет доступа к файлу аватара. Попробуйте выбрать другой файл.';
+
+  @override
+  String get profileEmptySelfHint =>
+      'Профиль пока выглядит пустым. Добавьте имя, описание или локацию, чтобы он выглядел полноценно.';
+
+  @override
+  String get profileEmptyOtherHint =>
+      'Пользователь ещё не заполнил профиль или сервер не вернул подробные поля.';
+
+  @override
+  String get twoFactorDisableConfirmContent =>
+      'Отключить двухфакторную аутентификацию для этого аккаунта? Чтобы вернуть дополнительную защиту, её придётся настроить заново.';
+
+  @override
+  String get betaTestLabel => 'Бета-тест';
+
+  @override
+  String get homeBetaWelcomeTitle => 'Приветствуем в бета-тесте TwoSpace!';
+
+  @override
+  String get homeBetaWelcomeBody =>
+      'Функционал может часто меняться. Отправляйте предложения.';
+
+  @override
+  String get devMenuInfoLoading => 'Собираем сведения об устройстве…';
+
+  @override
+  String get devMenuAppNameLabel => 'Название приложения';
+
+  @override
+  String get devMenuVersionLabel => 'Версия';
+
+  @override
+  String get devMenuPackageNameLabel => 'Имя пакета';
+
+  @override
+  String get devMenuDeviceLabel => 'Устройство';
 }

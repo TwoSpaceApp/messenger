@@ -2,21 +2,24 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/constants/greeting_constants.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/features/chat/presentation/screens/main_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen(
-      {required this.name,
-      super.key,
-      this.username,
-      this.avatarUrl,
-      this.avatarFileId,
-      this.description,
-      this.phone});
+  const WelcomeScreen({
+    required this.name,
+    super.key,
+    this.username,
+    this.avatarUrl,
+    this.avatarFileId,
+    this.description,
+    this.phone,
+  });
   final String name;
   final String? username;
   final String? avatarUrl;
@@ -55,16 +58,15 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
     // Transition to MainScreen after displaying welcome message
     _timer = Timer(
-        GreetingConstants.welcomeScreenDuration + const Duration(seconds: 1),
-        _transitionToMain);
+      GreetingConstants.welcomeScreenDuration + const Duration(seconds: 1),
+      _transitionToMain,
+    );
   }
 
   void _transitionToMain() {
     _ctrl.reverse().then((_) {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-        );
+        context.go(AppStrings.routeHome);
       }
     });
   }
@@ -87,7 +89,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             child: ScaleTransition(
               scale: _scale,
               child: GlassCard(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(UITokens.spaceXL),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -101,29 +103,24 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     Text(
                       _greeting, // Using random greeting
                       textAlign: TextAlign.center,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
+                      style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontStyle: FontStyle.italic),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: UITokens.spaceSm),
                     Text(
                       widget.name,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium
+                      style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    if (widget.username != null && widget.username!.trim().isNotEmpty)
+                    if (widget.username != null &&
+                        widget.username!.trim().isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.only(top: UITokens.spaceSm),
                         child: Text(
                           '@${widget.username!.trim()}',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 color: Theme.of(context)
                                     .textTheme
@@ -138,30 +135,27 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     if (widget.description != null &&
                         widget.description!.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.only(top: UITokens.spaceSm),
                         child: Text(
                           widget.description!,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
+                          style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.color
-                                      ?.withValues(alpha: 0.7)),
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.color
+                                    ?.withValues(alpha: 0.7),
+                              ),
                         ),
                       ),
                     if ((widget.phone ?? '').trim().isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.only(top: UITokens.spaceSmMd),
                         child: Text(
                           widget.phone!.trim(),
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
+                          style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(context)
                                     .textTheme

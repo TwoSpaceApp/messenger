@@ -72,10 +72,13 @@ Future<void> main() async {
   }
 
   final auth = await client.authenticateWithPassword(
-    username: username,
+    username: username.toUpperCase(),
     password: password,
   );
-  print('Auth success=${auth.success} userId=${auth.userId} username=${auth.username}');
+  print(
+    'Auth success=${auth.success} userId=${auth.userId} '
+    'username=${auth.username} loginAs=${username.toUpperCase()}',
+  );
 
   await client.disconnect();
 }

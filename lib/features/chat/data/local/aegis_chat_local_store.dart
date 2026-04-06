@@ -68,10 +68,27 @@ class AegisChatLocalStore {
             'id': row.id,
             'senderId': row.senderId,
             'content': row.content,
-            'time': DateTime.fromMillisecondsSinceEpoch(row.sentAtEpochMs)
+            'time': DateTime.fromMillisecondsSinceEpoch(
+              row.sentAtEpochMs,
+              isUtc: true,
+            )
                 .toIso8601String(),
             'type': row.type,
             'mediaId': row.mediaId,
+            if (row.replyToMessageId != null)
+              'replyToMessageId': row.replyToMessageId,
+            'isDelivered': row.isDelivered,
+            'isRead': row.isRead,
+            if (row.deliveredAtEpochMs != null)
+              'deliveredAt': DateTime.fromMillisecondsSinceEpoch(
+                row.deliveredAtEpochMs!,
+                isUtc: true,
+              ).toIso8601String(),
+            if (row.readAtEpochMs != null)
+              'readAt': DateTime.fromMillisecondsSinceEpoch(
+                row.readAtEpochMs!,
+                isUtc: true,
+              ).toIso8601String(),
           },
         )
         .toList(growable: false);
@@ -487,6 +504,12 @@ class AegisChatLocalStore {
   ) {
     final time = DateTime.tryParse(json['time'] as String? ?? '') ??
         DateTime.fromMillisecondsSinceEpoch(0);
+    final deliveredAt = json['deliveredAt'] is String
+        ? DateTime.tryParse(json['deliveredAt'] as String)
+        : null;
+    final readAt = json['readAt'] is String
+        ? DateTime.tryParse(json['readAt'] as String)
+        : null;
     return AegisMessagesCompanion.insert(
       id: json['id'] as String,
       roomId: roomId,
@@ -495,6 +518,11 @@ class AegisChatLocalStore {
       sentAtEpochMs: time.millisecondsSinceEpoch,
       type: Value(json['type'] as String? ?? 'm.text'),
       mediaId: Value(json['mediaId'] as String?),
+      replyToMessageId: Value((json['replyToMessageId'] as num?)?.toInt()),
+      isDelivered: Value(json['isDelivered'] as bool? ?? false),
+      isRead: Value(json['isRead'] as bool? ?? false),
+      deliveredAtEpochMs: Value(deliveredAt?.millisecondsSinceEpoch),
+      readAtEpochMs: Value(readAt?.millisecondsSinceEpoch),
     );
   }
 

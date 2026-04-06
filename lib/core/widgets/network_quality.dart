@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/environment.dart';
+import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 
 /// Shows simple network quality indicator (0-3 bars) based on ping RTT to
 /// the configured Aegis server. This is a light-weight heuristic and
@@ -19,6 +18,7 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
   Timer? _timer;
   int _bars = 0; // 0..3
   int? _rttMs;
+  final AegisAuthService _auth = AegisAuthService();
 
   @override
   void initState() {
@@ -35,17 +35,17 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
 
   Future<void> _check() async {
     try {
-      final host = Environment.aegisHost;
-      final port = Environment.aegisPort;
-      if (host.isEmpty || port <= 0) {
+      // Reuse the existing protocol connection instead of opening a
+      // throwaway TCP socket every probe.
+      if (!_auth.isConnected || !_auth.isAuthenticated) {
         if (mounted) setState(() => _bars = 0);
         return;
       }
+
       final sw = Stopwatch()..start();
-      final socket = await Socket.connect(host, port,
-          timeout: const Duration(seconds: 3));
-      await socket.close();
+      await _auth.rawClient.ping();
       sw.stop();
+
       final rtt = sw.elapsedMilliseconds;
       var bars = 0;
       if (rtt < 120) {

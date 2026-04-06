@@ -1,7 +1,30 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+class AppSecureStorage {
+  static const AndroidOptions _androidOptions = AndroidOptions(
+    sharedPreferencesName: 'two_space_secure_storage',
+    preferencesKeyPrefix: 'two_space_',
+  );
+
+  static const IOSOptions _iosOptions = IOSOptions(
+    accountName: 'two_space_secure_storage',
+    accessibility: KeychainAccessibility.first_unlock_this_device,
+  );
+
+  static const MacOsOptions _macOsOptions = MacOsOptions(
+    accountName: 'two_space_secure_storage',
+    accessibility: KeychainAccessibility.first_unlock_this_device,
+  );
+
+  static const FlutterSecureStorage instance = FlutterSecureStorage(
+    aOptions: _androidOptions,
+    iOptions: _iosOptions,
+    mOptions: _macOsOptions,
+  );
+}
+
 class SecureStore {
-  static const _storage = FlutterSecureStorage();
+  static const FlutterSecureStorage _storage = AppSecureStorage.instance;
   static final Map<String, String?> _cache = <String, String?>{};
   static bool _allKeysCached = false;
 
@@ -57,6 +80,11 @@ class SecureStore {
   static Future<void> delete(String key) async {
     await _storage.delete(key: key);
     _cache.remove(key);
+  }
+
+  static Future<void> deleteAll() async {
+    await _storage.deleteAll();
+    clearMemoryCache();
   }
 
   static void clearMemoryCache() {

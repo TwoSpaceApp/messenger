@@ -1,26 +1,45 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
-import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/loading_skeletons.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
-import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/calls_screen.dart';
 import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/people/data/services/people_repository.dart';
 import 'package:two_space_app/features/people/presentation/controllers/people_controller.dart';
 import 'package:two_space_app/features/people/presentation/widgets/people_search_field.dart';
 import 'package:two_space_app/features/people/presentation/widgets/person_tile.dart';
-import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 
 class PeopleScreen extends StatefulWidget {
-  const PeopleScreen({super.key, this.autofocusSearch = false});
+  const PeopleScreen({
+    super.key,
+    this.autofocusSearch = false,
+    this.simplified = false,
+    this.titleOverride,
+    this.searchHintOverride,
+    this.subtitleOverride,
+    this.showCallsShortcut = true,
+    this.onRemotePersonTap,
+  });
   final bool autofocusSearch;
+  final bool simplified;
+  final String? titleOverride;
+  final String? searchHintOverride;
+  final String? subtitleOverride;
+  final bool showCallsShortcut;
+  final Future<void> Function(PersonEntry person)? onRemotePersonTap;
 
   @override
   State<PeopleScreen> createState() => _PeopleScreenState();
@@ -30,6 +49,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
   late final PeopleController _controller;
   late final TextEditingController _searchController;
   late final FocusNode _searchFocusNode;
+  final ScrollController _bodyScrollController = ScrollController();
+  final Map<String, GlobalKey> _phonebookSectionKeys = <String, GlobalKey>{};
 
   @override
   void initState() {
@@ -44,6 +65,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
     _controller.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _bodyScrollController.dispose();
     super.dispose();
   }
 
@@ -54,6 +76,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final canPop = Navigator.of(context).canPop();
+    final title = widget.titleOverride ?? l10n.peopleTitle;
+    final searchHint = widget.searchHintOverride ?? l10n.peopleSearchHint;
+    final subtitle =
+      widget.subtitleOverride ??
+      (widget.autofocusSearch ? l10n.searchContactsHint : l10n.peopleSubtitle);
     const pad = EdgeInsets.symmetric(horizontal: 16);
 
     return AnimatedBuilder(
@@ -64,90 +91,152 @@ class _PeopleScreenState extends State<PeopleScreen> {
           child: SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 860),
+                constraints: const BoxConstraints(
+                  maxWidth: UITokens.readableContentMaxWidth,
+                ),
                 child: Column(
                   children: [
-                    // ── Header row ──
                     Padding(
-                      padding: pad.copyWith(top: 10, bottom: 2),
-                      child: Row(
-                        children: [
-                          if (canPop)
-                            _HeaderIcon(
-                              icon: Icons.arrow_back_rounded,
-                              tooltip: l10n.back,
-                              onTap: () => Navigator.of(context).maybePop(),
-                            ),
-                          if (canPop) const SizedBox(width: 4),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      padding: pad.copyWith(top: 10, bottom: 8),
+                      child: SectionCard(
+                        radius: UITokens.cornerXL,
+                        padding: const EdgeInsets.fromLTRB(
+                          UITokens.spaceMdLg,
+                          UITokens.spaceMdLg,
+                          UITokens.spaceMdLg,
+                          UITokens.spaceMd,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               children: [
-                                Text(
-                                  l10n.peopleTitle,
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    color: theme.colorScheme.onSurface,
-                                    fontWeight: FontWeight.w700,
+                                if (canPop)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: UITokens.spaceSmMd,
+                                    ),
+                                    child: _HeaderIcon(
+                                      icon: Icons.arrow_back_rounded,
+                                      tooltip: l10n.back,
+                                      onTap: () =>
+                                          Navigator.of(context).maybePop(),
+                                    ),
+                                  ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        title,
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
+                                      const SizedBox(height: UITokens.spaceXSm),
+                                      Text(
+                                        subtitle,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: AppColors.subtitleText(
+                                                context,
+                                              ),
+                                            ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  l10n.peopleSubtitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.subtitleText(context),
+                                if (widget.showCallsShortcut)
+                                  _HeaderIcon(
+                                    icon: Icons.history_rounded,
+                                    tooltip: l10n.callsTitle,
+                                    onTap: _openCallsHistory,
                                   ),
-                                ),
                               ],
                             ),
-                          ),
-                          _HeaderIcon(
-                            icon: Icons.sync_rounded,
-                            tooltip: l10n.peopleQuickSync,
-                            onTap: _controller.loading ? null : _controller.refresh,
-                          ),
-                          _HeaderIcon(
-                            icon: Icons.share_outlined,
-                            tooltip: l10n.peopleQuickInvite,
-                            onTap: _shareInviteText,
-                          ),
-                        ],
+                            const SizedBox(height: UITokens.spaceMd),
+                            Container(
+                              decoration: BoxDecoration(
+                                color:
+                                    theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(
+                                  UITokens.corner2Lg,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 2,
+                              ),
+                              child: PeopleSearchField(
+                                controller: _searchController,
+                                focusNode: _searchFocusNode,
+                                autofocus: widget.autofocusSearch,
+                                hintText: searchHint,
+                                embedded: true,
+                                onChanged: _controller.updateQuery,
+                                onClear: () {
+                                  _searchController.clear();
+                                  _controller.clearSearch();
+                                },
+                              ),
+                            ),
+                            if (!widget.simplified) ...[
+                              const SizedBox(height: UITokens.spaceMdSm),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                keyboardDismissBehavior:
+                                    ScrollViewKeyboardDismissBehavior.onDrag,
+                                child: SegmentedButton<PeopleSegment>(
+                                  showSelectedIcon: false,
+                                  selected: <PeopleSegment>{
+                                    _controller.segment,
+                                  },
+                                  onSelectionChanged: (selection) {
+                                    final segment = selection.firstOrNull;
+                                    if (segment != null) {
+                                      _controller.setSegment(segment);
+                                    }
+                                  },
+                                  segments: [
+                                    ButtonSegment(
+                                      value: PeopleSegment.all,
+                                      label: Text(l10n.peopleSegmentAll),
+                                      icon: const Icon(Icons.grid_view_rounded),
+                                    ),
+                                    ButtonSegment(
+                                      value: PeopleSegment.twospace,
+                                      label: Text(l10n.peopleSegmentTwoSpace),
+                                      icon: const Icon(
+                                        Icons.alternate_email_rounded,
+                                      ),
+                                    ),
+                                    ButtonSegment(
+                                      value: PeopleSegment.phonebook,
+                                      label: Text(l10n.peopleSegmentPhonebook),
+                                      icon: const Icon(
+                                        Icons.contact_phone_outlined,
+                                      ),
+                                    ),
+                                    ButtonSegment(
+                                      value: PeopleSegment.recent,
+                                      label: Text(l10n.peopleSegmentRecent),
+                                      icon: const Icon(Icons.schedule_rounded),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
-                    // ── Search ──
-                    Padding(
-                      padding: pad.copyWith(top: 4, bottom: 4),
-                      child: PeopleSearchField(
-                        controller: _searchController,
-                        focusNode: _searchFocusNode,
-                        autofocus: widget.autofocusSearch,
-                        hintText: l10n.peopleSearchHint,
-                        onChanged: _controller.updateQuery,
-                        onClear: () {
-                          _searchController.clear();
-                          _controller.clearSearch();
-                        },
-                      ),
-                    ),
-                    // ── Filter chips ──
-                    SizedBox(
-                      height: 36,
-                      child: ListView(
-                        padding: pad,
-                        scrollDirection: Axis.horizontal,
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        children: [
-                          _chip(PeopleSegment.all, l10n.peopleSegmentAll),
-                          _chip(PeopleSegment.twospace, l10n.peopleSegmentTwoSpace),
-                          _chip(PeopleSegment.phonebook, l10n.peopleSegmentPhonebook),
-                          _chip(PeopleSegment.recent, l10n.peopleSegmentRecent),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // ── Body ──
+                    const SizedBox(height: UITokens.spaceXS),
                     Expanded(
                       child: RefreshIndicator(
                         onRefresh: _controller.refresh,
@@ -160,38 +249,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _chip(PeopleSegment segment, String label) {
-    final selected = _controller.segment == segment;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: selected,
-        showCheckmark: false,
-        onSelected: (_) => _controller.setSegment(segment),
-        padding: const EdgeInsets.symmetric(horizontal: 6),
-        backgroundColor: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withValues(alpha: 0.56),
-        selectedColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.28),
-        labelStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontSize: 12,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-        ),
-        side: BorderSide(
-          color: selected
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.55)
-              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.25),
-        ),
-        visualDensity: VisualDensity.compact,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
@@ -212,36 +269,50 @@ class _PeopleScreenState extends State<PeopleScreen> {
     }
     final dashboard = _controller.dashboard;
     if (dashboard == null) {
-      return ListView(children: [
-        AppEmptyState(
-          title: l10n.peopleNoPeopleTitle,
-          message: l10n.peopleNoPeopleMessage,
-          icon: Icons.people_outline_rounded,
-        ),
-      ]);
+      return ListView(
+        children: [
+          AppEmptyState(
+            title: l10n.peopleNoPeopleTitle,
+            message: l10n.peopleNoPeopleMessage,
+            icon: Icons.people_outline_rounded,
+          ),
+        ],
+      );
     }
 
     final items = <Widget>[];
 
     // Permission card — compact, non-intrusive
     if (dashboard.permission != DeviceContactsPermission.granted) {
-      items.add(Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        child: _PermissionBanner(
-          message: dashboard.permission == DeviceContactsPermission.permanentlyDenied
-              ? l10n.peoplePermissionCardMessageSettings
-              : l10n.peoplePermissionCardMessage,
-          actionLabel: dashboard.permission == DeviceContactsPermission.permanentlyDenied
-              ? l10n.openSettingsButton
-              : l10n.requestPermissionButton,
-          onAction: () async {
-            if (dashboard.permission == DeviceContactsPermission.permanentlyDenied) {
-              await openAppSettings();
-            }
-            await _controller.refresh();
-          },
+      items.add(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            UITokens.spaceMd,
+            0,
+            UITokens.spaceMd,
+            UITokens.spaceSm,
+          ),
+          child: _PermissionBanner(
+            message:
+                dashboard.permission ==
+                    DeviceContactsPermission.permanentlyDenied
+                ? l10n.peoplePermissionCardMessageSettings
+                : l10n.peoplePermissionCardMessage,
+            actionLabel:
+                dashboard.permission ==
+                    DeviceContactsPermission.permanentlyDenied
+                ? l10n.openSettingsButton
+                : l10n.requestPermissionButton,
+            onAction: () async {
+              if (dashboard.permission ==
+                  DeviceContactsPermission.permanentlyDenied) {
+                await openAppSettings();
+              }
+              await _controller.refresh();
+            },
+          ),
         ),
-      ));
+      );
     }
 
     if (_controller.isSearchingMode) {
@@ -251,74 +322,243 @@ class _PeopleScreenState extends State<PeopleScreen> {
     }
 
     if (items.isEmpty) {
-      items.add(AppEmptyState(
-        title: l10n.peopleNoPeopleTitle,
-        message: l10n.peopleNoPeopleMessage,
-        icon: Icons.people_outline_rounded,
-      ));
+      items.add(
+        AppEmptyState(
+          title: l10n.peopleNoPeopleTitle,
+          message: l10n.peopleNoPeopleMessage,
+          icon: Icons.people_outline_rounded,
+        ),
+      );
     }
 
     return ListView(
+      controller: _bodyScrollController,
       cacheExtent: 800,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.only(bottom: 100),
+      padding: const EdgeInsets.only(bottom: UITokens.bottomSheetClearance),
       children: items,
     );
   }
 
   List<Widget> _dashboardContent(PeopleDashboardData d, AppLocalizations l10n) {
     final w = <Widget>[];
-    void section(String t, List<PersonEntry> p) {
-      final f = _filter(p);
-      if (f.isEmpty) return;
-      w.add(_SectionLabel(title: t, count: f.length));
-      w.addAll(f.map((p) => _personTile(p, l10n)));
+    final seen = <String>{};
+
+    void section(
+      String t,
+      List<PersonEntry> p, {
+      int? limit,
+    }) {
+      final filtered = _dedupePeople(_filter(p), seen);
+      if (filtered.isEmpty) {
+        return;
+      }
+      final visible = limit == null
+          ? filtered
+          : filtered.take(limit).toList(growable: false);
+      w.add(_SectionLabel(title: t, count: filtered.length));
+      w.addAll(visible.map((person) => _personTile(person, l10n)));
     }
-    section(l10n.peopleFavoritesFrequentTitle, d.favoritesAndFrequent);
-    section(l10n.peopleRecentTitle, d.recentPeople);
-    section(l10n.peopleTwoSpaceTitle, d.twoSpacePeople);
-    section(l10n.peopleInviteTitle, d.invitePeople);
+
+    switch (_controller.segment) {
+      case PeopleSegment.all:
+        section(
+          l10n.peopleFavoritesFrequentTitle,
+          d.favoritesAndFrequent,
+          limit: 4,
+        );
+        section(l10n.peopleRecentTitle, d.recentPeople, limit: 4);
+        section(l10n.peopleTwoSpaceTitle, d.twoSpacePeople, limit: 6);
+        section(l10n.peopleInviteTitle, d.invitePeople, limit: 4);
+      case PeopleSegment.twospace:
+        section(
+          l10n.peopleTwoSpaceTitle,
+          <PersonEntry>[
+            ...d.favoritesAndFrequent,
+            ...d.recentPeople,
+            ...d.twoSpacePeople,
+          ],
+        );
+      case PeopleSegment.phonebook:
+        w.addAll(_phonebookContent(d, l10n));
+      case PeopleSegment.recent:
+        section(l10n.peopleRecentTitle, d.recentPeople);
+    }
     return w;
+  }
+
+  List<Widget> _phonebookContent(
+    PeopleDashboardData d,
+    AppLocalizations l10n,
+  ) {
+    final people = _dedupePeople(
+      _filter(<PersonEntry>[
+        ...d.favoritesAndFrequent,
+        ...d.recentPeople,
+        ...d.twoSpacePeople,
+        ...d.invitePeople,
+      ]),
+      <String>{},
+    );
+    if (people.isEmpty) {
+      return const <Widget>[];
+    }
+
+    final grouped = <String, List<PersonEntry>>{};
+    var twoSpaceCount = 0;
+    var inviteCount = 0;
+    for (final person in people) {
+      if (person.isTwoSpaceUser) {
+        twoSpaceCount++;
+      }
+      if (person.isInvitable) {
+        inviteCount++;
+      }
+      grouped.putIfAbsent(_initialForPerson(person), () => <PersonEntry>[]).add(person);
+    }
+
+    final widgets = <Widget>[
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          UITokens.spaceMd,
+          UITokens.spaceSm,
+          UITokens.spaceMd,
+          UITokens.spaceSm,
+        ),
+        child: SectionCard(
+          padding: const EdgeInsets.all(UITokens.spaceMdSm),
+          child: Row(
+            children: [
+              Expanded(
+                child: _PhonebookMetric(
+                  label: l10n.peopleSegmentPhonebook,
+                  value: '${people.length}',
+                ),
+              ),
+              Expanded(
+                child: _PhonebookMetric(
+                  label: l10n.peopleTwoSpaceTitle,
+                  value: '$twoSpaceCount',
+                ),
+              ),
+              Expanded(
+                child: _PhonebookMetric(
+                  label: l10n.peopleInviteTitle,
+                  value: '$inviteCount',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    final sortedKeys = grouped.keys.toList()..sort();
+    widgets.add(
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          UITokens.spaceMd,
+          0,
+          UITokens.spaceMd,
+          UITokens.spaceSm,
+        ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final key in sortedKeys)
+                Padding(
+                  padding: const EdgeInsets.only(right: UITokens.spaceXSm),
+                  child: ActionChip(
+                    label: Text(key),
+                    onPressed: () => _jumpToPhonebookSection(key),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    for (final key in sortedKeys) {
+      final entries = grouped[key]!..sort(
+        (a, b) => a.displayName.toLowerCase().compareTo(
+          b.displayName.toLowerCase(),
+        ),
+      );
+      widgets.add(
+        KeyedSubtree(
+          key: _phonebookSectionKeys.putIfAbsent(key, GlobalKey.new),
+          child: _SectionLabel(title: key, count: entries.length),
+        ),
+      );
+      widgets.addAll(entries.map((person) => _personTile(person, l10n)));
+    }
+    return widgets;
+  }
+
+  Future<void> _jumpToPhonebookSection(String key) async {
+    final sectionKey = _phonebookSectionKeys[key];
+    final sectionContext = sectionKey?.currentContext;
+    if (sectionContext == null) {
+      return;
+    }
+    await Scrollable.ensureVisible(
+      sectionContext,
+      duration: UITokens.durationMdLg,
+      curve: Curves.easeOutCubic,
+      alignment: 0.02,
+    );
   }
 
   List<Widget> _searchContent(AppLocalizations l10n) {
     final data = _controller.searchData;
     final w = <Widget>[];
+    final seen = <String>{};
     if (_controller.searching) w.add(const PeopleInlineSkeleton());
     void section(String t, List<PersonEntry> p) {
-      final f = _filter(p);
+      final f = _dedupePeople(_filter(p), seen);
       if (f.isEmpty) return;
       w.add(_SectionLabel(title: t, count: f.length));
       w.addAll(f.map((p) => _personTile(p, l10n)));
     }
+
     section(l10n.peopleSearchRemoteTitle, data.remoteResults);
     section(l10n.peopleSearchLocalTitle, data.localResults);
     section(l10n.peopleSearchInviteTitle, data.inviteResults);
     if (w.isEmpty) {
-      w.add(AppEmptyState(
-        title: l10n.peopleSearchEmptyTitle,
-        message: l10n.peopleSearchEmptyMessage,
-        icon: Icons.manage_search_rounded,
-      ));
+      w.add(
+        AppEmptyState(
+          title: l10n.peopleSearchEmptyTitle,
+          message: l10n.peopleSearchEmptyMessage,
+          icon: Icons.manage_search_rounded,
+        ),
+      );
     }
     return w;
   }
 
   Widget _personTile(PersonEntry person, AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        0,
+        UITokens.spaceMd,
+        UITokens.spaceXSm,
+      ),
       child: PersonTile(
         person: person,
         trailingLabel: l10n.peopleTwoSpaceBadge,
         subtitle: _subtitle(person, l10n),
         onTap: person.remoteUserId != null
-            ? () => _openProfile(person)
+            ? () => _handleRemotePersonTap(person)
             : () => _showPersonSheet(person),
         onFavoriteTap: () => _controller.toggleFavorite(person),
-        onMessageTap: person.remoteUserId != null ? () => _openChat(person) : null,
-        onVoiceCallTap: person.remoteUserId != null ? () => _startCall(person, false) : null,
-        onVideoCallTap: person.remoteUserId != null ? () => _startCall(person, true) : null,
+        onMessageTap: person.remoteUserId != null
+            ? () => _openChat(person)
+            : null,
         onInviteTap: person.isInvitable ? () => _invitePerson(person) : null,
+        onMoreTap: () => _showPersonSheet(person),
       ),
     );
   }
@@ -336,6 +576,36 @@ class _PeopleScreenState extends State<PeopleScreen> {
       case PeopleSegment.recent:
         return people.where((p) => p.lastInteractionAt != null).toList();
     }
+  }
+
+  List<PersonEntry> _dedupePeople(List<PersonEntry> people, Set<String> seen) {
+    final unique = <PersonEntry>[];
+    for (final person in people) {
+      final key = _personDedupKey(person);
+      if (seen.add(key)) {
+        unique.add(person);
+      }
+    }
+    return unique;
+  }
+
+  String _personDedupKey(PersonEntry person) {
+    final remote = person.remoteUserId?.trim();
+    if (remote != null && remote.isNotEmpty) {
+      return 'remote:$remote';
+    }
+    if (person.phones.isNotEmpty) {
+      return 'phone:${person.phones.first.trim()}';
+    }
+    return 'local:${person.id.trim()}';
+  }
+
+  String _initialForPerson(PersonEntry person) {
+    final source = person.displayName.trim().isNotEmpty
+        ? person.displayName.trim()
+        : (person.phones.isNotEmpty ? person.phones.first.trim() : '#');
+    final first = source.characters.first.toUpperCase();
+    return RegExp('[A-ZА-Я0-9]').hasMatch(first) ? first : '#';
   }
 
   String _subtitle(PersonEntry person, AppLocalizations l10n) {
@@ -360,7 +630,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
           ? '@${person.username!} • ${_rel(person.lastSeenAt!, l10n)}'
           : _rel(person.lastSeenAt!, l10n);
     }
-    if (person.username != null && person.username!.isNotEmpty) return '@${person.username!}';
+    if (person.username != null && person.username!.isNotEmpty)
+      return '@${person.username!}';
     if (person.phones.isNotEmpty) return person.phones.first;
     return l10n.peopleNoDetails;
   }
@@ -395,28 +666,40 @@ class _PeopleScreenState extends State<PeopleScreen> {
   // ──────────────────────── Actions ──────────────────────────
 
   Future<void> _openChat(PersonEntry person) async {
-    if (person.remoteUserId == null) return;
+    final remoteUserId = person.remoteUserId;
+    if (remoteUserId == null) return;
     await _controller.rememberPerson(person);
     final backend = createChatBackend();
-    final map = await backend.getOrCreateDirectChat(person.remoteUserId!);
+    final map = await backend.getOrCreateDirectChat(remoteUserId);
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ChatScreen(chat: Chat.fromMap(map))),
+    final chat = Chat.fromMap(map);
+    await context.push(
+      '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
+      extra: chat,
     );
   }
 
+  Future<void> _handleRemotePersonTap(PersonEntry person) async {
+    final customTap = widget.onRemotePersonTap;
+    if (customTap != null) {
+      await customTap(person);
+      return;
+    }
+    await _openProfile(person);
+  }
+
   Future<void> _openProfile(PersonEntry person) async {
-    if (person.remoteUserId == null) return;
+    final remoteUserId = person.remoteUserId;
+    if (remoteUserId == null) return;
     await _controller.rememberPerson(person);
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ProfileScreen(
-          userId: person.remoteUserId!,
-          initialName: person.displayName,
-          initialAvatar: person.avatarUrl,
-        ),
-      ),
+    await context.push(
+      AppStrings.routeProfile,
+      extra: <String, dynamic>{
+        'userId': remoteUserId,
+        'initialName': person.displayName,
+        'initialAvatar': person.avatarUrl,
+      },
     );
   }
 
@@ -426,7 +709,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CallScreen(
-          room: 'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
+          room:
+              'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
           person: person,
           isVideo: isVideo,
           displayName: person.displayName,
@@ -436,9 +720,13 @@ class _PeopleScreenState extends State<PeopleScreen> {
     );
   }
 
-  Future<void> _shareInviteText() async {
-    final l10n = AppLocalizations.of(context)!;
-    await Share.share(l10n.peopleInviteShareText);
+  Future<void> _openCallsHistory() async {
+    if (!mounted) {
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const CallsScreen()),
+    );
   }
 
   Future<void> _invitePerson(PersonEntry person) async {
@@ -456,7 +744,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
       builder: (ctx) => Container(
         decoration: BoxDecoration(
           color: Theme.of(ctx).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(UITokens.corner2Lg),
+          ),
         ),
         child: SafeArea(
           top: false,
@@ -467,17 +757,24 @@ class _PeopleScreenState extends State<PeopleScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 8),
+                const SizedBox(height: UITokens.spaceSm),
                 Container(
-                  width: 40,
-                  height: 4,
+                  width: UITokens.dragHandleWidth,
+                  height: UITokens.dragHandleHeight,
                   decoration: BoxDecoration(
-                    color: Theme.of(ctx).colorScheme.outline.withValues(alpha: 0.45),
-                    borderRadius: BorderRadius.circular(99),
+                    color: Theme.of(
+                      ctx,
+                    ).colorScheme.outline.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(UITokens.cornerPill),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+                  padding: const EdgeInsets.fromLTRB(
+                    UITokens.spaceMd,
+                    UITokens.spaceSmMd,
+                    UITokens.spaceMd,
+                    UITokens.spaceXSm,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -486,8 +783,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -499,7 +796,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(
+                    UITokens.spaceMd,
+                    0,
+                    UITokens.spaceMd,
+                    UITokens.spaceSm,
+                  ),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -507,12 +809,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ),
-                const Divider(height: 1),
+                const Divider(height: UITokens.borderThin),
                 Flexible(
                   child: ListView(
                     shrinkWrap: true,
@@ -527,7 +829,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           },
                         ),
                         ListTile(
-                          leading: const Icon(Icons.chat_bubble_outline_rounded),
+                          leading: const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                          ),
                           title: Text(l10n.writeMessageAction),
                           onTap: () {
                             Navigator.pop(ctx);
@@ -565,7 +869,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           person.isFavorite
                               ? Icons.star_rounded
                               : Icons.star_border_rounded,
-                          color: person.isFavorite ? AppColors.favoriteActive(ctx) : null,
+                          color: person.isFavorite
+                              ? AppColors.favoriteActive(ctx)
+                              : null,
                         ),
                         title: Text(
                           person.isFavorite
@@ -577,7 +883,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           _controller.toggleFavorite(person);
                         },
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UITokens.spaceSm),
                     ],
                   ),
                 ),
@@ -593,7 +899,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
 // ══════════════════════ Private widgets ══════════════════════
 
 class _HeaderIcon extends StatelessWidget {
-  const _HeaderIcon({required this.icon, required this.tooltip, required this.onTap});
+  const _HeaderIcon({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
   final IconData icon;
   final String tooltip;
   final VoidCallback? onTap;
@@ -602,7 +912,7 @@ class _HeaderIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      margin: const EdgeInsets.only(left: 6),
+      margin: const EdgeInsets.only(left: UITokens.spaceXSm),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
         shape: BoxShape.circle,
@@ -634,26 +944,31 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        UITokens.spaceSm,
+        UITokens.spaceMd,
+        UITokens.spaceXS,
+      ),
       child: Row(
         children: [
           Expanded(
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: AppColors.subtitleText(context),
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
+                color: AppColors.subtitleText(context),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
             ),
           ),
           if (count != null)
             Text(
               '$count',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.hintText(context),
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: AppColors.hintText(context),
+                fontWeight: FontWeight.w700,
+              ),
             ),
         ],
       ),
@@ -661,16 +976,54 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
+class _PhonebookMetric extends StatelessWidget {
+  const _PhonebookMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: UITokens.space2XS),
+        Text(
+          label,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.subtitleText(context),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _PermissionBanner extends StatelessWidget {
-  const _PermissionBanner({required this.message, required this.actionLabel, required this.onAction});
+  const _PermissionBanner({
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
   final String message;
   final String actionLabel;
   final VoidCallback onAction;
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    return SectionCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.spaceMdSm,
+        vertical: UITokens.space,
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isNarrow = constraints.maxWidth < 620;
@@ -682,22 +1035,20 @@ class _PermissionBanner extends StatelessWidget {
                   color: AppColors.subtitleText(context),
                   size: 20,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UITokens.space),
                 Expanded(
                   child: Text(
                     message,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: AppColors.subtitleText(context)),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.subtitleText(context),
+                    ),
                   ),
                 ),
               ],
             ),
-            if (isNarrow) const SizedBox(height: 10),
+            if (isNarrow) const SizedBox(height: UITokens.spaceSmMd),
             Align(
-              alignment:
-                  isNarrow ? Alignment.centerRight : Alignment.center,
+              alignment: isNarrow ? Alignment.centerRight : Alignment.center,
               child: TextButton(
                 onPressed: onAction,
                 child: Text(actionLabel),
@@ -715,7 +1066,7 @@ class _PermissionBanner extends StatelessWidget {
           return Row(
             children: [
               Expanded(child: content.first),
-              const SizedBox(width: 8),
+              const SizedBox(width: UITokens.spaceSm),
               content.last,
             ],
           );

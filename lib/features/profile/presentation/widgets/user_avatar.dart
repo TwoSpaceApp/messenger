@@ -3,17 +3,19 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
 
 /// Reusable user avatar widget.
 /// Supports local files, network URLs and initials fallback.
 class UserAvatar extends StatefulWidget {
-  const UserAvatar(
-      {super.key,
-      this.avatarUrl,
-      this.avatarFileId,
-      this.name,
-      this.radius = 24});
+  const UserAvatar({
+    super.key,
+    this.avatarUrl,
+    this.avatarFileId,
+    this.name,
+    this.radius = 24,
+  });
   final String? avatarUrl;
   final String? avatarFileId;
   final String? name;
@@ -150,28 +152,36 @@ class _UserAvatarState extends State<UserAvatar> {
     final normalizedUrl = normalizeAegisAvatarUrl(widget.avatarUrl);
     if (_bytes != null) {
       return CircleAvatar(
-          radius: r,
-          backgroundColor: Colors.transparent,
-          child: ClipOval(
-              child: Image.memory(_bytes!,
-                  width: r * 2, height: r * 2, fit: BoxFit.cover)));
+        radius: r,
+        backgroundColor: Colors.transparent,
+        child: ClipOval(
+          child: Image.memory(
+            _bytes!,
+            width: r * 2,
+            height: r * 2,
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
     }
     if (normalizedUrl != null &&
         normalizedUrl.isNotEmpty &&
         !normalizedUrl.startsWith('data:') &&
         !isLocalAvatarFilePath(normalizedUrl)) {
-      return CircleAvatar(
+      return ShadAvatar(
         key: ValueKey(normalizedUrl),
-        radius: r,
+        normalizedUrl,
+        size: Size.square(r * 2),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        backgroundImage: NetworkImage(normalizedUrl),
-        onBackgroundImageError: (exception, stackTrace) {
-          // Fallback on network image load error
-        },
+        placeholder: _buildFallbackAvatar(context, r),
+        fit: BoxFit.cover,
       );
     }
 
-    // Gradient fallback for text avatars
+    return _buildFallbackAvatar(context, r);
+  }
+
+  Widget _buildFallbackAvatar(BuildContext context, double radius) {
     final nameVal = widget.name ?? '?';
     final hash = nameVal.hashCode;
     final h1 = (hash % 360).toDouble();
@@ -183,8 +193,8 @@ class _UserAvatarState extends State<UserAvatar> {
     final initial = nameVal.isNotEmpty ? nameVal[0].toUpperCase() : '?';
 
     return Container(
-      width: r * 2,
-      height: r * 2,
+      width: radius * 2,
+      height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
@@ -198,7 +208,7 @@ class _UserAvatarState extends State<UserAvatar> {
         initial,
         style: TextStyle(
           color: Colors.white,
-          fontSize: r * 0.9, // Adjust size based on radius
+          fontSize: radius * 0.9,
           fontWeight: FontWeight.bold,
           shadows: [
             Shadow(

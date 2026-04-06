@@ -1,77 +1,83 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
-import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_encoder.dart';
+import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
-import 'package:two_space_app/core/services/dev_network_logger.dart';
+import 'package:two_space_app/core/network/aegis/ring_buffer.dart';
+import 'package:two_space_app/core/network/aegis/security_utils.dart';
+import 'package:two_space_app/core/network/aegis/session_crypto.dart';
 
-/// TCP transport layer for Aegis client communication
+/// TCP transport layer for Aegis client communication.
+///
+/// Handles socket lifecycle, frame extraction from the TCP byte stream,
+/// optional XOR transport masking, backpressure, and periodic health checks.
+///
+/// See: `src/Aegis.Transport/TcpServer.cs` (server counterpart).
 class AegisTransport {
   late Socket _socket;
   bool _isConnected = false;
   int _nextSequenceId = 1;
-  List<int>? _macKey;
-  List<int>? _sessionKey;
+  Future<void> _receivePipeline = Future<void>.value();
+
+  /// Ring buffer for accumulating TCP chunks and extracting complete frames.
+  /// Replaces the old `Uint8List _pendingBytes` pattern, avoiding O(n)
+  /// copies on every chunk arrival.
+  final RingBuffer _pendingBuffer = RingBuffer();
+
   Uint8List _transportMaskingKey = Uint8List(0);
   int _inboundMaskOffset = 0;
   int _outboundMaskOffset = 0;
-  String? _connectedHost;
-  int? _connectedPort;
-
-  /// Буфер входящих байт. TCP является потоковым протоколом — одно
-  /// событие `data` может содержать неполное сообщение, несколько сообщений
-  /// или часть следующего. Буфер решает эту проблему.
-  final List<int> _incomingBuffer = [];
-
-  /// Max incoming buffer size (16 MB) to protect against unbounded growth.
-  static const int _maxIncomingBufferSize = 16 * 1024 * 1024;
 
   StreamSubscription<Uint8List>? _socketSubscription;
+  Timer? _healthCheckTimer;
+  AegisSessionCrypto? _sessionCrypto;
+
+  /// Maximum bytes buffered before pausing the socket (backpressure).
+  final int _maxBufferSize;
+
+  /// Whether reading has been paused due to backpressure.
+  bool _isPaused = false;
 
   final StreamController<Message> _messageController =
       StreamController<Message>.broadcast();
   final StreamController<void> _disconnectController =
       StreamController<void>.broadcast();
 
-  /// Stream of incoming messages
+  /// Stream of incoming decoded messages.
   Stream<Message> get messages => _messageController.stream;
 
-  /// Stream of disconnect events
+  /// Stream of disconnect events.
   Stream<void> get disconnects => _disconnectController.stream;
 
-  /// Check if client is connected to server
+  /// Whether the transport is connected.
   bool get isConnected => _isConnected;
 
-  void setMacKey(List<int> macKey) {
-    _macKey = List<int>.from(macKey);
-  }
+  /// Create a transport with optional [maxBufferSize] for backpressure.
+  AegisTransport({int maxBufferSize = 4 * 1024 * 1024})
+    : _maxBufferSize = maxBufferSize;
 
-  void setSessionKey(List<int> sessionKey) {
-    _sessionKey = List<int>.from(sessionKey);
-  }
+  // ── Connection ──────────────────────────────────────────────────────
 
-  void clearMacKey() {
-    _macKey = null;
-  }
-
-  void clearSessionKey() {
-    _sessionKey = null;
-  }
-
-  /// Connect to Aegis server
+  /// Connect to the Aegis server at [host]:[port].
+  ///
+  /// * [timeout] — TCP connect timeout.
+  /// * [transportMaskingKey] — optional XOR masking key for the transport.
+  /// * [healthCheckInterval] — if provided, a periodic ping is sent
+  ///   at this interval; a failure triggers a disconnect.
   Future<void> connect(
     String host,
     int port, {
     Duration? timeout,
     String? transportMaskingKey,
+    Duration? healthCheckInterval,
+    bool useTls = false,
   }) async {
     if (_isConnected) {
       throw ConnectionException('Already connected to server');
@@ -80,325 +86,350 @@ class AegisTransport {
     AegisLogger.info('Connecting to $host:$port');
 
     try {
-      // TODO(security): соединение устанавливается по plain TCP без TLS.
-      //   Для продакшна необходимо использовать [SecureSocket.connect] или
-      //   настроить TLS-терминацию на прокси (nginx/HAProxy).
-      //   Без TLS трафик (включая токены аутентификации) виден в сети.
-      _socket = await Socket.connect(host, port,
-              timeout: timeout ?? const Duration(seconds: 10))
-          .timeout(timeout ?? const Duration(seconds: 10));
+      final connectTimeout = timeout ?? const Duration(seconds: 10);
+      if (useTls) {
+        _socket = await SecureSocket.connect(
+          host,
+          port,
+          timeout: connectTimeout,
+        ).timeout(connectTimeout);
+      } else {
+        _socket = await Socket.connect(
+          host,
+          port,
+          timeout: connectTimeout,
+        ).timeout(connectTimeout);
+      }
 
       _isConnected = true;
-      _connectedHost = host;
-      _connectedPort = port;
       _nextSequenceId = 1;
-        _transportMaskingKey =
-          transportMaskingKey != null && transportMaskingKey.trim().isNotEmpty
-            ? Uint8List.fromList(utf8.encode(transportMaskingKey))
-            : Uint8List(0);
-        _inboundMaskOffset = 0;
-        _outboundMaskOffset = 0;
-        _incomingBuffer.clear();
+      _pendingBuffer.clear();
+      _inboundMaskOffset = 0;
+      _outboundMaskOffset = 0;
+      _isPaused = false;
+      _sessionCrypto?.dispose();
+      _sessionCrypto = null;
+
+      if (transportMaskingKey != null &&
+          transportMaskingKey.trim().isNotEmpty) {
+        _transportMaskingKey = Uint8List.fromList(
+          utf8.encode(transportMaskingKey),
+        );
+      } else {
+        _transportMaskingKey = Uint8List(0);
+      }
 
       AegisLogger.info('Connected to $host:$port');
-      _logNetworkEvent(
-        method: 'CONNECT',
-        statusCode: 200,
-        requestBody: {'timeoutMs': (timeout ?? const Duration(seconds: 10)).inMilliseconds},
-        responseBody: {'connected': true},
-      );
 
-      // Start listening for incoming data
       _listenForMessages();
-    } catch (e) {
+
+      if (healthCheckInterval != null) {
+        _startHealthCheck(healthCheckInterval);
+      }
+    } on Object catch (e) {
       _isConnected = false;
-      _connectedHost = host;
-      _connectedPort = port;
-      _logNetworkEvent(
-        method: 'CONNECT',
-        errorMessage: e.toString(),
-        requestBody: {'timeoutMs': (timeout ?? const Duration(seconds: 10)).inMilliseconds},
-      );
       AegisLogger.error('Failed to connect to $host:$port', e);
       throw ConnectionException('Failed to connect to $host:$port', e);
     }
   }
 
-  /// Disconnect from server
+  /// Disconnect from the server.
   Future<void> disconnect() async {
     if (!_isConnected) return;
 
     _isConnected = false;
-    _incomingBuffer.clear();
-    _macKey = null;
-    _sessionKey = null;
-    _transportMaskingKey = Uint8List(0);
-    _inboundMaskOffset = 0;
-    _outboundMaskOffset = 0;
+    _healthCheckTimer?.cancel();
+    _healthCheckTimer = null;
     AegisLogger.info('Disconnecting from server');
-    await _socketSubscription?.cancel();
-    _socketSubscription = null;
 
     try {
+      await _socketSubscription?.cancel();
+      _socketSubscription = null;
       await _socket.close();
-      _logNetworkEvent(
-        method: 'DISCONNECT',
-        statusCode: 200,
-        responseBody: {'connected': false},
-      );
-    } catch (e) {
-      // Ignore errors during disconnect
+    } on Object catch (_) {
+      // Best-effort close — ignore errors.
     }
 
-    _connectedHost = null;
-    _connectedPort = null;
+    // Zero out masking key for security.
+    if (_transportMaskingKey.isNotEmpty) {
+      SecureBufferUtils.zeroOut(_transportMaskingKey);
+    }
 
-    _disconnectController.add(null);
+    _sessionCrypto?.dispose();
+    _sessionCrypto = null;
+
+    if (!_disconnectController.isClosed) _disconnectController.add(null);
   }
 
-  /// Send a message to the server
+  void setSessionKey(Uint8List sessionKey) {
+    _sessionCrypto?.dispose();
+    _sessionCrypto = AegisSessionCrypto(sessionKey);
+  }
+
+  // ── Sending ─────────────────────────────────────────────────────────
+
+  /// Send [message] to the server.
+  ///
+  /// Assigns a sequence ID automatically if `message.sequenceId == 0`.
   Future<void> sendMessage(Message message) async {
     if (!_isConnected) {
       throw NotConnectedException();
     }
 
     AegisLogger.debug(
-        'Sending message: ${message.type} (seq: ${message.sequenceId})');
+      'Sending message: ${message.type} (seq: ${message.sequenceId})',
+    );
 
     try {
-      // Set sequence ID if not set
       if (message.sequenceId == 0) {
         message.sequenceId = _getNextSequenceId();
       }
 
-      if (_sessionKey != null && message.type != MessageType.handshake) {
-        final nonce = List<int>.generate(12, (_) => Random.secure().nextInt(256));
-        final encryptedPayload = AegisHandshakeCrypto.encryptPayload(
-          plaintext: message.payload,
-          sessionKey: _sessionKey!,
-          nonce: nonce,
-        );
-        message.payload = <int>[...nonce, ...encryptedPayload];
-        message.flags = message.flags | ProtocolConstants.flagEncrypted;
-      }
+      AegisLogger.traceFrame(
+        'transport.send',
+        message,
+        direction: 'outbound',
+      );
 
-      message.payloadLength = message.payload.length;
-
-      // Encode and send message
-      final data = MessageEncoder.encode(message);
-      if (_macKey != null && message.type != MessageType.handshake) {
-        final mac = await AegisHandshakeCrypto.computeMac(
-          data.sublist(0, data.length - ProtocolConstants.macSize),
-          _macKey!,
-        );
-        data.setRange(
-          data.length - ProtocolConstants.macSize,
-          data.length,
-          mac,
-        );
-      }
+      final wireMessage = await _prepareOutboundMessage(message);
+      final data = MessageEncoder.encode(wireMessage);
       final outgoing = _applyOutboundMask(data);
       _socket.add(outgoing);
       await _socket.flush();
 
-      _logNetworkEvent(
-        method: 'SEND',
-        statusCode: 200,
-        requestBody: _messageMetadata(message),
-      );
-
       AegisLogger.debug('Message sent successfully');
-    } catch (e) {
+    } on Object catch (e) {
       _isConnected = false;
-      _logNetworkEvent(
-        method: 'SEND',
-        errorMessage: e.toString(),
-        requestBody: _messageMetadata(message),
-      );
-      _disconnectController.add(null);
+      if (!_disconnectController.isClosed) _disconnectController.add(null);
       AegisLogger.error('Failed to send message', e);
       throw ConnectionException('Failed to send message', e);
     }
   }
 
-  /// Get next sequence ID
   int _getNextSequenceId() => _nextSequenceId++;
 
-  /// Listen for incoming messages
+  // ── Receiving ───────────────────────────────────────────────────────
+
   void _listenForMessages() {
-    _socketSubscription?.cancel();
     _socketSubscription = _socket.listen(
-      _handleIncomingData,
+      (data) {
+        _receivePipeline = _receivePipeline.then(
+          (_) => _handleIncomingData(data),
+        );
+      },
       onError: (error) {
+        AegisLogger.error('Socket error', error);
         _isConnected = false;
-        _disconnectController.add(null);
+        if (!_disconnectController.isClosed) _disconnectController.add(null);
       },
       onDone: () {
+        AegisLogger.info('Socket closed by remote peer');
         _isConnected = false;
-        _disconnectController.add(null);
+        if (!_disconnectController.isClosed) _disconnectController.add(null);
       },
     );
   }
 
-  /// Handle incoming data: accumulate in buffer and emit complete frames.
-  void _handleIncomingData(Uint8List data) {
-    _incomingBuffer.addAll(_applyInboundMask(data));
-    if (_incomingBuffer.length > _maxIncomingBufferSize) {
-      AegisLogger.error(
-        'Incoming buffer exceeded $_maxIncomingBufferSize bytes — '
-        'clearing and disconnecting.',
+  /// Accumulate [data] into the ring buffer and extract complete frames.
+  Future<void> _handleIncomingData(Uint8List data) async {
+    if (data.isEmpty) return;
+
+    final incoming = _applyInboundMask(data);
+    _pendingBuffer.write(incoming);
+
+    // ── Backpressure: pause socket if buffer grows too large ──────
+    if (!_isPaused && _pendingBuffer.length > _maxBufferSize) {
+      _socketSubscription?.pause();
+      _isPaused = true;
+      AegisLogger.warning(
+        'Backpressure: pausing socket read '
+        '(buffer ${_pendingBuffer.length} bytes)',
       );
-      _incomingBuffer.clear();
-      _isConnected = false;
-      _disconnectController.add(null);
-      return;
     }
-    _processBuffer();
+
+    await _extractFrames();
+
+    // ── Resume socket once buffer drains below half-mark ─────────
+    if (_isPaused && _pendingBuffer.length < _maxBufferSize ~/ 2) {
+      _socketSubscription?.resume();
+      _isPaused = false;
+      AegisLogger.debug('Backpressure: resumed socket read');
+    }
   }
 
-  Uint8List _applyInboundMask(Uint8List data) {
-    if (_transportMaskingKey.isEmpty) {
-      return data;
-    }
+  /// Parse and dispatch all complete frames currently in the ring buffer.
+  Future<void> _extractFrames() async {
+    while (_pendingBuffer.length >= ProtocolConstants.headerSize) {
+      // Read the 4-byte payload length at header offset 17 via a
+      // zero-copy view into the ring buffer.
+      final plView = _pendingBuffer.peekBytes(
+        ProtocolConstants.payloadLengthOffset,
+        4,
+      );
+      final payloadLength = ByteData.view(
+        plView.buffer,
+        plView.offsetInBytes,
+        4,
+      ).getUint32(0);
 
-    final masked = Uint8List.fromList(data);
-    for (var i = 0; i < masked.length; i++) {
-      final keyIndex = (_inboundMaskOffset + i) % _transportMaskingKey.length;
-      masked[i] = masked[i] ^ _transportMaskingKey[keyIndex];
+      // Validate before allocating.
+      if (payloadLength > ProtocolConstants.maxPayloadSize) {
+        AegisLogger.error(
+          'Error parsing message',
+          'Invalid payload length: $payloadLength',
+        );
+        _pendingBuffer.clear();
+        return;
+      }
+
+      final frameSize =
+          ProtocolConstants.headerSize +
+          payloadLength +
+          ProtocolConstants.macSize;
+
+      if (_pendingBuffer.length < frameSize) {
+        break; // Incomplete frame — wait for more data.
+      }
+
+      // Extract a full frame (copy) and decode it.
+      final frame = _pendingBuffer.take(frameSize);
+      try {
+        final message = MessageEncoder.decode(frame);
+        await _unwrapInboundMessage(frame, message);
+        AegisLogger.debug(
+          'Received message: ${message.type} (seq: ${message.sequenceId})',
+        );
+        AegisLogger.traceFrame(
+          'transport.receive',
+          message,
+          direction: 'inbound',
+        );
+        if (!_messageController.isClosed) {
+          _messageController.add(message);
+        }
+      } on Object catch (e) {
+        AegisLogger.error('Error parsing message', e);
+        // Skip this frame and continue parsing the rest.
+      }
     }
-    _inboundMaskOffset += masked.length;
+  }
+
+  // ── Health checks ───────────────────────────────────────────────────
+
+  /// Start periodic ping health checks.
+  void _startHealthCheck(Duration interval) {
+    _healthCheckTimer?.cancel();
+    _healthCheckTimer = Timer.periodic(interval, (_) {
+      if (!_isConnected) {
+        _healthCheckTimer?.cancel();
+        return;
+      }
+      unawaited(_sendPing());
+    });
+  }
+
+  Future<void> _sendPing() async {
+    try {
+      final pingMsg = Message.withType(MessageType.ping);
+      await sendMessage(pingMsg);
+    } on Object catch (_) {
+      AegisLogger.warning('Health check ping failed — disconnecting');
+      _isConnected = false;
+      if (!_disconnectController.isClosed) _disconnectController.add(null);
+    }
+  }
+
+  // ── Transport masking ───────────────────────────────────────────────
+
+  Uint8List _applyInboundMask(Uint8List data) {
+    if (_transportMaskingKey.isEmpty) return data;
+
+    final masked = Uint8List(data.length);
+    final keyLen = _transportMaskingKey.length;
+    for (var i = 0; i < data.length; i++) {
+      masked[i] =
+          data[i] ^ _transportMaskingKey[(_inboundMaskOffset + i) % keyLen];
+    }
+    _inboundMaskOffset += data.length;
     return masked;
   }
 
   Uint8List _applyOutboundMask(Uint8List data) {
-    if (_transportMaskingKey.isEmpty) {
-      return data;
-    }
+    if (_transportMaskingKey.isEmpty) return data;
 
-    final masked = Uint8List.fromList(data);
-    for (var i = 0; i < masked.length; i++) {
-      final keyIndex = (_outboundMaskOffset + i) % _transportMaskingKey.length;
-      masked[i] = masked[i] ^ _transportMaskingKey[keyIndex];
+    final masked = Uint8List(data.length);
+    final keyLen = _transportMaskingKey.length;
+    for (var i = 0; i < data.length; i++) {
+      masked[i] =
+          data[i] ^ _transportMaskingKey[(_outboundMaskOffset + i) % keyLen];
     }
-    _outboundMaskOffset += masked.length;
+    _outboundMaskOffset += data.length;
     return masked;
   }
 
-  /// Pull complete protocol frames out of [_incomingBuffer].
-  ///
-  /// TCP может доставлять данные частями или склеивать несколько сообщений
-  /// в одном `data`-событии. Этот метод гарантирует, что в стрим попадают
-  /// только полностью принятые, целые фреймы.
-  void _processBuffer() {
-    while (true) {
-      // Нужен хотя бы полный заголовок, чтобы знать размер сообщения.
-      if (_incomingBuffer.length < ProtocolConstants.headerSize) return;
+  // ── Cleanup ─────────────────────────────────────────────────────────
 
-        // payloadLength — big-endian uint32 по смещению 17 в заголовке:
-        // 4 (magic) + 1 + 1 + 1 (version/flags) + 2 (type) + 8 (sequence).
-        final payloadLength = (_incomingBuffer[17] << 24) |
-          (_incomingBuffer[18] << 16) |
-          (_incomingBuffer[19] << 8) |
-          _incomingBuffer[20];
-
-      // Защита от DoS: слишком большой payload разрывает соединение.
-      if (payloadLength > ProtocolConstants.maxPayloadSize) {
-        AegisLogger.error(
-          'Превышен максимальный размер payload '
-          '($payloadLength байт) — очищаем буфер и закрываем соединение.',
-        );
-        _incomingBuffer.clear();
-        _isConnected = false;
-        _disconnectController.add(null);
-        return;
-      }
-
-      final totalSize = ProtocolConstants.headerSize +
-          payloadLength +
-          ProtocolConstants.macSize;
-
-      // Ждём, пока придут все байты фрейма.
-      if (_incomingBuffer.length < totalSize) return;
-
-      // Извлекаем ровно один фрейм и удаляем его из буфера.
-      try {
-        final frame = Uint8List.fromList(_incomingBuffer.sublist(0, totalSize));
-        _incomingBuffer.removeRange(0, totalSize);
-        final message = MessageEncoder.decode(frame);
-        if ((message.flags & ProtocolConstants.flagEncrypted) != 0) {
-          if (_sessionKey == null) {
-            throw const FormatException('Encrypted payload received before session key was set');
-          }
-          message.payload = AegisHandshakeCrypto.decryptPayload(
-            encryptedPayload: message.payload,
-            sessionKey: _sessionKey!,
-          );
-          message.payloadLength = message.payload.length;
-          message.flags = message.flags & ~ProtocolConstants.flagEncrypted;
-        }
-        AegisLogger.debug(
-            'Received message: type=${message.type.value} seq=${message.sequenceId}');
-        _logNetworkEvent(
-          method: 'RECV',
-          statusCode: 200,
-          responseBody: _messageMetadata(message),
-        );
-        _messageController.add(message);
-      } catch (e) {
-        // После ошибки парсинга буфер рассинхронизирован — нельзя
-        // продолжать безопасно; закрываем соединение.
-        AegisLogger.error('Не удалось распарсить фрейм — буфер очищен', e);
-        _logNetworkEvent(
-          method: 'RECV',
-          errorMessage: e.toString(),
-          responseBody: {'bufferBytes': _incomingBuffer.length},
-        );
-        _incomingBuffer.clear();
-        _isConnected = false;
-        _disconnectController.add(null);
-        return;
-      }
-    }
-  }
-
-  /// Cleanup resources
+  /// Release all resources held by the transport.
   void dispose() {
+    _healthCheckTimer?.cancel();
+    _healthCheckTimer = null;
     if (_isConnected) {
-      disconnect();
+      disconnect().ignore();
     }
-    _incomingBuffer.clear();
-    _messageController.close();
-    _disconnectController.close();
+    if (!_messageController.isClosed) _messageController.close();
+    if (!_disconnectController.isClosed) _disconnectController.close();
   }
 
-  Map<String, dynamic> _messageMetadata(Message message) {
-    return {
-      'type': message.type.name,
-      'typeCode': message.type.value,
-      'sequenceId': message.sequenceId,
-      'payloadLength': message.payloadLength,
-      'encrypted': (message.flags & ProtocolConstants.flagEncrypted) != 0,
-      'requiresAck':
-          (message.flags & ProtocolConstants.flagRequiresAck) != 0,
-    };
+  Future<Message> _prepareOutboundMessage(Message message) async {
+    final sessionCrypto = _sessionCrypto;
+    if (sessionCrypto == null || message.type == MessageType.handshake) {
+      return message;
+    }
+
+    var preparedMessage = message;
+    final alreadyCompressed =
+        (preparedMessage.flags & ProtocolConstants.flagCompressed) != 0;
+    if (!alreadyCompressed &&
+        preparedMessage.payload.length >
+            ProtocolConstants.compressionThreshold) {
+      final compressedBytes = AegisSafeBrotli.tryEncode(preparedMessage.payload);
+
+      if (compressedBytes != null &&
+        compressedBytes.length < preparedMessage.payload.length) {
+        preparedMessage = Message()
+          ..magic = preparedMessage.magic
+          ..versionMajor = preparedMessage.versionMajor
+          ..versionMinor = preparedMessage.versionMinor
+          ..flags = preparedMessage.flags | ProtocolConstants.flagCompressed
+          ..type = preparedMessage.type
+          ..sequenceId = preparedMessage.sequenceId
+          ..payload = compressedBytes
+          ..payloadLength = compressedBytes.length;
+      }
+    }
+
+    return sessionCrypto.encryptMessage(preparedMessage);
   }
 
-  void _logNetworkEvent({
-    required String method,
-    int? statusCode,
-    dynamic requestBody,
-    dynamic responseBody,
-    String? errorMessage,
-  }) {
-    final host = _connectedHost ?? 'disconnected';
-    final port = _connectedPort?.toString() ?? '-';
-    DevNetworkLogger.instance.logRequest(
-      method: method,
-      url: 'aegis://$host:$port',
-      statusCode: statusCode,
-      requestBody: requestBody,
-      responseBody: responseBody,
-      errorMessage: errorMessage,
-    );
+  Future<void> _unwrapInboundMessage(Uint8List frame, Message message) async {
+    final sessionCrypto = _sessionCrypto;
+    if ((message.flags & ProtocolConstants.flagEncrypted) != 0) {
+      if (sessionCrypto == null) {
+        throw StateError('Encrypted message received before session key setup');
+      }
+
+      final headerBytes = Uint8List.sublistView(
+        frame,
+        0,
+        ProtocolConstants.headerSize,
+      );
+      await sessionCrypto.decryptMessage(message, headerBytes);
+    }
+
+    if ((message.flags & ProtocolConstants.flagCompressed) != 0) {
+      message.payload = AegisSafeBrotli.decode(message.payload);
+      message.payloadLength = message.payload.length;
+      message.flags &= ~ProtocolConstants.flagCompressed;
+    }
   }
 }

@@ -15,6 +15,9 @@ class AppStrings {
   static const routeSplash = '/splash';
   static const routeLogin = '/login';
   static const routeHome = '/home';
+  static const routeWidgets = '/widgets';
+  static const routePeople = '/people';
+  static const routeSettingsRoot = '/settings';
   static const routeRegister = '/register';
   static const routeForgot = '/forgot';
   static const routeCustomization = '/customization';

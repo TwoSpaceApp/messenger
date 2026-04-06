@@ -2,13 +2,14 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/src/providers/future_provider.dart';
 import 'package:two_space_app/core/providers/service_providers.dart';
 
 /// LRU cache implementation for user profiles using LinkedHashMap
 /// for O(1) access-order operations.
 class UserProfileCache {
   UserProfileCache({this.capacity = 100})
-      : _cache = LinkedHashMap<String, Map<String, dynamic>>();
+    : _cache = LinkedHashMap<String, Map<String, dynamic>>();
   final int capacity;
   final LinkedHashMap<String, Map<String, dynamic>> _cache;
 
@@ -47,66 +48,68 @@ final userCacheProvider = Provider<UserProfileCache>((ref) {
 });
 
 /// Cached user profile provider with automatic cache management
-final cachedUserProfileProvider =
-    FutureProvider.autoDispose.family<Map<String, dynamic>, String>(
-  (ref, userId) async {
-    final cache = ref.watch(userCacheProvider);
-    final profileService = ref.watch(aegisChatServiceProvider);
+final FutureProviderFamily<Map<String, dynamic>, String>
+cachedUserProfileProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>, String>(
+      (ref, userId) async {
+        final cache = ref.watch(userCacheProvider);
+        final profileService = ref.watch(aegisChatServiceProvider);
 
-    final cachedProfile = cache.get(userId);
-    if (cachedProfile != null) {
-      return cachedProfile;
-    }
+        final cachedProfile = cache.get(userId);
+        if (cachedProfile != null) {
+          return cachedProfile;
+        }
 
-    final profile = await profileService.getUserInfo(userId);
-    cache.set(userId, profile);
+        final profile = await profileService.getUserInfo(userId);
+        cache.set(userId, profile);
 
-    final link = ref.keepAlive();
-    final timer = Timer(const Duration(minutes: 5), link.close);
-    ref.onDispose(timer.cancel);
+        final link = ref.keepAlive();
+        final timer = Timer(const Duration(minutes: 5), link.close);
+        ref.onDispose(timer.cancel);
 
-    return profile;
-  },
-);
+        return profile;
+      },
+    );
 
 /// Batch user profiles provider with optimized concurrent fetching
-final batchUserProfilesProvider =
-    FutureProvider.autoDispose.family<List<Map<String, dynamic>>, List<String>>(
-  (ref, userIds) async {
-    final cache = ref.watch(userCacheProvider);
-    final profileService = ref.watch(aegisChatServiceProvider);
+final FutureProviderFamily<List<Map<String, dynamic>>, List<String>>
+batchUserProfilesProvider = FutureProvider.autoDispose
+    .family<List<Map<String, dynamic>>, List<String>>(
+      (ref, userIds) async {
+        final cache = ref.watch(userCacheProvider);
+        final profileService = ref.watch(aegisChatServiceProvider);
 
-    final uniqueIds = userIds.toSet().toList();
-    final cachedProfiles = <Map<String, dynamic>>[];
-    final idsToFetch = <String>[];
+        final uniqueIds = userIds.toSet().toList();
+        final cachedProfiles = <Map<String, dynamic>>[];
+        final idsToFetch = <String>[];
 
-    for (final id in uniqueIds) {
-      final cached = cache.get(id);
-      if (cached != null) {
-        cachedProfiles.add(cached);
-      } else {
-        idsToFetch.add(id);
-      }
-    }
+        for (final id in uniqueIds) {
+          final cached = cache.get(id);
+          if (cached != null) {
+            cachedProfiles.add(cached);
+          } else {
+            idsToFetch.add(id);
+          }
+        }
 
-    if (idsToFetch.isEmpty) {
-      return cachedProfiles;
-    }
+        if (idsToFetch.isEmpty) {
+          return cachedProfiles;
+        }
 
-    final fetchedProfiles = await Future.wait(
-      idsToFetch.map(profileService.getUserInfo),
+        final fetchedProfiles = await Future.wait(
+          idsToFetch.map(profileService.getUserInfo),
+        );
+        for (final profile in fetchedProfiles) {
+          final id = profile['id']?.toString();
+          if (id != null && id.isNotEmpty) {
+            cache.set(id, profile);
+          }
+        }
+
+        final link = ref.keepAlive();
+        final timer = Timer(const Duration(minutes: 5), link.close);
+        ref.onDispose(timer.cancel);
+
+        return [...cachedProfiles, ...fetchedProfiles];
+      },
     );
-    for (final profile in fetchedProfiles) {
-      final id = profile['id']?.toString();
-      if (id != null && id.isNotEmpty) {
-        cache.set(id, profile);
-      }
-    }
-
-    final link = ref.keepAlive();
-    final timer = Timer(const Duration(minutes: 5), link.close);
-    ref.onDispose(timer.cancel);
-
-    return [...cachedProfiles, ...fetchedProfiles];
-  },
-);

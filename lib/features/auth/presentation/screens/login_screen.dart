@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
+import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
+import 'package:two_space_app/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_background.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 
@@ -46,19 +50,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _errorMessage = null);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loading = true);
 
     final identifier = _emailCtl.text.trim();
-    final password = _passCtl.text.trim();
+    final password = _passCtl.text;
     final notifier = ref.read(authProvider.notifier);
 
     if (_emailLikePattern.hasMatch(identifier)) {
       setState(() {
         _loading = false;
-        _errorMessage = 'Use your Aegis username to sign in.';
+        _errorMessage = l10n.loginUsernameOnlyError;
       });
       return;
     }
@@ -70,6 +75,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Standard email + password login
       await notifier.login(identifier, password);
       // Navigation happens automatically via auth listener
+    } on TwoFactorRequiredException {
+      await _completeTwoFactorLogin(identifier, password);
+    } on TwoFactorInvalidException {
+      await _completeTwoFactorLogin(identifier, password, invalidCode: true);
     } catch (e, stackTrace) {
       SentryService.captureException(
         e,
@@ -78,10 +87,135 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       if (mounted) {
         setState(
-            () => _errorMessage = e.toString().replaceAll('Exception: ', ''));
+          () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _completeTwoFactorLogin(
+    String identifier,
+    String password, {
+    bool invalidCode = false,
+  }) async {
+    while (mounted) {
+      final credentials = await _promptForTwoFactorCredentials(
+        invalidCode: invalidCode,
+      );
+      if (!mounted || credentials == null) {
+        return;
+      }
+
+      try {
+        await ref
+            .read(authProvider.notifier)
+            .login(
+              identifier,
+              password,
+              twoFactorCode: credentials.$1?.isEmpty ?? true
+                  ? null
+                  : credentials.$1,
+              recoveryPhrase: credentials.$2?.isEmpty ?? true
+                  ? null
+                  : credentials.$2,
+            );
+        return;
+      } on TwoFactorInvalidException {
+        invalidCode = true;
+        continue;
+      } catch (e, stackTrace) {
+        SentryService.captureException(
+          e,
+          stackTrace: stackTrace,
+          hint: {'screen': 'login-2fa'},
+        );
+        if (!mounted) {
+          return;
+        }
+        setState(
+          () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+        );
+        return;
+      }
+    }
+  }
+
+  Future<(String?, String?)?> _promptForTwoFactorCredentials({
+    bool invalidCode = false,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final codeController = TextEditingController();
+    final recoveryController = TextEditingController();
+    try {
+      return await showDialog<(String?, String?)>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(l10n.twoFactorLabel),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.twoFactorSubtitle),
+                const SizedBox(height: UITokens.space),
+                if (invalidCode)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: UITokens.space),
+                    child: Text(
+                      l10n.twoFactorInvalidCodeMessage,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                TextField(
+                  controller: codeController,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: l10n.twoFactorVerificationCodeLabel,
+                    hintText: l10n.twoFactorVerificationCodeHint,
+                  ),
+                ),
+                const SizedBox(height: UITokens.space),
+                TextField(
+                  controller: recoveryController,
+                  decoration: InputDecoration(
+                    labelText: l10n.twoFactorRecoveryPhraseFieldLabel,
+                    hintText: l10n.twoFactorLoginRecoveryHint,
+                  ),
+                  minLines: 2,
+                  maxLines: 4,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  MaterialLocalizations.of(context).cancelButtonLabel,
+                ),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(
+                  (
+                    codeController.text.trim(),
+                    recoveryController.text.trim(),
+                  ),
+                ),
+                child: Text(l10n.loginButton),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      codeController.dispose();
+      recoveryController.dispose();
     }
   }
 
@@ -105,10 +239,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               alignment: Alignment.topRight,
               child: LanguageSwitcherButton(),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UITokens.spaceSm),
             const Center(
               child: Padding(
-                padding: EdgeInsets.only(bottom: 24),
+                padding: EdgeInsets.only(bottom: UITokens.spaceXLg),
                 child: AppLogo(),
               ),
             ),
@@ -120,38 +254,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: UITokens.spaceXL),
 
             if (_errorMessage != null)
               Container(
-                margin: const EdgeInsets.only(bottom: 24),
-                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: UITokens.spaceXLg),
+                padding: const EdgeInsets.all(UITokens.space),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(UITokens.corner),
                   border: Border.all(
-                      color: theme.colorScheme.error.withValues(alpha: 0.5)),
+                    color: theme.colorScheme.error.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.error_outline, color: theme.colorScheme.error),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: UITokens.space),
                     Expanded(
                       child: Text(
                         _errorMessage!,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            color: theme.colorScheme.error,
-                            fontWeight: FontWeight.w500),
+                          color: theme.colorScheme.error,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.close,
-                          size: 20, color: theme.colorScheme.error),
+                      icon: Icon(
+                        Icons.close,
+                        size: 20,
+                        color: theme.colorScheme.error,
+                      ),
                       onPressed: () => setState(() => _errorMessage = null),
-                      constraints:
-                          const BoxConstraints(minWidth: 40, minHeight: 40),
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
                     ),
                   ],
                 ),
@@ -172,26 +313,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: l10n.emailOrUsernameLabel,
                       hintText: 'username',
-                      prefixIcon: Icon(Icons.person_outline,
-                          color: theme.colorScheme.primary),
+                      prefixIcon: Icon(
+                        Icons.person_outline,
+                        color: theme.colorScheme.primary,
+                      ),
                       labelStyle: TextStyle(
                         color: isDark ? Colors.white70 : Colors.black54,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(UITokens.cornerLg),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
                       fillColor: theme.colorScheme.surface.withAlpha(50),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(UITokens.cornerLg),
                         borderSide: BorderSide(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(UITokens.cornerLg),
                         borderSide: BorderSide(
                           color: theme.colorScheme.primary,
                           width: 2,
@@ -202,7 +346,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ? l10n.validationEnterEmailOrUsername
                         : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: UITokens.spaceMd),
                   TextFormField(
                     controller: _passCtl,
                     obscureText: _obscurePassword,
@@ -215,8 +359,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     cursorColor: theme.colorScheme.primary,
                     decoration: InputDecoration(
                       labelText: l10n.passwordLabel,
-                      prefixIcon: Icon(Icons.lock_outline,
-                          color: theme.colorScheme.primary),
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        color: theme.colorScheme.primary,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -225,26 +371,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: theme.colorScheme.primary,
                         ),
                         onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword),
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                       labelStyle: TextStyle(
                         color: isDark ? Colors.white70 : Colors.black54,
                       ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(UITokens.cornerLg),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
                       fillColor: theme.colorScheme.surface.withAlpha(50),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(UITokens.cornerLg),
                         borderSide: BorderSide(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(UITokens.cornerLg),
                         borderSide: BorderSide(
                           color: theme.colorScheme.primary,
                           width: 2,
@@ -262,9 +410,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () {
-                  // TODO: Implement forgot password
-                },
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ForgotPasswordScreen(),
+                  ),
+                ),
                 child: Text(
                   l10n.forgotPassword,
                   style: TextStyle(
@@ -277,14 +427,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: UITokens.spaceXLg),
 
             ElevatedButton(
               onPressed: _loading ? null : _handleLogin,
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: UITokens.spaceMd),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(UITokens.cornerLg),
                 ),
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: theme.colorScheme.onPrimary,
@@ -296,24 +446,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       height: 20,
                       width: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : Text(
                       l10n.loginButton,
                       style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: UITokens.spaceXLg),
 
             Row(
               children: [
                 Expanded(
-                    child: Divider(
-                        color: theme.dividerColor.withValues(alpha: 0.2))),
+                  child: Divider(
+                    color: theme.dividerColor.withValues(alpha: 0.2),
+                  ),
+                ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: UITokens.spaceMd,
+                  ),
                   child: Text(
                     l10n.orDivider,
                     style: TextStyle(
@@ -323,23 +481,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 Expanded(
-                    child: Divider(
-                        color: theme.dividerColor.withValues(alpha: 0.2))),
+                  child: Divider(
+                    color: theme.dividerColor.withValues(alpha: 0.2),
+                  ),
+                ),
               ],
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: UITokens.spaceXLg),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _socialButton(Icons.g_mobiledata, 'Google', () {}, isDark),
-                const SizedBox(width: 16),
+                const SizedBox(width: UITokens.spaceMd),
                 _socialButton(Icons.apple, 'Apple', () {}, isDark),
               ],
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: UITokens.spaceXL),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -352,8 +512,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    setState(() => _isCovering = true);
-                    if (mounted) context.go('/register');
+                    if (mounted) context.go(AppStrings.routeRegister);
                   },
                   child: Text(
                     l10n.registerTitle,
@@ -372,17 +531,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _socialButton(
-      IconData icon, String label, VoidCallback onPressed, bool isDark) {
+    IconData icon,
+    String label,
+    VoidCallback onPressed,
+    bool isDark,
+  ) {
     return InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(UITokens.corner),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(UITokens.space),
         decoration: BoxDecoration(
           border: Border.all(
             color: isDark ? Colors.white24 : Colors.grey.shade300,
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(UITokens.corner),
           color: isDark ? Colors.white10 : Colors.white,
         ),
         child: Icon(

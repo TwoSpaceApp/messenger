@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:ffi';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:drift_sqflite/drift_sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sqlite3/open.dart' as sqlite_open;
 
 part 'aegis_chat_database.g.dart';
 
@@ -43,6 +46,11 @@ class AegisMessages extends Table {
   IntColumn get sentAtEpochMs => integer()();
   TextColumn get type => text().withDefault(const Constant('m.text'))();
   TextColumn get mediaId => text().nullable()();
+  IntColumn get replyToMessageId => integer().nullable()();
+  BoolColumn get isDelivered => boolean().withDefault(const Constant(false))();
+  BoolColumn get isRead => boolean().withDefault(const Constant(false))();
+  IntColumn get deliveredAtEpochMs => integer().nullable()();
+  IntColumn get readAtEpochMs => integer().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -84,6 +92,9 @@ class AegisOfflineQueue extends Table {
   TextColumn get chatId => text()();
   TextColumn get content => text()();
   TextColumn get type => text()();
+  TextColumn get localMessageId => text().nullable()();
+  TextColumn get mediaFileId => text().nullable()();
+  IntColumn get replyToMessageId => integer().nullable()();
   IntColumn get createdAtEpochMs => integer()();
   BoolColumn get sent => boolean().withDefault(const Constant(false))();
   TextColumn get errorMessage => text().nullable()();
@@ -109,8 +120,10 @@ class AegisPeopleEntries extends Table {
   TextColumn get displayName => text()();
   TextColumn get username => text().nullable()();
   TextColumn get remoteUserId => text().nullable()();
-  BoolColumn get isTwoSpaceUser => boolean().withDefault(const Constant(false))();
-  BoolColumn get isDeviceContact => boolean().withDefault(const Constant(false))();
+  BoolColumn get isTwoSpaceUser =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get isDeviceContact =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
   BoolColumn get isOnline => boolean().withDefault(const Constant(false))();
   TextColumn get presenceStatus => text().nullable()();
@@ -152,34 +165,68 @@ class AegisPeopleCallHistory extends Table {
   ],
 )
 class AegisChatDatabase extends _$AegisChatDatabase {
-  AegisChatDatabase() : super(_openConnection());
+  factory AegisChatDatabase() => _shared;
+  AegisChatDatabase._internal() : super(_openConnection());
+
+  static final AegisChatDatabase _shared = AegisChatDatabase._internal();
+
+  static AegisChatDatabase get instance => _shared;
 
   AegisChatDatabase.forExecutor(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (migrator) async {
-          await migrator.createAll();
-          await _createIndexes();
-        },
-        onUpgrade: (migrator, from, to) async {
-          if (from < 1) {
-            await migrator.createAll();
-          }
-          if (from < 2) {
-            await migrator.createTable(aegisOfflineQueue);
-          }
-          if (from < 3) {
-            await migrator.createTable(aegisPeopleFavorites);
-            await migrator.createTable(aegisPeopleEntries);
-            await migrator.createTable(aegisPeopleCallHistory);
-          }
-          await _createIndexes();
-        },
-      );
+    onCreate: (migrator) async {
+      await migrator.createAll();
+      await _createIndexes();
+    },
+    onUpgrade: (migrator, from, to) async {
+      if (from < 1) {
+        await migrator.createAll();
+      }
+      if (from < 2) {
+        await migrator.createTable(aegisOfflineQueue);
+      }
+      if (from < 3) {
+        await migrator.createTable(aegisPeopleFavorites);
+        await migrator.createTable(aegisPeopleEntries);
+        await migrator.createTable(aegisPeopleCallHistory);
+      }
+      if (from < 4) {
+        await migrator.addColumn(aegisMessages, aegisMessages.isDelivered);
+        await migrator.addColumn(aegisMessages, aegisMessages.isRead);
+        await migrator.addColumn(
+          aegisMessages,
+          aegisMessages.deliveredAtEpochMs,
+        );
+        await migrator.addColumn(aegisMessages, aegisMessages.readAtEpochMs);
+      }
+      if (from < 5) {
+        await migrator.addColumn(
+          aegisMessages,
+          aegisMessages.replyToMessageId,
+        );
+      }
+      if (from < 6) {
+        await migrator.addColumn(
+          aegisOfflineQueue,
+          aegisOfflineQueue.localMessageId,
+        );
+        await migrator.addColumn(
+          aegisOfflineQueue,
+          aegisOfflineQueue.mediaFileId,
+        );
+        await migrator.addColumn(
+          aegisOfflineQueue,
+          aegisOfflineQueue.replyToMessageId,
+        );
+      }
+      await _createIndexes();
+    },
+  );
 
   Future<void> _createIndexes() async {
     await customStatement(
@@ -201,10 +248,57 @@ class AegisChatDatabase extends _$AegisChatDatabase {
   }
 }
 
-LazyDatabase _openConnection() {
+QueryExecutor _openConnection() {
+  if (Platform.isAndroid || Platform.isIOS) {
+    return SqfliteQueryExecutor.inDatabaseFolder(
+      path: 'aegis_chat.sqlite',
+    );
+  }
+
   return LazyDatabase(() async {
+    _configureSqliteRuntime();
     final directory = await getApplicationSupportDirectory();
     final file = File(p.join(directory.path, 'aegis_chat.sqlite'));
-    return NativeDatabase.createInBackground(file);
+    return NativeDatabase.createInBackground(
+      file,
+      isolateSetup: _configureSqliteRuntime,
+    );
   });
+}
+
+bool _sqliteRuntimeConfigured = false;
+
+void _configureSqliteRuntime() {
+  if (_sqliteRuntimeConfigured) {
+    return;
+  }
+  _sqliteRuntimeConfigured = true;
+
+  if (!Platform.isLinux) {
+    return;
+  }
+
+  sqlite_open.open.overrideFor(
+    sqlite_open.OperatingSystem.linux,
+    _openSqliteDynamicLibrary,
+  );
+}
+
+DynamicLibrary _openSqliteDynamicLibrary() {
+  for (final candidate in const [
+    'libsqlite3.so.0',
+    '/lib/x86_64-linux-gnu/libsqlite3.so.0',
+    '/usr/lib/x86_64-linux-gnu/libsqlite3.so.0',
+    'libsqlite3.so',
+  ]) {
+    try {
+      return DynamicLibrary.open(candidate);
+    } catch (_) {
+      // Try the next known soname.
+    }
+  }
+  throw ArgumentError(
+    'Failed to load sqlite3 dynamic library on Linux. '
+    'Tried libsqlite3.so.0, libsqlite3.so, and common distro paths.',
+  );
 }

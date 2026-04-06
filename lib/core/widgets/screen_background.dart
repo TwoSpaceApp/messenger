@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -20,7 +21,7 @@ class ScreenBackground extends StatefulWidget {
 class _ScreenBackgroundState extends State<ScreenBackground>
     with WidgetsBindingObserver {
   Timer? _animationTimer;
-  final _blobNotifier = _BlobPositionNotifier();
+  final _motionNotifier = _BackgroundMotionNotifier();
 
   double _tiltX = 0;
   double _tiltY = 0;
@@ -48,7 +49,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     if (shouldAnimate) {
       _animationTimer ??= Timer.periodic(_animationTick, (_) {
         if (!mounted) return;
-        _updateBlobPositions();
+        _updateMotionState();
       });
     } else {
       _animationTimer?.cancel();
@@ -75,7 +76,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
 
     try {
       _accelSub ??= accelerometerEventStream().listen(
-        (AccelerometerEvent event) {
+        (event) {
           if (!mounted) return;
           _tiltX = (event.x / 9.8).clamp(-1.0, 1.0);
           _tiltY = (event.y / 9.8).clamp(-1.0, 1.0);
@@ -93,7 +94,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
         },
         cancelOnError: true,
       );
-    } catch (error) {
+    } on Object catch (error) {
       if (_isMissingPluginError(error)) {
         _accelerometerUnavailable = true;
       }
@@ -131,7 +132,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     _syncMotionState();
   }
 
-  void _updateBlobPositions() {
+  void _updateMotionState() {
     if (!mounted) return;
 
     final settings = SettingsService.themeNotifier.value;
@@ -143,8 +144,8 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     final screenH = size.height;
     final now = DateTime.now();
     final elapsedMs = _lastAnimationAt == null
-      ? _animationTick.inMilliseconds.toDouble()
-      : now.difference(_lastAnimationAt!).inMicroseconds / 1000;
+        ? _animationTick.inMilliseconds.toDouble()
+        : now.difference(_lastAnimationAt!).inMicroseconds / 1000;
     _lastAnimationAt = now;
     final deltaFactor = (elapsedMs / 16.0).clamp(0.6, 2.6);
 
@@ -152,16 +153,28 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     _smoothedTiltX += (_tiltX - _smoothedTiltX) * _tiltSmoothing;
     _smoothedTiltY += (_tiltY - _smoothedTiltY) * _tiltSmoothing;
 
-    var b1x = _blobNotifier.blob1X + _smoothedTiltX * speedMultiplier * 1.35 * deltaFactor;
-    var b1y = _blobNotifier.blob1Y + _smoothedTiltY * speedMultiplier * 1.35 * deltaFactor;
-    var b2x = _blobNotifier.blob2X + _smoothedTiltX * speedMultiplier * 1.05 * deltaFactor;
-    var b2y = _blobNotifier.blob2Y + _smoothedTiltY * speedMultiplier * 1.05 * deltaFactor;
+    var b1x =
+        _motionNotifier.blob1X +
+        _smoothedTiltX * speedMultiplier * 1.35 * deltaFactor;
+    var b1y =
+        _motionNotifier.blob1Y +
+        _smoothedTiltY * speedMultiplier * 1.35 * deltaFactor;
+    var b2x =
+        _motionNotifier.blob2X +
+        _smoothedTiltX * speedMultiplier * 1.05 * deltaFactor;
+    var b2y =
+        _motionNotifier.blob2Y +
+        _smoothedTiltY * speedMultiplier * 1.05 * deltaFactor;
+    final nextWavePhase =
+        (_motionNotifier.wavePhase + 0.0038 * speedMultiplier * deltaFactor) %
+        1.0;
 
     final changedEnough =
-        (b1x - _blobNotifier.blob1X).abs() >= _minVisualDelta ||
-        (b1y - _blobNotifier.blob1Y).abs() >= _minVisualDelta ||
-        (b2x - _blobNotifier.blob2X).abs() >= _minVisualDelta ||
-        (b2y - _blobNotifier.blob2Y).abs() >= _minVisualDelta;
+        settings.backgroundMotionMode == BackgroundMotionMode.waves ||
+        (b1x - _motionNotifier.blob1X).abs() >= _minVisualDelta ||
+        (b1y - _motionNotifier.blob1Y).abs() >= _minVisualDelta ||
+        (b2x - _motionNotifier.blob2X).abs() >= _minVisualDelta ||
+        (b2y - _motionNotifier.blob2Y).abs() >= _minVisualDelta;
 
     if (!changedEnough) return;
 
@@ -175,7 +188,15 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     if (b2y < -_blob2Size - buffer) b2y = screenH + buffer;
     if (b2y > screenH + buffer) b2y = -_blob2Size - buffer;
 
-    _blobNotifier.update(b1x, b1y, b2x, b2y);
+    _motionNotifier.update(
+      b1x,
+      b1y,
+      b2x,
+      b2y,
+      wavePhase: nextWavePhase,
+      tiltX: _smoothedTiltX,
+      tiltY: _smoothedTiltY,
+    );
   }
 
   @override
@@ -185,7 +206,7 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     _animationTimer?.cancel();
     unawaited(_accelSub?.cancel().catchError((_) {}));
     _accelSub = null;
-    _blobNotifier.dispose();
+    _motionNotifier.dispose();
     super.dispose();
   }
 
@@ -215,7 +236,15 @@ class _ScreenBackgroundState extends State<ScreenBackground>
         _lastScreenSize = size;
 
         if (!_positionsInitialized) {
-          _blobNotifier.update(-50, -50, size.width - 80, size.height - 250);
+          _motionNotifier.update(
+            -50,
+            -50,
+            size.width - 80,
+            size.height - 250,
+            wavePhase: 0,
+            tiltX: 0,
+            tiltY: 0,
+          );
           _positionsInitialized = true;
         }
 
@@ -239,14 +268,15 @@ class _ScreenBackgroundState extends State<ScreenBackground>
                   child: CustomPaint(
                     size: size,
                     painter: _BlobPainter(
-                      repaint: _blobNotifier,
+                      repaint: _motionNotifier,
                       primary: primary,
                       secondary: secondary,
                       isDark: isDark,
                       opacity: opacity,
                       blob1Size: _blob1Size,
                       blob2Size: _blob2Size,
-                      blobNotifier: _blobNotifier,
+                      motionNotifier: _motionNotifier,
+                      mode: settings.backgroundMotionMode,
                     ),
                   ),
                 ),
@@ -260,17 +290,31 @@ class _ScreenBackgroundState extends State<ScreenBackground>
   }
 }
 
-class _BlobPositionNotifier extends ChangeNotifier {
+class _BackgroundMotionNotifier extends ChangeNotifier {
   double blob1X = 0;
   double blob1Y = 0;
   double blob2X = 0;
   double blob2Y = 0;
+  double wavePhase = 0;
+  double tiltX = 0;
+  double tiltY = 0;
 
-  void update(double b1x, double b1y, double b2x, double b2y) {
+  void update(
+    double b1x,
+    double b1y,
+    double b2x,
+    double b2y, {
+    required double wavePhase,
+    required double tiltX,
+    required double tiltY,
+  }) {
     blob1X = b1x;
     blob1Y = b1y;
     blob2X = b2x;
     blob2Y = b2y;
+    this.wavePhase = wavePhase;
+    this.tiltX = tiltX;
+    this.tiltY = tiltY;
     notifyListeners();
   }
 }
@@ -284,7 +328,8 @@ class _BlobPainter extends CustomPainter {
     required this.opacity,
     required this.blob1Size,
     required this.blob2Size,
-    required this.blobNotifier,
+    required this.motionNotifier,
+    required this.mode,
   }) : super(repaint: repaint);
 
   final Color primary;
@@ -293,13 +338,19 @@ class _BlobPainter extends CustomPainter {
   final double opacity;
   final double blob1Size;
   final double blob2Size;
-  final _BlobPositionNotifier blobNotifier;
+  final _BackgroundMotionNotifier motionNotifier;
+  final BackgroundMotionMode mode;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (mode == BackgroundMotionMode.waves) {
+      _paintWaves(canvas, size);
+      return;
+    }
+
     final center1 = Offset(
-      blobNotifier.blob1X + blob1Size / 2,
-      blobNotifier.blob1Y + blob1Size / 2,
+      motionNotifier.blob1X + blob1Size / 2,
+      motionNotifier.blob1Y + blob1Size / 2,
     );
     final gradient1 = ui.Gradient.radial(
       center1,
@@ -318,8 +369,8 @@ class _BlobPainter extends CustomPainter {
     );
 
     final center2 = Offset(
-      blobNotifier.blob2X + blob2Size / 2,
-      blobNotifier.blob2Y + blob2Size / 2,
+      motionNotifier.blob2X + blob2Size / 2,
+      motionNotifier.blob2Y + blob2Size / 2,
     );
     final gradient2 = ui.Gradient.radial(
       center2,
@@ -338,10 +389,139 @@ class _BlobPainter extends CustomPainter {
     );
   }
 
+  void _paintWaves(Canvas canvas, Size size) {
+    final shiftX = motionNotifier.tiltX * size.width * 0.075;
+    final shiftY = motionNotifier.tiltY * size.height * 0.045;
+    final phase = motionNotifier.wavePhase;
+
+    final glowPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(
+          size.width * (0.52 + motionNotifier.tiltX * 0.08),
+          size.height * (0.44 + motionNotifier.tiltY * 0.05),
+        ),
+        size.longestSide * 0.62,
+        [
+          primary.withValues(alpha: isDark ? opacity * 0.12 : opacity * 0.08),
+          secondary.withValues(alpha: isDark ? opacity * 0.09 : opacity * 0.05),
+          Colors.transparent,
+        ],
+        const [0.0, 0.46, 1.0],
+      );
+    canvas.drawRect(Offset.zero & size, glowPaint);
+
+    _drawWaveLayer(
+      canvas,
+      size,
+      color: secondary,
+      alpha: isDark ? opacity * 0.12 : opacity * 0.08,
+      baseY: size.height * 0.14 + shiftY * 0.35,
+      amplitude: 18,
+      crestWidth: size.width * 0.48,
+      phase: phase,
+      shiftX: shiftX * 0.35,
+      fillToTop: true,
+    );
+    _drawWaveLayer(
+      canvas,
+      size,
+      color: primary,
+      alpha: isDark ? opacity * 0.16 : opacity * 0.1,
+      baseY: size.height * 0.32 + shiftY * 0.52,
+      amplitude: 24,
+      crestWidth: size.width * 0.4,
+      phase: (phase + 0.18) % 1.0,
+      shiftX: shiftX * 0.7,
+      fillToTop: true,
+    );
+    _drawWaveLayer(
+      canvas,
+      size,
+      color: secondary,
+      alpha: isDark ? opacity * 0.2 : opacity * 0.14,
+      baseY: size.height * 0.52 + shiftY * 0.7,
+      amplitude: 28,
+      crestWidth: size.width * 0.34,
+      phase: (phase + 0.34) % 1.0,
+      shiftX: shiftX,
+      fillToTop: true,
+    );
+    _drawWaveLayer(
+      canvas,
+      size,
+      color: primary,
+      alpha: isDark ? opacity * 0.28 : opacity * 0.18,
+      baseY: size.height * 0.74 + shiftY,
+      amplitude: 32,
+      crestWidth: size.width * 0.3,
+      phase: (phase + 0.52) % 1.0,
+      shiftX: shiftX * 1.2,
+    );
+  }
+
+  void _drawWaveLayer(
+    Canvas canvas,
+    Size size, {
+    required Color color,
+    required double alpha,
+    required double baseY,
+    required double amplitude,
+    required double crestWidth,
+    required double phase,
+    required double shiftX,
+    bool fillToTop = false,
+  }) {
+    final path = Path()..moveTo(0, fillToTop ? 0 : size.height);
+    final step = size.width / 4;
+    final startY = baseY + amplitude * _waveValue(phase);
+    path.lineTo(0, startY);
+
+    double previousX = 0;
+    double previousY = startY;
+    for (var index = 1; index <= 4; index++) {
+      final x = step * index;
+      final progress = (phase + index / 4) % 1.0;
+      final y = baseY + amplitude * _waveValue(progress);
+      final controlX = previousX + crestWidth / 2 + shiftX;
+      path.cubicTo(
+        controlX,
+        previousY,
+        x - crestWidth / 2 + shiftX,
+        y,
+        x,
+        y,
+      );
+      previousX = x;
+      previousY = y;
+    }
+
+    path.lineTo(size.width, fillToTop ? 0 : size.height);
+    path.close();
+
+    final shader = ui.Gradient.linear(
+      Offset(0, fillToTop ? 0 : baseY - amplitude),
+      Offset(0, fillToTop ? baseY + amplitude * 1.8 : size.height),
+      [
+        color.withValues(alpha: alpha),
+        color.withValues(alpha: alpha * 0.55),
+        Colors.transparent,
+      ],
+      const [0.0, 0.55, 1.0],
+    );
+
+    canvas.drawPath(path, Paint()..shader = shader);
+  }
+
+  double _waveValue(double value) {
+    final radians = value * 6.283185307179586;
+    return math.sin(radians);
+  }
+
   @override
   bool shouldRepaint(_BlobPainter oldDelegate) =>
       primary != oldDelegate.primary ||
       secondary != oldDelegate.secondary ||
       isDark != oldDelegate.isDark ||
-      opacity != oldDelegate.opacity;
+      opacity != oldDelegate.opacity ||
+      mode != oldDelegate.mode;
 }

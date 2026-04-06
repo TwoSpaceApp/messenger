@@ -1,19 +1,79 @@
-/// Constants for the Aegis Messenger Protocol
+/// Wire-format constants for the Aegis Messenger Protocol.
+///
+/// All values match the C# server's `ProtocolConstants` class in
+/// `src/Aegis.Protocol/ProtocolConstants.cs`.
+///
+/// Header layout (21 bytes, all multi-byte fields big-endian):
+///
+/// | Offset | Size | Field            |
+/// |--------|------|------------------|
+/// |   0    |  4   | Magic            |
+/// |   4    |  1   | Version Major    |
+/// |   5    |  1   | Version Minor    |
+/// |   6    |  1   | Flags            |
+/// |   7    |  2   | Message Type     |
+/// |   9    |  8   | Sequence ID      |
+/// |  17    |  4   | Payload Length    |
 class ProtocolConstants {
-  // Magic number for protocol identification
+  ProtocolConstants._();
+
+  // ── Identification ───────────────────────────────────────────────
+
+  /// Protocol magic number — first four bytes of every frame.
+  ///
+  /// Server ref: `ProtocolConstants.Magic = 0xAE6C5D7`
   static const int magic = 0xAE6C5D7;
 
-  // Protocol version
+  // ── Version ──────────────────────────────────────────────────────
+
+  /// Current major version. Frames with a different major version are rejected.
+  ///
+  /// Server ref: `ProtocolConstants.VersionMajor = 1`
   static const int versionMajor = 1;
+
+  /// Current minor version. Minor mismatches produce a warning, not a reject.
+  ///
+  /// Server ref: `ProtocolConstants.VersionMinor = 0`
   static const int versionMinor = 0;
 
-  // Header sizes
-  static const int headerSize = 4 + 1 + 1 + 1 + 2 + 8 + 4; // 20 bytes
-  static const int macSize = 32; // SHA256 HMAC
-  static const int maxMessageSize = 24 * 1024 * 1024; // 24MB
-  static const int maxPayloadSize = maxMessageSize - headerSize - macSize;
+  // ── Sizes ────────────────────────────────────────────────────────
 
-  // Message type constants
+  /// Header size in bytes: uint32 + 3×byte + uint16 + uint64 + uint32 = 21.
+  ///
+  /// Server ref: `ProtocolConstants.HeaderSize`
+  static const int headerSize = 4 + 1 + 1 + 1 + 2 + 8 + 4; // 21 bytes
+
+  /// MAC / authentication-tag size appended after the payload.
+  ///
+  /// Currently **0** — AES-GCM tags are embedded inside the ciphertext
+  /// rather than appended as a separate frame-level HMAC.
+  ///
+  /// Server ref: `ProtocolConstants.MacSize = 0`
+  static const int macSize = 0;
+
+  /// Maximum total frame size (header + payload + mac).
+  ///
+  /// Server ref: `ProtocolConstants.MaxMessageSize = 1 MB`
+  static const int maxMessageSize = 1024 * 1024; // 1 MB
+
+  /// Maximum payload size (maxMessageSize − headerSize).
+  ///
+  /// Server ref: `ProtocolConstants.MaxPayloadSize`
+  static const int maxPayloadSize = maxMessageSize - headerSize;
+
+  /// Payload byte threshold above which Brotli compression is applied.
+  ///
+  /// Server ref: `ProtocolConstants.CompressionThreshold = 512`
+  static const int compressionThreshold = 512;
+
+  // ── Payload-length field offset (convenience) ────────────────────
+
+  /// Byte offset of the 4-byte payload-length field within the header.
+  static const int payloadLengthOffset = 17;
+
+  // ── Message type constants ───────────────────────────────────────
+  // Mirrors `MessageType` enum values for use in switch-free code paths.
+
   static const int typeUnknown = 0;
   static const int typeAuth = 1;
   static const int typePing = 2;
@@ -36,59 +96,31 @@ class ProtocolConstants {
   static const int typeUserSearchResult = 19;
   static const int typeRegister = 20;
   static const int typeRegisterResponse = 21;
-  static const int typeProfileUpdate = 22;
-  static const int typeProfileUpdateResponse = 23;
-  static const int typeProfileGet = 24;
-  static const int typeProfileGetResponse = 25;
-  static const int typeMessageEdit = 26;
-  static const int typeMessageEditResponse = 27;
-  static const int typeMessageDelete = 28;
-  static const int typeMessageDeleteResponse = 29;
-  static const int typeChannelEdit = 30;
-  static const int typeChannelEditResponse = 31;
-  static const int typeGroupEdit = 32;
-  static const int typeGroupEditResponse = 33;
-  static const int typeMemberRoleUpdate = 34;
-  static const int typeMemberRoleUpdateResponse = 35;
-  static const int typeMemberPermissionUpdate = 36;
-  static const int typeMemberPermissionUpdateResponse = 37;
-  static const int typeGroupMessageSend = 38;
-  static const int typeGroupMessageResponse = 39;
-  static const int typeGroupCreateResponse = 40;
-  static const int typeChatListRequest = 41;
-  static const int typeChatListResponse = 42;
-  static const int typePrivateChatHistoryRequest = 43;
-  static const int typePrivateChatHistoryResponse = 44;
-  static const int typeChannelHistoryRequest = 45;
-  static const int typeChannelHistoryResponse = 46;
-  static const int typePrivateChatMessageEvent = 47;
-  static const int typeChannelMessageEvent = 48;
-  static const int typeProfileAvatarAdd = 49;
-  static const int typeProfileAvatarAddResponse = 50;
-  static const int typeProfileAvatarList = 51;
-  static const int typeProfileAvatarListResponse = 52;
-  static const int typeProfileAvatarDelete = 53;
-  static const int typeProfileAvatarDeleteResponse = 54;
-  static const int typeProfileAvatarSetPrimary = 55;
-  static const int typeProfileAvatarSetPrimaryResponse = 56;
-  static const int typeChannelLinkUpdate = 57;
-  static const int typeChannelLinkUpdateResponse = 58;
-  static const int typeChannelLinkGet = 59;
-  static const int typeChannelLinkGetResponse = 60;
-  static const int typeChannelResolve = 61;
-  static const int typeChannelResolveResponse = 62;
-  static const int typeChannelJoinByLink = 63;
-  static const int typeChannelJoinByLinkResponse = 64;
 
-  // Message flags
+  // ── Message flags ────────────────────────────────────────────────
+  // Bitmask values for the single-byte `Flags` header field.
+  // Server ref: `MessageFlags` enum in `MessageType.cs`.
+
+  /// No flags set.
   static const int flagNone = 0x00;
+
+  /// Sender expects an ACK for this frame.
   static const int flagRequiresAck = 0x01;
+
+  /// This frame is a retransmission of a previously-sent frame.
   static const int flagIsRetransmit = 0x02;
+
+  /// Payload is Brotli-compressed.
   static const int flagCompressed = 0x04;
+
+  /// Payload is encrypted (AES-GCM after session key exchange).
   static const int flagEncrypted = 0x08;
+
+  /// High-priority frame — may skip normal queue ordering.
   static const int flagPriority = 0x10;
 
-  // Acknowledgment status codes
+  // ── Acknowledgment status codes ──────────────────────────────────
+
   static const int ackOk = 0;
   static const int ackError = 1;
   static const int ackRetry = 2;

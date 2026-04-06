@@ -3,13 +3,15 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/core/services/navigation_service.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
@@ -18,11 +20,19 @@ import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen(
-      {required this.userId, super.key, this.initialName, this.initialAvatar});
+  const ProfileScreen({
+    required this.userId,
+    super.key,
+    this.initialName,
+    this.initialAvatar,
+    this.startInEdit = false,
+    this.embedded = false,
+  });
   final String userId;
   final String? initialName;
   final String? initialAvatar;
+  final bool startInEdit;
+  final bool embedded;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -34,7 +44,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _loading = true;
   bool _actionLoading = false;
   bool _isMe = false;
-  bool _isEditing = false;
   final ValueNotifier<double> _avatarStretch = ValueNotifier(0);
 
   final _nameController = TextEditingController();
@@ -46,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _warmUpSettings();
     _loadUser();
   }
 
@@ -60,53 +70,84 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _warmUpSettings() async {
+    await SettingsService.loadDeferredSettings();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Map<String, dynamic> _composeProfileState(
+    Map<String, dynamic> userInfo,
+    String fallbackId,
+  ) {
+    return <String, dynamic>{
+      'id': userInfo['id']?.toString() ?? fallbackId,
+      'name':
+          userInfo['displayName'] ??
+          widget.initialName ??
+          userInfo['username'] ??
+          _fallbackProfileName(),
+      'username': userInfo['username'] ?? '',
+      'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
+      'avatars': userInfo['avatars'] ?? const <Map<String, dynamic>>[],
+      'bio': userInfo['bio'] ?? '',
+      'location': userInfo['location'] ?? '',
+      'birthday': userInfo['birthday'] ?? '',
+      'email': userInfo['email'],
+      'phone': userInfo['phone'],
+      'presenceStatus': userInfo['presenceStatus'],
+      'lastSeenAt': userInfo['lastSeenAt'],
+      'prefs': <String, dynamic>{
+        'nickname': userInfo['username'] ?? '',
+        'about': userInfo['bio'] ?? '',
+        'avatarUrl': userInfo['avatarUrl'] ?? widget.initialAvatar,
+        'showEmail': userInfo['showEmail'] == true,
+        'showPhone': userInfo['showPhone'] == true,
+      },
+    };
+  }
+
+  void _applyLoadedUser(Map<String, dynamic> userInfo, {required bool isMe}) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isMe = isMe;
+      _user = _composeProfileState(userInfo, widget.userId);
+      _loading = false;
+    });
+    _initializeControllers();
+  }
+
   Future<void> _loadUser() async {
     try {
-      final results = await Future.wait<dynamic>([
-        _chatService.getCurrentUserId(),
-        _chatService.getUserInfo(widget.userId),
-      ]);
-      final currentUserId = results[0] as String?;
-      final userInfo = Map<String, dynamic>.from(results[1] as Map<String, dynamic>);
+      final currentUserId = await _chatService.getCurrentUserId();
+      var userInfo = Map<String, dynamic>.from(
+        await _chatService.getUserInfo(widget.userId),
+      );
 
-      // Determine if this is my profile
-      _isMe = currentUserId != null && widget.userId == currentUserId;
-
-      if (mounted) {
-        setState(() {
-          _user = {
-            'id': userInfo['id']?.toString() ?? widget.userId,
-            'name': userInfo['displayName'] ??
-                widget.initialName ??
-                userInfo['username'] ??
-                widget.userId,
-            'username': userInfo['username'] ?? '',
-            'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
-            'avatars': userInfo['avatars'] ?? const <Map<String, dynamic>>[],
-            'bio': userInfo['bio'] ?? '',
-            'email': userInfo['email'],
-            'presenceStatus': userInfo['presenceStatus'],
-            'lastSeenAt': userInfo['lastSeenAt'],
-            'prefs': {
-              'nickname': userInfo['username'] ?? '',
-              'about': userInfo['bio'] ?? '',
-              'avatarUrl': userInfo['avatarUrl'] ?? widget.initialAvatar,
-            },
-          };
-          _loading = false;
-        });
-        _initializeControllers();
+      _isMe = _matchesCurrentUser(currentUserId, userInfo);
+      if (_isMe) {
+        userInfo = <String, dynamic>{
+          ...userInfo,
+          ...Map<String, dynamic>.from(
+            await _chatService.getOwnUserInfo(forceRefresh: true),
+          ),
+        };
       }
+
+      _applyLoadedUser(userInfo, isMe: _isMe);
     } catch (_) {
       if (mounted) {
         setState(() {
           _loading = false;
           _user = {
             'id': widget.userId,
-            'name': widget.initialName ?? widget.userId,
-            'username': widget.userId.replaceAll('@', '').split(':').first,
+            'name': _fallbackProfileName(),
+            'username': _fallbackUsername(),
             'prefs': {
-              'nickname': widget.userId.replaceAll('@', '').split(':').first,
+              'nickname': _fallbackUsername(),
               'about': '',
             },
           };
@@ -116,6 +157,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  bool _matchesCurrentUser(
+    String? currentUserId,
+    Map<String, dynamic> userInfo,
+  ) {
+    final candidates = <String>{
+      _normalizeProfileToken(widget.userId),
+      _normalizeProfileToken(userInfo['id']?.toString()),
+      _normalizeProfileToken(userInfo['username']?.toString()),
+    }..removeWhere((value) => value.isEmpty);
+
+    final current = _normalizeProfileToken(currentUserId);
+    if (current.isEmpty) {
+      return false;
+    }
+    return candidates.contains(current);
+  }
+
+  String _normalizeProfileToken(String? value) {
+    if (value == null) {
+      return '';
+    }
+    return value.trim().replaceFirst('@', '').split(':').first.toLowerCase();
+  }
+
+  String _fallbackUsername() {
+    final normalized = widget.userId
+        .replaceAll('@', '')
+        .split(':')
+        .first
+        .trim();
+    return normalized.isEmpty ? widget.userId.trim() : normalized;
+  }
+
+  String _fallbackProfileName() {
+    final initial = widget.initialName?.trim();
+    if (initial != null && initial.isNotEmpty) {
+      return initial;
+    }
+    return _fallbackUsername();
+  }
+
   void _initializeControllers() {
     if (_user != null) {
       final prefs = (_user!['prefs'] is Map)
@@ -123,7 +205,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           : <String, dynamic>{};
       _nameController.text = (_user!['name'] as String?)?.trim() ?? '';
       _nicknameController.text = (prefs['nickname'] as String?)?.trim() ?? '';
-      _aboutController.text = (prefs['about'] as String?)?.trim() ??
+      _aboutController.text =
+          (prefs['about'] as String?)?.trim() ??
           (_user!['bio'] as String?)?.trim() ??
           '';
       _locationController.text = (_user!['location'] as String?)?.trim() ?? '';
@@ -168,7 +251,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } catch (e) {
         if (!mounted) return;
         final raw = e.toString().toLowerCase();
-        final denied = raw.contains('permission') ||
+        final denied =
+            raw.contains('permission') ||
             raw.contains('denied') ||
             raw.contains('access') ||
             raw.contains('operation not permitted');
@@ -176,7 +260,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: Text(
               denied
-                  ? l10n.filePickError('Нет доступа к выбранному файлу')
+                  ? l10n.filePickError(l10n.fileAccessDeniedMessage)
                   : l10n.filePickError(e.toString()),
             ),
           ),
@@ -196,27 +280,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         mimeType: _mimeTypeForPath(mimePathOrName),
       );
       if (!mounted) return;
-      setState(() {
-        _user = {
-          ...?_user,
-          'avatar': uploaded['avatarUrl'] ?? _user?['avatar'],
-          'avatars': uploaded['avatars'] ?? _user?['avatars'],
-          'presenceStatus': uploaded['presenceStatus'] ?? _user?['presenceStatus'],
-          'lastSeenAt': uploaded['lastSeenAt'] ?? _user?['lastSeenAt'],
-          'prefs': {
-            if (_user?['prefs'] is Map)
-              ...Map<String, dynamic>.from(_user!['prefs'] as Map),
-            'avatarUrl': uploaded['avatarUrl'] ?? _user?['avatar'],
-          },
-        };
-      });
+      _applyLoadedUser(Map<String, dynamic>.from(uploaded), isMe: _isMe);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.profileSaved)),
       );
     } catch (e) {
       if (!mounted) return;
       final raw = e.toString().toLowerCase();
-      final denied = raw.contains('permission') ||
+      final denied =
+          raw.contains('permission') ||
           raw.contains('denied') ||
           raw.contains('access') ||
           raw.contains('operation not permitted');
@@ -224,7 +296,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBar(
           content: Text(
             denied
-                ? 'Нет доступа к файлу аватара. Попробуйте выбрать другой файл.'
+                ? l10n.avatarFileAccessDeniedMessage
                 : e.toString().replaceAll('Exception: ', ''),
           ),
         ),
@@ -247,34 +319,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         displayName: displayName.isEmpty ? null : displayName,
         username: username.isEmpty ? null : username,
         bio: bio.isEmpty ? null : bio,
+        location: _locationController.text.trim(),
+        birthDate: _birthdayController.text.trim(),
+      );
+
+      final refreshed = Map<String, dynamic>.from(
+        await _chatService.getOwnUserInfo(forceRefresh: true),
       );
 
       if (!mounted) return;
-      setState(() {
-        _isEditing = false;
-        _user = {
-          ...?_user,
-          'name': displayName.isEmpty ? (_user?['name'] ?? '') : displayName,
-          'username':
-              username.isEmpty ? (_user?['username'] ?? '') : username,
-          'bio': bio,
-          'presenceStatus': _user?['presenceStatus'],
-          'lastSeenAt': _user?['lastSeenAt'],
-          'prefs': {
-            if (_user?['prefs'] is Map)
-              ...Map<String, dynamic>.from(_user!['prefs'] as Map),
-            'nickname': username,
-            'about': bio,
-            'avatarUrl': _avatarUrl(),
-          },
-          'location': _locationController.text.trim(),
-          'birthday': _birthdayController.text.trim(),
-        };
-      });
+      _applyLoadedUser(refreshed, isMe: true);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.profileSaved)),
       );
+      if (widget.startInEdit && mounted) {
+        Navigator.of(context).pop(true);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -296,7 +357,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final email = (_user!['email'] as String?) ?? '';
       if (email.isNotEmpty) return email.split('@').first;
     } catch (_) {}
-    return widget.initialName ?? widget.userId;
+    return _fallbackProfileName();
+  }
+
+  bool _hasReadableProfileData() {
+    if (_user == null) {
+      return false;
+    }
+    final name = (_user!['name'] as String?)?.trim() ?? '';
+    final bio = (_user!['bio'] as String?)?.trim() ?? '';
+    final location = (_user!['location'] as String?)?.trim() ?? '';
+    final birthday = (_user!['birthday'] as String?)?.trim() ?? '';
+    return name.isNotEmpty ||
+        bio.isNotEmpty ||
+        location.isNotEmpty ||
+        birthday.isNotEmpty;
+  }
+
+  String _emptyProfileHint(AppLocalizations l10n) {
+    if (_isMe) {
+      return l10n.profileEmptySelfHint;
+    }
+    return l10n.profileEmptyOtherHint;
   }
 
   String? _avatarUrl() {
@@ -337,6 +419,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return 'image/jpeg';
   }
 
+  Future<void> _pickBirthday() async {
+    final currentText = _birthdayController.text.trim();
+    final initialDate = DateTime.tryParse(currentText) ?? DateTime(2000);
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (selected == null || !mounted) {
+      return;
+    }
+    _birthdayController.text =
+        '${selected.year.toString().padLeft(4, '0')}-${selected.month.toString().padLeft(2, '0')}-${selected.day.toString().padLeft(2, '0')}';
+    setState(() {});
+  }
+
   DateTime? _lastSeenAt() {
     final raw = _user?['lastSeenAt'];
     if (raw is DateTime) return raw;
@@ -353,8 +452,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (status == 'recently') {
       return l10n.statusLastSeenRecently;
     }
-    if ((status == 'was_online' || status == 'offline') &&
-        lastSeenAt != null) {
+    if ((status == 'was_online' || status == 'offline') && lastSeenAt != null) {
       return _relativeTime(lastSeenAt, l10n);
     }
     if (status == 'long_ago') {
@@ -383,6 +481,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '${value.day}.${value.month.toString().padLeft(2, '0')}';
   }
 
+  Future<void> _openEditScreen() async {
+    final changed = await context.push<bool>(
+      AppStrings.routeProfile,
+      extra: <String, dynamic>{
+        'userId': widget.userId,
+        'initialName': widget.initialName,
+        'initialAvatar': widget.initialAvatar,
+        'startInEdit': true,
+      },
+    );
+    if (changed == true && mounted) {
+      setState(() => _loading = true);
+      await _loadUser();
+    }
+  }
+
   bool _updateAvatarStretch(double next) {
     final normalized = next.clamp(0.0, 72.0);
     if ((_avatarStretch.value - normalized).abs() < 0.5) {
@@ -400,123 +514,176 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final username = _username();
     final profileId = _profileId();
     final presenceLabel = _presenceLabel(l10n);
+    final body = _loading
+        ? const AppLoadingState()
+        : LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= UITokens.desktopBreakpoint;
+              final isTablet =
+                  constraints.maxWidth >= UITokens.tabletBreakpoint;
+              final horizontalPadding = constraints.maxWidth >= 1400
+                  ? 40.0
+                  : isWide
+                  ? 28.0
+                  : isTablet
+                  ? 20.0
+                  : 14.0;
+              final heroPanelWidth = (constraints.maxWidth * 0.34).clamp(
+                320.0,
+                420.0,
+              );
+              final heroPanel = ValueListenableBuilder<double>(
+                valueListenable: _avatarStretch,
+                builder: (context, stretch, _) => _buildHeroPanel(
+                  context: context,
+                  l10n: l10n,
+                  name: name,
+                  avatar: avatar,
+                  username: username,
+                  profileId: profileId,
+                  presenceLabel: presenceLabel,
+                  isWide: isWide,
+                  avatarStretch: stretch,
+                ),
+              );
+              final detailsPanel = _buildDetailsPanel(
+                context: context,
+                l10n: l10n,
+                username: username,
+                profileId: profileId,
+              );
+
+              return Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: UITokens.contentMaxWidth,
+                  ),
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification.metrics.axis != Axis.vertical) {
+                        return false;
+                      }
+
+                      if (notification is OverscrollNotification &&
+                          notification.metrics.pixels <=
+                              notification.metrics.minScrollExtent &&
+                          notification.overscroll < 0) {
+                        _updateAvatarStretch(
+                          _avatarStretch.value +
+                              (-notification.overscroll * 0.6),
+                        );
+                      } else if (notification is ScrollUpdateNotification &&
+                          notification.metrics.pixels >
+                              notification.metrics.minScrollExtent &&
+                          _avatarStretch.value > 0) {
+                        _updateAvatarStretch(0);
+                      } else if (notification is ScrollEndNotification &&
+                          _avatarStretch.value > 0) {
+                        _updateAvatarStretch(0);
+                      }
+                      return false;
+                    },
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        isWide ? 24 : 16,
+                        horizontalPadding,
+                        24,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (widget.embedded) ...[
+                            SectionPageHeader(
+                              title: widget.startInEdit
+                                  ? l10n.editTooltip
+                                  : l10n.profileTitle,
+                              subtitle: widget.startInEdit
+                                  ? l10n.profileSubtitle
+                                  : l10n.peopleViewProfileAction,
+                              leading: IconButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                icon: const Icon(Icons.arrow_back_rounded),
+                              ),
+                              actions: [
+                                if (_isMe)
+                                  IconButton(
+                                    icon: Icon(
+                                      widget.startInEdit
+                                          ? Icons.check_rounded
+                                          : Icons.edit_rounded,
+                                    ),
+                                    onPressed: widget.startInEdit
+                                        ? _saveProfile
+                                        : _openEditScreen,
+                                    tooltip: widget.startInEdit
+                                        ? l10n.saveTooltip
+                                        : l10n.editTooltip,
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: UITokens.spaceMd),
+                          ],
+                          if (isWide)
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: heroPanelWidth,
+                                  child: heroPanel,
+                                ),
+                                const SizedBox(width: UITokens.spaceXLg),
+                                Expanded(
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxWidth:
+                                          UITokens.readableContentMaxWidth,
+                                    ),
+                                    child: detailsPanel,
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                heroPanel,
+                                const SizedBox(height: UITokens.spaceMd),
+                                detailsPanel,
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+
+    if (widget.embedded) {
+      return body;
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(l10n.profileTitle),
+        title: Text(widget.startInEdit ? l10n.editTooltip : l10n.profileTitle),
         centerTitle: false,
         actions: [
           if (_isMe)
             IconButton(
-              icon: Icon(_isEditing ? Icons.check : Icons.edit),
-              onPressed: _isEditing
-                  ? _saveProfile
-                  : () => setState(() => _isEditing = true),
-              tooltip: _isEditing ? l10n.saveTooltip : l10n.editTooltip,
+              icon: Icon(
+                widget.startInEdit ? Icons.check_rounded : Icons.edit_rounded,
+              ),
+              onPressed: widget.startInEdit ? _saveProfile : _openEditScreen,
+              tooltip: widget.startInEdit ? l10n.saveTooltip : l10n.editTooltip,
             ),
         ],
       ),
-      body: ScreenBackground(
-        child: _loading
-          ? const AppLoadingState()
-          : LayoutBuilder(
-              builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= UITokens.desktopBreakpoint;
-            final isTablet = constraints.maxWidth >= UITokens.tabletBreakpoint;
-                final horizontalPadding = constraints.maxWidth >= 1400
-                    ? 40.0
-                    : isWide
-                        ? 28.0
-                        : isTablet
-                            ? 20.0
-                  : 14.0;
-              final heroPanelWidth =
-                (constraints.maxWidth * 0.34).clamp(320.0, 420.0);
-                final heroPanel = ValueListenableBuilder<double>(
-                  valueListenable: _avatarStretch,
-                  builder: (context, stretch, _) => _buildHeroPanel(
-                    context: context,
-                    l10n: l10n,
-                    name: name,
-                    avatar: avatar,
-                    username: username,
-                    profileId: profileId,
-                    presenceLabel: presenceLabel,
-                    isWide: isWide,
-                    avatarStretch: stretch,
-                  ),
-                );
-                final detailsPanel = _buildDetailsPanel(
-                  context: context,
-                  l10n: l10n,
-                  username: username,
-                  profileId: profileId,
-                );
-
-                return Align(
-                  alignment: Alignment.topCenter,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1280),
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: (notification) {
-                        if (notification.metrics.axis != Axis.vertical) {
-                          return false;
-                        }
-
-                        if (notification is OverscrollNotification &&
-                            notification.metrics.pixels <=
-                                notification.metrics.minScrollExtent &&
-                            notification.overscroll < 0) {
-                          _updateAvatarStretch(
-                            _avatarStretch.value + (-notification.overscroll * 0.6),
-                          );
-                        } else if (notification is ScrollUpdateNotification &&
-                            notification.metrics.pixels >
-                                notification.metrics.minScrollExtent &&
-                            _avatarStretch.value > 0) {
-                          _updateAvatarStretch(0);
-                        } else if (notification is ScrollEndNotification &&
-                            _avatarStretch.value > 0) {
-                          _updateAvatarStretch(0);
-                        }
-                        return false;
-                      },
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          isWide ? 24 : 16,
-                          horizontalPadding,
-                          24,
-                        ),
-                        child: isWide
-                            ? Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(width: heroPanelWidth, child: heroPanel),
-                                  const SizedBox(width: 24),
-                                  Expanded(
-                                    child: ConstrainedBox(
-                                      constraints: const BoxConstraints(maxWidth: 760),
-                                      child: detailsPanel,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  heroPanel,
-                                  const SizedBox(height: 16),
-                                  detailsPanel,
-                                ],
-                              ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-      ),
+      body: ScreenBackground(child: body),
     );
   }
 
@@ -564,7 +731,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     AnimatedContainer(
-                      duration: const Duration(milliseconds: 120),
+                      duration: UITokens.durationXS,
                       curve: Curves.easeOut,
                       width: avatarSize,
                       height: avatarSize,
@@ -586,9 +753,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(UITokens.spaceXS),
                       child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
+                        duration: UITokens.durationSm,
                         child: UserAvatar(
                           key: ValueKey(avatar ?? 'noavatar_${widget.userId}'),
                           avatarUrl: avatar,
@@ -597,7 +764,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
-                    if (_isMe && _isEditing)
+                    if (_isMe && widget.startInEdit)
                       Positioned(
                         right: -4,
                         bottom: -4,
@@ -605,15 +772,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onPressed: _pickAvatar,
                           style: FilledButton.styleFrom(
                             minimumSize: const Size(0, 0),
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(UITokens.spaceSmMd),
                             shape: const CircleBorder(),
                           ),
-                          child: const Icon(Icons.camera_alt_outlined, size: 18),
+                          child: const Icon(
+                            Icons.camera_alt_outlined,
+                            size: 18,
+                          ),
                         ),
                       ),
                   ],
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: UITokens.spaceMd),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,7 +796,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: UITokens.spaceXSm),
                       Text(
                         '@$username',
                         maxLines: 1,
@@ -636,18 +806,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       if (presenceLabel != null) ...[
-                        const SizedBox(height: 10),
+                        const SizedBox(height: UITokens.spaceSmMd),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: UITokens.spaceSmMd,
+                            vertical: UITokens.spaceXSm,
+                          ),
                           decoration: BoxDecoration(
-                            color: _presenceColor(context).withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(999),
+                            color: _presenceColor(
+                              context,
+                            ).withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(
+                              UITokens.cornerPill,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.circle, size: 8, color: _presenceColor(context)),
-                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.circle,
+                                size: 8,
+                                color: _presenceColor(context),
+                              ),
+                              const SizedBox(width: UITokens.spaceSm),
                               Flexible(
                                 child: Text(
                                   presenceLabel,
@@ -666,26 +847,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: UITokens.spaceMdSm),
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
                 _buildMetaChip(
                   context,
-                  icon: Icons.badge_outlined,
-                  label: 'ID: $profileId',
+                  icon: Icons.person_outline_rounded,
+                  label: '@$username',
                 ),
-                if (_user?['email'] is String && (_user!['email'] as String).isNotEmpty)
+                if (_user?['email'] is String &&
+                    (_user!['email'] as String).isNotEmpty)
                   _buildMetaChip(
                     context,
-                    icon: Icons.alternate_email,
+                    icon: Icons.mail_outline_rounded,
                     label: _user!['email'] as String,
                   ),
               ],
             ),
             if (!_isMe) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: UITokens.spaceMd),
               LayoutBuilder(
                 builder: (context, constraints) {
                   final compactButtons = constraints.maxWidth < 500;
@@ -693,7 +875,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     return Column(
                       children: [
                         _buildActionButton(
-                          icon: _actionLoading ? null : Icons.chat_bubble_outline,
+                          icon: _actionLoading
+                              ? null
+                              : Icons.chat_bubble_outline,
                           label: l10n.writeMessageButton,
                           loading: _actionLoading,
                           fullWidth: true,
@@ -701,18 +885,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ? null
                               : () async {
                                   setState(() => _actionLoading = true);
-                                  final messenger = ScaffoldMessenger.of(context);
-                                  final navState = appNavigatorKey.currentState;
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
                                   try {
                                     final cs = createChatBackend();
-                                    final m = await cs.getOrCreateDirectChat(widget.userId);
+                                    final m = await cs.getOrCreateDirectChat(
+                                      widget.userId,
+                                    );
                                     final chat = Chat.fromMap(m);
                                     if (!mounted) return;
-                                    navState?.pop(chat);
+                                    await context.push(
+                                      '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
+                                      extra: chat,
+                                    );
                                   } catch (e) {
                                     messenger.showSnackBar(
                                       SnackBar(
-                                        content: Text(l10n.createChatError(e.toString())),
+                                        content: Text(
+                                          l10n.createChatError(e.toString()),
+                                        ),
                                       ),
                                     );
                                   } finally {
@@ -722,7 +914,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   }
                                 },
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: UITokens.spaceSmMd),
                         _buildActionButton(
                           icon: Icons.call_outlined,
                           label: l10n.callButton,
@@ -750,7 +942,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       Expanded(
                         child: _buildActionButton(
-                          icon: _actionLoading ? null : Icons.chat_bubble_outline,
+                          icon: _actionLoading
+                              ? null
+                              : Icons.chat_bubble_outline,
                           label: l10n.writeMessageButton,
                           loading: _actionLoading,
                           fullWidth: true,
@@ -758,18 +952,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ? null
                               : () async {
                                   setState(() => _actionLoading = true);
-                                  final messenger = ScaffoldMessenger.of(context);
-                                  final navState = appNavigatorKey.currentState;
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
                                   try {
                                     final cs = createChatBackend();
-                                    final m = await cs.getOrCreateDirectChat(widget.userId);
+                                    final m = await cs.getOrCreateDirectChat(
+                                      widget.userId,
+                                    );
                                     final chat = Chat.fromMap(m);
                                     if (!mounted) return;
-                                    navState?.pop(chat);
+                                    await context.push(
+                                      '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
+                                      extra: chat,
+                                    );
                                   } catch (e) {
                                     messenger.showSnackBar(
                                       SnackBar(
-                                        content: Text(l10n.createChatError(e.toString())),
+                                        content: Text(
+                                          l10n.createChatError(e.toString()),
+                                        ),
                                       ),
                                     );
                                   } finally {
@@ -780,7 +982,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 },
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: UITokens.spaceSmMd),
                       Expanded(
                         child: _buildActionButton(
                           icon: Icons.call_outlined,
@@ -828,52 +1030,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(UITokens.cornerLg),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(UITokens.spaceLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _isEditing ? l10n.editTooltip : l10n.profileTitle,
+              widget.startInEdit ? l10n.editTooltip : l10n.profileTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: UITokens.spaceXSm),
             Text(
-              _isEditing ? l10n.profileSubtitle : l10n.peopleViewProfileAction,
+              widget.startInEdit
+                  ? l10n.profileSubtitle
+                  : l10n.peopleViewProfileAction,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 20),
-            if (_isEditing)
+            const SizedBox(height: UITokens.spaceLg),
+            if (!widget.startInEdit && !_hasReadableProfileData()) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(UITokens.spaceMdSm),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
+                  borderRadius: BorderRadius.circular(UITokens.cornerLg),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.4,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: UITokens.space),
+                    Expanded(
+                      child: Text(
+                        _emptyProfileHint(l10n),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: UITokens.spaceMd),
+            ],
+            if (widget.startInEdit)
               Column(
                 children: [
-                  _buildEditableField(l10n.nameField, _nameController, Icons.person),
-                  const SizedBox(height: 12),
+                  _buildEditableField(
+                    l10n.nameField,
+                    _nameController,
+                    Icons.person,
+                  ),
+                  const SizedBox(height: UITokens.space),
                   _buildEditableField(
                     l10n.nicknameField,
                     _nicknameController,
                     Icons.alternate_email,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UITokens.space),
                   _buildEditableField(
                     l10n.aboutField,
                     _aboutController,
                     Icons.info_outline,
                     maxLines: 4,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UITokens.space),
                   _buildEditableField(
                     l10n.locationField,
                     _locationController,
                     Icons.location_on_outlined,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UITokens.space),
                   _buildEditableField(
                     l10n.birthdayField,
                     _birthdayController,
                     Icons.cake_outlined,
+                    readOnly: true,
+                    onTap: _pickBirthday,
                   ),
                 ],
               )
@@ -888,16 +1135,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildInfoList(List<({String label, String? value})> infoTiles) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withValues(alpha: 0.35),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(UITokens.cornerSm),
         border: Border.all(
-          color: Theme.of(context)
-              .colorScheme
-              .outlineVariant
-              .withValues(alpha: 0.35),
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.35),
         ),
       ),
       child: Column(
@@ -907,10 +1152,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (i != infoTiles.length - 1)
               Divider(
                 height: 1,
-                color: Theme.of(context)
-                    .colorScheme
-                    .outlineVariant
-                    .withValues(alpha: 0.4),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: 0.4),
               ),
           ],
         ],
@@ -920,8 +1164,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildTelegramInfoRow(String title, String? value) {
     final theme = Theme.of(context);
+    final normalizedValue = value?.trim() ?? '';
+    final isEmpty = normalizedValue.isEmpty;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.spaceMdSm,
+        vertical: UITokens.space,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -934,14 +1183,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: UITokens.space),
           Expanded(
             flex: 6,
             child: Text(
-              value?.isNotEmpty ?? false ? value! : '-',
+              isEmpty ? AppLocalizations.of(context)!.noData : normalizedValue,
               textAlign: TextAlign.right,
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w600,
+                color: isEmpty ? theme.colorScheme.onSurfaceVariant : null,
               ),
             ),
           ),
@@ -972,10 +1222,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final phone = (_user!['phone'] as String?) ?? '';
       final serverShowEmail = prefs['showEmail'] == true;
       final serverShowPhone = prefs['showPhone'] == true;
-      final shouldShowEmail =
-          _isMe ? SettingsService.showEmailNotifier.value : serverShowEmail;
-      final shouldShowPhone =
-          _isMe ? SettingsService.showPhoneNotifier.value : serverShowPhone;
+      final shouldShowEmail = _isMe
+          ? SettingsService.showEmailNotifier.value
+          : serverShowEmail;
+      final shouldShowPhone = _isMe
+          ? SettingsService.showPhoneNotifier.value
+          : serverShowPhone;
 
       if (email.isNotEmpty && shouldShowEmail) {
         values.add((label: l10n.emailLabel, value: email));
@@ -987,7 +1239,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     values.addAll([
       (label: l10n.nicknameField, value: username),
-      (label: l10n.contactIdLabel, value: profileId),
       (
         label: l10n.locationField,
         value: (_user != null) ? (_user!['location'] as String?) ?? '' : '',
@@ -997,6 +1248,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         value: (_user != null) ? (_user!['birthday'] as String?) ?? '' : '',
       ),
     ]);
+    if (_isMe || (profileId.isNotEmpty && profileId != username)) {
+      values.add((label: l10n.contactIdLabel, value: profileId));
+    }
     return values;
   }
 
@@ -1007,11 +1261,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }) {
     final theme = Theme.of(context);
     return Container(
-      constraints: const BoxConstraints(maxWidth: 320),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      constraints: const BoxConstraints(
+        maxWidth: UITokens.compactSheetMaxWidth,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.space,
+        vertical: UITokens.spaceSmMd,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(UITokens.cornerPill),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
         ),
@@ -1020,7 +1279,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
+          const SizedBox(width: UITokens.spaceSm),
           Flexible(
             child: Text(
               label,
@@ -1033,37 +1292,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildActionButton(
-      {required IconData? icon,
-      required String label,
-      VoidCallback? onPressed,
-      bool fullWidth = false,
-      bool loading = false}) {
+  Widget _buildActionButton({
+    required IconData? icon,
+    required String label,
+    VoidCallback? onPressed,
+    bool fullWidth = false,
+    bool loading = false,
+  }) {
     return ElevatedButton.icon(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         minimumSize: Size(fullWidth ? double.infinity : 180, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: UITokens.spaceLg,
+          vertical: UITokens.space,
+        ),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(UITokens.cornerSm)),
+          borderRadius: BorderRadius.circular(UITokens.cornerSm),
+        ),
       ),
       icon: loading
           ? const SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2))
+              child: CircularProgressIndicator(
+                strokeWidth: UITokens.borderThick,
+              ),
+            )
           : icon != null
-              ? Icon(icon)
-              : const SizedBox.shrink(),
+          ? Icon(icon)
+          : const SizedBox.shrink(),
       label: Text(label),
     );
   }
 
   Widget _buildEditableField(
-      String label, TextEditingController controller, IconData icon,
-      {int maxLines = 1}) {
+    String label,
+    TextEditingController controller,
+    IconData icon, {
+    int maxLines = 1,
+    bool readOnly = false,
+    VoidCallback? onTap,
+  }) {
     return TextField(
       controller: controller,
+      readOnly: readOnly,
+      onTap: onTap,
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
@@ -1075,5 +1349,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
 }
