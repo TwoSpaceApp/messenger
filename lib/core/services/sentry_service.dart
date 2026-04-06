@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry/sentry.dart';
 import 'package:two_space_app/core/config/environment.dart';
 
 /// A centralized service for interacting with Sentry.
@@ -39,15 +39,12 @@ class SentryService {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
 
-      await SentryFlutter.init(
+      await Sentry.init(
         (options) {
           options.dsn = Environment.sentryDsn;
           options.tracesSampleRate = 1.0;
           options.release = '${packageInfo.version}+${packageInfo.buildNumber}';
           options.environment = Environment.appEnv;
-
-          // Performance monitoring for slow and frozen frames
-          options.enableAutoPerformanceTracing = true;
         },
       );
 

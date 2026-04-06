@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:sentry/sentry.dart';
 import 'package:two_space_app/core/services/sentry_service.dart';
 
 /// Performance monitoring utility for tracking operation durations
