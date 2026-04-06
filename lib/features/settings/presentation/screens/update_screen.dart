@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -111,7 +112,10 @@ class _UpdateScreenState extends State<UpdateScreen> {
 
     if (widget.info.sha256 != null && widget.info.sha256!.isNotEmpty) {
       setState(() => _verifying = true);
-      final isValid = await UpdateService.verifySha256(apkPath, widget.info.sha256!);
+      final isValid = await UpdateService.verifySha256(
+        apkPath,
+        widget.info.sha256!,
+      );
       if (!mounted) return;
       setState(() => _verifying = false);
       if (!isValid) {
@@ -211,22 +215,33 @@ class _UpdateScreenState extends State<UpdateScreen> {
 
     final sections = <_ReleaseSection>[];
     if (grouped['new']!.isNotEmpty) {
-      sections.add(_ReleaseSection(title: l10n.releaseSectionNew, items: grouped['new']!));
+      sections.add(
+        _ReleaseSection(title: l10n.releaseSectionNew, items: grouped['new']!),
+      );
     }
     if (grouped['improved']!.isNotEmpty) {
-      sections.add(_ReleaseSection(
-        title: l10n.releaseSectionImproved,
-        items: grouped['improved']!,
-      ));
+      sections.add(
+        _ReleaseSection(
+          title: l10n.releaseSectionImproved,
+          items: grouped['improved']!,
+        ),
+      );
     }
     if (grouped['fixed']!.isNotEmpty) {
-      sections.add(_ReleaseSection(title: l10n.releaseSectionFixed, items: grouped['fixed']!));
+      sections.add(
+        _ReleaseSection(
+          title: l10n.releaseSectionFixed,
+          items: grouped['fixed']!,
+        ),
+      );
     }
     if (grouped['security']!.isNotEmpty) {
-      sections.add(_ReleaseSection(
-        title: l10n.releaseSectionSecurity,
-        items: grouped['security']!,
-      ));
+      sections.add(
+        _ReleaseSection(
+          title: l10n.releaseSectionSecurity,
+          items: grouped['security']!,
+        ),
+      );
     }
     if (fallback.isNotEmpty) {
       sections.add(_ReleaseSection(title: l10n.whatsNewLabel, items: fallback));
@@ -285,7 +300,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                 height: 44,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(UITokens.cornerLg),
                 ),
                 alignment: Alignment.center,
                 child: Icon(
@@ -293,7 +308,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                   color: theme.colorScheme.primary,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: UITokens.space),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +319,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: UITokens.spaceXS),
                     Text(
                       l10n.updatePreviewModeSubtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -317,7 +332,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UITokens.spaceMd),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -342,7 +357,11 @@ class _UpdateScreenState extends State<UpdateScreen> {
   Widget _buildRing(BuildContext context) {
     final theme = Theme.of(context);
     final activity = _downloading || _verifying || _installing;
-    final displayProgress = _downloading ? _progress : activity ? null : 0.0;
+    final displayProgress = _downloading
+        ? _progress
+        : activity
+        ? null
+        : 0.0;
 
     return Container(
       width: 148,
@@ -367,7 +386,9 @@ class _UpdateScreenState extends State<UpdateScreen> {
             child: CircularProgressIndicator(
               strokeWidth: 8,
               value: displayProgress,
-              backgroundColor: theme.colorScheme.outline.withValues(alpha: 0.12),
+              backgroundColor: theme.colorScheme.outline.withValues(
+                alpha: 0.12,
+              ),
             ),
           ),
           Container(
@@ -389,8 +410,8 @@ class _UpdateScreenState extends State<UpdateScreen> {
               _installing
                   ? Icons.download_done_rounded
                   : _verifying
-                      ? Icons.verified_rounded
-                      : Icons.system_update_alt_rounded,
+                  ? Icons.verified_rounded
+                  : Icons.system_update_alt_rounded,
               size: 42,
               color: theme.colorScheme.primary,
             ),
@@ -418,7 +439,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
             height: 42,
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(UITokens.cornerMd),
             ),
             alignment: Alignment.center,
             child: Icon(
@@ -458,7 +479,9 @@ class _UpdateScreenState extends State<UpdateScreen> {
             ),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 860),
+                constraints: const BoxConstraints(
+                  maxWidth: UITokens.panelContentMaxWidth,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -470,7 +493,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                               : () => Navigator.of(context).maybePop(),
                           icon: const Icon(Icons.arrow_back_rounded),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: UITokens.spaceXS),
                         Expanded(
                           child: Text(
                             l10n.updateAvailableTitle,
@@ -481,7 +504,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: UITokens.space),
                     SettingsHeroCard(
                       icon: Icons.system_update_alt_rounded,
                       title: l10n.updateHeroTitle,
@@ -503,7 +526,9 @@ class _UpdateScreenState extends State<UpdateScreen> {
                         builder: (context, constraints) {
                           final vertical = constraints.maxWidth < 620;
                           return Flex(
-                            direction: vertical ? Axis.vertical : Axis.horizontal,
+                            direction: vertical
+                                ? Axis.vertical
+                                : Axis.horizontal,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildRing(context),
@@ -516,16 +541,19 @@ class _UpdateScreenState extends State<UpdateScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     _buildVersionStrip(context),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: UITokens.spaceMd),
                                     if (_error != null)
                                       Container(
                                         width: double.infinity,
-                                        padding: const EdgeInsets.all(14),
+                                        padding: const EdgeInsets.all(
+                                          UITokens.spaceMdSm,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: theme.colorScheme.error
                                               .withValues(alpha: 0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(18),
+                                          borderRadius: BorderRadius.circular(
+                                            UITokens.cornerXLg,
+                                          ),
                                           border: Border.all(
                                             color: theme.colorScheme.error
                                                 .withValues(alpha: 0.22),
@@ -535,8 +563,8 @@ class _UpdateScreenState extends State<UpdateScreen> {
                                           _error!,
                                           style: theme.textTheme.bodyMedium
                                               ?.copyWith(
-                                            color: theme.colorScheme.error,
-                                          ),
+                                                color: theme.colorScheme.error,
+                                              ),
                                         ),
                                       ),
                                   ],
@@ -547,21 +575,23 @@ class _UpdateScreenState extends State<UpdateScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: UITokens.spaceXLg),
                     SettingsSectionHeader(
                       title: l10n.updatePipelineTitle,
                       subtitle: l10n.updatePipelineSubtitle,
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: UITokens.spaceMdSm),
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount:
-                          MediaQuery.of(context).size.width < 760 ? 1 : 3,
+                      crossAxisCount: MediaQuery.of(context).size.width < 760
+                          ? 1
+                          : 3,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio:
-                          MediaQuery.of(context).size.width < 760 ? 3.6 : 1.9,
+                      childAspectRatio: MediaQuery.of(context).size.width < 760
+                          ? 3.6
+                          : 1.9,
                       children: [
                         SettingsStageTile(
                           title: l10n.updateStageDownloadTitle,
@@ -588,7 +618,7 @@ class _UpdateScreenState extends State<UpdateScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: UITokens.spaceXLg),
                     SettingsSectionHeader(
                       title: isPreviewBuild
                           ? l10n.updatePreviewModeTitle
@@ -597,13 +627,15 @@ class _UpdateScreenState extends State<UpdateScreen> {
                           ? l10n.updatePreviewModeSubtitle
                           : l10n.releaseSummarySubtitle,
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: UITokens.spaceMdSm),
                     if (isPreviewBuild)
                       _buildPreviewBuildCard(context)
                     else
                       ...sections.map(
                         (section) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.only(
+                            bottom: UITokens.space,
+                          ),
                           child: GlassCard(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -614,18 +646,20 @@ class _UpdateScreenState extends State<UpdateScreen> {
                                     fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: UITokens.space),
                                 ...section.items.map(
                                   (item) => Padding(
-                                    padding:
-                                        const EdgeInsets.only(bottom: 10),
+                                    padding: const EdgeInsets.only(
+                                      bottom: UITokens.spaceSmMd,
+                                    ),
                                     child: Row(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
                                         Padding(
-                                          padding:
-                                              const EdgeInsets.only(top: 6),
+                                          padding: const EdgeInsets.only(
+                                            top: 6,
+                                          ),
                                           child: Container(
                                             width: 8,
                                             height: 8,
@@ -635,14 +669,14 @@ class _UpdateScreenState extends State<UpdateScreen> {
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 12),
+                                        const SizedBox(width: UITokens.space),
                                         Expanded(
                                           child: Text(
                                             item,
                                             style: theme.textTheme.bodyMedium
                                                 ?.copyWith(
-                                              height: 1.35,
-                                            ),
+                                                  height: 1.35,
+                                                ),
                                           ),
                                         ),
                                       ],
@@ -654,12 +688,12 @@ class _UpdateScreenState extends State<UpdateScreen> {
                           ),
                         ),
                       ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: UITokens.space),
                     SettingsSectionHeader(
                       title: l10n.updateTrustTitle,
                       subtitle: l10n.updateTrustSubtitle,
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: UITokens.spaceMdSm),
                     GlassCard(
                       child: Column(
                         children: [
@@ -689,12 +723,13 @@ class _UpdateScreenState extends State<UpdateScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: UITokens.spaceXLg),
                     Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: widget.info.forceUpdate ||
+                            onPressed:
+                                widget.info.forceUpdate ||
                                     _downloading ||
                                     _verifying ||
                                     _installing
@@ -707,22 +742,21 @@ class _UpdateScreenState extends State<UpdateScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: UITokens.space),
                         Expanded(
                           flex: 2,
                           child: FilledButton(
-                            onPressed:
-                                _downloading || _verifying || _installing
-                                    ? null
-                                    : _startDownload,
+                            onPressed: _downloading || _verifying || _installing
+                                ? null
+                                : _startDownload,
                             child: Text(
                               _installing
                                   ? l10n.installingLabel
                                   : _verifying
-                                      ? l10n.checkingIntegrity
-                                      : _downloading
-                                          ? l10n.downloadingLabel
-                                          : l10n.updateButton,
+                                  ? l10n.checkingIntegrity
+                                  : _downloading
+                                  ? l10n.downloadingLabel
+                                  : l10n.updateButton,
                             ),
                           ),
                         ),
@@ -755,8 +789,9 @@ class _VersionColumn extends StatelessWidget {
     final theme = Theme.of(context);
     final textAlign = alignEnd ? TextAlign.end : TextAlign.start;
     return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         Text(
           label,
@@ -765,7 +800,7 @@ class _VersionColumn extends StatelessWidget {
             color: AppColors.subtitleText(context),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: UITokens.spaceXS),
         Text(
           value,
           textAlign: textAlign,
@@ -797,7 +832,7 @@ class _TrustRow extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: UITokens.spaceMd),
         Flexible(
           child: Text(
             value,

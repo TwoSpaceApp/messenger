@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -132,145 +133,146 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     final list = SafeArea(
       top: !widget.embedded,
       child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              if (widget.embedded) ...[
-                SectionPageHeader(
-                  title: l10n.suggestImprovementLabel,
-                  subtitle: l10n.feedbackCategoryNetworkSync,
-                  leading: IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_rounded),
+        padding: const EdgeInsets.all(UITokens.spaceMd),
+        children: [
+          if (widget.embedded) ...[
+            SectionPageHeader(
+              title: l10n.suggestImprovementLabel,
+              subtitle: l10n.feedbackCategoryNetworkSync,
+              leading: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+              ),
+            ),
+            const SizedBox(height: UITokens.space),
+          ],
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GlassCard(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
-                ),
-                const SizedBox(height: 12),
-              ],
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GlassCard(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Column(
-                        children: [
-                          DropdownButtonFormField<String>(
-                            initialValue: _category,
-                            decoration: InputDecoration(
-                              labelText: l10n.categoryLabel,
-                            ),
-                            items: [
-                              DropdownMenuItem(
-                                value: 'features',
-                                child: Text(l10n.feedbackCategoryFeatures),
-                              ),
-                              DropdownMenuItem(
-                                value: 'ux_design',
-                                child: Text(l10n.feedbackCategoryUxDesign),
-                              ),
-                              DropdownMenuItem(
-                                value: 'performance',
-                                child: Text(l10n.feedbackCategoryPerformance),
-                              ),
-                              DropdownMenuItem(
-                                value: 'security',
-                                child: Text(l10n.feedbackCategorySecurity),
-                              ),
-                              DropdownMenuItem(
-                                value: 'network',
-                                child: Text(l10n.feedbackCategoryNetworkSync),
-                              ),
-                            ],
-                            onChanged: (v) =>
-                                setState(() => _category = v ?? 'features'),
+                  child: Column(
+                    children: [
+                      DropdownButtonFormField<String>(
+                        initialValue: _category,
+                        decoration: InputDecoration(
+                          labelText: l10n.categoryLabel,
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'features',
+                            child: Text(l10n.feedbackCategoryFeatures),
                           ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _titleController,
-                            textInputAction: TextInputAction.next,
-                            decoration: InputDecoration(
-                              labelText: l10n.shortDescriptionLabel,
-                              hintText: l10n.shortDescriptionHint,
-                            ),
-                            validator: (v) {
-                              final hasTitle = (v ?? '').trim().isNotEmpty;
-                              final hasDetails =
-                                  _detailsController.text.trim().isNotEmpty;
-                              if (!hasTitle && !hasDetails) {
-                                return l10n.feedbackValidation;
-                              }
-                              return null;
-                            },
+                          DropdownMenuItem(
+                            value: 'ux_design',
+                            child: Text(l10n.feedbackCategoryUxDesign),
                           ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _detailsController,
-                            minLines: 3,
-                            maxLines: 8,
-                            decoration: InputDecoration(
-                              labelText: l10n.detailsOptionalLabel,
-                              hintText: l10n.detailsHint,
-                            ),
+                          DropdownMenuItem(
+                            value: 'performance',
+                            child: Text(l10n.feedbackCategoryPerformance),
+                          ),
+                          DropdownMenuItem(
+                            value: 'security',
+                            child: Text(l10n.feedbackCategorySecurity),
+                          ),
+                          DropdownMenuItem(
+                            value: 'network',
+                            child: Text(l10n.feedbackCategoryNetworkSync),
                           ),
                         ],
+                        onChanged: (v) =>
+                            setState(() => _category = v ?? 'features'),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isCompact = constraints.maxWidth < 420;
-                        final copyButton = OutlinedButton.icon(
-                          onPressed: _sending ? null : _copy,
-                          icon: const Icon(Icons.copy),
-                          label: Text(l10n.copyButton),
-                        );
-                        final sendButton = ElevatedButton.icon(
-                          onPressed: _sending ? null : _send,
-                          icon: _sending
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.send),
-                          label: Text(l10n.sendButton),
-                        );
-
-                        if (isCompact) {
-                          return Column(
-                            children: [
-                              SizedBox(
-                                width: double.infinity,
-                                child: copyButton,
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: sendButton,
-                              ),
-                            ],
-                          );
-                        }
-
-                        return Row(
-                          children: [
-                            Expanded(child: copyButton),
-                            const SizedBox(width: 12),
-                            Expanded(child: sendButton),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+                      const SizedBox(height: UITokens.space),
+                      TextFormField(
+                        controller: _titleController,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: l10n.shortDescriptionLabel,
+                          hintText: l10n.shortDescriptionHint,
+                        ),
+                        validator: (v) {
+                          final hasTitle = (v ?? '').trim().isNotEmpty;
+                          final hasDetails = _detailsController.text
+                              .trim()
+                              .isNotEmpty;
+                          if (!hasTitle && !hasDetails) {
+                            return l10n.feedbackValidation;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: UITokens.space),
+                      TextFormField(
+                        controller: _detailsController,
+                        minLines: 3,
+                        maxLines: 8,
+                        decoration: InputDecoration(
+                          labelText: l10n.detailsOptionalLabel,
+                          hintText: l10n.detailsHint,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: UITokens.spaceMd),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isCompact = constraints.maxWidth < 420;
+                    final copyButton = OutlinedButton.icon(
+                      onPressed: _sending ? null : _copy,
+                      icon: const Icon(Icons.copy),
+                      label: Text(l10n.copyButton),
+                    );
+                    final sendButton = ElevatedButton.icon(
+                      onPressed: _sending ? null : _send,
+                      icon: _sending
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.send),
+                      label: Text(l10n.sendButton),
+                    );
+
+                    if (isCompact) {
+                      return Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: copyButton,
+                          ),
+                          const SizedBox(height: UITokens.space),
+                          SizedBox(
+                            width: double.infinity,
+                            child: sendButton,
+                          ),
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(child: copyButton),
+                        const SizedBox(width: UITokens.space),
+                        Expanded(child: sendButton),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
+        ],
+      ),
     );
 
     if (widget.embedded) {

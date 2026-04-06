@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/sound/audio_player_service.dart';
@@ -91,154 +92,159 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final list = ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          children: [
-            if (widget.embedded) ...[
-              SectionPageHeader(
-                title: l10n.settingsNotificationNew,
-                subtitle: l10n.notificationsHeroSubtitle,
-                leading: IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.arrow_back_rounded),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        UITokens.spaceSm,
+        UITokens.spaceMd,
+        UITokens.spaceXLg,
+      ),
+      children: [
+        if (widget.embedded) ...[
+          SectionPageHeader(
+            title: l10n.settingsNotificationNew,
+            subtitle: l10n.notificationsHeroSubtitle,
+            leading: IconButton(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.arrow_back_rounded),
+            ),
+          ),
+          const SizedBox(height: UITokens.space),
+        ],
+        ValueListenableBuilder<bool>(
+          valueListenable: SettingsService.notificationsEnabledNotifier,
+          builder: (context, enabled, _) {
+            return SettingsHeroCard(
+              icon: enabled
+                  ? Icons.notifications_active_rounded
+                  : Icons.notifications_off_rounded,
+              title: l10n.settingsNotificationNew,
+              subtitle: l10n.notificationsHeroSubtitle,
+              badges: [
+                _StatusBadge(
+                  label: enabled
+                      ? l10n.notificationsLabel
+                      : l10n.settingsDoNotDisturb,
+                  active: enabled,
                 ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: UITokens.spaceMd),
+        GlassCard(
+          child: Column(
+            children: [
+              ValueListenableBuilder<bool>(
+                valueListenable: SettingsService.notificationsEnabledNotifier,
+                builder: (context, enabled, _) {
+                  return _ToggleTile(
+                    icon: Icons.notifications_rounded,
+                    title: l10n.notificationsLabel,
+                    subtitle: l10n.settingsNotificationNew,
+                    value: enabled,
+                    onChanged: SettingsService.setNotificationsEnabled,
+                  );
+                },
               ),
-              const SizedBox(height: 12),
+              const Divider(height: 18),
+              ValueListenableBuilder<bool>(
+                valueListenable: SettingsService.notificationsEnabledNotifier,
+                builder: (context, notificationsEnabled, _) {
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: SettingsService.soundEnabledNotifier,
+                    builder: (context, enabled, __) {
+                      return _ToggleTile(
+                        icon: Icons.volume_up_rounded,
+                        title: l10n.soundLabel,
+                        subtitle: l10n.settingsSoundOptions,
+                        value: enabled,
+                        onChanged: notificationsEnabled
+                            ? SettingsService.setSoundEnabled
+                            : null,
+                      );
+                    },
+                  );
+                },
+              ),
+              const Divider(height: 18),
+              ValueListenableBuilder<bool>(
+                valueListenable: SettingsService.doNotDisturbNotifier,
+                builder: (context, enabled, _) {
+                  return _ToggleTile(
+                    icon: Icons.do_not_disturb_on_total_silence_rounded,
+                    title: l10n.settingsDoNotDisturb,
+                    subtitle: l10n.notificationsSection,
+                    value: enabled,
+                    onChanged: SettingsService.setDoNotDisturb,
+                  );
+                },
+              ),
             ],
-            ValueListenableBuilder<bool>(
-              valueListenable: SettingsService.notificationsEnabledNotifier,
-              builder: (context, enabled, _) {
-                return SettingsHeroCard(
-                  icon: enabled
-                      ? Icons.notifications_active_rounded
-                      : Icons.notifications_off_rounded,
-                  title: l10n.settingsNotificationNew,
-                  subtitle: l10n.notificationsHeroSubtitle,
-                  badges: [
-                    _StatusBadge(
-                      label: enabled
-                          ? l10n.notificationsLabel
-                          : l10n.settingsDoNotDisturb,
-                      active: enabled,
-                    ),
-                  ],
+          ),
+        ),
+        const SizedBox(height: UITokens.spaceXLg),
+        SettingsSectionHeader(
+          title: l10n.soundLabel,
+          subtitle: l10n.settingsSoundOptions,
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        ValueListenableBuilder<String?>(
+          valueListenable: SettingsService.notificationTonePathNotifier,
+          builder: (context, tonePath, _) {
+            return ValueListenableBuilder<String?>(
+              valueListenable: SettingsService.notificationToneNameNotifier,
+              builder: (context, toneName, __) {
+                return _SoundCard(
+                  icon: Icons.music_note_rounded,
+                  title: l10n.notificationToneTitle,
+                  subtitle: l10n.notificationToneSubtitle,
+                  fileName: toneName,
+                  onPick: () => _pickTone(ringtone: false),
+                  onClear: tonePath == null || tonePath.isEmpty
+                      ? null
+                      : () => _clearTone(ringtone: false),
+                  onPreview: tonePath == null || tonePath.isEmpty
+                      ? null
+                      : () => _togglePreview(tonePath),
+                  previewLabel: _playingSource == tonePath
+                      ? l10n.stopPreviewLabel
+                      : l10n.playPreviewLabel,
+                  previewActive: _playingSource == tonePath,
                 );
               },
-            ),
-            const SizedBox(height: 16),
-            GlassCard(
-              child: Column(
-                children: [
-                  ValueListenableBuilder<bool>(
-                    valueListenable: SettingsService.notificationsEnabledNotifier,
-                    builder: (context, enabled, _) {
-                      return _ToggleTile(
-                        icon: Icons.notifications_rounded,
-                        title: l10n.notificationsLabel,
-                        subtitle: l10n.settingsNotificationNew,
-                        value: enabled,
-                        onChanged: SettingsService.setNotificationsEnabled,
-                      );
-                    },
-                  ),
-                  const Divider(height: 18),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: SettingsService.notificationsEnabledNotifier,
-                    builder: (context, notificationsEnabled, _) {
-                      return ValueListenableBuilder<bool>(
-                        valueListenable: SettingsService.soundEnabledNotifier,
-                        builder: (context, enabled, __) {
-                          return _ToggleTile(
-                            icon: Icons.volume_up_rounded,
-                            title: l10n.soundLabel,
-                            subtitle: l10n.settingsSoundOptions,
-                            value: enabled,
-                            onChanged: notificationsEnabled
-                                ? SettingsService.setSoundEnabled
-                                : null,
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  const Divider(height: 18),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: SettingsService.doNotDisturbNotifier,
-                    builder: (context, enabled, _) {
-                      return _ToggleTile(
-                        icon: Icons.do_not_disturb_on_total_silence_rounded,
-                        title: l10n.settingsDoNotDisturb,
-                        subtitle: l10n.notificationsSection,
-                        value: enabled,
-                        onChanged: SettingsService.setDoNotDisturb,
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            SettingsSectionHeader(
-              title: l10n.soundLabel,
-              subtitle: l10n.settingsSoundOptions,
-            ),
-            const SizedBox(height: 14),
-            ValueListenableBuilder<String?>(
-              valueListenable: SettingsService.notificationTonePathNotifier,
-              builder: (context, tonePath, _) {
-                return ValueListenableBuilder<String?>(
-                  valueListenable: SettingsService.notificationToneNameNotifier,
-                  builder: (context, toneName, __) {
-                    return _SoundCard(
-                      icon: Icons.music_note_rounded,
-                      title: l10n.notificationToneTitle,
-                      subtitle: l10n.notificationToneSubtitle,
-                      fileName: toneName,
-                      onPick: () => _pickTone(ringtone: false),
-                      onClear: tonePath == null || tonePath.isEmpty
-                          ? null
-                          : () => _clearTone(ringtone: false),
-                      onPreview: tonePath == null || tonePath.isEmpty
-                          ? null
-                          : () => _togglePreview(tonePath),
-                      previewLabel: _playingSource == tonePath
-                          ? l10n.stopPreviewLabel
-                          : l10n.playPreviewLabel,
-                      previewActive: _playingSource == tonePath,
-                    );
-                  },
+            );
+          },
+        ),
+        const SizedBox(height: UITokens.space),
+        ValueListenableBuilder<String?>(
+          valueListenable: SettingsService.ringtonePathNotifier,
+          builder: (context, ringtonePath, _) {
+            return ValueListenableBuilder<String?>(
+              valueListenable: SettingsService.ringtoneNameNotifier,
+              builder: (context, ringtoneName, __) {
+                return _SoundCard(
+                  icon: Icons.ring_volume_rounded,
+                  title: l10n.ringtoneTitle,
+                  subtitle: l10n.ringtoneSubtitle,
+                  fileName: ringtoneName,
+                  onPick: () => _pickTone(ringtone: true),
+                  onClear: ringtonePath == null || ringtonePath.isEmpty
+                      ? null
+                      : () => _clearTone(ringtone: true),
+                  onPreview: ringtonePath == null || ringtonePath.isEmpty
+                      ? null
+                      : () => _togglePreview(ringtonePath),
+                  previewLabel: _playingSource == ringtonePath
+                      ? l10n.stopPreviewLabel
+                      : l10n.playPreviewLabel,
+                  previewActive: _playingSource == ringtonePath,
                 );
               },
-            ),
-            const SizedBox(height: 12),
-            ValueListenableBuilder<String?>(
-              valueListenable: SettingsService.ringtonePathNotifier,
-              builder: (context, ringtonePath, _) {
-                return ValueListenableBuilder<String?>(
-                  valueListenable: SettingsService.ringtoneNameNotifier,
-                  builder: (context, ringtoneName, __) {
-                    return _SoundCard(
-                      icon: Icons.ring_volume_rounded,
-                      title: l10n.ringtoneTitle,
-                      subtitle: l10n.ringtoneSubtitle,
-                      fileName: ringtoneName,
-                      onPick: () => _pickTone(ringtone: true),
-                      onClear: ringtonePath == null || ringtonePath.isEmpty
-                          ? null
-                          : () => _clearTone(ringtone: true),
-                      onPreview: ringtonePath == null || ringtonePath.isEmpty
-                          ? null
-                          : () => _togglePreview(ringtonePath),
-                      previewLabel: _playingSource == ringtonePath
-                          ? l10n.stopPreviewLabel
-                          : l10n.playPreviewLabel,
-                      previewActive: _playingSource == ringtonePath,
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        );
+            );
+          },
+        ),
+      ],
+    );
 
     if (widget.embedded) {
       return list;
@@ -294,13 +300,15 @@ class _SoundCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.56),
-                  borderRadius: BorderRadius.circular(16),
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: 0.56,
+                  ),
+                  borderRadius: BorderRadius.circular(UITokens.cornerLg),
                 ),
                 alignment: Alignment.center,
                 child: Icon(icon, color: theme.colorScheme.primary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: UITokens.space),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,7 +319,7 @@ class _SoundCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: UITokens.spaceXS),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
@@ -324,15 +332,15 @@ class _SoundCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UITokens.spaceMd),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(UITokens.spaceMdSm),
             decoration: BoxDecoration(
               color: previewActive
                   ? theme.colorScheme.primaryContainer.withValues(alpha: 0.34)
                   : theme.colorScheme.surface.withValues(alpha: 0.42),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(UITokens.cornerXLg),
               border: Border.all(
                 color: previewActive
                     ? theme.colorScheme.primary.withValues(alpha: 0.22)
@@ -345,13 +353,14 @@ class _SoundCard extends StatelessWidget {
                   child: Text(
                     fileName ?? l10n.customSoundNotSelected,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight:
-                          fileName == null ? FontWeight.w500 : FontWeight.w700,
+                      fontWeight: fileName == null
+                          ? FontWeight.w500
+                          : FontWeight.w700,
                     ),
                   ),
                 ),
                 if (previewActive) ...[
-                  const SizedBox(width: 12),
+                  const SizedBox(width: UITokens.space),
                   Icon(
                     Icons.graphic_eq_rounded,
                     color: theme.colorScheme.primary,
@@ -360,7 +369,7 @@ class _SoundCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: UITokens.spaceMdSm),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -425,7 +434,7 @@ class _ToggleTile extends StatelessWidget {
         height: 40,
         decoration: BoxDecoration(
           color: theme.colorScheme.primaryContainer.withValues(alpha: 0.42),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(UITokens.cornerMd),
         ),
         alignment: Alignment.center,
         child: Icon(icon, color: theme.colorScheme.primary),
@@ -449,12 +458,15 @@ class _StatusBadge extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.spaceSmMd,
+        vertical: UITokens.spaceXSm,
+      ),
       decoration: BoxDecoration(
         color: active
             ? theme.colorScheme.primaryContainer.withValues(alpha: 0.72)
             : theme.colorScheme.surface.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(UITokens.cornerPill),
       ),
       child: Text(
         label,

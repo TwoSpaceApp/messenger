@@ -50,7 +50,13 @@ class ChatScreen extends StatefulWidget {
   final String? searchType; // 'all' | 'messages' | 'media' | 'users'
   final String? scrollToEventId;
 
-  const ChatScreen({required this.chat, super.key, this.searchQuery, this.searchType, this.scrollToEventId});
+  const ChatScreen({
+    required this.chat,
+    super.key,
+    this.searchQuery,
+    this.searchType,
+    this.scrollToEventId,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -98,16 +104,17 @@ class _ChatTimelineState {
 }
 
 class _ChatScreenState extends State<ChatScreen>
-  with WidgetsBindingObserver, RouteAware {
+    with WidgetsBindingObserver, RouteAware {
   static const int _historyPageSize = 80;
   static const int _userInfoBatchSize = 6;
-  static const Duration _searchDebounce = Duration(milliseconds: 260);
-  static const Duration _historyLoadThrottle = Duration(milliseconds: 700);
+  static const Duration _searchDebounce = UITokens.durationMd;
+  static const Duration _historyLoadThrottle = UITokens.durationXL;
   final AegisChatService _svc = AegisChatService();
   final TextEditingController _controller = TextEditingController();
   final DraftService _draftService = DraftService();
-  final ValueNotifier<_ChatTimelineState> _timeline =
-      ValueNotifier(const _ChatTimelineState());
+  final ValueNotifier<_ChatTimelineState> _timeline = ValueNotifier(
+    const _ChatTimelineState(),
+  );
   List<Map<String, dynamic>> _searchResults = [];
   bool _searching = false;
   final Map<String, Map<String, dynamic>> _reactions = {};
@@ -146,7 +153,7 @@ class _ChatScreenState extends State<ChatScreen>
   bool _screenHasFocus = false;
   AppLifecycleState _lifecycleState =
       SchedulerBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
-  
+
   // Group-related state
   // String? _groupBackgroundColor;
   // String? _groupBackgroundImageUrl;
@@ -235,7 +242,9 @@ class _ChatScreenState extends State<ChatScreen>
         final exts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov'];
         return exts.any(t.endsWith);
       }
-      if (type == 'users') return m.text.toLowerCase().contains('@') || m.text.toLowerCase().contains('invite');
+      if (type == 'users')
+        return m.text.toLowerCase().contains('@') ||
+            m.text.toLowerCase().contains('invite');
       // all
       return q.isEmpty || m.text.toLowerCase().contains(q);
     }).toList();
@@ -315,7 +324,8 @@ class _ChatScreenState extends State<ChatScreen>
     }
     final oldQ = (oldWidget.searchQuery ?? '').trim();
     final newQ = (widget.searchQuery ?? '').trim();
-    if (oldWidget.scrollToEventId != widget.scrollToEventId) _scrollToEventId = widget.scrollToEventId;
+    if (oldWidget.scrollToEventId != widget.scrollToEventId)
+      _scrollToEventId = widget.scrollToEventId;
     if (oldQ != newQ || oldWidget.searchType != widget.searchType) {
       _scheduleServerSearch(newQ, widget.searchType ?? 'all');
     }
@@ -399,17 +409,19 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _subscribeToMessages() {
     _messagesSub?.cancel();
-    _messagesSub = _svc.watchRoomMessages(
-      widget.chat.id,
-      limit: _historyLimit,
-    ).listen(
-      _scheduleMessagesApply,
-      onError: (_) {
-        if (mounted) {
-          _updateTimeline((current) => current.copyWith(loading: false));
-        }
-      },
-    );
+    _messagesSub = _svc
+        .watchRoomMessages(
+          widget.chat.id,
+          limit: _historyLimit,
+        )
+        .listen(
+          _scheduleMessagesApply,
+          onError: (_) {
+            if (mounted) {
+              _updateTimeline((current) => current.copyWith(loading: false));
+            }
+          },
+        );
   }
 
   String? get _directPeerUserId {
@@ -507,7 +519,9 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _handleListScroll() {
-    if (!_listController.hasClients || _loadingMoreHistory || !_hasMoreHistory) {
+    if (!_listController.hasClients ||
+        _loadingMoreHistory ||
+        !_hasMoreHistory) {
       return;
     }
     final lastHistoryLoadAt = _lastHistoryLoadAt;
@@ -575,7 +589,8 @@ class _ChatScreenState extends State<ChatScreen>
       if (info == null) continue;
       final nextName = info['displayName']?.toString() ?? message.senderName;
       final nextAvatar = info['avatarUrl']?.toString() ?? message.senderAvatar;
-      if (nextName == message.senderName && nextAvatar == message.senderAvatar) {
+      if (nextName == message.senderName &&
+          nextAvatar == message.senderAvatar) {
         continue;
       }
       hasVisualUpdates = true;
@@ -616,33 +631,33 @@ class _ChatScreenState extends State<ChatScreen>
     _lastHistoryLoadAt = now;
 
     final future = () async {
-    final previousMaxExtent = _listController.hasClients
-        ? _listController.position.maxScrollExtent
-        : 0.0;
+      final previousMaxExtent = _listController.hasClients
+          ? _listController.position.maxScrollExtent
+          : 0.0;
 
-    _updateTimeline((current) => current.copyWith(loadingMoreHistory: true));
-    _historyLimit += _historyPageSize;
-    await _loadMessages(forceRefresh: true);
-    _subscribeToMessages();
+      _updateTimeline((current) => current.copyWith(loadingMoreHistory: true));
+      _historyLimit += _historyPageSize;
+      await _loadMessages(forceRefresh: true);
+      _subscribeToMessages();
 
-    // Use a double post-frame callback so the extent is read after the
-    // list has fully laid out the newly prepended items.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Use a double post-frame callback so the extent is read after the
+      // list has fully laid out the newly prepended items.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_listController.hasClients) return;
-        final nextMaxExtent = _listController.position.maxScrollExtent;
-        final delta = nextMaxExtent - previousMaxExtent;
-        if (delta > 0) {
-          _listController.jumpTo(_listController.position.pixels + delta);
-        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_listController.hasClients) return;
+          final nextMaxExtent = _listController.position.maxScrollExtent;
+          final delta = nextMaxExtent - previousMaxExtent;
+          if (delta > 0) {
+            _listController.jumpTo(_listController.position.pixels + delta);
+          }
+        });
       });
-    });
 
-    if (mounted) {
-      _updateTimeline(
-        (current) => current.copyWith(loadingMoreHistory: false),
-      );
-    }
+      if (mounted) {
+        _updateTimeline(
+          (current) => current.copyWith(loadingMoreHistory: false),
+        );
+      }
     }();
 
     _loadOlderMessagesFuture = future;
@@ -659,19 +674,29 @@ class _ChatScreenState extends State<ChatScreen>
     final query = q.trim();
     if (query.isEmpty) {
       if (!mounted) return;
-      setState(() { _searchResults = []; _searching = false; });
+      setState(() {
+        _searchResults = [];
+        _searching = false;
+      });
       return;
     }
     final requestId = ++_searchRequestId;
     if (!mounted) return;
-    setState(() { _searching = true; _searchResults = []; });
+    setState(() {
+      _searching = true;
+      _searchResults = [];
+    });
     try {
       final res = await _svc.searchMessages(query: query, type: type);
       if (!mounted || requestId != _searchRequestId) return;
-      setState(() { _searchResults = res; });
+      setState(() {
+        _searchResults = res;
+      });
     } catch (_) {
       if (!mounted || requestId != _searchRequestId) return;
-      setState(() { _searchResults = []; });
+      setState(() {
+        _searchResults = [];
+      });
     } finally {
       if (mounted && requestId == _searchRequestId) {
         setState(() => _searching = false);
@@ -692,7 +717,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (animated) {
         _listController.animateTo(
           offset,
-          duration: const Duration(milliseconds: 240),
+          duration: UITokens.durationMdLg,
           curve: Curves.easeOutCubic,
         );
       } else {
@@ -705,7 +730,9 @@ class _ChatScreenState extends State<ChatScreen>
     required List<String> mediaIds,
     required int initialIndex,
   }) {
-    if (mediaIds.isEmpty || initialIndex < 0 || initialIndex >= mediaIds.length) {
+    if (mediaIds.isEmpty ||
+        initialIndex < 0 ||
+        initialIndex >= mediaIds.length) {
       return;
     }
     showDialog<void>(
@@ -718,7 +745,6 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
   }
-
 
   Future<void> _loadMessages({bool forceRefresh = false}) async {
     final msgs = await _svc.loadMessages(
@@ -747,8 +773,8 @@ class _ChatScreenState extends State<ChatScreen>
           }
         }
         final m = msgs[index];
-        final cached = _svc.peekUserInfo(m.senderId) ??
-            const <String, dynamic>{};
+        final cached =
+            _svc.peekUserInfo(m.senderId) ?? const <String, dynamic>{};
         if (cached.isEmpty && m.senderId.isNotEmpty) {
           missingSenderIds.add(m.senderId);
         }
@@ -765,11 +791,12 @@ class _ChatScreenState extends State<ChatScreen>
             if (s.contains(':')) s = s.split(':').first;
             return s.toLowerCase();
           }
+
           final meNorm = normalize(me);
           final senderNorm = normalize(m.senderId);
           isOwn = meNorm.isNotEmpty && meNorm == senderNorm;
-        } catch (_) { 
-          isOwn = me != null && me == m.senderId; 
+        } catch (_) {
+          isOwn = me != null && me == m.senderId;
         }
         final nextMessage = _Msg(
           id: m.id,
@@ -788,15 +815,17 @@ class _ChatScreenState extends State<ChatScreen>
         );
         out.add(nextMessage);
         final mediaId = nextMessage.mediaId;
-        if (nextMessage.type == 'm.image' && mediaId != null && mediaId.isNotEmpty) {
+        if (nextMessage.type == 'm.image' &&
+            mediaId != null &&
+            mediaId.isNotEmpty) {
           imageIndexByMessageId[nextMessage.id] = imageMediaIds.length;
           imageMediaIds.add(mediaId);
         }
       }
-      
-        final mergedMessages = _mergePendingMessages(out);
 
-        if (!mounted) return;
+      final mergedMessages = _mergePendingMessages(out);
+
+      if (!mounted) return;
       final nextMessageIds = out.map((message) => message.id).toSet();
       final nextHighlighted = _highlighted
           .where(nextMessageIds.contains)
@@ -827,7 +856,7 @@ class _ChatScreenState extends State<ChatScreen>
         unawaited(_prefetchUserInfo(missingSenderIds));
       }
       unawaited(_svc.markRoomRead(widget.chat.id));
-      
+
       // If we have an initial scroll target, try to scroll to it
       if (_scrollToEventId != null && _scrollToEventId!.isNotEmpty) {
         WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -835,7 +864,12 @@ class _ChatScreenState extends State<ChatScreen>
             final targetId = _scrollToEventId!;
             final key = _messageKeys[targetId];
             if (key != null && key.currentContext != null) {
-              await Scrollable.ensureVisible(key.currentContext!, duration: const Duration(milliseconds: 450), alignment: 0.4, curve: Curves.easeInOut);
+              await Scrollable.ensureVisible(
+                key.currentContext!,
+                duration: UITokens.durationLg,
+                alignment: 0.4,
+                curve: Curves.easeInOut,
+              );
               _setHighlighted(<String>{targetId});
             } else {
               // Fallback: jump to a ratio-estimated position so the item enters
@@ -844,8 +878,11 @@ class _ChatScreenState extends State<ChatScreen>
               if (idx >= 0 && _listController.hasClients) {
                 final total = _messages.length;
                 final ratio = total > 1 ? idx / (total - 1) : 1.0;
-                final estimated = (ratio * _listController.position.maxScrollExtent)
-                    .clamp(0.0, _listController.position.maxScrollExtent);
+                final estimated =
+                    (ratio * _listController.position.maxScrollExtent).clamp(
+                      0.0,
+                      _listController.position.maxScrollExtent,
+                    );
                 _listController.jumpTo(estimated);
                 // After the jump is painted, try ensureVisible for exact alignment.
                 WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -854,7 +891,7 @@ class _ChatScreenState extends State<ChatScreen>
                     if (k?.currentContext != null) {
                       await Scrollable.ensureVisible(
                         k!.currentContext!,
-                        duration: const Duration(milliseconds: 350),
+                        duration: UITokens.durationLgMd,
                         alignment: 0.4,
                         curve: Curves.easeInOut,
                       );
@@ -873,7 +910,10 @@ class _ChatScreenState extends State<ChatScreen>
         _scrollToLatest();
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.loadMessagesError(e.toString()))));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.loadMessagesError(e.toString()))),
+        );
     } finally {
       if (mounted && _loading) {
         _updateTimeline((current) => current.copyWith(loading: false));
@@ -937,27 +977,43 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _sendReplyForEvent(String eventId) async {
     // prompt for reply text then send as a reply
     final l10n = AppLocalizations.of(context)!;
-    final text = await showDialog<String>(context: context, builder: (c) {
-      final ctl = TextEditingController();
-      return AlertDialog(
-        title: Text(l10n.replyAction),
-        content: TextField(controller: ctl, decoration: InputDecoration(hintText: l10n.replyHint)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.cancelButton)),
-          ElevatedButton(onPressed: () => Navigator.pop(c, ctl.text.trim()), child: Text(l10n.sendButton)),
-        ],
-      );
-    });
+    final text = await showDialog<String>(
+      context: context,
+      builder: (c) {
+        final ctl = TextEditingController();
+        return AlertDialog(
+          title: Text(l10n.replyAction),
+          content: TextField(
+            controller: ctl,
+            decoration: InputDecoration(hintText: l10n.replyHint),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c),
+              child: Text(l10n.cancelButton),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(c, ctl.text.trim()),
+              child: Text(l10n.sendButton),
+            ),
+          ],
+        );
+      },
+    );
     if (text == null || text.isEmpty) return;
     try {
-      final formatted = '<mx-reply><blockquote>${text.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</blockquote></mx-reply>';
-      await _svc.sendReply(widget.chat.id, eventId, body: text, formattedBody: formatted);
+      final formatted =
+          '<mx-reply><blockquote>${text.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}</blockquote></mx-reply>';
+      await _svc.sendReply(
+        widget.chat.id,
+        eventId,
+        body: text,
+        formattedBody: formatted,
+      );
     } catch (e) {
       if (mounted) _showErrorMessage(l10n.replyError(e.toString()));
     }
   }
-
-
 
   Future<void> _pinUnpinEvent(String eventId) async {
     final l10n = AppLocalizations.of(context)!;
@@ -969,7 +1025,13 @@ class _ChatScreenState extends State<ChatScreen>
         pinned.insert(0, eventId);
       }
       await _svc.setPinnedEvents(widget.chat.id, pinned);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.pinnedUpdated), duration: const Duration(seconds: 2)));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.pinnedUpdated),
+            duration: const Duration(seconds: 2),
+          ),
+        );
     } catch (e) {
       if (mounted) _showErrorMessage(l10n.pinError(e.toString()));
     }
@@ -977,7 +1039,22 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _redactEvent(String eventId) async {
     final l10n = AppLocalizations.of(context)!;
-    final ok = await showDialog<bool>(context: context, builder: (c) => AlertDialog(title: Text(l10n.deleteMessageTitle), actions: [TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.cancelButton)), ElevatedButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.deleteButton))]));
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(l10n.deleteMessageTitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: Text(l10n.cancelButton),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: Text(l10n.deleteButton),
+          ),
+        ],
+      ),
+    );
     if (ok != true) return;
     try {
       await _svc.redactEvent(widget.chat.id, eventId);
@@ -988,25 +1065,40 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _editEvent(String eventId, String currentText) async {
     final l10n = AppLocalizations.of(context)!;
-    final newText = await showDialog<String>(context: context, builder: (c) {
-      final ctl = TextEditingController(text: currentText);
-      return AlertDialog(
-        title: Text(l10n.editMessageTitle),
-        content: TextField(
-          controller: ctl,
-          decoration: InputDecoration(hintText: l10n.editMessageHint),
-          maxLines: null,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c), child: Text(l10n.cancelButton)),
-          ElevatedButton(onPressed: () => Navigator.pop(c, ctl.text.trim()), child: Text(l10n.saveButton)),
-        ],
-      );
-    });
+    final newText = await showDialog<String>(
+      context: context,
+      builder: (c) {
+        final ctl = TextEditingController(text: currentText);
+        return AlertDialog(
+          title: Text(l10n.editMessageTitle),
+          content: TextField(
+            controller: ctl,
+            decoration: InputDecoration(hintText: l10n.editMessageHint),
+            maxLines: null,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c),
+              child: Text(l10n.cancelButton),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(c, ctl.text.trim()),
+              child: Text(l10n.saveButton),
+            ),
+          ],
+        );
+      },
+    );
     if (newText == null || newText.isEmpty) return;
     try {
       await _svc.editMessage(widget.chat.id, eventId, newText);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.messageEdited), duration: const Duration(seconds: 2)));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.messageEdited),
+            duration: const Duration(seconds: 2),
+          ),
+        );
     } catch (e) {
       if (mounted) _showErrorMessage(l10n.editError(e.toString()));
     }
@@ -1054,95 +1146,104 @@ class _ChatScreenState extends State<ChatScreen>
   void _showEmojiBurst(BuildContext context, String emoji, Offset position) {
     final overlay = Overlay.of(context);
     late OverlayEntry burstEntry;
-    
-    burstEntry = OverlayEntry(builder: (ctx) {
-      return TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 600),
-        onEnd: () => burstEntry.remove(),
-        builder: (context, val, child) {
-          return Stack(
-            children: List.generate(6, (index) {
-              final angle = (index / 6) * 2 * math.pi;
-              final distance = val * 60;
-              final dx = position.dx + math.cos(angle) * distance;
-              final dy = position.dy + math.sin(angle) * distance - (val * 40); // curve up
-              
-              return Positioned(
-                left: dx - 12, // center offset
-                top: dy - 12,
-                child: Transform.scale(
-                  scale: math.max(0, 1.0 - val), // shrink
-                  child: Text(
-                    emoji,
-                    style: const TextStyle(fontSize: 24, decoration: TextDecoration.none),
+
+    burstEntry = OverlayEntry(
+      builder: (ctx) {
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: UITokens.duration2Lg,
+          onEnd: () => burstEntry.remove(),
+          builder: (context, val, child) {
+            return Stack(
+              children: List.generate(6, (index) {
+                final angle = (index / 6) * 2 * math.pi;
+                final distance = val * 60;
+                final dx = position.dx + math.cos(angle) * distance;
+                final dy =
+                    position.dy +
+                    math.sin(angle) * distance -
+                    (val * 40); // curve up
+
+                return Positioned(
+                  left: dx - 12, // center offset
+                  top: dy - 12,
+                  child: Transform.scale(
+                    scale: math.max(0, 1.0 - val), // shrink
+                    child: Text(
+                      emoji,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
                   ),
-                ),
-              );
-            }),
-          );
-        },
-      );
-    });
-    
+                );
+              }),
+            );
+          },
+        );
+      },
+    );
+
     overlay.insert(burstEntry);
   }
 
   Future<void> _showMessageActions(_Msg m, Offset globalPos) async {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final actions = <({IconData icon, String label, Future<void> Function() run})>[
-      (
-        icon: Icons.reply,
-        label: l10n.replyAction,
-        run: () async => _sendReplyForEvent(m.id),
-      ),
-      if (m.isOwn)
-        (
-          icon: Icons.edit,
-          label: l10n.editShort,
-          run: () async => _editEvent(m.id, m.text),
-        ),
-      (
-        icon: Icons.push_pin,
-        label: l10n.pinAction,
-        run: () async => _pinUnpinEvent(m.id),
-      ),
-      if (m.isOwn)
-        (
-          icon: Icons.delete_outline,
-          label: l10n.deleteButton,
-          run: () async => _redactEvent(m.id),
-        ),
-      (
-        icon: Icons.share_outlined,
-        label: l10n.shareAction,
-        run: () async => _shareMessage(m),
-      ),
-      (
-        icon: Icons.emoji_emotions_outlined,
-        label: l10n.moreButton,
-        run: () async {
-          final picked = await _showEmojiPickerDialog();
-          if (picked == null) {
-            return;
-          }
-          try {
-            _showEmojiBurst(context, picked, globalPos);
-            await _svc.sendReaction(
-              roomId: widget.chat.id,
-              eventId: m.id,
-              reaction: picked,
-            );
-            _toggleReactionLocally(m.id, picked);
-          } catch (_) {}
-        },
-      ),
-    ];
+    final actions =
+        <({IconData icon, String label, Future<void> Function() run})>[
+          (
+            icon: Icons.reply,
+            label: l10n.replyAction,
+            run: () async => _sendReplyForEvent(m.id),
+          ),
+          if (m.isOwn)
+            (
+              icon: Icons.edit,
+              label: l10n.editShort,
+              run: () async => _editEvent(m.id, m.text),
+            ),
+          (
+            icon: Icons.push_pin,
+            label: l10n.pinAction,
+            run: () async => _pinUnpinEvent(m.id),
+          ),
+          if (m.isOwn)
+            (
+              icon: Icons.delete_outline,
+              label: l10n.deleteButton,
+              run: () async => _redactEvent(m.id),
+            ),
+          (
+            icon: Icons.share_outlined,
+            label: l10n.shareAction,
+            run: () async => _shareMessage(m),
+          ),
+          (
+            icon: Icons.emoji_emotions_outlined,
+            label: l10n.moreButton,
+            run: () async {
+              final picked = await _showEmojiPickerDialog();
+              if (picked == null) {
+                return;
+              }
+              try {
+                _showEmojiBurst(context, picked, globalPos);
+                await _svc.sendReaction(
+                  roomId: widget.chat.id,
+                  eventId: m.id,
+                  reaction: picked,
+                );
+                _toggleReactionLocally(m.id, picked);
+              } catch (_) {}
+            },
+          ),
+        ];
 
     const quickReactions = ['👍', '❤️', '😂', '🔥', '😮', '🎉'];
-    final useDesktopMenu = MediaQuery.of(context).size.width >=
-        UITokens.tabletBreakpoint;
+    final useDesktopMenu =
+        MediaQuery.of(context).size.width >= UITokens.tabletBreakpoint;
 
     if (useDesktopMenu) {
       final selected = await showMenu<String>(
@@ -1160,7 +1261,7 @@ class _ChatScreenState extends State<ChatScreen>
               child: Row(
                 children: [
                   Text(emoji, style: const TextStyle(fontSize: 18)),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: UITokens.spaceSmMd),
                   Text(emoji),
                 ],
               ),
@@ -1172,7 +1273,7 @@ class _ChatScreenState extends State<ChatScreen>
               child: Row(
                 children: [
                   Icon(actions[index].icon, size: 18),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: UITokens.spaceSmMd),
                   Expanded(child: Text(actions[index].label)),
                 ],
               ),
@@ -1214,7 +1315,12 @@ class _ChatScreenState extends State<ChatScreen>
         final maxHeight = MediaQuery.of(sheetContext).size.height * 0.72;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+            padding: const EdgeInsets.fromLTRB(
+              UITokens.space,
+              UITokens.space,
+              UITokens.space,
+              UITokens.spaceMd,
+            ),
             child: Align(
               alignment: Alignment.bottomCenter,
               child: ConstrainedBox(
@@ -1224,9 +1330,14 @@ class _ChatScreenState extends State<ChatScreen>
                 ),
                 child: Material(
                   color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(UITokens.corner2XL),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
+                    padding: const EdgeInsets.fromLTRB(
+                      UITokens.spaceMd,
+                      UITokens.spaceSmMd,
+                      UITokens.spaceMd,
+                      UITokens.spaceMdLg,
+                    ),
                     child: SingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -1238,25 +1349,29 @@ class _ChatScreenState extends State<ChatScreen>
                               height: 4,
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.outlineVariant,
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(
+                                  UITokens.cornerPill,
+                                ),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: UITokens.spaceMdSm),
                           Text(
                             m.text.isEmpty ? l10n.messageInputHint : m.text,
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleMedium,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: UITokens.spaceMd),
                           Wrap(
                             spacing: 10,
                             runSpacing: 10,
                             children: [
                               for (final emoji in quickReactions)
                                 InkWell(
-                                  borderRadius: BorderRadius.circular(999),
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.cornerPill,
+                                  ),
                                   onTap: () async {
                                     Navigator.of(sheetContext).pop();
                                     _showEmojiBurst(context, emoji, globalPos);
@@ -1275,8 +1390,12 @@ class _ChatScreenState extends State<ChatScreen>
                                       vertical: 10,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: theme.colorScheme.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(999),
+                                      color: theme
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(
+                                        UITokens.cornerPill,
+                                      ),
                                     ),
                                     child: Text(
                                       emoji,
@@ -1286,7 +1405,7 @@ class _ChatScreenState extends State<ChatScreen>
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: UITokens.spaceMdLg),
                           Wrap(
                             spacing: 10,
                             runSpacing: 10,
@@ -1323,38 +1442,44 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<String?> _showEmojiPickerDialog() async {
     String? chosen;
-    await showDialog(context: context, builder: (c) {
-      final size = MediaQuery.of(c).size;
-      final width = math.min<double>(size.width * 0.9, 420);
-      final height = math.min<double>(size.height * 0.72, 520);
-      return Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-        child: SizedBox(
-          width: width,
-          height: height,
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  tooltip: MaterialLocalizations.of(c).closeButtonTooltip,
-                  onPressed: () => Navigator.of(c).pop(),
-                  icon: const Icon(Icons.close),
-                ),
-              ),
-              Expanded(
-                child: EmojiPicker(
-                  onEmojiSelected: (category, emoji) {
-                    chosen = emoji.emoji;
-                    Navigator.of(c).pop();
-                  },
-                ),
-              ),
-            ],
+    await showDialog(
+      context: context,
+      builder: (c) {
+        final size = MediaQuery.of(c).size;
+        final width = math.min<double>(size.width * 0.9, 420);
+        final height = math.min<double>(size.height * 0.72, 520);
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 24,
           ),
-        ),
-      );
-    });
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    tooltip: MaterialLocalizations.of(c).closeButtonTooltip,
+                    onPressed: () => Navigator.of(c).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ),
+                Expanded(
+                  child: EmojiPicker(
+                    onEmojiSelected: (category, emoji) {
+                      chosen = emoji.emoji;
+                      Navigator.of(c).pop();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
     return chosen;
   }
 
@@ -1409,7 +1534,7 @@ class _ChatScreenState extends State<ChatScreen>
       }
       return;
     }
-    
+
     final path = await _voiceService.startRecording();
     if (path == null) {
       if (mounted) {
@@ -1467,13 +1592,17 @@ class _ChatScreenState extends State<ChatScreen>
         text: '',
         type: 'm.audio',
         mediaFileId: path,
-        onMediaSendProgress: (progress) => _setUploadProgress(fileName, progress),
+        onMediaSendProgress: (progress) =>
+            _setUploadProgress(fileName, progress),
       );
       if (mounted) {
         _scrollToLatest(animated: true);
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.genericError(e.toString()))));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.genericError(e.toString()))),
+        );
     } finally {
       if (mounted) {
         _clearUploadProgress();
@@ -1491,10 +1620,15 @@ class _ChatScreenState extends State<ChatScreen>
         lower.endsWith('.webp')) {
       return 'm.image';
     }
-    if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.webm')) {
+    if (lower.endsWith('.mp4') ||
+        lower.endsWith('.mov') ||
+        lower.endsWith('.webm')) {
       return 'm.video';
     }
-    if (lower.endsWith('.ogg') || lower.endsWith('.m4a') || lower.endsWith('.mp3') || lower.endsWith('.wav')) {
+    if (lower.endsWith('.ogg') ||
+        lower.endsWith('.m4a') ||
+        lower.endsWith('.mp3') ||
+        lower.endsWith('.wav')) {
       return 'm.audio';
     }
     return 'm.file';
@@ -1589,7 +1723,8 @@ class _ChatScreenState extends State<ChatScreen>
 
     setState(() => _sending = true);
     try {
-      final shouldInlineCaption = text.isNotEmpty &&
+      final shouldInlineCaption =
+          text.isNotEmpty &&
           attachments.isNotEmpty &&
           _supportsInlineCaption(attachments.first.type);
 
@@ -1661,15 +1796,25 @@ class _ChatScreenState extends State<ChatScreen>
 
     final percent = (progress * 100).clamp(0, 100).round();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceSm,
+        0,
+        UITokens.spaceSm,
+        UITokens.spaceSm,
+      ),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: colorScheme.surface.withValues(alpha: 0.96),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.6)),
+          borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+          ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: UITokens.spaceMdSm,
+            vertical: UITokens.space,
+          ),
           child: Row(
             children: [
               Container(
@@ -1677,11 +1822,11 @@ class _ChatScreenState extends State<ChatScreen>
                 height: 34,
                 decoration: BoxDecoration(
                   color: colorScheme.primary.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(UITokens.corner),
                 ),
                 child: Icon(Icons.upload_rounded, color: colorScheme.primary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: UITokens.space),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1696,20 +1841,22 @@ class _ChatScreenState extends State<ChatScreen>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: UITokens.spaceSm),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(UITokens.cornerPill),
                       child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 6,
                         backgroundColor: colorScheme.surfaceContainerHighest,
-                        valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          colorScheme.primary,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: UITokens.space),
               Text(
                 '$percent%',
                 style: TextStyle(
@@ -1730,13 +1877,19 @@ class _ChatScreenState extends State<ChatScreen>
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceSm,
+        0,
+        UITokens.spaceSm,
+        UITokens.spaceSm,
+      ),
       child: SizedBox(
         height: 138,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: _pendingAttachments.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          separatorBuilder: (_, __) =>
+              const SizedBox(width: UITokens.spaceSmMd),
           itemBuilder: (context, index) {
             final attachment = _pendingAttachments[index];
             return _ComposerAttachmentCard(
@@ -1759,10 +1912,10 @@ class _ChatScreenState extends State<ChatScreen>
     return Positioned.fill(
       child: IgnorePointer(
         child: Container(
-          margin: const EdgeInsets.all(12),
+          margin: const EdgeInsets.all(UITokens.space),
           decoration: BoxDecoration(
             color: colorScheme.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(UITokens.cornerXL),
             border: Border.all(
               color: colorScheme.primary.withValues(alpha: 0.72),
               width: 2,
@@ -1772,15 +1925,22 @@ class _ChatScreenState extends State<ChatScreen>
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: colorScheme.surface.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(UITokens.corner2XLg),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 18,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.file_upload_outlined, color: colorScheme.primary, size: 34),
-                    const SizedBox(height: 10),
+                    Icon(
+                      Icons.file_upload_outlined,
+                      color: colorScheme.primary,
+                      size: 34,
+                    ),
+                    const SizedBox(height: UITokens.spaceSmMd),
                     Text(
                       AppLocalizations.of(context)!.dropFilesTitle,
                       style: TextStyle(
@@ -1788,7 +1948,7 @@ class _ChatScreenState extends State<ChatScreen>
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: UITokens.spaceXS),
                     Text(
                       AppLocalizations.of(context)!.dropFilesSubtitle,
                       style: TextStyle(
@@ -1811,333 +1971,451 @@ class _ChatScreenState extends State<ChatScreen>
     final l10n = AppLocalizations.of(context)!;
     final headerName = _headerName ?? widget.chat.name;
     final headerAvatarUrl = _headerAvatarUrl ?? widget.chat.avatarUrl;
-    final presenceLabel = _directPeerUserId != null ? _headerPresenceLabel(l10n) : null;
+    final presenceLabel = _directPeerUserId != null
+        ? _headerPresenceLabel(l10n)
+        : null;
     final bodyWidget = ValueListenableBuilder(
       valueListenable: SettingsService.themeNotifier,
       builder: (context, themeSettings, _) {
         final bubbleRounding = themeSettings.bubbleRounding;
         final dynamicBubbles = themeSettings.dynamicBubbles;
         return ValueListenableBuilder<_ChatTimelineState>(
-      valueListenable: _timeline,
-      builder: (context, timeline, _) {
-        if (timeline.loading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if ((widget.searchQuery ?? '').trim().isNotEmpty) {
-          if (_searching) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(8),
-            itemBuilder: (c, i) {
-              final item = _searchResults[i];
-              final ev = item['event'] as Map<String, dynamic>? ?? {};
-              final content = ev['content'] as Map<String, dynamic>? ?? {};
-              final body = content['body']?.toString() ?? '';
-              final sender = ev['sender']?.toString() ?? '';
-              final tsNum = ev['origin_server_ts'] as num?;
-              final ts = tsNum != null
-                  ? DateTime.fromMillisecondsSinceEpoch(tsNum.toInt())
-                  : null;
-              final roomId = (item['context'] is Map)
-                  ? ((item['context'] as Map)['room_id']?.toString() ?? '')
-                  : '';
+          valueListenable: _timeline,
+          builder: (context, timeline, _) {
+            if (timeline.loading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if ((widget.searchQuery ?? '').trim().isNotEmpty) {
+              if (_searching) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.all(UITokens.spaceSm),
+                itemBuilder: (c, i) {
+                  final item = _searchResults[i];
+                  final ev = item['event'] as Map<String, dynamic>? ?? {};
+                  final content = ev['content'] as Map<String, dynamic>? ?? {};
+                  final body = content['body']?.toString() ?? '';
+                  final sender = ev['sender']?.toString() ?? '';
+                  final tsNum = ev['origin_server_ts'] as num?;
+                  final ts = tsNum != null
+                      ? DateTime.fromMillisecondsSinceEpoch(tsNum.toInt())
+                      : null;
+                  final roomId = (item['context'] is Map)
+                      ? ((item['context'] as Map)['room_id']?.toString() ?? '')
+                      : '';
 
-              final info = _svc.peekUserInfo(sender) ?? {};
-              final avatar = info['avatarUrl']?.toString();
-              final displayName = info['displayName']?.toString() ?? sender;
+                  final info = _svc.peekUserInfo(sender) ?? {};
+                  final avatar = info['avatarUrl']?.toString();
+                  final displayName = info['displayName']?.toString() ?? sender;
 
-              return ListTile(
-                leading: avatar != null
-                    ? UserAvatar(avatarUrl: avatar, radius: 18)
-                    : CircleAvatar(
-                        radius: 18,
-                        child: Text(displayName.isNotEmpty ? displayName[0] : '?'),
-                      ),
-                title: Text(body, maxLines: 2, overflow: TextOverflow.ellipsis),
-                subtitle: Text(
-                  '$displayName${roomId.isNotEmpty ? ' • $roomId' : ''}${ts != null ? ' • ${MessageTimeFormatter.formatTime(ts)}' : ''}',
-                ),
-                onTap: () async {
-                  if (roomId.isEmpty) return;
-                  final infoRoom = await _svc.getRoomNameAndAvatar(roomId);
-                  final chat = Chat(
-                    id: roomId,
-                    name: infoRoom['name'] ?? roomId,
-                    avatarUrl: infoRoom['avatar'],
-                    members: [],
-                  );
-                  if (!context.mounted) return;
-                  context.push(
-                    '${AppStrings.routeChat}/${Uri.encodeComponent(roomId)}',
-                    extra: chat,
-                  );
-                },
-              );
-            },
-            separatorBuilder: (_, __) => const Divider(),
-            itemCount: _searchResults.length,
-          );
-        }
-
-        final visibleMessages = _visibleMessagesFor(timeline.messages);
-        final viewportWidth = MediaQuery.of(context).size.width;
-        final bubbleMaxWidth = math.min<double>(viewportWidth * 0.72, 560);
-        return ListView.custom(
-          controller: _listController,
-          padding: const EdgeInsets.all(12),
-          cacheExtent: 400,
-          childrenDelegate: SliverChildBuilderDelegate(
-            (c, i) {
-          if (timeline.loadingMoreHistory && i == 0) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            );
-          }
-          final messageIndex = i - (timeline.loadingMoreHistory ? 1 : 0);
-          final m = visibleMessages[messageIndex];
-          final shouldTrackKey =
-              _scrollToEventId == m.id || timeline.highlighted.contains(m.id);
-          final key = shouldTrackKey
-              ? _messageKeys.putIfAbsent(m.id, GlobalKey.new)
-              : null;
-            final caption = _messageCaption(m);
-          final bubbleContent = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              if (!m.isOwn) Text(m.senderName ?? m.senderId ?? '', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: AppColors.subtitleText(context))),
-              const SizedBox(height: 6),
-              if (m.type == 'm.image' && (m.mediaId != null && m.mediaId!.isNotEmpty))
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
-                  child: _ImageMessageWidget(
-                    mediaId: m.mediaId!,
-                    svc: _svc,
-                    mediaDownloads: _mediaDownloads,
-                    maxWidth: bubbleMaxWidth,
-                    onOpenGallery: () {
-                      final index = timeline.imageIndexByMessageId[m.id];
-                      if (index == null) return;
-                      _openImageGallery(
-                        mediaIds: timeline.imageMediaIds,
-                        initialIndex: index,
+                  return ListTile(
+                    leading: avatar != null
+                        ? UserAvatar(avatarUrl: avatar, radius: 18)
+                        : CircleAvatar(
+                            radius: 18,
+                            child: Text(
+                              displayName.isNotEmpty ? displayName[0] : '?',
+                            ),
+                          ),
+                    title: Text(
+                      body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      '$displayName${roomId.isNotEmpty ? ' • $roomId' : ''}${ts != null ? ' • ${MessageTimeFormatter.formatTime(ts)}' : ''}',
+                    ),
+                    onTap: () async {
+                      if (roomId.isEmpty) return;
+                      final infoRoom = await _svc.getRoomNameAndAvatar(roomId);
+                      final chat = Chat(
+                        id: roomId,
+                        name: infoRoom['name'] ?? roomId,
+                        avatarUrl: infoRoom['avatar'],
+                        members: [],
+                      );
+                      if (!context.mounted) return;
+                      context.push(
+                        '${AppStrings.routeChat}/${Uri.encodeComponent(roomId)}',
+                        extra: chat,
                       );
                     },
-                  ),
-                )
-              else if (m.type == 'm.video' && (m.mediaId != null && m.mediaId!.isNotEmpty))
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
-                  child: _VideoMessageWidget(
-                    message: m,
-                    svc: _svc,
-                    mediaDownloads: _mediaDownloads,
-                    maxWidth: bubbleMaxWidth,
-                  ),
-                )
-              else if (m.type == 'm.audio' || (m.text.toLowerCase().endsWith('.ogg') || (m.mediaId?.toLowerCase().endsWith('.ogg') ?? false)))
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: bubbleMaxWidth * 0.85),
-                  child: _AudioMessageWidget(message: m, svc: _svc, audioPlayers: _audioPlayers),
-                )
-              else if (m.type == 'm.file')
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
-                  child: _FileMessageWidget(message: m, svc: _svc),
-                )
-              else
-                Text(
-                  m.text,
-                  softWrap: true,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: m.isOwn ? AppColors.ownBubbleText(context) : AppColors.otherBubbleText(context),
-                  ),
-                ),
-              if (caption != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  caption,
-                  softWrap: true,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: m.isOwn ? AppColors.ownBubbleText(context) : AppColors.otherBubbleText(context),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    MessageTimeFormatter.formatTime(m.time),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: m.isOwn ? AppColors.ownBubbleText(context).withValues(alpha: 0.68) : AppColors.otherBubbleText(context).withValues(alpha: 0.68),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (m.isOwn) ...[
-                    const SizedBox(width: 4),
-                    MessageStatusIcon(
-                      isPending: m.isPending,
-                      isDelivered: m.isDelivered,
-                      isRead: m.isRead,
-                    ),
-                  ],
-                ],
-              ),
-              // reactions row
-              if ((_reactions[m.id] ?? {}).isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Wrap(spacing: 6, runSpacing: 4, children: [
-                  for (final entry in (_reactions[m.id] ?? {}).entries)
-                    GestureDetector(
-                      onTap: () async {
-                        // toggle reaction: if myEventId present -> redact it, else send reaction
-                        final data = entry.value as Map<String, dynamic>;
-                        final myEvent = data['myEventId'] as String?;
-                        try {
-                          if (myEvent == 'local') {
-                            _toggleReactionLocally(m.id, entry.key);
-                          } else if (myEvent != null && myEvent.isNotEmpty) {
-                            await _svc.redactEvent(widget.chat.id, myEvent);
-                            _toggleReactionLocally(m.id, entry.key);
-                          } else {
-                            await _svc.sendReaction(roomId: widget.chat.id, eventId: m.id, reaction: entry.key);
-                            _toggleReactionLocally(m.id, entry.key);
-                          }
-                        } catch (_) {}
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 160),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: ((entry.value as Map)['myEventId'] != null)
-                              ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.92)
-                              : AppColors.reactionBackground(context),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: ((entry.value as Map)['myEventId'] != null)
-                                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.34)
-                                : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.35),
+                  );
+                },
+                separatorBuilder: (_, __) => const Divider(),
+                itemCount: _searchResults.length,
+              );
+            }
+
+            final visibleMessages = _visibleMessagesFor(timeline.messages);
+            final viewportWidth = MediaQuery.of(context).size.width;
+            final bubbleMaxWidth = math.min<double>(viewportWidth * 0.72, 560);
+            return ListView.custom(
+              controller: _listController,
+              padding: const EdgeInsets.all(UITokens.space),
+              cacheExtent: 400,
+              childrenDelegate: SliverChildBuilderDelegate(
+                (c, i) {
+                  if (timeline.loadingMoreHistory && i == 0) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: UITokens.spaceSm),
+                      child: Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: UITokens.borderThick,
                           ),
                         ),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          Text(
-                            entry.key,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: ((entry.value as Map)['myEventId'] != null)
-                                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                                  : AppColors.subtitleText(context),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${(entry.value as Map)['count']}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: ((entry.value as Map)['myEventId'] != null)
-                                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                                  : AppColors.subtitleText(context),
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ]),
                       ),
-                    ),
-                ]),
-              ]
-            ]);
-
-          // Date separator
-          final showDateSep = messageIndex == 0 ||
-              _differentDay(visibleMessages[messageIndex - 1].time, m.time);
-
-          final messageWidget = Padding(
-            padding: const EdgeInsets.only(bottom: 2),
-            child: RepaintBoundary(
-              child: Dismissible(
-                key: Key('dismiss_${m.id}'),
-                direction: DismissDirection.startToEnd,
-                confirmDismiss: (direction) async {
-                  _sendReplyForEvent(m.id);
-                  return false; // don't actually dismiss
-                },
-                background: Container(
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.only(left: 16),
-                  child: Icon(Icons.reply, color: Theme.of(context).colorScheme.primary),
-                ),
-                child: KeyedSubtree(
-                  key: key,
-                  child: Row(
-                    mainAxisAlignment:
-                        m.isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+                    );
+                  }
+                  final messageIndex =
+                      i - (timeline.loadingMoreHistory ? 1 : 0);
+                  final m = visibleMessages[messageIndex];
+                  final shouldTrackKey =
+                      _scrollToEventId == m.id ||
+                      timeline.highlighted.contains(m.id);
+                  final key = shouldTrackKey
+                      ? _messageKeys.putIfAbsent(m.id, GlobalKey.new)
+                      : null;
+                  final caption = _messageCaption(m);
+                  final bubbleContent = Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (!m.isOwn)
-                        GestureDetector(
-                          onTap: () => _openUserProfile(
-                            m.senderId ?? '',
-                            initialName: m.senderName,
-                            initialAvatar: m.senderAvatar,
+                        Text(
+                          m.senderName ?? m.senderId ?? '',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.subtitleText(context),
+                              ),
+                        ),
+                      const SizedBox(height: UITokens.spaceXSm),
+                      if (m.type == 'm.image' &&
+                          (m.mediaId != null && m.mediaId!.isNotEmpty))
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
+                          child: _ImageMessageWidget(
+                            mediaId: m.mediaId!,
+                            svc: _svc,
+                            mediaDownloads: _mediaDownloads,
+                            maxWidth: bubbleMaxWidth,
+                            onOpenGallery: () {
+                              final index =
+                                  timeline.imageIndexByMessageId[m.id];
+                              if (index == null) return;
+                              _openImageGallery(
+                                mediaIds: timeline.imageMediaIds,
+                                initialIndex: index,
+                              );
+                            },
                           ),
-                          child: UserAvatar(
-                            avatarUrl: m.senderAvatar,
-                            name: m.senderName ?? '?',
-                            radius: 16,
+                        )
+                      else if (m.type == 'm.video' &&
+                          (m.mediaId != null && m.mediaId!.isNotEmpty))
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
+                          child: _VideoMessageWidget(
+                            message: m,
+                            svc: _svc,
+                            mediaDownloads: _mediaDownloads,
+                            maxWidth: bubbleMaxWidth,
+                          ),
+                        )
+                      else if (m.type == 'm.audio' ||
+                          (m.text.toLowerCase().endsWith('.ogg') ||
+                              (m.mediaId?.toLowerCase().endsWith('.ogg') ??
+                                  false)))
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: bubbleMaxWidth * 0.85,
+                          ),
+                          child: _AudioMessageWidget(
+                            message: m,
+                            svc: _svc,
+                            audioPlayers: _audioPlayers,
+                          ),
+                        )
+                      else if (m.type == 'm.file')
+                        ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
+                          child: _FileMessageWidget(message: m, svc: _svc),
+                        )
+                      else
+                        Text(
+                          m.text,
+                          softWrap: true,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: m.isOwn
+                                    ? AppColors.ownBubbleText(context)
+                                    : AppColors.otherBubbleText(context),
+                              ),
+                        ),
+                      if (caption != null) ...[
+                        const SizedBox(height: UITokens.spaceSm),
+                        Text(
+                          caption,
+                          softWrap: true,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: m.isOwn
+                                    ? AppColors.ownBubbleText(context)
+                                    : AppColors.otherBubbleText(context),
+                              ),
+                        ),
+                      ],
+                      const SizedBox(height: UITokens.spaceXS),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            MessageTimeFormatter.formatTime(m.time),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: m.isOwn
+                                      ? AppColors.ownBubbleText(
+                                          context,
+                                        ).withValues(alpha: 0.68)
+                                      : AppColors.otherBubbleText(
+                                          context,
+                                        ).withValues(alpha: 0.68),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                          if (m.isOwn) ...[
+                            const SizedBox(width: UITokens.spaceXS),
+                            MessageStatusIcon(
+                              isPending: m.isPending,
+                              isDelivered: m.isDelivered,
+                              isRead: m.isRead,
+                            ),
+                          ],
+                        ],
+                      ),
+                      // reactions row
+                      if ((_reactions[m.id] ?? {}).isNotEmpty) ...[
+                        const SizedBox(height: UITokens.spaceSm),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            for (final entry
+                                in (_reactions[m.id] ?? {}).entries)
+                              GestureDetector(
+                                onTap: () async {
+                                  // toggle reaction: if myEventId present -> redact it, else send reaction
+                                  final data =
+                                      entry.value as Map<String, dynamic>;
+                                  final myEvent = data['myEventId'] as String?;
+                                  try {
+                                    if (myEvent == 'local') {
+                                      _toggleReactionLocally(m.id, entry.key);
+                                    } else if (myEvent != null &&
+                                        myEvent.isNotEmpty) {
+                                      await _svc.redactEvent(
+                                        widget.chat.id,
+                                        myEvent,
+                                      );
+                                      _toggleReactionLocally(m.id, entry.key);
+                                    } else {
+                                      await _svc.sendReaction(
+                                        roomId: widget.chat.id,
+                                        eventId: m.id,
+                                        reaction: entry.key,
+                                      );
+                                      _toggleReactionLocally(m.id, entry.key);
+                                    }
+                                  } catch (_) {}
+                                },
+                                child: AnimatedContainer(
+                                  duration: UITokens.durationSmMd,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: UITokens.spaceSmMd,
+                                    vertical: UITokens.spaceXSm,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        ((entry.value as Map)['myEventId'] !=
+                                            null)
+                                        ? Theme.of(context)
+                                              .colorScheme
+                                              .primaryContainer
+                                              .withValues(alpha: 0.92)
+                                        : AppColors.reactionBackground(context),
+                                    borderRadius: BorderRadius.circular(
+                                      UITokens.cornerPill,
+                                    ),
+                                    border: Border.all(
+                                      color:
+                                          ((entry.value as Map)['myEventId'] !=
+                                              null)
+                                          ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withValues(alpha: 0.34)
+                                          : Theme.of(context)
+                                                .colorScheme
+                                                .outlineVariant
+                                                .withValues(alpha: 0.35),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        entry.key,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color:
+                                              ((entry.value
+                                                      as Map)['myEventId'] !=
+                                                  null)
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.onPrimaryContainer
+                                              : AppColors.subtitleText(context),
+                                        ),
+                                      ),
+                                      const SizedBox(width: UITokens.spaceXSm),
+                                      Text(
+                                        '${(entry.value as Map)['count']}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color:
+                                                  ((entry.value
+                                                          as Map)['myEventId'] !=
+                                                      null)
+                                                  ? Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimaryContainer
+                                                  : AppColors.subtitleText(
+                                                      context,
+                                                    ),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  );
+
+                  // Date separator
+                  final showDateSep =
+                      messageIndex == 0 ||
+                      _differentDay(
+                        visibleMessages[messageIndex - 1].time,
+                        m.time,
+                      );
+
+                  final messageWidget = Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: RepaintBoundary(
+                      child: Dismissible(
+                        key: Key('dismiss_${m.id}'),
+                        direction: DismissDirection.startToEnd,
+                        confirmDismiss: (direction) async {
+                          _sendReplyForEvent(m.id);
+                          return false; // don't actually dismiss
+                        },
+                        background: Container(
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.only(
+                            left: UITokens.spaceMd,
+                          ),
+                          child: Icon(
+                            Icons.reply,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: GestureDetector(
-                          onLongPressStart: (details) =>
-                              _showMessageActions(m, details.globalPosition),
-                          onSecondaryTapDown: (details) =>
-                              _showMessageActions(m, details.globalPosition),
-                          child: _SquishyBubble(
-                            isOwn: m.isOwn,
-                              highlighted: timeline.highlighted.contains(m.id),
-                            bubbleRounding: bubbleRounding,
-                            dynamicBubbles: dynamicBubbles,
-                            child: bubbleContent,
+                        child: KeyedSubtree(
+                          key: key,
+                          child: Row(
+                            mainAxisAlignment: m.isOwn
+                                ? MainAxisAlignment.end
+                                : MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (!m.isOwn)
+                                GestureDetector(
+                                  onTap: () => _openUserProfile(
+                                    m.senderId ?? '',
+                                    initialName: m.senderName,
+                                    initialAvatar: m.senderAvatar,
+                                  ),
+                                  child: UserAvatar(
+                                    avatarUrl: m.senderAvatar,
+                                    name: m.senderName ?? '?',
+                                    radius: 16,
+                                  ),
+                                ),
+                              const SizedBox(width: UITokens.spaceSm),
+                              Flexible(
+                                child: GestureDetector(
+                                  onLongPressStart: (details) =>
+                                      _showMessageActions(
+                                        m,
+                                        details.globalPosition,
+                                      ),
+                                  onSecondaryTapDown: (details) =>
+                                      _showMessageActions(
+                                        m,
+                                        details.globalPosition,
+                                      ),
+                                  child: _SquishyBubble(
+                                    isOwn: m.isOwn,
+                                    highlighted: timeline.highlighted.contains(
+                                      m.id,
+                                    ),
+                                    bubbleRounding: bubbleRounding,
+                                    dynamicBubbles: dynamicBubbles,
+                                    child: bubbleContent,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
+                    ),
+                  );
 
-          if (!showDateSep) return messageWidget;
-          final l10nLocal = AppLocalizations.of(context)!;
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _DateSeparator(
-                label: MessageTimeFormatter.formatDateSeparator(
-                  m.time,
-                  todayLabel: l10nLocal.callsTodaySection,
-                  yesterdayLabel: l10nLocal.yesterdayLabel,
-                ),
+                  if (!showDateSep) return messageWidget;
+                  final l10nLocal = AppLocalizations.of(context)!;
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _DateSeparator(
+                        label: MessageTimeFormatter.formatDateSeparator(
+                          m.time,
+                          todayLabel: l10nLocal.callsTodaySection,
+                          yesterdayLabel: l10nLocal.yesterdayLabel,
+                        ),
+                      ),
+                      messageWidget,
+                    ],
+                  );
+                },
+                childCount:
+                    visibleMessages.length +
+                    (timeline.loadingMoreHistory ? 1 : 0),
+                addAutomaticKeepAlives: false,
+                addSemanticIndexes: false,
               ),
-              messageWidget,
-            ],
-          );
-        },
-          childCount: visibleMessages.length +
-              (timeline.loadingMoreHistory ? 1 : 0),
-          addAutomaticKeepAlives: false,
-          addSemanticIndexes: false,
-          ),
+            );
+          },
         );
-      },
-    );
       },
     );
 
@@ -2151,12 +2429,12 @@ class _ChatScreenState extends State<ChatScreen>
         title: InkWell(
           onTap: _directPeerUserId != null
               ? () => _openUserProfile(
-                    _directPeerUserId!,
-                    initialName: headerName,
-                    initialAvatar: headerAvatarUrl,
-                  )
+                  _directPeerUserId!,
+                  initialName: headerName,
+                  initialAvatar: headerAvatarUrl,
+                )
               : _openChatSettings,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(UITokens.corner),
           child: Row(
             children: [
               Hero(
@@ -2167,7 +2445,7 @@ class _ChatScreenState extends State<ChatScreen>
                   radius: 18,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: UITokens.space),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -2204,7 +2482,8 @@ class _ChatScreenState extends State<ChatScreen>
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final maxWidth = constraints.maxWidth >= (UITokens.desktopBreakpoint + 100)
+              final maxWidth =
+                  constraints.maxWidth >= UITokens.desktopBreakpoint
                   ? UITokens.readableContentMaxWidth
                   : double.infinity;
               final colorScheme = Theme.of(context).colorScheme;
@@ -2229,96 +2508,162 @@ class _ChatScreenState extends State<ChatScreen>
                     },
                     child: Stack(
                       children: [
-                        Column(children: [
-                          Expanded(child: bodyWidget),
-                          if (_isTyping)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: TypingIndicator(dotColor: AppColors.subtitleText(context)),
+                        Column(
+                          children: [
+                            Expanded(child: bodyWidget),
+                            if (_isTyping)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 4,
                                 ),
-                              ),
-                            ),
-                          if (_pendingAttachments.isNotEmpty)
-                            _buildAttachmentPreviewTray(colorScheme),
-                          if (_uploadProgress != null)
-                            _buildUploadProgressCard(colorScheme),
-                          Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.96),
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: colorScheme.outlineVariant.withValues(alpha: 0.72),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: colorScheme.shadow.withValues(alpha: 0.08),
-                                    blurRadius: 14,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: Row(children: [
-                                IconButton(
-                                  icon: Icon(Icons.attach_file, color: colorScheme.onSurfaceVariant),
-                                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                                  onPressed: _sending ? null : _pickAttachments,
-                                ),
-                                if (!_voiceService.isRecording && _pendingAttachments.isEmpty)
-                                  IconButton(
-                                    icon: Icon(Icons.mic, color: colorScheme.onSurfaceVariant),
-                                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                                    onPressed: _sending ? null : _recordVoiceMessage,
-                                  )
-                                else if (_voiceService.isRecording)
-                                  IconButton(
-                                    icon: Icon(Icons.mic, color: AppColors.recording(context)),
-                                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                                    onPressed: _voiceService.isRecording ? _stopVoiceAndSend : null,
-                                  )
-                                else
-                                  const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _controller,
-                                    style: TextStyle(color: colorScheme.onSurface),
-                                    decoration: InputDecoration(
-                                      hintText: _pendingAttachments.isNotEmpty
-                                          ? AppLocalizations.of(context)!.addCaptionHint
-                                          : AppLocalizations.of(context)!.messageInputHint,
-                                      hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-                                      border: InputBorder.none,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
                                     ),
-                                    enabled: !_voiceService.isRecording,
-                                    maxLines: null,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          colorScheme.surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(
+                                        UITokens.cornerLg,
+                                      ),
+                                    ),
+                                    child: TypingIndicator(
+                                      dotColor: AppColors.subtitleText(context),
+                                    ),
                                   ),
                                 ),
-                                IconButton(
-                                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                                  icon: _sending
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        )
-                                      : Icon(Icons.send, color: colorScheme.primary),
-                                  onPressed: (_sending || _voiceService.isRecording)
-                                      ? null
-                                      : _sendText,
+                              ),
+                            if (_pendingAttachments.isNotEmpty)
+                              _buildAttachmentPreviewTray(colorScheme),
+                            if (_uploadProgress != null)
+                              _buildUploadProgressCard(colorScheme),
+                            Padding(
+                              padding: const EdgeInsets.all(UITokens.spaceSm),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surfaceContainerHigh
+                                      .withValues(alpha: 0.96),
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.cornerXL,
+                                  ),
+                                  border: Border.all(
+                                    color: colorScheme.outlineVariant
+                                        .withValues(alpha: 0.72),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: colorScheme.shadow.withValues(
+                                        alpha: 0.08,
+                                      ),
+                                      blurRadius: 14,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
                                 ),
-                              ]),
+                                child: Row(
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.attach_file,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 48,
+                                        minHeight: 48,
+                                      ),
+                                      onPressed: _sending
+                                          ? null
+                                          : _pickAttachments,
+                                    ),
+                                    if (!_voiceService.isRecording &&
+                                        _pendingAttachments.isEmpty)
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.mic,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 48,
+                                          minHeight: 48,
+                                        ),
+                                        onPressed: _sending
+                                            ? null
+                                            : _recordVoiceMessage,
+                                      )
+                                    else if (_voiceService.isRecording)
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.mic,
+                                          color: AppColors.recording(context),
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 48,
+                                          minHeight: 48,
+                                        ),
+                                        onPressed: _voiceService.isRecording
+                                            ? _stopVoiceAndSend
+                                            : null,
+                                      )
+                                    else
+                                      const SizedBox(width: UITokens.spaceSm),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _controller,
+                                        style: TextStyle(
+                                          color: colorScheme.onSurface,
+                                        ),
+                                        decoration: InputDecoration(
+                                          hintText:
+                                              _pendingAttachments.isNotEmpty
+                                              ? AppLocalizations.of(
+                                                  context,
+                                                )!.addCaptionHint
+                                              : AppLocalizations.of(
+                                                  context,
+                                                )!.messageInputHint,
+                                          hintStyle: TextStyle(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                          border: InputBorder.none,
+                                        ),
+                                        enabled: !_voiceService.isRecording,
+                                        maxLines: null,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      constraints: const BoxConstraints(
+                                        minWidth: 48,
+                                        minHeight: 48,
+                                      ),
+                                      icon: _sending
+                                          ? const SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth:
+                                                    UITokens.borderThick,
+                                              ),
+                                            )
+                                          : Icon(
+                                              Icons.send,
+                                              color: colorScheme.primary,
+                                            ),
+                                      onPressed:
+                                          (_sending ||
+                                              _voiceService.isRecording)
+                                          ? null
+                                          : _sendText,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        ]),
+                          ],
+                        ),
                         _buildDesktopDropOverlay(colorScheme),
                       ],
                     ),
@@ -2349,7 +2694,22 @@ class _Msg {
   final DateTime? readAt;
   final bool isPending;
 
-  _Msg({required this.id, required this.text, required this.isOwn, required this.time, this.senderId, this.senderName, this.senderAvatar, this.type, this.mediaId, this.isDelivered = false, this.isRead = false, this.deliveredAt, this.readAt, this.isPending = false});
+  _Msg({
+    required this.id,
+    required this.text,
+    required this.isOwn,
+    required this.time,
+    this.senderId,
+    this.senderName,
+    this.senderAvatar,
+    this.type,
+    this.mediaId,
+    this.isDelivered = false,
+    this.isRead = false,
+    this.deliveredAt,
+    this.readAt,
+    this.isPending = false,
+  });
 }
 
 class _ComposerAttachment {
@@ -2402,7 +2762,7 @@ class _ComposerAttachmentCard extends StatelessWidget {
       width: 156,
       decoration: BoxDecoration(
         color: colorScheme.surface.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.55),
         ),
@@ -2415,7 +2775,9 @@ class _ComposerAttachmentCard extends StatelessWidget {
               children: [
                 Positioned.fill(
                   child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(18),
+                    ),
                     child: _ComposerAttachmentVisual(
                       attachment: attachment,
                       colorScheme: colorScheme,
@@ -2432,11 +2794,20 @@ class _ComposerAttachmentCard extends StatelessWidget {
                     ),
                     child: IconButton(
                       visualDensity: VisualDensity.compact,
-                      constraints: const BoxConstraints.tightFor(width: 30, height: 30),
+                      constraints: const BoxConstraints.tightFor(
+                        width: 30,
+                        height: 30,
+                      ),
                       padding: EdgeInsets.zero,
-                      tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).deleteButtonTooltip,
                       onPressed: sending ? null : onRemove,
-                      icon: const Icon(Icons.close_rounded, size: 18, color: Colors.white),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        size: 18,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -2444,7 +2815,12 @@ class _ComposerAttachmentCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+            padding: const EdgeInsets.fromLTRB(
+              UITokens.spaceSmMd,
+              UITokens.spaceSm,
+              UITokens.spaceSmMd,
+              UITokens.spaceSmMd,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -2457,7 +2833,7 @@ class _ComposerAttachmentCard extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: UITokens.spaceXS),
                 Text(
                   StorageService.formatBytes(attachment.sizeBytes),
                   style: TextStyle(
@@ -2538,7 +2914,11 @@ class _ComposerAttachmentVisualState extends State<_ComposerAttachmentVisual> {
               children: [
                 _buildFallback(),
                 const Center(
-                  child: Icon(Icons.play_circle_fill_rounded, color: Colors.white70, size: 34),
+                  child: Icon(
+                    Icons.play_circle_fill_rounded,
+                    color: Colors.white70,
+                    size: 34,
+                  ),
                 ),
               ],
             );
@@ -2550,7 +2930,11 @@ class _ComposerAttachmentVisualState extends State<_ComposerAttachmentVisual> {
               Image.memory(bytes, fit: BoxFit.cover),
               Container(color: Colors.black.withValues(alpha: 0.18)),
               const Center(
-                child: Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 34),
+                child: Icon(
+                  Icons.play_circle_fill_rounded,
+                  color: Colors.white,
+                  size: 34,
+                ),
               ),
             ],
           );
@@ -2746,11 +3130,11 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
     return GestureDetector(
       onTap: widget.onOpenGallery,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.mediaSurface(context),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(UITokens.cornerLg),
             border: Border.all(color: AppColors.mediaBorder(context)),
           ),
           child: ConstrainedBox(
@@ -2776,11 +3160,15 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.48),
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(UITokens.cornerPill),
                     ),
                     child: const Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Icon(Icons.open_in_full_rounded, color: Colors.white, size: 18),
+                      padding: EdgeInsets.all(UITokens.spaceSm),
+                      child: Icon(
+                        Icons.open_in_full_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -2800,7 +3188,11 @@ class _AudioMessageWidget extends StatefulWidget {
   final _Msg message;
   final AegisChatService svc;
   final Map<String, AudioPlayer> audioPlayers;
-  const _AudioMessageWidget({required this.message, required this.svc, required this.audioPlayers});
+  const _AudioMessageWidget({
+    required this.message,
+    required this.svc,
+    required this.audioPlayers,
+  });
   @override
   State<_AudioMessageWidget> createState() => _AudioMessageWidgetState();
 }
@@ -2917,7 +3309,7 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
         width: widget.maxWidth,
         height: widget.maxWidth * 0.56,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(UITokens.cornerSmMd),
           color: AppColors.mediaPlaceholder(context),
         ),
       );
@@ -2926,16 +3318,16 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
     if (_error != null || _localPath == null) {
       return Container(
         width: widget.maxWidth,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(UITokens.space),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(UITokens.cornerSmMd),
           color: AppColors.mediaPlaceholder(context),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.broken_image, color: AppColors.iconMuted(context)),
-            const SizedBox(width: 8),
+            const SizedBox(width: UITokens.spaceSm),
             Flexible(
               child: Text(
                 AppLocalizations.of(context)!.videoUnavailable,
@@ -2951,15 +3343,15 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(UITokens.cornerSmMd),
         onTap: _open,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(UITokens.cornerLg),
           child: Container(
             width: widget.maxWidth,
             decoration: BoxDecoration(
               color: AppColors.mediaSurface(context),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(UITokens.cornerLg),
               border: Border.all(color: AppColors.mediaBorder(context)),
             ),
             child: Column(
@@ -3015,15 +3407,24 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
                       left: 10,
                       bottom: 10,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.55),
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(
+                            UITokens.cornerPill,
+                          ),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.videocam_rounded, size: 14, color: Colors.white),
+                            Icon(
+                              Icons.videocam_rounded,
+                              size: 14,
+                              color: Colors.white,
+                            ),
                             SizedBox(width: 6),
                           ],
                         ),
@@ -3032,14 +3433,19 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                  padding: const EdgeInsets.fromLTRB(
+                    UITokens.spaceSmMd,
+                    UITokens.spaceSm,
+                    UITokens.spaceSmMd,
+                    UITokens.spaceSmMd,
+                  ),
                   child: Text(
                     _label(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white,
-                        ),
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
@@ -3065,7 +3471,8 @@ class _ChatImageGalleryDialog extends StatefulWidget {
   final Map<String, String> mediaDownloads;
 
   @override
-  State<_ChatImageGalleryDialog> createState() => _ChatImageGalleryDialogState();
+  State<_ChatImageGalleryDialog> createState() =>
+      _ChatImageGalleryDialogState();
 }
 
 class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
@@ -3098,7 +3505,7 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      insetPadding: const EdgeInsets.all(8),
+      insetPadding: const EdgeInsets.all(UITokens.spaceSm),
       backgroundColor: Colors.black,
       child: Stack(
         children: [
@@ -3142,10 +3549,13 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
             top: 14,
             right: 16,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: UITokens.spaceSmMd,
+                vertical: UITokens.spaceXSm,
+              ),
               decoration: BoxDecoration(
                 color: Colors.black54,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(UITokens.cornerPill),
               ),
               child: Text(
                 '${_currentIndex + 1}/${widget.mediaIds.length}',
@@ -3169,7 +3579,9 @@ class _FileMessageWidget extends StatelessWidget {
   final AegisChatService svc;
 
   String _fileLabel() {
-    final raw = (message.text.trim().isNotEmpty ? message.text : message.mediaId) ?? 'file';
+    final raw =
+        (message.text.trim().isNotEmpty ? message.text : message.mediaId) ??
+        'file';
     return raw.split('/').last;
   }
 
@@ -3196,27 +3608,27 @@ class _FileMessageWidget extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _openFile(context),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(UITokens.cornerMd),
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(UITokens.space),
           decoration: BoxDecoration(
             color: AppColors.mediaPlaceholder(context),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(UITokens.cornerMd),
             border: Border.all(color: AppColors.mediaBorder(context)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(_icon(), color: AppColors.iconMuted(context)),
-              const SizedBox(width: 10),
+              const SizedBox(width: UITokens.spaceSmMd),
               Flexible(
                 child: Text(
                   _fileLabel(),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
             ],
@@ -3253,11 +3665,11 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
     super.initState();
     _waveformPulse = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: UITokens.duration2XL,
     );
     _interactionPulse = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 180),
+      duration: UITokens.durationSmMd,
       value: 0,
     );
   }
@@ -3346,7 +3758,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
         _positionSub ??= _player!.onPositionChanged.listen((position) {
           _pendingPosition = position;
           _positionThrottle ??= Timer(
-            const Duration(milliseconds: 100),
+            UITokens.duration2XS,
             () {
               _positionThrottle = null;
               if (mounted) {
@@ -3442,8 +3854,9 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
     final progress = (_duration.inMilliseconds > 0)
         ? (_position.inMilliseconds / _duration.inMilliseconds).clamp(0.0, 1.0)
         : 0.0;
-    final totalLabel =
-        _duration > Duration.zero ? _formatDuration(_duration) : _formatDuration(_position);
+    final totalLabel = _duration > Duration.zero
+        ? _formatDuration(_duration)
+        : _formatDuration(_position);
     final currentLabel = _formatDuration(_position);
 
     return AnimatedBuilder(
@@ -3467,19 +3880,28 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
               scale: 1 - (interactionValue * 0.012),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: UITokens.spaceXS,
+                  vertical: UITokens.spaceXS,
+                ),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
+                  duration: UITokens.durationSmMd,
                   curve: Curves.easeOutCubic,
                   padding: const EdgeInsets.fromLTRB(8, 8, 10, 8),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(UITokens.corner2Lg),
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.white.withValues(alpha: 0.07 + interactionValue * 0.04),
-                        accent.withValues(alpha: (_playing ? 0.12 : 0.05) + interactionValue * 0.05),
+                        Colors.white.withValues(
+                          alpha: 0.07 + interactionValue * 0.04,
+                        ),
+                        accent.withValues(
+                          alpha:
+                              (_playing ? 0.12 : 0.05) +
+                              interactionValue * 0.05,
+                        ),
                       ],
                     ),
                     border: Border.all(
@@ -3491,7 +3913,11 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: accent.withValues(alpha: (_playing ? 0.12 : 0.04) + interactionValue * 0.08),
+                        color: accent.withValues(
+                          alpha:
+                              (_playing ? 0.12 : 0.04) +
+                              interactionValue * 0.08,
+                        ),
                         blurRadius: 16 + interactionValue * 10,
                         offset: Offset(0, 6 + interactionValue * 3),
                       ),
@@ -3500,7 +3926,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                   child: Row(
                     children: [
                       AnimatedScale(
-                        duration: const Duration(milliseconds: 140),
+                        duration: UITokens.durationXSm,
                         curve: Curves.easeOutBack,
                         scale: _pressing ? 0.92 : (_hovering ? 1.03 : 1),
                         child: Material(
@@ -3513,21 +3939,28 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                               height: 42,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: accent.withValues(alpha: _playing ? 0.22 : 0.14),
+                                color: accent.withValues(
+                                  alpha: _playing ? 0.22 : 0.14,
+                                ),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: _playing ? 0.18 : 0.10),
+                                  color: Colors.white.withValues(
+                                    alpha: _playing ? 0.18 : 0.10,
+                                  ),
                                 ),
                               ),
                               child: Center(
                                 child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 180),
+                                  duration: UITokens.durationSmMd,
                                   transitionBuilder: (child, animation) {
                                     return ScaleTransition(
                                       scale: CurvedAnimation(
                                         parent: animation,
                                         curve: Curves.easeOutBack,
                                       ),
-                                      child: FadeTransition(opacity: animation, child: child),
+                                      child: FadeTransition(
+                                        opacity: animation,
+                                        child: child,
+                                      ),
                                     );
                                   },
                                   child: _preparing
@@ -3535,7 +3968,9 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                                           key: ValueKey('loading'),
                                           width: 18,
                                           height: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: UITokens.borderThick,
+                                          ),
                                         )
                                       : Icon(
                                           _playing
@@ -3551,18 +3986,21 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: UITokens.spaceSmMd),
                       Expanded(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
                             return GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               onTapDown: (details) {
-                                if (_duration == Duration.zero || constraints.maxWidth <= 0) {
+                                if (_duration == Duration.zero ||
+                                    constraints.maxWidth <= 0) {
                                   return;
                                 }
-                                final rel = (details.localPosition.dx / constraints.maxWidth)
-                                    .clamp(0.0, 1.0);
+                                final rel =
+                                    (details.localPosition.dx /
+                                            constraints.maxWidth)
+                                        .clamp(0.0, 1.0);
                                 _seekTo(rel);
                               },
                               child: Column(
@@ -3572,10 +4010,17 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                                   Row(
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.06),
-                                          borderRadius: BorderRadius.circular(999),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.06,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            UITokens.cornerPill,
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -3587,40 +4032,58 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                                                 shape: BoxShape.circle,
                                                 color: _playing
                                                     ? accent
-                                                    : Colors.white.withValues(alpha: 0.6),
+                                                    : Colors.white.withValues(
+                                                        alpha: 0.6,
+                                                      ),
                                               ),
                                             ),
-                                            const SizedBox(width: 6),
+                                            const SizedBox(
+                                              width: UITokens.spaceXSm,
+                                            ),
                                             Text(
                                               '$currentLabel / $totalLabel',
-                                              style: theme.textTheme.labelSmall?.copyWith(
-                                                color: Colors.white.withValues(alpha: 0.84),
-                                                fontWeight: FontWeight.w700,
-                                              ),
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                    color: Colors.white
+                                                        .withValues(
+                                                          alpha: 0.84,
+                                                        ),
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
                                             ),
                                           ],
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: UITokens.spaceSm),
                                   SizedBox(
                                     height: 46,
                                     width: double.infinity,
                                     child: DecoratedBox(
                                       decoration: BoxDecoration(
-                                        color: theme.colorScheme.surface.withValues(
-                                          alpha: 0.08 + interactionValue * 0.04,
+                                        color: theme.colorScheme.surface
+                                            .withValues(
+                                              alpha:
+                                                  0.08 +
+                                                  interactionValue * 0.04,
+                                            ),
+                                        borderRadius: BorderRadius.circular(
+                                          UITokens.cornerLg,
                                         ),
-                                        borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
                                           color: Colors.white.withValues(
-                                            alpha: (_playing ? 0.12 : 0.06) + interactionValue * 0.06,
+                                            alpha:
+                                                (_playing ? 0.12 : 0.06) +
+                                                interactionValue * 0.06,
                                           ),
                                         ),
                                       ),
                                       child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: UITokens.spaceSmMd,
+                                          vertical: UITokens.spaceXSm,
+                                        ),
                                         child: AnimatedBuilder(
                                           animation: Listenable.merge([
                                             _waveformPulse,
@@ -3631,10 +4094,12 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                                               child: CustomPaint(
                                                 painter: WaveformPainter(
                                                   samples,
-                                                  baseColor: Colors.white.withValues(alpha: 0.24),
+                                                  baseColor: Colors.white
+                                                      .withValues(alpha: 0.24),
                                                   playedColor: accent,
                                                   progress: progress,
-                                                  pulsePhase: _waveformPulse.value,
+                                                  pulsePhase:
+                                                      _waveformPulse.value,
                                                   isPlaying: _playing,
                                                   strokeWidth: 3,
                                                 ),
@@ -3683,20 +4148,23 @@ class _DateSeparator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: UITokens.space),
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          padding: const EdgeInsets.symmetric(
+            horizontal: UITokens.spaceMdSm,
+            vertical: UITokens.spaceXsSm,
+          ),
           decoration: BoxDecoration(
             color: AppColors.dateSeparatorBg(context),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(UITokens.corner),
           ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.dateSeparatorText(context),
-                  fontWeight: FontWeight.w600,
-                ),
+              color: AppColors.dateSeparatorText(context),
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -3723,7 +4191,8 @@ class _SquishyBubble extends StatefulWidget {
   State<_SquishyBubble> createState() => _SquishyBubbleState();
 }
 
-class _SquishyBubbleState extends State<_SquishyBubble> with SingleTickerProviderStateMixin {
+class _SquishyBubbleState extends State<_SquishyBubble>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
@@ -3732,7 +4201,7 @@ class _SquishyBubbleState extends State<_SquishyBubble> with SingleTickerProvide
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100), 
+      duration: UITokens.duration2XS,
     );
     _scaleAnimation = Tween<double>(begin: 1, end: 0.95).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
@@ -3753,22 +4222,29 @@ class _SquishyBubbleState extends State<_SquishyBubble> with SingleTickerProvide
 
     return GestureDetector(
       onTapDown: (_) {
-         if (widget.dynamicBubbles) _controller.forward();
+        if (widget.dynamicBubbles) _controller.forward();
       },
       onTapUp: (_) {
-         if (widget.dynamicBubbles) _controller.reverse();
+        if (widget.dynamicBubbles) _controller.reverse();
       },
       onTapCancel: () {
-         if (widget.dynamicBubbles) _controller.reverse();
+        if (widget.dynamicBubbles) _controller.reverse();
       },
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.68),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          margin: const EdgeInsets.symmetric(vertical: 8),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.68,
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: UITokens.spaceMdSm,
+            vertical: UITokens.spaceSmMd,
+          ),
+          margin: const EdgeInsets.symmetric(vertical: UITokens.spaceSm),
           decoration: BoxDecoration(
-            color: widget.isOwn ? AppColors.ownBubble(context) : AppColors.otherBubble(context),
+            color: widget.isOwn
+                ? AppColors.ownBubble(context)
+                : AppColors.otherBubble(context),
             borderRadius: BorderRadius.circular(widget.bubbleRounding),
             border: Border.all(
               color: borderColor,

@@ -78,14 +78,21 @@ class _PeopleScreenState extends State<PeopleScreen> {
           child: SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 860),
+                constraints: const BoxConstraints(
+                  maxWidth: UITokens.readableContentMaxWidth,
+                ),
                 child: Column(
                   children: [
                     Padding(
                       padding: pad.copyWith(top: 10, bottom: 8),
                       child: SectionCard(
                         radius: UITokens.cornerXL,
-                        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                        padding: const EdgeInsets.fromLTRB(
+                          UITokens.spaceMdLg,
+                          UITokens.spaceMdLg,
+                          UITokens.spaceMdLg,
+                          UITokens.spaceMd,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -93,45 +100,57 @@ class _PeopleScreenState extends State<PeopleScreen> {
                               children: [
                                 if (canPop)
                                   Padding(
-                                    padding: const EdgeInsets.only(right: 10),
+                                    padding: const EdgeInsets.only(
+                                      right: UITokens.spaceSmMd,
+                                    ),
                                     child: _HeaderIcon(
                                       icon: Icons.arrow_back_rounded,
                                       tooltip: l10n.back,
-                                      onTap: () => Navigator.of(context).maybePop(),
+                                      onTap: () =>
+                                          Navigator.of(context).maybePop(),
                                     ),
                                   ),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         title,
-                                        style: theme.textTheme.headlineSmall?.copyWith(
-                                          color: theme.colorScheme.onSurface,
-                                          fontWeight: FontWeight.w700,
-                                        ),
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                       ),
-                                      const SizedBox(height: 6),
+                                      const SizedBox(height: UITokens.spaceXSm),
                                       Text(
                                         widget.autofocusSearch
                                             ? l10n.searchContactsHint
                                             : l10n.peopleSubtitle,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: AppColors.subtitleText(context),
-                                        ),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: AppColors.subtitleText(
+                                                context,
+                                              ),
+                                            ),
                                       ),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: UITokens.spaceMd),
                             Container(
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(20),
+                                color:
+                                    theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(
+                                  UITokens.corner2Lg,
+                                ),
                               ),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 14,
@@ -151,14 +170,16 @@ class _PeopleScreenState extends State<PeopleScreen> {
                               ),
                             ),
                             if (!widget.simplified) ...[
-                              const SizedBox(height: 14),
+                              const SizedBox(height: UITokens.spaceMdSm),
                               SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 keyboardDismissBehavior:
                                     ScrollViewKeyboardDismissBehavior.onDrag,
                                 child: SegmentedButton<PeopleSegment>(
                                   showSelectedIcon: false,
-                                  selected: <PeopleSegment>{_controller.segment},
+                                  selected: <PeopleSegment>{
+                                    _controller.segment,
+                                  },
                                   onSelectionChanged: (selection) {
                                     final segment = selection.firstOrNull;
                                     if (segment != null) {
@@ -174,12 +195,16 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                     ButtonSegment(
                                       value: PeopleSegment.twospace,
                                       label: Text(l10n.peopleSegmentTwoSpace),
-                                      icon: const Icon(Icons.alternate_email_rounded),
+                                      icon: const Icon(
+                                        Icons.alternate_email_rounded,
+                                      ),
                                     ),
                                     ButtonSegment(
                                       value: PeopleSegment.phonebook,
                                       label: Text(l10n.peopleSegmentPhonebook),
-                                      icon: const Icon(Icons.contact_phone_outlined),
+                                      icon: const Icon(
+                                        Icons.contact_phone_outlined,
+                                      ),
                                     ),
                                     ButtonSegment(
                                       value: PeopleSegment.recent,
@@ -194,7 +219,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: UITokens.spaceXS),
                     Expanded(
                       child: RefreshIndicator(
                         onRefresh: _controller.refresh,
@@ -227,36 +252,50 @@ class _PeopleScreenState extends State<PeopleScreen> {
     }
     final dashboard = _controller.dashboard;
     if (dashboard == null) {
-      return ListView(children: [
-        AppEmptyState(
-          title: l10n.peopleNoPeopleTitle,
-          message: l10n.peopleNoPeopleMessage,
-          icon: Icons.people_outline_rounded,
-        ),
-      ]);
+      return ListView(
+        children: [
+          AppEmptyState(
+            title: l10n.peopleNoPeopleTitle,
+            message: l10n.peopleNoPeopleMessage,
+            icon: Icons.people_outline_rounded,
+          ),
+        ],
+      );
     }
 
     final items = <Widget>[];
 
     // Permission card — compact, non-intrusive
     if (dashboard.permission != DeviceContactsPermission.granted) {
-      items.add(Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        child: _PermissionBanner(
-          message: dashboard.permission == DeviceContactsPermission.permanentlyDenied
-              ? l10n.peoplePermissionCardMessageSettings
-              : l10n.peoplePermissionCardMessage,
-          actionLabel: dashboard.permission == DeviceContactsPermission.permanentlyDenied
-              ? l10n.openSettingsButton
-              : l10n.requestPermissionButton,
-          onAction: () async {
-            if (dashboard.permission == DeviceContactsPermission.permanentlyDenied) {
-              await openAppSettings();
-            }
-            await _controller.refresh();
-          },
+      items.add(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            UITokens.spaceMd,
+            0,
+            UITokens.spaceMd,
+            UITokens.spaceSm,
+          ),
+          child: _PermissionBanner(
+            message:
+                dashboard.permission ==
+                    DeviceContactsPermission.permanentlyDenied
+                ? l10n.peoplePermissionCardMessageSettings
+                : l10n.peoplePermissionCardMessage,
+            actionLabel:
+                dashboard.permission ==
+                    DeviceContactsPermission.permanentlyDenied
+                ? l10n.openSettingsButton
+                : l10n.requestPermissionButton,
+            onAction: () async {
+              if (dashboard.permission ==
+                  DeviceContactsPermission.permanentlyDenied) {
+                await openAppSettings();
+              }
+              await _controller.refresh();
+            },
+          ),
         ),
-      ));
+      );
     }
 
     if (_controller.isSearchingMode) {
@@ -266,17 +305,19 @@ class _PeopleScreenState extends State<PeopleScreen> {
     }
 
     if (items.isEmpty) {
-      items.add(AppEmptyState(
-        title: l10n.peopleNoPeopleTitle,
-        message: l10n.peopleNoPeopleMessage,
-        icon: Icons.people_outline_rounded,
-      ));
+      items.add(
+        AppEmptyState(
+          title: l10n.peopleNoPeopleTitle,
+          message: l10n.peopleNoPeopleMessage,
+          icon: Icons.people_outline_rounded,
+        ),
+      );
     }
 
     return ListView(
       cacheExtent: 800,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.only(bottom: 100),
+      padding: const EdgeInsets.only(bottom: UITokens.bottomSheetClearance),
       children: items,
     );
   }
@@ -289,6 +330,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
       w.add(_SectionLabel(title: t, count: f.length));
       w.addAll(f.map((p) => _personTile(p, l10n)));
     }
+
     section(l10n.peopleFavoritesFrequentTitle, d.favoritesAndFrequent);
     section(l10n.peopleRecentTitle, d.recentPeople);
     section(l10n.peopleTwoSpaceTitle, d.twoSpacePeople);
@@ -306,22 +348,30 @@ class _PeopleScreenState extends State<PeopleScreen> {
       w.add(_SectionLabel(title: t, count: f.length));
       w.addAll(f.map((p) => _personTile(p, l10n)));
     }
+
     section(l10n.peopleSearchRemoteTitle, data.remoteResults);
     section(l10n.peopleSearchLocalTitle, data.localResults);
     section(l10n.peopleSearchInviteTitle, data.inviteResults);
     if (w.isEmpty) {
-      w.add(AppEmptyState(
-        title: l10n.peopleSearchEmptyTitle,
-        message: l10n.peopleSearchEmptyMessage,
-        icon: Icons.manage_search_rounded,
-      ));
+      w.add(
+        AppEmptyState(
+          title: l10n.peopleSearchEmptyTitle,
+          message: l10n.peopleSearchEmptyMessage,
+          icon: Icons.manage_search_rounded,
+        ),
+      );
     }
     return w;
   }
 
   Widget _personTile(PersonEntry person, AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        0,
+        UITokens.spaceMd,
+        UITokens.spaceXSm,
+      ),
       child: PersonTile(
         person: person,
         trailingLabel: l10n.peopleTwoSpaceBadge,
@@ -330,9 +380,15 @@ class _PeopleScreenState extends State<PeopleScreen> {
             ? () => _openProfile(person)
             : () => _showPersonSheet(person),
         onFavoriteTap: () => _controller.toggleFavorite(person),
-        onMessageTap: person.remoteUserId != null ? () => _openChat(person) : null,
-        onVoiceCallTap: person.remoteUserId != null ? () => _startCall(person, false) : null,
-        onVideoCallTap: person.remoteUserId != null ? () => _startCall(person, true) : null,
+        onMessageTap: person.remoteUserId != null
+            ? () => _openChat(person)
+            : null,
+        onVoiceCallTap: person.remoteUserId != null
+            ? () => _startCall(person, false)
+            : null,
+        onVideoCallTap: person.remoteUserId != null
+            ? () => _startCall(person, true)
+            : null,
         onInviteTap: person.isInvitable ? () => _invitePerson(person) : null,
       ),
     );
@@ -375,7 +431,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
           ? '@${person.username!} • ${_rel(person.lastSeenAt!, l10n)}'
           : _rel(person.lastSeenAt!, l10n);
     }
-    if (person.username != null && person.username!.isNotEmpty) return '@${person.username!}';
+    if (person.username != null && person.username!.isNotEmpty)
+      return '@${person.username!}';
     if (person.phones.isNotEmpty) return person.phones.first;
     return l10n.peopleNoDetails;
   }
@@ -444,7 +501,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CallScreen(
-          room: 'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
+          room:
+              'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
           person: person,
           isVideo: isVideo,
           displayName: person.displayName,
@@ -469,7 +527,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
       builder: (ctx) => Container(
         decoration: BoxDecoration(
           color: Theme.of(ctx).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(UITokens.corner2Lg),
+          ),
         ),
         child: SafeArea(
           top: false,
@@ -480,17 +540,24 @@ class _PeopleScreenState extends State<PeopleScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 8),
+                const SizedBox(height: UITokens.spaceSm),
                 Container(
-                  width: 40,
-                  height: 4,
+                  width: UITokens.dragHandleWidth,
+                  height: UITokens.dragHandleHeight,
                   decoration: BoxDecoration(
-                    color: Theme.of(ctx).colorScheme.outline.withValues(alpha: 0.45),
-                    borderRadius: BorderRadius.circular(99),
+                    color: Theme.of(
+                      ctx,
+                    ).colorScheme.outline.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(UITokens.cornerPill),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+                  padding: const EdgeInsets.fromLTRB(
+                    UITokens.spaceMd,
+                    UITokens.spaceSmMd,
+                    UITokens.spaceMd,
+                    UITokens.spaceXSm,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -499,8 +566,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -512,7 +579,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(
+                    UITokens.spaceMd,
+                    0,
+                    UITokens.spaceMd,
+                    UITokens.spaceSm,
+                  ),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -520,12 +592,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ),
-                const Divider(height: 1),
+                const Divider(height: UITokens.borderThin),
                 Flexible(
                   child: ListView(
                     shrinkWrap: true,
@@ -540,7 +612,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           },
                         ),
                         ListTile(
-                          leading: const Icon(Icons.chat_bubble_outline_rounded),
+                          leading: const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                          ),
                           title: Text(l10n.writeMessageAction),
                           onTap: () {
                             Navigator.pop(ctx);
@@ -578,7 +652,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           person.isFavorite
                               ? Icons.star_rounded
                               : Icons.star_border_rounded,
-                          color: person.isFavorite ? AppColors.favoriteActive(ctx) : null,
+                          color: person.isFavorite
+                              ? AppColors.favoriteActive(ctx)
+                              : null,
                         ),
                         title: Text(
                           person.isFavorite
@@ -590,7 +666,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           _controller.toggleFavorite(person);
                         },
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UITokens.spaceSm),
                     ],
                   ),
                 ),
@@ -606,7 +682,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
 // ══════════════════════ Private widgets ══════════════════════
 
 class _HeaderIcon extends StatelessWidget {
-  const _HeaderIcon({required this.icon, required this.tooltip, required this.onTap});
+  const _HeaderIcon({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
   final IconData icon;
   final String tooltip;
   final VoidCallback? onTap;
@@ -615,7 +695,7 @@ class _HeaderIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      margin: const EdgeInsets.only(left: 6),
+      margin: const EdgeInsets.only(left: UITokens.spaceXSm),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
         shape: BoxShape.circle,
@@ -647,26 +727,31 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        UITokens.spaceSm,
+        UITokens.spaceMd,
+        UITokens.spaceXS,
+      ),
       child: Row(
         children: [
           Expanded(
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: AppColors.subtitleText(context),
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
+                color: AppColors.subtitleText(context),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
             ),
           ),
           if (count != null)
             Text(
               '$count',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.hintText(context),
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: AppColors.hintText(context),
+                fontWeight: FontWeight.w700,
+              ),
             ),
         ],
       ),
@@ -675,7 +760,11 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _PermissionBanner extends StatelessWidget {
-  const _PermissionBanner({required this.message, required this.actionLabel, required this.onAction});
+  const _PermissionBanner({
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
   final String message;
   final String actionLabel;
   final VoidCallback onAction;
@@ -683,7 +772,10 @@ class _PermissionBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SectionCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.spaceMdSm,
+        vertical: UITokens.space,
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final isNarrow = constraints.maxWidth < 620;
@@ -695,22 +787,20 @@ class _PermissionBanner extends StatelessWidget {
                   color: AppColors.subtitleText(context),
                   size: 20,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UITokens.space),
                 Expanded(
                   child: Text(
                     message,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: AppColors.subtitleText(context)),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.subtitleText(context),
+                    ),
                   ),
                 ),
               ],
             ),
-            if (isNarrow) const SizedBox(height: 10),
+            if (isNarrow) const SizedBox(height: UITokens.spaceSmMd),
             Align(
-              alignment:
-                  isNarrow ? Alignment.centerRight : Alignment.center,
+              alignment: isNarrow ? Alignment.centerRight : Alignment.center,
               child: TextButton(
                 onPressed: onAction,
                 child: Text(actionLabel),
@@ -728,7 +818,7 @@ class _PermissionBanner extends StatelessWidget {
           return Row(
             children: [
               Expanded(child: content.first),
-              const SizedBox(width: 8),
+              const SizedBox(width: UITokens.spaceSm),
               content.last,
             ],
           );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/navigation_service.dart';
 import 'package:two_space_app/core/widgets/feature_in_development_dialog.dart';
@@ -22,8 +23,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (email.isEmpty) {
       final navCtx = appNavigatorKey.currentContext;
       if (navCtx != null)
-        ScaffoldMessenger.of(navCtx)
-            .showSnackBar(SnackBar(content: Text(l10n.validationEnterEmail)));
+        ScaffoldMessenger.of(
+          navCtx,
+        ).showSnackBar(SnackBar(content: Text(l10n.validationEnterEmail)));
       return;
     }
     setState(() => _loading = true);
@@ -40,7 +42,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final navCtx = appNavigatorKey.currentContext;
       if (navCtx != null)
         ScaffoldMessenger.of(navCtx).showSnackBar(
-            SnackBar(content: Text(l10n.errorWithDetail(e.toString()))));
+          SnackBar(content: Text(l10n.errorWithDetail(e.toString()))),
+        );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -65,16 +68,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 720),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(UITokens.spaceMd),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 8),
+                    const SizedBox(height: UITokens.spaceSm),
                     Text(
                       l10n.forgotPasswordDescription,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: UITokens.space),
                     InlineNoticeCard(
                       icon: Icons.construction_rounded,
                       badge: l10n.featureInDevelopmentLabel,
@@ -83,13 +86,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         l10n.forgotPasswordTitle,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: UITokens.space),
                     TextField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(labelText: l10n.emailLabel),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: UITokens.spaceMd),
                     ElevatedButton(
                       onPressed: _loading ? null : _submit,
                       child: _loading

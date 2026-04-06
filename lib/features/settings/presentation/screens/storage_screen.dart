@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/storage_service.dart';
@@ -17,8 +18,6 @@ class StorageScreen extends StatefulWidget {
   @override
   State<StorageScreen> createState() => _StorageScreenState();
 }
-
-
 
 class _StorageScreenState extends State<StorageScreen> {
   final StorageService _storageService = StorageService.instance;
@@ -137,7 +136,9 @@ class _StorageScreenState extends State<StorageScreen> {
         return Container(
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(UITokens.corner2XL),
+            ),
           ),
           child: SafeArea(
             top: false,
@@ -179,7 +180,7 @@ class _StorageScreenState extends State<StorageScreen> {
                     },
                   );
                 }),
-                const SizedBox(height: 8),
+                const SizedBox(height: UITokens.spaceSm),
               ],
             ),
           ),
@@ -205,7 +206,9 @@ class _StorageScreenState extends State<StorageScreen> {
         return Container(
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(UITokens.corner2XL),
+            ),
           ),
           child: SafeArea(
             top: false,
@@ -240,7 +243,7 @@ class _StorageScreenState extends State<StorageScreen> {
                     },
                   );
                 }),
-                const SizedBox(height: 8),
+                const SizedBox(height: UITokens.spaceSm),
               ],
             ),
           ),
@@ -267,8 +270,9 @@ class _StorageScreenState extends State<StorageScreen> {
             return Container(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(UITokens.corner2XL),
+                ),
               ),
               child: SafeArea(
                 top: false,
@@ -306,7 +310,12 @@ class _StorageScreenState extends State<StorageScreen> {
                       title: Text(l10n.storageCacheLabel),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(
+                        UITokens.spaceMd,
+                        UITokens.spaceSm,
+                        UITokens.spaceMd,
+                        UITokens.spaceMd,
+                      ),
                       child: Row(
                         children: [
                           Expanded(
@@ -322,7 +331,7 @@ class _StorageScreenState extends State<StorageScreen> {
                               child: Text(l10n.storageAutoCleanSelectAll),
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: UITokens.spaceSmMd),
                           Expanded(
                             child: FilledButton(
                               onPressed: () async {
@@ -360,52 +369,60 @@ class _StorageScreenState extends State<StorageScreen> {
     final snapshot = _snapshot;
 
     final body = _loading
-            ? const AppLoadingState()
-            : snapshot == null
-                ? AppEmptyState(
-                    title: l10n.nothingFound,
-                    message: l10n.noResultsFound,
-                    icon: Icons.storage_rounded,
-                  )
-                : ListView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    children: [
-                      _StorageOverviewCard(snapshot: snapshot),
-                      const SizedBox(height: 16),
-                      _StorageCleanupSection(
-                        snapshot: snapshot,
-                        clearPhotos: _clearPhotos,
-                        clearVideos: _clearVideos,
-                        clearFiles: _clearFiles,
-                        clearCache: _clearCache,
-                        selectedBytes: _selectedBytes(snapshot),
-                        clearing: _clearing,
-                        autoCleanSettings: _autoCleanSettings,
-                        onPhotosChanged: (value) =>
-                            setState(() => _clearPhotos = value),
-                        onVideosChanged: (value) =>
-                            setState(() => _clearVideos = value),
-                        onFilesChanged: (value) =>
-                            setState(() => _clearFiles = value),
-                        onCacheChanged: (value) =>
-                            setState(() => _clearCache = value),
-                        onAutoCleanChanged: (value) => _saveAutoCleanSettings(
-                          _autoCleanSettings.copyWith(enabled: value),
-                        ),
-                        onAutoCleanIntervalPressed: _pickAutoCleanInterval,
-                        onAutoCleanThresholdPressed: _pickAutoCleanThreshold,
-                        onAutoCleanTypesPressed: _pickAutoCleanTypes,
-                        onClearPressed: _clearSelected,
-                      ),
-                    ],
-                  );
+        ? const AppLoadingState()
+        : snapshot == null
+        ? AppEmptyState(
+            title: l10n.nothingFound,
+            message: l10n.noResultsFound,
+            icon: Icons.storage_rounded,
+          )
+        : ListView(
+            controller: _scrollController,
+            padding: const EdgeInsets.fromLTRB(
+              UITokens.spaceMd,
+              UITokens.spaceSm,
+              UITokens.spaceMd,
+              UITokens.spaceXLg,
+            ),
+            children: [
+              _StorageOverviewCard(snapshot: snapshot),
+              const SizedBox(height: UITokens.spaceMd),
+              _StorageCleanupSection(
+                snapshot: snapshot,
+                clearPhotos: _clearPhotos,
+                clearVideos: _clearVideos,
+                clearFiles: _clearFiles,
+                clearCache: _clearCache,
+                selectedBytes: _selectedBytes(snapshot),
+                clearing: _clearing,
+                autoCleanSettings: _autoCleanSettings,
+                onPhotosChanged: (value) =>
+                    setState(() => _clearPhotos = value),
+                onVideosChanged: (value) =>
+                    setState(() => _clearVideos = value),
+                onFilesChanged: (value) => setState(() => _clearFiles = value),
+                onCacheChanged: (value) => setState(() => _clearCache = value),
+                onAutoCleanChanged: (value) => _saveAutoCleanSettings(
+                  _autoCleanSettings.copyWith(enabled: value),
+                ),
+                onAutoCleanIntervalPressed: _pickAutoCleanInterval,
+                onAutoCleanThresholdPressed: _pickAutoCleanThreshold,
+                onAutoCleanTypesPressed: _pickAutoCleanTypes,
+                onClearPressed: _clearSelected,
+              ),
+            ],
+          );
 
     final content = Column(
       children: [
         if (widget.embedded)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(
+              UITokens.spaceMd,
+              UITokens.spaceSm,
+              UITokens.spaceMd,
+              UITokens.space,
+            ),
             child: SectionPageHeader(
               title: l10n.storageMemoryTitle,
               subtitle: l10n.storageCleanupSubtitle,
@@ -457,7 +474,7 @@ class _StorageOverviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(UITokens.spaceLg),
         child: Column(
           children: [
             SizedBox(
@@ -525,11 +542,11 @@ class _StorageCleanupSection extends StatelessWidget {
     final lastRunLabel = lastRun == null
         ? l10n.storageAutoCleanLastRunNever
         : '${materialL10n.formatCompactDate(lastRun)} • '
-            '${materialL10n.formatTimeOfDay(TimeOfDay.fromDateTime(lastRun))}';
+              '${materialL10n.formatTimeOfDay(TimeOfDay.fromDateTime(lastRun))}';
 
     return GlassCard(
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(UITokens.spaceMdLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -539,14 +556,14 @@ class _StorageCleanupSection extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: UITokens.spaceXSm),
             Text(
               l10n.storageCleanupSubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UITokens.spaceMd),
             _CleanupToggleTile(
               label: l10n.storagePhotosLabel,
               value: StorageService.formatBytes(snapshot.photoBytes),
@@ -556,7 +573,7 @@ class _StorageCleanupSection extends StatelessWidget {
               enabled: snapshot.photoBytes > 0,
               onChanged: onPhotosChanged,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: UITokens.spaceSmMd),
             _CleanupToggleTile(
               label: l10n.storageVideosLabel,
               value: StorageService.formatBytes(snapshot.videoBytes),
@@ -566,7 +583,7 @@ class _StorageCleanupSection extends StatelessWidget {
               enabled: snapshot.videoBytes > 0,
               onChanged: onVideosChanged,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: UITokens.spaceSmMd),
             _CleanupToggleTile(
               label: l10n.filesLabel,
               value: StorageService.formatBytes(snapshot.fileBytes),
@@ -576,7 +593,7 @@ class _StorageCleanupSection extends StatelessWidget {
               enabled: snapshot.fileBytes > 0,
               onChanged: onFilesChanged,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: UITokens.spaceSmMd),
             _CleanupToggleTile(
               label: l10n.storageCacheLabel,
               value: StorageService.formatBytes(snapshot.cacheBytes),
@@ -586,12 +603,14 @@ class _StorageCleanupSection extends StatelessWidget {
               enabled: snapshot.cacheBytes > 0,
               onChanged: onCacheChanged,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UITokens.spaceMd),
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(UITokens.spaceMdSm),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.32),
-                borderRadius: BorderRadius.circular(18),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.32,
+                ),
+                borderRadius: BorderRadius.circular(UITokens.cornerXLg),
               ),
               child: Row(
                 children: [
@@ -602,10 +621,12 @@ class _StorageCleanupSection extends StatelessWidget {
                         Text(
                           l10n.storageSelectedLabel,
                           style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: UITokens.spaceXS),
                         Text(
                           StorageService.formatBytes(selectedBytes),
                           style: theme.textTheme.titleLarge?.copyWith(
@@ -615,12 +636,14 @@ class _StorageCleanupSection extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: UITokens.space),
                   Expanded(
                     child: Text(
                       selectedLabels.isEmpty ? '—' : selectedLabels.join(', '),
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.72,
+                        ),
                         height: 1.35,
                       ),
                     ),
@@ -628,7 +651,7 @@ class _StorageCleanupSection extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UITokens.spaceMd),
             GlassCard(
               child: Column(
                 children: [
@@ -653,20 +676,24 @@ class _StorageCleanupSection extends StatelessWidget {
                     },
                     onTap: onAutoCleanIntervalPressed,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: UITokens.spaceSmMd),
                   _StorageSheetField(
                     icon: Icons.speed_rounded,
                     label: l10n.storageAutoCleanThresholdLabel,
-                    value: StorageService.formatBytes(autoCleanSettings.maxBytes),
+                    value: StorageService.formatBytes(
+                      autoCleanSettings.maxBytes,
+                    ),
                     onTap: onAutoCleanThresholdPressed,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: UITokens.spaceSmMd),
                   _StorageSheetField(
                     icon: Icons.tune_rounded,
                     label: l10n.storageAutoCleanTypesLabel,
                     value: [
-                      if (autoCleanSettings.clearPhotos) l10n.storagePhotosLabel,
-                      if (autoCleanSettings.clearVideos) l10n.storageVideosLabel,
+                      if (autoCleanSettings.clearPhotos)
+                        l10n.storagePhotosLabel,
+                      if (autoCleanSettings.clearVideos)
+                        l10n.storageVideosLabel,
                       if (autoCleanSettings.clearFiles) l10n.filesLabel,
                       if (autoCleanSettings.clearCache) l10n.storageCacheLabel,
                     ].join(', '),
@@ -675,15 +702,15 @@ class _StorageCleanupSection extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: UITokens.spaceMdSm),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(UITokens.spaceMdSm),
               decoration: BoxDecoration(
                 color: autoCleanSettings.enabled
                     ? theme.colorScheme.primaryContainer.withValues(alpha: 0.32)
                     : theme.colorScheme.surface.withValues(alpha: 0.34),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(UITokens.cornerXLg),
                 border: Border.all(
                   color: autoCleanSettings.enabled
                       ? theme.colorScheme.primary.withValues(alpha: 0.14)
@@ -704,7 +731,7 @@ class _StorageCleanupSection extends StatelessWidget {
                             ? theme.colorScheme.primary
                             : AppColors.subtitleText(context),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: UITokens.spaceSm),
                       Text(
                         l10n.storageAutoCleanStatusTitle,
                         style: theme.textTheme.titleSmall?.copyWith(
@@ -713,7 +740,7 @@ class _StorageCleanupSection extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: UITokens.spaceSm),
                   Text(
                     autoCleanSettings.enabled
                         ? l10n.storageAutoCleanStatusEnabled
@@ -723,7 +750,7 @@ class _StorageCleanupSection extends StatelessWidget {
                       height: 1.35,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UITokens.space),
                   Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -747,20 +774,23 @@ class _StorageCleanupSection extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UITokens.spaceMd),
             LayoutBuilder(
               builder: (context, constraints) {
                 final actionButton = SizedBox(
                   height: 50,
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed:
-                        clearing || selectedBytes <= 0 ? null : onClearPressed,
+                    onPressed: clearing || selectedBytes <= 0
+                        ? null
+                        : onClearPressed,
                     icon: clearing
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: UITokens.borderThick,
+                            ),
                           )
                         : const Icon(Icons.cleaning_services_rounded),
                     label: Text(l10n.settingsStorageClearBtn),
@@ -808,10 +838,13 @@ class _StorageSummaryPill extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.space,
+        vertical: UITokens.spaceSmMd,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.12),
         ),
@@ -820,7 +853,7 @@ class _StorageSummaryPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
+          const SizedBox(width: UITokens.spaceSm),
           Text(
             '$label: $value',
             style: theme.textTheme.bodySmall?.copyWith(
@@ -853,14 +886,14 @@ class _StorageSheetField extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
         onTap: onTap,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(UITokens.space),
           decoration: BoxDecoration(
             color: theme.colorScheme.surface.withValues(alpha: 0.42),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(UITokens.cornerLg),
             border: Border.all(
               color: theme.colorScheme.outline.withValues(alpha: 0.12),
             ),
@@ -868,7 +901,7 @@ class _StorageSheetField extends StatelessWidget {
           child: Row(
             children: [
               Icon(icon, size: 18, color: theme.colorScheme.primary),
-              const SizedBox(width: 10),
+              const SizedBox(width: UITokens.spaceSmMd),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -876,10 +909,12 @@ class _StorageSheetField extends StatelessWidget {
                     Text(
                       label,
                       style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.72,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: UITokens.space2XS),
                     Text(
                       value.isEmpty ? '—' : value,
                       maxLines: 2,
@@ -891,7 +926,7 @@ class _StorageSheetField extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: UITokens.spaceSm),
               const Icon(Icons.expand_more_rounded),
             ],
           ),
@@ -909,12 +944,12 @@ class _SheetHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      width: 40,
-      height: 4,
+      margin: const EdgeInsets.symmetric(vertical: UITokens.space),
+      width: UITokens.dragHandleWidth,
+      height: UITokens.dragHandleHeight,
       decoration: BoxDecoration(
         color: theme.colorScheme.outlineVariant,
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(UITokens.corner2XS),
       ),
     );
   }
@@ -936,18 +971,23 @@ class _SheetHeader extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceLg,
+        0,
+        UITokens.spaceLg,
+        UITokens.spaceSm,
+      ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(UITokens.spaceSm),
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(UITokens.corner),
             ),
             child: Icon(icon, color: theme.colorScheme.primary),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: UITokens.spaceMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -958,7 +998,7 @@ class _SheetHeader extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: UITokens.spaceXS),
                 Text(subtitle, style: theme.textTheme.bodySmall),
               ],
             ),
@@ -995,7 +1035,7 @@ class _CleanupToggleTile extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
         border: Border.all(
           color: theme.colorScheme.outline.withValues(alpha: 0.12),
         ),
@@ -1025,7 +1065,7 @@ class _AnimatedStorageRing extends StatelessWidget {
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 1100),
+      duration: UITokens.duration3Lg,
       curve: Curves.easeOutCubic,
       builder: (context, value, child) {
         return CustomPaint(
@@ -1041,16 +1081,16 @@ class _AnimatedStorageRing extends StatelessWidget {
                 Text(
                   l10n.storageTotalLabel,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: UITokens.spaceSm),
                 Text(
                   StorageService.formatBytes(snapshot.totalBytes),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),

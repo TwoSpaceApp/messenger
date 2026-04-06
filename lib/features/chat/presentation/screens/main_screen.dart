@@ -96,9 +96,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     if (mounted && !_isLocked) {
       setState(() => _isLocked = true);
     }
-    
+
     try {
-      final success = await BiometricService.authenticate(AppLocalizations.of(context)?.unlockApp ?? 'Unlock App');
+      final success = await BiometricService.authenticate(
+        AppLocalizations.of(context)?.unlockApp ?? 'Unlock App',
+      );
       if (success && mounted && _isLocked) {
         setState(() => _isLocked = false);
       }
@@ -142,7 +144,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           child: SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
+                constraints: const BoxConstraints(
+                  maxWidth: UITokens.dialogMaxWidth,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(UITokens.spaceLg),
                   child: SectionCard(
@@ -160,17 +164,21 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                         Text(
                           l10n.unlockApp,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
                         const SizedBox(height: UITokens.spaceSm),
                         Text(
                           l10n.biometricSubtitle,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                         const SizedBox(height: UITokens.spaceLg),
                         FilledButton.icon(

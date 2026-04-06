@@ -20,18 +20,19 @@ import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen(
-      {required this.userId,
-      super.key,
-      this.initialName,
-      this.initialAvatar,
-      this.startInEdit = false,
-      this.embedded = false});
+  const ProfileScreen({
+    required this.userId,
+    super.key,
+    this.initialName,
+    this.initialAvatar,
+    this.startInEdit = false,
+    this.embedded = false,
+  });
   final String userId;
   final String? initialName;
   final String? initialAvatar;
   final bool startInEdit;
-    final bool embedded;
+  final bool embedded;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -89,7 +90,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _user = {
             'id': userInfo['id']?.toString() ?? widget.userId,
-            'name': userInfo['displayName'] ??
+            'name':
+                userInfo['displayName'] ??
                 widget.initialName ??
                 userInfo['username'] ??
                 _fallbackProfileName(),
@@ -131,7 +133,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  bool _matchesCurrentUser(String? currentUserId, Map<String, dynamic> userInfo) {
+  bool _matchesCurrentUser(
+    String? currentUserId,
+    Map<String, dynamic> userInfo,
+  ) {
     final candidates = <String>{
       _normalizeProfileToken(widget.userId),
       _normalizeProfileToken(userInfo['id']?.toString()),
@@ -153,7 +158,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String _fallbackUsername() {
-    final normalized = widget.userId.replaceAll('@', '').split(':').first.trim();
+    final normalized = widget.userId
+        .replaceAll('@', '')
+        .split(':')
+        .first
+        .trim();
     return normalized.isEmpty ? widget.userId.trim() : normalized;
   }
 
@@ -172,7 +181,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           : <String, dynamic>{};
       _nameController.text = (_user!['name'] as String?)?.trim() ?? '';
       _nicknameController.text = (prefs['nickname'] as String?)?.trim() ?? '';
-      _aboutController.text = (prefs['about'] as String?)?.trim() ??
+      _aboutController.text =
+          (prefs['about'] as String?)?.trim() ??
           (_user!['bio'] as String?)?.trim() ??
           '';
       _locationController.text = (_user!['location'] as String?)?.trim() ?? '';
@@ -217,7 +227,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } catch (e) {
         if (!mounted) return;
         final raw = e.toString().toLowerCase();
-        final denied = raw.contains('permission') ||
+        final denied =
+            raw.contains('permission') ||
             raw.contains('denied') ||
             raw.contains('access') ||
             raw.contains('operation not permitted');
@@ -250,7 +261,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ...?_user,
           'avatar': uploaded['avatarUrl'] ?? _user?['avatar'],
           'avatars': uploaded['avatars'] ?? _user?['avatars'],
-          'presenceStatus': uploaded['presenceStatus'] ?? _user?['presenceStatus'],
+          'presenceStatus':
+              uploaded['presenceStatus'] ?? _user?['presenceStatus'],
           'lastSeenAt': uploaded['lastSeenAt'] ?? _user?['lastSeenAt'],
           'prefs': {
             if (_user?['prefs'] is Map)
@@ -265,7 +277,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       final raw = e.toString().toLowerCase();
-      final denied = raw.contains('permission') ||
+      final denied =
+          raw.contains('permission') ||
           raw.contains('denied') ||
           raw.contains('access') ||
           raw.contains('operation not permitted');
@@ -305,8 +318,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _user = {
           ...?_user,
           'name': displayName.isEmpty ? (_user?['name'] ?? '') : displayName,
-          'username':
-              username.isEmpty ? (_user?['username'] ?? '') : username,
+          'username': username.isEmpty ? (_user?['username'] ?? '') : username,
           'bio': bio,
           'presenceStatus': _user?['presenceStatus'],
           'lastSeenAt': _user?['lastSeenAt'],
@@ -360,7 +372,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final bio = (_user!['bio'] as String?)?.trim() ?? '';
     final location = (_user!['location'] as String?)?.trim() ?? '';
     final birthday = (_user!['birthday'] as String?)?.trim() ?? '';
-    return name.isNotEmpty || bio.isNotEmpty || location.isNotEmpty || birthday.isNotEmpty;
+    return name.isNotEmpty ||
+        bio.isNotEmpty ||
+        location.isNotEmpty ||
+        birthday.isNotEmpty;
   }
 
   String _emptyProfileHint(AppLocalizations l10n) {
@@ -424,8 +439,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (status == 'recently') {
       return l10n.statusLastSeenRecently;
     }
-    if ((status == 'was_online' || status == 'offline') &&
-        lastSeenAt != null) {
+    if ((status == 'was_online' || status == 'offline') && lastSeenAt != null) {
       return _relativeTime(lastSeenAt, l10n);
     }
     if (status == 'long_ago') {
@@ -492,16 +506,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         : LayoutBuilder(
             builder: (context, constraints) {
               final isWide = constraints.maxWidth >= UITokens.desktopBreakpoint;
-              final isTablet = constraints.maxWidth >= UITokens.tabletBreakpoint;
+              final isTablet =
+                  constraints.maxWidth >= UITokens.tabletBreakpoint;
               final horizontalPadding = constraints.maxWidth >= 1400
                   ? 40.0
                   : isWide
-                      ? 28.0
-                      : isTablet
-                          ? 20.0
-                          : 14.0;
-              final heroPanelWidth =
-                  (constraints.maxWidth * 0.34).clamp(320.0, 420.0);
+                  ? 28.0
+                  : isTablet
+                  ? 20.0
+                  : 14.0;
+              final heroPanelWidth = (constraints.maxWidth * 0.34).clamp(
+                320.0,
+                420.0,
+              );
               final heroPanel = ValueListenableBuilder<double>(
                 valueListenable: _avatarStretch,
                 builder: (context, stretch, _) => _buildHeroPanel(
@@ -526,7 +543,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               return Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1280),
+                  constraints: const BoxConstraints(
+                    maxWidth: UITokens.contentMaxWidth,
+                  ),
                   child: NotificationListener<ScrollNotification>(
                     onNotification: (notification) {
                       if (notification.metrics.axis != Axis.vertical) {
@@ -538,7 +557,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               notification.metrics.minScrollExtent &&
                           notification.overscroll < 0) {
                         _updateAvatarStretch(
-                          _avatarStretch.value + (-notification.overscroll * 0.6),
+                          _avatarStretch.value +
+                              (-notification.overscroll * 0.6),
                         );
                       } else if (notification is ScrollUpdateNotification &&
                           notification.metrics.pixels >
@@ -590,17 +610,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                               ],
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: UITokens.spaceMd),
                           ],
                           if (isWide)
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SizedBox(width: heroPanelWidth, child: heroPanel),
-                                const SizedBox(width: 24),
+                                SizedBox(
+                                  width: heroPanelWidth,
+                                  child: heroPanel,
+                                ),
+                                const SizedBox(width: UITokens.spaceXLg),
                                 Expanded(
                                   child: ConstrainedBox(
-                                    constraints: const BoxConstraints(maxWidth: 760),
+                                    constraints: const BoxConstraints(
+                                      maxWidth:
+                                          UITokens.readableContentMaxWidth,
+                                    ),
                                     child: detailsPanel,
                                   ),
                                 ),
@@ -611,7 +637,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 heroPanel,
-                                const SizedBox(height: 16),
+                                const SizedBox(height: UITokens.spaceMd),
                                 detailsPanel,
                               ],
                             ),
@@ -636,7 +662,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           if (_isMe)
             IconButton(
-              icon: Icon(widget.startInEdit ? Icons.check_rounded : Icons.edit_rounded),
+              icon: Icon(
+                widget.startInEdit ? Icons.check_rounded : Icons.edit_rounded,
+              ),
               onPressed: widget.startInEdit ? _saveProfile : _openEditScreen,
               tooltip: widget.startInEdit ? l10n.saveTooltip : l10n.editTooltip,
             ),
@@ -690,7 +718,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     AnimatedContainer(
-                      duration: const Duration(milliseconds: 120),
+                      duration: UITokens.durationXS,
                       curve: Curves.easeOut,
                       width: avatarSize,
                       height: avatarSize,
@@ -712,9 +740,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(UITokens.spaceXS),
                       child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
+                        duration: UITokens.durationSm,
                         child: UserAvatar(
                           key: ValueKey(avatar ?? 'noavatar_${widget.userId}'),
                           avatarUrl: avatar,
@@ -731,15 +759,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onPressed: _pickAvatar,
                           style: FilledButton.styleFrom(
                             minimumSize: const Size(0, 0),
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(UITokens.spaceSmMd),
                             shape: const CircleBorder(),
                           ),
-                          child: const Icon(Icons.camera_alt_outlined, size: 18),
+                          child: const Icon(
+                            Icons.camera_alt_outlined,
+                            size: 18,
+                          ),
                         ),
                       ),
                   ],
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: UITokens.spaceMd),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -752,7 +783,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: UITokens.spaceXSm),
                       Text(
                         '@$username',
                         maxLines: 1,
@@ -762,18 +793,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       if (presenceLabel != null) ...[
-                        const SizedBox(height: 10),
+                        const SizedBox(height: UITokens.spaceSmMd),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: UITokens.spaceSmMd,
+                            vertical: UITokens.spaceXSm,
+                          ),
                           decoration: BoxDecoration(
-                            color: _presenceColor(context).withValues(alpha: 0.10),
-                            borderRadius: BorderRadius.circular(999),
+                            color: _presenceColor(
+                              context,
+                            ).withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(
+                              UITokens.cornerPill,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.circle, size: 8, color: _presenceColor(context)),
-                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.circle,
+                                size: 8,
+                                color: _presenceColor(context),
+                              ),
+                              const SizedBox(width: UITokens.spaceSm),
                               Flexible(
                                 child: Text(
                                   presenceLabel,
@@ -792,7 +834,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: UITokens.spaceMdSm),
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -802,7 +844,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.alternate_email,
                   label: '@$username',
                 ),
-                if (_user?['email'] is String && (_user!['email'] as String).isNotEmpty)
+                if (_user?['email'] is String &&
+                    (_user!['email'] as String).isNotEmpty)
                   _buildMetaChip(
                     context,
                     icon: Icons.alternate_email,
@@ -811,7 +854,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             if (!_isMe) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: UITokens.spaceMd),
               LayoutBuilder(
                 builder: (context, constraints) {
                   final compactButtons = constraints.maxWidth < 500;
@@ -819,7 +862,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     return Column(
                       children: [
                         _buildActionButton(
-                          icon: _actionLoading ? null : Icons.chat_bubble_outline,
+                          icon: _actionLoading
+                              ? null
+                              : Icons.chat_bubble_outline,
                           label: l10n.writeMessageButton,
                           loading: _actionLoading,
                           fullWidth: true,
@@ -827,10 +872,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ? null
                               : () async {
                                   setState(() => _actionLoading = true);
-                                  final messenger = ScaffoldMessenger.of(context);
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
                                   try {
                                     final cs = createChatBackend();
-                                    final m = await cs.getOrCreateDirectChat(widget.userId);
+                                    final m = await cs.getOrCreateDirectChat(
+                                      widget.userId,
+                                    );
                                     final chat = Chat.fromMap(m);
                                     if (!mounted) return;
                                     await context.push(
@@ -840,7 +889,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   } catch (e) {
                                     messenger.showSnackBar(
                                       SnackBar(
-                                        content: Text(l10n.createChatError(e.toString())),
+                                        content: Text(
+                                          l10n.createChatError(e.toString()),
+                                        ),
                                       ),
                                     );
                                   } finally {
@@ -850,7 +901,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   }
                                 },
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: UITokens.spaceSmMd),
                         _buildActionButton(
                           icon: Icons.call_outlined,
                           label: l10n.callButton,
@@ -878,7 +929,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       Expanded(
                         child: _buildActionButton(
-                          icon: _actionLoading ? null : Icons.chat_bubble_outline,
+                          icon: _actionLoading
+                              ? null
+                              : Icons.chat_bubble_outline,
                           label: l10n.writeMessageButton,
                           loading: _actionLoading,
                           fullWidth: true,
@@ -886,10 +939,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ? null
                               : () async {
                                   setState(() => _actionLoading = true);
-                                  final messenger = ScaffoldMessenger.of(context);
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
                                   try {
                                     final cs = createChatBackend();
-                                    final m = await cs.getOrCreateDirectChat(widget.userId);
+                                    final m = await cs.getOrCreateDirectChat(
+                                      widget.userId,
+                                    );
                                     final chat = Chat.fromMap(m);
                                     if (!mounted) return;
                                     await context.push(
@@ -899,7 +956,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   } catch (e) {
                                     messenger.showSnackBar(
                                       SnackBar(
-                                        content: Text(l10n.createChatError(e.toString())),
+                                        content: Text(
+                                          l10n.createChatError(e.toString()),
+                                        ),
                                       ),
                                     );
                                   } finally {
@@ -910,7 +969,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 },
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: UITokens.spaceSmMd),
                       Expanded(
                         child: _buildActionButton(
                           icon: Icons.call_outlined,
@@ -958,7 +1017,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(UITokens.cornerLg),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(UITokens.spaceLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -968,23 +1027,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: UITokens.spaceXSm),
             Text(
-              widget.startInEdit ? l10n.profileSubtitle : l10n.peopleViewProfileAction,
+              widget.startInEdit
+                  ? l10n.profileSubtitle
+                  : l10n.peopleViewProfileAction,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: UITokens.spaceLg),
             if (!widget.startInEdit && !_hasReadableProfileData()) ...[
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(UITokens.spaceMdSm),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(16),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
+                  borderRadius: BorderRadius.circular(UITokens.cornerLg),
                   border: Border.all(
-                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                    color: theme.colorScheme.outlineVariant.withValues(
+                      alpha: 0.4,
+                    ),
                   ),
                 ),
                 child: Row(
@@ -994,7 +1059,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Icons.info_outline_rounded,
                       color: theme.colorScheme.primary,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: UITokens.space),
                     Expanded(
                       child: Text(
                         _emptyProfileHint(l10n),
@@ -1007,32 +1072,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: UITokens.spaceMd),
             ],
             if (widget.startInEdit)
               Column(
                 children: [
-                  _buildEditableField(l10n.nameField, _nameController, Icons.person),
-                  const SizedBox(height: 12),
+                  _buildEditableField(
+                    l10n.nameField,
+                    _nameController,
+                    Icons.person,
+                  ),
+                  const SizedBox(height: UITokens.space),
                   _buildEditableField(
                     l10n.nicknameField,
                     _nicknameController,
                     Icons.alternate_email,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UITokens.space),
                   _buildEditableField(
                     l10n.aboutField,
                     _aboutController,
                     Icons.info_outline,
                     maxLines: 4,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UITokens.space),
                   _buildEditableField(
                     l10n.locationField,
                     _locationController,
                     Icons.location_on_outlined,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: UITokens.space),
                   _buildEditableField(
                     l10n.birthdayField,
                     _birthdayController,
@@ -1051,16 +1120,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildInfoList(List<({String label, String? value})> infoTiles) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withValues(alpha: 0.35),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(UITokens.cornerSm),
         border: Border.all(
-          color: Theme.of(context)
-              .colorScheme
-              .outlineVariant
-              .withValues(alpha: 0.35),
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.35),
         ),
       ),
       child: Column(
@@ -1070,10 +1137,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (i != infoTiles.length - 1)
               Divider(
                 height: 1,
-                color: Theme.of(context)
-                    .colorScheme
-                    .outlineVariant
-                    .withValues(alpha: 0.4),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: 0.4),
               ),
           ],
         ],
@@ -1086,7 +1152,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final normalizedValue = value?.trim() ?? '';
     final isEmpty = normalizedValue.isEmpty;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.spaceMdSm,
+        vertical: UITokens.space,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1099,7 +1168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: UITokens.space),
           Expanded(
             flex: 6,
             child: Text(
@@ -1138,10 +1207,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final phone = (_user!['phone'] as String?) ?? '';
       final serverShowEmail = prefs['showEmail'] == true;
       final serverShowPhone = prefs['showPhone'] == true;
-      final shouldShowEmail =
-          _isMe ? SettingsService.showEmailNotifier.value : serverShowEmail;
-      final shouldShowPhone =
-          _isMe ? SettingsService.showPhoneNotifier.value : serverShowPhone;
+      final shouldShowEmail = _isMe
+          ? SettingsService.showEmailNotifier.value
+          : serverShowEmail;
+      final shouldShowPhone = _isMe
+          ? SettingsService.showPhoneNotifier.value
+          : serverShowPhone;
 
       if (email.isNotEmpty && shouldShowEmail) {
         values.add((label: l10n.emailLabel, value: email));
@@ -1175,11 +1246,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }) {
     final theme = Theme.of(context);
     return Container(
-      constraints: const BoxConstraints(maxWidth: 320),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      constraints: const BoxConstraints(
+        maxWidth: UITokens.compactSheetMaxWidth,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.space,
+        vertical: UITokens.spaceSmMd,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(UITokens.cornerPill),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
         ),
@@ -1188,7 +1264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
+          const SizedBox(width: UITokens.spaceSm),
           Flexible(
             child: Text(
               label,
@@ -1201,35 +1277,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildActionButton(
-      {required IconData? icon,
-      required String label,
-      VoidCallback? onPressed,
-      bool fullWidth = false,
-      bool loading = false}) {
+  Widget _buildActionButton({
+    required IconData? icon,
+    required String label,
+    VoidCallback? onPressed,
+    bool fullWidth = false,
+    bool loading = false,
+  }) {
     return ElevatedButton.icon(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         minimumSize: Size(fullWidth ? double.infinity : 180, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: UITokens.spaceLg,
+          vertical: UITokens.space,
+        ),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(UITokens.cornerSm)),
+          borderRadius: BorderRadius.circular(UITokens.cornerSm),
+        ),
       ),
       icon: loading
           ? const SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2))
+              child: CircularProgressIndicator(
+                strokeWidth: UITokens.borderThick,
+              ),
+            )
           : icon != null
-              ? Icon(icon)
-              : const SizedBox.shrink(),
+          ? Icon(icon)
+          : const SizedBox.shrink(),
       label: Text(label),
     );
   }
 
   Widget _buildEditableField(
-      String label, TextEditingController controller, IconData icon,
-      {int maxLines = 1}) {
+    String label,
+    TextEditingController controller,
+    IconData icon, {
+    int maxLines = 1,
+  }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
@@ -1243,5 +1330,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
 }

@@ -2552,7 +2552,9 @@ class MemberSummary {
     userId: _parseIntValue(json['UserId'], fieldName: 'MemberSummary.UserId'),
     username: json['Username'] as String,
     role: json['Role'] as String,
-    joinedAt: _parseDateTimeValue(json['JoinedAt']),
+    joinedAt:
+        _parseNullableDateTimeValue(json['JoinedAt']) ??
+        DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
     canSendMessages: json['CanSendMessages'] as bool? ?? true,
     canDeleteOthersMessages: json['CanDeleteOthersMessages'] as bool? ?? false,
     canPinMessages: json['CanPinMessages'] as bool? ?? false,

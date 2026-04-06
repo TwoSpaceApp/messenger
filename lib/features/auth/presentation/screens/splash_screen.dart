@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/constants/app_constants.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -40,7 +41,8 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
       setState(
-        () => _versionLabel = '${AppConstants.appVersion}+${AppConstants.buildNumber}',
+        () => _versionLabel =
+            '${AppConstants.appVersion}+${AppConstants.buildNumber}',
       );
     }
   }
@@ -49,14 +51,19 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final normalizedProgress = (widget.progress ?? 0).clamp(0.0, 1.0);
-    final versionLabel = _versionLabel ?? '${AppConstants.appVersion}+${AppConstants.buildNumber}';
+    final versionLabel =
+        _versionLabel ??
+        '${AppConstants.appVersion}+${AppConstants.buildNumber}';
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: ScreenBackground(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            padding: const EdgeInsets.symmetric(
+              horizontal: UITokens.spaceXLg,
+              vertical: UITokens.spaceXLg,
+            ),
             child: Stack(
               children: [
                 Center(
@@ -67,15 +74,19 @@ class _SplashScreenState extends State<SplashScreen> {
                         tag: 'app_logo',
                         child: AppLogo(),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: UITokens.spaceXL),
                       SizedBox(
                         width: 220,
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(
+                            UITokens.cornerPill,
+                          ),
                           child: LinearProgressIndicator(
                             value: normalizedProgress,
                             minHeight: 8,
-                            backgroundColor: Colors.white.withValues(alpha: 0.08),
+                            backgroundColor: Colors.white.withValues(
+                              alpha: 0.08,
+                            ),
                             valueColor: const AlwaysStoppedAnimation<Color>(
                               Color(0xFF46B3FF),
                             ),
@@ -90,7 +101,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   right: 0,
                   bottom: 0,
                   child: Text(
-                    l10n?.feedbackVersion(versionLabel) ?? 'Version: $versionLabel',
+                    l10n?.feedbackVersion(versionLabel) ??
+                        'Version: $versionLabel',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white38,

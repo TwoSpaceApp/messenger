@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
@@ -34,7 +35,6 @@ class _RoomSettingsSection {
   final IconData icon;
   final _RoomSettingsStatus status;
 }
-
 
 class ChatSettingsScreen extends StatefulWidget {
   const ChatSettingsScreen({
@@ -231,7 +231,10 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
 
       final userInfo = await _svc.getUserInfo(peerUserId);
       return {
-        'name': userInfo['displayName'] ?? userInfo['username'] ?? widget.initialName,
+        'name':
+            userInfo['displayName'] ??
+            userInfo['username'] ??
+            widget.initialName,
         'avatar': userInfo['avatarUrl'] ?? roomMeta['avatar'],
         'userId': userInfo['id']?.toString() ?? peerUserId,
         'presenceStatus': userInfo['presenceStatus']?.toString(),
@@ -264,8 +267,10 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   }
 
   Future<List<AegisRoomMessage>> _loadRoomMessages() {
-    return _roomMessagesFuture ??=
-      _svc.loadMessages(roomId: widget.roomId, limit: 500);
+    return _roomMessagesFuture ??= _svc.loadMessages(
+      roomId: widget.roomId,
+      limit: 500,
+    );
   }
 
   Future<void> _loadMembers() async {
@@ -302,12 +307,17 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     setState(() => _saving = true);
     try {
       final bytes = await File(path).readAsBytes();
-      await _svc.setRoomAvatar(widget.roomId, bytes, fileName: path.split('/').last);
+      await _svc.setRoomAvatar(
+        widget.roomId,
+        bytes,
+        fileName: path.split('/').last,
+      );
       _overviewFuture = _loadOverview();
       if (!mounted) return;
       setState(() {});
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.roomAvatarUpdated)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.roomAvatarUpdated)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -331,8 +341,9 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       _overviewFuture = _loadOverview();
       if (!mounted) return;
       setState(() {});
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.roomSettingsSaved)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.roomSettingsSaved)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -354,8 +365,9 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       }
       await Clipboard.setData(ClipboardData(text: link));
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.textCopied)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.textCopied)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -425,15 +437,16 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     try {
       await _svc.leaveRoom(widget.roomId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.leftRoom)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.leftRoom)));
       Navigator.pop(context);
-      } on AegisFeatureInDevelopmentException {
-        if (!mounted) return;
-        await showFeatureInDevelopmentDialog(
-          context,
-          feature: l10n.leaveAction,
-        );
+    } on AegisFeatureInDevelopmentException {
+      if (!mounted) return;
+      await showFeatureInDevelopmentDialog(
+        context,
+        feature: l10n.leaveAction,
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -489,7 +502,10 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     return raw.split('/').last;
   }
 
-  Future<void> _handleSectionTap(_RoomSettingsSection section, bool isMobile) async {
+  Future<void> _handleSectionTap(
+    _RoomSettingsSection section,
+    bool isMobile,
+  ) async {
     switch (section.key) {
       case 'members':
         await _loadMembers();
@@ -548,7 +564,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                       name: data['name']?.toString() ?? widget.initialName,
                       radius: 28,
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: UITokens.spaceMd),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -557,10 +573,11 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                             data['name']?.toString() ?? widget.initialName,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: UITokens.spaceXS),
                           Text(
                             presence ?? _chatTypeLabel(l10n),
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                           ),
@@ -570,7 +587,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: UITokens.space),
               GlassCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -579,7 +596,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                       l10n.generalLabel,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: UITokens.space),
                     _InfoRow(
                       label: l10n.roomVisibilityLabel,
                       value: _chatTypeLabel(l10n),
@@ -587,18 +604,22 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                     if (_isDirectChat)
                       _InfoRow(
                         label: l10n.contactIdLabel,
-                        value: data['userId']?.toString() ?? (_directPeerUserId ?? widget.roomId),
+                        value:
+                            data['userId']?.toString() ??
+                            (_directPeerUserId ?? widget.roomId),
                       ),
                     if (!_isDirectChat)
                       _InfoRow(
                         label: l10n.membersLabel,
-                        value: l10n.membersCount((data['memberCount'] as int?) ?? 0),
+                        value: l10n.membersCount(
+                          (data['memberCount'] as int?) ?? 0,
+                        ),
                       ),
                   ],
                 ),
               ),
               if (_supportsLinks) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: UITokens.space),
                 GlassCard(
                   child: ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -630,10 +651,13 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
 
     return ListView.separated(
       itemCount: _members.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => const SizedBox(height: UITokens.spaceSm),
       itemBuilder: (context, index) {
         final member = _members[index];
-        final title = member['displayName']?.toString() ?? member['userId']?.toString() ?? '';
+        final title =
+            member['displayName']?.toString() ??
+            member['userId']?.toString() ??
+            '';
         return GlassCard(
           child: ListTile(
             contentPadding: EdgeInsets.zero,
@@ -683,20 +707,24 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
           return AppEmptyState(
             title: mediaOnly ? l10n.mediaLabel : l10n.filesLabel,
             message: mediaOnly ? l10n.noSharedMedia : l10n.noSharedFiles,
-            icon: mediaOnly ? Icons.perm_media_outlined : Icons.insert_drive_file_outlined,
+            icon: mediaOnly
+                ? Icons.perm_media_outlined
+                : Icons.insert_drive_file_outlined,
           );
         }
 
         return ListView.separated(
           itemCount: messages.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          separatorBuilder: (_, __) => const SizedBox(height: UITokens.spaceSm),
           itemBuilder: (context, index) {
             final message = messages[index];
             return GlassCard(
               child: ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(
-                  mediaOnly ? Icons.perm_media_outlined : Icons.insert_drive_file_outlined,
+                  mediaOnly
+                      ? Icons.perm_media_outlined
+                      : Icons.insert_drive_file_outlined,
                 ),
                 title: Text(
                   _messageTitle(message, l10n),
@@ -728,21 +756,23 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                   l10n.generalLabel,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: UITokens.space),
                 TextField(
                   controller: _nameController,
                   decoration: InputDecoration(labelText: l10n.roomNameLabel),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: UITokens.space),
                 ElevatedButton.icon(
                   onPressed: _saving ? null : _pickAndUploadAvatar,
                   icon: const Icon(Icons.image_outlined),
                   label: Text(l10n.uploadAvatarButton),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: UITokens.space),
                 DropdownButtonFormField<int>(
                   initialValue: _joinRule,
-                  decoration: InputDecoration(labelText: l10n.roomJoinRuleLabel),
+                  decoration: InputDecoration(
+                    labelText: l10n.roomJoinRuleLabel,
+                  ),
                   items: [0, 1, 2]
                       .map(
                         (value) => DropdownMenuItem<int>(
@@ -758,12 +788,12 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                           setState(() => _joinRule = value);
                         },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: UITokens.spaceSm),
                 Text(
                   _joinRuleSubtitle(l10n, _joinRule),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: UITokens.space),
                 DropdownButtonFormField<int>(
                   initialValue: _historyVisibility,
                   decoration: InputDecoration(
@@ -784,19 +814,21 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                           setState(() => _historyVisibility = value);
                         },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: UITokens.spaceSm),
                 Text(
                   _historyVisibilitySubtitle(l10n, _historyVisibility),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: UITokens.space),
                 FilledButton(
                   onPressed: _saving ? null : _saveSettings,
                   child: _saving
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: UITokens.borderThick,
+                          ),
                         )
                       : Text(l10n.saveButton),
                 ),
@@ -816,10 +848,13 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                horizontal: UITokens.spaceSmMd,
+                vertical: UITokens.spaceXSm,
+              ),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(UITokens.cornerPill),
               ),
               child: Text(
                 l10n.featureInDevelopmentLabel,
@@ -829,18 +864,18 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: UITokens.spaceMd),
             Text(
               feature,
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UITokens.spaceSm),
             Text(
               l10n.featureInDevelopmentMessage(feature),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
           ],
         ),
@@ -881,163 +916,203 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       appBar: AppBar(title: Text(widget.initialName)),
       body: ScreenBackground(
         child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 900;
-          final leftWidth = isMobile ? constraints.maxWidth : constraints.maxWidth * 0.3;
-          final currentSection = sections[_selectedIndex];
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 900;
+            final leftWidth = isMobile
+                ? constraints.maxWidth
+                : constraints.maxWidth * 0.3;
+            final currentSection = sections[_selectedIndex];
 
-          final navigation = Container(
-            width: isMobile ? null : leftWidth.clamp(220, 360),
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.02),
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: FutureBuilder<Map<String, dynamic>>(
-                    future: _overviewFuture,
-                    builder: (context, snapshot) {
-                      final data = snapshot.data;
-                      final name = data?['name']?.toString() ?? widget.initialName;
-                      final avatar = data?['avatar']?.toString();
-                      return GlassCard(
-                        onTap: _isDirectChat && data != null
-                            ? () => _openDirectProfile(data)
-                            : null,
-                        child: ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: UserAvatar(
-                            avatarUrl: avatar,
-                            name: name,
-                            radius: 22,
-                          ),
-                          title: Text(name),
-                          subtitle: Text(_chatTypeLabel(l10n)),
-                          trailing: !_isDirectChat && !_isGroupRoom
-                              ? IconButton(
-                                  icon: const Icon(Icons.edit_outlined),
-                                  onPressed: _saving ? null : _pickAndUploadAvatar,
-                                )
+            final navigation = Container(
+              width: isMobile ? null : leftWidth.clamp(220, 360),
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withValues(alpha: 0.02),
+              child: Column(
+                children: [
+                  const SizedBox(height: UITokens.space),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: UITokens.space,
+                    ),
+                    child: FutureBuilder<Map<String, dynamic>>(
+                      future: _overviewFuture,
+                      builder: (context, snapshot) {
+                        final data = snapshot.data;
+                        final name =
+                            data?['name']?.toString() ?? widget.initialName;
+                        final avatar = data?['avatar']?.toString();
+                        return GlassCard(
+                          onTap: _isDirectChat && data != null
+                              ? () => _openDirectProfile(data)
                               : null,
-                        ),
-                      );
-                    },
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: UserAvatar(
+                              avatarUrl: avatar,
+                              name: name,
+                              radius: 22,
+                            ),
+                            title: Text(name),
+                            subtitle: Text(_chatTypeLabel(l10n)),
+                            trailing: !_isDirectChat && !_isGroupRoom
+                                ? IconButton(
+                                    icon: const Icon(Icons.edit_outlined),
+                                    onPressed: _saving
+                                        ? null
+                                        : _pickAndUploadAvatar,
+                                  )
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: sections.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 6),
-                    itemBuilder: (context, index) {
-                      final section = sections[index];
-                      final isSelected = _selectedIndex == index;
-                      final isDanger = section.status == _RoomSettingsStatus.destructive;
-                      final isWip = section.status == _RoomSettingsStatus.inDevelopment;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.surfaceContainerHighest
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () => _handleSectionTap(section, isMobile),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: isDanger
-                                        ? Theme.of(context).colorScheme.error
-                                        : isSelected
-                                            ? Theme.of(context).colorScheme.primary
-                                            : Theme.of(context).colorScheme.surface,
-                                    child: Icon(
-                                      section.icon,
-                                      size: 18,
-                                      color: isDanger
-                                          ? Colors.white
+                  const SizedBox(height: UITokens.space),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(UITokens.spaceSm),
+                      itemCount: sections.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: UITokens.spaceXSm),
+                      itemBuilder: (context, index) {
+                        final section = sections[index];
+                        final isSelected = _selectedIndex == index;
+                        final isDanger =
+                            section.status == _RoomSettingsStatus.destructive;
+                        final isWip =
+                            section.status == _RoomSettingsStatus.inDevelopment;
+                        return AnimatedContainer(
+                          duration: UITokens.durationSm,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(
+                              UITokens.corner,
+                            ),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(
+                                UITokens.corner,
+                              ),
+                              onTap: () => _handleSectionTap(section, isMobile),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 10,
+                                ),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: isDanger
+                                          ? Theme.of(context).colorScheme.error
                                           : isSelected
-                                              ? Theme.of(context).colorScheme.onPrimary
-                                              : Theme.of(context).colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      section.title,
-                                      style: TextStyle(
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
+                                          : Theme.of(
+                                              context,
+                                            ).colorScheme.surface,
+                                      child: Icon(
+                                        section.icon,
+                                        size: 18,
                                         color: isDanger
-                                            ? Theme.of(context).colorScheme.error
+                                            ? Colors.white
                                             : isSelected
-                                                ? Theme.of(context).colorScheme.primary
-                                                : null,
-                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimary
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.onSurface,
                                       ),
                                     ),
-                                  ),
-                                  if (isWip)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .secondaryContainer,
-                                        borderRadius: BorderRadius.circular(999),
-                                      ),
+                                    const SizedBox(width: UITokens.space),
+                                    Expanded(
                                       child: Text(
-                                        l10n.featureInDevelopmentLabel,
+                                        section.title,
                                         style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSecondaryContainer,
+                                          color: isDanger
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.error
+                                              : isSelected
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.primary
+                                              : null,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
                                         ),
                                       ),
                                     ),
-                                ],
+                                    if (isWip)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.secondaryContainer,
+                                          borderRadius: BorderRadius.circular(
+                                            UITokens.cornerPill,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          l10n.featureInDevelopmentLabel,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSecondaryContainer,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
+                ],
+              ),
+            );
 
-          if (isMobile) {
-            return navigation;
-          }
+            if (isMobile) {
+              return navigation;
+            }
 
-          return Row(
-            children: [
-              SizedBox(width: leftWidth.clamp(220, 360), child: navigation),
-              const VerticalDivider(width: 12, thickness: 1),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: GlassCard(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
-                      child: _buildSectionContent(currentSection.key),
+            return Row(
+              children: [
+                SizedBox(width: leftWidth.clamp(220, 360), child: navigation),
+                const VerticalDivider(width: 12, thickness: 1),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(UITokens.spaceMd),
+                    child: GlassCard(
+                      child: AnimatedSwitcher(
+                        duration: UITokens.durationMdSm,
+                        child: _buildSectionContent(currentSection.key),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
-      ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -1052,7 +1127,7 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: UITokens.spaceSmMd),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1060,18 +1135,18 @@ class _InfoRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: UITokens.space),
           Expanded(
             child: Text(
               value,
               textAlign: TextAlign.right,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -1079,7 +1154,6 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
-
 
 class _ChatSettingDetailPage extends StatelessWidget {
   const _ChatSettingDetailPage({required this.title, required this.child});
@@ -1094,7 +1168,7 @@ class _ChatSettingDetailPage extends StatelessWidget {
       appBar: AppBar(title: Text(title)),
       body: ScreenBackground(
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(UITokens.space),
           child: GlassCard(child: child),
         ),
       ),

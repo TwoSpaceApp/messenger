@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_underscores
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
@@ -67,7 +68,9 @@ class _CallsScreenState extends State<CallsScreen> {
             child: SafeArea(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 860),
+                  constraints: const BoxConstraints(
+                    maxWidth: UITokens.panelContentMaxWidth,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -87,8 +90,11 @@ class _CallsScreenState extends State<CallsScreen> {
                             ),
                             IconButton(
                               onPressed: _openStartCall,
-                              icon: Icon(Icons.add_ic_call_outlined,
-                                  color: theme.colorScheme.onSurface, size: 22),
+                              icon: Icon(
+                                Icons.add_ic_call_outlined,
+                                color: theme.colorScheme.onSurface,
+                                size: 22,
+                              ),
                               tooltip: l10n.callsStartCallAction,
                               visualDensity: VisualDensity.compact,
                             ),
@@ -126,7 +132,9 @@ class _CallsScreenState extends State<CallsScreen> {
                       // ── Top contacts strip ──
                       if (_controller.topContacts.isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.only(top: 10),
+                          padding: const EdgeInsets.only(
+                            top: UITokens.spaceSmMd,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -140,7 +148,7 @@ class _CallsScreenState extends State<CallsScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: UITokens.spaceSm),
                               SizedBox(
                                 height: 88,
                                 child: ListView.separated(
@@ -148,7 +156,7 @@ class _CallsScreenState extends State<CallsScreen> {
                                   scrollDirection: Axis.horizontal,
                                   itemCount: _controller.topContacts.length,
                                   separatorBuilder: (_, __) =>
-                                      const SizedBox(width: 10),
+                                      const SizedBox(width: UITokens.spaceSmMd),
                                   itemBuilder: (_, i) {
                                     final p = _controller.topContacts[i];
                                     return _TopContactChip(
@@ -161,7 +169,7 @@ class _CallsScreenState extends State<CallsScreen> {
                             ],
                           ),
                         ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UITokens.spaceSm),
                       // ── History list ──
                       Expanded(
                         child: RefreshIndicator(
@@ -183,14 +191,15 @@ class _CallsScreenState extends State<CallsScreen> {
   Widget _chip(CallsFilter filter, String label) {
     final selected = _controller.filter == filter;
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: UITokens.spaceSm),
       child: FilterChip(
         label: Text(label),
         selected: selected,
         onSelected: (_) => _controller.setFilter(filter),
         backgroundColor: AppColors.chipBackground(context),
-        selectedColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
+        selectedColor: Theme.of(
+          context,
+        ).colorScheme.primary.withValues(alpha: 0.35),
         labelStyle: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
           fontSize: 13,
@@ -210,22 +219,28 @@ class _CallsScreenState extends State<CallsScreen> {
     if (_controller.loading) return const CallsListSkeleton();
 
     if (sections.isEmpty) {
-      return ListView(children: [
-        AppEmptyState(
-          title: l10n.callsEmptyTitle,
-          message: _controller.query.trim().isNotEmpty
-              ? l10n.callsEmptySearchMessage
-              : l10n.callsEmptyMessage,
-          icon: Icons.call_outlined,
-          actionLabel: l10n.callsStartCallAction,
-          onAction: _openStartCall,
-        ),
-      ]);
+      return ListView(
+        children: [
+          AppEmptyState(
+            title: l10n.callsEmptyTitle,
+            message: _controller.query.trim().isNotEmpty
+                ? l10n.callsEmptySearchMessage
+                : l10n.callsEmptyMessage,
+            icon: Icons.call_outlined,
+            actionLabel: l10n.callsStartCallAction,
+            onAction: _openStartCall,
+          ),
+        ],
+      );
     }
 
     return ListView.builder(
       cacheExtent: 800,
-      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+      padding: const EdgeInsets.only(
+        left: UITokens.spaceMd,
+        right: UITokens.spaceMd,
+        bottom: UITokens.bottomSheetClearance,
+      ),
       itemCount: sections.length,
       itemBuilder: (context, index) {
         final section = sections[index];
@@ -234,25 +249,28 @@ class _CallsScreenState extends State<CallsScreen> {
           children: [
             // Section header
             Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 6),
+              padding: const EdgeInsets.only(
+                top: UITokens.spaceSm,
+                bottom: UITokens.spaceXSm,
+              ),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       section.title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: AppColors.subtitleText(context),
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.3,
-                          ),
+                        color: AppColors.subtitleText(context),
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                      ),
                     ),
                   ),
                   Text(
                     '${section.items.length}',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.hintText(context),
-                          fontWeight: FontWeight.w700,
-                        ),
+                      color: AppColors.hintText(context),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
@@ -266,7 +284,7 @@ class _CallsScreenState extends State<CallsScreen> {
 
   Widget _callTile(CallThreadSummary thread, AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: UITokens.spaceXSm),
       child: Dismissible(
         key: ValueKey(thread.latest.id),
         direction: DismissDirection.endToStart,
@@ -276,10 +294,10 @@ class _CallsScreenState extends State<CallsScreen> {
         },
         background: Container(
           alignment: Alignment.centerRight,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: UITokens.spaceLg),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.error.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(UITokens.cornerLg),
           ),
           child: Icon(
             Icons.delete_outline_rounded,
@@ -288,11 +306,16 @@ class _CallsScreenState extends State<CallsScreen> {
           ),
         ),
         child: GlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(
+            horizontal: UITokens.spaceSm,
+            vertical: UITokens.spaceXSm,
+          ),
           onTap: () => _showThreadSheet(thread),
           child: ListTile(
             minVerticalPadding: 0,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: UITokens.spaceSm,
+            ),
             leading: PersonAvatar(
               name: thread.person.displayName,
               avatarUrl: thread.person.avatarUrl,
@@ -303,16 +326,20 @@ class _CallsScreenState extends State<CallsScreen> {
             title: Text(
               thread.person.displayName,
               style: TextStyle(
-                color: thread.missedCount > 0 ? AppColors.danger(context) : Theme.of(context).colorScheme.onSurface,
+                color: thread.missedCount > 0
+                    ? AppColors.danger(context)
+                    : Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
             subtitle: Padding(
-              padding: const EdgeInsets.only(top: 2),
+              padding: const EdgeInsets.only(top: UITokens.space2XS),
               child: Text(
                 _threadSubtitle(thread, l10n),
                 style: TextStyle(
-                    color: AppColors.subtitleText(context), fontSize: 13),
+                  color: AppColors.subtitleText(context),
+                  fontSize: 13,
+                ),
               ),
             ),
             trailing: SizedBox(
@@ -324,25 +351,32 @@ class _CallsScreenState extends State<CallsScreen> {
                   Text(
                     _formatTime(thread.latest.startedAt, l10n),
                     style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.hintText(context)),
+                      fontSize: 12,
+                      color: AppColors.hintText(context),
+                    ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: UITokens.spaceXS),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       GestureDetector(
                         onTap: () => _startCall(thread.person, false),
-                        child: Icon(Icons.call_outlined,
-                            size: 18,
-                    color: Colors.green.withValues(alpha: 0.92)),
+                        child: Icon(
+                          Icons.call_outlined,
+                          size: 18,
+                          color: Colors.green.withValues(alpha: 0.92),
+                        ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: UITokens.space),
                       GestureDetector(
                         onTap: () => _startCall(thread.person, true),
-                        child: Icon(Icons.videocam_outlined,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.92)),
+                        child: Icon(
+                          Icons.videocam_outlined,
+                          size: 18,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.92),
+                        ),
                       ),
                     ],
                   ),
@@ -358,8 +392,9 @@ class _CallsScreenState extends State<CallsScreen> {
   // ──────────────────────── Helpers ──────────────────────────
 
   String _threadSubtitle(CallThreadSummary thread, AppLocalizations l10n) {
-    final type =
-        thread.latest.isVideo ? l10n.videoCallLabel : l10n.voiceCallLabel;
+    final type = thread.latest.isVideo
+        ? l10n.videoCallLabel
+        : l10n.voiceCallLabel;
     final count = thread.totalCount > 1
         ? l10n.callsThreadCount(thread.totalCount)
         : _directionLabel(thread.latest.direction, l10n);
@@ -372,7 +407,10 @@ class _CallsScreenState extends State<CallsScreen> {
     return '$count • $type$duration';
   }
 
-  String _directionLabel(CallHistoryDirection direction, AppLocalizations l10n) {
+  String _directionLabel(
+    CallHistoryDirection direction,
+    AppLocalizations l10n,
+  ) {
     return direction == CallHistoryDirection.incoming
         ? l10n.incomingCall
         : l10n.outgoingCall;
@@ -382,13 +420,15 @@ class _CallsScreenState extends State<CallsScreen> {
     final h = duration.inHours;
     final m = duration.inMinutes.remainder(60);
     final s = duration.inSeconds.remainder(60);
-    if (h > 0) return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+    if (h > 0)
+      return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
     return '${duration.inMinutes}:${s.toString().padLeft(2, '0')}';
   }
 
   String _formatTime(DateTime date, AppLocalizations l10n) {
     final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 60) return l10n.minutesAgo(diff.inMinutes.clamp(1, 59));
+    if (diff.inMinutes < 60)
+      return l10n.minutesAgo(diff.inMinutes.clamp(1, 59));
     if (diff.inHours < 24) return l10n.hoursAgo(diff.inHours);
     if (diff.inDays == 1) return l10n.yesterdayLabel;
     return '${date.day}.${date.month.toString().padLeft(2, '0')}';
@@ -417,7 +457,8 @@ class _CallsScreenState extends State<CallsScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CallScreen(
-          room: 'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
+          room:
+              'call_${person.stableRemoteId}_${DateTime.now().millisecondsSinceEpoch}',
           person: person,
           displayName: person.displayName,
           avatarUrl: person.avatarUrl,
@@ -436,19 +477,23 @@ class _CallsScreenState extends State<CallsScreen> {
       builder: (ctx) => Container(
         decoration: BoxDecoration(
           color: Theme.of(ctx).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(UITokens.corner2Lg),
+          ),
         ),
         child: SafeArea(
           top: false,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 8),
+              const SizedBox(height: UITokens.spaceSm),
               Container(
-                width: 40,
-                height: 4,
+                width: UITokens.dragHandleWidth,
+                height: UITokens.dragHandleHeight,
                 decoration: BoxDecoration(
-                    color: AppColors.divider(context), borderRadius: BorderRadius.circular(99)),
+                  color: AppColors.divider(context),
+                  borderRadius: BorderRadius.circular(UITokens.cornerPill),
+                ),
               ),
               ListTile(
                 leading: PersonAvatar(
@@ -492,7 +537,7 @@ class _CallsScreenState extends State<CallsScreen> {
                   await _controller.deleteEntry(thread.latest.id);
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: UITokens.space),
             ],
           ),
         ),
@@ -512,9 +557,12 @@ class _TopContactChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(UITokens.cornerLg),
       child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: UITokens.space,
+          vertical: UITokens.spaceSmMd,
+        ),
         child: Column(
           children: [
             PersonAvatar(
@@ -524,7 +572,7 @@ class _TopContactChip extends StatelessWidget {
               radius: 20,
               showOnline: person.isOnline,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: UITokens.spaceXSm),
             SizedBox(
               width: 64,
               child: Text(
@@ -533,9 +581,9 @@ class _TopContactChip extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],

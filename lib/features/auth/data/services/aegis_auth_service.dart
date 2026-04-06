@@ -308,10 +308,18 @@ class AegisAuthService {
       if (_token == null) return false;
 
       await connect();
-      await _client.loginWithToken(_token!);
-      _token = _client.sessionToken ?? _token;
-      _username = _client.username;
-      _userId = _client.userId;
+      if (_looksLikeLegacyCredentialPair(_token!)) {
+        final separatorIndex = _token!.indexOf(':');
+        final identifier = _token!.substring(0, separatorIndex);
+        final password = _token!.substring(separatorIndex + 1);
+        await _client.login(identifier, password);
+        _token = _client.sessionToken ?? _token;
+      } else {
+        await _client.loginWithToken(_token!);
+        _token = _client.sessionToken ?? _token;
+      }
+      _username = _client.username ?? _username;
+      _userId = _client.userId ?? _userId;
       await _saveSession();
       _ensureKeepAlive();
       _sessionRestoredController.add(null);
@@ -329,6 +337,17 @@ class AegisAuthService {
       }
       return false;
     }
+  }
+
+  bool _looksLikeLegacyCredentialPair(String value) {
+    final separatorIndex = value.indexOf(':');
+    if (separatorIndex <= 0 || separatorIndex >= value.length - 1) {
+      return false;
+    }
+
+    // Opaque session tokens returned by the server are hex-like and do not
+    // contain separators. Historically the app stored identifier:password.
+    return true;
   }
 
   bool _isAuthRejectionError(Object error) {

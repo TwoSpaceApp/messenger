@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -23,7 +24,9 @@ import 'package:two_space_app/features/settings/presentation/screens/dev_screen_
 class FeatureFlags {
   static final ValueNotifier<bool> enableNewChatUI = ValueNotifier(false);
   static final ValueNotifier<bool> forceVideoCompression = ValueNotifier(true);
-  static final ValueNotifier<bool> enableAggressiveCaching = ValueNotifier(false);
+  static final ValueNotifier<bool> enableAggressiveCaching = ValueNotifier(
+    false,
+  );
   static final ValueNotifier<bool> ignoreServerOffline = ValueNotifier(false);
 }
 
@@ -60,7 +63,10 @@ class _DevMenuScreenState extends State<DevMenuScreen>
           controller: _tabController,
           isScrollable: true,
           tabs: const [
-            Tab(icon: Icon(Icons.dashboard_customize_outlined), text: 'Actions'),
+            Tab(
+              icon: Icon(Icons.dashboard_customize_outlined),
+              text: 'Actions',
+            ),
             Tab(icon: Icon(Icons.brush_outlined), text: 'UI Inspect'),
             Tab(icon: Icon(Icons.article_outlined), text: 'Logs'),
             Tab(icon: Icon(Icons.network_check), text: 'Network'),
@@ -104,7 +110,9 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
       builder: (context, snapshot) {
         final sourceLogs = snapshot.data ?? const <String>[];
         final logs = _showOnlyErrors
-            ? sourceLogs.where((line) => line.contains(LogLevel.error.emoji)).toList()
+            ? sourceLogs
+                  .where((line) => line.contains(LogLevel.error.emoji))
+                  .toList()
             : sourceLogs;
 
         if (logs.isEmpty) {
@@ -123,7 +131,12 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+              padding: const EdgeInsets.fromLTRB(
+                UITokens.space,
+                UITokens.space,
+                UITokens.space,
+                UITokens.spaceSm,
+              ),
               child: Row(
                 children: [
                   FilterChip(
@@ -133,7 +146,8 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
                           : 'Все записи (${sourceLogs.length})',
                     ),
                     selected: _showOnlyErrors,
-                    onSelected: (value) => setState(() => _showOnlyErrors = value),
+                    onSelected: (value) =>
+                        setState(() => _showOnlyErrors = value),
                   ),
                   const Spacer(),
                   TextButton.icon(
@@ -146,20 +160,26 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
             ),
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                padding: const EdgeInsets.fromLTRB(
+                  UITokens.space,
+                  0,
+                  UITokens.space,
+                  UITokens.space,
+                ),
                 itemCount: logs.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: UITokens.spaceSm),
                 itemBuilder: (context, index) {
                   final line = logs[index];
                   final color = _appLogColor(line);
                   return Container(
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(UITokens.cornerMd),
                       border: Border.all(color: color.withValues(alpha: 0.18)),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(UITokens.space),
                       child: SelectableText(
                         line,
                         style: TextStyle(
@@ -202,14 +222,14 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
   String? _selectedGroup;
 
   List<DevScreenEntry> get _allScreens => [
-        DevScreenEntry(
-          title: 'DevMenuScreen',
-          source: 'settings/dev_menu_screen.dart',
-          group: 'Settings',
-          builder: (_) => const DevMenuScreen(),
-        ),
-        ...DevScreenCatalog.entries,
-      ];
+    DevScreenEntry(
+      title: 'DevMenuScreen',
+      source: 'settings/dev_menu_screen.dart',
+      group: 'Settings',
+      builder: (_) => const DevMenuScreen(),
+    ),
+    ...DevScreenCatalog.entries,
+  ];
 
   List<String> get _groups =>
       _allScreens.map((entry) => entry.group).toSet().toList()..sort();
@@ -246,7 +266,7 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
     final query = _searchController.text.trim();
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(UITokens.spaceMd),
       children: [
         _buildSectionTitle(context, 'Screen Explorer'),
         TextField(
@@ -266,14 +286,14 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
                   ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: UITokens.space),
         SizedBox(
           height: 40,
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
               Padding(
-                padding: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.only(right: UITokens.spaceSm),
                 child: ChoiceChip(
                   label: Text('Все (${_allScreens.length})'),
                   selected: _selectedGroup == null,
@@ -282,9 +302,11 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
               ),
               ..._groups.map(
                 (group) {
-                  final count = _allScreens.where((e) => e.group == group).length;
+                  final count = _allScreens
+                      .where((e) => e.group == group)
+                      .length;
                   return Padding(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.only(right: UITokens.spaceSm),
                     child: ChoiceChip(
                       label: Text('$group ($count)'),
                       selected: _selectedGroup == group,
@@ -296,28 +318,35 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: UITokens.space),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
+          duration: UITokens.durationMdSm,
           child: groupedScreens.isEmpty
               ? const AppEmptyState(
                   key: ValueKey('empty-dev-screens'),
                   title: 'Экраны не найдены',
-                  message: 'Измените поисковый запрос или снимите фильтр группы.',
+                  message:
+                      'Измените поисковый запрос или снимите фильтр группы.',
                   icon: Icons.travel_explore_rounded,
                 )
               : Container(
                   key: ValueKey('${query}_${_selectedGroup ?? 'all'}'),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(UITokens.cornerXLg),
                     border: Border.all(
-                      color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+                      color: Theme.of(
+                        context,
+                      ).dividerColor.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Column(
                     children: [
                       for (final entry in groupedScreens.entries) ...[
-                        _buildGroupHeader(context, entry.key, entry.value.length),
+                        _buildGroupHeader(
+                          context,
+                          entry.key,
+                          entry.value.length,
+                        ),
                         for (var i = 0; i < entry.value.length; i++) ...[
                           _buildScreenTile(context, entry.value[i], query),
                           if (i != entry.value.length - 1)
@@ -328,7 +357,7 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
                   ),
                 ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: UITokens.spaceXLg),
         _buildSectionTitle(context, 'Utilities'),
         Wrap(
           spacing: 10,
@@ -380,7 +409,12 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
   Widget _buildGroupHeader(BuildContext context, String group, int count) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        UITokens.spaceMdSm,
+        UITokens.spaceMd,
+        UITokens.spaceSmMd,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
       ),
@@ -389,16 +423,21 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
           Text(
             group,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+              fontWeight: FontWeight.w800,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: UITokens.spaceSm),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const EdgeInsets.symmetric(
+              horizontal: UITokens.spaceSm,
+              vertical: UITokens.space2XS,
+            ),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(UITokens.cornerPill),
             ),
             child: Text(
               '$count',
@@ -420,10 +459,14 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
     String query,
   ) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: UITokens.spaceMd,
+        vertical: UITokens.spaceXS,
+      ),
       leading: CircleAvatar(
-        backgroundColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+        backgroundColor: Theme.of(
+          context,
+        ).colorScheme.primary.withValues(alpha: 0.12),
         child: Icon(
           Icons.web_asset_outlined,
           color: Theme.of(context).colorScheme.primary,
@@ -437,24 +480,23 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 4),
+          const SizedBox(height: UITokens.spaceXS),
           HighlightedText(
             entry.source,
             query: query,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.72),
-                ),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.72),
+            ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: UITokens.spaceXSm),
           Text(
             'Открыть экран',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -467,13 +509,13 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
 
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: UITokens.space),
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        ),
       ),
     );
   }
@@ -487,7 +529,10 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
   }) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: UITokens.spaceMd,
+          vertical: UITokens.space,
+        ),
         backgroundColor: color?.withValues(alpha: 0.1),
         foregroundColor: color ?? Theme.of(context).colorScheme.onSurface,
       ),
@@ -509,7 +554,7 @@ class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(UITokens.spaceMd),
       children: [
         SwitchListTile(
           title: const Text('Показывать границы (debugPaintSize)'),
@@ -519,8 +564,9 @@ class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
         ),
         SwitchListTile(
           title: const Text('Закрашивать перерисовки (RepaintRainbow)'),
-          subtitle:
-              const Text('Подсвечивает элементы, которые перерисовываются'),
+          subtitle: const Text(
+            'Подсвечивает элементы, которые перерисовываются',
+          ),
           value: debugRepaintRainbowEnabled,
           onChanged: (val) => setState(() => debugRepaintRainbowEnabled = val),
         ),
@@ -549,13 +595,17 @@ class _DevMenuFeatureFlagsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(UITokens.spaceMd),
       children: [
         _buildFlagTile('Enable New Chat UI', FeatureFlags.enableNewChatUI),
         _buildFlagTile(
-            'Force Video Compression', FeatureFlags.forceVideoCompression),
+          'Force Video Compression',
+          FeatureFlags.forceVideoCompression,
+        ),
         _buildFlagTile(
-            'Enable Aggressive Caching', FeatureFlags.enableAggressiveCaching),
+          'Enable Aggressive Caching',
+          FeatureFlags.enableAggressiveCaching,
+        ),
         _buildFlagTile(
           'Ignore Server Offline (no logout)',
           FeatureFlags.ignoreServerOffline,
@@ -622,15 +672,23 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+              padding: const EdgeInsets.fromLTRB(
+                UITokens.space,
+                UITokens.space,
+                UITokens.space,
+                UITokens.spaceSm,
+              ),
               child: Row(
                 children: [
                   FilterChip(
-                    label: Text(_showOnlyErrors
-                        ? 'Только ошибки'
-                        : 'Все запросы (${sourceLogs.length})'),
+                    label: Text(
+                      _showOnlyErrors
+                          ? 'Только ошибки'
+                          : 'Все запросы (${sourceLogs.length})',
+                    ),
                     selected: _showOnlyErrors,
-                    onSelected: (value) => setState(() => _showOnlyErrors = value),
+                    onSelected: (value) =>
+                        setState(() => _showOnlyErrors = value),
                   ),
                   const Spacer(),
                   TextButton.icon(
@@ -644,7 +702,8 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
             Expanded(
               child: ListView.separated(
                 itemCount: logs.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, __) =>
+                    const Divider(height: UITokens.borderThin),
                 itemBuilder: (context, index) {
                   final log = logs[index];
                   final color = _colorFor(log);
@@ -654,10 +713,14 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                     child: ExpansionTile(
                       leading: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 6),
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(
+                            UITokens.cornerSmMd,
+                          ),
                           border: Border.all(
                             color: color.withValues(alpha: 0.28),
                           ),
@@ -683,8 +746,14 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                         children: [
                           _buildMetaChip(log.statusLabel, color),
                           _buildMetaChip(log.kindLabel, color),
-                          _buildMetaChip('${log.latencyMs} ms', Colors.blueGrey),
-                          _buildMetaChip(log.responseTypeLabel, Colors.deepPurple),
+                          _buildMetaChip(
+                            '${log.latencyMs} ms',
+                            Colors.blueGrey,
+                          ),
+                          _buildMetaChip(
+                            log.responseTypeLabel,
+                            Colors.deepPurple,
+                          ),
                         ],
                       ),
                       children: [
@@ -707,7 +776,8 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                             log.responseHeaders,
                             accent: Colors.cyanAccent,
                           ),
-                        if (log.responseBody != null || log.errorMessage != null)
+                        if (log.responseBody != null ||
+                            log.errorMessage != null)
                           _buildCodeBlock(
                             'Response body · ${log.responseTypeLabel}',
                             log.errorMessage ?? log.responseBody,
@@ -756,7 +826,7 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(UITokens.cornerPill),
       ),
       child: Text(
         text,
@@ -782,7 +852,7 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(UITokens.space),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -794,13 +864,13 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
               color: accent,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: UITokens.spaceXS),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(UITokens.spaceSm),
             decoration: BoxDecoration(
               color: Colors.black87,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(UITokens.cornerSm),
               border: Border.all(color: accent.withValues(alpha: 0.25)),
             ),
             child: SelectableText(
@@ -857,7 +927,9 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
 
     if (Platform.isAndroid) {
       final androidInfo = await deviceInfoPlugin.androidInfo;
-      final abis = androidInfo.supportedAbis.where((abi) => abi.isNotEmpty).join(', ');
+      final abis = androidInfo.supportedAbis
+          .where((abi) => abi.isNotEmpty)
+          .join(', ');
       devInfo = [
         '${androidInfo.manufacturer} ${androidInfo.model}'.trim(),
         'Android ${androidInfo.version.release} • SDK ${androidInfo.version.sdkInt}',
@@ -893,7 +965,7 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
     }
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(UITokens.spaceMd),
       children: [
         ListTile(
           leading: const Icon(Icons.info_outline),
@@ -903,8 +975,9 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
         ListTile(
           leading: const Icon(Icons.numbers),
           title: Text(l10n.devMenuVersionLabel),
-          subtitle:
-              Text('${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})'),
+          subtitle: Text(
+            '${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})',
+          ),
         ),
         ListTile(
           leading: const Icon(Icons.code),

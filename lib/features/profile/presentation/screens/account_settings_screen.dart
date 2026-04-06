@@ -77,7 +77,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: Text(l10n.deleteButton),
           ),
         ],
@@ -103,7 +105,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           children: [
             if (widget.embedded)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  UITokens.spaceMd,
+                  UITokens.space,
+                  UITokens.spaceMd,
+                  UITokens.spaceSm,
+                ),
                 child: SectionPageHeader(
                   title: l10n.accountSettingsTitle,
                   subtitle: l10n.changePasswordSection,
@@ -114,18 +121,23 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 ),
               ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              padding: const EdgeInsets.fromLTRB(
+                UITokens.spaceMd,
+                UITokens.spaceXLg,
+                UITokens.spaceMd,
+                UITokens.space,
+              ),
               child: Text(
                 l10n.changePasswordSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             GlassCard(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(UITokens.spaceMd),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -147,11 +159,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           ),
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UITokens.cornerSm),
+                          borderRadius: BorderRadius.circular(
+                            UITokens.cornerSm,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: UITokens.spaceMd),
                     TextField(
                       controller: _newPasswordController,
                       obscureText: _obscureNewPassword,
@@ -169,12 +183,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           ),
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UITokens.cornerSm),
+                          borderRadius: BorderRadius.circular(
+                            UITokens.cornerSm,
+                          ),
                         ),
                         helperText: l10n.minPasswordHelper,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: UITokens.spaceMd),
                     TextField(
                       controller: _confirmPasswordController,
                       obscureText: _obscureConfirmPassword,
@@ -193,11 +209,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           ),
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(UITokens.cornerSm),
+                          borderRadius: BorderRadius.circular(
+                            UITokens.cornerSm,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: UITokens.spaceMd),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -205,9 +223,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         icon: const Icon(Icons.check),
                         label: Text(l10n.changePasswordButton),
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: UITokens.space,
+                          ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(UITokens.cornerSm),
+                            borderRadius: BorderRadius.circular(
+                              UITokens.cornerSm,
+                            ),
                           ),
                         ),
                       ),
@@ -217,18 +239,26 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              padding: const EdgeInsets.fromLTRB(
+                UITokens.spaceMd,
+                UITokens.spaceXLg,
+                UITokens.spaceMd,
+                UITokens.space,
+              ),
               child: Text(
                 l10n.contactDataSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             GlassCard(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Column(
                   children: [
                     ListTile(
@@ -237,46 +267,57 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       subtitle: const Text('—'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => context.push(AppStrings.routeChangeEmail),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: UITokens.spaceSm,
+                      ),
                     ),
-                    const Divider(height: 1),
+                    const Divider(height: UITokens.borderThin),
                     ListTile(
                       leading: const Icon(Icons.phone),
                       title: Text(l10n.phoneLabel),
                       subtitle: const Text('—'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => context.push(AppStrings.routeChangePhone),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: UITokens.spaceSm,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              padding: const EdgeInsets.fromLTRB(
+                UITokens.spaceMd,
+                UITokens.spaceXLg,
+                UITokens.spaceMd,
+                UITokens.space,
+              ),
               child: Text(
                 l10n.dangerZoneSection,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.danger(context),
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: AppColors.danger(context),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             GlassCard(
               child: Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.error.withValues(alpha: 0.3),
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(UITokens.corner),
                 ),
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: _deleteAccount,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(UITokens.corner),
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(UITokens.spaceMd),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -288,14 +329,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                               l10n.deleteAccountTitle,
                             ),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: UITokens.spaceMdSm),
                           Row(
                             children: [
                               Icon(
                                 Icons.delete_forever,
                                 color: AppColors.danger(context),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: UITokens.spaceMd),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,7 +379,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: UITokens.spaceXL),
           ],
         ),
       ),

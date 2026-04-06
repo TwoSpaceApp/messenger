@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:two_space_app/core/config/app_colors.dart';
@@ -45,7 +46,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   Future<void> _pickImage() async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+      final pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+      );
       if (pickedFile != null) {
         setState(() {
           _selectedImage = File(pickedFile.path);
@@ -81,8 +84,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         visibility: _visibility,
         showMessageHistory: _showMessageHistory,
         avatarBytes: avatarBytes,
-        avatarFileName:
-            _selectedImage == null ? null : p.basename(_selectedImage!.path),
+        avatarFileName: _selectedImage == null
+            ? null
+            : p.basename(_selectedImage!.path),
       );
 
       if (mounted) {
@@ -137,8 +141,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 ? 2 * Responsive.scaleWidth(context)
                 : 1 * Responsive.scaleWidth(context),
           ),
-          borderRadius:
-              BorderRadius.circular(12 * Responsive.scaleWidth(context)),
+          borderRadius: BorderRadius.circular(
+            12 * Responsive.scaleWidth(context),
+          ),
           color: isSelected
               ? theme.colorScheme.primary.withValues(alpha: 0.08)
               : null,
@@ -200,7 +205,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         centerTitle: !isWideScreen,
         actions: [
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(UITokens.spaceSm),
             child: TextButton.icon(
               onPressed: _isLoading ? null : _createGroup,
               icon: _isLoading
@@ -208,9 +213,12 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(
-                              theme.colorScheme.primary)))
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(
+                          theme.colorScheme.primary,
+                        ),
+                      ),
+                    )
                   : const Icon(Icons.check),
               label: Text(l10n.createButton),
               style: TextButton.styleFrom(
@@ -227,192 +235,224 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : LayoutBuilder(
-              builder: (context, constraints) {
-                final maxWidth = constraints.maxWidth >= 1100 ? 860.0 : double.infinity;
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxWidth),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                  // Avatar selector
-                  Center(
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: AppColors.mediaPlaceholder(context),
-                          borderRadius: BorderRadius.circular(60),
-                          border: Border.all(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.3),
-                            width: 2,
-                          ),
+                builder: (context, constraints) {
+                  final maxWidth = constraints.maxWidth >= 1100
+                      ? 860.0
+                      : double.infinity;
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxWidth),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
                         ),
-                        child: _selectedImage != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(60),
-                                child: Image.file(
-                                  _selectedImage!,
-                                  fit: BoxFit.cover,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Avatar selector
+                            Center(
+                              child: GestureDetector(
+                                onTap: _pickImage,
+                                child: Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mediaPlaceholder(context),
+                                    borderRadius: BorderRadius.circular(
+                                      UITokens.cornerAvatar,
+                                    ),
+                                    border: Border.all(
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.3),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: _selectedImage != null
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            60,
+                                          ),
+                                          child: Image.file(
+                                            _selectedImage!,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.add_a_photo,
+                                          size: 40,
+                                          color: theme.colorScheme.primary
+                                              .withValues(alpha: 0.6),
+                                        ),
                                 ),
-                              )
-                            : Icon(
-                                Icons.add_a_photo,
-                                size: 40,
-                                color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.6),
                               ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                            ),
+                            const SizedBox(height: UITokens.spaceXLg),
 
-                  // Group name field
-                  Text(
-                    l10n.roomNameLabel,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      hintText: l10n.roomNameHint,
-                      filled: true,
-                      fillColor: AppColors.mediaSurface(context),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color:
-                              theme.colorScheme.outline.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color:
-                              theme.colorScheme.outline.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: theme.colorScheme.primary,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                            // Group name field
+                            Text(
+                              l10n.roomNameLabel,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: UITokens.spaceSm),
+                            TextField(
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                hintText: l10n.roomNameHint,
+                                filled: true,
+                                fillColor: AppColors.mediaSurface(context),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.corner,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.outline.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.corner,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.outline.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.corner,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: UITokens.spaceXLg),
 
-                  // Description field
-                  Text(
-                    l10n.roomTopicLabel,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _descriptionController,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      hintText: l10n.roomTopicHint,
-                      filled: true,
-                      fillColor: AppColors.mediaSurface(context),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color:
-                              theme.colorScheme.outline.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color:
-                              theme.colorScheme.outline.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: theme.colorScheme.primary,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                            // Description field
+                            Text(
+                              l10n.roomTopicLabel,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: UITokens.spaceSm),
+                            TextField(
+                              controller: _descriptionController,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                hintText: l10n.roomTopicHint,
+                                filled: true,
+                                fillColor: AppColors.mediaSurface(context),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.corner,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.outline.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.corner,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.outline.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.corner,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: UITokens.spaceXLg),
 
-                  // Visibility section
-                  Text(
-                    l10n.roomVisibilityLabel,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildVisibilityOption(
-                    title: l10n.privateRoomOption,
-                    subtitle: l10n.privateRoomSubtitle,
-                    value: GroupVisibility.private,
-                    icon: Icons.lock,
-                  ),
-                  _buildVisibilityOption(
-                    title: l10n.publicRoomOption,
-                    subtitle: l10n.publicRoomSubtitle,
-                    value: GroupVisibility.public,
-                    icon: Icons.public,
-                  ),
-                  const SizedBox(height: 24),
+                            // Visibility section
+                            Text(
+                              l10n.roomVisibilityLabel,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: UITokens.space),
+                            _buildVisibilityOption(
+                              title: l10n.privateRoomOption,
+                              subtitle: l10n.privateRoomSubtitle,
+                              value: GroupVisibility.private,
+                              icon: Icons.lock,
+                            ),
+                            _buildVisibilityOption(
+                              title: l10n.publicRoomOption,
+                              subtitle: l10n.publicRoomSubtitle,
+                              value: GroupVisibility.public,
+                              icon: Icons.public,
+                            ),
+                            const SizedBox(height: UITokens.spaceXLg),
 
-                  // Message history checkbox
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                            // Message history checkbox
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: theme.colorScheme.outline.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  UITokens.corner,
+                                ),
+                              ),
+                              child: CheckboxListTile(
+                                value: _showMessageHistory,
+                                onChanged: (value) {
+                                  setState(
+                                    () => _showMessageHistory = value ?? false,
+                                  );
+                                },
+                                title: Text(
+                                  l10n.showHistoryLabel,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  l10n.showHistorySubtitle,
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: UITokens.spaceXL),
+                          ],
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: CheckboxListTile(
-                      value: _showMessageHistory,
-                      onChanged: (value) {
-                        setState(() => _showMessageHistory = value ?? false);
-                      },
-                      title: Text(
-                        l10n.showHistoryLabel,
-                        style: theme.textTheme.bodyMedium
-                            ?.copyWith(fontWeight: FontWeight.w500),
-                      ),
-                      subtitle: Text(
-                        l10n.showHistorySubtitle,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ),
-                  ),
-                          const SizedBox(height: 32),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
       ),
     );
   }

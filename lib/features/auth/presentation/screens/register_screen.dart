@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
@@ -39,8 +40,9 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen>
     with SingleTickerProviderStateMixin {
-  static final RegExp _aegisUsernamePattern =
-      RegExp(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{2,31}$');
+  static final RegExp _aegisUsernamePattern = RegExp(
+    r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{2,31}$',
+  );
   static const List<_RegisterStylePreset> _stylePresets = [
     _RegisterStylePreset(
       id: 'quietGlass',
@@ -66,7 +68,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   late final _avatarAnimController = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 300),
+    duration: UITokens.durationLgSm,
     lowerBound: 0.9,
   )..value = 1.0;
 
@@ -268,7 +270,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
       if (mounted) {
         setState(
-            () => _errorMessage = e.toString().replaceAll('Exception: ', ''));
+          () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -280,8 +283,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(message),
-          backgroundColor: Theme.of(context).colorScheme.error),
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
     );
   }
 
@@ -362,7 +366,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         return Container(
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(UITokens.corner2XL),
+            ),
           ),
           child: SafeArea(
             top: false,
@@ -370,31 +376,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  width: 40,
-                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: UITokens.space),
+                  width: UITokens.dragHandleWidth,
+                  height: UITokens.dragHandleHeight,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(UITokens.corner2XS),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(
+                    UITokens.spaceLg,
+                    0,
+                    UITokens.spaceLg,
+                    UITokens.spaceSm,
+                  ),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(UITokens.spaceSm),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer
-                              .withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(12),
+                          color: theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(UITokens.corner),
                         ),
                         child: Icon(
                           Icons.text_fields_rounded,
                           color: theme.colorScheme.primary,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: UITokens.spaceMd),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,7 +417,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: UITokens.spaceXS),
                             Text(
                               l10n.selectFontFamily,
                               style: theme.textTheme.bodySmall,
@@ -483,42 +495,49 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               alignment: Alignment.topRight,
               child: LanguageSwitcherButton(),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: UITokens.spaceSm),
             const Padding(
-              padding: EdgeInsets.only(bottom: 24),
+              padding: EdgeInsets.only(bottom: UITokens.spaceXLg),
               child: AppLogo(large: false),
             ),
 
             if (_errorMessage != null)
               Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.symmetric(vertical: UITokens.space),
+                padding: const EdgeInsets.all(UITokens.space),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(UITokens.corner),
                   border: Border.all(
-                      color: theme.colorScheme.error.withValues(alpha: 0.5)),
+                    color: theme.colorScheme.error.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.error_outline, color: theme.colorScheme.error),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: UITokens.space),
                     Expanded(
                       child: Text(
                         _errorMessage!,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            color: theme.colorScheme.error,
-                            fontWeight: FontWeight.w500),
+                          color: theme.colorScheme.error,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.close,
-                          size: 20, color: theme.colorScheme.error),
+                      icon: Icon(
+                        Icons.close,
+                        size: 20,
+                        color: theme.colorScheme.error,
+                      ),
                       onPressed: () => setState(() => _errorMessage = null),
-                      constraints:
-                          const BoxConstraints(minWidth: 40, minHeight: 40),
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
                     ),
                   ],
                 ),
@@ -526,7 +545,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
             // Step Indicator
             Container(
-              margin: const EdgeInsets.only(bottom: 24),
+              margin: const EdgeInsets.only(bottom: UITokens.spaceXLg),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -543,23 +562,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
             // Content
             AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
+              duration: UITokens.durationLgSm,
               child: Container(
                 key: ValueKey<int>(_step),
                 width: double.infinity,
                 constraints: const BoxConstraints(minHeight: 392),
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(UITokens.spaceLg),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface.withValues(
                     alpha: isDark ? 0.36 : 0.68,
                   ),
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(UITokens.corner2XL),
                   border: Border.all(
                     color: theme.colorScheme.outline.withValues(alpha: 0.12),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.08),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.22 : 0.08,
+                      ),
                       blurRadius: 32,
                       offset: const Offset(0, 20),
                     ),
@@ -569,7 +590,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: UITokens.spaceXL),
 
             // Navigation Buttons
             Row(
@@ -579,8 +600,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   child: Text(
                     _step == 0 ? l10n.backToLogin : l10n.back,
                     style: TextStyle(
-                      color:
-                          isDark ? Colors.white70 : theme.colorScheme.primary,
+                      color: isDark
+                          ? Colors.white70
+                          : theme.colorScheme.primary,
                     ),
                   ),
                 ),
@@ -589,9 +611,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   onPressed: (_loading || _isCovering) ? null : _nextStep,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 16),
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(UITokens.cornerLg),
+                    ),
                     backgroundColor: theme.colorScheme.primary,
                     foregroundColor: theme.colorScheme.onPrimary,
                   ),
@@ -600,7 +625,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : Text(
                           _step == 3 ? l10n.finishButton : l10n.next,
                           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -641,10 +669,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           textInputAction: TextInputAction.next,
           onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-          decoration:
-              _inputDecoration(theme, 'Email', Icons.email_outlined, isDark),
+          decoration: _inputDecoration(
+            theme,
+            'Email',
+            Icons.email_outlined,
+            isDark,
+          ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: UITokens.spaceMd),
         TextFormField(
           controller: _passCtl,
           focusNode: _passwordFocus,
@@ -654,29 +686,33 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           onChanged: (_) => setState(() {}),
           textInputAction: TextInputAction.done,
           onFieldSubmitted: (_) => _nextStep(),
-          decoration: _inputDecoration(
-                  theme, l10n.passwordLabel, Icons.lock_outline, isDark)
-              .copyWith(
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                color: theme.colorScheme.primary,
+          decoration:
+              _inputDecoration(
+                theme,
+                l10n.passwordLabel,
+                Icons.lock_outline,
+                isDark,
+              ).copyWith(
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                ),
               ),
-              onPressed: () =>
-                  setState(() => _obscurePassword = !_obscurePassword),
-            ),
-          ),
         ),
         if (_passCtl.text.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: UITokens.space),
             child: Row(
               children: [
                 Expanded(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(UITokens.cornerXS),
                     child: LinearProgressIndicator(
                       value: _getPasswordStrength(_passCtl.text) / 4,
                       minHeight: 4,
@@ -685,20 +721,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           : Colors.grey.withValues(alpha: 0.2),
                       valueColor: AlwaysStoppedAnimation<Color>(
                         _getPasswordStrengthColor(
-                            _getPasswordStrength(_passCtl.text)),
+                          _getPasswordStrength(_passCtl.text),
+                        ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UITokens.space),
                 Text(
                   _getPasswordStrengthLabel(
-                      _getPasswordStrength(_passCtl.text), l10n),
+                    _getPasswordStrength(_passCtl.text),
+                    l10n,
+                  ),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: _getPasswordStrengthColor(
-                        _getPasswordStrength(_passCtl.text)),
+                      _getPasswordStrength(_passCtl.text),
+                    ),
                   ),
                 ),
               ],
@@ -719,9 +759,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           textInputAction: TextInputAction.next,
           onFieldSubmitted: (_) => _nicknameFocus.requestFocus(),
           decoration: _inputDecoration(
-              theme, l10n.fullNameLabel, Icons.person_outline, isDark),
+            theme,
+            l10n.fullNameLabel,
+            Icons.person_outline,
+            isDark,
+          ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: UITokens.spaceMd),
         TextFormField(
           controller: _nicknameCtl,
           focusNode: _nicknameFocus,
@@ -731,9 +775,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           textInputAction: TextInputAction.done,
           onFieldSubmitted: (_) => _nextStep(),
           decoration: _inputDecoration(
-              theme, l10n.nicknameAtLabel, Icons.alternate_email, isDark),
+            theme,
+            l10n.nicknameAtLabel,
+            Icons.alternate_email,
+            isDark,
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: UITokens.spaceSm),
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
@@ -776,7 +824,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           child: ScaleTransition(
             scale: _avatarAnimController,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+              duration: UITokens.durationLgSm,
               width: 140,
               height: 140,
               decoration: BoxDecoration(
@@ -789,8 +837,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 boxShadow: _avatarBytes != null
                     ? [
                         BoxShadow(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.3),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.3,
+                          ),
                           blurRadius: 15,
                           spreadRadius: 5,
                         ),
@@ -804,13 +853,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     : null,
               ),
               child: _avatarBytes == null
-                  ? Icon(Icons.add_a_photo_outlined,
-                      size: 40, color: theme.colorScheme.primary)
+                  ? Icon(
+                      Icons.add_a_photo_outlined,
+                      size: 40,
+                      color: theme.colorScheme.primary,
+                    )
                   : null,
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: UITokens.spaceXLg),
         Text(
           _avatarBytes != null ? l10n.photoLooksGreat : l10n.uploadPhotoPrompt,
           style: TextStyle(
@@ -819,7 +871,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             color: isDark ? Colors.white : Colors.black87,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: UITokens.spaceSm),
         Text(
           l10n.helpFriendsFind,
           style: TextStyle(
@@ -846,37 +898,42 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: UITokens.spaceXLg),
         Text(
           l10n.stylePresetsTitle,
           style: TextStyle(color: theme.hintColor),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: UITokens.space),
         SizedBox(
           height: 174,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _stylePresets.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            separatorBuilder: (_, __) => const SizedBox(width: UITokens.space),
             itemBuilder: (context, index) {
               final preset = _stylePresets[index];
               final selected =
-                  _selectedColor == preset.color && _selectedFont == preset.fontFamily;
+                  _selectedColor == preset.color &&
+                  _selectedFont == preset.fontFamily;
               final color = Color(preset.color);
               return SizedBox(
                 width: 208,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(UITokens.corner2XLg),
                     onTap: () => _applyRegisterPreset(preset),
                     child: Ink(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(
+                          UITokens.corner2XLg,
+                        ),
                         border: Border.all(
                           color: selected
                               ? color.withValues(alpha: 0.95)
-                              : theme.colorScheme.outline.withValues(alpha: 0.14),
+                              : theme.colorScheme.outline.withValues(
+                                  alpha: 0.14,
+                                ),
                           width: selected ? 2 : 1,
                         ),
                         gradient: LinearGradient(
@@ -889,7 +946,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         ),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(UITokens.spaceMd),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -899,7 +956,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   child: Container(
                                     height: 56,
                                     decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(
+                                        UITokens.cornerLg,
+                                      ),
                                       gradient: LinearGradient(
                                         colors: [
                                           color,
@@ -909,13 +968,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 10),
+                                const SizedBox(width: UITokens.spaceSmMd),
                                 Container(
                                   width: 56,
                                   height: 56,
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    color: theme.colorScheme.surface.withValues(alpha: 0.76),
+                                    borderRadius: BorderRadius.circular(
+                                      UITokens.cornerLg,
+                                    ),
+                                    color: theme.colorScheme.surface.withValues(
+                                      alpha: 0.76,
+                                    ),
                                   ),
                                   alignment: Alignment.center,
                                   child: Text(
@@ -928,14 +991,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: UITokens.spaceMdSm),
                             Text(
                               _presetTitle(l10n, preset.id),
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: UITokens.spaceXSm),
                             Expanded(
                               child: Text(
                                 _presetSubtitle(l10n, preset.id),
@@ -957,19 +1020,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             },
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: UITokens.spaceXLg),
         Text(l10n.fontLabel, style: TextStyle(color: theme.hintColor)),
-        const SizedBox(height: 12),
+        const SizedBox(height: UITokens.space),
         Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(UITokens.cornerXLg),
             onTap: _openFontPicker,
             child: Ink(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(UITokens.spaceMd),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface.withValues(alpha: 0.46),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(UITokens.cornerXLg),
                 border: Border.all(
                   color: theme.colorScheme.outline.withValues(alpha: 0.18),
                 ),
@@ -980,8 +1043,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.56),
-                      borderRadius: BorderRadius.circular(16),
+                      color: theme.colorScheme.primaryContainer.withValues(
+                        alpha: 0.56,
+                      ),
+                      borderRadius: BorderRadius.circular(UITokens.cornerLg),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -992,7 +1057,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: UITokens.spaceMdSm),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1004,7 +1069,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: UITokens.spaceXS),
                         Text(
                           l10n.selectFontFamily,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -1014,7 +1079,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: UITokens.space),
                   Icon(
                     Icons.expand_more_rounded,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -1029,7 +1094,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   }
 
   InputDecoration _inputDecoration(
-      ThemeData theme, String label, IconData icon, bool isDark) {
+    ThemeData theme,
+    String label,
+    IconData icon,
+    bool isDark,
+  ) {
     return InputDecoration(
       labelText: label,
       labelStyle: TextStyle(
@@ -1037,19 +1106,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       ),
       prefixIcon: Icon(icon, color: theme.colorScheme.primary),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
         borderSide: BorderSide.none,
       ),
       filled: true,
       fillColor: theme.colorScheme.surface.withAlpha(50),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
         borderSide: BorderSide(
           color: theme.colorScheme.primary.withValues(alpha: 0.1),
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
         borderSide: BorderSide(
           color: theme.colorScheme.primary,
           width: 2,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 // import 'dart:async';
@@ -30,11 +31,11 @@ class _SsoWebviewScreenState extends State<SsoWebviewScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.web, size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
+              const SizedBox(height: UITokens.spaceMd),
               Text(l10n.ssoLoginVia(widget.idpId)),
-              const SizedBox(height: 24),
+              const SizedBox(height: UITokens.spaceXLg),
               const CircularProgressIndicator(),
-              const SizedBox(height: 16),
+              const SizedBox(height: UITokens.spaceMd),
               Text(l10n.ssoFeatureRequired),
             ],
           ),

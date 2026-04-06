@@ -17,7 +17,6 @@ import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/unread_badge.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
-import 'package:two_space_app/features/chat/presentation/widgets/start_chat_bottom_sheet.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -112,12 +111,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  ({IconData icon, String title, String message}) _describeRoomError(String raw) {
+  ({IconData icon, String title, String message}) _describeRoomError(
+    String raw,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     final text = raw.toLowerCase();
     final clean = raw.replaceFirst(RegExp('^Exception: '), '').trim();
 
-    if (text.contains('timeout') || text.contains('timed out') || text.contains('no response for seq')) {
+    if (text.contains('timeout') ||
+        text.contains('timed out') ||
+        text.contains('no response for seq')) {
       return (
         icon: Icons.schedule_rounded,
         title: l10n.chatListTimeoutTitle,
@@ -161,7 +164,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       (chats) {
         final nextRooms = chats.map(_roomFromChat).toList(growable: false);
         if (!mounted) return;
-        if (_roomListsEqual(_rooms, nextRooms) && !_loading && _errorMessage == null) {
+        if (_roomListsEqual(_rooms, nextRooms) &&
+            !_loading &&
+            _errorMessage == null) {
           return;
         }
         setState(() {
@@ -317,7 +322,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDirect = room['roomType'] == 'direct';
     var confirmed = true;
     if (!isDirect) {
-      confirmed = await showDialog<bool>(
+      confirmed =
+          await showDialog<bool>(
             context: context,
             builder: (dialogContext) => AlertDialog(
               title: Text(l10n.leaveRoomTitle),
@@ -336,25 +342,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ) ??
           false;
     }
-    if (!confirmed) {
+    if (!confirmed || !mounted) {
       return;
     }
+
     try {
-      if (isDirect) {
-        await _chat.clearRoomCache(roomId);
-      } else {
-        await _chat.leaveRoom(roomId);
+      await _chat.leaveRoom(roomId);
+      if (!mounted) {
+        return;
       }
-    } catch (error) {
+      await _loadUserAndRooms();
+    } catch (e) {
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            error.toString().replaceAll('Exception: ', ''),
-          ),
-        ),
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
       );
     }
   }
@@ -364,27 +367,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Offset globalPosition,
   ) async {
     final l10n = AppLocalizations.of(context)!;
-    final canOpenProfile = _directUserIdForRoom(room) != null;
     final isDirect = room['roomType'] == 'direct';
+    final overlay = Overlay.maybeOf(context);
+    final overlayBox = overlay?.context.findRenderObject();
+    if (overlayBox is! RenderBox) {
+      return;
+    }
     final action = await showMenu<String>(
       context: context,
-      position: RelativeRect.fromLTRB(
-        globalPosition.dx,
-        globalPosition.dy,
-        globalPosition.dx,
-        globalPosition.dy,
+      position: RelativeRect.fromRect(
+        Rect.fromLTWH(globalPosition.dx, globalPosition.dy, 1, 1),
+        Offset.zero & overlayBox.size,
       ),
-      items: [
-        PopupMenuItem<String>(
-          value: 'open',
-          child: Text(l10n.writeMessageButton),
-        ),
-        if (canOpenProfile)
+      items: <PopupMenuEntry<String>>[
+        if (isDirect)
           PopupMenuItem<String>(
             value: 'profile',
             child: Text(l10n.peopleViewProfileAction),
           ),
-        const PopupMenuDivider(),
+        if (isDirect) const PopupMenuDivider(),
         PopupMenuItem<String>(
           value: 'remove',
           child: Text(isDirect ? l10n.deleteButton : l10n.leaveRoomAction),
@@ -393,69 +394,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
 
     switch (action) {
-      case 'open':
-        _openChat(room['id']?.toString() ?? '');
       case 'profile':
         await _openRoomProfile(room);
       case 'remove':
         await _leaveOrRemoveRoom(room);
+      case null:
+        return;
     }
   }
 
-  void _openDirectChat() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CreateChatScreen(),
-      ),
-    ).then((result) {
-      if (result != null) {
-        unawaited(_chat.refreshChatsQuietly());
-      }
-    });
-  }
-
-  void _openCreateGroup() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CreateChatScreen(
-          initialMode: CreateChatMode.group,
-        ),
-      ),
-    ).then((result) {
-      if (result != null) {
-        unawaited(_chat.refreshChatsQuietly());
-      }
-    });
-  }
-
-  void _openJoinByCode() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const CreateChatScreen(
-          initialMode: CreateChatMode.join,
-        ),
-      ),
-    ).then((result) {
-      if (result != null) {
-        unawaited(_chat.refreshChatsQuietly());
-      }
-    });
-  }
-
   Future<void> _showStartChatSheet() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => StartChatBottomSheet(
-        onStartDirectChat: _openDirectChat,
-        onCreateGroup: _openCreateGroup,
-        onJoinByAddress: _openJoinByCode,
-      ),
+    final result = await Navigator.push<Object?>(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateChatScreen()),
     );
+    if (result != null) {
+      unawaited(_chat.refreshChatsQuietly());
+    }
   }
 
   Widget _buildHeroHeader(
@@ -464,10 +419,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     int roomCount,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        UITokens.spaceMd,
+        UITokens.spaceMd,
+        UITokens.spaceSmMd,
+      ),
       child: SectionCard(
         radius: UITokens.cornerXL,
-        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+        padding: const EdgeInsets.fromLTRB(
+          UITokens.spaceMdLg,
+          UITokens.spaceMdLg,
+          UITokens.spaceMdLg,
+          UITokens.spaceMd,
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -482,7 +447,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       color: theme.colorScheme.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: UITokens.spaceXSm),
                   Text(
                     roomCount > 0
                         ? l10n.chatsSubtitle
@@ -494,7 +459,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: UITokens.space),
             IconButton.filled(
               onPressed: _showStartChatSheet,
               icon: const Icon(Icons.add_comment_outlined),
@@ -521,7 +486,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final maxWidth = constraints.maxWidth >= UITokens.desktopBreakpoint
+              final maxWidth =
+                  constraints.maxWidth >= UITokens.desktopBreakpoint
                   ? 920.0
                   : double.infinity;
 
@@ -532,7 +498,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     children: [
                       _buildHeroHeader(theme, l10n, _rooms.length),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        padding: const EdgeInsets.fromLTRB(
+                          UITokens.spaceMd,
+                          0,
+                          UITokens.spaceMd,
+                          UITokens.spaceSm,
+                        ),
                         child: InlineNoticeCard(
                           icon: Icons.science_outlined,
                           badge: l10n.betaTestLabel,
@@ -542,7 +513,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       Expanded(
                         child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 260),
+                          duration: UITokens.durationMd,
                           child: _loading
                               ? _buildShimmerLoading()
                               : RefreshIndicator.adaptive(
@@ -567,11 +538,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final highlightColor = AppColors.skeletonHighlight(context);
     final bottomInset = MediaQuery.of(context).padding.bottom + 124;
     return ListView.builder(
-      padding: EdgeInsets.fromLTRB(8, 8, 8, bottomInset),
+      padding: EdgeInsets.fromLTRB(
+        UITokens.spaceSm,
+        UITokens.spaceSm,
+        UITokens.spaceSm,
+        bottomInset,
+      ),
       itemCount: 6,
       itemBuilder: (context, index) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: UITokens.spaceSm),
           child: Shimmer.fromColors(
             baseColor: baseColor,
             highlightColor: highlightColor,
@@ -579,9 +555,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               height: 72,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(UITokens.cornerLg),
               ),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(UITokens.space),
               child: Row(
                 children: [
                   Container(
@@ -592,14 +568,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: UITokens.space),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(width: 150, height: 16, color: Colors.white),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: UITokens.spaceSm),
                         Container(width: 100, height: 12, color: Colors.white),
                       ],
                     ),
@@ -620,7 +596,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(UITokens.space),
         children: [
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.55,
@@ -643,7 +619,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(UITokens.space),
         children: [
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.5,
@@ -677,7 +653,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         if (_errorMessage != null && i == 0) {
           final error = _describeRoomError(_errorMessage!);
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: UITokens.spaceSm),
             child: SectionCard(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -686,21 +662,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     error.icon,
                     color: Theme.of(context).colorScheme.error,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: UITokens.space),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           error.title,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: UITokens.spaceXS),
                         Text(
                           error.message,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 color: AppColors.subtitleText(context),
                               ),
                         ),
@@ -722,7 +700,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final unreadCount = r['unreadCount'] as int? ?? 0;
 
         final item = Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: UITokens.spaceSm),
           child: SectionCard(
             onTap: () => _openChat(id),
             child: Row(
@@ -757,26 +735,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UITokens.space),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         r['name'],
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.onSurface,
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: UITokens.spaceXS),
                       Text(
                         _roomSubtitle(r),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.subtitleText(context),
-                            ),
+                          color: AppColors.subtitleText(context),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -789,11 +768,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Text(
                       _formatRoomTime(r['time'] as DateTime?),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppColors.hintText(context),
-                          ),
+                        color: AppColors.hintText(context),
+                      ),
                     ),
                     if (unreadCount > 0) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UITokens.spaceSm),
                       UnreadBadge(count: unreadCount),
                     ],
                   ],

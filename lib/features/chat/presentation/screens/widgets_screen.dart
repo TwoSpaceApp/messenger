@@ -22,13 +22,23 @@ class WidgetsScreen extends StatelessWidget {
                 maxWidth: UITokens.readableContentMaxWidth,
               ),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  UITokens.spaceMd,
+                  UITokens.spaceMd,
+                  UITokens.spaceMd,
+                  UITokens.spaceXLg,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SectionCard(
                       radius: UITokens.cornerXL,
-                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                      padding: const EdgeInsets.fromLTRB(
+                        UITokens.spaceMdLg,
+                        UITokens.spaceMdLg,
+                        UITokens.spaceMdLg,
+                        UITokens.spaceMd,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -38,7 +48,7 @@ class WidgetsScreen extends StatelessWidget {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: UITokens.spaceXSm),
                           Text(
                             l10n.widgetsSubtitle,
                             style: theme.textTheme.bodyMedium?.copyWith(
@@ -48,14 +58,21 @@ class WidgetsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: UITokens.spaceMd),
                     Expanded(
                       child: Center(
                         child: SectionCard(
                           radius: UITokens.cornerXL,
-                          padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
+                          padding: const EdgeInsets.fromLTRB(
+                            UITokens.spaceXLg,
+                            UITokens.space2XL,
+                            UITokens.spaceXLg,
+                            UITokens.space2XL,
+                          ),
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 540),
+                            constraints: const BoxConstraints(
+                              maxWidth: UITokens.heroCardMaxWidth,
+                            ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -64,7 +81,9 @@ class WidgetsScreen extends StatelessWidget {
                                   height: 72,
                                   decoration: BoxDecoration(
                                     color: theme.colorScheme.primaryContainer,
-                                    borderRadius: BorderRadius.circular(24),
+                                    borderRadius: BorderRadius.circular(
+                                      UITokens.cornerXL,
+                                    ),
                                   ),
                                   alignment: Alignment.center,
                                   child: Icon(
@@ -73,15 +92,16 @@ class WidgetsScreen extends StatelessWidget {
                                     color: theme.colorScheme.onPrimaryContainer,
                                   ),
                                 ),
-                                const SizedBox(height: 18),
+                                const SizedBox(height: UITokens.spaceMdLg),
                                 Text(
                                   l10n.widgetsComingTitle,
                                   textAlign: TextAlign.center,
-                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                 ),
-                                const SizedBox(height: 10),
+                                const SizedBox(height: UITokens.spaceSmMd),
                                 Text(
                                   l10n.widgetsComingBody,
                                   textAlign: TextAlign.center,

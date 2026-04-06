@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_underscores
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_builder.dart';
@@ -331,8 +332,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
       0xFFE8D7FF,
       0xFFFFB300,
       0xFF00C7B1,
-    }
-        .contains(color);
+    }.contains(color);
   }
 
   String _colorLabel(AppLocalizations l10n, int color) {
@@ -474,7 +474,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                 : null,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: UITokens.spaceSmMd),
         Expanded(
           child: _SegmentChoiceCard(
             label: l10n.motionModeWaves,
@@ -504,9 +504,9 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPreviewSelector(context),
-        const SizedBox(height: 18),
+        const SizedBox(height: UITokens.spaceMdLg),
         ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(UITokens.cornerXL),
           child: Theme(
             data: previewTheme,
             child: Container(
@@ -515,32 +515,33 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                 gradient: LinearGradient(
                   colors: [
                     previewTheme.colorScheme.surface,
-                    previewTheme.colorScheme.surfaceContainer
-                        .withValues(alpha: 0.9),
+                    previewTheme.colorScheme.surfaceContainer.withValues(
+                      alpha: 0.9,
+                    ),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 260),
+                duration: UITokens.durationMd,
                 child: SizedBox.expand(
                   child: switch (_previewSurface) {
                     _PreviewSurface.rooms => _PreviewRoomsCard(
-                        key: const ValueKey('rooms'),
-                        bubbleRounding: _bubbleRounding,
-                        compactMode: _compactMode,
-                      ),
+                      key: const ValueKey('rooms'),
+                      bubbleRounding: _bubbleRounding,
+                      compactMode: _compactMode,
+                    ),
                     _PreviewSurface.conversation => _PreviewConversationCard(
-                        key: const ValueKey('conversation'),
-                        bubbleRounding: _bubbleRounding,
-                        dynamicBubbles: _dynamicBubbles,
-                        compactMode: _compactMode,
-                      ),
+                      key: const ValueKey('conversation'),
+                      bubbleRounding: _bubbleRounding,
+                      dynamicBubbles: _dynamicBubbles,
+                      compactMode: _compactMode,
+                    ),
                     _PreviewSurface.settings => _PreviewSettingsCard(
-                        key: const ValueKey('settings'),
-                        compactMode: _compactMode,
-                      ),
+                      key: const ValueKey('settings'),
+                      compactMode: _compactMode,
+                    ),
                   },
                 ),
               ),
@@ -579,7 +580,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
                         icon: const Icon(Icons.arrow_back_rounded),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: UITokens.space),
                     _buildScreenBody(context, theme, l10n),
                   ],
                 ),
@@ -588,39 +589,39 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
           : ScreenBackground(
               child: SafeArea(
                 child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              12,
-              16,
-              MediaQuery.of(context).padding.bottom + 32,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: _closeScreen,
-                      icon: const Icon(Icons.arrow_back_rounded),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        l10n.customizationTitle,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    12,
+                    16,
+                    MediaQuery.of(context).padding.bottom + 32,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: _closeScreen,
+                            icon: const Icon(Icons.arrow_back_rounded),
+                          ),
+                          const SizedBox(width: UITokens.spaceXS),
+                          Expanded(
+                            child: Text(
+                              l10n.customizationTitle,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: UITokens.space),
+                      _buildScreenBody(context, theme, l10n),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 12),
-                _buildScreenBody(context, theme, l10n),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -633,320 +634,315 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SettingsHeroCard(
-                  icon: Icons.auto_awesome_rounded,
-                  title: l10n.customizationHeroTitle,
-                  subtitle: l10n.customizationHeroSubtitle,
-                  child: _buildPreviewShell(context),
-                ),
-                const SizedBox(height: 28),
-                SettingsSectionHeader(
-                  title: l10n.stylePresetsTitle,
-                  subtitle: l10n.stylePresetsSubtitle,
-                ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  height: 204,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _presets.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) {
-                      final preset = _presets[index];
-                      final selected = preset.color == _selectedColor &&
-                          preset.themeMode == _selectedThemeMode &&
-                          preset.fontFamily == _selectedFont &&
-                          preset.fontWeight == _selectedWeight &&
-                          preset.backgroundMotionMode ==
-                              _backgroundMotionMode;
-                      return _PresetCard(
-                        title: _presetTitle(l10n, preset.id),
-                        subtitle: _presetSubtitle(l10n, preset.id),
-                        color: Color(preset.color),
-                        fontFamily: preset.fontFamily,
-                        themeModeLabel: _themeModeLabel(l10n, preset.themeMode),
-                        selected: selected,
-                        onTap: () => _applyPreset(preset),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 28),
-                SettingsSectionHeader(
-                  title: l10n.moodSectionTitle,
-                  subtitle: l10n.moodSectionSubtitle,
-                ),
-                const SizedBox(height: 14),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final crossAxisCount = constraints.maxWidth < 380 ? 1 : 2;
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _colorChoices.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        mainAxisExtent: 112,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      itemBuilder: (context, index) {
-                        final colorValue = _colorChoices[index]['value'] as int;
-                        final selected = colorValue == _selectedColor;
-                        return _ColorChoiceCard(
-                          label: _colorLabel(l10n, colorValue),
-                          toneLabel: _isLightColor(colorValue)
-                              ? l10n.themeLight
-                              : l10n.themeDark,
-                          color: Color(colorValue),
-                          selected: selected,
-                          onTap: () async {
-                            setState(() => _selectedColor = colorValue);
-                            await _applyThemeUpdate(color: colorValue);
-                          },
-                        );
-                      },
-                    );
+          icon: Icons.auto_awesome_rounded,
+          title: l10n.customizationHeroTitle,
+          subtitle: l10n.customizationHeroSubtitle,
+          child: _buildPreviewShell(context),
+        ),
+        const SizedBox(height: UITokens.space2XL),
+        SettingsSectionHeader(
+          title: l10n.stylePresetsTitle,
+          subtitle: l10n.stylePresetsSubtitle,
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        SizedBox(
+          height: 204,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _presets.length,
+            separatorBuilder: (_, __) => const SizedBox(width: UITokens.space),
+            itemBuilder: (context, index) {
+              final preset = _presets[index];
+              final selected =
+                  preset.color == _selectedColor &&
+                  preset.themeMode == _selectedThemeMode &&
+                  preset.fontFamily == _selectedFont &&
+                  preset.fontWeight == _selectedWeight &&
+                  preset.backgroundMotionMode == _backgroundMotionMode;
+              return _PresetCard(
+                title: _presetTitle(l10n, preset.id),
+                subtitle: _presetSubtitle(l10n, preset.id),
+                color: Color(preset.color),
+                fontFamily: preset.fontFamily,
+                themeModeLabel: _themeModeLabel(l10n, preset.themeMode),
+                selected: selected,
+                onTap: () => _applyPreset(preset),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: UITokens.space2XL),
+        SettingsSectionHeader(
+          title: l10n.moodSectionTitle,
+          subtitle: l10n.moodSectionSubtitle,
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth < 380 ? 1 : 2;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _colorChoices.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisExtent: 112,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemBuilder: (context, index) {
+                final colorValue = _colorChoices[index]['value'] as int;
+                final selected = colorValue == _selectedColor;
+                return _ColorChoiceCard(
+                  label: _colorLabel(l10n, colorValue),
+                  toneLabel: _isLightColor(colorValue)
+                      ? l10n.themeLight
+                      : l10n.themeDark,
+                  color: Color(colorValue),
+                  selected: selected,
+                  onTap: () async {
+                    setState(() => _selectedColor = colorValue);
+                    await _applyThemeUpdate(color: colorValue);
                   },
+                );
+              },
+            );
+          },
+        ),
+        const SizedBox(height: UITokens.space2XL),
+        SettingsSectionHeader(
+          title: l10n.typeSectionTitle,
+          subtitle: l10n.typeSectionSubtitle,
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: _fontChoices.map((font) {
+            final selected = font == _selectedFont;
+            return _FontChoiceCard(
+              fontFamily: font,
+              selected: selected,
+              previewWeight: _resolveFontWeight(_selectedWeight),
+              onTap: () async {
+                setState(() => _selectedFont = font);
+                await _applyThemeUpdate(fontFamily: font);
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        GlassCard(
+          child: Column(
+            children: [
+              _SliderSettingTile(
+                title: l10n.fontWeightLabel,
+                valueLabel: '$_selectedWeight',
+                icon: Icons.format_bold_rounded,
+                min: 300,
+                max: 900,
+                divisions: 6,
+                value: _selectedWeight.toDouble(),
+                onChanged: (value) {
+                  setState(() => _selectedWeight = value.round());
+                },
+                onChangeEnd: (value) async {
+                  await _applyThemeUpdate(fontWeight: value.round());
+                },
+              ),
+              const SizedBox(height: UITokens.spaceSmMd),
+              _SliderSettingTile(
+                title: l10n.textSizeLabel,
+                valueLabel: '${_fontSize.toStringAsFixed(0)} pt',
+                icon: Icons.format_size_rounded,
+                min: 12,
+                max: 20,
+                divisions: 8,
+                value: _fontSize,
+                onChanged: (value) {
+                  setState(() => _fontSize = value);
+                },
+                onChangeEnd: (value) async {
+                  await _applyThemeUpdate(textScale: value / 14);
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: UITokens.space2XL),
+        SettingsSectionHeader(
+          title: l10n.motionSectionTitle,
+          subtitle: l10n.motionSectionSubtitle,
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        GlassCard(
+          child: Column(
+            children: [
+              SwitchListTile(
+                value: _enableFloatingCircles,
+                onChanged: (value) async {
+                  setState(() => _enableFloatingCircles = value);
+                  await _applyThemeUpdate(enableFloatingCircles: value);
+                },
+                secondary: const Icon(Icons.blur_on_rounded),
+                title: Text(l10n.backgroundMotionToggleLabel),
+                subtitle: Text(
+                  _enableFloatingCircles
+                      ? l10n.backgroundMotionOnSubtitle
+                      : l10n.backgroundMotionOffSubtitle,
                 ),
-                const SizedBox(height: 28),
-                SettingsSectionHeader(
-                  title: l10n.typeSectionTitle,
-                  subtitle: l10n.typeSectionSubtitle,
+                contentPadding: EdgeInsets.zero,
+              ),
+              const Divider(height: UITokens.borderThin),
+              SwitchListTile(
+                value: _enableParallax,
+                onChanged: _enableFloatingCircles
+                    ? (value) async {
+                        setState(() => _enableParallax = value);
+                        await _applyThemeUpdate(enableParallax: value);
+                      }
+                    : null,
+                secondary: const Icon(Icons.sensors_rounded),
+                title: Text(l10n.parallaxEffect),
+                subtitle: Text(
+                  _enableParallax ? l10n.reactOnTilt : l10n.staticMotion,
                 ),
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: _fontChoices.map((font) {
-                    final selected = font == _selectedFont;
-                    return _FontChoiceCard(
-                      fontFamily: font,
-                      selected: selected,
-                      previewWeight: _resolveFontWeight(_selectedWeight),
-                      onTap: () async {
-                        setState(() => _selectedFont = font);
-                        await _applyThemeUpdate(fontFamily: font);
-                      },
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 14),
-                GlassCard(
-                  child: Column(
-                    children: [
-                      _SliderSettingTile(
-                        title: l10n.fontWeightLabel,
-                        valueLabel: '$_selectedWeight',
-                        icon: Icons.format_bold_rounded,
-                        min: 300,
-                        max: 900,
-                        divisions: 6,
-                        value: _selectedWeight.toDouble(),
-                        onChanged: (value) {
-                          setState(() => _selectedWeight = value.round());
-                        },
-                        onChangeEnd: (value) async {
-                          await _applyThemeUpdate(fontWeight: value.round());
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      _SliderSettingTile(
-                        title: l10n.textSizeLabel,
-                        valueLabel: '${_fontSize.toStringAsFixed(0)} pt',
-                        icon: Icons.format_size_rounded,
-                        min: 12,
-                        max: 20,
-                        divisions: 8,
-                        value: _fontSize,
-                        onChanged: (value) {
-                          setState(() => _fontSize = value);
-                        },
-                        onChangeEnd: (value) async {
-                          await _applyThemeUpdate(textScale: value / 14);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 28),
-                SettingsSectionHeader(
-                  title: l10n.motionSectionTitle,
-                  subtitle: l10n.motionSectionSubtitle,
-                ),
-                const SizedBox(height: 14),
-                GlassCard(
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        value: _enableFloatingCircles,
-                        onChanged: (value) async {
-                          setState(() => _enableFloatingCircles = value);
-                          await _applyThemeUpdate(enableFloatingCircles: value);
-                        },
-                        secondary: const Icon(Icons.blur_on_rounded),
-                        title: Text(l10n.backgroundMotionToggleLabel),
-                        subtitle: Text(
-                          _enableFloatingCircles
-                              ? l10n.backgroundMotionOnSubtitle
-                              : l10n.backgroundMotionOffSubtitle,
-                        ),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      const Divider(height: 1),
-                      SwitchListTile(
-                        value: _enableParallax,
-                        onChanged: _enableFloatingCircles
-                            ? (value) async {
-                                setState(() => _enableParallax = value);
-                                await _applyThemeUpdate(enableParallax: value);
-                              }
-                            : null,
-                        secondary: const Icon(Icons.sensors_rounded),
-                        title: Text(l10n.parallaxEffect),
-                        subtitle: Text(
-                          _enableParallax
-                              ? l10n.reactOnTilt
-                              : l10n.staticMotion,
-                        ),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                _buildMotionModeSelector(context),
-                const SizedBox(height: 14),
-                GlassCard(
-                  child: Column(
-                    children: [
-                      _SliderSettingTile(
-                        title: l10n.circlesSpeedLabel,
-                        valueLabel:
-                            '${(_floatingCirclesSpeed * 100).round()}%',
-                        icon: Icons.speed_rounded,
-                        min: 0.2,
-                        max: 2,
-                        divisions: 18,
-                        value: _floatingCirclesSpeed,
-                        enabled: _enableFloatingCircles,
-                        onChanged: (value) {
-                          setState(() => _floatingCirclesSpeed = value);
-                        },
-                        onChangeEnd: (value) async {
-                          await _applyThemeUpdate(
-                            floatingCirclesSpeed: value,
-                          );
-                        },
-                        startLabel: l10n.speedSlow,
-                        endLabel: l10n.speedFast,
-                      ),
-                      const SizedBox(height: 10),
-                      _SliderSettingTile(
-                        title: l10n.brightnessLabel,
-                        valueLabel:
-                            '${(_floatingCirclesOpacity * 100).round()}%',
-                        icon: Icons.blur_circular_rounded,
-                        min: 0.1,
-                        max: 1,
-                        divisions: 9,
-                        value: _floatingCirclesOpacity,
-                        enabled: _enableFloatingCircles,
-                        onChanged: (value) {
-                          setState(() => _floatingCirclesOpacity = value);
-                        },
-                        onChangeEnd: (value) async {
-                          await _applyThemeUpdate(
-                            floatingCirclesOpacity: value,
-                          );
-                        },
-                        startLabel: l10n.dimOpacity,
-                        endLabel: l10n.brightOpacity,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 28),
-                SettingsSectionHeader(
-                  title: l10n.densitySectionTitle,
-                  subtitle: l10n.densitySectionSubtitle,
-                ),
-                const SizedBox(height: 14),
-                GlassCard(
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        value: _compactMode,
-                        onChanged: (value) async {
-                          setState(() => _compactMode = value);
-                          await _applyThemeUpdate(compactMode: value);
-                        },
-                        secondary: const Icon(Icons.compress_rounded),
-                        title: Text(l10n.compactModeLabel),
-                        subtitle: Text(l10n.compactMode),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      const Divider(height: 1),
-                      SwitchListTile(
-                        value: _dynamicBubbles,
-                        onChanged: (value) async {
-                          setState(() => _dynamicBubbles = value);
-                          await _applyThemeUpdate(dynamicBubbles: value);
-                        },
-                        secondary: const Icon(Icons.forum_rounded),
-                        title: Text(l10n.dynamicBubblesLabel),
-                        subtitle: Text(l10n.dynamicBubblesSubtitle),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-                GlassCard(
-                  child: Column(
-                    children: [
-                      _SliderSettingTile(
-                        title: l10n.bubbleRoundingLabel,
-                        valueLabel: _bubbleRounding.toStringAsFixed(0),
-                        icon: Icons.rounded_corner_rounded,
-                        min: 8,
-                        max: 28,
-                        divisions: 10,
-                        value: _bubbleRounding,
-                        onChanged: (value) {
-                          setState(() => _bubbleRounding = value);
-                        },
-                        onChangeEnd: (value) async {
-                          await _applyThemeUpdate(bubbleRounding: value);
-                        },
-                        startLabel: l10n.bubbleRoundingCompact,
-                        endLabel: l10n.bubbleRoundingSoft,
-                      ),
-                      const SizedBox(height: 10),
-                      _SliderSettingTile(
-                        title: l10n.navBarTimeoutLabel,
-                        valueLabel: l10n
-                            .navBarTimeoutValue(_navBarHideTimeoutSeconds),
-                        icon: Icons.timer_outlined,
-                        min: 1,
-                        max: 6,
-                        divisions: 5,
-                        value: _navBarHideTimeoutSeconds.toDouble(),
-                        onChanged: (value) {
-                          setState(() {
-                            _navBarHideTimeoutSeconds = value.round();
-                          });
-                        },
-                        onChangeEnd: (value) async {
-                          await _applyThemeUpdate(
-                            navBarHideTimeoutSeconds: value.round(),
-                          );
-                        },
-                        startLabel: l10n.navBarTimeoutShort,
-                        endLabel: l10n.navBarTimeoutLong,
-                      ),
-                    ],
-                  ),
-                ),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        _buildMotionModeSelector(context),
+        const SizedBox(height: UITokens.spaceMdSm),
+        GlassCard(
+          child: Column(
+            children: [
+              _SliderSettingTile(
+                title: l10n.circlesSpeedLabel,
+                valueLabel: '${(_floatingCirclesSpeed * 100).round()}%',
+                icon: Icons.speed_rounded,
+                min: 0.2,
+                max: 2,
+                divisions: 18,
+                value: _floatingCirclesSpeed,
+                enabled: _enableFloatingCircles,
+                onChanged: (value) {
+                  setState(() => _floatingCirclesSpeed = value);
+                },
+                onChangeEnd: (value) async {
+                  await _applyThemeUpdate(
+                    floatingCirclesSpeed: value,
+                  );
+                },
+                startLabel: l10n.speedSlow,
+                endLabel: l10n.speedFast,
+              ),
+              const SizedBox(height: UITokens.spaceSmMd),
+              _SliderSettingTile(
+                title: l10n.brightnessLabel,
+                valueLabel: '${(_floatingCirclesOpacity * 100).round()}%',
+                icon: Icons.blur_circular_rounded,
+                min: 0.1,
+                max: 1,
+                divisions: 9,
+                value: _floatingCirclesOpacity,
+                enabled: _enableFloatingCircles,
+                onChanged: (value) {
+                  setState(() => _floatingCirclesOpacity = value);
+                },
+                onChangeEnd: (value) async {
+                  await _applyThemeUpdate(
+                    floatingCirclesOpacity: value,
+                  );
+                },
+                startLabel: l10n.dimOpacity,
+                endLabel: l10n.brightOpacity,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: UITokens.space2XL),
+        SettingsSectionHeader(
+          title: l10n.densitySectionTitle,
+          subtitle: l10n.densitySectionSubtitle,
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        GlassCard(
+          child: Column(
+            children: [
+              SwitchListTile(
+                value: _compactMode,
+                onChanged: (value) async {
+                  setState(() => _compactMode = value);
+                  await _applyThemeUpdate(compactMode: value);
+                },
+                secondary: const Icon(Icons.compress_rounded),
+                title: Text(l10n.compactModeLabel),
+                subtitle: Text(l10n.compactMode),
+                contentPadding: EdgeInsets.zero,
+              ),
+              const Divider(height: UITokens.borderThin),
+              SwitchListTile(
+                value: _dynamicBubbles,
+                onChanged: (value) async {
+                  setState(() => _dynamicBubbles = value);
+                  await _applyThemeUpdate(dynamicBubbles: value);
+                },
+                secondary: const Icon(Icons.forum_rounded),
+                title: Text(l10n.dynamicBubblesLabel),
+                subtitle: Text(l10n.dynamicBubblesSubtitle),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        GlassCard(
+          child: Column(
+            children: [
+              _SliderSettingTile(
+                title: l10n.bubbleRoundingLabel,
+                valueLabel: _bubbleRounding.toStringAsFixed(0),
+                icon: Icons.rounded_corner_rounded,
+                min: 8,
+                max: 28,
+                divisions: 10,
+                value: _bubbleRounding,
+                onChanged: (value) {
+                  setState(() => _bubbleRounding = value);
+                },
+                onChangeEnd: (value) async {
+                  await _applyThemeUpdate(bubbleRounding: value);
+                },
+                startLabel: l10n.bubbleRoundingCompact,
+                endLabel: l10n.bubbleRoundingSoft,
+              ),
+              const SizedBox(height: UITokens.spaceSmMd),
+              _SliderSettingTile(
+                title: l10n.navBarTimeoutLabel,
+                valueLabel: l10n.navBarTimeoutValue(_navBarHideTimeoutSeconds),
+                icon: Icons.timer_outlined,
+                min: 1,
+                max: 6,
+                divisions: 5,
+                value: _navBarHideTimeoutSeconds.toDouble(),
+                onChanged: (value) {
+                  setState(() {
+                    _navBarHideTimeoutSeconds = value.round();
+                  });
+                },
+                onChangeEnd: (value) async {
+                  await _applyThemeUpdate(
+                    navBarHideTimeoutSeconds: value.round(),
+                  );
+                },
+                startLabel: l10n.navBarTimeoutShort,
+                endLabel: l10n.navBarTimeoutLong,
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -980,11 +976,11 @@ class _PresetCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(UITokens.cornerXL),
           onTap: onTap,
           child: Ink(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(UITokens.cornerXL),
               border: Border.all(
                 color: selected
                     ? color.withValues(alpha: 0.95)
@@ -1010,7 +1006,7 @@ class _PresetCard extends StatelessWidget {
                   : null,
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(UITokens.spaceMd),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1021,7 +1017,9 @@ class _PresetCard extends StatelessWidget {
                         child: Container(
                           height: 70,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(
+                              UITokens.cornerXLg,
+                            ),
                             gradient: LinearGradient(
                               colors: [
                                 color.withValues(alpha: 0.86),
@@ -1033,20 +1031,25 @@ class _PresetCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: UITokens.spaceSmMd),
                       Container(
                         width: 64,
                         height: 70,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18),
-                          color:
-                              theme.colorScheme.surface.withValues(alpha: 0.76),
+                          borderRadius: BorderRadius.circular(
+                            UITokens.cornerXLg,
+                          ),
+                          color: theme.colorScheme.surface.withValues(
+                            alpha: 0.76,
+                          ),
                         ),
                         alignment: Alignment.center,
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: UITokens.spaceXSm,
+                            ),
                             child: Text(
                               'Аа',
                               style: theme.textTheme.titleLarge?.copyWith(
@@ -1059,7 +1062,7 @@ class _PresetCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: UITokens.spaceMdSm),
                   Text(
                     themeModeLabel,
                     style: theme.textTheme.labelMedium?.copyWith(
@@ -1067,14 +1070,14 @@ class _PresetCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: UITokens.spaceSm),
                   Text(
                     title,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: UITokens.spaceXS),
                   Expanded(
                     child: Text(
                       subtitle,
@@ -1119,10 +1122,10 @@ class _ColorChoiceCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(UITokens.corner2XLg),
         child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(UITokens.corner2XLg),
             border: Border.all(
               color: selected
                   ? color.withValues(alpha: 0.95)
@@ -1132,12 +1135,12 @@ class _ColorChoiceCard extends StatelessWidget {
             color: theme.colorScheme.surface.withValues(alpha: 0.68),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(UITokens.spaceMd),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.only(top: UITokens.space2XS),
                   child: Container(
                     width: 42,
                     height: 42,
@@ -1158,7 +1161,7 @@ class _ColorChoiceCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: UITokens.space),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1172,7 +1175,7 @@ class _ColorChoiceCard extends StatelessWidget {
                           height: 1.15,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: UITokens.spaceSm),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -1180,7 +1183,9 @@ class _ColorChoiceCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(
+                            UITokens.cornerPill,
+                          ),
                         ),
                         child: Text(
                           toneLabel,
@@ -1193,9 +1198,8 @@ class _ColorChoiceCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                if (selected)
-                  Icon(Icons.check_circle_rounded, color: color),
+                const SizedBox(width: UITokens.spaceSm),
+                if (selected) Icon(Icons.check_circle_rounded, color: color),
               ],
             ),
           ),
@@ -1228,10 +1232,10 @@ class _FontChoiceCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(UITokens.corner2XLg),
           child: Ink(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(UITokens.corner2XLg),
               border: Border.all(
                 color: selected
                     ? theme.colorScheme.primary
@@ -1241,7 +1245,7 @@ class _FontChoiceCard extends StatelessWidget {
               color: theme.colorScheme.surface.withValues(alpha: 0.72),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(UITokens.spaceMdSm),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1253,7 +1257,7 @@ class _FontChoiceCard extends StatelessWidget {
                       fontWeight: previewWeight,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: UITokens.spaceSm),
                   Text(
                     fontFamily,
                     maxLines: 1,
@@ -1296,11 +1300,11 @@ class _SegmentChoiceCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(UITokens.cornerXLg),
             border: Border.all(
               color: selected
                   ? theme.colorScheme.primary
@@ -1321,7 +1325,7 @@ class _SegmentChoiceCard extends StatelessWidget {
                     ? theme.colorScheme.primary
                     : AppColors.subtitleText(context),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: UITokens.spaceSm),
               Text(
                 label,
                 maxLines: 1,
@@ -1331,7 +1335,7 @@ class _SegmentChoiceCard extends StatelessWidget {
                 ),
               ),
               if (caption != null) ...[
-                const SizedBox(height: 3),
+                const SizedBox(height: UITokens.space3XS),
                 Text(
                   caption!,
                   maxLines: 2,
@@ -1389,7 +1393,7 @@ class _SliderSettingTile extends StatelessWidget {
         Row(
           children: [
             Icon(icon, size: 18, color: AppColors.subtitleText(context)),
-            const SizedBox(width: 8),
+            const SizedBox(width: UITokens.spaceSm),
             Expanded(
               child: Text(
                 title,
@@ -1454,38 +1458,46 @@ class _PreviewRoomsCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    final rooms = <({
-      String title,
-      String subtitle,
-      String time,
-      int unread,
-      bool muted,
-    })>[
-      (
-        title: l10n.previewRoomDesignSync,
-        subtitle: l10n.previewRoomDesignSyncSubtitle,
-        time: '08:14',
-        unread: 3,
-        muted: false,
-      ),
-      (
-        title: l10n.previewRoomReleaseCheck,
-        subtitle: l10n.previewRoomReleaseCheckSubtitle,
-        time: '09:07',
-        unread: 1,
-        muted: true,
-      ),
-      (
-        title: l10n.previewRoomAlphaOps,
-        subtitle: l10n.previewRoomAlphaOpsSubtitle,
-        time: '09:41',
-        unread: 0,
-        muted: false,
-      ),
-    ];
+    final rooms =
+        <
+          ({
+            String title,
+            String subtitle,
+            String time,
+            int unread,
+            bool muted,
+          })
+        >[
+          (
+            title: l10n.previewRoomDesignSync,
+            subtitle: l10n.previewRoomDesignSyncSubtitle,
+            time: '08:14',
+            unread: 3,
+            muted: false,
+          ),
+          (
+            title: l10n.previewRoomReleaseCheck,
+            subtitle: l10n.previewRoomReleaseCheckSubtitle,
+            time: '09:07',
+            unread: 1,
+            muted: true,
+          ),
+          (
+            title: l10n.previewRoomAlphaOps,
+            subtitle: l10n.previewRoomAlphaOpsSubtitle,
+            time: '09:41',
+            unread: 0,
+            muted: false,
+          ),
+        ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        UITokens.spaceMd,
+        UITokens.spaceMd,
+        UITokens.spaceMdSm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1495,14 +1507,14 @@ class _PreviewRoomsCard extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: UITokens.spaceXS),
           Text(
             l10n.previewRoomsSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.subtitleText(context),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: UITokens.spaceMdSm),
           Expanded(
             child: Column(
               children: rooms.map((room) {
@@ -1526,7 +1538,7 @@ class _PreviewRoomsCard extends StatelessWidget {
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: UITokens.space),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1538,7 +1550,7 @@ class _PreviewRoomsCard extends StatelessWidget {
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              const SizedBox(height: 3),
+                              const SizedBox(height: UITokens.space3XS),
                               Text(
                                 room.subtitle,
                                 maxLines: 2,
@@ -1551,13 +1563,13 @@ class _PreviewRoomsCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: UITokens.spaceSm),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(room.time, style: theme.textTheme.labelSmall),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: UITokens.spaceSm),
                             if (room.unread > 0)
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -1566,7 +1578,9 @@ class _PreviewRoomsCard extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: theme.colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(999),
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.cornerPill,
+                                  ),
                                 ),
                                 child: Text(
                                   '${room.unread}',
@@ -1643,7 +1657,12 @@ class _PreviewConversationCard extends StatelessWidget {
     final maxWidth = compactMode ? 214.0 : 236.0;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        UITokens.spaceMd,
+        UITokens.spaceMd,
+        UITokens.spaceMdSm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1653,14 +1672,14 @@ class _PreviewConversationCard extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: UITokens.spaceXS),
           Text(
             l10n.previewConversationSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.subtitleText(context),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: UITokens.spaceMd),
           Align(
             alignment: Alignment.centerLeft,
             child: Container(
@@ -1745,7 +1764,7 @@ class _PreviewSettingsCard extends StatelessWidget {
         padding: EdgeInsets.all(compactMode ? 12 : 14),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface.withValues(alpha: 0.68),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(UITokens.cornerXLg),
         ),
         child: Row(
           children: [
@@ -1754,12 +1773,12 @@ class _PreviewSettingsCard extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(UITokens.cornerMd),
               ),
               alignment: Alignment.center,
               child: Icon(icon, color: theme.colorScheme.primary),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: UITokens.space),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1770,7 +1789,7 @@ class _PreviewSettingsCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: UITokens.space3XS),
                   Text(
                     subtitle,
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -1787,7 +1806,12 @@ class _PreviewSettingsCard extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      padding: const EdgeInsets.fromLTRB(
+        UITokens.spaceMd,
+        UITokens.spaceMd,
+        UITokens.spaceMd,
+        UITokens.spaceMdSm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1797,14 +1821,14 @@ class _PreviewSettingsCard extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: UITokens.spaceXS),
           Text(
             l10n.previewSettingsSubtitle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.subtitleText(context),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: UITokens.spaceMdSm),
           Expanded(
             child: Column(
               children: [

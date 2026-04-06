@@ -747,6 +747,138 @@ class AegisChatService {
     return _profileCache[parsedId];
   }
 
+  String _normalizeConversationKind(String rawType, {int? peerUserId}) {
+    if (peerUserId != null) {
+      return 'direct';
+    }
+
+    switch (rawType.trim().toLowerCase()) {
+      case 'direct':
+      case 'dm':
+      case 'privatechat':
+      case 'private_chat':
+        return 'direct';
+      case 'channel':
+      case 'public':
+      case 'broadcast':
+        return 'channel';
+      case 'group':
+      case 'chat':
+      case 'private':
+      case 'private_group':
+      case 'privategroup':
+        return 'group';
+      default:
+        return rawType.trim().isEmpty ? 'channel' : rawType.trim().toLowerCase();
+    }
+  }
+
+  Map<String, dynamic>? _conversationProfileFallback(int userId) {
+    final roomIds = _peerUserIdToRoomIds[userId];
+    if (roomIds == null || roomIds.isEmpty) {
+      return null;
+    }
+
+    for (final roomId in roomIds) {
+      final conversation = _conversations[roomId];
+      if (conversation == null) {
+        continue;
+      }
+
+      final title = conversation.title.trim();
+      final avatarUrl = normalizeAegisAvatarUrl(conversation.avatarUrl);
+      final hasTitle = title.isNotEmpty;
+      final hasAvatar = avatarUrl?.isNotEmpty ?? false;
+      if (!hasTitle && !hasAvatar) {
+        continue;
+      }
+
+      return <String, dynamic>{
+        'id': userId.toString(),
+        'displayName': hasTitle ? title : userId.toString(),
+        'avatarUrl': hasAvatar ? avatarUrl : null,
+      };
+    }
+
+    return null;
+  }
+
+  bool _looksLikeOpaqueIdentity(
+    String? value, {
+    required int userId,
+    String? username,
+  }) {
+    final text = value?.trim();
+    if (text == null || text.isEmpty) {
+      return true;
+    }
+    if (text == userId.toString()) {
+      return true;
+    }
+    final normalizedUsername = username?.trim();
+    if (normalizedUsername == null || normalizedUsername.isEmpty) {
+      return false;
+    }
+    return text == normalizedUsername && RegExp(r'^\d+$').hasMatch(text);
+  }
+
+  Map<String, dynamic> _applyConversationProfileFallback(
+    int userId,
+    Map<String, dynamic> info,
+  ) {
+    final fallback = _conversationProfileFallback(userId);
+    if (fallback == null) {
+      return info;
+    }
+
+    final fallbackDisplayName = fallback['displayName']?.toString().trim();
+    final fallbackAvatarUrl = fallback['avatarUrl']?.toString();
+    final username = info['username']?.toString();
+    final displayName = info['displayName']?.toString();
+    final avatarUrl = info['avatarUrl']?.toString();
+
+    return <String, dynamic>{
+      ...info,
+      if ((fallbackDisplayName?.isNotEmpty ?? false) &&
+          _looksLikeOpaqueIdentity(
+            displayName,
+            userId: userId,
+            username: username,
+          ))
+        'displayName': fallbackDisplayName,
+      if ((avatarUrl == null || avatarUrl.isEmpty) &&
+          (fallbackAvatarUrl?.isNotEmpty ?? false))
+        'avatarUrl': fallbackAvatarUrl,
+    };
+  }
+
+  void _seedProfileFromChatListItem(ChatListItem item) {
+    final peerUserId = item.peerUserId;
+    if (peerUserId == null) {
+      return;
+    }
+
+    final existing = _profileCache[peerUserId];
+    final seeded = <String, dynamic>{
+      'id': peerUserId.toString(),
+      'username': existing?['username']?.toString() ?? peerUserId.toString(),
+      'displayName': item.title.trim().isNotEmpty
+          ? item.title.trim()
+          : existing?['displayName']?.toString() ?? peerUserId.toString(),
+      'avatarUrl': normalizeAegisAvatarUrl(item.avatarUrl) ?? existing?['avatarUrl'],
+      'avatars': existing?['avatars'] ?? const <Map<String, dynamic>>[],
+      'presenceStatus': item.presenceStatus ?? existing?['presenceStatus'],
+      'isOnline': item.presenceStatus == 'online' || existing?['isOnline'] == true,
+      'bio': existing?['bio'],
+      'location': existing?['location'],
+      'birthday': existing?['birthday'],
+      'email': existing?['email'],
+      'lastSeenAt': existing?['lastSeenAt'],
+    };
+
+    _storeProfile(peerUserId, seeded);
+  }
+
   Map<String, dynamic> _profileToInfo(dynamic profile) {
     return <String, dynamic>{
       'id': profile.id.toString(),
@@ -804,11 +936,14 @@ class AegisChatService {
 
       final profile = response.profile;
       if (profile == null) {
+        final fallback = parsedId == null
+            ? null
+            : _conversationProfileFallback(parsedId);
         return {
           'id': userId,
           'username': userId,
-          'displayName': userId,
-          'avatarUrl': null,
+          'displayName': fallback?['displayName'] ?? userId,
+          'avatarUrl': fallback?['avatarUrl'],
           'avatars': const <Map<String, dynamic>>[],
           'presenceStatus': null,
           'isOnline': false,
@@ -816,7 +951,10 @@ class AegisChatService {
         };
       }
 
-      final info = _profileToInfo(profile);
+      final info = _applyConversationProfileFallback(
+        profile.id,
+        _profileToInfo(profile),
+      );
       _storeProfile(profile.id, info);
       final conversationChanged = _syncProfileIntoConversations(
         profile.id,
@@ -1039,7 +1177,7 @@ class AegisChatService {
     }
 
     int? messageId;
-    if (conversation.kind == 'direct') {
+    if (conversation.peerUserId != null || conversation.kind == 'direct') {
       final peerId = conversation.peerUserId;
       if (peerId == null) throw Exception('Missing peer user id');
       final response = await _auth.rawClient.sendPrivateMessage(
@@ -1048,7 +1186,9 @@ class AegisChatService {
       );
       messageId = response.messageId > 0 ? response.messageId : null;
       if (!response.success) {
-        throw Exception(response.messageText ?? 'Unable to send message');
+        throw Exception(
+          _normalizeDirectSendError(response.messageText),
+        );
       }
     } else if (conversation.kind == 'group') {
       final groupId = conversation.channelId;
@@ -1095,6 +1235,21 @@ class AegisChatService {
       await _appendMessage(roomId, message);
     }
     return message;
+  }
+
+  String _normalizeDirectSendError(String? serverMessage) {
+    final raw = (serverMessage ?? '').trim();
+    final normalized = raw.toLowerCase();
+
+    if (normalized.isEmpty) {
+      return 'Unable to send direct message';
+    }
+
+    if (normalized.contains('internal server error')) {
+      return 'Direct messages are unavailable on the current server';
+    }
+
+    return raw;
   }
 
   Future<AegisRoomMessage> _sendMediaMessage({
@@ -3163,6 +3318,7 @@ class AegisChatService {
       final seenRoomIds = <String>{};
 
       for (final item in response.chats) {
+        _seedProfileFromChatListItem(item);
         final roomId = item.peerUserId != null
             ? 'dm:${item.peerUserId}'
             : 'channel:${item.channelId ?? item.chatId}';
@@ -3174,7 +3330,10 @@ class AegisChatService {
         final next = _StoredConversation(
           id: roomId,
           title: item.title,
-          kind: item.type == 'direct' ? 'direct' : item.type,
+          kind: _normalizeConversationKind(
+            item.type,
+            peerUserId: item.peerUserId,
+          ),
           updatedAt:
               item.lastMessageAt ?? existing?.updatedAt ?? DateTime.now(),
           lastMessage: item.lastMessage ?? existing?.lastMessage,
