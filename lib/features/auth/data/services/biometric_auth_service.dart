@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:two_space_app/core/utils/secure_store.dart';
 
 class BiometricAuthService {
   factory BiometricAuthService() => _instance;
@@ -8,7 +9,7 @@ class BiometricAuthService {
   static final BiometricAuthService _instance =
       BiometricAuthService._internal();
   final LocalAuthentication _auth = LocalAuthentication();
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage _secureStorage = AppSecureStorage.instance;
 
   /// Check if device supports biometric authentication
   Future<bool> canAuthenticate() async {

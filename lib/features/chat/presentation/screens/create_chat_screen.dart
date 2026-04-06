@@ -1,7 +1,6 @@
-import 'dart:typed_data';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
@@ -10,7 +9,10 @@ import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
+import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/group_settings_screen.dart';
+import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
 import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
 import 'package:two_space_app/core/models/group.dart';
@@ -42,6 +44,7 @@ class _CreateChatScreenState extends State<CreateChatScreen>
   bool _loading = false;
   bool _isPrivate = true;
   bool _showGroupHistory = false;
+  bool _openGroupSettingsAfterCreate = true;
   String? _errorMessage;
   final AegisChatService _chatService = AegisChatService();
 
@@ -105,10 +108,37 @@ class _CreateChatScreenState extends State<CreateChatScreen>
   }
 
   Future<void> _openContacts() async {
-    await Navigator.push(
+    final selected = await Navigator.push<PersonEntry>(
       context,
-      MaterialPageRoute(builder: (_) => const SearchContactsScreen()),
+      MaterialPageRoute(
+        builder: (_) => const SearchContactsScreen(
+          purpose: SearchContactsPurpose.newChat,
+        ),
+      ),
     );
+    if (selected == null || selected.remoteUserId == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+      _userIdController.text = selected.remoteUserId!;
+    });
+
+    try {
+      final backend = createChatBackend();
+      final map = await backend.getOrCreateDirectChat(selected.remoteUserId!);
+      await _openChat(Chat.fromMap(map));
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _loading = false;
+        _errorMessage = _friendlyError(error);
+      });
+    }
   }
 
   Future<void> _openChat(Chat chat) async {
@@ -185,6 +215,18 @@ class _CreateChatScreenState extends State<CreateChatScreen>
         avatarBytes: _groupAvatarBytes,
         avatarFileName: _groupAvatarFileName,
       );
+      if (!mounted) {
+        return;
+      }
+      if (_openGroupSettingsAfterCreate) {
+        await Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GroupSettingsScreen(roomId: group.roomId),
+          ),
+        );
+        return;
+      }
       await _openChat(
         Chat(
           id: group.roomId,
@@ -228,6 +270,25 @@ class _CreateChatScreenState extends State<CreateChatScreen>
         });
       }
     }
+  }
+
+  Future<void> _pasteJoinLink() async {
+    final l10n = AppLocalizations.of(context)!;
+    final data = await Clipboard.getData('text/plain');
+    final value = data?.text?.trim() ?? '';
+    if (value.isEmpty) {
+      return;
+    }
+    setState(() {
+      _joinLinkController.text = value;
+      _errorMessage = null;
+    });
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.textCopied)),
+    );
   }
 
   InputDecoration _fieldDecoration({
@@ -818,6 +879,29 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   onChanged: (v) => setState(() => _showGroupHistory = v),
                 ),
               ),
+              const SizedBox(height: UITokens.spaceMdSm),
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+                ),
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: UITokens.spaceMdSm,
+                  ),
+                  title: Text(
+                    l10n.settingsTitle,
+                    style: TextStyle(color: theme.colorScheme.onSurface),
+                  ),
+                  subtitle: Text(
+                    l10n.inviteUserSubtitle,
+                    style: TextStyle(color: AppColors.subtitleText(context)),
+                  ),
+                  value: _openGroupSettingsAfterCreate,
+                  onChanged: (v) =>
+                      setState(() => _openGroupSettingsAfterCreate = v),
+                ),
+              ),
               if (_errorMessage != null && _tabController.index == 1) ...[
                 const SizedBox(height: UITokens.space),
                 _buildErrorBanner(),
@@ -872,6 +956,33 @@ class _CreateChatScreenState extends State<CreateChatScreen>
                   hint: l10n.joinLinkHint,
                   icon: Icons.link_rounded,
                 ),
+              ),
+              const SizedBox(height: UITokens.spaceMdSm),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _loading ? null : _pasteJoinLink,
+                      icon: const Icon(Icons.content_paste_go_rounded),
+                      label: Text(l10n.copyLinkAction),
+                    ),
+                  ),
+                  const SizedBox(width: UITokens.spaceSmMd),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _loading
+                          ? null
+                          : () {
+                              setState(() {
+                                _joinLinkController.clear();
+                                _errorMessage = null;
+                              });
+                            },
+                      icon: const Icon(Icons.close_rounded),
+                      label: Text(l10n.storageAutoCleanSelectNone),
+                    ),
+                  ),
+                ],
               ),
               if (_errorMessage != null && _tabController.index == 2) ...[
                 const SizedBox(height: UITokens.space),

@@ -3,6 +3,7 @@ import 'dart:ffi';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:drift_sqflite/drift_sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/open.dart' as sqlite_open;
@@ -247,7 +248,13 @@ class AegisChatDatabase extends _$AegisChatDatabase {
   }
 }
 
-LazyDatabase _openConnection() {
+QueryExecutor _openConnection() {
+  if (Platform.isAndroid || Platform.isIOS) {
+    return SqfliteQueryExecutor.inDatabaseFolder(
+      path: 'aegis_chat.sqlite',
+    );
+  }
+
   return LazyDatabase(() async {
     _configureSqliteRuntime();
     final directory = await getApplicationSupportDirectory();

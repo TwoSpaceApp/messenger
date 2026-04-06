@@ -9,6 +9,7 @@ import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/official_api_credentials.dart';
 import 'package:two_space_app/core/services/dev_http_client.dart' as http;
 import 'package:two_space_app/core/services/dev_logger.dart';
+import 'package:two_space_app/core/utils/secure_store.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_identity_service.dart';
 
 export 'package:two_space_app/core/network/aegis/message_payloads.dart'
@@ -51,7 +52,7 @@ class AegisAuthService {
   static final AegisAuthService _instance = AegisAuthService._internal();
 
   final DevLogger _log = DevLogger('AegisAuthService');
-  final FlutterSecureStorage _secure = const FlutterSecureStorage();
+  final FlutterSecureStorage _secure = AppSecureStorage.instance;
   final AegisClient _client = _buildClient();
   final AegisIdentityService _identity = AegisIdentityService();
   final StreamController<void> _sessionRestoredController =

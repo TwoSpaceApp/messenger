@@ -4,17 +4,19 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/services/dev_network_logger.dart';
+import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
 import 'package:two_space_app/core/services/dev_tools_service.dart';
 import 'package:two_space_app/core/services/update_service.dart';
+import 'package:two_space_app/core/utils/secure_store.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/highlighted_text.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
@@ -375,8 +377,7 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
               '🗑️ Clear Secure Storage',
               Icons.delete_forever_outlined,
               () async {
-                const storage = FlutterSecureStorage();
-                await storage.deleteAll();
+                await SecureStore.deleteAll();
                 widget.logger.info('Secure storage cleared');
               },
               color: Colors.red,
@@ -589,14 +590,75 @@ class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
   }
 }
 
-class _DevMenuFeatureFlagsTab extends StatelessWidget {
+class _DevMenuFeatureFlagsTab extends StatefulWidget {
   const _DevMenuFeatureFlagsTab();
+
+  @override
+  State<_DevMenuFeatureFlagsTab> createState() =>
+      _DevMenuFeatureFlagsTabState();
+}
+
+class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
+  Future<void> _handleSensitiveToggle(bool value) async {
+    if (!DevSensitiveDataPolicy.canRevealSensitiveData) {
+      return;
+    }
+
+    if (!value) {
+      DevSensitiveDataPolicy.setRevealSensitiveData(false);
+      return;
+    }
+
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Показ чувствительных данных'),
+          content: const Text(
+            'После включения новые debug- и network-логи смогут содержать токены, ключи и другие секреты в явном виде. Уже сохранённые записи не изменятся. Продолжить?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Включить'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (approved == true) {
+      DevSensitiveDataPolicy.setRevealSensitiveData(true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(UITokens.spaceMd),
       children: [
+        ValueListenableBuilder<bool>(
+          valueListenable:
+              DevSensitiveDataPolicy.revealSensitiveDataForNewLogs,
+          builder: (context, revealSensitiveData, _) {
+            final canToggle = DevSensitiveDataPolicy.canRevealSensitiveData;
+            final subtitle = canToggle
+                ? 'По умолчанию ключи, токены и пароли маскируются. Этот переключатель влияет только на новые логи.'
+                : 'В этой сборке чувствительные данные всегда скрыты.';
+            return SwitchListTile(
+              title: const Text(
+                'Показывать чувствительные данные в новых логах',
+              ),
+              subtitle: Text(subtitle),
+              value: revealSensitiveData,
+              onChanged: canToggle ? _handleSensitiveToggle : null,
+            );
+          },
+        ),
         _buildFlagTile('Enable New Chat UI', FeatureFlags.enableNewChatUI),
         _buildFlagTile(
           'Force Video Compression',
@@ -612,6 +674,14 @@ class _DevMenuFeatureFlagsTab extends StatelessWidget {
           subtitle:
               'Сохраняет текущую сессию и не выбрасывает на экран входа, если сервер недоступен.',
         ),
+        if (!kDebugMode)
+          const ListTile(
+            leading: Icon(Icons.shield_outlined),
+            title: Text('Чувствительные данные скрыты'),
+            subtitle: Text(
+              'Публичные release/profile сборки всегда показывают debug-данные только в замаскированном виде.',
+            ),
+          ),
       ],
     );
   }

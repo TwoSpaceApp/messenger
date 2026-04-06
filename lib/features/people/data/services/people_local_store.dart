@@ -134,6 +134,16 @@ class PeopleLocalStore {
         .go();
   }
 
+  Future<void> deleteCallHistoryEntries(List<String> ids) async {
+    await _ensureInitialized();
+    if (ids.isEmpty) {
+      return;
+    }
+    await (_database.delete(_database.aegisPeopleCallHistory)
+          ..where((table) => table.id.isIn(ids)))
+        .go();
+  }
+
   Future<void> _ensureInitialized() async {
     if (_initialized) {
       return;

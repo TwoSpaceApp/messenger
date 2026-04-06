@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:two_space_app/core/utils/secure_store.dart';
 
 class TwoFactorAuthService {
   factory TwoFactorAuthService() => _instance;
@@ -9,7 +10,7 @@ class TwoFactorAuthService {
   TwoFactorAuthService._internal();
   static final TwoFactorAuthService _instance =
       TwoFactorAuthService._internal();
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage _secureStorage = AppSecureStorage.instance;
 
   /// Generate a new secret for TOTP (Base32 encoded random bytes)
   Future<String> generateSecret() async {

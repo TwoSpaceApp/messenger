@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
+
 /// Уровни логирования
 enum LogLevel {
   debug('🔵'),
@@ -23,7 +25,8 @@ class DevLogger {
   /// Логировать сообщение с определённым уровнем
   static void _log(String msg, LogLevel level) {
     final timestamp = DateTime.now().toIso8601String();
-    final line = '[$timestamp] ${level.emoji} $msg';
+    final safeMessage = DebugDataSanitizer.sanitizeText(msg);
+    final line = '[$timestamp] ${level.emoji} $safeMessage';
     _logs.add(line);
     if (_logs.length > _maxEntries) {
       _logs.removeRange(0, _logs.length - _maxEntries);

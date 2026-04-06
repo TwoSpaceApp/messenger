@@ -17,6 +17,7 @@ class PersonTile extends StatelessWidget {
     this.onVoiceCallTap,
     this.onVideoCallTap,
     this.onInviteTap,
+    this.onMoreTap,
     this.trailingLabel,
   });
 
@@ -28,6 +29,7 @@ class PersonTile extends StatelessWidget {
   final VoidCallback? onVoiceCallTap;
   final VoidCallback? onVideoCallTap;
   final VoidCallback? onInviteTap;
+  final VoidCallback? onMoreTap;
   final String? trailingLabel;
 
   @override
@@ -85,46 +87,42 @@ class PersonTile extends StatelessWidget {
       );
     }
 
-    final actionButtons = <Widget>[
+    final inlineActions = <Widget>[
       actionIcon(
-        icon: person.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+        icon:
+            person.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
         onPressed: onFavoriteTap,
-        iconColor: person.isFavorite ? AppColors.favoriteActive(context) : AppColors.favoriteInactive(context),
+        iconColor: person.isFavorite
+            ? AppColors.favoriteActive(context)
+            : AppColors.favoriteInactive(context),
       ),
       if (onInviteTap != null)
         actionIcon(
           icon: Icons.share_rounded,
           onPressed: onInviteTap,
         )
-      else ...[
-        if (onMessageTap != null)
-          actionIcon(
-            icon: Icons.chat_bubble_outline_rounded,
-            onPressed: onMessageTap,
-          ),
-        if (onVoiceCallTap != null)
-          actionIcon(
-            icon: Icons.call_outlined,
-            onPressed: onVoiceCallTap,
-          ),
-        if (onVideoCallTap != null)
-          actionIcon(
-            icon: Icons.videocam_outlined,
-            onPressed: onVideoCallTap,
-          ),
-      ],
+      else if (onMessageTap != null)
+        actionIcon(
+          icon: Icons.chat_bubble_outline_rounded,
+          onPressed: onMessageTap,
+        ),
+      if (onMoreTap != null)
+        actionIcon(
+          icon: Icons.more_horiz_rounded,
+          onPressed: onMoreTap,
+        ),
     ];
 
     return GlassCard(
       padding: EdgeInsets.symmetric(
-        horizontal: 6.s(context),
-        vertical: 3.s(context),
+        horizontal: 4.s(context),
+        vertical: 2.s(context),
       ),
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: 8.s(context),
-          vertical: 4.s(context),
+          vertical: 3.s(context),
         ),
         child: isCompact
             ? Column(
@@ -180,7 +178,7 @@ class PersonTile extends StatelessWidget {
                     child: Wrap(
                       spacing: 6.s(context),
                       runSpacing: 6.s(context),
-                      children: actionButtons,
+                      children: inlineActions,
                     ),
                   ),
                 ],
@@ -231,7 +229,7 @@ class PersonTile extends StatelessWidget {
                   Wrap(
                     spacing: 6.s(context),
                     runSpacing: 6.s(context),
-                    children: actionButtons,
+                    children: inlineActions,
                   ),
                 ],
               ),

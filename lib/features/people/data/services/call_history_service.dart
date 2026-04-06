@@ -12,6 +12,9 @@ class CallHistoryService {
 
   Future<void> deleteEntry(String id) => _store.deleteCallHistory(id);
 
+  Future<void> deleteEntries(List<String> ids) =>
+      _store.deleteCallHistoryEntries(ids);
+
   Future<void> recordOutgoingCall({
     required PersonEntry person,
     required bool isVideo,

@@ -6,6 +6,7 @@ import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/feature_in_development_dialog.dart';
 import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class ChangeEmailScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class ChangeEmailScreen extends StatefulWidget {
 }
 
 class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
+  final AegisChatService _chatService = AegisChatService();
   final _emailCtrl = TextEditingController();
   final _pwdCtrl = TextEditingController();
   bool _loading = false;
@@ -31,9 +33,12 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
 
   Future<void> _loadCurrent() async {
     try {
-      // Backend email management is not available yet.
+      final profile = await _chatService.getOwnUserInfo(forceRefresh: true);
+      final email = profile['email']?.toString().trim();
       if (!mounted) return;
-      setState(() => _currentEmail = null);
+      setState(() {
+        _currentEmail = (email == null || email.isEmpty) ? null : email;
+      });
     } catch (_) {}
   }
 

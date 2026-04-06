@@ -105,7 +105,7 @@ class _ChatTimelineState {
 
 class _ChatScreenState extends State<ChatScreen>
     with WidgetsBindingObserver, RouteAware {
-  static const int _historyPageSize = 80;
+  static const int _historyPageSize = 60;
   static const int _userInfoBatchSize = 6;
   static const Duration _searchDebounce = UITokens.durationMd;
   static const Duration _historyLoadThrottle = UITokens.durationXL;
@@ -147,6 +147,10 @@ class _ChatScreenState extends State<ChatScreen>
   bool _desktopDropActive = false;
   final Map<String, _Msg> _pendingOutgoingMessages = <String, _Msg>{};
   int _nextPendingMessageId = 0;
+  List<_Msg>? _visibleMessagesCacheSource;
+  String _visibleMessagesCacheQuery = '';
+  String _visibleMessagesCacheType = 'all';
+  List<_Msg> _visibleMessagesCache = const <_Msg>[];
   ModalRoute<dynamic>? _route;
   bool _routeObserverAttached = false;
   bool _routeHasFocus = false;
@@ -232,22 +236,36 @@ class _ChatScreenState extends State<ChatScreen>
   List<_Msg> _visibleMessagesFor(List<_Msg> messages) {
     final q = (widget.searchQuery ?? '').trim().toLowerCase();
     final type = widget.searchType ?? 'all';
-    if (q.isEmpty && type == 'all') return messages;
-    return messages.where((m) {
-      if (type == 'messages') return m.text.toLowerCase().contains(q);
-      if (type == 'media') {
-        // crude media detection: contains mxc:// or http and common extensions
-        final t = m.text.toLowerCase();
-        if (t.contains('mxc://') || t.contains('http')) return true;
-        final exts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov'];
-        return exts.any(t.endsWith);
-      }
-      if (type == 'users')
-        return m.text.toLowerCase().contains('@') ||
-            m.text.toLowerCase().contains('invite');
-      // all
-      return q.isEmpty || m.text.toLowerCase().contains(q);
-    }).toList();
+    if (identical(_visibleMessagesCacheSource, messages) &&
+        _visibleMessagesCacheQuery == q &&
+        _visibleMessagesCacheType == type) {
+      return _visibleMessagesCache;
+    }
+    late final List<_Msg> visible;
+    if (q.isEmpty && type == 'all') {
+      visible = messages;
+    } else {
+      visible = messages.where((m) {
+        if (type == 'messages') return m.text.toLowerCase().contains(q);
+        if (type == 'media') {
+          // crude media detection: contains mxc:// or http and common extensions
+          final t = m.text.toLowerCase();
+          if (t.contains('mxc://') || t.contains('http')) return true;
+          final exts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov'];
+          return exts.any(t.endsWith);
+        }
+        if (type == 'users') {
+          return m.text.toLowerCase().contains('@') ||
+              m.text.toLowerCase().contains('invite');
+        }
+        return q.isEmpty || m.text.toLowerCase().contains(q);
+      }).toList();
+    }
+    _visibleMessagesCacheSource = messages;
+    _visibleMessagesCacheQuery = q;
+    _visibleMessagesCacheType = type;
+    _visibleMessagesCache = visible;
+    return visible;
   }
 
   bool _sameVisualMessages(List<_Msg> left, List<_Msg> right) {
@@ -766,7 +784,7 @@ class _ChatScreenState extends State<ChatScreen>
       final imageMediaIds = <String>[];
       final imageIndexByMessageId = <String, int>{};
       for (var index = 0; index < msgs.length; index++) {
-        if (index > 0 && index % 40 == 0) {
+        if (index > 0 && index % 24 == 0) {
           await Future<void>.delayed(Duration.zero);
           if (!mounted) {
             return;
@@ -2054,7 +2072,7 @@ class _ChatScreenState extends State<ChatScreen>
             return ListView.custom(
               controller: _listController,
               padding: const EdgeInsets.all(UITokens.space),
-              cacheExtent: 400,
+              cacheExtent: 220,
               childrenDelegate: SliverChildBuilderDelegate(
                 (c, i) {
                   if (timeline.loadingMoreHistory && i == 0) {

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 import 'package:two_space_app/core/network/aegis/message.dart';
+import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
 import 'package:two_space_app/core/services/dev_logger.dart' as dev;
 
 /// Simple logger for Aegis client
@@ -102,22 +103,24 @@ class AegisLogger {
     }
 
     final label = level.name.toUpperCase();
-    print('[$label] Aegis: $message');
+    final safeMessage = DebugDataSanitizer.sanitizeText(message);
+    print('[$label] Aegis: $safeMessage');
 
     switch (level) {
       case LogLevel.debug:
-        _devLogger.debug(message);
+        _devLogger.debug(safeMessage);
       case LogLevel.info:
-        _devLogger.info(message);
+        _devLogger.info(safeMessage);
       case LogLevel.warning:
-        _devLogger.warning(message);
+        _devLogger.warning(safeMessage);
       case LogLevel.error:
-        _devLogger.error(message);
+        _devLogger.error(safeMessage);
     }
 
     if (error != null) {
-      print('[ERROR] Aegis: $error');
-      _devLogger.error(error.toString());
+      final safeError = DebugDataSanitizer.sanitizeText(error.toString());
+      print('[ERROR] Aegis: $safeError');
+      _devLogger.error(safeError);
     }
   }
 

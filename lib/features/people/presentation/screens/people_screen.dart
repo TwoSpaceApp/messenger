@@ -15,6 +15,7 @@ import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/calls_screen.dart';
 import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/people/data/services/people_repository.dart';
 import 'package:two_space_app/features/people/presentation/controllers/people_controller.dart';
@@ -28,11 +29,17 @@ class PeopleScreen extends StatefulWidget {
     this.simplified = false,
     this.titleOverride,
     this.searchHintOverride,
+    this.subtitleOverride,
+    this.showCallsShortcut = true,
+    this.onRemotePersonTap,
   });
   final bool autofocusSearch;
   final bool simplified;
   final String? titleOverride;
   final String? searchHintOverride;
+  final String? subtitleOverride;
+  final bool showCallsShortcut;
+  final Future<void> Function(PersonEntry person)? onRemotePersonTap;
 
   @override
   State<PeopleScreen> createState() => _PeopleScreenState();
@@ -42,6 +49,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
   late final PeopleController _controller;
   late final TextEditingController _searchController;
   late final FocusNode _searchFocusNode;
+  final ScrollController _bodyScrollController = ScrollController();
+  final Map<String, GlobalKey> _phonebookSectionKeys = <String, GlobalKey>{};
 
   @override
   void initState() {
@@ -56,6 +65,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
     _controller.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _bodyScrollController.dispose();
     super.dispose();
   }
 
@@ -68,6 +78,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final canPop = Navigator.of(context).canPop();
     final title = widget.titleOverride ?? l10n.peopleTitle;
     final searchHint = widget.searchHintOverride ?? l10n.peopleSearchHint;
+    final subtitle =
+      widget.subtitleOverride ??
+      (widget.autofocusSearch ? l10n.searchContactsHint : l10n.peopleSubtitle);
     const pad = EdgeInsets.symmetric(horizontal: 16);
 
     return AnimatedBuilder(
@@ -126,9 +139,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                       ),
                                       const SizedBox(height: UITokens.spaceXSm),
                                       Text(
-                                        widget.autofocusSearch
-                                            ? l10n.searchContactsHint
-                                            : l10n.peopleSubtitle,
+                                        subtitle,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                         style: theme.textTheme.bodyMedium
@@ -141,6 +152,12 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                     ],
                                   ),
                                 ),
+                                if (widget.showCallsShortcut)
+                                  _HeaderIcon(
+                                    icon: Icons.history_rounded,
+                                    tooltip: l10n.callsTitle,
+                                    onTap: _openCallsHistory,
+                                  ),
                               ],
                             ),
                             const SizedBox(height: UITokens.spaceMd),
@@ -315,6 +332,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
     }
 
     return ListView(
+      controller: _bodyScrollController,
       cacheExtent: 800,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.only(bottom: UITokens.bottomSheetClearance),
@@ -324,26 +342,182 @@ class _PeopleScreenState extends State<PeopleScreen> {
 
   List<Widget> _dashboardContent(PeopleDashboardData d, AppLocalizations l10n) {
     final w = <Widget>[];
-    void section(String t, List<PersonEntry> p) {
-      final f = _filter(p);
-      if (f.isEmpty) return;
-      w.add(_SectionLabel(title: t, count: f.length));
-      w.addAll(f.map((p) => _personTile(p, l10n)));
+    final seen = <String>{};
+
+    void section(
+      String t,
+      List<PersonEntry> p, {
+      int? limit,
+    }) {
+      final filtered = _dedupePeople(_filter(p), seen);
+      if (filtered.isEmpty) {
+        return;
+      }
+      final visible = limit == null
+          ? filtered
+          : filtered.take(limit).toList(growable: false);
+      w.add(_SectionLabel(title: t, count: filtered.length));
+      w.addAll(visible.map((person) => _personTile(person, l10n)));
     }
 
-    section(l10n.peopleFavoritesFrequentTitle, d.favoritesAndFrequent);
-    section(l10n.peopleRecentTitle, d.recentPeople);
-    section(l10n.peopleTwoSpaceTitle, d.twoSpacePeople);
-    section(l10n.peopleInviteTitle, d.invitePeople);
+    switch (_controller.segment) {
+      case PeopleSegment.all:
+        section(
+          l10n.peopleFavoritesFrequentTitle,
+          d.favoritesAndFrequent,
+          limit: 4,
+        );
+        section(l10n.peopleRecentTitle, d.recentPeople, limit: 4);
+        section(l10n.peopleTwoSpaceTitle, d.twoSpacePeople, limit: 6);
+        section(l10n.peopleInviteTitle, d.invitePeople, limit: 4);
+      case PeopleSegment.twospace:
+        section(
+          l10n.peopleTwoSpaceTitle,
+          <PersonEntry>[
+            ...d.favoritesAndFrequent,
+            ...d.recentPeople,
+            ...d.twoSpacePeople,
+          ],
+        );
+      case PeopleSegment.phonebook:
+        w.addAll(_phonebookContent(d, l10n));
+      case PeopleSegment.recent:
+        section(l10n.peopleRecentTitle, d.recentPeople);
+    }
     return w;
+  }
+
+  List<Widget> _phonebookContent(
+    PeopleDashboardData d,
+    AppLocalizations l10n,
+  ) {
+    final people = _dedupePeople(
+      _filter(<PersonEntry>[
+        ...d.favoritesAndFrequent,
+        ...d.recentPeople,
+        ...d.twoSpacePeople,
+        ...d.invitePeople,
+      ]),
+      <String>{},
+    );
+    if (people.isEmpty) {
+      return const <Widget>[];
+    }
+
+    final grouped = <String, List<PersonEntry>>{};
+    var twoSpaceCount = 0;
+    var inviteCount = 0;
+    for (final person in people) {
+      if (person.isTwoSpaceUser) {
+        twoSpaceCount++;
+      }
+      if (person.isInvitable) {
+        inviteCount++;
+      }
+      grouped.putIfAbsent(_initialForPerson(person), () => <PersonEntry>[]).add(person);
+    }
+
+    final widgets = <Widget>[
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          UITokens.spaceMd,
+          UITokens.spaceSm,
+          UITokens.spaceMd,
+          UITokens.spaceSm,
+        ),
+        child: SectionCard(
+          padding: const EdgeInsets.all(UITokens.spaceMdSm),
+          child: Row(
+            children: [
+              Expanded(
+                child: _PhonebookMetric(
+                  label: l10n.peopleSegmentPhonebook,
+                  value: '${people.length}',
+                ),
+              ),
+              Expanded(
+                child: _PhonebookMetric(
+                  label: l10n.peopleTwoSpaceTitle,
+                  value: '$twoSpaceCount',
+                ),
+              ),
+              Expanded(
+                child: _PhonebookMetric(
+                  label: l10n.peopleInviteTitle,
+                  value: '$inviteCount',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    final sortedKeys = grouped.keys.toList()..sort();
+    widgets.add(
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          UITokens.spaceMd,
+          0,
+          UITokens.spaceMd,
+          UITokens.spaceSm,
+        ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final key in sortedKeys)
+                Padding(
+                  padding: const EdgeInsets.only(right: UITokens.spaceXSm),
+                  child: ActionChip(
+                    label: Text(key),
+                    onPressed: () => _jumpToPhonebookSection(key),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    for (final key in sortedKeys) {
+      final entries = grouped[key]!..sort(
+        (a, b) => a.displayName.toLowerCase().compareTo(
+          b.displayName.toLowerCase(),
+        ),
+      );
+      widgets.add(
+        KeyedSubtree(
+          key: _phonebookSectionKeys.putIfAbsent(key, GlobalKey.new),
+          child: _SectionLabel(title: key, count: entries.length),
+        ),
+      );
+      widgets.addAll(entries.map((person) => _personTile(person, l10n)));
+    }
+    return widgets;
+  }
+
+  Future<void> _jumpToPhonebookSection(String key) async {
+    final sectionKey = _phonebookSectionKeys[key];
+    final sectionContext = sectionKey?.currentContext;
+    if (sectionContext == null) {
+      return;
+    }
+    await Scrollable.ensureVisible(
+      sectionContext,
+      duration: UITokens.durationMdLg,
+      curve: Curves.easeOutCubic,
+      alignment: 0.02,
+    );
   }
 
   List<Widget> _searchContent(AppLocalizations l10n) {
     final data = _controller.searchData;
     final w = <Widget>[];
+    final seen = <String>{};
     if (_controller.searching) w.add(const PeopleInlineSkeleton());
     void section(String t, List<PersonEntry> p) {
-      final f = _filter(p);
+      final f = _dedupePeople(_filter(p), seen);
       if (f.isEmpty) return;
       w.add(_SectionLabel(title: t, count: f.length));
       w.addAll(f.map((p) => _personTile(p, l10n)));
@@ -377,19 +551,14 @@ class _PeopleScreenState extends State<PeopleScreen> {
         trailingLabel: l10n.peopleTwoSpaceBadge,
         subtitle: _subtitle(person, l10n),
         onTap: person.remoteUserId != null
-            ? () => _openProfile(person)
+            ? () => _handleRemotePersonTap(person)
             : () => _showPersonSheet(person),
         onFavoriteTap: () => _controller.toggleFavorite(person),
         onMessageTap: person.remoteUserId != null
             ? () => _openChat(person)
             : null,
-        onVoiceCallTap: person.remoteUserId != null
-            ? () => _startCall(person, false)
-            : null,
-        onVideoCallTap: person.remoteUserId != null
-            ? () => _startCall(person, true)
-            : null,
         onInviteTap: person.isInvitable ? () => _invitePerson(person) : null,
+        onMoreTap: () => _showPersonSheet(person),
       ),
     );
   }
@@ -407,6 +576,36 @@ class _PeopleScreenState extends State<PeopleScreen> {
       case PeopleSegment.recent:
         return people.where((p) => p.lastInteractionAt != null).toList();
     }
+  }
+
+  List<PersonEntry> _dedupePeople(List<PersonEntry> people, Set<String> seen) {
+    final unique = <PersonEntry>[];
+    for (final person in people) {
+      final key = _personDedupKey(person);
+      if (seen.add(key)) {
+        unique.add(person);
+      }
+    }
+    return unique;
+  }
+
+  String _personDedupKey(PersonEntry person) {
+    final remote = person.remoteUserId?.trim();
+    if (remote != null && remote.isNotEmpty) {
+      return 'remote:$remote';
+    }
+    if (person.phones.isNotEmpty) {
+      return 'phone:${person.phones.first.trim()}';
+    }
+    return 'local:${person.id.trim()}';
+  }
+
+  String _initialForPerson(PersonEntry person) {
+    final source = person.displayName.trim().isNotEmpty
+        ? person.displayName.trim()
+        : (person.phones.isNotEmpty ? person.phones.first.trim() : '#');
+    final first = source.characters.first.toUpperCase();
+    return RegExp('[A-ZА-Я0-9]').hasMatch(first) ? first : '#';
   }
 
   String _subtitle(PersonEntry person, AppLocalizations l10n) {
@@ -480,6 +679,15 @@ class _PeopleScreenState extends State<PeopleScreen> {
     );
   }
 
+  Future<void> _handleRemotePersonTap(PersonEntry person) async {
+    final customTap = widget.onRemotePersonTap;
+    if (customTap != null) {
+      await customTap(person);
+      return;
+    }
+    await _openProfile(person);
+  }
+
   Future<void> _openProfile(PersonEntry person) async {
     final remoteUserId = person.remoteUserId;
     if (remoteUserId == null) return;
@@ -509,6 +717,15 @@ class _PeopleScreenState extends State<PeopleScreen> {
           avatarUrl: person.avatarUrl,
         ),
       ),
+    );
+  }
+
+  Future<void> _openCallsHistory() async {
+    if (!mounted) {
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const CallsScreen()),
     );
   }
 
@@ -755,6 +972,37 @@ class _SectionLabel extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _PhonebookMetric extends StatelessWidget {
+  const _PhonebookMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: UITokens.space2XS),
+        Text(
+          label,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.subtitleText(context),
+          ),
+        ),
+      ],
     );
   }
 }

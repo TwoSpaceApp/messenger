@@ -9,6 +9,8 @@ import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/features/auth/data/services/biometric_auth_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key, this.embedded = false});
@@ -20,12 +22,24 @@ class AccountSettingsScreen extends StatefulWidget {
 }
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
+  final AegisChatService _chatService = AegisChatService();
+  final BiometricAuthService _biometricAuthService = BiometricAuthService();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+  bool _accountLoading = true;
+  bool _biometricsAvailable = false;
+  bool _biometricsEnabled = false;
+  Map<String, dynamic>? _accountProfile;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAccountState();
+  }
 
   @override
   void dispose() {
@@ -33,6 +47,80 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadAccountState() async {
+    try {
+      final results = await Future.wait<Object?>([
+        _chatService.getOwnUserInfo(forceRefresh: true),
+        _biometricAuthService.canAuthenticate(),
+        _biometricAuthService.isBiometricEnabled(),
+      ]);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _accountProfile = Map<String, dynamic>.from(
+          results[0]! as Map<String, dynamic>,
+        );
+        _biometricsAvailable = results[1]! as bool;
+        _biometricsEnabled = results[2]! as bool;
+        _accountLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _accountLoading = false;
+      });
+    }
+  }
+
+  String _displayName() {
+    final profile = _accountProfile;
+    if (profile == null) {
+      return '';
+    }
+
+    final displayName = profile['displayName']?.toString().trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      return displayName;
+    }
+
+    final username = profile['username']?.toString().trim();
+    if (username != null && username.isNotEmpty) {
+      return username;
+    }
+
+    return profile['id']?.toString() ?? '';
+  }
+
+  String _username() {
+    return _accountProfile?['username']?.toString().trim() ?? '';
+  }
+
+  String? _email() {
+    final value = _accountProfile?['email']?.toString().trim();
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    return value;
+  }
+
+  String _profileId() {
+    return _accountProfile?['id']?.toString().trim() ?? '';
+  }
+
+  String _biometricsSubtitle(AppLocalizations l10n) {
+    if (!_biometricsAvailable) {
+      return l10n.updateTrustUnavailable;
+    }
+    if (_biometricsEnabled) {
+      return l10n.biometricEnabledLabel;
+    }
+    return l10n.biometricsSetup;
   }
 
   Future<void> _changePassword() async {
@@ -97,6 +185,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final displayName = _displayName();
+    final username = _username();
+    final email = _email();
+    final profileId = _profileId();
     final content = SafeArea(
       top: !widget.embedded,
       child: SingleChildScrollView(
@@ -113,13 +206,72 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 ),
                 child: SectionPageHeader(
                   title: l10n.accountSettingsTitle,
-                  subtitle: l10n.changePasswordSection,
+                  subtitle: l10n.accountSettingsSubtitle,
                   leading: IconButton(
                     onPressed: () => context.pop(),
                     icon: const Icon(Icons.arrow_back_rounded),
                   ),
                 ),
               ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                UITokens.spaceMd,
+                UITokens.spaceMd,
+                UITokens.spaceMd,
+                UITokens.spaceSm,
+              ),
+              child: GlassCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(UITokens.spaceMd),
+                  child: _accountLoading
+                      ? Row(
+                          children: [
+                            const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: UITokens.borderThick,
+                              ),
+                            ),
+                            const SizedBox(width: UITokens.spaceMd),
+                            Text(l10n.loading),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName.isEmpty
+                                  ? l10n.accountSettingsTitle
+                                  : displayName,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (username.isNotEmpty) ...[
+                              const SizedBox(height: UITokens.spaceXS),
+                              Text(
+                                '@$username',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                            if (email != null || profileId.isNotEmpty) ...[
+                              const SizedBox(height: UITokens.spaceSm),
+                              Text(
+                                email ?? profileId,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 UITokens.spaceMd,
@@ -141,6 +293,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    InlineNoticeCard(
+                      icon: Icons.construction_rounded,
+                      badge: l10n.featureInDevelopmentLabel,
+                      title: l10n.changePasswordSection,
+                      message: l10n.featureInDevelopmentMessage(
+                        l10n.changePasswordSection,
+                      ),
+                    ),
+                    const SizedBox(height: UITokens.spaceMd),
                     TextField(
                       controller: _currentPasswordController,
                       obscureText: _obscureCurrentPassword,
@@ -264,7 +425,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     ListTile(
                       leading: const Icon(Icons.email),
                       title: Text(l10n.emailLabel),
-                      subtitle: const Text('—'),
+                      subtitle: Text(email ?? l10n.updateTrustUnavailable),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => context.push(AppStrings.routeChangeEmail),
                       contentPadding: const EdgeInsets.symmetric(
@@ -275,9 +436,68 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     ListTile(
                       leading: const Icon(Icons.phone),
                       title: Text(l10n.phoneLabel),
-                      subtitle: const Text('—'),
+                      subtitle: Text(l10n.updateTrustUnavailable),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => context.push(AppStrings.routeChangePhone),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: UITokens.spaceSm,
+                      ),
+                    ),
+                    if (profileId.isNotEmpty) ...[
+                      const Divider(height: UITokens.borderThin),
+                      ListTile(
+                        leading: const Icon(Icons.badge_outlined),
+                        title: Text(l10n.contactIdLabel),
+                        subtitle: Text(profileId),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: UITokens.spaceSm,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                UITokens.spaceMd,
+                UITokens.spaceXLg,
+                UITokens.spaceMd,
+                UITokens.space,
+              ),
+              child: Text(
+                l10n.biometricSetupTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            GlassCard(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.security_rounded),
+                      title: Text(l10n.twoFactorLabel),
+                      subtitle: Text(l10n.twoFactorPrivacySubtitle),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push(AppStrings.routeTfaSetup),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: UITokens.spaceSm,
+                      ),
+                    ),
+                    const Divider(height: UITokens.borderThin),
+                    ListTile(
+                      leading: const Icon(Icons.fingerprint_rounded),
+                      title: Text(l10n.biometricAuthLabel),
+                      subtitle: Text(_biometricsSubtitle(l10n)),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push(AppStrings.routeBiometricSetup),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: UITokens.spaceSm,
                       ),

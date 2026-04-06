@@ -55,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _warmUpSettings();
     _loadUser();
   }
 
@@ -67,6 +68,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _birthdayController.dispose();
     _avatarStretch.dispose();
     super.dispose();
+  }
+
+  Future<void> _warmUpSettings() async {
+    await SettingsService.loadDeferredSettings();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Map<String, dynamic> _composeProfileState(
+    Map<String, dynamic> userInfo,
+    String fallbackId,
+  ) {
+    return <String, dynamic>{
+      'id': userInfo['id']?.toString() ?? fallbackId,
+      'name':
+          userInfo['displayName'] ??
+          widget.initialName ??
+          userInfo['username'] ??
+          _fallbackProfileName(),
+      'username': userInfo['username'] ?? '',
+      'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
+      'avatars': userInfo['avatars'] ?? const <Map<String, dynamic>>[],
+      'bio': userInfo['bio'] ?? '',
+      'location': userInfo['location'] ?? '',
+      'birthday': userInfo['birthday'] ?? '',
+      'email': userInfo['email'],
+      'phone': userInfo['phone'],
+      'presenceStatus': userInfo['presenceStatus'],
+      'lastSeenAt': userInfo['lastSeenAt'],
+      'prefs': <String, dynamic>{
+        'nickname': userInfo['username'] ?? '',
+        'about': userInfo['bio'] ?? '',
+        'avatarUrl': userInfo['avatarUrl'] ?? widget.initialAvatar,
+        'showEmail': userInfo['showEmail'] == true,
+        'showPhone': userInfo['showPhone'] == true,
+      },
+    };
+  }
+
+  void _applyLoadedUser(Map<String, dynamic> userInfo, {required bool isMe}) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isMe = isMe;
+      _user = _composeProfileState(userInfo, widget.userId);
+      _loading = false;
+    });
+    _initializeControllers();
   }
 
   Future<void> _loadUser() async {
@@ -86,34 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         };
       }
 
-      if (mounted) {
-        setState(() {
-          _user = {
-            'id': userInfo['id']?.toString() ?? widget.userId,
-            'name':
-                userInfo['displayName'] ??
-                widget.initialName ??
-                userInfo['username'] ??
-                _fallbackProfileName(),
-            'username': userInfo['username'] ?? '',
-            'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
-            'avatars': userInfo['avatars'] ?? const <Map<String, dynamic>>[],
-            'bio': userInfo['bio'] ?? '',
-            'location': userInfo['location'] ?? '',
-            'birthday': userInfo['birthday'] ?? '',
-            'email': userInfo['email'],
-            'presenceStatus': userInfo['presenceStatus'],
-            'lastSeenAt': userInfo['lastSeenAt'],
-            'prefs': {
-              'nickname': userInfo['username'] ?? '',
-              'about': userInfo['bio'] ?? '',
-              'avatarUrl': userInfo['avatarUrl'] ?? widget.initialAvatar,
-            },
-          };
-          _loading = false;
-        });
-        _initializeControllers();
-      }
+      _applyLoadedUser(userInfo, isMe: _isMe);
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -256,21 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         mimeType: _mimeTypeForPath(mimePathOrName),
       );
       if (!mounted) return;
-      setState(() {
-        _user = {
-          ...?_user,
-          'avatar': uploaded['avatarUrl'] ?? _user?['avatar'],
-          'avatars': uploaded['avatars'] ?? _user?['avatars'],
-          'presenceStatus':
-              uploaded['presenceStatus'] ?? _user?['presenceStatus'],
-          'lastSeenAt': uploaded['lastSeenAt'] ?? _user?['lastSeenAt'],
-          'prefs': {
-            if (_user?['prefs'] is Map)
-              ...Map<String, dynamic>.from(_user!['prefs'] as Map),
-            'avatarUrl': uploaded['avatarUrl'] ?? _user?['avatar'],
-          },
-        };
-      });
+      _applyLoadedUser(Map<String, dynamic>.from(uploaded), isMe: _isMe);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.profileSaved)),
       );
@@ -313,26 +323,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         birthDate: _birthdayController.text.trim(),
       );
 
+      final refreshed = Map<String, dynamic>.from(
+        await _chatService.getOwnUserInfo(forceRefresh: true),
+      );
+
       if (!mounted) return;
-      setState(() {
-        _user = {
-          ...?_user,
-          'name': displayName.isEmpty ? (_user?['name'] ?? '') : displayName,
-          'username': username.isEmpty ? (_user?['username'] ?? '') : username,
-          'bio': bio,
-          'presenceStatus': _user?['presenceStatus'],
-          'lastSeenAt': _user?['lastSeenAt'],
-          'prefs': {
-            if (_user?['prefs'] is Map)
-              ...Map<String, dynamic>.from(_user!['prefs'] as Map),
-            'nickname': username,
-            'about': bio,
-            'avatarUrl': _avatarUrl(),
-          },
-          'location': _locationController.text.trim(),
-          'birthday': _birthdayController.text.trim(),
-        };
-      });
+      _applyLoadedUser(refreshed, isMe: true);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.profileSaved)),
@@ -421,6 +417,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (normalized.endsWith('.webp')) return 'image/webp';
     if (normalized.endsWith('.gif')) return 'image/gif';
     return 'image/jpeg';
+  }
+
+  Future<void> _pickBirthday() async {
+    final currentText = _birthdayController.text.trim();
+    final initialDate = DateTime.tryParse(currentText) ?? DateTime(2000);
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (selected == null || !mounted) {
+      return;
+    }
+    _birthdayController.text =
+        '${selected.year.toString().padLeft(4, '0')}-${selected.month.toString().padLeft(2, '0')}-${selected.day.toString().padLeft(2, '0')}';
+    setState(() {});
   }
 
   DateTime? _lastSeenAt() {
@@ -841,14 +854,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _buildMetaChip(
                   context,
-                  icon: Icons.alternate_email,
+                  icon: Icons.person_outline_rounded,
                   label: '@$username',
                 ),
                 if (_user?['email'] is String &&
                     (_user!['email'] as String).isNotEmpty)
                   _buildMetaChip(
                     context,
-                    icon: Icons.alternate_email,
+                    icon: Icons.mail_outline_rounded,
                     label: _user!['email'] as String,
                   ),
               ],
@@ -1106,6 +1119,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     l10n.birthdayField,
                     _birthdayController,
                     Icons.cake_outlined,
+                    readOnly: true,
+                    onTap: _pickBirthday,
                   ),
                 ],
               )
@@ -1316,9 +1331,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     TextEditingController controller,
     IconData icon, {
     int maxLines = 1,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
     return TextField(
       controller: controller,
+      readOnly: readOnly,
+      onTap: onTap,
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,

@@ -29,6 +29,8 @@ class CallsScreen extends StatefulWidget {
 class _CallsScreenState extends State<CallsScreen> {
   late final CallsController _controller;
   late final TextEditingController _searchController;
+  final Set<String> _selectedThreadKeys = <String>{};
+  bool _selectionMode = false;
 
   @override
   void initState() {
@@ -61,6 +63,9 @@ class _CallsScreenState extends State<CallsScreen> {
           thisWeekLabel: l10n.callsThisWeekSection,
           earlierLabel: l10n.callsEarlierSection,
         );
+        final topContacts = _controller.topContacts.take(6).toList(
+          growable: false,
+        );
 
         return Scaffold(
           backgroundColor: Colors.transparent,
@@ -81,21 +86,55 @@ class _CallsScreenState extends State<CallsScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                l10n.callsTitle,
+                                _selectionMode
+                                    ? '${l10n.callsTitle} • ${_selectedThreadKeys.length}'
+                                    : l10n.callsTitle,
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   color: theme.colorScheme.onSurface,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
-                            IconButton(
-                              onPressed: _openStartCall,
-                              icon: Icon(
-                                Icons.add_ic_call_outlined,
-                                color: theme.colorScheme.onSurface,
-                                size: 22,
+                            if (_selectionMode)
+                              IconButton(
+                                onPressed: () => _selectAllVisible(sections),
+                                icon: Icon(
+                                  Icons.select_all_rounded,
+                                  color: theme.colorScheme.onSurface,
+                                  size: 20,
+                                ),
+                                tooltip: l10n.storageAutoCleanSelectAll,
+                                visualDensity: VisualDensity.compact,
                               ),
-                              tooltip: l10n.callsStartCallAction,
+                            if (_selectionMode)
+                              IconButton(
+                                onPressed: _selectedThreadKeys.isEmpty
+                                    ? null
+                                    : () => _deleteSelected(sections),
+                                icon: Icon(
+                                  Icons.delete_outline_rounded,
+                                  color: _selectedThreadKeys.isEmpty
+                                      ? theme.colorScheme.onSurface.withValues(alpha: 0.35)
+                                      : theme.colorScheme.error,
+                                  size: 20,
+                                ),
+                                tooltip: l10n.delete,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            IconButton(
+                              onPressed: _selectionMode
+                                  ? _clearSelection
+                                  : _openStartCall,
+                              icon: Icon(
+                                _selectionMode
+                                    ? Icons.close_rounded
+                                    : Icons.add_ic_call_outlined,
+                                color: theme.colorScheme.onSurface,
+                                size: 20,
+                              ),
+                              tooltip: _selectionMode
+                                  ? l10n.cancelButton
+                                  : l10n.callsStartCallAction,
                               visualDensity: VisualDensity.compact,
                             ),
                           ],
@@ -116,7 +155,7 @@ class _CallsScreenState extends State<CallsScreen> {
                       ),
                       // ── Filter chips ──
                       SizedBox(
-                        height: 40,
+                        height: 36,
                         child: ListView(
                           padding: pad,
                           scrollDirection: Axis.horizontal,
@@ -130,7 +169,7 @@ class _CallsScreenState extends State<CallsScreen> {
                         ),
                       ),
                       // ── Top contacts strip ──
-                      if (_controller.topContacts.isNotEmpty)
+                      if (!_selectionMode && topContacts.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(
                             top: UITokens.spaceSmMd,
@@ -148,17 +187,17 @@ class _CallsScreenState extends State<CallsScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: UITokens.spaceSm),
+                              const SizedBox(height: UITokens.spaceXSm),
                               SizedBox(
-                                height: 88,
+                                height: 72,
                                 child: ListView.separated(
                                   padding: pad,
                                   scrollDirection: Axis.horizontal,
-                                  itemCount: _controller.topContacts.length,
+                                  itemCount: topContacts.length,
                                   separatorBuilder: (_, __) =>
                                       const SizedBox(width: UITokens.spaceSmMd),
                                   itemBuilder: (_, i) {
-                                    final p = _controller.topContacts[i];
+                                    final p = topContacts[i];
                                     return _TopContactChip(
                                       person: p,
                                       onTap: () => _startCall(p, false),
@@ -202,7 +241,7 @@ class _CallsScreenState extends State<CallsScreen> {
         ).colorScheme.primary.withValues(alpha: 0.35),
         labelStyle: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
         ),
         checkmarkColor: Theme.of(context).colorScheme.onSurface,
@@ -283,13 +322,19 @@ class _CallsScreenState extends State<CallsScreen> {
   }
 
   Widget _callTile(CallThreadSummary thread, AppLocalizations l10n) {
+    final selectionKey = _threadSelectionKey(thread);
+    final selected = _selectedThreadKeys.contains(selectionKey);
     return Padding(
       padding: const EdgeInsets.only(bottom: UITokens.spaceXSm),
       child: Dismissible(
         key: ValueKey(thread.latest.id),
-        direction: DismissDirection.endToStart,
+        direction: _selectionMode
+            ? DismissDirection.none
+            : DismissDirection.endToStart,
         confirmDismiss: (_) async {
-          await _controller.deleteEntry(thread.latest.id);
+          await _controller.deleteEntries(
+            thread.entries.map((entry) => entry.id).toList(growable: false),
+          );
           return false;
         },
         background: Container(
@@ -307,26 +352,31 @@ class _CallsScreenState extends State<CallsScreen> {
         ),
         child: GlassCard(
           padding: const EdgeInsets.symmetric(
-            horizontal: UITokens.spaceSm,
-            vertical: UITokens.spaceXSm,
+            horizontal: UITokens.spaceXSm,
+            vertical: 2,
           ),
-          onTap: () => _showThreadSheet(thread),
+          onTap: () => _selectionMode
+              ? _toggleThreadSelection(thread)
+              : _showThreadSheet(thread),
           child: ListTile(
+            onLongPress: () => _enterSelectionMode(thread),
             minVerticalPadding: 0,
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: UITokens.spaceSm,
+              horizontal: UITokens.spaceXSm,
             ),
             leading: PersonAvatar(
               name: thread.person.displayName,
               avatarUrl: thread.person.avatarUrl,
               photoBytes: thread.person.photoBytes,
-              radius: 22,
+              radius: 20,
               showOnline: thread.person.isOnline,
             ),
             title: Text(
               thread.person.displayName,
               style: TextStyle(
-                color: thread.missedCount > 0
+                color: selected
+                    ? Theme.of(context).colorScheme.primary
+                    : thread.missedCount > 0
                     ? AppColors.danger(context)
                     : Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
@@ -343,43 +393,45 @@ class _CallsScreenState extends State<CallsScreen> {
               ),
             ),
             trailing: SizedBox(
-              width: 90,
+              width: 64,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    _formatTime(thread.latest.startedAt, l10n),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.hintText(context),
+                  if (_selectionMode) ...[
+                    Icon(
+                      selected
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      size: 20,
+                      color: selected
+                          ? Theme.of(context).colorScheme.primary
+                          : AppColors.hintText(context),
                     ),
-                  ),
-                  const SizedBox(height: UITokens.spaceXS),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        onTap: () => _startCall(thread.person, false),
-                        child: Icon(
-                          Icons.call_outlined,
-                          size: 18,
-                          color: Colors.green.withValues(alpha: 0.92),
-                        ),
+                  ] else ...[
+                    Text(
+                      _formatTime(thread.latest.startedAt, l10n),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.hintText(context),
                       ),
-                      const SizedBox(width: UITokens.space),
-                      GestureDetector(
-                        onTap: () => _startCall(thread.person, true),
-                        child: Icon(
-                          Icons.videocam_outlined,
-                          size: 18,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.92),
-                        ),
+                    ),
+                    const SizedBox(height: UITokens.spaceXS),
+                    GestureDetector(
+                      onTap: () => _startCall(thread.person, thread.hasVideo),
+                      child: Icon(
+                        thread.hasVideo
+                            ? Icons.videocam_outlined
+                            : Icons.call_outlined,
+                        size: 18,
+                        color: thread.hasVideo
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.92)
+                            : Colors.green.withValues(alpha: 0.92),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -434,12 +486,82 @@ class _CallsScreenState extends State<CallsScreen> {
     return '${date.day}.${date.month.toString().padLeft(2, '0')}';
   }
 
+  String _threadSelectionKey(CallThreadSummary thread) => thread.latest.id;
+
+  void _enterSelectionMode(CallThreadSummary thread) {
+    setState(() {
+      _selectionMode = true;
+      _selectedThreadKeys.add(_threadSelectionKey(thread));
+    });
+  }
+
+  void _toggleThreadSelection(CallThreadSummary thread) {
+    final key = _threadSelectionKey(thread);
+    setState(() {
+      if (_selectedThreadKeys.contains(key)) {
+        _selectedThreadKeys.remove(key);
+      } else {
+        _selectedThreadKeys.add(key);
+      }
+      if (_selectedThreadKeys.isEmpty) {
+        _selectionMode = false;
+      }
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectionMode = false;
+      _selectedThreadKeys.clear();
+    });
+  }
+
+  void _selectAllVisible(List<CallsSection> sections) {
+    final keys = sections
+        .expand((section) => section.items)
+        .map(_threadSelectionKey)
+        .toSet();
+    setState(() {
+      _selectionMode = true;
+      _selectedThreadKeys
+        ..clear()
+        ..addAll(keys);
+    });
+  }
+
+  Future<void> _deleteSelected(List<CallsSection> sections) async {
+    final entryIds = sections
+        .expand((section) => section.items)
+        .where((thread) => _selectedThreadKeys.contains(_threadSelectionKey(thread)))
+        .expand((thread) => thread.entries)
+        .map((entry) => entry.id)
+        .toSet()
+        .toList(growable: false);
+    if (entryIds.isEmpty) {
+      _clearSelection();
+      return;
+    }
+    await _controller.deleteEntries(entryIds);
+    if (!mounted) {
+      return;
+    }
+    _clearSelection();
+  }
+
   // ──────────────────────── Actions ──────────────────────────
 
   Future<void> _openStartCall() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SearchContactsScreen()),
+    final selected = await Navigator.of(context).push<PersonEntry>(
+      MaterialPageRoute(
+        builder: (_) => const SearchContactsScreen(
+          purpose: SearchContactsPurpose.call,
+        ),
+      ),
     );
+    if (selected != null && mounted) {
+      await _startCall(selected, false);
+      return;
+    }
     await _controller.load();
   }
 
@@ -560,8 +682,8 @@ class _TopContactChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(UITokens.cornerLg),
       child: GlassCard(
         padding: const EdgeInsets.symmetric(
-          horizontal: UITokens.space,
-          vertical: UITokens.spaceSmMd,
+          horizontal: UITokens.spaceXSm,
+          vertical: UITokens.spaceXSm,
         ),
         child: Column(
           children: [
@@ -569,12 +691,12 @@ class _TopContactChip extends StatelessWidget {
               name: person.displayName,
               avatarUrl: person.avatarUrl,
               photoBytes: person.photoBytes,
-              radius: 20,
+              radius: 16,
               showOnline: person.isOnline,
             ),
-            const SizedBox(height: UITokens.spaceXSm),
+            const SizedBox(height: 4),
             SizedBox(
-              width: 64,
+              width: 56,
               child: Text(
                 person.displayName,
                 maxLines: 1,
@@ -583,6 +705,7 @@ class _TopContactChip extends StatelessWidget {
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
+                  fontSize: 11,
                 ),
               ),
             ),
