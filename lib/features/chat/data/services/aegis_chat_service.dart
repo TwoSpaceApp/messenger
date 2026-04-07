@@ -13,6 +13,7 @@ import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
+import 'package:two_space_app/core/utils/user_content_sanitizer.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/chat/data/local/aegis_chat_local_store.dart';
 import 'package:two_space_app/features/chat/data/services/offline_queue_service.dart';
@@ -882,8 +883,12 @@ class AegisChatService {
   Map<String, dynamic> _profileToInfo(dynamic profile) {
     return <String, dynamic>{
       'id': profile.id.toString(),
-      'username': profile.username,
-      'displayName': profile.displayName ?? profile.username,
+      'username': UserContentSanitizer.sanitizeUsername(profile.username),
+      'displayName': UserContentSanitizer.sanitizeOptionalText(
+            profile.displayName,
+            maxLength: 120,
+          ) ??
+          UserContentSanitizer.sanitizeUsername(profile.username),
       'avatarUrl': normalizeAegisAvatarUrl(profile.avatarUrl),
       'avatars': profile.avatars
           .map(
@@ -897,10 +902,22 @@ class AegisChatService {
           .toList(growable: false),
       'presenceStatus': profile.presenceStatus,
       'isOnline': profile.presenceStatus == 'online',
-      'bio': profile.bio,
-      'location': profile.location,
+      'bio': UserContentSanitizer.sanitizeOptionalText(
+        profile.bio,
+        maxLength: 512,
+      ),
+      'location': UserContentSanitizer.sanitizeOptionalText(
+        profile.location,
+        maxLength: 120,
+        preserveNewlines: false,
+      ),
       'birthday': profile.birthDate,
-      'email': profile.email,
+      'email': UserContentSanitizer.sanitizeOptionalText(
+        profile.email,
+        maxLength: 160,
+        preserveNewlines: false,
+      ),
+      'createdAt': profile.createdAt?.toIso8601String(),
       'lastSeenAt': profile.lastSeenAt?.toIso8601String(),
     };
   }

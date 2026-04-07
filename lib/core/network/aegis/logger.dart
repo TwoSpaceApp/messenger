@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
@@ -8,7 +8,12 @@ import 'package:two_space_app/core/services/dev_logger.dart' as dev;
 
 /// Simple logger for Aegis client
 class AegisLogger {
-  static bool _enabled = true;
+  static const int _maxBinaryPreviewBytes = 192;
+  static const int _maxCollectionEntries = 20;
+  static const int _maxStringLength = 400;
+  static const int _maxDepth = 4;
+
+  static bool _enabled = kDebugMode;
   static LogLevel _level = LogLevel.debug;
   static final dev.DevLogger _devLogger = dev.DevLogger('Aegis');
 
@@ -81,7 +86,7 @@ class AegisLogger {
     };
   }
 
-  static Object? decodePayload(List<int> payload, {int maxBytes = 16384}) {
+  static Object? decodePayload(List<int> payload, {int maxBytes = 2048}) {
     if (payload.isEmpty) {
       return null;
     }
@@ -145,22 +150,56 @@ class AegisLogger {
       final decoded = msgpack.deserialize(bytes);
       return _normalize(decoded);
     } on Object catch (_) {
+      final previewLength = bytes.length > _maxBinaryPreviewBytes
+          ? _maxBinaryPreviewBytes
+          : bytes.length;
       return <String, dynamic>{
         'binary': true,
         'bytes': bytes.length,
-        'base64': base64Encode(bytes),
+        'base64Preview': base64Encode(bytes.sublist(0, previewLength)),
+        'truncated': bytes.length > previewLength,
       };
     }
   }
 
-  static Object? _normalize(Object? value) {
+  static Object? _normalize(Object? value, {int depth = 0}) {
+    if (value is String) {
+      if (value.length <= _maxStringLength) {
+        return value;
+      }
+      return '${value.substring(0, _maxStringLength)}… [truncated ${value.length - _maxStringLength} chars]';
+    }
+
+    if (depth >= _maxDepth) {
+      if (value is List) {
+        return '[truncated list depth=${depth + 1} size=${value.length}]';
+      }
+      if (value is Map) {
+        return '{truncated map depth=${depth + 1} size=${value.length}}';
+      }
+      return value;
+    }
+
     if (value is Map) {
-      return value.map<String, Object?>((key, item) {
-        return MapEntry(key.toString(), _normalize(item));
-      });
+      final entries = value.entries.take(_maxCollectionEntries);
+      final result = <String, Object?>{
+        for (final entry in entries)
+          entry.key.toString(): _normalize(entry.value, depth: depth + 1),
+      };
+      if (value.length > _maxCollectionEntries) {
+        result['…'] = '${value.length - _maxCollectionEntries} more entries';
+      }
+      return result;
     }
     if (value is List) {
-      return value.map(_normalize).toList(growable: false);
+      final result = value
+          .take(_maxCollectionEntries)
+          .map((item) => _normalize(item, depth: depth + 1))
+          .toList(growable: true);
+      if (value.length > _maxCollectionEntries) {
+        result.add('${value.length - _maxCollectionEntries} more items');
+      }
+      return result;
     }
     return value;
   }

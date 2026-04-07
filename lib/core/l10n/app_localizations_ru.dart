@@ -105,6 +105,34 @@ class AppLocalizationsRu extends AppLocalizations {
   String get textCopied => 'Текст скопирован';
 
   @override
+  String get authUsernameHint => 'username';
+
+  @override
+  String get continueWithGoogle => 'Войти через Google';
+
+  @override
+  String get continueWithApple => 'Войти через Apple';
+
+  @override
+  String get continueWithYandex => 'Войти через Yandex';
+
+  @override
+  String get chooseAegisUsernamePrompt => 'Придумайте Aegis username.';
+
+  @override
+  String get validationAegisUsernameFormat =>
+      'Username должен быть длиной 3-32 символа и содержать только латиницу, цифры, ., _ или -.';
+
+  @override
+  String get aegisUsernameHelper =>
+      'Aegis username: 3-32 символа, латиница, цифры, ., _ или -';
+
+  @override
+  String loginCooldownMessage(int seconds) {
+    return 'Слишком много попыток. Попробуйте снова через $seconds сек.';
+  }
+
+  @override
   String get onlineLabel => 'Онлайн';
 
   @override
@@ -424,6 +452,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileLabel => 'Профиль';
 
   @override
+  String get accountProfileTitle => 'Мой аккаунт';
+
+  @override
+  String get accountProfileSubtitle =>
+      'Управление публичными данными профиля и контактами';
+
+  @override
+  String get accountProfileEditSubtitle =>
+      'Изменяйте видимые данные профиля и сохраняйте их прямо здесь';
+
+  @override
+  String get otherProfileSubtitle =>
+      'Публичный профиль и доступные контактные данные';
+
+  @override
   String get profileSubtitle => 'Изменить данные профиля';
 
   @override
@@ -607,6 +650,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileTitle => 'Профиль';
 
   @override
+  String get editProfileButton => 'Изменить данные';
+
+  @override
+  String get saveProfileButton => 'Сохранить изменения';
+
+  @override
+  String get copyAegisIdButton => 'Скопировать Aegis ID';
+
+  @override
   String get saveTooltip => 'Сохранить';
 
   @override
@@ -632,6 +684,29 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nameField => 'Имя';
+
+  @override
+  String get aegisIdLabel => 'Aegis ID';
+
+  @override
+  String get registeredAtLabel => 'Дата регистрации';
+
+  @override
+  String get profileStatusLabel => 'Статус';
+
+  @override
+  String get profileModerationNoticeTitle =>
+      'Действия безопасности пока не готовы';
+
+  @override
+  String get profileModerationNoticeMessage =>
+      'Блокировка и жалобы появятся здесь после завершения сценария модерации.';
+
+  @override
+  String get blockUserAction => 'Заблокировать';
+
+  @override
+  String get reportUserAction => 'Пожаловаться';
 
   @override
   String get avatarUploadLater => 'Загрузка аватара будет добавлена позже';

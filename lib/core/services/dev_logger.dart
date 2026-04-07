@@ -16,6 +16,7 @@ enum LogLevel {
 /// Журнал для разработчиков с поддержкой уровней логирования
 class DevLogger {
   static const int _maxEntries = 200;
+  static const int _maxLineLength = 4000;
   DevLogger(this._tag);
   static final List<String> _logs = [];
   static final StreamController<List<String>> _ctrl =
@@ -26,7 +27,10 @@ class DevLogger {
   static void _log(String msg, LogLevel level) {
     final timestamp = DateTime.now().toIso8601String();
     final safeMessage = DebugDataSanitizer.sanitizeText(msg);
-    final line = '[$timestamp] ${level.emoji} $safeMessage';
+    final truncatedMessage = safeMessage.length <= _maxLineLength
+        ? safeMessage
+        : '${safeMessage.substring(0, _maxLineLength)}… [truncated ${safeMessage.length - _maxLineLength} chars]';
+    final line = '[$timestamp] ${level.emoji} $truncatedMessage';
     _logs.add(line);
     if (_logs.length > _maxEntries) {
       _logs.removeRange(0, _logs.length - _maxEntries);

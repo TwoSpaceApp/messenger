@@ -129,6 +129,43 @@
   "@textCopied": {
     "description": "Snackbar text when text is copied to clipboard"
   },
+  "authUsernameHint": "username",
+  "@authUsernameHint": {
+    "description": "Hint for username fields"
+  },
+  "continueWithGoogle": "Continue with Google",
+  "@continueWithGoogle": {
+    "description": "Sign-in button label for Google"
+  },
+  "continueWithApple": "Continue with Apple",
+  "@continueWithApple": {
+    "description": "Sign-in button label for Apple"
+  },
+  "continueWithYandex": "Continue with Yandex",
+  "@continueWithYandex": {
+    "description": "Sign-in button label for Yandex"
+  },
+  "chooseAegisUsernamePrompt": "Choose an Aegis username.",
+  "@chooseAegisUsernamePrompt": {
+    "description": "Validation prompt for choosing an Aegis username"
+  },
+  "validationAegisUsernameFormat": "Username must be 3-32 chars and use Latin letters, digits, ., _ or -.",
+  "@validationAegisUsernameFormat": {
+    "description": "Validation text describing the allowed Aegis username format"
+  },
+  "aegisUsernameHelper": "Aegis username: 3-32 chars, Latin letters, digits, ., _ or -",
+  "@aegisUsernameHelper": {
+    "description": "Helper text under the Aegis username field"
+  },
+  "loginCooldownMessage": "Too many attempts. Try again in {seconds}s.",
+  "@loginCooldownMessage": {
+    "description": "Cooldown message after too many failed login attempts",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "onlineLabel": "Online",
   "@onlineLabel": {
     "description": "Online status"
@@ -588,6 +625,22 @@
   "@profileLabel": {
     "description": "Profile label"
   },
+  "accountProfileTitle": "My account",
+  "@accountProfileTitle": {
+    "description": "Title for the current user's account profile screen"
+  },
+  "accountProfileSubtitle": "Manage your public profile data and contact details",
+  "@accountProfileSubtitle": {
+    "description": "Subtitle for the current user's account profile screen"
+  },
+  "accountProfileEditSubtitle": "Edit your visible profile data and save the changes here",
+  "@accountProfileEditSubtitle": {
+    "description": "Subtitle while editing the current user's account profile"
+  },
+  "otherProfileSubtitle": "Public profile and available contact information",
+  "@otherProfileSubtitle": {
+    "description": "Subtitle for another user's profile screen"
+  },
   "profileSubtitle": "Edit profile information",
   "@profileSubtitle": {
     "description": "Profile subtitle"
@@ -833,6 +886,18 @@
   "@profileTitle": {
     "description": "Profile screen title"
   },
+  "editProfileButton": "Edit profile",
+  "@editProfileButton": {
+    "description": "Primary action to start editing profile data"
+  },
+  "saveProfileButton": "Save changes",
+  "@saveProfileButton": {
+    "description": "Primary action to save profile changes"
+  },
+  "copyAegisIdButton": "Copy Aegis ID",
+  "@copyAegisIdButton": {
+    "description": "Action to copy the current user's Aegis ID"
+  },
   "saveTooltip": "Save",
   "@saveTooltip": {
     "description": "Save tooltip"
@@ -868,6 +933,34 @@
   "nameField": "Name",
   "@nameField": {
     "description": "Name field"
+  },
+  "aegisIdLabel": "Aegis ID",
+  "@aegisIdLabel": {
+    "description": "Label for the Aegis ID row"
+  },
+  "registeredAtLabel": "Registered",
+  "@registeredAtLabel": {
+    "description": "Label for the profile registration date row"
+  },
+  "profileStatusLabel": "Status",
+  "@profileStatusLabel": {
+    "description": "Label for the profile status row"
+  },
+  "profileModerationNoticeTitle": "Safety actions are not ready yet",
+  "@profileModerationNoticeTitle": {
+    "description": "Title for the moderation placeholder notice on other user profiles"
+  },
+  "profileModerationNoticeMessage": "Blocking and reporting will appear here after the moderation flow is completed.",
+  "@profileModerationNoticeMessage": {
+    "description": "Message for the moderation placeholder notice on other user profiles"
+  },
+  "blockUserAction": "Block user",
+  "@blockUserAction": {
+    "description": "Action label to block a user"
+  },
+  "reportUserAction": "Report user",
+  "@reportUserAction": {
+    "description": "Action label to report a user"
   },
   "avatarUploadLater": "Avatar upload will be added later",
   "@avatarUploadLater": {

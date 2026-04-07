@@ -21,6 +21,7 @@ import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/main_screen.dart';
+import 'package:two_space_app/features/profile/presentation/screens/account_profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/account_settings_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/customization_screen.dart';
@@ -229,6 +230,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           }
           final authState = ref.read(authProvider).whenOrNull(data: (value) => value);
           final userId = userIdFromExtra ?? authState?.userId ?? '';
+          final isOwnProfile =
+              authState?.userId != null && authState!.userId == userId;
+
+          if (isOwnProfile && !startInEdit) {
+            return _buildShellPage(
+              state,
+              AccountProfileScreen(
+                userId: userId,
+                embedded: true,
+              ),
+              selectedIndex: 3,
+            );
+          }
+
           return _buildShellPage(
             state,
             ProfileScreen(
@@ -236,6 +251,21 @@ final routerProvider = Provider<GoRouter>((ref) {
               initialName: initialName,
               initialAvatar: initialAvatar,
               startInEdit: startInEdit,
+              embedded: true,
+            ),
+            selectedIndex: 3,
+          );
+        },
+      ),
+      GoRoute(
+        path: AppStrings.routeAccountProfile,
+        pageBuilder: (context, state) {
+          final authState = ref.read(authProvider).whenOrNull(data: (value) => value);
+          final userId = authState?.userId ?? '';
+          return _buildShellPage(
+            state,
+            AccountProfileScreen(
+              userId: userId,
               embedded: true,
             ),
             selectedIndex: 3,
@@ -340,7 +370,7 @@ class _WelcomeRouteLoaderState extends State<_WelcomeRouteLoader> {
   Future<void> _loadUserInfo() async {
     try {
       final svc = AegisChatService();
-      final info = await svc.getOwnUserInfo(forceRefresh: true);
+      final info = await svc.getOwnUserInfo();
       if (!mounted) {
         return;
       }

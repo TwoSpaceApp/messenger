@@ -359,12 +359,36 @@ class _ThemeBuilder extends StatelessWidget {
 }
 
 class _AppLifecycleObserver with WidgetsBindingObserver {
+  static DateTime? _lastResumeHandledAt;
+  static Future<void>? _resumeRefreshInFlight;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
       return;
     }
-    unawaited(AegisAuthService().restoreSession().catchError((_) => false));
-    unawaited(AegisChatService().ensureReady().catchError((_) => null));
+
+    final now = DateTime.now();
+    final lastHandledAt = _lastResumeHandledAt;
+    if (lastHandledAt != null && now.difference(lastHandledAt) < const Duration(seconds: 8)) {
+      return;
+    }
+
+    final inFlight = _resumeRefreshInFlight;
+    if (inFlight != null) {
+      return;
+    }
+
+    _lastResumeHandledAt = now;
+    final future = () async {
+      await AegisAuthService().restoreSession().catchError((_) => false);
+      await AegisChatService().ensureReady().catchError((_) => null);
+    }();
+    _resumeRefreshInFlight = future;
+    future.whenComplete(() {
+      if (identical(_resumeRefreshInFlight, future)) {
+        _resumeRefreshInFlight = null;
+      }
+    });
   }
 }

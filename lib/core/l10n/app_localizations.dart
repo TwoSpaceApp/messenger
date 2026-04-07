@@ -300,6 +300,54 @@ abstract class AppLocalizations {
   /// **'Text copied'**
   String get textCopied;
 
+  /// Hint for username fields
+  ///
+  /// In en, this message translates to:
+  /// **'username'**
+  String get authUsernameHint;
+
+  /// Sign-in button label for Google
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// Sign-in button label for Apple
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
+  /// Sign-in button label for Yandex
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Yandex'**
+  String get continueWithYandex;
+
+  /// Validation prompt for choosing an Aegis username
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an Aegis username.'**
+  String get chooseAegisUsernamePrompt;
+
+  /// Validation text describing the allowed Aegis username format
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be 3-32 chars and use Latin letters, digits, ., _ or -.'**
+  String get validationAegisUsernameFormat;
+
+  /// Helper text under the Aegis username field
+  ///
+  /// In en, this message translates to:
+  /// **'Aegis username: 3-32 chars, Latin letters, digits, ., _ or -'**
+  String get aegisUsernameHelper;
+
+  /// Cooldown message after too many failed login attempts
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in {seconds}s.'**
+  String loginCooldownMessage(int seconds);
+
   /// Online status
   ///
   /// In en, this message translates to:
@@ -876,6 +924,30 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profileLabel;
 
+  /// Title for the current user's account profile screen
+  ///
+  /// In en, this message translates to:
+  /// **'My account'**
+  String get accountProfileTitle;
+
+  /// Subtitle for the current user's account profile screen
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your public profile data and contact details'**
+  String get accountProfileSubtitle;
+
+  /// Subtitle while editing the current user's account profile
+  ///
+  /// In en, this message translates to:
+  /// **'Edit your visible profile data and save the changes here'**
+  String get accountProfileEditSubtitle;
+
+  /// Subtitle for another user's profile screen
+  ///
+  /// In en, this message translates to:
+  /// **'Public profile and available contact information'**
+  String get otherProfileSubtitle;
+
   /// Profile subtitle
   ///
   /// In en, this message translates to:
@@ -1236,6 +1308,24 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profileTitle;
 
+  /// Primary action to start editing profile data
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get editProfileButton;
+
+  /// Primary action to save profile changes
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get saveProfileButton;
+
+  /// Action to copy the current user's Aegis ID
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Aegis ID'**
+  String get copyAegisIdButton;
+
   /// Save tooltip
   ///
   /// In en, this message translates to:
@@ -1289,6 +1379,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name'**
   String get nameField;
+
+  /// Label for the Aegis ID row
+  ///
+  /// In en, this message translates to:
+  /// **'Aegis ID'**
+  String get aegisIdLabel;
+
+  /// Label for the profile registration date row
+  ///
+  /// In en, this message translates to:
+  /// **'Registered'**
+  String get registeredAtLabel;
+
+  /// Label for the profile status row
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get profileStatusLabel;
+
+  /// Title for the moderation placeholder notice on other user profiles
+  ///
+  /// In en, this message translates to:
+  /// **'Safety actions are not ready yet'**
+  String get profileModerationNoticeTitle;
+
+  /// Message for the moderation placeholder notice on other user profiles
+  ///
+  /// In en, this message translates to:
+  /// **'Blocking and reporting will appear here after the moderation flow is completed.'**
+  String get profileModerationNoticeMessage;
+
+  /// Action label to block a user
+  ///
+  /// In en, this message translates to:
+  /// **'Block user'**
+  String get blockUserAction;
+
+  /// Action label to report a user
+  ///
+  /// In en, this message translates to:
+  /// **'Report user'**
+  String get reportUserAction;
 
   /// Avatar upload not yet available
   ///

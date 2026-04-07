@@ -52,7 +52,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   Future<void> _loadAccountState() async {
     try {
       final results = await Future.wait<Object?>([
-        _chatService.getOwnUserInfo(forceRefresh: true),
+        _chatService.getOwnUserInfo(),
         _biometricAuthService.canAuthenticate(),
         _biometricAuthService.isBiometricEnabled(),
       ]);

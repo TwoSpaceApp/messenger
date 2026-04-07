@@ -15,6 +15,8 @@ class NetworkQualityIndicator extends StatefulWidget {
 }
 
 class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
+  static const Duration _probeInterval = Duration(seconds: 12);
+
   Timer? _timer;
   int _bars = 0; // 0..3
   int? _rttMs;
@@ -24,7 +26,7 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
   void initState() {
     super.initState();
     _check();
-    _timer = Timer.periodic(const Duration(seconds: 4), (_) => _check());
+    _timer = Timer.periodic(_probeInterval, (_) => _check());
   }
 
   @override
@@ -57,14 +59,19 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
       } else {
         bars = 0;
       }
-      if (mounted) {
+      if (mounted && (bars != _bars || rtt != _rttMs)) {
         setState(() {
           _bars = bars;
           _rttMs = rtt;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _bars = 0);
+      if (mounted && (_bars != 0 || _rttMs != null)) {
+        setState(() {
+          _bars = 0;
+          _rttMs = null;
+        });
+      }
     }
   }
 

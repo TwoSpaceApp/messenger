@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
+import 'package:two_space_app/core/utils/user_content_sanitizer.dart';
 
 /// Message content types
 enum MessageContentType {
@@ -155,14 +156,24 @@ ParsedRichText parseRichTextContent(String content) {
       if (kind == 'rich-text' || kind == 'bot-rich-text') {
         final text = decoded['Text'] as String? ?? '';
         final parseMode = decoded['ParseMode'] as String?;
-        return ParsedRichText(text: text, parseMode: parseMode);
+        return ParsedRichText(
+          text: UserContentSanitizer.sanitizeRichTextDisplay(
+            text,
+            parseMode: parseMode,
+          ),
+          parseMode: (parseMode?.toLowerCase() == ParseMode.html.value)
+              ? null
+              : parseMode,
+        );
       }
     }
   } catch (_) {
     // Content is plain text.
   }
 
-  return ParsedRichText(text: content);
+  return ParsedRichText(
+    text: UserContentSanitizer.sanitizeRichTextDisplay(content),
+  );
 }
 
 /// Recursively converts a MessagePack-deserialized structure into

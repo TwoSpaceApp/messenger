@@ -58,6 +58,15 @@ class UITokens {
   static const double dragHandleWidth = 40;
   static const double dragHandleHeight = 4;
   static const double buttonHeight = 48;
+  static const double authProviderButtonHeight = 50;
+  static const double authSocialIconSize = 32;
+  static const double authAvatarPickerSize = 140;
+  static const double authHelperTextSize = 12;
+  static const double authPrimaryButtonHorizontalPadding = 32;
+  static const double authPrimaryButtonVerticalPadding = 16;
+  static const double authPresetCardWidth = 208;
+  static const double authPresetListHeight = 174;
+  static const double authStepCardMinHeight = 392;
   static const double compactButtonWidth = 180;
   static const double compactSheetMaxWidth = 320;
   static const double dialogMaxWidth = 420;
@@ -69,6 +78,14 @@ class UITokens {
   static const double formContentMaxWidth = 920;
   static const double wideContentMaxWidth = 1320;
   static const double bottomBarClearance = 120;
+
+  // Validation and profile constraints
+  static const int aegisUsernameMinLength = 3;
+  static const int aegisUsernameMaxLength = 32;
+  static const int authPasswordMinLength = 6;
+  static const int profileNameMaxLength = 120;
+  static const int profileBioMaxLength = 512;
+  static const int profileLocationMaxLength = 120;
 
   // Responsive breakpoints
   static const double mobileBreakpoint = 540;

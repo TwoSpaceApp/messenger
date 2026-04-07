@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
@@ -10,7 +10,10 @@ import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/utils/user_content_sanitizer.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -18,6 +21,8 @@ import 'package:two_space_app/features/chat/data/services/chat_backend_factory.d
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+
+enum ProfileScreenVariant { account, contact }
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
@@ -27,12 +32,14 @@ class ProfileScreen extends StatefulWidget {
     this.initialAvatar,
     this.startInEdit = false,
     this.embedded = false,
+    this.variant = ProfileScreenVariant.contact,
   });
   final String userId;
   final String? initialName;
   final String? initialAvatar;
   final bool startInEdit;
   final bool embedded;
+  final ProfileScreenVariant variant;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -44,6 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _loading = true;
   bool _actionLoading = false;
   bool _isMe = false;
+  bool _editMode = false;
   final ValueNotifier<double> _avatarStretch = ValueNotifier(0);
 
   final _nameController = TextEditingController();
@@ -55,9 +63,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _editMode = widget.startInEdit;
     _warmUpSettings();
     _loadUser();
   }
+
+  bool get _isAccountProfile => widget.variant == ProfileScreenVariant.account;
 
   @override
   void dispose() {
@@ -96,6 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'birthday': userInfo['birthday'] ?? '',
       'email': userInfo['email'],
       'phone': userInfo['phone'],
+      'createdAt': userInfo['createdAt'],
       'presenceStatus': userInfo['presenceStatus'],
       'lastSeenAt': userInfo['lastSeenAt'],
       'prefs': <String, dynamic>{
@@ -122,6 +134,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUser() async {
     try {
+      if (_isAccountProfile) {
+        final userInfo = Map<String, dynamic>.from(
+          await _chatService.getOwnUserInfo(),
+        );
+        _applyLoadedUser(userInfo, isMe: true);
+        return;
+      }
+
       final currentUserId = await _chatService.getCurrentUserId();
       var userInfo = Map<String, dynamic>.from(
         await _chatService.getUserInfo(widget.userId),
@@ -132,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         userInfo = <String, dynamic>{
           ...userInfo,
           ...Map<String, dynamic>.from(
-            await _chatService.getOwnUserInfo(forceRefresh: true),
+            await _chatService.getOwnUserInfo(),
           ),
         };
       }
@@ -311,15 +331,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveProfile() async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final displayName = _nameController.text.trim();
-      final username = _nicknameController.text.trim();
-      final bio = _aboutController.text.trim();
+      final displayName = UserContentSanitizer.sanitizeOptionalText(
+        _nameController.text,
+        maxLength: 120,
+      );
+      final username = UserContentSanitizer.sanitizeUsername(
+        _nicknameController.text,
+      );
+      final bio = UserContentSanitizer.sanitizeOptionalText(
+        _aboutController.text,
+        maxLength: 512,
+      );
+      final location = UserContentSanitizer.sanitizeOptionalText(
+        _locationController.text,
+        maxLength: 120,
+        preserveNewlines: false,
+      );
 
       await _chatService.updateMyProfile(
-        displayName: displayName.isEmpty ? null : displayName,
+        displayName: displayName,
         username: username.isEmpty ? null : username,
-        bio: bio.isEmpty ? null : bio,
-        location: _locationController.text.trim(),
+        bio: bio,
+        location: location,
         birthDate: _birthdayController.text.trim(),
       );
 
@@ -329,17 +362,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (!mounted) return;
       _applyLoadedUser(refreshed, isMe: true);
+      setState(() => _editMode = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.profileSaved)),
       );
-      if (widget.startInEdit && mounted) {
-        Navigator.of(context).pop(true);
-      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        SnackBar(content: Text(UserFacingError.format(e))),
       );
     }
   }
@@ -401,8 +432,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs = (_user?['prefs'] is Map)
         ? Map<String, dynamic>.from(_user!['prefs'] as Map)
         : <String, dynamic>{};
-    return (prefs['nickname'] as String?)?.trim() ??
-        widget.userId.replaceAll('@', '').split(':').first;
+    return (prefs['nickname'] as String?)?.trim() ?? '';
   }
 
   String _profileId() {
@@ -481,20 +511,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '${value.day}.${value.month.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _openEditScreen() async {
-    final changed = await context.push<bool>(
-      AppStrings.routeProfile,
-      extra: <String, dynamic>{
-        'userId': widget.userId,
-        'initialName': widget.initialName,
-        'initialAvatar': widget.initialAvatar,
-        'startInEdit': true,
-      },
-    );
-    if (changed == true && mounted) {
-      setState(() => _loading = true);
-      await _loadUser();
+  void _startInlineEdit() {
+    _initializeControllers();
+    setState(() => _editMode = true);
+  }
+
+  void _cancelInlineEdit() {
+    _initializeControllers();
+    setState(() => _editMode = false);
+  }
+
+  Future<void> _copyProfileId() async {
+    final l10n = AppLocalizations.of(context)!;
+    final profileId = _profileId();
+    if (profileId.isEmpty) {
+      return;
     }
+    await Clipboard.setData(ClipboardData(text: profileId));
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.textCopied)),
+    );
+  }
+
+  void _showModerationStub(String feature) {
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.featureInDevelopmentMessage(feature))),
+    );
   }
 
   bool _updateAvatarStretch(double next) {
@@ -513,6 +559,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final avatar = _avatarUrl();
     final username = _username();
     final profileId = _profileId();
+    final usernameLabel = username.isNotEmpty ? '@$username' : profileId;
     final presenceLabel = _presenceLabel(l10n);
     final body = _loading
         ? const AppLoadingState()
@@ -539,7 +586,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   l10n: l10n,
                   name: name,
                   avatar: avatar,
-                  username: username,
+                  username: usernameLabel,
                   profileId: profileId,
                   presenceLabel: presenceLabel,
                   isWide: isWide,
@@ -596,32 +643,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           if (widget.embedded) ...[
                             SectionPageHeader(
-                              title: widget.startInEdit
-                                  ? l10n.editTooltip
+                              title: _isAccountProfile
+                                  ? l10n.accountProfileTitle
                                   : l10n.profileTitle,
-                              subtitle: widget.startInEdit
-                                  ? l10n.profileSubtitle
-                                  : l10n.peopleViewProfileAction,
+                              subtitle: _isAccountProfile
+                                  ? (_editMode
+                                        ? l10n.accountProfileEditSubtitle
+                                        : l10n.accountProfileSubtitle)
+                                  : l10n.otherProfileSubtitle,
                               leading: IconButton(
                                 onPressed: () => Navigator.of(context).pop(),
                                 icon: const Icon(Icons.arrow_back_rounded),
                               ),
-                              actions: [
-                                if (_isMe)
-                                  IconButton(
-                                    icon: Icon(
-                                      widget.startInEdit
-                                          ? Icons.check_rounded
-                                          : Icons.edit_rounded,
-                                    ),
-                                    onPressed: widget.startInEdit
-                                        ? _saveProfile
-                                        : _openEditScreen,
-                                    tooltip: widget.startInEdit
-                                        ? l10n.saveTooltip
-                                        : l10n.editTooltip,
-                                  ),
-                              ],
                             ),
                             const SizedBox(height: UITokens.spaceMd),
                           ],
@@ -670,18 +703,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(widget.startInEdit ? l10n.editTooltip : l10n.profileTitle),
+        title: Text(
+          _isAccountProfile ? l10n.accountProfileTitle : l10n.profileTitle,
+        ),
         centerTitle: false,
-        actions: [
-          if (_isMe)
-            IconButton(
-              icon: Icon(
-                widget.startInEdit ? Icons.check_rounded : Icons.edit_rounded,
-              ),
-              onPressed: widget.startInEdit ? _saveProfile : _openEditScreen,
-              tooltip: widget.startInEdit ? l10n.saveTooltip : l10n.editTooltip,
-            ),
-        ],
+        actions: const [],
       ),
       body: ScreenBackground(child: body),
     );
@@ -764,7 +790,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
-                    if (_isMe && widget.startInEdit)
+                    if (_isAccountProfile && _editMode)
                       Positioned(
                         right: -4,
                         bottom: -4,
@@ -798,7 +824,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: UITokens.spaceXSm),
                       Text(
-                        '@$username',
+                        username,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall?.copyWith(
@@ -852,11 +878,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               spacing: 10,
               runSpacing: 10,
               children: [
-                _buildMetaChip(
-                  context,
-                  icon: Icons.person_outline_rounded,
-                  label: '@$username',
-                ),
+                if (profileId.isNotEmpty)
+                  _buildMetaChip(
+                    context,
+                    icon: Icons.badge_outlined,
+                    label: profileId,
+                  ),
+                if (username.isNotEmpty)
+                  _buildMetaChip(
+                    context,
+                    icon: Icons.alternate_email_rounded,
+                    label: username,
+                  ),
                 if (_user?['email'] is String &&
                     (_user!['email'] as String).isNotEmpty)
                   _buildMetaChip(
@@ -866,7 +899,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
               ],
             ),
-            if (!_isMe) ...[
+            if (_isAccountProfile) ...[
+              const SizedBox(height: UITokens.spaceMd),
+              Wrap(
+                spacing: UITokens.spaceSmMd,
+                runSpacing: UITokens.spaceSmMd,
+                children: [
+                  FilledButton.icon(
+                    onPressed: _actionLoading
+                        ? null
+                        : (_editMode ? _saveProfile : _startInlineEdit),
+                    icon: Icon(
+                      _editMode ? Icons.save_rounded : Icons.edit_rounded,
+                    ),
+                    label: Text(
+                      _editMode
+                          ? l10n.saveProfileButton
+                          : l10n.editProfileButton,
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _copyProfileId,
+                    icon: const Icon(Icons.copy_rounded),
+                    label: Text(l10n.copyAegisIdButton),
+                  ),
+                  if (_editMode)
+                    TextButton(
+                      onPressed: _cancelInlineEdit,
+                      child: Text(l10n.cancelButton),
+                    ),
+                ],
+              ),
+            ] else ...[
               const SizedBox(height: UITokens.spaceMd),
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -1035,22 +1099,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.startInEdit ? l10n.editTooltip : l10n.profileTitle,
+              _isAccountProfile
+                  ? l10n.accountProfileTitle
+                  : l10n.profileTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: UITokens.spaceXSm),
             Text(
-              widget.startInEdit
-                  ? l10n.profileSubtitle
-                  : l10n.peopleViewProfileAction,
+              _isAccountProfile
+                  ? (_editMode
+                        ? l10n.accountProfileEditSubtitle
+                        : l10n.accountProfileSubtitle)
+                  : l10n.otherProfileSubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: UITokens.spaceLg),
-            if (!widget.startInEdit && !_hasReadableProfileData()) ...[
+            if (!_editMode && !_hasReadableProfileData()) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(UITokens.spaceMdSm),
@@ -1087,7 +1155,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: UITokens.spaceMd),
             ],
-            if (widget.startInEdit)
+            if (!_isAccountProfile) ...[
+              InlineNoticeCard(
+                icon: Icons.shield_outlined,
+                badge: l10n.featureInDevelopmentLabel,
+                title: l10n.profileModerationNoticeTitle,
+                message: l10n.profileModerationNoticeMessage,
+              ),
+              const SizedBox(height: UITokens.spaceMd),
+              Wrap(
+                spacing: UITokens.spaceSmMd,
+                runSpacing: UITokens.spaceSmMd,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _showModerationStub(l10n.blockUserAction),
+                    icon: const Icon(Icons.block_outlined),
+                    label: Text(l10n.blockUserAction),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => _showModerationStub(l10n.reportUserAction),
+                    icon: const Icon(Icons.flag_outlined),
+                    label: Text(l10n.reportUserAction),
+                  ),
+                ],
+              ),
+              const SizedBox(height: UITokens.spaceMd),
+            ],
+            if (_editMode)
               Column(
                 children: [
                   _buildEditableField(
@@ -1205,53 +1299,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String username,
     String profileId,
   ) {
+    final displayName = (_user?['name'] as String?)?.trim();
+    final about = (_user?['bio'] as String?)?.trim();
+    final location = (_user?['location'] as String?)?.trim();
+    final birthday = (_user?['birthday'] as String?)?.trim();
+    final email = (_user?['email'] as String?)?.trim();
+    final phone = (_user?['phone'] as String?)?.trim();
+    final createdAt = _formattedCreatedAt();
+    final status = _presenceLabel(l10n);
+
     final values = <({String label, String? value})>[
-      (
-        label: l10n.aboutField,
-        value: (_user != null)
-            ? (_user!['prefs']?['about'] ?? _user!['bio'] ?? '') as String?
-            : '',
-      ),
-    ];
-
-    if (_user != null) {
-      final prefs = (_user!['prefs'] is Map)
-          ? Map<String, dynamic>.from(_user!['prefs'] as Map)
-          : <String, dynamic>{};
-      final email = (_user!['email'] as String?) ?? '';
-      final phone = (_user!['phone'] as String?) ?? '';
-      final serverShowEmail = prefs['showEmail'] == true;
-      final serverShowPhone = prefs['showPhone'] == true;
-      final shouldShowEmail = _isMe
-          ? SettingsService.showEmailNotifier.value
-          : serverShowEmail;
-      final shouldShowPhone = _isMe
-          ? SettingsService.showPhoneNotifier.value
-          : serverShowPhone;
-
-      if (email.isNotEmpty && shouldShowEmail) {
-        values.add((label: l10n.emailLabel, value: email));
-      }
-      if (phone.isNotEmpty && shouldShowPhone) {
-        values.add((label: l10n.phoneLabel, value: phone));
-      }
-    }
-
-    values.addAll([
+      (label: l10n.nameField, value: displayName),
       (label: l10n.nicknameField, value: username),
-      (
-        label: l10n.locationField,
-        value: (_user != null) ? (_user!['location'] as String?) ?? '' : '',
-      ),
-      (
-        label: l10n.birthdayField,
-        value: (_user != null) ? (_user!['birthday'] as String?) ?? '' : '',
-      ),
-    ]);
-    if (_isMe || (profileId.isNotEmpty && profileId != username)) {
-      values.add((label: l10n.contactIdLabel, value: profileId));
-    }
+      (label: l10n.aboutField, value: about),
+      (label: l10n.locationField, value: location),
+      (label: l10n.birthdayField, value: birthday),
+      (label: l10n.emailLabel, value: email),
+      (label: l10n.phoneLabel, value: phone),
+      (label: l10n.profileStatusLabel, value: status),
+      (label: l10n.registeredAtLabel, value: createdAt),
+      (label: l10n.aegisIdLabel, value: profileId),
+    ];
     return values;
+  }
+
+  String? _formattedCreatedAt() {
+    final raw = _user?['createdAt']?.toString().trim();
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) {
+      return raw;
+    }
+    return '${parsed.day.toString().padLeft(2, '0')}.${parsed.month.toString().padLeft(2, '0')}.${parsed.year}';
   }
 
   Widget _buildMetaChip(

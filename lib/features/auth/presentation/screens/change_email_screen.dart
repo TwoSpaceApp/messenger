@@ -33,7 +33,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
 
   Future<void> _loadCurrent() async {
     try {
-      final profile = await _chatService.getOwnUserInfo(forceRefresh: true);
+      final profile = await _chatService.getOwnUserInfo();
       final email = profile['email']?.toString().trim();
       if (!mounted) return;
       setState(() {

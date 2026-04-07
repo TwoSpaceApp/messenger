@@ -418,7 +418,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 final auth = AuthService();
                                 final userId = await auth.getCurrentUserId();
                                 if (userId != null && context.mounted) {
-                                  context.push('/profile', extra: userId);
+                                  context.push(AppStrings.routeAccountProfile);
                                 }
                               },
                               contentPadding: const EdgeInsets.symmetric(
