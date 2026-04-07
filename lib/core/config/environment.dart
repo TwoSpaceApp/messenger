@@ -15,7 +15,6 @@ class Environment {
   static int? _cachedAegisAppId;
   static String? _cachedAegisAppHash;
   static String? _cachedAegisBotApiBaseUrl;
-  static String? _cachedSentryDsn;
   static String? _cachedAppEnv;
   static bool? _cachedEnableDevTools;
   static final Map<String, String> _runtimeOverrides = <String, String>{};
@@ -49,7 +48,6 @@ class Environment {
       _cachedAegisAppId = null;
       _cachedAegisAppHash = null;
       _cachedAegisBotApiBaseUrl = null;
-      _cachedSentryDsn = null;
       _cachedAppEnv = null;
       _cachedEnableDevTools = null;
     } catch (_) {
@@ -124,8 +122,6 @@ class Environment {
     return '$scheme://$aegisHost:5000';
   }
 
-  static String get sentryDsn =>
-      _cachedSentryDsn ??= _string('SENTRY_DSN', Env.sentryDsn);
   static String get appEnv => _cachedAppEnv ??= _string('APP_ENV', Env.appEnv);
   static bool get enableDevTools => _cachedEnableDevTools ??=
       _string('ENABLE_DEV_TOOLS', Env.enableDevTools) == 'true';

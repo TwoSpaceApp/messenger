@@ -255,6 +255,8 @@ class AppThemeBuilder {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceContainerColor,
+        prefixIconColor: onSurfaceVariantColor,
+        suffixIconColor: onSurfaceVariantColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: outlineVariantColor),
@@ -276,8 +278,41 @@ class AppThemeBuilder {
         visualDensity: settings.compactMode
             ? VisualDensity.compact
             : VisualDensity.standard,
+        iconColor: onSurfaceVariantColor,
+        textColor: onSurfaceColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return onSurfaceVariantColor.withValues(alpha: 0.38);
+            }
+            return onSurfaceVariantColor;
+          }),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return onSurfaceVariantColor.withValues(alpha: 0.38);
+          }
+          if (states.contains(WidgetState.selected)) {
+            return onPrimaryContainerColor;
+          }
+          return onSurfaceVariantColor;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return outlineVariantColor.withValues(alpha: 0.32);
+          }
+          if (states.contains(WidgetState.selected)) {
+            return primaryContainerColor;
+          }
+          return outlineVariantColor.withValues(alpha: 0.72);
+        }),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
       cardTheme: CardThemeData(
         margin: settings.compactMode

@@ -21,6 +21,35 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   final bool _loading = false;
 
   @override
+  void initState() {
+    super.initState();
+    SettingsService.loadDeferredSettings();
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, UITokens.spaceSm),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSurfaceTile(BuildContext context, Widget child) {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(UITokens.cornerSm),
+      ),
+      child: child,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final list = ListView(
@@ -29,7 +58,6 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
         if (widget.embedded) ...[
           SectionPageHeader(
             title: l10n.privacyTitle,
-            subtitle: l10n.biometricsSetup,
             leading: IconButton(
               onPressed: () => context.pop(),
               icon: const Icon(Icons.arrow_back_rounded),
@@ -37,6 +65,48 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
           ),
           const SizedBox(height: UITokens.space),
         ],
+        _buildSectionTitle(context, l10n.contactDataSection),
+        ValueListenableBuilder<bool>(
+          valueListenable: SettingsService.showEmailNotifier,
+          builder: (context, isEnabled, _) {
+            return _buildSurfaceTile(
+              context,
+              SwitchListTile(
+                title: Text(l10n.emailLabel),
+                subtitle: Text(l10n.privacyTitle),
+                secondary: const Icon(Icons.email_outlined),
+                value: isEnabled,
+                onChanged: _loading
+                    ? null
+                    : (value) async {
+                        await SettingsService.setShowEmail(value);
+                      },
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: UITokens.spaceSm),
+        ValueListenableBuilder<bool>(
+          valueListenable: SettingsService.showPhoneNotifier,
+          builder: (context, isEnabled, _) {
+            return _buildSurfaceTile(
+              context,
+              SwitchListTile(
+                title: Text(l10n.phoneLabel),
+                subtitle: Text(l10n.privacyTitle),
+                secondary: const Icon(Icons.phone_outlined),
+                value: isEnabled,
+                onChanged: _loading
+                    ? null
+                    : (value) async {
+                        await SettingsService.setShowPhone(value);
+                      },
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: UITokens.space),
+        _buildSectionTitle(context, l10n.securitySection),
         ValueListenableBuilder<bool>(
           valueListenable: SettingsService.biometricsNotifier,
           builder: (context, isEnabled, child) {
@@ -63,7 +133,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             );
           },
         ),
-        // Session persistence setting (silent re-login)
+        const SizedBox(height: UITokens.spaceSm),
         ValueListenableBuilder<int>(
           valueListenable: SettingsService.sessionTimeoutDaysNotifier,
           builder: (c, days, _) {
@@ -161,12 +231,9 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             );
           },
         ),
-        Material(
-          color: Theme.of(context).colorScheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(UITokens.cornerSm),
-          ),
-          child: ListTile(
+        _buildSurfaceTile(
+          context,
+          ListTile(
             leading: const Icon(Icons.devices_rounded),
             title: Text(l10n.activeSessionsLabel),
             subtitle: Text(l10n.activeSessionsSubtitle),
@@ -174,13 +241,10 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             onTap: () => context.push(AppStrings.routeActiveSessions),
           ),
         ),
-        const SizedBox(height: UITokens.space),
-        Material(
-          color: Theme.of(context).colorScheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(UITokens.cornerSm),
-          ),
-          child: ListTile(
+        const SizedBox(height: UITokens.spaceSm),
+        _buildSurfaceTile(
+          context,
+          ListTile(
             leading: const Icon(Icons.security),
             title: Text(l10n.twoFactorLabel),
             subtitle: Text(l10n.twoFactorPrivacySubtitle),
@@ -191,14 +255,16 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
       ],
     );
 
+    final content = Material(color: Colors.transparent, child: list);
+
     if (widget.embedded) {
-      return list;
+      return content;
     }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.privacyTitle)),
-      body: ScreenBackground(child: list),
+      body: ScreenBackground(child: content),
     );
   }
 }

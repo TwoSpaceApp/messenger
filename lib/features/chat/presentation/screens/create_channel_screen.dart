@@ -3,11 +3,11 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
-import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/widgets/chat_creation_scaffold.dart';
@@ -24,7 +24,6 @@ class _CreateChannelScreenState extends State<CreateChannelScreen> {
   final _descriptionController = TextEditingController();
   final _aliasController = TextEditingController();
   final AegisChatService _chatService = AegisChatService();
-  final AegisAuthService _authService = AegisAuthService();
 
   Uint8List? _avatarBytes;
   String? _avatarFileName;
@@ -130,19 +129,12 @@ class _CreateChannelScreenState extends State<CreateChannelScreen> {
 
       final alias = _normalizedChannelLink;
       if (_isPublic && alias.isNotEmpty) {
-        final channelId = int.tryParse(roomId.replaceFirst('channel:', ''));
-        if (channelId != null) {
-          try {
-            final response = await _authService.rawClient.updateChannelLinks(
-              channelId,
-              publicAlias: alias,
-            );
-            if (!response.success) {
-              warnings.add(response.message ?? l10n.errorGeneric);
-            }
-          } catch (error) {
-            warnings.add(chatCreationFriendlyError(error));
-          }
+        try {
+          await _chatService.updateRoomPublicAlias(roomId, alias);
+        } catch (error) {
+          warnings.add(
+            UserFacingError.format(error, AppLocalizations.of(context)),
+          );
         }
       }
 
@@ -174,7 +166,10 @@ class _CreateChannelScreenState extends State<CreateChannelScreen> {
         return;
       }
       setState(() {
-        _errorMessage = chatCreationFriendlyError(error);
+        _errorMessage = UserFacingError.format(
+          error,
+          AppLocalizations.of(context),
+        );
       });
     } finally {
       if (mounted) {

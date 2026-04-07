@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
@@ -133,12 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on TwoFactorInvalidException {
       setState(() => _recordFailedAttempt(l10n));
       await _completeTwoFactorLogin(identifier, password, invalidCode: true);
-    } catch (e, stackTrace) {
-      SentryService.captureException(
-        e,
-        stackTrace: stackTrace,
-        hint: {'screen': 'login'},
-      );
+    } catch (e) {
       if (mounted) {
         setState(
           () {
@@ -197,12 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         }
         invalidCode = true;
         continue;
-      } catch (e, stackTrace) {
-        SentryService.captureException(
-          e,
-          stackTrace: stackTrace,
-          hint: {'screen': 'login-2fa'},
-        );
+      } catch (e) {
         if (!mounted) {
           return;
         }

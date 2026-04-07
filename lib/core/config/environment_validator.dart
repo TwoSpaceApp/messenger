@@ -21,10 +21,6 @@ class EnvironmentValidator {
         errors.add('❌ AEGIS_PORT должен быть в диапазоне 1..65535');
       }
 
-      if (Environment.sentryDsn.isEmpty) {
-        warnings.add('⚠️  Опциональная переменная не установлена: SENTRY_DSN');
-      }
-
       if (Environment.aegisConnectTimeout <= Duration.zero) {
         errors.add('❌ AEGIS_CONNECT_TIMEOUT_SECONDS должен быть больше 0');
       }

@@ -94,11 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   ) {
     return <String, dynamic>{
       'id': userInfo['id']?.toString() ?? fallbackId,
-      'name':
-          userInfo['displayName'] ??
-          widget.initialName ??
-          userInfo['username'] ??
-          _fallbackProfileName(),
+      'displayName': userInfo['displayName'] ?? widget.initialName,
       'username': userInfo['username'] ?? '',
       'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
       'avatars': userInfo['avatars'] ?? const <Map<String, dynamic>>[],
@@ -110,13 +106,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'createdAt': userInfo['createdAt'],
       'presenceStatus': userInfo['presenceStatus'],
       'lastSeenAt': userInfo['lastSeenAt'],
-      'prefs': <String, dynamic>{
-        'nickname': userInfo['username'] ?? '',
-        'about': userInfo['bio'] ?? '',
-        'avatarUrl': userInfo['avatarUrl'] ?? widget.initialAvatar,
-        'showEmail': userInfo['showEmail'] == true,
-        'showPhone': userInfo['showPhone'] == true,
-      },
+      'showEmail': userInfo['showEmail'] == true,
+      'showPhone': userInfo['showPhone'] == true,
+    };
+  }
+
+  Map<String, dynamic> _fallbackProfileState() {
+    return <String, dynamic>{
+      'id': widget.userId,
+      'displayName': _fallbackProfileName(),
+      'username': _fallbackUsername(),
+      'avatar': widget.initialAvatar,
+      'avatars': const <Map<String, dynamic>>[],
+      'bio': '',
+      'location': '',
+      'birthday': '',
+      'email': null,
+      'phone': null,
+      'createdAt': null,
+      'presenceStatus': null,
+      'lastSeenAt': null,
+      'showEmail': false,
+      'showPhone': false,
     };
   }
 
@@ -158,21 +169,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       _applyLoadedUser(userInfo, isMe: _isMe);
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         setState(() {
           _loading = false;
-          _user = {
-            'id': widget.userId,
-            'name': _fallbackProfileName(),
-            'username': _fallbackUsername(),
-            'prefs': {
-              'nickname': _fallbackUsername(),
-              'about': '',
-            },
-          };
+          _user = _fallbackProfileState();
         });
         _initializeControllers();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                UserFacingError.format(error, AppLocalizations.of(context)),
+              ),
+            ),
+          );
+        });
       }
     }
   }
@@ -220,15 +235,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _initializeControllers() {
     if (_user != null) {
-      final prefs = (_user!['prefs'] is Map)
-          ? Map<String, dynamic>.from(_user!['prefs'])
-          : <String, dynamic>{};
-      _nameController.text = (_user!['name'] as String?)?.trim() ?? '';
-      _nicknameController.text = (prefs['nickname'] as String?)?.trim() ?? '';
-      _aboutController.text =
-          (prefs['about'] as String?)?.trim() ??
-          (_user!['bio'] as String?)?.trim() ??
-          '';
+      _nameController.text = (_user!['displayName'] as String?)?.trim() ?? '';
+      _nicknameController.text = (_user!['username'] as String?)?.trim() ?? '';
+      _aboutController.text = (_user!['bio'] as String?)?.trim() ?? '';
       _locationController.text = (_user!['location'] as String?)?.trim() ?? '';
       _birthdayController.text = (_user!['birthday'] as String?)?.trim() ?? '';
     }
@@ -240,6 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     Uint8List? avatarBytes;
     String mimePathOrName = '';
+    Object? galleryError;
 
     try {
       final picker = ImagePicker();
@@ -248,8 +258,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         avatarBytes = await image.readAsBytes();
         mimePathOrName = image.path;
       }
-    } catch (_) {
-      // Ignore and fallback to FilePicker below.
+    } catch (error) {
+      galleryError = error;
     }
 
     if (avatarBytes == null) {
@@ -281,7 +291,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             content: Text(
               denied
                   ? l10n.filePickError(l10n.fileAccessDeniedMessage)
-                  : l10n.filePickError(e.toString()),
+                  : l10n.filePickError(
+                      UserFacingError.format(
+                        galleryError ?? e,
+                        AppLocalizations.of(context),
+                      ),
+                    ),
             ),
           ),
         );
@@ -317,7 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           content: Text(
             denied
                 ? l10n.avatarFileAccessDeniedMessage
-                : e.toString().replaceAll('Exception: ', ''),
+                : UserFacingError.format(e, AppLocalizations.of(context)),
           ),
         ),
       );
@@ -372,7 +387,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            UserFacingError.format(e, AppLocalizations.of(context)!),
+            UserFacingError.format(e, AppLocalizations.of(context)),
           ),
         ),
       );
@@ -380,18 +395,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String _displayName() {
-    try {
-      if (_user == null) return widget.initialName ?? widget.userId;
-      final prefs = (_user!['prefs'] is Map)
-          ? Map<String, dynamic>.from(_user!['prefs'])
-          : <String, dynamic>{};
-      final name = (_user!['name'] as String?)?.trim();
-      if (name != null && name.isNotEmpty) return name;
-      final nick = (prefs['nickname'] as String?)?.trim();
-      if (nick != null && nick.isNotEmpty) return nick;
-      final email = (_user!['email'] as String?) ?? '';
-      if (email.isNotEmpty) return email.split('@').first;
-    } catch (_) {}
+    if (_user == null) return widget.initialName ?? widget.userId;
+    final displayName = (_user!['displayName'] as String?)?.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      return displayName;
+    }
+    final username = (_user!['username'] as String?)?.trim();
+    if (username != null && username.isNotEmpty) {
+      return username;
+    }
+    final email = (_user!['email'] as String?)?.trim() ?? '';
+    if (email.isNotEmpty) {
+      return email.split('@').first;
+    }
     return _fallbackProfileName();
   }
 
@@ -399,7 +415,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_user == null) {
       return false;
     }
-    final name = (_user!['name'] as String?)?.trim() ?? '';
+    final name = (_user!['displayName'] as String?)?.trim() ?? '';
     final bio = (_user!['bio'] as String?)?.trim() ?? '';
     final location = (_user!['location'] as String?)?.trim() ?? '';
     final birthday = (_user!['birthday'] as String?)?.trim() ?? '';
@@ -417,14 +433,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String? _avatarUrl() {
-    try {
-      if (_user != null) {
-        final prefs = (_user!['prefs'] is Map)
-            ? Map<String, dynamic>.from(_user!['prefs'])
-            : <String, dynamic>{};
-        return (prefs['avatarUrl'] as String?) ?? (_user!['avatar'] as String?);
-      }
-    } catch (_) {}
+    if (_user != null) {
+      return (_user!['avatar'] as String?) ?? widget.initialAvatar;
+    }
     return widget.initialAvatar;
   }
 
@@ -433,10 +444,93 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (usernameValue != null && usernameValue.isNotEmpty) {
       return usernameValue;
     }
-    final prefs = (_user?['prefs'] is Map)
-        ? Map<String, dynamic>.from(_user!['prefs'] as Map)
-        : <String, dynamic>{};
-    return (prefs['nickname'] as String?)?.trim() ?? '';
+    return '';
+  }
+
+  Future<void> _openDirectChat() async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _actionLoading = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final cs = createChatBackend();
+      final mappedChat = await cs.getOrCreateDirectChat(widget.userId);
+      final chat = Chat.fromMap(mappedChat);
+      if (!mounted) {
+        return;
+      }
+      await context.push(
+        '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
+        extra: chat,
+      );
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.createChatError(
+              UserFacingError.format(error, AppLocalizations.of(context)),
+            ),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _actionLoading = false);
+      }
+    }
+  }
+
+  void _openCall() {
+    final roomName =
+        'call_${widget.userId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_')}_${DateTime.now().millisecondsSinceEpoch}';
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CallScreen(
+          room: roomName,
+          isVideo: true,
+          displayName: _displayName(),
+          avatarUrl: _avatarUrl(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContactActionButtons(AppLocalizations l10n) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compactButtons = constraints.maxWidth < 500;
+        final messageButton = _buildActionButton(
+          icon: _actionLoading ? null : Icons.chat_bubble_outline,
+          label: l10n.writeMessageButton,
+          loading: _actionLoading,
+          fullWidth: true,
+          onPressed: _actionLoading ? null : _openDirectChat,
+        );
+        final callButton = _buildActionButton(
+          icon: Icons.call_outlined,
+          label: l10n.callButton,
+          fullWidth: true,
+          onPressed: _openCall,
+        );
+
+        if (compactButtons) {
+          return Column(
+            children: [
+              messageButton,
+              const SizedBox(height: UITokens.spaceSmMd),
+              callButton,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: messageButton),
+            const SizedBox(width: UITokens.spaceSmMd),
+            Expanded(child: callButton),
+          ],
+        );
+      },
+    );
   }
 
   String _profileId() {
@@ -936,146 +1030,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ] else ...[
               const SizedBox(height: UITokens.spaceMd),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final compactButtons = constraints.maxWidth < 500;
-                  if (compactButtons) {
-                    return Column(
-                      children: [
-                        _buildActionButton(
-                          icon: _actionLoading
-                              ? null
-                              : Icons.chat_bubble_outline,
-                          label: l10n.writeMessageButton,
-                          loading: _actionLoading,
-                          fullWidth: true,
-                          onPressed: _actionLoading
-                              ? null
-                              : () async {
-                                  setState(() => _actionLoading = true);
-                                  final messenger = ScaffoldMessenger.of(
-                                    context,
-                                  );
-                                  try {
-                                    final cs = createChatBackend();
-                                    final m = await cs.getOrCreateDirectChat(
-                                      widget.userId,
-                                    );
-                                    final chat = Chat.fromMap(m);
-                                    if (!mounted) return;
-                                    await context.push(
-                                      '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
-                                      extra: chat,
-                                    );
-                                  } catch (e) {
-                                    messenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          l10n.createChatError(e.toString()),
-                                        ),
-                                      ),
-                                    );
-                                  } finally {
-                                    if (mounted) {
-                                      setState(() => _actionLoading = false);
-                                    }
-                                  }
-                                },
-                        ),
-                        const SizedBox(height: UITokens.spaceSmMd),
-                        _buildActionButton(
-                          icon: Icons.call_outlined,
-                          label: l10n.callButton,
-                          fullWidth: true,
-                          onPressed: () async {
-                            final roomName =
-                                'call_${widget.userId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_')}_${DateTime.now().millisecondsSinceEpoch}';
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => CallScreen(
-                                  room: roomName,
-                                  isVideo: true,
-                                  displayName: _displayName(),
-                                  avatarUrl: _avatarUrl(),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  }
-
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: _buildActionButton(
-                          icon: _actionLoading
-                              ? null
-                              : Icons.chat_bubble_outline,
-                          label: l10n.writeMessageButton,
-                          loading: _actionLoading,
-                          fullWidth: true,
-                          onPressed: _actionLoading
-                              ? null
-                              : () async {
-                                  setState(() => _actionLoading = true);
-                                  final messenger = ScaffoldMessenger.of(
-                                    context,
-                                  );
-                                  try {
-                                    final cs = createChatBackend();
-                                    final m = await cs.getOrCreateDirectChat(
-                                      widget.userId,
-                                    );
-                                    final chat = Chat.fromMap(m);
-                                    if (!mounted) return;
-                                    await context.push(
-                                      '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
-                                      extra: chat,
-                                    );
-                                  } catch (e) {
-                                    messenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          l10n.createChatError(e.toString()),
-                                        ),
-                                      ),
-                                    );
-                                  } finally {
-                                    if (mounted) {
-                                      setState(() => _actionLoading = false);
-                                    }
-                                  }
-                                },
-                        ),
-                      ),
-                      const SizedBox(width: UITokens.spaceSmMd),
-                      Expanded(
-                        child: _buildActionButton(
-                          icon: Icons.call_outlined,
-                          label: l10n.callButton,
-                          fullWidth: true,
-                          onPressed: () async {
-                            final roomName =
-                                'call_${widget.userId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_')}_${DateTime.now().millisecondsSinceEpoch}';
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => CallScreen(
-                                  room: roomName,
-                                  isVideo: true,
-                                  displayName: _displayName(),
-                                  avatarUrl: _avatarUrl(),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+              _buildContactActionButtons(l10n),
             ],
           ],
         ),
@@ -1102,26 +1057,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              _isAccountProfile
-                  ? l10n.accountProfileTitle
-                  : l10n.profileTitle,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: UITokens.spaceXSm),
-            Text(
-              _isAccountProfile
-                  ? (_editMode
-                        ? l10n.accountProfileEditSubtitle
-                        : l10n.accountProfileSubtitle)
-                  : l10n.otherProfileSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: UITokens.spaceLg),
             if (!_editMode && !_hasReadableProfileData()) ...[
               Container(
                 width: double.infinity,
@@ -1303,7 +1238,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String username,
     String profileId,
   ) {
-    final displayName = (_user?['name'] as String?)?.trim();
+    final displayName = (_user?['displayName'] as String?)?.trim();
     final about = (_user?['bio'] as String?)?.trim();
     final location = (_user?['location'] as String?)?.trim();
     final birthday = (_user?['birthday'] as String?)?.trim();

@@ -5,6 +5,7 @@ import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
@@ -26,6 +27,7 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
   String? _recoveryPhrase;
   String? _error;
   bool _loading = true;
+  bool _submitting = false;
   bool _isDisabling = false;
   final _enableCodeController = TextEditingController();
   final _disableCodeController = TextEditingController();
@@ -45,12 +47,23 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
     _fetchTfaSetup();
   }
 
-  Future<void> _fetchTfaSetup() async {
-    setState(() => _loading = true);
+  Future<void> _fetchTfaSetup({bool showLoader = true}) async {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      if (showLoader) {
+        _loading = true;
+      }
+      _error = null;
+    });
     final l10n = AppLocalizations.of(context)!;
     try {
       final authService = AuthService();
       final result = await authService.requestTotpSetup();
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _secret = result['secret'];
         _otpAuthUri = result['otpauth_uri'];
@@ -61,20 +74,9 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
     } catch (e) {
       setState(() {
         _loading = false;
-        _error = _cleanError(e, fallback: l10n.errorGeneric);
+        _error = UserFacingError.format(e, l10n);
       });
     }
-  }
-
-  String _cleanError(Object error, {required String fallback}) {
-    final text = error
-        .toString()
-        .replaceFirst(RegExp('^Exception: '), '')
-        .trim();
-    if (text.isEmpty || text == 'Exception') {
-      return fallback;
-    }
-    return text;
   }
 
   Future<void> _copyToClipboard(String value) async {
@@ -98,26 +100,34 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
       );
       return;
     }
-    setState(() => _loading = true);
+    setState(() => _submitting = true);
     try {
       final authService = AuthService();
       await authService.verifyTotpSetup(_enableCodeController.text.trim());
-      setState(() => _loading = false);
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.twoFactorEnabledMessage)),
       );
-      Navigator.pop(context);
+      context.pop();
     } catch (e) {
-      setState(() => _loading = false);
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             l10n.twoFactorEnableFailed(
-              _cleanError(e, fallback: l10n.errorGeneric),
+              UserFacingError.format(e, l10n),
             ),
           ),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
     }
   }
 
@@ -155,7 +165,7 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
       return;
     }
 
-    setState(() => _loading = true);
+    setState(() => _submitting = true);
     try {
       final authService = AuthService();
       await authService.verifyTotpSetup(
@@ -163,8 +173,10 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
         disable: true,
         recoveryPhrase: recoveryPhrase.isEmpty ? null : recoveryPhrase,
       );
+      if (!mounted) {
+        return;
+      }
       setState(() {
-        _loading = false;
         _isDisabling = false;
         _disableCodeController.clear();
         _disableRecoveryController.clear();
@@ -172,17 +184,24 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.twoFactorDisabledMessage)),
       );
+      await _fetchTfaSetup(showLoader: false);
     } catch (e) {
-      setState(() => _loading = false);
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             l10n.twoFactorDisableFailed(
-              _cleanError(e, fallback: l10n.errorGeneric),
+              UserFacingError.format(e, l10n),
             ),
           ),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
     }
   }
 
@@ -192,10 +211,11 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
     final body = _loading
         ? const Center(child: CircularProgressIndicator())
         : _error != null
-        ? AppEmptyState(
+        ? AppErrorState(
             title: l10n.twoFactorLabel,
             message: _error!,
-            icon: Icons.security,
+            actionLabel: l10n.retry,
+            onAction: _fetchTfaSetup,
           )
         : SingleChildScrollView(
             padding: const EdgeInsets.all(UITokens.spaceMd),
@@ -211,21 +231,28 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
                     if (widget.embedded) ...[
                       SectionPageHeader(
                         title: l10n.twoFactorLabel,
-                        subtitle: l10n.twoFactorSetupDescription,
                         leading: IconButton(
                           onPressed: () => context.pop(),
                           icon: const Icon(Icons.arrow_back_rounded),
                         ),
+                        actions: [
+                          IconButton(
+                            onPressed: _submitting ? null : _fetchTfaSetup,
+                            icon: const Icon(Icons.refresh_rounded),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: UITokens.spaceMd),
                     ],
-                    Text(
-                      l10n.twoFactorSetupTitle,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: UITokens.spaceSm),
-                    Text(l10n.twoFactorSetupDescription),
-                    const SizedBox(height: UITokens.spaceLg),
+                    if (!widget.embedded) ...[
+                      Text(
+                        l10n.twoFactorSetupTitle,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: UITokens.spaceSm),
+                      Text(l10n.twoFactorSetupDescription),
+                      const SizedBox(height: UITokens.spaceLg),
+                    ],
                     SectionCard(
                       padding: const EdgeInsets.all(UITokens.spaceLg),
                       child: Column(
@@ -302,6 +329,7 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
                         children: [
                           TextField(
                             controller: _enableCodeController,
+                            enabled: !_submitting,
                             decoration: InputDecoration(
                               labelText: l10n.twoFactorVerificationCodeLabel,
                               hintText: l10n.twoFactorVerificationCodeHint,
@@ -310,8 +338,12 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
                           ),
                           const SizedBox(height: UITokens.spaceXLg),
                           ElevatedButton(
-                            onPressed: _verifyTfa,
-                            child: Text(l10n.twoFactorVerifyEnableAction),
+                            onPressed: _submitting ? null : _verifyTfa,
+                            child: Text(
+                              _submitting
+                                  ? l10n.loading
+                                  : l10n.twoFactorVerifyEnableAction,
+                            ),
                           ),
                         ],
                       ),
@@ -339,6 +371,7 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
                             const SizedBox(height: UITokens.space),
                             TextField(
                               controller: _disableCodeController,
+                              enabled: !_submitting,
                               decoration: InputDecoration(
                                 labelText: l10n.twoFactorVerificationCodeLabel,
                                 hintText: l10n.twoFactorDisableCodeHint,
@@ -348,6 +381,7 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
                             const SizedBox(height: UITokens.space),
                             TextField(
                               controller: _disableRecoveryController,
+                              enabled: !_submitting,
                               decoration: InputDecoration(
                                 labelText:
                                     l10n.twoFactorRecoveryPhraseFieldLabel,
@@ -358,8 +392,12 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
                             ),
                             const SizedBox(height: UITokens.spaceMd),
                             FilledButton.tonal(
-                              onPressed: _disableTfa,
-                              child: Text(l10n.twoFactorDisableAction),
+                              onPressed: _submitting ? null : _disableTfa,
+                              child: Text(
+                                _submitting
+                                    ? l10n.loading
+                                    : l10n.twoFactorDisableAction,
+                              ),
                             ),
                           ],
                         ),
@@ -378,7 +416,15 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.twoFactorLabel)),
+      appBar: AppBar(
+        title: Text(l10n.twoFactorLabel),
+        actions: [
+          IconButton(
+            onPressed: (_loading || _submitting) ? null : _fetchTfaSetup,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
       body: content,
     );
   }

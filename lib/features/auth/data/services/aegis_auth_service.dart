@@ -49,6 +49,10 @@ class AegisAuthService {
     _client.disconnects.listen((_) {
       _stopKeepAlive();
       _log.warning('Соединение с Aegis-сервером разорвано');
+      if (_suppressDisconnectRecovery) {
+        _log.debug('Пропускаю auto-recovery для управляемого disconnect');
+        return;
+      }
       if (!_logoutInProgress && (_token?.isNotEmpty ?? false)) {
         unawaited(_recoverSessionAfterKeepAliveFailure());
       }
@@ -78,6 +82,7 @@ class AegisAuthService {
   Future<void>? _ensureSessionFuture;
   Future<void>? _sessionRecoveryFuture;
   bool _logoutInProgress = false;
+  bool _suppressDisconnectRecovery = false;
 
   bool get isConnected => _client.isConnected;
   bool get isAuthenticated => _client.isAuthenticated;
@@ -199,72 +204,78 @@ class AegisAuthService {
       return;
     }
 
-    final future = () async {
-      _logConnectionProfile();
-      _log.info(
-        'Подключение к ${Environment.aegisHost}:${Environment.aegisPort}',
-      );
-      final configuredTls = Environment.aegisUseTls;
-      try {
-        await _client.connect(
-          Environment.aegisHost,
-          Environment.aegisPort,
-          timeout: Environment.aegisConnectTimeout,
-          transportMaskingKey: Environment.aegisTransportMaskingKey,
-          useTls: configuredTls,
-        );
-      } on Object catch (e) {
-        if (_usingEnvAppCredentials &&
-            e.toString().toLowerCase().contains('app credentials')) {
-          _log.warning(
-            'Server rejected configured app credentials, official fallback was attempted automatically: $e',
-          );
-        }
-        if (_shouldTryTlsFallback(e, configuredTls: configuredTls)) {
-          final fallbackTls = !configuredTls;
-          _log.warning(
-            'Primary connect failed, retry with TLS=$fallbackTls: $e',
-          );
-          try {
-            if (_client.isConnected) {
-              await _client.disconnect();
-            }
-          } catch (_) {}
+    final completer = Completer<void>();
+    final future = completer.future;
+    _connectFuture = future;
 
-          try {
-            await _client.connect(
-              Environment.aegisHost,
-              Environment.aegisPort,
-              timeout: Environment.aegisConnectTimeout,
-              transportMaskingKey: Environment.aegisTransportMaskingKey,
-              useTls: fallbackTls,
+    unawaited(() async {
+      try {
+        _logConnectionProfile();
+        _log.info(
+          'Подключение к ${Environment.aegisHost}:${Environment.aegisPort}',
+        );
+        final configuredTls = Environment.aegisUseTls;
+        try {
+          await _client.connect(
+            Environment.aegisHost,
+            Environment.aegisPort,
+            timeout: Environment.aegisConnectTimeout,
+            transportMaskingKey: Environment.aegisTransportMaskingKey,
+            useTls: configuredTls,
+          );
+        } on Object catch (e) {
+          if (_usingEnvAppCredentials &&
+              e.toString().toLowerCase().contains('app credentials')) {
+            _log.warning(
+              'Server rejected configured app credentials, official fallback was attempted automatically: $e',
             );
-            _log.info(
-              'Connected using TLS fallback mode (env TLS=$configuredTls, active TLS=$fallbackTls)',
+          }
+          if (_shouldTryTlsFallback(e, configuredTls: configuredTls)) {
+            final fallbackTls = !configuredTls;
+            _log.warning(
+              'Primary connect failed, retry with TLS=$fallbackTls: $e',
             );
-          } on Object catch (fallbackError) {
-            final code = _classifyConnectionError(fallbackError);
-            _log.error('Connect failed [$code]: $fallbackError');
+            try {
+              if (_client.isConnected) {
+                await _disconnectClient();
+              }
+            } catch (_) {}
+
+            try {
+              await _client.connect(
+                Environment.aegisHost,
+                Environment.aegisPort,
+                timeout: Environment.aegisConnectTimeout,
+                transportMaskingKey: Environment.aegisTransportMaskingKey,
+                useTls: fallbackTls,
+              );
+              _log.info(
+                'Connected using TLS fallback mode (env TLS=$configuredTls, active TLS=$fallbackTls)',
+              );
+            } on Object catch (fallbackError) {
+              final code = _classifyConnectionError(fallbackError);
+              _log.error('Connect failed [$code]: $fallbackError');
+              rethrow;
+            }
+          } else {
+            final code = _classifyConnectionError(e);
+            _log.error('Connect failed [$code]: $e');
             rethrow;
           }
-        } else {
-          final code = _classifyConnectionError(e);
-          _log.error('Connect failed [$code]: $e');
-          rethrow;
+        }
+        _ensureKeepAlive();
+        _log.info('TCP-соединение установлено');
+        completer.complete();
+      } on Object catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      } finally {
+        if (identical(_connectFuture, future)) {
+          _connectFuture = null;
         }
       }
-      _ensureKeepAlive();
-      _log.info('TCP-соединение установлено');
-    }();
+    }());
 
-    _connectFuture = future;
-    try {
-      await future;
-    } finally {
-      if (identical(_connectFuture, future)) {
-        _connectFuture = null;
-      }
-    }
+    await future;
   }
 
   Future<void> ensureSession() async {
@@ -279,15 +290,24 @@ class AegisAuthService {
       return;
     }
 
-    final future = _ensureSessionInternal();
+    final completer = Completer<void>();
+    final future = completer.future;
     _ensureSessionFuture = future;
-    try {
-      await future;
-    } finally {
-      if (identical(_ensureSessionFuture, future)) {
-        _ensureSessionFuture = null;
+
+    unawaited(() async {
+      try {
+        await _ensureSessionInternal();
+        completer.complete();
+      } on Object catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      } finally {
+        if (identical(_ensureSessionFuture, future)) {
+          _ensureSessionFuture = null;
+        }
       }
-    }
+    }());
+
+    await future;
   }
 
   Future<void> _ensureSessionInternal() async {
@@ -320,9 +340,23 @@ class AegisAuthService {
     final inFlight = _restoreSessionFuture;
     if (inFlight != null) return inFlight;
 
-    final future = _restoreSessionInternal();
+    final completer = Completer<bool>();
+    final future = completer.future;
     _restoreSessionFuture = future;
-    future.whenComplete(() => _restoreSessionFuture = null);
+
+    unawaited(() async {
+      try {
+        final restored = await _restoreSessionInternal();
+        completer.complete(restored);
+      } on Object catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      } finally {
+        if (identical(_restoreSessionFuture, future)) {
+          _restoreSessionFuture = null;
+        }
+      }
+    }());
+
     return future;
   }
 
@@ -653,7 +687,7 @@ class AegisAuthService {
     try {
       await clearSession();
       try {
-        await _client.disconnect();
+        await _disconnectClient();
       } on Object catch (e) {
         _log.debug('Ошибка при disconnect: $e');
       }
@@ -718,27 +752,43 @@ class AegisAuthService {
       return;
     }
 
-    final future = () async {
-      try {
-        if (_client.isConnected) {
-          await _client.disconnect();
-        }
-      } catch (_) {}
-
-      try {
-        await ensureSession();
-      } on Object catch (e) {
-        _log.debug('Автовосстановление сессии не удалось: $e');
-      }
-    }();
-
+    final completer = Completer<void>();
+    final future = completer.future;
     _sessionRecoveryFuture = future;
-    try {
-      await future;
-    } finally {
-      if (identical(_sessionRecoveryFuture, future)) {
-        _sessionRecoveryFuture = null;
+
+    unawaited(() async {
+      try {
+        try {
+          if (_client.isConnected) {
+            await _disconnectClient();
+          }
+        } catch (_) {}
+
+        try {
+          await ensureSession();
+        } on Object catch (e) {
+          _log.debug('Автовосстановление сессии не удалось: $e');
+        }
+        completer.complete();
+      } on Object catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      } finally {
+        if (identical(_sessionRecoveryFuture, future)) {
+          _sessionRecoveryFuture = null;
+        }
       }
+    }());
+
+    await future;
+  }
+
+  Future<void> _disconnectClient() async {
+    final previousSuppression = _suppressDisconnectRecovery;
+    _suppressDisconnectRecovery = true;
+    try {
+      await _client.disconnect();
+    } finally {
+      _suppressDisconnectRecovery = previousSuppression;
     }
   }
 
@@ -842,7 +892,7 @@ class AegisAuthService {
     await clearSession();
     try {
       if (_client.isConnected) {
-        await _client.disconnect();
+        await _disconnectClient();
       }
     } on Object catch (error) {
       _log.debug('Disconnect after session termination failed: $error');

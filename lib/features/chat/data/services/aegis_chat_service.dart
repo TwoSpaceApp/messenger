@@ -807,6 +807,38 @@ class AegisChatService {
     return null;
   }
 
+  bool _profileCacheNeedsRefresh(int userId, Map<String, dynamic> info) {
+    final idText = userId.toString();
+    final username = info['username']?.toString().trim() ?? '';
+    final displayName = info['displayName']?.toString().trim() ?? '';
+    final avatarUrl = normalizeAegisAvatarUrl(info['avatarUrl']?.toString());
+    final avatars = info['avatars'];
+    final bio = info['bio']?.toString().trim() ?? '';
+    final location = info['location']?.toString().trim() ?? '';
+    final birthday = info['birthday']?.toString().trim() ?? '';
+    final email = info['email']?.toString().trim() ?? '';
+    final presenceStatus = info['presenceStatus']?.toString().trim() ?? '';
+    final lastSeenAt = info['lastSeenAt']?.toString().trim() ?? '';
+
+    final hasRichFields =
+        (avatarUrl?.isNotEmpty ?? false) ||
+        (avatars is List && avatars.isNotEmpty) ||
+        bio.isNotEmpty ||
+        location.isNotEmpty ||
+        birthday.isNotEmpty ||
+        email.isNotEmpty ||
+        presenceStatus.isNotEmpty ||
+        lastSeenAt.isNotEmpty;
+
+    final usernameLooksOpaque = username.isEmpty || username == idText;
+    final displayNameLooksOpaque =
+        displayName.isEmpty ||
+        displayName == idText ||
+        (displayName == username && usernameLooksOpaque);
+
+    return usernameLooksOpaque && displayNameLooksOpaque && !hasRichFields;
+  }
+
   bool _looksLikeOpaqueIdentity(
     String? value, {
     required int userId,
@@ -936,7 +968,10 @@ class AegisChatService {
       userId.replaceFirst('@', '').split(':').first,
     );
     if (parsedId != null && _profileCache.containsKey(parsedId)) {
-      return _profileCache[parsedId]!;
+      final cached = _profileCache[parsedId]!;
+      if (!_profileCacheNeedsRefresh(parsedId, cached)) {
+        return cached;
+      }
     }
 
     final cacheKey = parsedId?.toString() ?? userId;
@@ -1009,7 +1044,7 @@ class AegisChatService {
     final selfId = _auth.userId;
     if (!forceRefresh && selfId != null) {
       final cached = _profileCache[selfId];
-      if (cached != null) {
+      if (cached != null && !_profileCacheNeedsRefresh(selfId, cached)) {
         return cached;
       }
     }
@@ -2498,6 +2533,22 @@ class AegisChatService {
           ? (link.publicLink ?? link.privateInviteLink)
           : link.privateInviteLink,
     };
+  }
+
+  Future<void> updateRoomPublicAlias(String roomId, String publicAlias) async {
+    await ensureReady();
+    final room = _conversations[roomId];
+    if (room == null || room.channelId == null || !room.isPublic) {
+      throw Exception('Links are only available for public channels');
+    }
+
+    final response = await _auth.rawClient.updateChannelLinks(
+      room.channelId!,
+      publicAlias: publicAlias.trim(),
+    );
+    if (!response.success) {
+      throw Exception(response.message ?? 'Unable to update room link');
+    }
   }
 
   Future<Map<String, dynamic>> resolveRoomLink(String linkOrAlias) async {

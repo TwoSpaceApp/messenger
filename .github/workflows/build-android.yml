@@ -90,7 +90,6 @@ jobs:
         env:
           APP_ENV_VALUE: ${{ secrets.APP_ENV }}
           ENABLE_DEV_TOOLS_VALUE: ${{ secrets.ENABLE_DEV_TOOLS }}
-          SENTRY_DSN_VALUE: ${{ secrets.SENTRY_DSN }}
           AEGIS_HOST_VALUE: ${{ secrets.AEGIS_HOST }}
           AEGIS_PORT_VALUE: ${{ secrets.AEGIS_PORT }}
           AEGIS_CONNECT_TIMEOUT_SECONDS_VALUE: ${{ secrets.AEGIS_CONNECT_TIMEOUT_SECONDS }}
@@ -107,7 +106,6 @@ jobs:
           cat > .env <<EOF
           APP_ENV=${APP_ENV_VALUE:-development}
           ENABLE_DEV_TOOLS=${ENABLE_DEV_TOOLS_VALUE:-false}
-          SENTRY_DSN=${SENTRY_DSN_VALUE:-}
           AEGIS_HOST=${AEGIS_HOST_VALUE:-}
           AEGIS_PORT=${AEGIS_PORT_VALUE:-8888}
           AEGIS_CONNECT_TIMEOUT_SECONDS=${AEGIS_CONNECT_TIMEOUT_SECONDS_VALUE:-10}

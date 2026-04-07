@@ -1,7 +1,7 @@
 name: two_space_app
 description: "A secure and feature-rich messenger for the TwoSpace ecosystem."
 publish_to: 'none'
-version: 2.0.7-beta+46
+version: 2.0.7-beta+48
 
 environment:
   sdk: ^3.8.0
@@ -28,8 +28,7 @@ dependencies:
   riverpod_annotation: ^3.0.3
   riverpod: ^3.0.3
 
-  # ===== Monitoring & Error Tracking =====
-  sentry_flutter: ^9.14.0
+  # ===== Logging =====
   logger: ^2.4.0
 
   # ===== Security =====

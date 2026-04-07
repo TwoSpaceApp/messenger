@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/config/environment_validator.dart';
-import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 /// Result of an initialization step
@@ -195,7 +194,6 @@ class InitializationService {
     }
     _deferredStartupFuture = () async {
       await Future.wait<InitStepResult>(<Future<InitStepResult>>[
-        _executeStep(_SentryStep()),
         _executeStep(_EnvironmentValidationStep()),
       ]);
       await SettingsService.loadDeferredSettings();
@@ -236,22 +234,6 @@ class InitializationService {
 
       if (kDebugMode) {
         print('❌ Failed: ${step.name} - $e');
-      }
-
-      // Report non-critical failures to Sentry
-      if (!step.critical) {
-        try {
-          SentryService.captureException(
-            e,
-            stackTrace: stackTrace,
-            hint: {
-              'initialization_step': step.name,
-              'critical': step.critical,
-            },
-          );
-        } catch (_) {
-          // Ignore Sentry errors during initialization
-        }
       }
 
       return InitStepResult(
@@ -302,22 +284,6 @@ class _EnvironmentStep implements InitializationStep {
   @override
   Future<void> execute() async {
     await Environment.load();
-  }
-}
-
-class _SentryStep implements InitializationStep {
-  @override
-  String get name => 'Sentry Error Tracking';
-
-  @override
-  bool get critical => false;
-
-  @override
-  Duration get timeout => const Duration(seconds: 5);
-
-  @override
-  Future<void> execute() async {
-    await SentryService.initialize();
   }
 }
 

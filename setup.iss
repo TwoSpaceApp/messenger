@@ -1,9 +1,40 @@
 ; setup.iss — улучшенный Inno Setup для Flutter (Windows, русский язык)
-; НЕ ЗАБУДЬ ОБНОВИТЬ ВЕРСИЮ ПРИ СБОРКЕ!
 #define MyAppName "TwoSpace"
 #define MyAppExeName "two_space_app.exe"
+#define MyPubspecPath AddBackslash(SourcePath) + "pubspec.yaml"
+#define MyRawPubspecVersion ""
+#define MyPubspecHandle
+#define MyPubspecLine
+#sub ReadPubspecVersionLine
+  #define MyPubspecLine = Trim(FileRead(MyPubspecHandle))
+  #if Pos("version:", LowerCase(MyPubspecLine)) == 1
+    #define MyRawPubspecVersion Trim(Copy(MyPubspecLine, 9, 255))
+  #endif
+#endsub
+#ifndef MyRawPubspecVersion
+  #define MyRawPubspecVersion ""
+#endif
+#if MyRawPubspecVersion == "" && FileExists(MyPubspecPath)
+  #for {MyPubspecHandle = FileOpen(MyPubspecPath); MyPubspecHandle && !FileEof(MyPubspecHandle) && MyRawPubspecVersion == ""; ""} ReadPubspecVersionLine
+  #if MyPubspecHandle
+    #expr FileClose(MyPubspecHandle)
+  #endif
+#endif
 #ifndef MyAppVersion
-#define MyAppVersion "1.0.6"
+  #define MyAppVersion Copy(
+    MyRawPubspecVersion,
+    1,
+    Pos("+", MyRawPubspecVersion) > 0 ? Pos("+", MyRawPubspecVersion) - 1 : Len(MyRawPubspecVersion)
+  )
+#endif
+#ifndef MyVersionInfoVersion
+  #define MyVersionCore Copy(
+    MyAppVersion,
+    1,
+    Pos("-", MyAppVersion) > 0 ? Pos("-", MyAppVersion) - 1 : Len(MyAppVersion)
+  )
+  #define MyVersionBuild Pos("+", MyRawPubspecVersion) > 0 ? Copy(MyRawPubspecVersion, Pos("+", MyRawPubspecVersion) + 1, 32) : "0"
+  #define MyVersionInfoVersion MyVersionCore + "." + MyVersionBuild
 #endif
 #ifndef MyBuildDir
 #define MyBuildDir "build\windows\x64\runner\Release"
@@ -19,7 +50,7 @@ AppId={#MyAppName}
 AppName={#MyAppName}
 AppVerName={#MyAppName} {#MyAppVersion}
 AppVersion={#MyAppVersion}
-VersionInfoVersion={#MyAppVersion}
+VersionInfoVersion={#MyVersionInfoVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}

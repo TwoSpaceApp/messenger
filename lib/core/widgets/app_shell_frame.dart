@@ -123,7 +123,7 @@ class _ConstrainedShellBody extends StatelessWidget {
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxBodyWidth),
-            child: child,
+            child: SizedBox.expand(child: child),
           ),
         ),
       ),

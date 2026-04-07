@@ -12,7 +12,6 @@ import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
@@ -257,8 +256,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   Future<void> _handleRegistration() async {
     setState(() => _loading = true);
     try {
-      SentryService.addBreadcrumb('Начало регистрации', category: 'auth');
-
       final notifier = ref.read(authProvider.notifier);
 
       // Apply customization settings before registering/logging in
@@ -275,17 +272,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         avatarBytes: _avatarBytes,
       );
 
-      SentryService.addBreadcrumb('Регистрация успешна', category: 'auth');
-
       if (!mounted) return;
       context.go(AppStrings.routeWelcome);
-    } catch (e, stackTrace) {
-      SentryService.captureException(
-        e,
-        stackTrace: stackTrace,
-        hint: {'screen': 'register', 'step': _step},
-      );
-
+    } catch (e) {
       if (mounted) {
         setState(
           () => _errorMessage = UserFacingError.format(e, AppLocalizations.of(context)),

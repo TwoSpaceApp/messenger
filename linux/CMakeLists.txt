@@ -54,6 +54,11 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
 
+# sentry-native's bundled crashpad currently pulls a frozen Chromium zlib
+# submodule that returns HTTP 403 in CI. Force it to use the system zlib
+# available on the runner instead of the bundled one.
+set(CRASHPAD_ZLIB_SYSTEM ON CACHE BOOL "Use system zlib for crashpad" FORCE)
+
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 

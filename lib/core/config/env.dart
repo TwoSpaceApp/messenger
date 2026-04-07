@@ -10,9 +10,6 @@ abstract class Env {
   @EnviedField(varName: 'APP_ENV', defaultValue: 'development')
   static const String appEnv = _Env.appEnv;
 
-  @EnviedField(varName: 'SENTRY_DSN', defaultValue: '')
-  static const String sentryDsn = _Env.sentryDsn;
-
   @EnviedField(varName: 'AEGIS_HOST', defaultValue: '')
   static const String aegisHost = _Env.aegisHost;
 

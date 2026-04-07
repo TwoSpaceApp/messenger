@@ -83,6 +83,7 @@ jobs:
             cmake \
             ninja-build \
             pkg-config \
+            zlib1g-dev \
             libunwind-dev \
             libcurl4-openssl-dev \
             libc-ares-dev \
@@ -125,7 +126,6 @@ jobs:
         env:
           APP_ENV_VALUE: ${{ secrets.APP_ENV }}
           ENABLE_DEV_TOOLS_VALUE: ${{ secrets.ENABLE_DEV_TOOLS }}
-          SENTRY_DSN_VALUE: ${{ secrets.SENTRY_DSN }}
           AEGIS_HOST_VALUE: ${{ secrets.AEGIS_HOST }}
           AEGIS_PORT_VALUE: ${{ secrets.AEGIS_PORT }}
           AEGIS_CONNECT_TIMEOUT_SECONDS_VALUE: ${{ secrets.AEGIS_CONNECT_TIMEOUT_SECONDS }}
@@ -148,7 +148,6 @@ jobs:
           cat > .env <<EOF
           APP_ENV=${APP_ENV_VALUE:-development}
           ENABLE_DEV_TOOLS=${enable_dev_tools}
-          SENTRY_DSN=${SENTRY_DSN_VALUE:-}
           AEGIS_HOST=${AEGIS_HOST_VALUE:-}
           AEGIS_PORT=${AEGIS_PORT_VALUE:-8888}
           AEGIS_CONNECT_TIMEOUT_SECONDS=${AEGIS_CONNECT_TIMEOUT_SECONDS_VALUE:-10}
@@ -267,6 +266,9 @@ jobs:
 
           $ver = $verLine.Split(':', 2)[1].Trim()
           $verShort = $ver.Split('+')[0]
+          $verCore = $verShort.Split('-')[0]
+          $verBuild = if ($ver -match '\+(\d+)$') { $Matches[1] } else { '0' }
+          $versionInfo = "$verCore.$verBuild"
           $suffix = if ('${{ steps.meta.outputs.build_mode }}' -eq 'debug') { '-debug' } else { '' }
 
           New-Item -ItemType Directory -Force -Path dist | Out-Null
@@ -274,7 +276,7 @@ jobs:
           $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
           if (-not (Test-Path $iscc)) { throw "ISCC not found at $iscc" }
 
-          & $iscc "/DMyAppVersion=$verShort" "/DMyOutputSuffix=$suffix" "/DMyBuildDir=build\\windows\\x64\\runner\\Release" "/DMyVcRedistPath=dist\\vc_redist.x64.exe" /Odist setup.iss
+          & $iscc "/DMyAppVersion=$verShort" "/DMyVersionInfoVersion=$versionInfo" "/DMyOutputSuffix=$suffix" "/DMyBuildDir=build\\windows\\x64\\runner\\Release" "/DMyVcRedistPath=dist\\vc_redist.x64.exe" /Odist setup.iss
 
           $out = Get-ChildItem -Path dist -Filter '*_setup*_v*.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
           if (-not $out) { throw 'Installer .exe not found in dist/' }

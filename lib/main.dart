@@ -12,7 +12,6 @@ import 'package:two_space_app/core/navigation/app_router.dart';
 import 'package:two_space_app/core/services/background_effects_performance_service.dart';
 import 'package:two_space_app/core/services/dev_tools_service.dart';
 import 'package:two_space_app/core/services/initialization_service.dart';
-import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/widgets/dev_fab.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
@@ -129,21 +128,21 @@ class AppBootstrapperState extends State<AppBootstrapper> {
 void _setupErrorHandlers() {
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    SentryService.captureException(
-      details.exception,
-      stackTrace: details.stack,
-      hint: {'flutter_error': true},
-    );
   };
 
   // Catch errors outside Flutter framework
   PlatformDispatcher.instance.onError = (error, stack) {
-    SentryService.captureException(
-      error,
-      stackTrace: stack,
-      hint: {'platform_error': true},
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stack,
+        library: 'dart:ui',
+        informationCollector: () sync* {
+          yield DiagnosticsNode.message('Unhandled platform error');
+        },
+      ),
     );
-    return true;
+    return false;
   };
 }
 
