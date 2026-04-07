@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_underscores
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
@@ -15,6 +16,20 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
 
 enum _PreviewSurface { rooms, conversation, settings }
+
+TextStyle? _fontPreviewStyle(
+  TextStyle? baseStyle,
+  String fontFamily, {
+  FontWeight? fontWeight,
+}) {
+  final resolvedBase = (baseStyle ?? const TextStyle()).copyWith(
+    fontWeight: fontWeight,
+  );
+  if (fontFamily == 'Handjet' || fontFamily == 'PressStart 2P') {
+    return GoogleFonts.handjet(textStyle: resolvedBase);
+  }
+  return resolvedBase.copyWith(fontFamily: fontFamily);
+}
 
 class _ThemePreset {
   const _ThemePreset({
@@ -135,7 +150,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
       id: 'retroPulse',
       color: 0xFFE2558F,
       themeMode: ThemeMode.dark,
-      fontFamily: 'PressStart 2P',
+      fontFamily: 'Handjet',
       fontWeight: 700,
       enableFloatingCircles: true,
       backgroundMotionMode: BackgroundMotionMode.circles,
@@ -1052,8 +1067,9 @@ class _PresetCard extends StatelessWidget {
                             ),
                             child: Text(
                               'Аа',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontFamily: fontFamily,
+                              style: _fontPreviewStyle(
+                                theme.textTheme.titleLarge,
+                                fontFamily,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -1252,8 +1268,9 @@ class _FontChoiceCard extends StatelessWidget {
                 children: [
                   Text(
                     'Аа',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontFamily: fontFamily,
+                    style: _fontPreviewStyle(
+                      theme.textTheme.headlineSmall,
+                      fontFamily,
                       fontWeight: previewWeight,
                     ),
                   ),
@@ -1262,8 +1279,9 @@ class _FontChoiceCard extends StatelessWidget {
                     fontFamily,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontFamily: fontFamily,
+                    style: _fontPreviewStyle(
+                      theme.textTheme.titleSmall,
+                      fontFamily,
                       fontWeight: previewWeight,
                     ),
                   ),

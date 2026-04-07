@@ -139,6 +139,7 @@ class _ChatScreenState extends State<ChatScreen>
   String? _headerAvatarUrl;
   String? _headerPresenceStatus;
   DateTime? _headerLastSeenAt;
+  int? _headerMemberCount;
   Timer? _searchDebounceTimer;
   int _searchRequestId = 0;
   double? _uploadProgress;
@@ -453,15 +454,36 @@ class _ChatScreenState extends State<ChatScreen>
     _headerAvatarUrl = widget.chat.avatarUrl;
     _headerPresenceStatus = widget.chat.presenceStatus;
     _headerLastSeenAt = widget.chat.lastSeenAt;
+    _headerMemberCount = widget.chat.members.isEmpty
+        ? null
+        : widget.chat.members.length;
 
     final peerUserId = _directPeerUserId;
-    if (peerUserId == null) return;
+    if (peerUserId == null) {
+      unawaited(_loadRoomHeaderDetails());
+      return;
+    }
 
     final cached = _svc.peekUserInfo(peerUserId);
     if (cached != null) {
       _applyHeaderUserInfo(cached, notify: false);
     }
     unawaited(_loadHeaderUserInfo(peerUserId));
+  }
+
+  Future<void> _loadRoomHeaderDetails() async {
+    if (_directPeerUserId != null) {
+      return;
+    }
+    try {
+      final members = await _svc.getRoomMembers(widget.chat.id);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _headerMemberCount = members.length;
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadHeaderUserInfo(String peerUserId) async {
@@ -963,6 +985,7 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
     if (!mounted) return;
+    await _loadRoomHeaderDetails();
     await _loadMessages(forceRefresh: true);
   }
 
@@ -1992,6 +2015,11 @@ class _ChatScreenState extends State<ChatScreen>
     final presenceLabel = _directPeerUserId != null
         ? _headerPresenceLabel(l10n)
         : null;
+    final roomMetaLabel = _headerMemberCount == null
+      ? null
+      : '${l10n.membersLabel}: $_headerMemberCount';
+    final isChannelRoom =
+      widget.chat.roomType == 'public' || widget.chat.roomType == 'private';
     final bodyWidget = ValueListenableBuilder(
       valueListenable: SettingsService.themeNotifier,
       builder: (context, themeSettings, _) {
@@ -2481,6 +2509,37 @@ class _ChatScreenState extends State<ChatScreen>
                           fontSize: 12,
                           color: _headerPresenceColor(context),
                         ),
+                      )
+                    else if (roomMetaLabel != null)
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              roomMetaLabel,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.subtitleText(context),
+                              ),
+                            ),
+                          ),
+                          if (isChannelRoom) ...[
+                            const SizedBox(width: UITokens.spaceXsSm),
+                            Icon(
+                              Icons.visibility_outlined,
+                              size: 12,
+                              color: AppColors.subtitleText(context),
+                            ),
+                            const SizedBox(width: UITokens.space2XS),
+                            Text(
+                              '—',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.subtitleText(context),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                   ],
                 ),
@@ -3496,6 +3555,7 @@ class _ChatImageGalleryDialog extends StatefulWidget {
 class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
   late final PageController _pageController;
   late int _currentIndex;
+  final Map<String, Future<String>> _pathFutures = <String, Future<String>>{};
 
   @override
   void initState() {
@@ -3520,6 +3580,10 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
     return path;
   }
 
+  Future<String> _pathFutureFor(String mediaId) {
+    return _pathFutures.putIfAbsent(mediaId, () => _resolvePath(mediaId));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -3534,7 +3598,7 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
             itemBuilder: (context, index) {
               final mediaId = widget.mediaIds[index];
               return FutureBuilder<String>(
-                future: _resolvePath(mediaId),
+                future: _pathFutureFor(mediaId),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());

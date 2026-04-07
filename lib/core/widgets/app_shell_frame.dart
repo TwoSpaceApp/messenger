@@ -16,6 +16,7 @@ class AppShellFrame extends StatelessWidget {
     this.chatUnreadCount = 0,
     this.constrainBody = false,
     this.maxBodyWidth = UITokens.contentMaxWidth,
+    this.showMobileNavBar = true,
   });
 
   final int selectedIndex;
@@ -24,6 +25,7 @@ class AppShellFrame extends StatelessWidget {
   final int chatUnreadCount;
   final bool constrainBody;
   final double maxBodyWidth;
+  final bool showMobileNavBar;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +70,7 @@ class AppShellFrame extends StatelessWidget {
               chatUnreadCount: chatUnreadCount,
             ),
           )
-        else
+        else if (showMobileNavBar)
           Positioned.fill(
             child: IgnorePointer(
               ignoring: false,

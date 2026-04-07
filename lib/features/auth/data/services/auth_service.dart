@@ -3,6 +3,13 @@ import 'dart:typed_data';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 
+class StoredAuthSession {
+  const StoredAuthSession({required this.userId, required this.token});
+
+  final String userId;
+  final String token;
+}
+
 class AuthService {
   factory AuthService({dynamic accountClient}) {
     if (accountClient != null) {
@@ -32,6 +39,24 @@ class AuthService {
       return storedToken;
     }
     return null;
+  }
+
+  Future<StoredAuthSession?> getStoredSessionSnapshot() async {
+    final values = await Future.wait<String?>([
+      getAuthToken(),
+      getCurrentUserId(),
+    ]);
+    final token = values[0];
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+
+    final userId = values[1];
+    if (userId == null || userId.isEmpty) {
+      return null;
+    }
+
+    return StoredAuthSession(userId: userId, token: token);
   }
 
   Future<bool> ensureStoredSession() async {

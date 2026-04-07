@@ -79,8 +79,22 @@ class AegisAuthService {
       Environment.aegisAppId != null ||
       (Environment.aegisAppHash?.isNotEmpty ?? false);
 
+  Future<void> _hydrateStoredSessionFields() async {
+    final stored = await SecureStore.readMany(const <String>[
+      _kAegisTokenKey,
+      _kAegisUsernameKey,
+      _kAegisUserIdKey,
+    ]);
+    _token ??= stored[_kAegisTokenKey];
+    _username ??= stored[_kAegisUsernameKey];
+    final storedUserId = stored[_kAegisUserIdKey];
+    _userId ??= storedUserId == null ? null : int.tryParse(storedUserId);
+  }
+
   Future<String?> getStoredToken() async {
-    _token ??= await _secure.read(key: _kAegisTokenKey);
+    if (_token == null) {
+      await _hydrateStoredSessionFields();
+    }
     return _token;
   }
 
@@ -154,7 +168,9 @@ class AegisAuthService {
   }
 
   Future<String?> getStoredUsername() async {
-    _username ??= await _secure.read(key: _kAegisUsernameKey);
+    if (_username == null) {
+      await _hydrateStoredSessionFields();
+    }
     return _username;
   }
 
@@ -301,10 +317,7 @@ class AegisAuthService {
 
   Future<bool> _restoreSessionInternal() async {
     try {
-      _token = await _secure.read(key: _kAegisTokenKey);
-      _username = await _secure.read(key: _kAegisUsernameKey);
-      final idStr = await _secure.read(key: _kAegisUserIdKey);
-      _userId = idStr != null ? int.tryParse(idStr) : null;
+      await _hydrateStoredSessionFields();
 
       if (_token == null) return false;
 

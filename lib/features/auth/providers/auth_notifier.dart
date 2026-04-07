@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,25 +53,69 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
 
   @override
   Future<AuthState> build() async {
+    final storedSession = await _authService.getStoredSessionSnapshot();
+    if (storedSession != null) {
+      unawaited(_restoreStoredSessionInBackground());
+      return AuthState.authenticated(
+        userId: storedSession.userId,
+        token: storedSession.token,
+      );
+    }
     return _loadAuthState();
+  }
+
+  Future<void> _restoreStoredSessionInBackground() async {
+    try {
+      final restored = await _authService.restoreSessionFromToken();
+      if (restored) {
+        state = AsyncValue.data(await _resolveAuthenticatedState());
+        return;
+      }
+
+      final storedSession = await _authService.getStoredSessionSnapshot();
+      if (storedSession == null) {
+        state = const AsyncValue.data(AuthState.unauthenticated());
+      }
+    } on Object catch (e, stackTrace) {
+      final storedSession = await _authService.getStoredSessionSnapshot();
+      if (storedSession == null) {
+        state = AsyncValue.error(e, stackTrace);
+      }
+    }
+  }
+
+  Future<AuthState> _resolveAuthenticatedState() async {
+    final token = await _authService.getAuthToken();
+    final userId = await _authService.getCurrentUserId();
+    if (token != null && token.isNotEmpty && userId != null && userId.isNotEmpty) {
+      return AuthState.authenticated(userId: userId, token: token);
+    }
+    return const AuthState.unauthenticated();
   }
 
   Future<AuthState> _loadAuthState() async {
     try {
       final restored = await _authService.restoreSessionFromToken();
       if (!restored) {
+        final storedSession = await _authService.getStoredSessionSnapshot();
+        if (storedSession != null) {
+          return AuthState.authenticated(
+            userId: storedSession.userId,
+            token: storedSession.token,
+          );
+        }
         return const AuthState.unauthenticated();
       }
 
-      final token = await _authService.getAuthToken();
-      if (token != null && token.isNotEmpty) {
-        final userId = await _authService.getCurrentUserId();
-        if (userId != null && userId.isNotEmpty) {
-          return AuthState.authenticated(userId: userId, token: token);
-        }
-      }
-      return const AuthState.unauthenticated();
+      return _resolveAuthenticatedState();
     } on Object catch (e) {
+      final storedSession = await _authService.getStoredSessionSnapshot();
+      if (storedSession != null) {
+        return AuthState.authenticated(
+          userId: storedSession.userId,
+          token: storedSession.token,
+        );
+      }
       if (FeatureFlags.ignoreServerOffline.value) {
         final previousState = state.asData?.value;
         if (previousState?.isAuthenticated ?? false) {

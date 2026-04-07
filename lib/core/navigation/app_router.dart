@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -39,7 +41,13 @@ class _RouterRefreshNotifier extends ChangeNotifier {
 }
 
 CustomTransitionPage<void> _buildPage(GoRouterState state, Widget child) {
-  return buildAppTransitionPage(state: state, child: child);
+  return buildAppTransitionPage(
+    state: state,
+    child: _RouteBackGuard(
+      fallbackRoute: _fallbackRouteFor(state.matchedLocation),
+      child: child,
+    ),
+  );
 }
 
 NoTransitionPage<void> _buildShellPage(
@@ -48,31 +56,81 @@ NoTransitionPage<void> _buildShellPage(
   required int selectedIndex,
   bool constrainBody = true,
   double maxBodyWidth = UITokens.readableContentMaxWidth,
+  bool showMobileNavBar = true,
 }) {
   return NoTransitionPage<void>(
     key: state.pageKey,
-    child: AppShellFrame(
-      selectedIndex: selectedIndex,
-      onItemSelected: (index) {
-        final context = rootNavigatorKey.currentContext;
-        if (context == null) {
-          return;
-        }
-        context.go(
-          switch (index) {
-            0 => AppStrings.routeHome,
-            1 => AppStrings.routeWidgets,
-            2 => AppStrings.routePeople,
-            3 => AppStrings.routeSettingsRoot,
-            _ => AppStrings.routeHome,
-          },
-        );
-      },
-      constrainBody: constrainBody,
-      maxBodyWidth: maxBodyWidth,
-      child: child,
+    child: _RouteBackGuard(
+      fallbackRoute: AppStrings.routeHome,
+      child: AppShellFrame(
+        selectedIndex: selectedIndex,
+        onItemSelected: (index) {
+          final context = rootNavigatorKey.currentContext;
+          if (context == null) {
+            return;
+          }
+          context.go(
+            switch (index) {
+              0 => AppStrings.routeHome,
+              1 => AppStrings.routeWidgets,
+              2 => AppStrings.routePeople,
+              3 => AppStrings.routeSettingsRoot,
+              _ => AppStrings.routeHome,
+            },
+          );
+        },
+        constrainBody: constrainBody,
+        maxBodyWidth: maxBodyWidth,
+        showMobileNavBar: showMobileNavBar,
+        child: child,
+      ),
     ),
   );
+}
+
+String _fallbackRouteFor(String matchedLocation) {
+  switch (matchedLocation) {
+    case AppStrings.routeSplash:
+    case AppStrings.routeLogin:
+    case AppStrings.routeRegister:
+    case AppStrings.routeForgot:
+      return AppStrings.routeLogin;
+    default:
+      return AppStrings.routeHome;
+  }
+}
+
+class _RouteBackGuard extends StatelessWidget {
+  const _RouteBackGuard({required this.fallbackRoute, required this.child});
+
+  final String fallbackRoute;
+  final Widget child;
+
+  Future<void> _handleBack(BuildContext context) async {
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+      return;
+    }
+
+    if (GoRouterState.of(context).matchedLocation != fallbackRoute) {
+      router.go(fallbackRoute);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope<void>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+        unawaited(_handleBack(context));
+      },
+      child: child,
+    );
+  }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -343,6 +401,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ChatScreen(chat: chat),
             selectedIndex: 0,
             constrainBody: false,
+            showMobileNavBar: false,
           );
         },
       ),

@@ -1042,10 +1042,35 @@ class AppLocalizationsDe extends AppLocalizations {
   String get newChatTitle => 'Neuer Chat';
 
   @override
+  String get newChatChooserTitle => 'Start a new conversation';
+
+  @override
+  String get newChatChooserSubtitle =>
+      'Choose the kind of chat you want to create or join.';
+
+  @override
+  String get createDirectChatSubtitle =>
+      'Search for a person or enter an Aegis ID manually.';
+
+  @override
   String get directChatTab => 'Direkt';
 
   @override
   String get groupChatTab => 'Gruppe';
+
+  @override
+  String get channelChatTab => 'Channel';
+
+  @override
+  String get createGroupSubtitle =>
+      'Set up a group, pick participants and share the invite link right away.';
+
+  @override
+  String get createChannelTitle => 'Create channel';
+
+  @override
+  String get createChannelSubtitle =>
+      'Create a read-focused channel with avatar, description and shareable link.';
 
   @override
   String get startDirectChatTitle => 'Direktchat starten';
@@ -1964,10 +1989,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get inviteUserSubtitle => 'Benutzer finden und schreiben';
 
   @override
+  String get addParticipantAction => 'Add participant';
+
+  @override
+  String get selectedParticipantsTitle => 'Participants';
+
+  @override
+  String get groupParticipantsOptionalHint =>
+      'Participants are optional. You can create the group now and invite people later.';
+
+  @override
   String get joinByCodeTitle => 'Per Code beitreten';
 
   @override
   String get joinByCodeSubtitle => 'Einem Raum mit Einladungscode beitreten';
+
+  @override
+  String get joinRoomAction => 'Join';
+
+  @override
+  String get subscribeAction => 'Subscribe';
 
   @override
   String get chatsSubtitle =>
@@ -1981,6 +2022,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get joinLinkHint => 'Einladungslink, Alias oder Code einfügen';
+
+  @override
+  String get publicAliasLabel => 'Public alias';
+
+  @override
+  String get publicAliasHint =>
+      'Short public name without spaces, for example newsroom';
+
+  @override
+  String get channelPublicLinkHelper =>
+      'This link will be used in search and invitations when the channel is public.';
+
+  @override
+  String get channelLinkFormatError =>
+      'Use only Latin letters, digits, dots, underscores or hyphens.';
+
+  @override
+  String get inviteLinkReadyTitle => 'Invite link is ready';
+
+  @override
+  String get inviteLinkReadySubtitle =>
+      'Share it now or keep it for later. Selected people will receive it in direct messages when possible.';
+
+  @override
+  String get openChatAction => 'Open chat';
 
   @override
   String get fontLabel => 'Schrift';

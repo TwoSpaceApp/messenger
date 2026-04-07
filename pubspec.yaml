@@ -1,7 +1,7 @@
 name: two_space_app
 description: "A secure and feature-rich messenger for the TwoSpace ecosystem."
 publish_to: 'none'
-version: 2.0.6-beta+42
+version: 2.0.7-pre+44
 
 environment:
   sdk: ^3.8.0

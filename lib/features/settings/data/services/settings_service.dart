@@ -163,6 +163,29 @@ class ThemeSettings {
 class SettingsService {
   SettingsService._();
 
+  static const _legacyPixelFontFamily = 'PressStart 2P';
+  static const _pixelFontFamily = 'Handjet';
+
+  static String normalizeFontFamily(String? rawFontFamily) {
+    final normalized = (rawFontFamily ?? '').trim();
+    switch (normalized) {
+      case '':
+        return 'Inter';
+      case _legacyPixelFontFamily:
+        return _pixelFontFamily;
+      case 'Inter':
+      case 'Roboto':
+      case 'NotoSans':
+      case 'OpenSans':
+      case 'Oswald':
+      case _pixelFontFamily:
+      case 'ComicSans MS':
+        return normalized;
+      default:
+        return 'Inter';
+    }
+  }
+
   static int normalizeFontWeight(int rawWeight) {
     if (rawWeight >= 100 && rawWeight <= 900) {
       return ((rawWeight / 100).round() * 100).clamp(300, 900);
@@ -312,8 +335,11 @@ class SettingsService {
 
     String? valueOf(String key) => stored[key];
 
+    final storedFontFamily = valueOf(_fontKey);
+    final normalizedFontFamily = normalizeFontFamily(storedFontFamily);
+
     themeNotifier.value = ThemeSettings(
-      fontFamily: valueOf(_fontKey) ?? 'Inter',
+      fontFamily: normalizedFontFamily,
       primaryColorValue: int.tryParse(valueOf(_colorKey) ?? '') ?? 0xFF651FFF,
       fontWeight: normalizeFontWeight(
         int.tryParse(valueOf(_weightKey) ?? '') ?? 400,
@@ -335,6 +361,10 @@ class SettingsService {
           double.tryParse(valueOf(_floatingCirclesOpacityKey) ?? '') ?? 0.5,
       shapeVariant: ShapeVariantX.fromStorage(valueOf(_shapeVariantKey)),
     );
+
+    if (storedFontFamily != null && storedFontFamily != normalizedFontFamily) {
+      await SecureStore.write(_fontKey, normalizedFontFamily);
+    }
 
     // Load startup-critical settings only. Everything else is hydrated lazily.
     paleVioletNotifier.value = valueOf(_paleVioletKey) == 'true';
@@ -549,11 +579,14 @@ class SettingsService {
     ShapeVariant? shapeVariant,
   }) async {
     final current = themeNotifier.value;
+    final normalizedFontFamily = fontFamily == null
+        ? null
+        : normalizeFontFamily(fontFamily);
     final normalizedFontWeight = fontWeight == null
         ? null
         : normalizeFontWeight(fontWeight);
     final next = current.copyWith(
-      fontFamily: fontFamily,
+      fontFamily: normalizedFontFamily,
       primaryColorValue: primaryColorValue,
       bubbleRounding: bubbleRounding,
       dynamicBubbles: dynamicBubbles,
@@ -570,7 +603,9 @@ class SettingsService {
 
     themeNotifier.value = next;
 
-    if (fontFamily != null) await SecureStore.write(_fontKey, fontFamily);
+    if (normalizedFontFamily != null) {
+      await SecureStore.write(_fontKey, normalizedFontFamily);
+    }
     if (primaryColorValue != null)
       await SecureStore.write(_colorKey, primaryColorValue.toString());
     if (normalizedFontWeight != null)

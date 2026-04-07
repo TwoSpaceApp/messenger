@@ -1039,10 +1039,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get newChatTitle => 'Новый чат';
 
   @override
+  String get newChatChooserTitle => 'Начать новый диалог';
+
+  @override
+  String get newChatChooserSubtitle =>
+      'Выберите, что вы хотите создать или куда хотите войти.';
+
+  @override
+  String get createDirectChatSubtitle =>
+      'Найдите человека или введите Aegis ID вручную.';
+
+  @override
   String get directChatTab => 'Личный чат';
 
   @override
   String get groupChatTab => 'Группа';
+
+  @override
+  String get channelChatTab => 'Канал';
+
+  @override
+  String get createGroupSubtitle =>
+      'Настройте группу, выберите участников и сразу получите ссылку-приглашение.';
+
+  @override
+  String get createChannelTitle => 'Создать канал';
+
+  @override
+  String get createChannelSubtitle =>
+      'Создайте канал с аватаром, описанием и ссылкой на канал.';
 
   @override
   String get startDirectChatTitle => 'Начать личный чат';
@@ -1961,11 +1986,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get inviteUserSubtitle => 'Найти и написать пользователю';
 
   @override
+  String get addParticipantAction => 'Добавить участника';
+
+  @override
+  String get selectedParticipantsTitle => 'Участники';
+
+  @override
+  String get groupParticipantsOptionalHint =>
+      'Участники необязательны. Группу можно создать сейчас, а пригласить людей позже.';
+
+  @override
   String get joinByCodeTitle => 'Присоединиться по коду';
 
   @override
   String get joinByCodeSubtitle =>
       'Присоединиться к комнате по пригласительному коду';
+
+  @override
+  String get joinRoomAction => 'Вступить';
+
+  @override
+  String get subscribeAction => 'Подписаться';
 
   @override
   String get chatsSubtitle =>
@@ -1979,6 +2020,30 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get joinLinkHint => 'Вставьте пригласительную ссылку, алиас или код';
+
+  @override
+  String get publicAliasLabel => 'Ссылка на канал';
+
+  @override
+  String get publicAliasHint => 'Короткое имя без пробелов, например newsroom';
+
+  @override
+  String get channelPublicLinkHelper =>
+      'Эта ссылка будет использоваться в поиске и приглашениях для публичного канала.';
+
+  @override
+  String get channelLinkFormatError =>
+      'Используйте только латинские буквы, цифры, точки, подчёркивания или дефисы.';
+
+  @override
+  String get inviteLinkReadyTitle => 'Ссылка-приглашение готова';
+
+  @override
+  String get inviteLinkReadySubtitle =>
+      'Её можно сразу скопировать или оставить на потом. Выбранным людям ссылка отправится в личку, если это получится.';
+
+  @override
+  String get openChatAction => 'Открыть чат';
 
   @override
   String get fontLabel => 'Шрифт';

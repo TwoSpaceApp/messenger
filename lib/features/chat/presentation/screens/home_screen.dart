@@ -17,7 +17,12 @@ import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/unread_badge.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/create_channel_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/create_group_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/join_room_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
+
+enum _NewChatAction { direct, group, channel, join }
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -404,9 +409,106 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _showStartChatSheet() async {
+    final l10n = AppLocalizations.of(context)!;
+    final action = await showModalBottomSheet<_NewChatAction>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final theme = Theme.of(context);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              UITokens.spaceMd,
+              UITokens.spaceMd,
+              UITokens.spaceMd,
+              UITokens.spaceMd,
+            ),
+            child: SectionCard(
+              radius: UITokens.corner2XL,
+              padding: const EdgeInsets.all(UITokens.spaceMd),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: UITokens.dragHandleWidth,
+                      height: UITokens.dragHandleHeight,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outlineVariant
+                            .withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(UITokens.cornerPill),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: UITokens.spaceMd),
+                  Text(
+                    l10n.newChatChooserTitle,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: UITokens.spaceXsSm),
+                  Text(
+                    l10n.newChatChooserSubtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: UITokens.spaceSmMd),
+                  _NewChatActionTile(
+                    icon: Icons.person_add_alt_1_rounded,
+                    title: l10n.newChatTitle,
+                    subtitle: l10n.createDirectChatSubtitle,
+                    onTap: () => Navigator.of(context).pop(_NewChatAction.direct),
+                  ),
+                  const SizedBox(height: UITokens.spaceXsSm),
+                  _NewChatActionTile(
+                    icon: Icons.groups_rounded,
+                    title: l10n.groupChatTab,
+                    subtitle: l10n.createGroupSubtitle,
+                    onTap: () => Navigator.of(context).pop(_NewChatAction.group),
+                  ),
+                  const SizedBox(height: UITokens.spaceXsSm),
+                  _NewChatActionTile(
+                    icon: Icons.campaign_outlined,
+                    title: l10n.channelChatTab,
+                    subtitle: l10n.createChannelSubtitle,
+                    onTap: () => Navigator.of(context).pop(_NewChatAction.channel),
+                  ),
+                  const SizedBox(height: UITokens.spaceXsSm),
+                  _NewChatActionTile(
+                    icon: Icons.link_rounded,
+                    title: l10n.joinByCodeTitle,
+                    subtitle: l10n.joinByCodeSubtitle,
+                    onTap: () => Navigator.of(context).pop(_NewChatAction.join),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted || action == null) {
+      return;
+    }
+
+    final Widget destination = switch (action) {
+      _NewChatAction.direct => const CreateChatScreen(),
+      _NewChatAction.group => const CreateGroupScreen(),
+      _NewChatAction.channel => const CreateChannelScreen(),
+      _NewChatAction.join => const JoinRoomScreen(),
+    };
+
     final result = await Navigator.push<Object?>(
       context,
-      MaterialPageRoute(builder: (_) => const CreateChatScreen()),
+      MaterialPageRoute(builder: (_) => destination),
     );
     if (result != null) {
       unawaited(_chat.refreshChatsQuietly());
@@ -810,6 +912,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         isOnline: room['isOnline'] == true,
         presenceStatus: room['presenceStatus'] as String?,
         lastSeenAt: room['lastSeenAt'] as DateTime?,
+      ),
+    );
+  }
+}
+
+class _NewChatActionTile extends StatelessWidget {
+  const _NewChatActionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SectionCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(UITokens.spaceSmMd),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(UITokens.cornerLg),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+          ),
+          const SizedBox(width: UITokens.spaceSmMd),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: UITokens.space2XS),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: UITokens.spaceXsSm),
+          const Icon(Icons.chevron_right_rounded),
+        ],
       ),
     );
   }

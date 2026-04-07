@@ -155,8 +155,10 @@ class AppThemeBuilder {
       textTheme = GoogleFonts.openSansTextTheme(mainTextTheme);
     } else if (fontName == 'Oswald') {
       textTheme = GoogleFonts.oswaldTextTheme(mainTextTheme);
-    } else if (fontName == 'PressStart 2P') {
-      textTheme = GoogleFonts.pressStart2pTextTheme(mainTextTheme);
+    } else if (fontName == 'Handjet' || fontName == 'PressStart 2P') {
+      textTheme = GoogleFonts.handjetTextTheme(mainTextTheme).apply(
+        fontSizeFactor: 0.92,
+      );
     } else if (fontName == 'ComicSans MS') {
       textTheme = GoogleFonts.comicNeueTextTheme(mainTextTheme);
     } else {

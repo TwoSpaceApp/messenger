@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
@@ -18,6 +19,23 @@ import 'package:two_space_app/core/widgets/language_switcher.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_background.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+
+TextStyle _registerFontPreviewStyle(
+  String fontFamily, {
+  double? fontSize,
+  FontWeight? fontWeight,
+  Color? color,
+}) {
+  final baseStyle = TextStyle(
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    color: color,
+  );
+  if (fontFamily == 'Handjet' || fontFamily == 'PressStart 2P') {
+    return GoogleFonts.handjet(textStyle: baseStyle);
+  }
+  return baseStyle.copyWith(fontFamily: fontFamily);
+}
 
 class _RegisterStylePreset {
   const _RegisterStylePreset({
@@ -450,12 +468,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         ),
                         title: Text(
                           font,
-                          style: TextStyle(fontFamily: font),
+                          style: _registerFontPreviewStyle(font),
                         ),
                         subtitle: Text(
                           'Аа',
-                          style: TextStyle(
-                            fontFamily: font,
+                          style: _registerFontPreviewStyle(
+                            font,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
@@ -989,9 +1007,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   alignment: Alignment.center,
                                   child: Text(
                                     'Аа',
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontFamily: preset.fontFamily,
+                                    style: _registerFontPreviewStyle(
+                                      preset.fontFamily,
+                                      fontSize: theme.textTheme.titleLarge?.fontSize,
                                       fontWeight: FontWeight.w700,
+                                      color: theme.textTheme.titleLarge?.color,
                                     ),
                                   ),
                                 ),
@@ -1057,9 +1077,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     alignment: Alignment.center,
                     child: Text(
                       'Аа',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontFamily: _selectedFont,
+                      style: _registerFontPreviewStyle(
+                        _selectedFont,
+                        fontSize: theme.textTheme.titleLarge?.fontSize,
                         fontWeight: FontWeight.w700,
+                        color: theme.textTheme.titleLarge?.color,
                       ),
                     ),
                   ),
@@ -1070,9 +1092,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       children: [
                         Text(
                           _selectedFont,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontFamily: _selectedFont,
+                          style: _registerFontPreviewStyle(
+                            _selectedFont,
+                            fontSize: theme.textTheme.titleMedium?.fontSize,
                             fontWeight: FontWeight.w700,
+                            color: theme.textTheme.titleMedium?.color,
                           ),
                         ),
                         const SizedBox(height: UITokens.spaceXS),

@@ -20,7 +20,7 @@ class ThemeOptions {
     'NotoSans',
     'OpenSans',
     'Oswald',
-    'PressStart 2P',
+    'Handjet',
     'ComicSans MS',
   ];
 }

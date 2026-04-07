@@ -2028,6 +2028,24 @@ abstract class AppLocalizations {
   /// **'New chat'**
   String get newChatTitle;
 
+  /// No description provided for @newChatChooserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new conversation'**
+  String get newChatChooserTitle;
+
+  /// No description provided for @newChatChooserSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the kind of chat you want to create or join.'**
+  String get newChatChooserSubtitle;
+
+  /// No description provided for @createDirectChatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a person or enter an Aegis ID manually.'**
+  String get createDirectChatSubtitle;
+
   /// Direct chat tab
   ///
   /// In en, this message translates to:
@@ -2039,6 +2057,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Group'**
   String get groupChatTab;
+
+  /// No description provided for @channelChatTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get channelChatTab;
+
+  /// No description provided for @createGroupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up a group, pick participants and share the invite link right away.'**
+  String get createGroupSubtitle;
+
+  /// No description provided for @createChannelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create channel'**
+  String get createChannelTitle;
+
+  /// No description provided for @createChannelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a read-focused channel with avatar, description and shareable link.'**
+  String get createChannelSubtitle;
 
   /// Start direct chat title
   ///
@@ -3678,6 +3720,24 @@ abstract class AppLocalizations {
   /// **'Find and message a user'**
   String get inviteUserSubtitle;
 
+  /// No description provided for @addParticipantAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add participant'**
+  String get addParticipantAction;
+
+  /// No description provided for @selectedParticipantsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get selectedParticipantsTitle;
+
+  /// No description provided for @groupParticipantsOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants are optional. You can create the group now and invite people later.'**
+  String get groupParticipantsOptionalHint;
+
   /// Join by code option title
   ///
   /// In en, this message translates to:
@@ -3689,6 +3749,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join a room using an invite code'**
   String get joinByCodeSubtitle;
+
+  /// No description provided for @joinRoomAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get joinRoomAction;
+
+  /// No description provided for @subscribeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe'**
+  String get subscribeAction;
 
   /// Subtitle for chats home screen
   ///
@@ -3713,6 +3785,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paste an invite link, alias or code'**
   String get joinLinkHint;
+
+  /// No description provided for @publicAliasLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Public alias'**
+  String get publicAliasLabel;
+
+  /// No description provided for @publicAliasHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Short public name without spaces, for example newsroom'**
+  String get publicAliasHint;
+
+  /// No description provided for @channelPublicLinkHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'This link will be used in search and invitations when the channel is public.'**
+  String get channelPublicLinkHelper;
+
+  /// No description provided for @channelLinkFormatError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use only Latin letters, digits, dots, underscores or hyphens.'**
+  String get channelLinkFormatError;
+
+  /// No description provided for @inviteLinkReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link is ready'**
+  String get inviteLinkReadyTitle;
+
+  /// No description provided for @inviteLinkReadySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share it now or keep it for later. Selected people will receive it in direct messages when possible.'**
+  String get inviteLinkReadySubtitle;
+
+  /// No description provided for @openChatAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get openChatAction;
 
   /// Font label
   ///

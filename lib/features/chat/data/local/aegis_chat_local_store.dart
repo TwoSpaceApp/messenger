@@ -127,35 +127,38 @@ class AegisChatLocalStore {
           continue;
         }
         await _database.batch((batch) {
-          batch.insertAllOnConflictUpdate(
+          batch.insertAll(
             _database.aegisMessages,
             entry.value
                 .map((message) => _messageCompanionFromJson(entry.key, message))
                 .toList(growable: false),
+            mode: InsertMode.insertOrReplace,
           );
         });
       }
 
       if (writeConversations) {
         await _database.batch((batch) {
-          batch.insertAllOnConflictUpdate(
+          batch.insertAll(
             _database.aegisConversations,
             conversationsJson
                 .map(_conversationCompanionFromJson)
                 .toList(growable: false),
+            mode: InsertMode.insertOrReplace,
           );
         });
       }
 
       if (writeProfiles) {
         await _database.batch((batch) {
-          batch.insertAllOnConflictUpdate(
+          batch.insertAll(
             _database.aegisProfiles,
             profilesJsonByUserId.entries
                 .map(
                   (entry) => _profileCompanionFromJson(entry.key, entry.value),
                 )
                 .toList(growable: false),
+            mode: InsertMode.insertOrReplace,
           );
         });
       }
@@ -223,11 +226,12 @@ class AegisChatLocalStore {
   Future<void> _writeMetadata(String key, String value) {
     return _database
         .into(_database.aegisMetadata)
-        .insertOnConflictUpdate(
+        .insert(
           AegisMetadataCompanion.insert(
             key: key,
             value: value,
           ),
+          mode: InsertMode.insertOrReplace,
         );
   }
 
