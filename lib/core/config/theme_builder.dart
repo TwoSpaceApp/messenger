@@ -6,6 +6,40 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 class AppThemeBuilder {
   AppThemeBuilder._();
 
+  static TextStyle? _scaleTextStyleIfSized(
+    TextStyle? style,
+    double factor,
+  ) {
+    if (style == null) {
+      return null;
+    }
+    final fontSize = style.fontSize;
+    if (fontSize == null) {
+      return style;
+    }
+    return style.copyWith(fontSize: fontSize * factor);
+  }
+
+  static TextTheme _scaleTextThemeSafely(TextTheme textTheme, double factor) {
+    return textTheme.copyWith(
+      displayLarge: _scaleTextStyleIfSized(textTheme.displayLarge, factor),
+      displayMedium: _scaleTextStyleIfSized(textTheme.displayMedium, factor),
+      displaySmall: _scaleTextStyleIfSized(textTheme.displaySmall, factor),
+      headlineLarge: _scaleTextStyleIfSized(textTheme.headlineLarge, factor),
+      headlineMedium: _scaleTextStyleIfSized(textTheme.headlineMedium, factor),
+      headlineSmall: _scaleTextStyleIfSized(textTheme.headlineSmall, factor),
+      titleLarge: _scaleTextStyleIfSized(textTheme.titleLarge, factor),
+      titleMedium: _scaleTextStyleIfSized(textTheme.titleMedium, factor),
+      titleSmall: _scaleTextStyleIfSized(textTheme.titleSmall, factor),
+      bodyLarge: _scaleTextStyleIfSized(textTheme.bodyLarge, factor),
+      bodyMedium: _scaleTextStyleIfSized(textTheme.bodyMedium, factor),
+      bodySmall: _scaleTextStyleIfSized(textTheme.bodySmall, factor),
+      labelLarge: _scaleTextStyleIfSized(textTheme.labelLarge, factor),
+      labelMedium: _scaleTextStyleIfSized(textTheme.labelMedium, factor),
+      labelSmall: _scaleTextStyleIfSized(textTheme.labelSmall, factor),
+    );
+  }
+
   static TextStyle applyFontFamily(
     String fontFamily, {
     TextStyle? textStyle,
@@ -50,8 +84,9 @@ class AppThemeBuilder {
       return GoogleFonts.oswaldTextTheme(baseTextTheme);
     }
     if (fontFamily == 'Handjet') {
-      return GoogleFonts.handjetTextTheme(baseTextTheme).apply(
-        fontSizeFactor: 0.92,
+      return _scaleTextThemeSafely(
+        GoogleFonts.handjetTextTheme(baseTextTheme),
+        0.92,
       );
     }
     if (fontFamily == 'ComicSans MS') {

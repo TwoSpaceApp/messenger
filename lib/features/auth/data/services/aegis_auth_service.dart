@@ -389,10 +389,19 @@ class AegisAuthService {
         'Restore session failed [${_classifyConnectionError(e)}]: $e',
       );
       _log.warning('Не удалось восстановить сессию: $e');
-      if (_isAuthRejectionError(e)) {
+      if (_isStoredSessionPermanentlyInvalid(e)) {
         await clearSession();
       } else {
         _stopKeepAlive();
+        try {
+          if (_client.isConnected) {
+            await _disconnectClient();
+          }
+        } on Object catch (disconnectError) {
+          _log.debug(
+            'Disconnect after failed restore did not complete cleanly: $disconnectError',
+          );
+        }
       }
       return false;
     }
@@ -409,13 +418,10 @@ class AegisAuthService {
     return true;
   }
 
-  bool _isAuthRejectionError(Object error) {
+  bool _isStoredSessionPermanentlyInvalid(Object error) {
     final message = error.toString().toLowerCase();
     return message.contains('invalid token') ||
-        message.contains('invalid credentials') ||
-        message.contains('unauthorized') ||
-        message.contains('not authenticated') ||
-        message.contains('authentication failed');
+        message.contains('invalid credentials');
   }
 
   // ─── Регистрация ──────────────────────────────────────────────────────────
@@ -780,6 +786,10 @@ class AegisAuthService {
     }());
 
     await future;
+  }
+  
+  Future<void> recoverSession() async {
+    await _recoverSessionAfterKeepAliveFailure();
   }
 
   Future<void> _disconnectClient() async {

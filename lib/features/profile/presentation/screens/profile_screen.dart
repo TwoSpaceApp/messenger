@@ -48,6 +48,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final AegisChatService _chatService = AegisChatService();
   Map<String, dynamic>? _user;
+  String? _loadErrorMessage;
   bool _loading = true;
   bool _actionLoading = false;
   bool _isMe = false;
@@ -102,7 +103,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'location': userInfo['location'] ?? '',
       'birthday': userInfo['birthday'] ?? '',
       'email': userInfo['email'],
-      'phone': userInfo['phone'],
       'createdAt': userInfo['createdAt'],
       'presenceStatus': userInfo['presenceStatus'],
       'lastSeenAt': userInfo['lastSeenAt'],
@@ -122,7 +122,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'location': '',
       'birthday': '',
       'email': null,
-      'phone': null,
       'createdAt': null,
       'presenceStatus': null,
       'lastSeenAt': null,
@@ -138,6 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _isMe = isMe;
       _user = _composeProfileState(userInfo, widget.userId);
+      _loadErrorMessage = null;
       _loading = false;
     });
     _initializeControllers();
@@ -170,24 +170,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       _applyLoadedUser(userInfo, isMe: _isMe);
     } catch (error) {
+      final l10n = AppLocalizations.of(context);
       if (mounted) {
         setState(() {
           _loading = false;
           _user = _fallbackProfileState();
+          _loadErrorMessage = UserFacingError.format(error, l10n);
         });
         _initializeControllers();
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) {
-            return;
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                UserFacingError.format(error, AppLocalizations.of(context)),
-              ),
-            ),
-          );
-        });
       }
     }
   }
@@ -363,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         preserveNewlines: false,
       );
 
-      await _chatService.updateMyProfile(
+      final updated = await _chatService.updateMyProfile(
         displayName: displayName,
         username: username.isEmpty ? null : username,
         bio: bio,
@@ -371,12 +361,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         birthDate: _birthdayController.text.trim(),
       );
 
-      final refreshed = Map<String, dynamic>.from(
-        await _chatService.getOwnUserInfo(forceRefresh: true),
-      );
-
       if (!mounted) return;
-      _applyLoadedUser(refreshed, isMe: true);
+      _applyLoadedUser(Map<String, dynamic>.from(updated), isMe: true);
       setState(() => _editMode = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1057,7 +1043,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!_editMode && !_hasReadableProfileData()) ...[
+            if (_loadErrorMessage != null) ...[
+              InlineNoticeCard(
+                icon: Icons.error_outline_rounded,
+                title: l10n.errorGeneric,
+                message: _loadErrorMessage!,
+              ),
+              const SizedBox(height: UITokens.spaceMd),
+            ],
+            if (_loadErrorMessage == null && !_editMode && !_hasReadableProfileData()) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(UITokens.spaceMdSm),
@@ -1243,7 +1237,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final location = (_user?['location'] as String?)?.trim();
     final birthday = (_user?['birthday'] as String?)?.trim();
     final email = (_user?['email'] as String?)?.trim();
-    final phone = (_user?['phone'] as String?)?.trim();
     final createdAt = _formattedCreatedAt();
     final status = _presenceLabel(l10n);
 
@@ -1254,7 +1247,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       (label: l10n.locationField, value: location),
       (label: l10n.birthdayField, value: birthday),
       (label: l10n.emailLabel, value: email),
-      (label: l10n.phoneLabel, value: phone),
       (label: l10n.profileStatusLabel, value: status),
       (label: l10n.registeredAtLabel, value: createdAt),
       (label: l10n.aegisIdLabel, value: profileId),
