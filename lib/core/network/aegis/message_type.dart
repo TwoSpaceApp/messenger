@@ -118,7 +118,20 @@ enum MessageType {
   roomSettingsGet(83),
   roomSettingsGetResponse(84),
   roomSettingsUpdate(85),
-  roomSettingsUpdateResponse(86);
+  roomSettingsUpdateResponse(86),
+
+  // SERVER-007: Typing, file transfer, and session management
+  userTyping(87),
+  userTypingEvent(88),
+  fileTransfer(89),
+  fileTransferResponse(90),
+  fileTransferChunk(91),
+  sessionListRequest(92),
+  sessionListResponse(93),
+  sessionRevokeRequest(94),
+  sessionRevokeResponse(95),
+  sessionTerminatedEvent(96),
+  readSyncEvent(97);
 
   const MessageType(this.value);
   final int value;

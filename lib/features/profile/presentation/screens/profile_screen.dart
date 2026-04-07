@@ -370,7 +370,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(UserFacingError.format(e))),
+        SnackBar(
+          content: Text(
+            UserFacingError.format(e, AppLocalizations.of(context)!),
+          ),
+        ),
       );
     }
   }

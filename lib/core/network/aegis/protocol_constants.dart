@@ -96,6 +96,17 @@ class ProtocolConstants {
   static const int typeUserSearchResult = 19;
   static const int typeRegister = 20;
   static const int typeRegisterResponse = 21;
+  static const int typeUserTyping = 87;
+  static const int typeUserTypingEvent = 88;
+  static const int typeFileTransfer = 89;
+  static const int typeFileTransferResponse = 90;
+  static const int typeFileTransferChunk = 91;
+  static const int typeSessionListRequest = 92;
+  static const int typeSessionListResponse = 93;
+  static const int typeSessionRevokeRequest = 94;
+  static const int typeSessionRevokeResponse = 95;
+  static const int typeSessionTerminatedEvent = 96;
+  static const int typeReadSyncEvent = 97;
 
   // ── Message flags ────────────────────────────────────────────────
   // Bitmask values for the single-byte `Flags` header field.

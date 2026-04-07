@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:two_space_app/core/utils/secure_store.dart';
 
 class TwoFactorAuthService {
@@ -10,7 +9,6 @@ class TwoFactorAuthService {
   TwoFactorAuthService._internal();
   static final TwoFactorAuthService _instance =
       TwoFactorAuthService._internal();
-  final FlutterSecureStorage _secureStorage = AppSecureStorage.instance;
 
   /// Generate a new secret for TOTP (Base32 encoded random bytes)
   Future<String> generateSecret() async {
@@ -32,12 +30,12 @@ class TwoFactorAuthService {
 
   /// Save secret (encrypted)
   Future<void> saveSecret(String secret, String userId) async {
-    await _secureStorage.write(key: 'totp_secret_$userId', value: secret);
+    await SecureStore.write('totp_secret_$userId', secret);
   }
 
   /// Get saved secret
   Future<String?> getSecret(String userId) async {
-    return _secureStorage.read(key: 'totp_secret_$userId');
+    return SecureStore.read('totp_secret_$userId');
   }
 
   /// Verify TOTP code using RFC 6238 algorithm
@@ -100,19 +98,19 @@ class TwoFactorAuthService {
 
   /// Enable 2FA for user
   Future<void> enable2FA(String userId, String secret) async {
-    await _secureStorage.write(key: '2fa_enabled_$userId', value: 'true');
+    await SecureStore.write('2fa_enabled_$userId', 'true');
     await saveSecret(secret, userId);
   }
 
   /// Disable 2FA for user
   Future<void> disable2FA(String userId) async {
-    await _secureStorage.delete(key: '2fa_enabled_$userId');
-    await _secureStorage.delete(key: 'totp_secret_$userId');
+    await SecureStore.delete('2fa_enabled_$userId');
+    await SecureStore.delete('totp_secret_$userId');
   }
 
   /// Check if 2FA is enabled
   Future<bool> is2FAEnabled(String userId) async {
-    final value = await _secureStorage.read(key: '2fa_enabled_$userId');
+    final value = await SecureStore.read('2fa_enabled_$userId');
     return value == 'true';
   }
 }

@@ -111,6 +111,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Regenerate localizations
+        run: flutter gen-l10n
+
       - name: Regenerate code
         run: dart run build_runner build --delete-conflicting-outputs
 
@@ -136,9 +139,15 @@ jobs:
             exit 1
           fi
 
+          if [[ "${{ steps.meta.outputs.build_mode }}" == "debug" ]]; then
+            enable_dev_tools="true"
+          else
+            enable_dev_tools="${ENABLE_DEV_TOOLS_VALUE:-false}"
+          fi
+
           cat > .env <<EOF
           APP_ENV=${APP_ENV_VALUE:-development}
-          ENABLE_DEV_TOOLS=${ENABLE_DEV_TOOLS_VALUE:-false}
+          ENABLE_DEV_TOOLS=${enable_dev_tools}
           SENTRY_DSN=${SENTRY_DSN_VALUE:-}
           AEGIS_HOST=${AEGIS_HOST_VALUE:-}
           AEGIS_PORT=${AEGIS_PORT_VALUE:-8888}
@@ -151,6 +160,7 @@ jobs:
 
       - name: Force regenerate code for build env
         run: |
+          flutter gen-l10n
           dart run build_runner clean
           dart run build_runner build --delete-conflicting-outputs
 
@@ -204,24 +214,24 @@ jobs:
             echo "- Download (zip artifact): [twospace-linux-release](${{ steps.upload_linux_release.outputs.artifact-url }})"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Build Windows (debug)
+      - name: Build Windows portable bundle (debug)
         if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'windows'
-        run: flutter build windows --debug
+        run: flutter build windows --release
 
-      - name: Build Windows (release)
+      - name: Build Windows portable bundle (release)
         if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
         run: flutter build windows --release
 
-      - name: Upload Windows artifact (debug)
+      - name: Upload Windows portable artifact (debug)
         if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'windows'
         uses: actions/upload-artifact@v4
-        id: upload_windows_debug
+        id: upload_windows_preview
         with:
           name: twospace-windows-debug
           retention-days: 30
-          path: build/windows/x64/runner/Debug
+          path: build/windows/x64/runner/Release
 
-      - name: Upload Windows artifact (release)
+      - name: Upload Windows portable artifact (release)
         if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
         uses: actions/upload-artifact@v4
         id: upload_windows_release
@@ -234,34 +244,51 @@ jobs:
         if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'windows'
         run: |
           "### Windows (debug)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
-          "- Download (zip artifact): [twospace-windows-debug](${{ steps.upload_windows_debug.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          "- Portable bundle: [twospace-windows-debug](${{ steps.upload_windows_preview.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
         shell: pwsh
 
       - name: Install Inno Setup (Windows)
-        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
+        if: matrix.platform == 'windows'
         run: choco install innosetup -y --no-progress
         shell: pwsh
 
+      - name: Download Visual C++ Redistributable (Windows)
+        if: matrix.platform == 'windows'
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Invoke-WebRequest -Uri https://aka.ms/vc14/vc_redist.x64.exe -OutFile dist/vc_redist.x64.exe
+        shell: pwsh
+
       - name: Build Windows installer (Inno Setup)
-        if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
+        if: matrix.platform == 'windows'
         run: |
           $verLine = (Get-Content pubspec.yaml | Select-String -Pattern '^version:' | Select-Object -First 1).Line
           if (-not $verLine) { throw 'pubspec.yaml: version not found' }
 
           $ver = $verLine.Split(':', 2)[1].Trim()
           $verShort = $ver.Split('+')[0]
+          $suffix = if ('${{ steps.meta.outputs.build_mode }}' -eq 'debug') { '-debug' } else { '' }
 
           New-Item -ItemType Directory -Force -Path dist | Out-Null
 
           $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
           if (-not (Test-Path $iscc)) { throw "ISCC not found at $iscc" }
 
-          & $iscc "/DMyAppVersion=$verShort" /Odist setup.iss
+          & $iscc "/DMyAppVersion=$verShort" "/DMyOutputSuffix=$suffix" "/DMyBuildDir=build\\windows\\x64\\runner\\Release" "/DMyVcRedistPath=dist\\vc_redist.x64.exe" /Odist setup.iss
 
-          $out = Get-ChildItem -Path dist -Filter '*_setup_v*.exe' | Select-Object -First 1
+          $out = Get-ChildItem -Path dist -Filter '*_setup*_v*.exe' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
           if (-not $out) { throw 'Installer .exe not found in dist/' }
           Write-Host "Built installer: $($out.FullName)"
         shell: pwsh
+
+      - name: Upload Windows installer artifact (debug)
+        if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        id: upload_windows_installer_preview
+        with:
+          name: twospace-windows-installer-debug
+          retention-days: 30
+          path: dist/*_setup*-debug_v*.exe
 
       - name: Upload Windows installer artifact (release)
         if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
@@ -272,10 +299,16 @@ jobs:
           retention-days: 30
           path: dist/*_setup_v*.exe
 
+      - name: Summary (Windows installer debug)
+        if: steps.meta.outputs.build_mode == 'debug' && matrix.platform == 'windows'
+        run: |
+          "- Installer (.exe): [twospace-windows-installer-debug](${{ steps.upload_windows_installer_preview.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+        shell: pwsh
+
       - name: Summary (Windows release)
         if: steps.meta.outputs.build_mode == 'release' && matrix.platform == 'windows'
         run: |
           "### Windows (release)" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
-          "- Download (zip artifact): [twospace-windows-release](${{ steps.upload_windows_release.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+          "- Portable bundle: [twospace-windows-release](${{ steps.upload_windows_release.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
           "- Installer (.exe): [twospace-windows-installer](${{ steps.upload_windows_installer_release.outputs.artifact-url }})" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
         shell: pwsh

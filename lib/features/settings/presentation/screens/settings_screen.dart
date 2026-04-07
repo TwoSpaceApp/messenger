@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
@@ -12,16 +14,17 @@ import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/theme_switcher.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
+import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _loggingOut = false;
   String _appVersion = '';
 
@@ -73,15 +76,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() => _loggingOut = true);
     try {
-      final auth = AuthService();
-      await auth.signOut();
+      await ref.read(authProvider.notifier).logout();
       if (!mounted) return;
-      context.go('/login');
+      context.go(AppStrings.routeLogin);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.errorLogout(e.toString()))));
+      ).showSnackBar(
+        SnackBar(content: Text(UserFacingError.format(e, l10n))),
+      );
       setState(() => _loggingOut = false);
     }
   }

@@ -6,8 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/theme_builder.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
@@ -26,15 +26,14 @@ TextStyle _registerFontPreviewStyle(
   FontWeight? fontWeight,
   Color? color,
 }) {
-  final baseStyle = TextStyle(
-    fontSize: fontSize,
-    fontWeight: fontWeight,
-    color: color,
+  return AppThemeBuilder.applyFontFamily(
+    fontFamily,
+    textStyle: TextStyle(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+    ),
   );
-  if (fontFamily == 'Handjet' || fontFamily == 'PressStart 2P') {
-    return GoogleFonts.handjet(textStyle: baseStyle);
-  }
-  return baseStyle.copyWith(fontFamily: fontFamily);
 }
 
 class _RegisterStylePreset {
@@ -289,7 +288,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
       if (mounted) {
         setState(
-          () => _errorMessage = UserFacingError.format(e),
+          () => _errorMessage = UserFacingError.format(e, AppLocalizations.of(context)),
         );
       }
     } finally {

@@ -143,7 +143,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(
           () {
             _recordFailedAttempt(l10n);
-            _errorMessage ??= UserFacingError.format(e);
+            _errorMessage ??= UserFacingError.format(e, l10n);
           },
         );
       }
@@ -209,7 +209,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(
           () {
             _recordFailedAttempt(l10n);
-            _errorMessage ??= UserFacingError.format(e);
+            _errorMessage ??= UserFacingError.format(e, l10n);
           },
         );
         return;

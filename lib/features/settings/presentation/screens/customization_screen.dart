@@ -1,7 +1,6 @@
 // ignore_for_file: unnecessary_underscores
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
@@ -22,13 +21,12 @@ TextStyle? _fontPreviewStyle(
   String fontFamily, {
   FontWeight? fontWeight,
 }) {
-  final resolvedBase = (baseStyle ?? const TextStyle()).copyWith(
-    fontWeight: fontWeight,
+  return AppThemeBuilder.applyFontFamily(
+    fontFamily,
+    textStyle: (baseStyle ?? const TextStyle()).copyWith(
+      fontWeight: fontWeight,
+    ),
   );
-  if (fontFamily == 'Handjet' || fontFamily == 'PressStart 2P') {
-    return GoogleFonts.handjet(textStyle: resolvedBase);
-  }
-  return resolvedBase.copyWith(fontFamily: fontFamily);
 }
 
 class _ThemePreset {

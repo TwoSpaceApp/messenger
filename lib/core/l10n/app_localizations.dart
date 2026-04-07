@@ -5291,6 +5291,408 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Device'**
   String get devMenuDeviceLabel;
+
+  /// No description provided for @authRegisterVerifyEmailBeforeLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration is complete. Verify your email before signing in.'**
+  String get authRegisterVerifyEmailBeforeLogin;
+
+  /// No description provided for @authRegisterAutoLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created, but automatic sign-in failed: {error}'**
+  String authRegisterAutoLoginFailed(Object error);
+
+  /// No description provided for @authProfileUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update profile'**
+  String get authProfileUpdateFailed;
+
+  /// No description provided for @authAvatarUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update avatar'**
+  String get authAvatarUpdateFailed;
+
+  /// No description provided for @authLoginAppCredentialsRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The server rejected the app credentials. Check server configuration or handshake compatibility.'**
+  String get authLoginAppCredentialsRejected;
+
+  /// No description provided for @authSessionTokenMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not return a session token'**
+  String get authSessionTokenMissing;
+
+  /// No description provided for @authTotpSetupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to prepare two-factor authentication'**
+  String get authTotpSetupFailed;
+
+  /// No description provided for @authTotpDisableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to disable two-factor authentication'**
+  String get authTotpDisableFailed;
+
+  /// No description provided for @authTotpVerifyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to verify two-factor authentication'**
+  String get authTotpVerifyFailed;
+
+  /// No description provided for @authSessionsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load active sessions'**
+  String get authSessionsLoadFailed;
+
+  /// No description provided for @authSessionsRevokeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to end the session'**
+  String get authSessionsRevokeFailed;
+
+  /// No description provided for @authRegisterNotLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration completed, but sign-in was not completed'**
+  String get authRegisterNotLoggedIn;
+
+  /// No description provided for @devMenuTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer menu'**
+  String get devMenuTitle;
+
+  /// No description provided for @devMenuTabActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get devMenuTabActions;
+
+  /// No description provided for @devMenuTabUiInspect.
+  ///
+  /// In en, this message translates to:
+  /// **'UI inspect'**
+  String get devMenuTabUiInspect;
+
+  /// No description provided for @devMenuTabLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs'**
+  String get devMenuTabLogs;
+
+  /// No description provided for @devMenuTabNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get devMenuTabNetwork;
+
+  /// No description provided for @devMenuTabFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Features'**
+  String get devMenuTabFeatures;
+
+  /// No description provided for @devMenuTabInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get devMenuTabInfo;
+
+  /// No description provided for @devMenuLogsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No application logs yet'**
+  String get devMenuLogsEmptyTitle;
+
+  /// No description provided for @devMenuLogsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the problematic screen or repeat the action. New records will appear here.'**
+  String get devMenuLogsEmptyMessage;
+
+  /// No description provided for @devMenuShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get devMenuShowAll;
+
+  /// No description provided for @devMenuOnlyErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Only errors'**
+  String get devMenuOnlyErrors;
+
+  /// No description provided for @devMenuAllEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'All entries ({count})'**
+  String devMenuAllEntries(Object count);
+
+  /// No description provided for @devMenuClearAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get devMenuClearAction;
+
+  /// No description provided for @devMenuScreenExplorerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen explorer'**
+  String get devMenuScreenExplorerTitle;
+
+  /// No description provided for @devMenuScreenSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by screen name, group, or file'**
+  String get devMenuScreenSearchHint;
+
+  /// No description provided for @devMenuAllScreens.
+  ///
+  /// In en, this message translates to:
+  /// **'All ({count})'**
+  String devMenuAllScreens(Object count);
+
+  /// No description provided for @devMenuScreensNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Screens not found'**
+  String get devMenuScreensNotFoundTitle;
+
+  /// No description provided for @devMenuScreensNotFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the search query or clear the group filter.'**
+  String get devMenuScreensNotFoundMessage;
+
+  /// No description provided for @devMenuUtilitiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Utilities'**
+  String get devMenuUtilitiesTitle;
+
+  /// No description provided for @devMenuForceCrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Force crash'**
+  String get devMenuForceCrash;
+
+  /// No description provided for @devMenuClearSecureStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear secure storage'**
+  String get devMenuClearSecureStorage;
+
+  /// No description provided for @devMenuClearCacheProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear profile cache'**
+  String get devMenuClearCacheProfile;
+
+  /// No description provided for @devMenuCheckOta.
+  ///
+  /// In en, this message translates to:
+  /// **'Check OTA'**
+  String get devMenuCheckOta;
+
+  /// No description provided for @devMenuOpenScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open screen'**
+  String get devMenuOpenScreen;
+
+  /// No description provided for @devMenuShowBounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Show bounds (debugPaintSize)'**
+  String get devMenuShowBounds;
+
+  /// No description provided for @devMenuShowBoundsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Displays paddings and borders of all widgets'**
+  String get devMenuShowBoundsSubtitle;
+
+  /// No description provided for @devMenuRepaintRainbow.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight repaints (RepaintRainbow)'**
+  String get devMenuRepaintRainbow;
+
+  /// No description provided for @devMenuRepaintRainbowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlights elements that are being repainted'**
+  String get devMenuRepaintRainbowSubtitle;
+
+  /// No description provided for @devMenuSlowAnimations.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow animations (timeDilation = 5.0)'**
+  String get devMenuSlowAnimations;
+
+  /// No description provided for @devMenuSlowAnimationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Slows down all animations in the app'**
+  String get devMenuSlowAnimationsSubtitle;
+
+  /// No description provided for @devMenuPerformanceOverlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance profiling'**
+  String get devMenuPerformanceOverlay;
+
+  /// No description provided for @devMenuPerformanceOverlaySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the Performance Overlay on top of the app'**
+  String get devMenuPerformanceOverlaySubtitle;
+
+  /// No description provided for @devMenuSensitiveDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive data visibility'**
+  String get devMenuSensitiveDialogTitle;
+
+  /// No description provided for @devMenuSensitiveDialogMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'After enabling this option, new debug and network logs may contain tokens, keys, and other secrets in plain text. Existing records will not change. Continue?'**
+  String get devMenuSensitiveDialogMessage;
+
+  /// No description provided for @devMenuEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get devMenuEnable;
+
+  /// No description provided for @devMenuSensitiveEnableDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keys, tokens, and passwords are masked by default. This switch affects only new logs.'**
+  String get devMenuSensitiveEnableDescription;
+
+  /// No description provided for @devMenuSensitiveDisabledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive data is always hidden in this build.'**
+  String get devMenuSensitiveDisabledDescription;
+
+  /// No description provided for @devMenuRevealSensitiveData.
+  ///
+  /// In en, this message translates to:
+  /// **'Show sensitive data in new logs'**
+  String get devMenuRevealSensitiveData;
+
+  /// No description provided for @devMenuFlagNewChatUi.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable new chat UI'**
+  String get devMenuFlagNewChatUi;
+
+  /// No description provided for @devMenuFlagForceVideoCompression.
+  ///
+  /// In en, this message translates to:
+  /// **'Force video compression'**
+  String get devMenuFlagForceVideoCompression;
+
+  /// No description provided for @devMenuFlagAggressiveCaching.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable aggressive caching'**
+  String get devMenuFlagAggressiveCaching;
+
+  /// No description provided for @devMenuFlagIgnoreServerOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore server offline state'**
+  String get devMenuFlagIgnoreServerOffline;
+
+  /// No description provided for @devMenuFlagIgnoreServerOfflineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the current session and avoids returning to the sign-in screen when the server is unavailable.'**
+  String get devMenuFlagIgnoreServerOfflineSubtitle;
+
+  /// No description provided for @devMenuReleaseHiddenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive data is hidden'**
+  String get devMenuReleaseHiddenTitle;
+
+  /// No description provided for @devMenuReleaseHiddenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public release and profile builds always show debug data only in masked form.'**
+  String get devMenuReleaseHiddenSubtitle;
+
+  /// No description provided for @devMenuNetworkEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No network logs yet'**
+  String get devMenuNetworkEmptyTitle;
+
+  /// No description provided for @devMenuNetworkEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open any screen that performs requests and logs will appear here.'**
+  String get devMenuNetworkEmptyMessage;
+
+  /// No description provided for @devMenuAllRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'All requests ({count})'**
+  String devMenuAllRequests(Object count);
+
+  /// No description provided for @devMenuNetworkProblemDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'problem detected'**
+  String get devMenuNetworkProblemDetected;
+
+  /// No description provided for @devMenuNetworkCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'completed'**
+  String get devMenuNetworkCompleted;
+
+  /// No description provided for @devMenuRequestHeaders.
+  ///
+  /// In en, this message translates to:
+  /// **'Request headers'**
+  String get devMenuRequestHeaders;
+
+  /// No description provided for @devMenuRequestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Request body · {type}'**
+  String devMenuRequestBody(Object type);
+
+  /// No description provided for @devMenuResponseHeaders.
+  ///
+  /// In en, this message translates to:
+  /// **'Response headers'**
+  String get devMenuResponseHeaders;
+
+  /// No description provided for @devMenuResponseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Response body · {type}'**
+  String devMenuResponseBody(Object type);
+
+  /// No description provided for @devMenuVersionWithBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'{version} (Build {buildNumber})'**
+  String devMenuVersionWithBuild(Object buildNumber, Object version);
 }
 
 class _AppLocalizationsDelegate

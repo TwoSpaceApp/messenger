@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
@@ -117,6 +118,20 @@ class AegisClient {
 
   /// Typed stream of incoming message pin events.
   Stream<MessagePinEvent> get messagePinEvents => events.messagePinEvents;
+
+    /// Typed stream of incoming typing indicator events.
+    Stream<UserTypingEventPayload> get typingEvents => events.typingEvents;
+
+    /// Typed stream of incoming file download chunks.
+    Stream<FileTransferResponsePayload> get fileTransferChunkEvents =>
+      events.fileTransferChunks;
+
+    /// Typed stream of session termination events.
+    Stream<SessionTerminatedEventPayload> get sessionTerminatedEvents =>
+      events.sessionTerminatedEvents;
+
+    /// Typed stream of cross-device read sync events.
+    Stream<ReadSyncEventPayload> get readSyncEvents => events.readSyncEvents;
 
   /// Stream of disconnect events
   Stream<void> get disconnects => _transport.disconnects;
@@ -740,6 +755,30 @@ class AegisClient {
     void Function(MessagePinEvent event) handler,
   ) {
     return messagePinEvents.listen(handler);
+  }
+
+  StreamSubscription<UserTypingEventPayload> onTypingEvent(
+    void Function(UserTypingEventPayload event) handler,
+  ) {
+    return typingEvents.listen(handler);
+  }
+
+  StreamSubscription<FileTransferResponsePayload> onFileTransferChunk(
+    void Function(FileTransferResponsePayload event) handler,
+  ) {
+    return fileTransferChunkEvents.listen(handler);
+  }
+
+  StreamSubscription<SessionTerminatedEventPayload> onSessionTerminated(
+    void Function(SessionTerminatedEventPayload event) handler,
+  ) {
+    return sessionTerminatedEvents.listen(handler);
+  }
+
+  StreamSubscription<ReadSyncEventPayload> onReadSyncEvent(
+    void Function(ReadSyncEventPayload event) handler,
+  ) {
+    return readSyncEvents.listen(handler);
   }
 
   // ─── Channels ───────────────────────────────────────────────────────────────
@@ -2775,6 +2814,249 @@ class AegisClient {
     );
   }
 
+  Future<SessionListResponse> listActiveSessions() async {
+    _requireAuthenticated();
+
+    final msg = Message.withType(
+      MessageType.sessionListRequest,
+      const SessionListRequest().toBytes(),
+    );
+    final response = await _sendAndWaitResponse(
+      msg,
+      expectedTypes: {MessageType.sessionListResponse},
+    );
+    return SessionListResponse.fromBytes(response.payload);
+  }
+
+  Future<void> sendTyping({
+    required String scope,
+    required int targetId,
+    required bool isTyping,
+    int? toUserId,
+  }) async {
+    _requireAuthenticated();
+
+    final request = UserTypingRequest(
+      scope: scope,
+      targetId: targetId,
+      isTyping: isTyping,
+      toUserId: toUserId,
+    );
+    final msg = Message.withType(MessageType.userTyping, request.toBytes());
+    msg.sequenceId = _nextSeqId++;
+    await _transport.sendMessage(msg);
+  }
+
+  Future<void> sendPrivateTyping(
+    int toUserId, {
+    required bool isTyping,
+  }) {
+    return sendTyping(
+      scope: ChatScope.privateChat.value,
+      targetId: toUserId,
+      toUserId: toUserId,
+      isTyping: isTyping,
+    );
+  }
+
+  Future<void> sendChannelTyping(
+    int channelId, {
+    required bool isTyping,
+  }) {
+    return sendTyping(
+      scope: ChatScope.channel.value,
+      targetId: channelId,
+      isTyping: isTyping,
+    );
+  }
+
+  Future<void> sendGroupTyping(
+    int groupId, {
+    required bool isTyping,
+  }) {
+    return sendTyping(
+      scope: ChatScope.group.value,
+      targetId: groupId,
+      isTyping: isTyping,
+    );
+  }
+
+  Future<FileTransferResponsePayload> initializeFileUpload({
+    required String fileName,
+    required int totalSize,
+    required int totalChunks,
+    String mimeType = 'application/octet-stream',
+    List<int>? allowedUserIds,
+  }) async {
+    _requireAuthenticated();
+
+    final request = FileTransferRequest(
+      action: 'init',
+      fileName: fileName,
+      mimeType: mimeType,
+      totalSize: totalSize,
+      totalChunks: totalChunks,
+      allowedUserIds: allowedUserIds,
+    );
+    final response = await _sendAndWaitResponse(
+      Message.withType(MessageType.fileTransfer, request.toBytes()),
+      expectedTypes: {MessageType.fileTransferResponse},
+    );
+    return FileTransferResponsePayload.fromBytes(response.payload);
+  }
+
+  Future<FileTransferResponsePayload> uploadFileChunk({
+    required String transferId,
+    required int chunkIndex,
+    required String chunkDataBase64,
+  }) async {
+    _requireAuthenticated();
+
+    final request = FileTransferRequest(
+      action: 'chunk',
+      transferId: transferId,
+      chunkIndex: chunkIndex,
+      chunkDataBase64: chunkDataBase64,
+    );
+    final response = await _sendAndWaitResponse(
+      Message.withType(MessageType.fileTransfer, request.toBytes()),
+      expectedTypes: {MessageType.fileTransferResponse},
+    );
+    return FileTransferResponsePayload.fromBytes(response.payload);
+  }
+
+  Future<FileTransferResponsePayload> completeFileUpload(
+    String transferId,
+  ) async {
+    _requireAuthenticated();
+
+    final request = FileTransferRequest(
+      action: 'complete',
+      transferId: transferId,
+    );
+    final response = await _sendAndWaitResponse(
+      Message.withType(MessageType.fileTransfer, request.toBytes()),
+      expectedTypes: {MessageType.fileTransferResponse},
+    );
+    return FileTransferResponsePayload.fromBytes(response.payload);
+  }
+
+  Future<FileTransferResponsePayload> startFileDownload(String fileId) async {
+    _requireAuthenticated();
+
+    final request = FileTransferRequest(action: 'download', fileId: fileId);
+    final response = await _sendAndWaitResponse(
+      Message.withType(MessageType.fileTransfer, request.toBytes()),
+      expectedTypes: {MessageType.fileTransferResponse},
+      timeout: const Duration(seconds: 20),
+    );
+    return FileTransferResponsePayload.fromBytes(response.payload);
+  }
+
+  Future<Uint8List> downloadFileBytes(
+    String fileId, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    _requireAuthenticated();
+
+    final chunks = <int, String>{};
+    final completer = Completer<Uint8List>();
+    int? totalChunks;
+    Timer? timeoutTimer;
+
+    void resetTimer() {
+      timeoutTimer?.cancel();
+      timeoutTimer = Timer(timeout, () {
+        if (!completer.isCompleted) {
+          completer.completeError(
+            TimeoutException('Timed out while downloading file $fileId', timeout),
+          );
+        }
+      });
+    }
+
+    late final StreamSubscription<FileTransferResponsePayload> subscription;
+    subscription = fileTransferChunkEvents.listen((event) {
+      if (!event.success || event.fileId != fileId) {
+        return;
+      }
+      if (event.chunkIndex == null || event.chunkDataBase64 == null) {
+        return;
+      }
+
+      totalChunks = event.totalChunks ?? totalChunks;
+      chunks[event.chunkIndex!] = event.chunkDataBase64!;
+      resetTimer();
+
+      final expectedChunks = totalChunks;
+      if (expectedChunks == null || chunks.length < expectedChunks) {
+        return;
+      }
+
+      final bytesBuilder = BytesBuilder(copy: false);
+      for (var index = 0; index < expectedChunks; index++) {
+        final encoded = chunks[index];
+        if (encoded == null) {
+          return;
+        }
+        bytesBuilder.add(base64Decode(encoded));
+      }
+      if (!completer.isCompleted) {
+        completer.complete(bytesBuilder.takeBytes());
+      }
+    });
+
+    resetTimer();
+    final response = await startFileDownload(fileId);
+    if (!response.success) {
+      await subscription.cancel();
+      timeoutTimer?.cancel();
+      throw Exception(response.message ?? 'File download failed');
+    }
+
+    totalChunks = response.totalChunks;
+    if ((totalChunks ?? 0) <= 0) {
+      await subscription.cancel();
+      timeoutTimer?.cancel();
+      return Uint8List(0);
+    }
+
+    try {
+      final bytes = await completer.future;
+      final expectedSize = response.totalSize;
+      if (expectedSize != null && bytes.length > expectedSize) {
+        return Uint8List.sublistView(
+          bytes,
+          0,
+          math.min(bytes.length, expectedSize),
+        );
+      }
+      return bytes;
+    } finally {
+      timeoutTimer?.cancel();
+      await subscription.cancel();
+    }
+  }
+
+  Future<SessionRevokeResponse> revokeSession(String sessionId) async {
+    _requireAuthenticated();
+
+    final parsedSessionId = int.tryParse(sessionId);
+    if (parsedSessionId == null || parsedSessionId <= 0) {
+      throw ArgumentError.value(sessionId, 'sessionId', 'Session id must be numeric');
+    }
+
+    final msg = Message.withType(
+      MessageType.sessionRevokeRequest,
+      SessionRevokeRequest(sessionId: parsedSessionId).toBytes(),
+    );
+    final response = await _sendAndWaitResponse(
+      msg,
+      expectedTypes: {MessageType.sessionRevokeResponse},
+    );
+    return SessionRevokeResponse.fromBytes(response.payload);
+  }
+
   Future<void> _publishPresence({required bool isOnline}) async {
     try {
       final request = UserPresenceUpdateRequest(
@@ -2795,7 +3077,7 @@ class AegisClient {
 
   void _requireAuthenticated() {
     _requireConnected();
-    if (!_isAuthenticated) throw Exception('Not authenticated');
+    if (!_isAuthenticated) throw Exception('auth.not_authenticated');
   }
 }
 

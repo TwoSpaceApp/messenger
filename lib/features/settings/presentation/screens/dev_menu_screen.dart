@@ -58,22 +58,23 @@ class _DevMenuScreenState extends State<DevMenuScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🔧 Developer Menu'),
+        title: Text(l10n.devMenuTitle),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          tabs: const [
+          tabs: [
             Tab(
-              icon: Icon(Icons.dashboard_customize_outlined),
-              text: 'Actions',
+              icon: const Icon(Icons.dashboard_customize_outlined),
+              text: l10n.devMenuTabActions,
             ),
-            Tab(icon: Icon(Icons.brush_outlined), text: 'UI Inspect'),
-            Tab(icon: Icon(Icons.article_outlined), text: 'Logs'),
-            Tab(icon: Icon(Icons.network_check), text: 'Network'),
-            Tab(icon: Icon(Icons.flag_outlined), text: 'Features'),
-            Tab(icon: Icon(Icons.info_outline), text: 'Info'),
+            Tab(icon: const Icon(Icons.brush_outlined), text: l10n.devMenuTabUiInspect),
+            Tab(icon: const Icon(Icons.article_outlined), text: l10n.devMenuTabLogs),
+            Tab(icon: const Icon(Icons.network_check), text: l10n.devMenuTabNetwork),
+            Tab(icon: const Icon(Icons.flag_outlined), text: l10n.devMenuTabFeatures),
+            Tab(icon: const Icon(Icons.info_outline), text: l10n.devMenuTabInfo),
           ],
         ),
       ),
@@ -106,6 +107,7 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return StreamBuilder<List<String>>(
       stream: DevLogger.stream,
       initialData: DevLogger.all,
@@ -119,11 +121,10 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
 
         if (logs.isEmpty) {
           return AppEmptyState(
-            title: 'Пока нет логов приложения',
-            message:
-                'Откройте проблемный экран или повторите действие — новые записи появятся здесь.',
+            title: l10n.devMenuLogsEmptyTitle,
+            message: l10n.devMenuLogsEmptyMessage,
             icon: Icons.receipt_long_outlined,
-            actionLabel: sourceLogs.isNotEmpty ? 'Показать всё' : null,
+            actionLabel: sourceLogs.isNotEmpty ? l10n.devMenuShowAll : null,
             onAction: sourceLogs.isNotEmpty
                 ? () => setState(() => _showOnlyErrors = false)
                 : null,
@@ -144,8 +145,8 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
                   FilterChip(
                     label: Text(
                       _showOnlyErrors
-                          ? 'Только ошибки'
-                          : 'Все записи (${sourceLogs.length})',
+                          ? l10n.devMenuOnlyErrors
+                          : l10n.devMenuAllEntries(sourceLogs.length.toString()),
                     ),
                     selected: _showOnlyErrors,
                     onSelected: (value) =>
@@ -155,7 +156,7 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
                   TextButton.icon(
                     onPressed: DevLogger.clear,
                     icon: const Icon(Icons.delete_sweep_outlined),
-                    label: const Text('Очистить'),
+                    label: Text(l10n.devMenuClearAction),
                   ),
                 ],
               ),
@@ -264,18 +265,19 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final groupedScreens = _groupedScreens;
     final query = _searchController.text.trim();
 
     return ListView(
       padding: const EdgeInsets.all(UITokens.spaceMd),
       children: [
-        _buildSectionTitle(context, 'Screen Explorer'),
+        _buildSectionTitle(context, l10n.devMenuScreenExplorerTitle),
         TextField(
           controller: _searchController,
           onChanged: (_) => setState(() {}),
           decoration: InputDecoration(
-            hintText: 'Поиск по имени, группе или файлу экрана',
+            hintText: l10n.devMenuScreenSearchHint,
             prefixIcon: const Icon(Icons.search_rounded),
             suffixIcon: query.isEmpty
                 ? null
@@ -297,7 +299,7 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
               Padding(
                 padding: const EdgeInsets.only(right: UITokens.spaceSm),
                 child: ChoiceChip(
-                  label: Text('Все (${_allScreens.length})'),
+                  label: Text(l10n.devMenuAllScreens(_allScreens.length.toString())),
                   selected: _selectedGroup == null,
                   onSelected: (_) => setState(() => _selectedGroup = null),
                 ),
@@ -324,11 +326,10 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
         AnimatedSwitcher(
           duration: UITokens.durationMdSm,
           child: groupedScreens.isEmpty
-              ? const AppEmptyState(
-                  key: ValueKey('empty-dev-screens'),
-                  title: 'Экраны не найдены',
-                  message:
-                      'Измените поисковый запрос или снимите фильтр группы.',
+              ? AppEmptyState(
+                  key: const ValueKey('empty-dev-screens'),
+                  title: l10n.devMenuScreensNotFoundTitle,
+                  message: l10n.devMenuScreensNotFoundMessage,
                   icon: Icons.travel_explore_rounded,
                 )
               : Container(
@@ -360,21 +361,21 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
                 ),
         ),
         const SizedBox(height: UITokens.spaceXLg),
-        _buildSectionTitle(context, 'Utilities'),
+        _buildSectionTitle(context, l10n.devMenuUtilitiesTitle),
         Wrap(
           spacing: 10,
           runSpacing: 10,
           children: [
             _buildAction(
               context,
-              '💥 Force Crash',
+              l10n.devMenuForceCrash,
               Icons.bug_report_outlined,
               () => throw Exception('Test crash triggered from Dev Menu'),
               color: Colors.orange,
             ),
             _buildAction(
               context,
-              '🗑️ Clear Secure Storage',
+              l10n.devMenuClearSecureStorage,
               Icons.delete_forever_outlined,
               () async {
                 await SecureStore.deleteAll();
@@ -384,7 +385,7 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
             ),
             _buildAction(
               context,
-              '🗂️ Clear Cache Profile',
+              l10n.devMenuClearCacheProfile,
               Icons.layers_clear,
               () async {
                 await SettingsService.clearCachedProfile();
@@ -394,7 +395,7 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
             ),
             _buildAction(
               context,
-              'OTA Check',
+              l10n.devMenuCheckOta,
               Icons.system_update_alt_rounded,
               () async {
                 widget.logger.info('Checking OTA update…');
@@ -493,7 +494,7 @@ class _DevMenuActionsTabState extends State<_DevMenuActionsTab> {
           ),
           const SizedBox(height: UITokens.spaceXSm),
           Text(
-            'Открыть экран',
+            AppLocalizations.of(context)!.devMenuOpenScreen,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w700,
@@ -554,32 +555,31 @@ class _DevMenuUIInspectorTab extends StatefulWidget {
 class _DevMenuUIInspectorTabState extends State<_DevMenuUIInspectorTab> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.all(UITokens.spaceMd),
       children: [
         SwitchListTile(
-          title: const Text('Показывать границы (debugPaintSize)'),
-          subtitle: const Text('Отображение отступов и границ всех виджетов'),
+          title: Text(l10n.devMenuShowBounds),
+          subtitle: Text(l10n.devMenuShowBoundsSubtitle),
           value: debugPaintSizeEnabled,
           onChanged: (val) => setState(() => debugPaintSizeEnabled = val),
         ),
         SwitchListTile(
-          title: const Text('Закрашивать перерисовки (RepaintRainbow)'),
-          subtitle: const Text(
-            'Подсвечивает элементы, которые перерисовываются',
-          ),
+          title: Text(l10n.devMenuRepaintRainbow),
+          subtitle: Text(l10n.devMenuRepaintRainbowSubtitle),
           value: debugRepaintRainbowEnabled,
           onChanged: (val) => setState(() => debugRepaintRainbowEnabled = val),
         ),
         SwitchListTile(
-          title: const Text('Медленные анимации (timeDilation = 5.0)'),
-          subtitle: const Text('Замедляет все анимации в приложении'),
+          title: Text(l10n.devMenuSlowAnimations),
+          subtitle: Text(l10n.devMenuSlowAnimationsSubtitle),
           value: timeDilation != 1.0,
           onChanged: (val) => setState(() => timeDilation = val ? 5.0 : 1.0),
         ),
         SwitchListTile(
-          title: const Text('Профилирование производительности'),
-          subtitle: const Text('Отображает Performance Overlay сверху'),
+          title: Text(l10n.devMenuPerformanceOverlay),
+          subtitle: Text(l10n.devMenuPerformanceOverlaySubtitle),
           value: DevToolsService.performanceOverlayEnabled.value,
           onChanged: (val) => setState(
             () => DevToolsService.performanceOverlayEnabled.value = val,
@@ -612,19 +612,18 @@ class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
     final approved = await showDialog<bool>(
       context: context,
       builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: const Text('Показ чувствительных данных'),
-          content: const Text(
-            'После включения новые debug- и network-логи смогут содержать токены, ключи и другие секреты в явном виде. Уже сохранённые записи не изменятся. Продолжить?',
-          ),
+          title: Text(l10n.devMenuSensitiveDialogTitle),
+          content: Text(l10n.devMenuSensitiveDialogMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Отмена'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Включить'),
+              child: Text(l10n.devMenuEnable),
             ),
           ],
         );
@@ -638,6 +637,7 @@ class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.all(UITokens.spaceMd),
       children: [
@@ -647,40 +647,35 @@ class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
           builder: (context, revealSensitiveData, _) {
             final canToggle = DevSensitiveDataPolicy.canRevealSensitiveData;
             final subtitle = canToggle
-                ? 'По умолчанию ключи, токены и пароли маскируются. Этот переключатель влияет только на новые логи.'
-                : 'В этой сборке чувствительные данные всегда скрыты.';
+                ? l10n.devMenuSensitiveEnableDescription
+                : l10n.devMenuSensitiveDisabledDescription;
             return SwitchListTile(
-              title: const Text(
-                'Показывать чувствительные данные в новых логах',
-              ),
+              title: Text(l10n.devMenuRevealSensitiveData),
               subtitle: Text(subtitle),
               value: revealSensitiveData,
               onChanged: canToggle ? _handleSensitiveToggle : null,
             );
           },
         ),
-        _buildFlagTile('Enable New Chat UI', FeatureFlags.enableNewChatUI),
+        _buildFlagTile(l10n.devMenuFlagNewChatUi, FeatureFlags.enableNewChatUI),
         _buildFlagTile(
-          'Force Video Compression',
+          l10n.devMenuFlagForceVideoCompression,
           FeatureFlags.forceVideoCompression,
         ),
         _buildFlagTile(
-          'Enable Aggressive Caching',
+          l10n.devMenuFlagAggressiveCaching,
           FeatureFlags.enableAggressiveCaching,
         ),
         _buildFlagTile(
-          'Ignore Server Offline (no logout)',
+          l10n.devMenuFlagIgnoreServerOffline,
           FeatureFlags.ignoreServerOffline,
-          subtitle:
-              'Сохраняет текущую сессию и не выбрасывает на экран входа, если сервер недоступен.',
+          subtitle: l10n.devMenuFlagIgnoreServerOfflineSubtitle,
         ),
         if (!kDebugMode)
-          const ListTile(
-            leading: Icon(Icons.shield_outlined),
-            title: Text('Чувствительные данные скрыты'),
-            subtitle: Text(
-              'Публичные release/profile сборки всегда показывают debug-данные только в замаскированном виде.',
-            ),
+          ListTile(
+            leading: const Icon(Icons.shield_outlined),
+            title: Text(l10n.devMenuReleaseHiddenTitle),
+            subtitle: Text(l10n.devMenuReleaseHiddenSubtitle),
           ),
       ],
     );
@@ -717,6 +712,7 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return StreamBuilder<List<DevNetworkLog>>(
       stream: DevNetworkLogger.instance.logsStream,
       initialData: DevNetworkLogger.instance.logs,
@@ -728,11 +724,10 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
 
         if (logs.isEmpty) {
           return AppEmptyState(
-            title: 'Пока нет сетевых логов',
-            message:
-                'Откройте любой экран, который делает запросы, и логи появятся здесь.',
+            title: l10n.devMenuNetworkEmptyTitle,
+            message: l10n.devMenuNetworkEmptyMessage,
             icon: Icons.wifi_find_rounded,
-            actionLabel: sourceLogs.isNotEmpty ? 'Показать всё' : null,
+            actionLabel: sourceLogs.isNotEmpty ? l10n.devMenuShowAll : null,
             onAction: sourceLogs.isNotEmpty
                 ? () => setState(() => _showOnlyErrors = false)
                 : null,
@@ -753,8 +748,8 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                   FilterChip(
                     label: Text(
                       _showOnlyErrors
-                          ? 'Только ошибки'
-                          : 'Все запросы (${sourceLogs.length})',
+                          ? l10n.devMenuOnlyErrors
+                          : l10n.devMenuAllRequests(sourceLogs.length.toString()),
                     ),
                     selected: _showOnlyErrors,
                     onSelected: (value) =>
@@ -764,7 +759,7 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                   TextButton.icon(
                     onPressed: DevNetworkLogger.instance.clear,
                     icon: const Icon(Icons.delete_sweep_outlined),
-                    label: const Text('Очистить'),
+                    label: Text(l10n.devMenuClearAction),
                   ),
                 ],
               ),
@@ -827,29 +822,29 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                         ],
                       ),
                       children: [
-                        _buildDetailsHeader(log, color),
+                        _buildDetailsHeader(context, log, color),
                         if (log.requestHeaders.isNotEmpty)
                           _buildCodeBlock(
-                            'Request headers',
+                            l10n.devMenuRequestHeaders,
                             log.requestHeaders,
                             accent: Colors.lightBlueAccent,
                           ),
                         if (log.requestBody != null)
                           _buildCodeBlock(
-                            'Request body · ${log.requestTypeLabel}',
+                            l10n.devMenuRequestBody(log.requestTypeLabel),
                             log.requestBody,
                             accent: Colors.orangeAccent,
                           ),
                         if (log.responseHeaders.isNotEmpty)
                           _buildCodeBlock(
-                            'Response headers',
+                            l10n.devMenuResponseHeaders,
                             log.responseHeaders,
                             accent: Colors.cyanAccent,
                           ),
                         if (log.responseBody != null ||
                             log.errorMessage != null)
                           _buildCodeBlock(
-                            'Response body · ${log.responseTypeLabel}',
+                            l10n.devMenuResponseBody(log.responseTypeLabel),
                             log.errorMessage ?? log.responseBody,
                             accent: log.isError
                                 ? Colors.redAccent
@@ -867,7 +862,12 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
     );
   }
 
-  Widget _buildDetailsHeader(DevNetworkLog log, Color color) {
+  Widget _buildDetailsHeader(
+    BuildContext context,
+    DevNetworkLog log,
+    Color color,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       child: Row(
@@ -879,7 +879,9 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
             ),
           ),
           Text(
-            log.isError ? 'problem detected' : 'completed',
+            log.isError
+                ? l10n.devMenuNetworkProblemDetected
+                : l10n.devMenuNetworkCompleted,
             style: TextStyle(
               color: color,
               fontSize: 12,
@@ -1046,7 +1048,10 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
           leading: const Icon(Icons.numbers),
           title: Text(l10n.devMenuVersionLabel),
           subtitle: Text(
-            '${_packageInfo!.version} (Build ${_packageInfo!.buildNumber})',
+            l10n.devMenuVersionWithBuild(
+              _packageInfo!.version,
+              _packageInfo!.buildNumber,
+            ),
           ),
         ),
         ListTile(

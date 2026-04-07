@@ -225,4 +225,12 @@ class AuthService {
   Future<void> logout() async {
     return signOut();
   }
+
+  Future<List<ActiveSessionInfo>> listActiveSessions() {
+    return _aegis.listActiveSessions();
+  }
+
+  Future<void> revokeSession(String sessionId) {
+    return _aegis.revokeSession(sessionId);
+  }
 }

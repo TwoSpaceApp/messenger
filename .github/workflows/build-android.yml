@@ -76,6 +76,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Regenerate localizations
+        run: flutter gen-l10n
+
       - name: Regenerate code
         run: dart run build_runner build --delete-conflicting-outputs
 
@@ -116,6 +119,7 @@ jobs:
 
       - name: Force regenerate code for build env
         run: |
+          flutter gen-l10n
           dart run build_runner clean
           dart run build_runner build --delete-conflicting-outputs
 

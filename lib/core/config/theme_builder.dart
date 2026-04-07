@@ -6,6 +6,60 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 class AppThemeBuilder {
   AppThemeBuilder._();
 
+  static TextStyle applyFontFamily(
+    String fontFamily, {
+    TextStyle? textStyle,
+  }) {
+    final resolvedStyle = textStyle ?? const TextStyle();
+
+    if (fontFamily == 'Roboto') {
+      return GoogleFonts.roboto(textStyle: resolvedStyle);
+    }
+    if (fontFamily == 'NotoSans') {
+      return GoogleFonts.notoSans(textStyle: resolvedStyle);
+    }
+    if (fontFamily == 'OpenSans') {
+      return GoogleFonts.openSans(textStyle: resolvedStyle);
+    }
+    if (fontFamily == 'Oswald') {
+      return GoogleFonts.oswald(textStyle: resolvedStyle);
+    }
+    if (fontFamily == 'Handjet') {
+      return GoogleFonts.handjet(textStyle: resolvedStyle);
+    }
+    if (fontFamily == 'ComicSans MS') {
+      return GoogleFonts.comicNeue(textStyle: resolvedStyle);
+    }
+    return GoogleFonts.inter(textStyle: resolvedStyle);
+  }
+
+  static TextTheme buildTextTheme(
+    String fontFamily,
+    TextTheme baseTextTheme,
+  ) {
+    if (fontFamily == 'Roboto') {
+      return GoogleFonts.robotoTextTheme(baseTextTheme);
+    }
+    if (fontFamily == 'NotoSans') {
+      return GoogleFonts.notoSansTextTheme(baseTextTheme);
+    }
+    if (fontFamily == 'OpenSans') {
+      return GoogleFonts.openSansTextTheme(baseTextTheme);
+    }
+    if (fontFamily == 'Oswald') {
+      return GoogleFonts.oswaldTextTheme(baseTextTheme);
+    }
+    if (fontFamily == 'Handjet') {
+      return GoogleFonts.handjetTextTheme(baseTextTheme).apply(
+        fontSizeFactor: 0.92,
+      );
+    }
+    if (fontFamily == 'ComicSans MS') {
+      return GoogleFonts.comicNeueTextTheme(baseTextTheme);
+    }
+    return GoogleFonts.interTextTheme(baseTextTheme);
+  }
+
   static FontWeight _resolveFontWeight(int weight) {
     switch (weight.clamp(300, 900)) {
       case 300:
@@ -144,26 +198,9 @@ class AppThemeBuilder {
       displayColor: onBackgroundColor,
     );
 
-    TextTheme textTheme;
     final fontName = settings.fontFamily;
 
-    if (fontName == 'Roboto') {
-      textTheme = GoogleFonts.robotoTextTheme(mainTextTheme);
-    } else if (fontName == 'NotoSans') {
-      textTheme = GoogleFonts.notoSansTextTheme(mainTextTheme);
-    } else if (fontName == 'OpenSans') {
-      textTheme = GoogleFonts.openSansTextTheme(mainTextTheme);
-    } else if (fontName == 'Oswald') {
-      textTheme = GoogleFonts.oswaldTextTheme(mainTextTheme);
-    } else if (fontName == 'Handjet' || fontName == 'PressStart 2P') {
-      textTheme = GoogleFonts.handjetTextTheme(mainTextTheme).apply(
-        fontSizeFactor: 0.92,
-      );
-    } else if (fontName == 'ComicSans MS') {
-      textTheme = GoogleFonts.comicNeueTextTheme(mainTextTheme);
-    } else {
-      textTheme = GoogleFonts.interTextTheme(mainTextTheme);
-    }
+    TextTheme textTheme = buildTextTheme(fontName, mainTextTheme);
 
     textTheme = _applyFontWeights(
       textTheme,

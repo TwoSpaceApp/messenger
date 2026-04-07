@@ -234,6 +234,7 @@ class AegisChatService {
   Future<bool>? _bootstrapFuture;
   StreamSubscription<Message>? _incomingSub;
   StreamSubscription<MessageStatusEvent>? _messageStatusSub;
+  StreamSubscription<ReadSyncEventPayload>? _readSyncSub;
   StreamSubscription<void>? _sessionRestoredSub;
   late Directory _storeDir;
   final AegisChatLocalStore _localStore = AegisChatLocalStore();
@@ -455,6 +456,7 @@ class AegisChatService {
     _messageStatusSub ??= _auth.rawClient.messageStatusEvents.listen(
       _handleMessageStatusEvent,
     );
+    _readSyncSub ??= _auth.rawClient.readSyncEvents.listen(_handleReadSyncEvent);
   }
 
   Future<bool> _ensureChatBootstrap() async {
@@ -477,6 +479,7 @@ class AegisChatService {
     await _flushPersistNow();
     await _incomingSub?.cancel();
     await _messageStatusSub?.cancel();
+    await _readSyncSub?.cancel();
     await _sessionRestoredSub?.cancel();
     await _localStore.close();
     _attached = false;
@@ -1563,15 +1566,42 @@ class AegisChatService {
     required String body,
     String? formattedBody,
   }) async {
-    final replyToMessageId = int.tryParse(replyToId);
+    final replyToMessageId = _resolveCanonicalReplyToMessageId(
+      roomId,
+      replyToId,
+    );
     if (replyToMessageId == null) {
-      throw Exception('Unable to reply to a non-numeric message id');
+      throw Exception(
+        'Reply is only available after the original message is delivered',
+      );
     }
     await sendMessage(
       roomId: roomId,
       text: body,
       replyToMessageId: replyToMessageId,
     );
+  }
+
+  int? _resolveCanonicalReplyToMessageId(String roomId, String replyToId) {
+    final directId = int.tryParse(replyToId);
+    if (directId != null && directId > 0) {
+      return directId;
+    }
+
+    final roomMessages = _messages[roomId];
+    if (roomMessages == null) {
+      return null;
+    }
+
+    for (final message in roomMessages) {
+      if (message.id != replyToId) {
+        continue;
+      }
+      final canonicalId = int.tryParse(message.id);
+      return canonicalId != null && canonicalId > 0 ? canonicalId : null;
+    }
+
+    return null;
   }
 
   Future<void> editMessage(
@@ -1859,6 +1889,20 @@ class AegisChatService {
       _emitRoomChanged(roomId);
     }
     _emitChanged();
+  }
+
+  void _handleReadSyncEvent(ReadSyncEventPayload event) {
+    if (event.messageIds.isEmpty) {
+      return;
+    }
+
+    _handleMessageStatusEvent(
+      MessageStatusEvent(
+        success: true,
+        messageIds: event.messageIds,
+        processedAt: event.readAt,
+      ),
+    );
   }
 
   Future<void> setRoomName(String roomId, String name) async {
@@ -3480,6 +3524,7 @@ class AegisChatService {
               content: item.content,
               contentType: item.contentType,
               createdAt: item.createdAt,
+              replyToMessageId: _extractHistoryReplyToMessageId(item),
               isDelivered: status.$1,
               isRead: status.$2,
               deliveredAt: status.$3,

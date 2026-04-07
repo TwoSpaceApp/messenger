@@ -1,5 +1,6 @@
 // Date grouping utilities
 import 'package:intl/intl.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
 
 enum DateGroup {
   today,
@@ -22,16 +23,16 @@ class DateGroupingUtils {
     return DateGroup.older;
   }
 
-  static String getDateGroupLabel(DateGroup group) {
+  static String getDateGroupLabel(DateGroup group, AppLocalizations l10n) {
     switch (group) {
       case DateGroup.today:
-        return 'Сегодня';
+        return l10n.callsTodaySection;
       case DateGroup.yesterday:
-        return 'Вчера';
+        return l10n.yesterdayLabel;
       case DateGroup.thisWeek:
-        return 'На этой неделе';
+        return l10n.callsThisWeekSection;
       case DateGroup.older:
-        return 'Раньше';
+        return l10n.callsEarlierSection;
     }
   }
 

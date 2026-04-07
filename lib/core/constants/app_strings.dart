@@ -22,6 +22,7 @@ class AppStrings {
   static const routeForgot = '/forgot';
   static const routeCustomization = '/customization';
   static const routePrivacy = '/privacy';
+  static const routeActiveSessions = '/active-sessions';
   static const routeProfile = '/profile';
   static const routeAccountProfile = '/account-profile';
   static const routeChangeEmail = '/change_email';

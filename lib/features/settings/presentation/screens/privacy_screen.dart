@@ -167,6 +167,20 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             borderRadius: BorderRadius.circular(UITokens.cornerSm),
           ),
           child: ListTile(
+            leading: const Icon(Icons.devices_rounded),
+            title: Text(l10n.activeSessionsLabel),
+            subtitle: Text(l10n.activeSessionsSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(AppStrings.routeActiveSessions),
+          ),
+        ),
+        const SizedBox(height: UITokens.space),
+        Material(
+          color: Theme.of(context).colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(UITokens.cornerSm),
+          ),
+          child: ListTile(
             leading: const Icon(Icons.security),
             title: Text(l10n.twoFactorLabel),
             subtitle: Text(l10n.twoFactorPrivacySubtitle),

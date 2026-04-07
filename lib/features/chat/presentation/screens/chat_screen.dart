@@ -1232,13 +1232,15 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _showMessageActions(_Msg m, Offset globalPos) async {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final canReply = _canReplyToMessage(m);
     final actions =
         <({IconData icon, String label, Future<void> Function() run})>[
-          (
-            icon: Icons.reply,
-            label: l10n.replyAction,
-            run: () async => _sendReplyForEvent(m.id),
-          ),
+          if (canReply)
+            (
+              icon: Icons.reply,
+              label: l10n.replyAction,
+              run: () async => _sendReplyForEvent(m.id),
+            ),
           if (m.isOwn)
             (
               icon: Icons.edit,
@@ -1479,6 +1481,14 @@ class _ChatScreenState extends State<ChatScreen>
         );
       },
     );
+  }
+
+  bool _canReplyToMessage(_Msg message) {
+    if (message.isPending) {
+      return false;
+    }
+
+    return int.tryParse(message.id) != null;
   }
 
   Future<String?> _showEmojiPickerDialog() async {

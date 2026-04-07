@@ -165,7 +165,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       );
       final nextState = await _loadAuthState();
       if (!nextState.isAuthenticated) {
-        throw Exception('Регистрация завершена, но вход не выполнен');
+        throw Exception('auth.register.not_logged_in');
       }
       state = AsyncValue.data(nextState);
     } on Object catch (e, stackTrace) {

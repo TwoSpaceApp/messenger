@@ -26,6 +26,7 @@ import 'package:two_space_app/features/chat/presentation/screens/main_screen.dar
 import 'package:two_space_app/features/profile/presentation/screens/account_profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/account_settings_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:two_space_app/features/settings/presentation/screens/active_sessions_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/customization_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/dev_menu_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/feedback_screen.dart';
@@ -243,6 +244,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
       ),
       GoRoute(
+        path: AppStrings.routeActiveSessions,
+        pageBuilder: (context, state) =>
+            _buildShellPage(
+              state,
+              const ActiveSessionsScreen(embedded: true),
+              selectedIndex: 3,
+            ),
+      ),
+      GoRoute(
         path: AppStrings.routeAccountSettings,
         pageBuilder: (context, state) =>
             _buildShellPage(
@@ -400,7 +410,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             state,
             ChatScreen(chat: chat),
             selectedIndex: 0,
-            constrainBody: false,
             showMobileNavBar: false,
           );
         },
