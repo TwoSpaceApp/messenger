@@ -424,6 +424,46 @@ class AegisAuthService {
         message.contains('invalid credentials');
   }
 
+  bool _isRetryableAuthFailure(Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains('unauthorized') ||
+        message.contains('not authenticated') ||
+        message.contains('authentication failed') ||
+        message.contains('auth.not_authenticated') ||
+        message.contains('notauthenticatedexception');
+  }
+
+  Future<T> _runAuthedProtocolRequest<T>(Future<T> Function() request) async {
+    try {
+      return await request();
+    } on Object catch (error) {
+      if (_isRetryableAuthFailure(error)) {
+        await recoverSession();
+        return request();
+      }
+      rethrow;
+    }
+  }
+
+  Future<http.Response> _runAuthedHttpRequest(
+    Future<http.Response> Function() request,
+  ) async {
+    try {
+      final response = await request();
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        await recoverSession();
+        return request();
+      }
+      return response;
+    } on Object catch (error) {
+      if (_isRetryableAuthFailure(error)) {
+        await recoverSession();
+        return request();
+      }
+      rethrow;
+    }
+  }
+
   // ─── Регистрация ──────────────────────────────────────────────────────────
 
   /// Зарегистрировать нового пользователя.
@@ -578,7 +618,7 @@ class AegisAuthService {
     _userId = userId;
 
     await connect();
-    await _client.loginWithToken(token);
+    await _runAuthedProtocolRequest(() => _client.loginWithToken(token));
 
     _token = _client.sessionToken ?? token;
     _username = _client.username ?? username;
@@ -591,9 +631,11 @@ class AegisAuthService {
 
   Future<Map<String, dynamic>> requestTotpSetup() async {
     await ensureSession();
-    final response = await http.post(
-      _botApiUri('/api/auth/2fa/setup'),
-      headers: _authHeaders(),
+    final response = await _runAuthedHttpRequest(
+      () => http.post(
+        _botApiUri('/api/auth/2fa/setup'),
+        headers: _authHeaders(),
+      ),
     );
 
     final payload = _decodeJsonResponse(response);
@@ -616,13 +658,16 @@ class AegisAuthService {
     String? recoveryPhrase,
   }) async {
     await ensureSession();
-    final response = await http.post(
-      _botApiUri(disable ? '/api/auth/2fa/disable' : '/api/auth/2fa/enable'),
-      headers: _authHeaders(),
-      body: jsonEncode({
-        'Code': code,
-        if (disable && recoveryPhrase != null) 'RecoveryPhrase': recoveryPhrase,
-      }),
+    final response = await _runAuthedHttpRequest(
+      () => http.post(
+        _botApiUri(disable ? '/api/auth/2fa/disable' : '/api/auth/2fa/enable'),
+        headers: _authHeaders(),
+        body: jsonEncode({
+          'Code': code,
+          if (disable && recoveryPhrase != null)
+            'RecoveryPhrase': recoveryPhrase,
+        }),
+      ),
     );
 
     final payload = _decodeJsonResponse(response);
@@ -641,7 +686,9 @@ class AegisAuthService {
 
     late final Object protocolError;
     try {
-      final response = await _client.listActiveSessions();
+      final response = await _runAuthedProtocolRequest(
+        _client.listActiveSessions,
+      );
       if (!response.success) {
         throw Exception(response.message ?? 'auth.sessions.list_failed');
       }
@@ -667,7 +714,9 @@ class AegisAuthService {
 
     late final Object protocolError;
     try {
-      final response = await _client.revokeSession(sessionId);
+      final response = await _runAuthedProtocolRequest(
+        () => _client.revokeSession(sessionId),
+      );
       if (!response.success) {
         throw Exception(response.message ?? 'auth.sessions.revoke_failed');
       }
@@ -706,7 +755,9 @@ class AegisAuthService {
 
   Future<UserSearchResponse> searchUsers(String query, {int limit = 20}) async {
     _ensureAuthenticated();
-    return _client.searchUsers(query, limit: limit);
+    return _runAuthedProtocolRequest(
+      () => _client.searchUsers(query, limit: limit),
+    );
   }
 
   // ─── Приватное ────────────────────────────────────────────────────────────
@@ -827,9 +878,11 @@ class AegisAuthService {
     Object? lastError;
     for (final endpoint in endpoints) {
       try {
-        final response = await http.get(
-          _botApiUri(endpoint),
-          headers: _authHeaders(),
+        final response = await _runAuthedHttpRequest(
+          () => http.get(
+            _botApiUri(endpoint),
+            headers: _authHeaders(),
+          ),
         );
         final payload = _decodeJsonResponse(response);
         if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -874,7 +927,7 @@ class AegisAuthService {
     Object? lastError;
     for (final operation in operations) {
       try {
-        final response = await operation();
+        final response = await _runAuthedHttpRequest(operation);
         final payload = _decodeJsonResponse(response);
         if (response.statusCode >= 200 && response.statusCode < 300) {
           final result = SessionRevokeResponse.fromJson(payload);

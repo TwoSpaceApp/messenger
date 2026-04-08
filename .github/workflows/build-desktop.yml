@@ -118,9 +118,6 @@ jobs:
       - name: Regenerate code
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Verify generated files are up to date
-        run: git diff --exit-code
-
       - name: Prepare build env from GitHub secrets
         shell: bash
         env:

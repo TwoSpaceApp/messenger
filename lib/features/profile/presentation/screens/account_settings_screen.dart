@@ -296,23 +296,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           children: [
+            InlineNoticeCard(
+              icon: Icons.info_outline_rounded,
+              badge: l10n.featureInDevelopmentLabel,
+              title: l10n.contactDataSection,
+              message: l10n.featureInDevelopmentMessage(
+                l10n.contactDataSection,
+              ),
+            ),
+            const SizedBox(height: UITokens.spaceMd),
             ListTile(
               leading: const Icon(Icons.email),
               title: Text(l10n.emailLabel),
               subtitle: Text(email ?? l10n.updateTrustUnavailable),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => context.push(AppStrings.routeChangeEmail),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: UITokens.spaceSm,
-              ),
-            ),
-            const Divider(height: UITokens.borderThin),
-            ListTile(
-              leading: const Icon(Icons.phone),
-              title: Text(l10n.phoneLabel),
-              subtitle: Text(l10n.updateTrustUnavailable),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppStrings.routeChangePhone),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: UITokens.spaceSm,
               ),

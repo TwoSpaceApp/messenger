@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/biometric_service.dart';
+import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
@@ -66,44 +67,11 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
           const SizedBox(height: UITokens.space),
         ],
         _buildSectionTitle(context, l10n.contactDataSection),
-        ValueListenableBuilder<bool>(
-          valueListenable: SettingsService.showEmailNotifier,
-          builder: (context, isEnabled, _) {
-            return _buildSurfaceTile(
-              context,
-              SwitchListTile(
-                title: Text(l10n.emailLabel),
-                subtitle: Text(l10n.privacyTitle),
-                secondary: const Icon(Icons.email_outlined),
-                value: isEnabled,
-                onChanged: _loading
-                    ? null
-                    : (value) async {
-                        await SettingsService.setShowEmail(value);
-                      },
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: UITokens.spaceSm),
-        ValueListenableBuilder<bool>(
-          valueListenable: SettingsService.showPhoneNotifier,
-          builder: (context, isEnabled, _) {
-            return _buildSurfaceTile(
-              context,
-              SwitchListTile(
-                title: Text(l10n.phoneLabel),
-                subtitle: Text(l10n.privacyTitle),
-                secondary: const Icon(Icons.phone_outlined),
-                value: isEnabled,
-                onChanged: _loading
-                    ? null
-                    : (value) async {
-                        await SettingsService.setShowPhone(value);
-                      },
-              ),
-            );
-          },
+        InlineNoticeCard(
+          icon: Icons.info_outline_rounded,
+          badge: l10n.featureInDevelopmentLabel,
+          title: l10n.contactDataSection,
+          message: l10n.featureInDevelopmentMessage(l10n.contactDataSection),
         ),
         const SizedBox(height: UITokens.space),
         _buildSectionTitle(context, l10n.securitySection),
