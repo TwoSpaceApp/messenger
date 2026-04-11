@@ -6,10 +6,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart' as share;
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/group.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -55,6 +57,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   int _joinRule = 1;
   int _historyVisibility = 1;
   GroupRoom? _currentGroup;
+  String? _loadErrorMessage;
 
   @override
   void initState() {
@@ -93,28 +96,63 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
 
   Future<void> _loadGroupData() async {
     final l10n = AppLocalizations.of(context)!;
-    setState(() => _isLoading = true);
-    try {
-      final group = await _groupService.getGroupRoom(widget.roomId);
-      final settings = await _groupService.getRoomSettingsState(widget.roomId);
-      if (!mounted) return;
-      setState(() {
-        _currentGroup = group;
-        _nameController.text = group?.name ?? '';
-        _descriptionController.text = group?.description ?? '';
-        _joinRule = (settings['joinRule'] as int?) ?? _joinRule;
-        _historyVisibility =
-            (settings['historyVisibility'] as int?) ?? _historyVisibility;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.loadError(e.toString()))),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+    setState(() {
+      _isLoading = true;
+      if (_currentGroup == null) {
+        _loadErrorMessage = null;
       }
+    });
+
+    GroupRoom? nextGroup = _currentGroup ?? _chatService.getGroupRoom(widget.roomId);
+    Map<String, dynamic>? settings;
+    Object? loadError;
+
+    try {
+      final loadedGroup = await _groupService.getGroupRoom(widget.roomId);
+      if (loadedGroup != null) {
+        nextGroup = loadedGroup;
+      }
+    } catch (error) {
+      loadError = error;
+    }
+
+    try {
+      settings = await _groupService.getRoomSettingsState(widget.roomId);
+    } catch (error) {
+      loadError ??= error;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    final resolvedError = loadError == null
+        ? null
+        : UserFacingError.format(loadError, l10n);
+    final fallbackSettings = nextGroup == null
+        ? null
+        : <String, dynamic>{
+            'joinRule': nextGroup.visibility == GroupVisibility.public ? 0 : 1,
+            'historyVisibility': nextGroup.showMessageHistory ? 1 : 2,
+          };
+    final effectiveSettings = settings ?? fallbackSettings;
+
+    setState(() {
+      _currentGroup = nextGroup;
+      _nameController.text = nextGroup?.name ?? '';
+      _descriptionController.text = nextGroup?.description ?? '';
+      _joinRule = (effectiveSettings?['joinRule'] as int?) ?? _joinRule;
+      _historyVisibility =
+          (effectiveSettings?['historyVisibility'] as int?) ??
+          _historyVisibility;
+      _loadErrorMessage = nextGroup == null ? resolvedError : null;
+      _isLoading = false;
+    });
+
+    if (resolvedError != null && nextGroup != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.loadError(resolvedError))),
+      );
     }
   }
 
@@ -197,23 +235,94 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
     }
   }
 
-  Future<void> _copyGroupLink() async {
+  Future<String> _loadGroupLink() async {
+    final l10n = AppLocalizations.of(context)!;
+    final linkInfo = await _chatService.getRoomLinkInfo(widget.roomId);
+    final link = linkInfo['preferredLink'];
+    if (link == null || link.isEmpty) {
+      throw Exception(l10n.errorGeneric);
+    }
+    return link;
+  }
+
+  Future<void> _showInviteLinkSheet() async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final linkInfo = await _chatService.getRoomLinkInfo(widget.roomId);
-      final link = linkInfo['preferredLink'];
-      if (link == null || link.isEmpty) {
-        throw Exception(l10n.errorGeneric);
+      final inviteLink = await _loadGroupLink();
+      if (!mounted) {
+        return;
       }
-      await Clipboard.setData(ClipboardData(text: link));
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.textCopied)));
-    } catch (e) {
+
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (sheetContext) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                UITokens.spaceMd,
+                UITokens.spaceSm,
+                UITokens.spaceMd,
+                UITokens.spaceLg,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.inviteLinkReadyTitle,
+                    style: Theme.of(sheetContext).textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: UITokens.spaceXsSm),
+                  Text(l10n.inviteLinkReadySubtitle),
+                  const SizedBox(height: UITokens.spaceMd),
+                  SelectableText(inviteLink),
+                  const SizedBox(height: UITokens.spaceLg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            await Clipboard.setData(
+                              ClipboardData(text: inviteLink),
+                            );
+                            if (!sheetContext.mounted) {
+                              return;
+                            }
+                            ScaffoldMessenger.of(sheetContext).showSnackBar(
+                              SnackBar(content: Text(l10n.textCopied)),
+                            );
+                          },
+                          icon: const Icon(Icons.link_rounded),
+                          label: Text(l10n.copyLinkAction),
+                        ),
+                      ),
+                      const SizedBox(width: UITokens.space),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            await share.SharePlus.instance.share(
+                              share.ShareParams(text: inviteLink),
+                            );
+                          },
+                          icon: const Icon(Icons.share_outlined),
+                          label: Text(l10n.shareAction),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.genericError(e.toString()))),
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
       );
     }
   }
@@ -339,14 +448,32 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         final isTablet = constraints.maxWidth >= 680;
 
         if (_isLoading || _currentGroup == null) {
+          if (!_isLoading && _currentGroup == null) {
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                title: Text(_currentGroup?.name ?? l10n.groupInfoTab),
+                centerTitle: !isWideScreen,
+              ),
+              body: ScreenBackground(
+                child: AppErrorState(
+                  title: l10n.errorGeneric,
+                  message: _loadErrorMessage ?? l10n.loadError(l10n.errorGeneric),
+                  actionLabel: l10n.retry,
+                  onAction: _loadGroupData,
+                ),
+              ),
+            );
+          }
+
           return Scaffold(
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               title: Text(_currentGroup?.name ?? l10n.groupInfoTab),
               centerTitle: !isWideScreen,
             ),
-            body: const ScreenBackground(
-              child: AppLoadingState(),
+            body: ScreenBackground(
+              child: AppLoadingState(label: l10n.loading),
             ),
           );
         }
@@ -362,10 +489,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         }
 
         final horizontalPadding = isWideScreen
-            ? 28.0
-            : isTablet
-            ? 20.0
-            : 12.0;
+          ? UITokens.space2XL
+          : isTablet
+          ? UITokens.spaceLg
+          : UITokens.space;
 
         return Scaffold(
           backgroundColor: Colors.transparent,
@@ -383,16 +510,16 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
-                    16,
+                    UITokens.spaceMd,
                     horizontalPadding,
-                    24,
+                    UITokens.spaceXLg,
                   ),
                   child: isWideScreen
                       ? Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SizedBox(
-                              width: 300,
+                              width: UITokens.settingsSidebarWidth,
                               child: _buildNavigationPane(
                                 sections: sections,
                                 compact: false,
@@ -448,7 +575,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         borderRadius: BorderRadius.circular(UITokens.cornerLg),
       ),
       child: Padding(
-        padding: EdgeInsets.all(compact ? 12 : 20),
+        padding: EdgeInsets.all(
+          compact ? UITokens.space : UITokens.spaceLg,
+        ),
         child: compact
             ? SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -457,7 +586,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                     for (var i = 0; i < sections.length; i++)
                       Padding(
                         padding: EdgeInsets.only(
-                          right: i == sections.length - 1 ? 0 : 10,
+                          right: i == sections.length - 1
+                              ? 0
+                              : UITokens.spaceSmMd,
                         ),
                         child: _buildSectionChip(i, sections[i]),
                       ),
@@ -525,7 +656,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
           name: group.name,
           radius: dense ? 28 : 42,
         ),
-        SizedBox(height: dense ? 12 : 16),
+        SizedBox(
+          height: dense ? UITokens.space : UITokens.spaceMd,
+        ),
         Text(
           group.name,
           textAlign: dense ? TextAlign.start : TextAlign.center,
@@ -548,8 +681,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         const SizedBox(height: UITokens.spaceMdSm),
         Wrap(
           alignment: dense ? WrapAlignment.start : WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
+          spacing: UITokens.spaceSm,
+          runSpacing: UITokens.spaceSm,
           children: [
             _buildMetaBadge(
               icon: group.visibility == GroupVisibility.public
@@ -579,7 +712,10 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   }) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.space,
+        vertical: UITokens.spaceSm,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(
           alpha: 0.75,
@@ -589,7 +725,11 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
+          Icon(
+            icon,
+            size: UITokens.iconSm,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: UITokens.spaceSm),
           Text(label, style: theme.textTheme.bodySmall),
         ],
@@ -605,7 +745,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       onSelected: (_) => setState(() => _selectedTabIndex = index),
       avatar: Icon(
         section.icon,
-        size: 18,
+        size: UITokens.iconMd,
         color: isSelected
             ? theme.colorScheme.onPrimaryContainer
             : section.destructive
@@ -702,7 +842,9 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: EdgeInsets.all(compact ? 16 : 20),
+            padding: EdgeInsets.all(
+              compact ? UITokens.spaceMd : UITokens.spaceLg,
+            ),
             decoration: BoxDecoration(
               color: section.destructive
                   ? theme.colorScheme.errorContainer.withValues(alpha: 0.55)
@@ -753,18 +895,18 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
+                  spacing: UITokens.spaceMd,
+                  runSpacing: UITokens.spaceMd,
                   children: [
                     SizedBox(
-                      width: 260,
+                      width: UITokens.settingsInfoBlockWidth,
                       child: _buildInfoBlock(
                         label: l10n.nameField,
                         value: group.name,
                       ),
                     ),
                     SizedBox(
-                      width: 260,
+                      width: UITokens.settingsInfoBlockWidth,
                       child: _buildInfoBlock(
                         label: l10n.roomVisibilityLabel,
                         value: group.visibility == GroupVisibility.public
@@ -786,14 +928,14 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                       ),
                     ),
                     SizedBox(
-                      width: 260,
+                      width: UITokens.settingsInfoBlockWidth,
                       child: _buildInfoBlock(
                         label: l10n.membersLabel,
                         value: l10n.membersCount(group.memberCount),
                       ),
                     ),
                     SizedBox(
-                      width: 260,
+                      width: UITokens.settingsInfoBlockWidth,
                       child: _buildInfoBlock(
                         label: l10n.groupRolesTab,
                         value: _roleLabel(group.currentUserRole, l10n),
@@ -826,8 +968,8 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                   ),
                   const SizedBox(height: UITokens.spaceMd),
                   Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
+                    spacing: UITokens.space,
+                    runSpacing: UITokens.space,
                     children: [
                       FilledButton.icon(
                         onPressed: _isSavingGroupInfo
@@ -855,7 +997,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 ...[
                   const SizedBox(height: UITokens.spaceXLg),
                   FilledButton.icon(
-                    onPressed: _copyGroupLink,
+                    onPressed: _showInviteLinkSheet,
                     icon: const Icon(Icons.link_outlined),
                     label: Text(l10n.copyLinkAction),
                   ),
@@ -978,7 +1120,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                 title: Text(l10n.inviteAction),
                 subtitle: Text(l10n.copyLinkAction),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: _copyGroupLink,
+                onTap: _showInviteLinkSheet,
               ),
             ),
           );

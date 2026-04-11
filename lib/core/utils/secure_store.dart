@@ -1,4 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:path_provider/path_provider.dart';
 
 class AppSecureStorage {
   static const AndroidOptions _androidOptions = AndroidOptions(
@@ -27,9 +33,101 @@ class SecureStore {
   static const FlutterSecureStorage _storage = AppSecureStorage.instance;
   static final Map<String, String?> _cache = <String, String?>{};
   static bool _allKeysCached = false;
+  static bool _preferFallback = false;
+  static Future<File>? _fallbackFileFuture;
+
+  static bool _shouldFallbackFor(Object error) {
+    if (kIsWeb) {
+      return false;
+    }
+
+    if (error is PlatformException || error is MissingPluginException) {
+      return true;
+    }
+
+    final text = error.toString().toLowerCase();
+    return text.contains('libsecret') ||
+        text.contains('keyring') ||
+        text.contains('org.freedesktop.secrets') ||
+        text.contains('failed to unblock') ||
+        text.contains('secret service');
+  }
+
+  static Future<T> _runWithFallback<T>(
+    Future<T> Function() primary,
+    Future<T> Function() fallback,
+  ) async {
+    if (_preferFallback) {
+      return fallback();
+    }
+
+    try {
+      return await primary();
+    } on Object catch (error) {
+      if (!_shouldFallbackFor(error)) {
+        rethrow;
+      }
+      _preferFallback = true;
+      return fallback();
+    }
+  }
+
+  static Future<File> _getFallbackFile() {
+    final existing = _fallbackFileFuture;
+    if (existing != null) {
+      return existing;
+    }
+
+    final future = () async {
+      final baseDir = await getApplicationSupportDirectory();
+      final dir = Directory('${baseDir.path}/secure_store');
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+      final file = File('${dir.path}/fallback_store.json');
+      if (!await file.exists()) {
+        await file.writeAsString('{}', flush: true);
+      }
+      return file;
+    }();
+
+    _fallbackFileFuture = future;
+    return future;
+  }
+
+  static Future<Map<String, String>> _readFallbackMap() async {
+    final file = await _getFallbackFile();
+    try {
+      final raw = await file.readAsString();
+      if (raw.trim().isEmpty) {
+        return <String, String>{};
+      }
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) {
+        return <String, String>{};
+      }
+      return decoded.map<String, String>(
+        (key, value) => MapEntry(key.toString(), value?.toString() ?? ''),
+      );
+    } on Object {
+      return <String, String>{};
+    }
+  }
+
+  static Future<void> _writeFallbackMap(Map<String, String> values) async {
+    final file = await _getFallbackFile();
+    await file.writeAsString(jsonEncode(values), flush: true);
+  }
 
   static Future<void> write(String key, String value) async {
-    await _storage.write(key: key, value: value);
+    await _runWithFallback<void>(
+      () => _storage.write(key: key, value: value),
+      () async {
+        final values = await _readFallbackMap();
+        values[key] = value;
+        await _writeFallbackMap(values);
+      },
+    );
     _cache[key] = value;
   }
 
@@ -37,20 +135,42 @@ class SecureStore {
     if (_cache.containsKey(key)) {
       return _cache[key];
     }
-    final value = await _storage.read(key: key);
+
+    final value = await _runWithFallback<String?>(
+      () => _storage.read(key: key),
+      () async {
+        final values = await _readFallbackMap();
+        return values[key];
+      },
+    );
     _cache[key] = value;
     return value;
   }
 
   static Future<Map<String, String>> readMany(Iterable<String> keys) async {
     final uniqueKeys = keys.toSet();
-    final missingKeys = uniqueKeys.where((key) => !_cache.containsKey(key)).toList(growable: false);
+    final missingKeys = uniqueKeys
+        .where((key) => !_cache.containsKey(key))
+        .toList(growable: false);
 
     if (missingKeys.isNotEmpty) {
-      final values = await Future.wait(
-        missingKeys.map((key) async => MapEntry(key, await _storage.read(key: key))),
+      final values = await _runWithFallback<Map<String, String?>>(
+        () async {
+          final all = await _storage.readAll();
+          _allKeysCached = true;
+          return <String, String?>{
+            for (final key in missingKeys) key: all[key],
+          };
+        },
+        () async {
+          final all = await _readFallbackMap();
+          _allKeysCached = true;
+          return <String, String?>{
+            for (final key in missingKeys) key: all[key],
+          };
+        },
       );
-      for (final entry in values) {
+      for (final entry in values.entries) {
         _cache[entry.key] = entry.value;
       }
     }
@@ -69,7 +189,10 @@ class SecureStore {
       };
     }
 
-    final values = await _storage.readAll();
+    final values = await _runWithFallback<Map<String, String>>(
+      () => _storage.readAll(),
+      _readFallbackMap,
+    );
     _cache
       ..clear()
       ..addAll(values);
@@ -78,12 +201,22 @@ class SecureStore {
   }
 
   static Future<void> delete(String key) async {
-    await _storage.delete(key: key);
+    await _runWithFallback<void>(
+      () => _storage.delete(key: key),
+      () async {
+        final values = await _readFallbackMap();
+        values.remove(key);
+        await _writeFallbackMap(values);
+      },
+    );
     _cache.remove(key);
   }
 
   static Future<void> deleteAll() async {
-    await _storage.deleteAll();
+    await _runWithFallback<void>(
+      _storage.deleteAll,
+      () => _writeFallbackMap(<String, String>{}),
+    );
     clearMemoryCache();
   }
 

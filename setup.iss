@@ -1,9 +1,46 @@
 ; setup.iss — улучшенный Inno Setup для Flutter (Windows, русский язык)
-; НЕ ЗАБУДЬ ОБНОВИТЬ ВЕРСИЮ ПРИ СБОРКЕ!
 #define MyAppName "TwoSpace"
 #define MyAppExeName "two_space_app.exe"
+#define MyPubspecPath AddBackslash(SourcePath) + "pubspec.yaml"
+#define MyRawPubspecVersion ""
+#define MyPubspecHandle
+#define MyPubspecLine
+#sub ReadPubspecVersionLine
+  #define MyPubspecLine = Trim(FileRead(MyPubspecHandle))
+  #if Pos("version:", LowerCase(MyPubspecLine)) == 1
+    #define MyRawPubspecVersion Trim(Copy(MyPubspecLine, 9, 255))
+  #endif
+#endsub
+#ifndef MyRawPubspecVersion
+  #define MyRawPubspecVersion ""
+#endif
+#if MyRawPubspecVersion == "" && FileExists(MyPubspecPath)
+  #for {MyPubspecHandle = FileOpen(MyPubspecPath); MyPubspecHandle && !FileEof(MyPubspecHandle) && MyRawPubspecVersion == ""; ""} ReadPubspecVersionLine
+  #if MyPubspecHandle
+    #expr FileClose(MyPubspecHandle)
+  #endif
+#endif
 #ifndef MyAppVersion
-#define MyAppVersion "2.0.6-beta"
+  #define MyAppVersion Copy(
+    MyRawPubspecVersion,
+    1,
+    Pos("+", MyRawPubspecVersion) > 0 ? Pos("+", MyRawPubspecVersion) - 1 : Len(MyRawPubspecVersion)
+  )
+#endif
+#ifndef MyVersionInfoVersion
+  #define MyVersionCore Copy(
+    MyAppVersion,
+    1,
+    Pos("-", MyAppVersion) > 0 ? Pos("-", MyAppVersion) - 1 : Len(MyAppVersion)
+  )
+  #define MyVersionBuild Pos("+", MyRawPubspecVersion) > 0 ? Copy(MyRawPubspecVersion, Pos("+", MyRawPubspecVersion) + 1, 32) : "0"
+  #define MyVersionInfoVersion MyVersionCore + "." + MyVersionBuild
+#endif
+#ifndef MyBuildDir
+#define MyBuildDir "build\windows\x64\runner\Release"
+#endif
+#ifndef MyOutputSuffix
+#define MyOutputSuffix ""
 #endif
 #define MyAppPublisher "Synapse Corp"
 #define MyAppURL "https://twospace.ru"
@@ -11,21 +48,28 @@
 [Setup]
 AppId={#MyAppName}
 AppName={#MyAppName}
+AppVerName={#MyAppName} {#MyAppVersion}
 AppVersion={#MyAppVersion}
+VersionInfoVersion={#MyVersionInfoVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
-OutputBaseFilename={#MyAppName}_setup_v{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 OutputDir=.
+OutputBaseFilename={#MyAppName}_setup{#MyOutputSuffix}_v{#MyAppVersion}
 WindowVisible=yes
+WizardStyle=modern
+CloseApplications=yes
+CloseApplicationsFilter={#MyAppExeName}
+RestartApplications=no
+UninstallDisplayIcon={app}\{#MyAppExeName}
 ; --- Язык интерфейса ---
 ShowLanguageDialog=no
 ; ------------------------
@@ -34,7 +78,10 @@ ShowLanguageDialog=no
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 
 [Files]
-Source: "build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBuildDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+#ifdef MyVcRedistPath
+Source: "{#MyVcRedistPath}"; DestDir: "{tmp}"; Flags: deleteafterinstall
+#endif
 
 [Tasks]
 Name: "desktopicon"; Description: "Создать ярлык на рабочем столе"; GroupDescription: "Дополнительные ярлыки:"; Flags: unchecked
@@ -47,6 +94,9 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 
 [Run]
+#ifdef MyVcRedistPath
+Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /passive /norestart"; StatusMsg: "Установка Microsoft Visual C++ Runtime..."; Flags: waituntilterminated skipifsilent
+#endif
 Filename: "{app}\{#MyAppExeName}"; Description: "Запустить {#MyAppName}"; Flags: postinstall nowait skipifsilent
 
 [UninstallDelete]

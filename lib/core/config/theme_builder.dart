@@ -6,6 +6,95 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 class AppThemeBuilder {
   AppThemeBuilder._();
 
+  static TextStyle? _scaleTextStyleIfSized(
+    TextStyle? style,
+    double factor,
+  ) {
+    if (style == null) {
+      return null;
+    }
+    final fontSize = style.fontSize;
+    if (fontSize == null) {
+      return style;
+    }
+    return style.copyWith(fontSize: fontSize * factor);
+  }
+
+  static TextTheme _scaleTextThemeSafely(TextTheme textTheme, double factor) {
+    return textTheme.copyWith(
+      displayLarge: _scaleTextStyleIfSized(textTheme.displayLarge, factor),
+      displayMedium: _scaleTextStyleIfSized(textTheme.displayMedium, factor),
+      displaySmall: _scaleTextStyleIfSized(textTheme.displaySmall, factor),
+      headlineLarge: _scaleTextStyleIfSized(textTheme.headlineLarge, factor),
+      headlineMedium: _scaleTextStyleIfSized(textTheme.headlineMedium, factor),
+      headlineSmall: _scaleTextStyleIfSized(textTheme.headlineSmall, factor),
+      titleLarge: _scaleTextStyleIfSized(textTheme.titleLarge, factor),
+      titleMedium: _scaleTextStyleIfSized(textTheme.titleMedium, factor),
+      titleSmall: _scaleTextStyleIfSized(textTheme.titleSmall, factor),
+      bodyLarge: _scaleTextStyleIfSized(textTheme.bodyLarge, factor),
+      bodyMedium: _scaleTextStyleIfSized(textTheme.bodyMedium, factor),
+      bodySmall: _scaleTextStyleIfSized(textTheme.bodySmall, factor),
+      labelLarge: _scaleTextStyleIfSized(textTheme.labelLarge, factor),
+      labelMedium: _scaleTextStyleIfSized(textTheme.labelMedium, factor),
+      labelSmall: _scaleTextStyleIfSized(textTheme.labelSmall, factor),
+    );
+  }
+
+  static TextStyle applyFontFamily(
+    String fontFamily, {
+    TextStyle? textStyle,
+  }) {
+    final resolvedStyle = textStyle ?? const TextStyle();
+
+    if (fontFamily == 'Roboto') {
+      return GoogleFonts.roboto(textStyle: resolvedStyle);
+    }
+    if (fontFamily == 'NotoSans') {
+      return GoogleFonts.notoSans(textStyle: resolvedStyle);
+    }
+    if (fontFamily == 'OpenSans') {
+      return GoogleFonts.openSans(textStyle: resolvedStyle);
+    }
+    if (fontFamily == 'Oswald') {
+      return GoogleFonts.oswald(textStyle: resolvedStyle);
+    }
+    if (fontFamily == 'Handjet') {
+      return GoogleFonts.handjet(textStyle: resolvedStyle);
+    }
+    if (fontFamily == 'ComicSans MS') {
+      return GoogleFonts.comicNeue(textStyle: resolvedStyle);
+    }
+    return GoogleFonts.inter(textStyle: resolvedStyle);
+  }
+
+  static TextTheme buildTextTheme(
+    String fontFamily,
+    TextTheme baseTextTheme,
+  ) {
+    if (fontFamily == 'Roboto') {
+      return GoogleFonts.robotoTextTheme(baseTextTheme);
+    }
+    if (fontFamily == 'NotoSans') {
+      return GoogleFonts.notoSansTextTheme(baseTextTheme);
+    }
+    if (fontFamily == 'OpenSans') {
+      return GoogleFonts.openSansTextTheme(baseTextTheme);
+    }
+    if (fontFamily == 'Oswald') {
+      return GoogleFonts.oswaldTextTheme(baseTextTheme);
+    }
+    if (fontFamily == 'Handjet') {
+      return _scaleTextThemeSafely(
+        GoogleFonts.handjetTextTheme(baseTextTheme),
+        0.92,
+      );
+    }
+    if (fontFamily == 'ComicSans MS') {
+      return GoogleFonts.comicNeueTextTheme(baseTextTheme);
+    }
+    return GoogleFonts.interTextTheme(baseTextTheme);
+  }
+
   static FontWeight _resolveFontWeight(int weight) {
     switch (weight.clamp(300, 900)) {
       case 300:
@@ -144,24 +233,9 @@ class AppThemeBuilder {
       displayColor: onBackgroundColor,
     );
 
-    TextTheme textTheme;
     final fontName = settings.fontFamily;
 
-    if (fontName == 'Roboto') {
-      textTheme = GoogleFonts.robotoTextTheme(mainTextTheme);
-    } else if (fontName == 'NotoSans') {
-      textTheme = GoogleFonts.notoSansTextTheme(mainTextTheme);
-    } else if (fontName == 'OpenSans') {
-      textTheme = GoogleFonts.openSansTextTheme(mainTextTheme);
-    } else if (fontName == 'Oswald') {
-      textTheme = GoogleFonts.oswaldTextTheme(mainTextTheme);
-    } else if (fontName == 'PressStart 2P') {
-      textTheme = GoogleFonts.pressStart2pTextTheme(mainTextTheme);
-    } else if (fontName == 'ComicSans MS') {
-      textTheme = GoogleFonts.comicNeueTextTheme(mainTextTheme);
-    } else {
-      textTheme = GoogleFonts.interTextTheme(mainTextTheme);
-    }
+    TextTheme textTheme = buildTextTheme(fontName, mainTextTheme);
 
     textTheme = _applyFontWeights(
       textTheme,
@@ -216,6 +290,8 @@ class AppThemeBuilder {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceContainerColor,
+        prefixIconColor: onSurfaceVariantColor,
+        suffixIconColor: onSurfaceVariantColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: outlineVariantColor),
@@ -237,8 +313,41 @@ class AppThemeBuilder {
         visualDensity: settings.compactMode
             ? VisualDensity.compact
             : VisualDensity.standard,
+        iconColor: onSurfaceVariantColor,
+        textColor: onSurfaceColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return onSurfaceVariantColor.withValues(alpha: 0.38);
+            }
+            return onSurfaceVariantColor;
+          }),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return onSurfaceVariantColor.withValues(alpha: 0.38);
+          }
+          if (states.contains(WidgetState.selected)) {
+            return onPrimaryContainerColor;
+          }
+          return onSurfaceVariantColor;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return outlineVariantColor.withValues(alpha: 0.32);
+          }
+          if (states.contains(WidgetState.selected)) {
+            return primaryContainerColor;
+          }
+          return outlineVariantColor.withValues(alpha: 0.72);
+        }),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
       cardTheme: CardThemeData(
         margin: settings.compactMode

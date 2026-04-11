@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
@@ -19,6 +20,7 @@ import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/navigation/app_route_observer.dart';
+import 'package:two_space_app/core/services/media_file_service.dart';
 import 'package:two_space_app/core/sound/waveform_painter.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/utils/storage_service.dart';
@@ -139,10 +141,13 @@ class _ChatScreenState extends State<ChatScreen>
   String? _headerAvatarUrl;
   String? _headerPresenceStatus;
   DateTime? _headerLastSeenAt;
+  int? _headerMemberCount;
   Timer? _searchDebounceTimer;
   int _searchRequestId = 0;
   double? _uploadProgress;
   String? _uploadLabel;
+  Timer? _recordingTicker;
+  Duration _recordingDuration = Duration.zero;
   final List<_ComposerAttachment> _pendingAttachments = <_ComposerAttachment>[];
   bool _desktopDropActive = false;
   final Map<String, _Msg> _pendingOutgoingMessages = <String, _Msg>{};
@@ -322,6 +327,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _searchDebounceTimer?.cancel();
     _messagesSub?.cancel();
+    _recordingTicker?.cancel();
     _timeline.dispose();
     _listController.removeListener(_handleListScroll);
     _listController.dispose();
@@ -453,15 +459,36 @@ class _ChatScreenState extends State<ChatScreen>
     _headerAvatarUrl = widget.chat.avatarUrl;
     _headerPresenceStatus = widget.chat.presenceStatus;
     _headerLastSeenAt = widget.chat.lastSeenAt;
+    _headerMemberCount = widget.chat.members.isEmpty
+        ? null
+        : widget.chat.members.length;
 
     final peerUserId = _directPeerUserId;
-    if (peerUserId == null) return;
+    if (peerUserId == null) {
+      unawaited(_loadRoomHeaderDetails());
+      return;
+    }
 
     final cached = _svc.peekUserInfo(peerUserId);
     if (cached != null) {
       _applyHeaderUserInfo(cached, notify: false);
     }
     unawaited(_loadHeaderUserInfo(peerUserId));
+  }
+
+  Future<void> _loadRoomHeaderDetails() async {
+    if (_directPeerUserId != null) {
+      return;
+    }
+    try {
+      final members = await _svc.getRoomMembers(widget.chat.id);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _headerMemberCount = members.length;
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadHeaderUserInfo(String peerUserId) async {
@@ -963,6 +990,7 @@ class _ChatScreenState extends State<ChatScreen>
       ),
     );
     if (!mounted) return;
+    await _loadRoomHeaderDetails();
     await _loadMessages(forceRefresh: true);
   }
 
@@ -1209,13 +1237,15 @@ class _ChatScreenState extends State<ChatScreen>
   Future<void> _showMessageActions(_Msg m, Offset globalPos) async {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final canReply = _canReplyToMessage(m);
     final actions =
         <({IconData icon, String label, Future<void> Function() run})>[
-          (
-            icon: Icons.reply,
-            label: l10n.replyAction,
-            run: () async => _sendReplyForEvent(m.id),
-          ),
+          if (canReply)
+            (
+              icon: Icons.reply,
+              label: l10n.replyAction,
+              run: () async => _sendReplyForEvent(m.id),
+            ),
           if (m.isOwn)
             (
               icon: Icons.edit,
@@ -1458,6 +1488,14 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
+  bool _canReplyToMessage(_Msg message) {
+    if (message.isPending) {
+      return false;
+    }
+
+    return int.tryParse(message.id) != null;
+  }
+
   Future<String?> _showEmojiPickerDialog() async {
     String? chosen;
     await showDialog(
@@ -1546,7 +1584,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   Future<void> _recordVoiceMessage() async {
     final l10n = AppLocalizations.of(context)!;
-    if (!_voiceService.isInitialized) {
+    if (!_voiceService.isSupported) {
       if (mounted) {
         _showErrorMessage(l10n.voiceRecordingUnsupported);
       }
@@ -1560,6 +1598,7 @@ class _ChatScreenState extends State<ChatScreen>
       }
       return;
     }
+    _startRecordingTicker();
     setState(() {});
   }
 
@@ -1593,10 +1632,108 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
+  void _startRecordingTicker() {
+    _recordingTicker?.cancel();
+    final startedAt = DateTime.now();
+    if (mounted) {
+      setState(() => _recordingDuration = Duration.zero);
+    } else {
+      _recordingDuration = Duration.zero;
+    }
+    _recordingTicker = Timer.periodic(
+      const Duration(milliseconds: 250),
+      (_) {
+        if (!_voiceService.isRecording) {
+          _recordingTicker?.cancel();
+          _recordingTicker = null;
+          return;
+        }
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _recordingDuration = DateTime.now().difference(startedAt);
+        });
+      },
+    );
+  }
+
+  void _resetRecordingState() {
+    _recordingTicker?.cancel();
+    _recordingTicker = null;
+    if (!mounted) {
+      _recordingDuration = Duration.zero;
+      return;
+    }
+    setState(() {
+      _recordingDuration = Duration.zero;
+    });
+  }
+
+  Future<void> _cancelVoiceRecording() async {
+    await _voiceService.cancelRecording();
+    _resetRecordingState();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  String _formatRecordingDuration(Duration value) {
+    final minutes = value.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = value.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  Widget _buildRecordingComposerState(ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.spaceSmMd,
+        vertical: UITokens.spaceSm,
+      ),
+      decoration: BoxDecoration(
+        color: colorScheme.surface.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(UITokens.cornerLg),
+        border: Border.all(
+          color: AppColors.recording(context).withValues(alpha: 0.28),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: AppColors.recording(context),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: UITokens.spaceSmMd),
+          Icon(
+            Icons.graphic_eq_rounded,
+            color: AppColors.recording(context),
+            size: 18,
+          ),
+          const SizedBox(width: UITokens.spaceSm),
+          Expanded(
+            child: Text(
+              _formatRecordingDuration(_recordingDuration),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _stopVoiceAndSend() async {
     final l10n = AppLocalizations.of(context)!;
     final path = await _voiceService.stopRecording();
     if (path == null || !await _pathExists(path)) {
+      _resetRecordingState();
       if (mounted) _showErrorMessage(l10n.recordingError);
       return;
     }
@@ -1622,6 +1759,7 @@ class _ChatScreenState extends State<ChatScreen>
           SnackBar(content: Text(l10n.genericError(e.toString()))),
         );
     } finally {
+      _resetRecordingState();
       if (mounted) {
         _clearUploadProgress();
         setState(() => _sending = false);
@@ -1992,6 +2130,11 @@ class _ChatScreenState extends State<ChatScreen>
     final presenceLabel = _directPeerUserId != null
         ? _headerPresenceLabel(l10n)
         : null;
+    final roomMetaLabel = _headerMemberCount == null
+      ? null
+      : '${l10n.membersLabel}: $_headerMemberCount';
+    final isChannelRoom =
+      widget.chat.roomType == 'public' || widget.chat.roomType == 'private';
     final bodyWidget = ValueListenableBuilder(
       valueListenable: SettingsService.themeNotifier,
       builder: (context, themeSettings, _) {
@@ -2156,12 +2299,17 @@ class _ChatScreenState extends State<ChatScreen>
                             message: m,
                             svc: _svc,
                             audioPlayers: _audioPlayers,
+                            mediaDownloads: _mediaDownloads,
                           ),
                         )
                       else if (m.type == 'm.file')
                         ConstrainedBox(
                           constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
-                          child: _FileMessageWidget(message: m, svc: _svc),
+                          child: _FileMessageWidget(
+                            message: m,
+                            svc: _svc,
+                            mediaDownloads: _mediaDownloads,
+                          ),
                         )
                       else
                         Text(
@@ -2481,6 +2629,37 @@ class _ChatScreenState extends State<ChatScreen>
                           fontSize: 12,
                           color: _headerPresenceColor(context),
                         ),
+                      )
+                    else if (roomMetaLabel != null)
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              roomMetaLabel,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.subtitleText(context),
+                              ),
+                            ),
+                          ),
+                          if (isChannelRoom) ...[
+                            const SizedBox(width: UITokens.spaceXsSm),
+                            Icon(
+                              Icons.visibility_outlined,
+                              size: 12,
+                              color: AppColors.subtitleText(context),
+                            ),
+                            const SizedBox(width: UITokens.space2XS),
+                            Text(
+                              '—',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.subtitleText(context),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                   ],
                 ),
@@ -2584,24 +2763,10 @@ class _ChatScreenState extends State<ChatScreen>
                                 ),
                                 child: Row(
                                   children: [
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.attach_file,
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 48,
-                                        minHeight: 48,
-                                      ),
-                                      onPressed: _sending
-                                          ? null
-                                          : _pickAttachments,
-                                    ),
-                                    if (!_voiceService.isRecording &&
-                                        _pendingAttachments.isEmpty)
+                                    if (_voiceService.isRecording) ...[
                                       IconButton(
                                         icon: Icon(
-                                          Icons.mic,
+                                          Icons.close_rounded,
                                           color: colorScheme.onSurfaceVariant,
                                         ),
                                         constraints: const BoxConstraints(
@@ -2610,72 +2775,117 @@ class _ChatScreenState extends State<ChatScreen>
                                         ),
                                         onPressed: _sending
                                             ? null
-                                            : _recordVoiceMessage,
-                                      )
-                                    else if (_voiceService.isRecording)
+                                            : _cancelVoiceRecording,
+                                      ),
+                                      Expanded(
+                                        child: _buildRecordingComposerState(
+                                          colorScheme,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        constraints: const BoxConstraints(
+                                          minWidth: 48,
+                                          minHeight: 48,
+                                        ),
+                                        icon: _sending
+                                            ? const SizedBox(
+                                                width: 18,
+                                                height: 18,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth:
+                                                      UITokens.borderThick,
+                                                ),
+                                              )
+                                            : Icon(
+                                                Icons.send_rounded,
+                                                color: AppColors.recording(
+                                                  context,
+                                                ),
+                                              ),
+                                        onPressed: _sending
+                                            ? null
+                                            : _stopVoiceAndSend,
+                                      ),
+                                    ] else ...[
                                       IconButton(
                                         icon: Icon(
-                                          Icons.mic,
-                                          color: AppColors.recording(context),
+                                          Icons.attach_file,
+                                          color: colorScheme.onSurfaceVariant,
                                         ),
                                         constraints: const BoxConstraints(
                                           minWidth: 48,
                                           minHeight: 48,
                                         ),
-                                        onPressed: _voiceService.isRecording
-                                            ? _stopVoiceAndSend
-                                            : null,
-                                      )
-                                    else
-                                      const SizedBox(width: UITokens.spaceSm),
-                                    Expanded(
-                                      child: TextField(
-                                        controller: _controller,
-                                        style: TextStyle(
-                                          color: colorScheme.onSurface,
-                                        ),
-                                        decoration: InputDecoration(
-                                          hintText:
-                                              _pendingAttachments.isNotEmpty
-                                              ? AppLocalizations.of(
-                                                  context,
-                                                )!.addCaptionHint
-                                              : AppLocalizations.of(
-                                                  context,
-                                                )!.messageInputHint,
-                                          hintStyle: TextStyle(
+                                        onPressed: _sending
+                                            ? null
+                                            : _pickAttachments,
+                                      ),
+                                      if (_voiceService.isSupported &&
+                                          _pendingAttachments.isEmpty)
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.mic,
                                             color: colorScheme.onSurfaceVariant,
                                           ),
-                                          border: InputBorder.none,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 48,
+                                            minHeight: 48,
+                                          ),
+                                          onPressed: _sending
+                                              ? null
+                                              : _recordVoiceMessage,
+                                        )
+                                      else
+                                        const SizedBox(
+                                          width: UITokens.spaceSm,
                                         ),
-                                        enabled: !_voiceService.isRecording,
-                                        maxLines: null,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      constraints: const BoxConstraints(
-                                        minWidth: 48,
-                                        minHeight: 48,
-                                      ),
-                                      icon: _sending
-                                          ? const SizedBox(
-                                              width: 18,
-                                              height: 18,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth:
-                                                    UITokens.borderThick,
-                                              ),
-                                            )
-                                          : Icon(
-                                              Icons.send,
-                                              color: colorScheme.primary,
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _controller,
+                                          style: TextStyle(
+                                            color: colorScheme.onSurface,
+                                          ),
+                                          decoration: InputDecoration(
+                                            hintText:
+                                                _pendingAttachments.isNotEmpty
+                                                ? AppLocalizations.of(
+                                                    context,
+                                                  )!.addCaptionHint
+                                                : AppLocalizations.of(
+                                                    context,
+                                                  )!.messageInputHint,
+                                            hintMaxLines: 1,
+                                            hintStyle: TextStyle(
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
                                             ),
-                                      onPressed:
-                                          (_sending ||
-                                              _voiceService.isRecording)
-                                          ? null
-                                          : _sendText,
-                                    ),
+                                            border: InputBorder.none,
+                                          ),
+                                          minLines: 1,
+                                          maxLines: 5,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        constraints: const BoxConstraints(
+                                          minWidth: 48,
+                                          minHeight: 48,
+                                        ),
+                                        icon: _sending
+                                            ? const SizedBox(
+                                                width: 18,
+                                                height: 18,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth:
+                                                      UITokens.borderThick,
+                                                ),
+                                              )
+                                            : Icon(
+                                                Icons.send,
+                                                color: colorScheme.primary,
+                                              ),
+                                        onPressed: _sending ? null : _sendText,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -3054,6 +3264,137 @@ bool _sameIntMap(Map<String, int> left, Map<String, int> right) {
   return true;
 }
 
+Widget _mediaPreviewFallback(BuildContext context, IconData icon) {
+  return ColoredBox(
+    color: AppColors.mediaPlaceholder(context),
+    child: Center(
+      child: Icon(icon, size: 34, color: AppColors.iconMuted(context)),
+    ),
+  );
+}
+
+Widget _inlineImagePreview(
+  BuildContext context,
+  String mediaId, {
+  required IconData fallbackIcon,
+  BoxFit fit = BoxFit.cover,
+}) {
+  final normalized = mediaId.trim();
+  if (normalized.startsWith('data:')) {
+    try {
+      return Image.memory(
+        UriData.parse(normalized).contentAsBytes(),
+        fit: fit,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.low,
+        errorBuilder: (_, _, _) => _mediaPreviewFallback(
+          context,
+          fallbackIcon,
+        ),
+      );
+    } catch (_) {
+      return _mediaPreviewFallback(context, fallbackIcon);
+    }
+  }
+
+  return Image.file(
+    File(normalized),
+    fit: fit,
+    gaplessPlayback: true,
+    filterQuality: FilterQuality.low,
+    errorBuilder: (_, _, _) => _mediaPreviewFallback(context, fallbackIcon),
+  );
+}
+
+class _DeferredMediaSurface extends StatelessWidget {
+  const _DeferredMediaSurface({
+    required this.width,
+    required this.height,
+    required this.preview,
+    required this.loading,
+    required this.onDownload,
+    required this.buttonLabel,
+    this.borderRadius = UITokens.cornerLg,
+  });
+
+  final double width;
+  final double height;
+  final Widget preview;
+  final bool loading;
+  final VoidCallback onDownload;
+  final String buttonLabel;
+  final double borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.mediaSurface(context),
+          borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(color: AppColors.mediaBorder(context)),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ImageFiltered(
+              imageFilter: ui.ImageFilter.blur(sigmaX: 11, sigmaY: 11),
+              child: preview,
+            ),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.18),
+                      Colors.black.withValues(alpha: 0.34),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Center(
+              child: FilledButton.icon(
+                onPressed: loading ? null : onDownload,
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.surface.withValues(
+                    alpha: 0.94,
+                  ),
+                  foregroundColor: theme.colorScheme.onSurface,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: UITokens.spaceMd,
+                    vertical: UITokens.spaceSmMd,
+                  ),
+                ),
+                icon: loading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: UITokens.borderThick,
+                        ),
+                      )
+                    : const Icon(Icons.download_rounded, size: 18),
+                label: Text(
+                  loading ? l10n.downloadingLabel : buttonLabel,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ImageMessageWidget extends StatefulWidget {
   const _ImageMessageWidget({
     required this.mediaId,
@@ -3078,22 +3419,69 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
   String? _localPath;
   Object? _error;
   bool _loading = true;
+  bool _downloadRequested = false;
 
   @override
   void initState() {
     super.initState();
-    unawaited(_loadImage());
+    _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+    SettingsService.autoDownloadMediaNotifier.addListener(
+      _handleAutoDownloadChanged,
+    );
+    if (_downloadRequested) {
+      unawaited(_loadImage());
+    } else {
+      _loading = false;
+    }
   }
 
   @override
   void didUpdateWidget(covariant _ImageMessageWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.mediaId != widget.mediaId) {
+      _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
       _localPath = null;
       _error = null;
-      _loading = true;
-      unawaited(_loadImage());
+      _loading = _downloadRequested;
+      if (_downloadRequested) {
+        unawaited(_loadImage());
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    SettingsService.autoDownloadMediaNotifier.removeListener(
+      _handleAutoDownloadChanged,
+    );
+    super.dispose();
+  }
+
+  void _handleAutoDownloadChanged() {
+    if (!mounted ||
+        !SettingsService.autoDownloadMediaNotifier.value ||
+        _downloadRequested ||
+        _localPath != null) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    unawaited(_loadImage());
+  }
+
+  Future<void> _requestDownload() async {
+    if (_loading) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    await _loadImage();
   }
 
   Future<void> _loadImage() async {
@@ -3128,6 +3516,20 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (_localPath == null && (!_downloadRequested || _loading || _error != null)) {
+      return _DeferredMediaSurface(
+        width: widget.maxWidth,
+        height: widget.maxWidth * 0.62,
+        preview: _inlineImagePreview(
+          context,
+          widget.mediaId,
+          fallbackIcon: Icons.image_outlined,
+        ),
+        loading: _loading,
+        onDownload: _requestDownload,
+        buttonLabel: AppLocalizations.of(context)!.mediaDownloadAction,
+      );
+    }
     if (_loading) {
       return Container(
         width: widget.maxWidth,
@@ -3206,10 +3608,12 @@ class _AudioMessageWidget extends StatefulWidget {
   final _Msg message;
   final AegisChatService svc;
   final Map<String, AudioPlayer> audioPlayers;
+  final Map<String, String> mediaDownloads;
   const _AudioMessageWidget({
     required this.message,
     required this.svc,
     required this.audioPlayers,
+    required this.mediaDownloads,
   });
   @override
   State<_AudioMessageWidget> createState() => _AudioMessageWidgetState();
@@ -3237,23 +3641,70 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
   Uint8List? _thumbnailBytes;
   bool _loading = true;
   Object? _error;
+  bool _downloadRequested = false;
 
   @override
   void initState() {
     super.initState();
-    unawaited(_prepare());
+    _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+    SettingsService.autoDownloadMediaNotifier.addListener(
+      _handleAutoDownloadChanged,
+    );
+    if (_downloadRequested) {
+      unawaited(_prepare());
+    } else {
+      _loading = false;
+    }
   }
 
   @override
   void didUpdateWidget(covariant _VideoMessageWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.message.mediaId != widget.message.mediaId) {
+      _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
       _localPath = null;
       _thumbnailBytes = null;
       _error = null;
-      _loading = true;
-      unawaited(_prepare());
+      _loading = _downloadRequested;
+      if (_downloadRequested) {
+        unawaited(_prepare());
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    SettingsService.autoDownloadMediaNotifier.removeListener(
+      _handleAutoDownloadChanged,
+    );
+    super.dispose();
+  }
+
+  void _handleAutoDownloadChanged() {
+    if (!mounted ||
+        !SettingsService.autoDownloadMediaNotifier.value ||
+        _downloadRequested ||
+        _localPath != null) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    unawaited(_prepare());
+  }
+
+  Future<void> _requestDownload() async {
+    if (_loading) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    await _prepare();
   }
 
   Future<Uint8List?> _buildThumbnail(String path) {
@@ -3279,9 +3730,11 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
       }
       final cachedPath = widget.mediaDownloads[mediaRef];
       if (cachedPath != null && await _pathExists(cachedPath)) {
+        final thumbnail = await _buildThumbnail(cachedPath);
         if (!mounted) return;
         setState(() {
           _localPath = cachedPath;
+          _thumbnailBytes = thumbnail;
           _loading = false;
         });
         return;
@@ -3309,6 +3762,55 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
     return raw.split('/').last;
   }
 
+  Future<void> _shareVideo() async {
+    try {
+      final path = _localPath;
+      if (path == null || path.isEmpty) {
+        return;
+      }
+      await MediaFileService.share(path, subject: _label());
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.genericError(error.toString())),
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveVideo() async {
+    try {
+      final path = _localPath;
+      if (path == null || path.isEmpty) {
+        return;
+      }
+      final savedPath = await MediaFileService.saveAs(
+        path,
+        suggestedName: _label(),
+      );
+      if (!mounted || savedPath == null) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.fileDownloaded(savedPath)),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.genericError(error.toString())),
+        ),
+      );
+    }
+  }
+
   Future<void> _open() async {
     final path = _localPath;
     if (path == null || path.isEmpty) return;
@@ -3322,6 +3824,23 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (_localPath == null && (!_downloadRequested || _loading || _error != null)) {
+      return _DeferredMediaSurface(
+        width: widget.maxWidth,
+        height: widget.maxWidth * 0.56,
+        preview: _thumbnailBytes != null
+            ? Image.memory(
+                _thumbnailBytes!,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+              )
+            : _mediaPreviewFallback(context, Icons.movie_creation_outlined),
+        loading: _loading,
+        onDownload: _requestDownload,
+        buttonLabel: AppLocalizations.of(context)!.mediaDownloadAction,
+      );
+    }
+
     if (_loading) {
       return Container(
         width: widget.maxWidth,
@@ -3457,13 +3976,46 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
                     UITokens.spaceSmMd,
                     UITokens.spaceSmMd,
                   ),
-                  child: Text(
-                    _label(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                    ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _label(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.white),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: AppLocalizations.of(context)!.shareAction,
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 34,
+                          height: 34,
+                        ),
+                        onPressed: _shareVideo,
+                        icon: const Icon(
+                          Icons.share_outlined,
+                          size: 18,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: AppLocalizations.of(context)!.saveTooltip,
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 34,
+                          height: 34,
+                        ),
+                        onPressed: _saveVideo,
+                        icon: const Icon(
+                          Icons.download_rounded,
+                          size: 18,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -3496,6 +4048,7 @@ class _ChatImageGalleryDialog extends StatefulWidget {
 class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
   late final PageController _pageController;
   late int _currentIndex;
+  final Map<String, Future<String>> _pathFutures = <String, Future<String>>{};
 
   @override
   void initState() {
@@ -3520,8 +4073,60 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
     return path;
   }
 
+  Future<String> _pathFutureFor(String mediaId) {
+    return _pathFutures.putIfAbsent(mediaId, () => _resolvePath(mediaId));
+  }
+
+  Future<void> _shareCurrentImage() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final mediaId = widget.mediaIds[_currentIndex];
+      final path = await _pathFutureFor(mediaId);
+      if (!mounted) {
+        return;
+      }
+      await MediaFileService.share(
+        path,
+        subject: MediaFileService.resolvedFileName(path),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
+    }
+  }
+
+  Future<void> _saveCurrentImage() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final mediaId = widget.mediaIds[_currentIndex];
+      final path = await _pathFutureFor(mediaId);
+      final savedPath = await MediaFileService.saveAs(
+        path,
+        suggestedName: MediaFileService.resolvedFileName(path),
+      );
+      if (!mounted || savedPath == null) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.fileDownloaded(savedPath))));
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Dialog(
       insetPadding: const EdgeInsets.all(UITokens.spaceSm),
       backgroundColor: Colors.black,
@@ -3534,7 +4139,7 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
             itemBuilder: (context, index) {
               final mediaId = widget.mediaIds[index];
               return FutureBuilder<String>(
-                future: _resolvePath(mediaId),
+                future: _pathFutureFor(mediaId),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
@@ -3566,19 +4171,38 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
           Positioned(
             top: 14,
             right: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: UITokens.spaceSmMd,
-                vertical: UITokens.spaceXSm,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(UITokens.cornerPill),
-              ),
-              child: Text(
-                '${_currentIndex + 1}/${widget.mediaIds.length}',
-                style: const TextStyle(color: Colors.white),
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  style: IconButton.styleFrom(backgroundColor: Colors.black54),
+                  tooltip: l10n.shareAction,
+                  onPressed: _shareCurrentImage,
+                  icon: const Icon(Icons.share_outlined, color: Colors.white),
+                ),
+                const SizedBox(width: UITokens.spaceXS),
+                IconButton(
+                  style: IconButton.styleFrom(backgroundColor: Colors.black54),
+                  tooltip: l10n.saveTooltip,
+                  onPressed: _saveCurrentImage,
+                  icon: const Icon(Icons.download_rounded, color: Colors.white),
+                ),
+                const SizedBox(width: UITokens.spaceXS),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: UITokens.spaceSmMd,
+                    vertical: UITokens.spaceXSm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(UITokens.cornerPill),
+                  ),
+                  child: Text(
+                    '${_currentIndex + 1}/${widget.mediaIds.length}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -3587,41 +4211,235 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
   }
 }
 
-class _FileMessageWidget extends StatelessWidget {
+class _FileMessageWidget extends StatefulWidget {
   const _FileMessageWidget({
     required this.message,
     required this.svc,
+    required this.mediaDownloads,
   });
 
   final _Msg message;
   final AegisChatService svc;
+  final Map<String, String> mediaDownloads;
+
+  @override
+  State<_FileMessageWidget> createState() => _FileMessageWidgetState();
+}
+
+class _FileMessageWidgetState extends State<_FileMessageWidget> {
+  String? _localPath;
+  Object? _error;
+  bool _loading = true;
+  bool _downloadRequested = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+    SettingsService.autoDownloadMediaNotifier.addListener(
+      _handleAutoDownloadChanged,
+    );
+    if (_downloadRequested) {
+      unawaited(_loadFile());
+    } else {
+      _loading = false;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _FileMessageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message.mediaId != widget.message.mediaId) {
+      _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+      _localPath = null;
+      _error = null;
+      _loading = _downloadRequested;
+      if (_downloadRequested) {
+        unawaited(_loadFile());
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    SettingsService.autoDownloadMediaNotifier.removeListener(
+      _handleAutoDownloadChanged,
+    );
+    super.dispose();
+  }
+
+  void _handleAutoDownloadChanged() {
+    if (!mounted ||
+        !SettingsService.autoDownloadMediaNotifier.value ||
+        _downloadRequested ||
+        _localPath != null) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    unawaited(_loadFile());
+  }
+
+  Future<void> _requestDownload() async {
+    if (_loading) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    await _loadFile();
+  }
 
   String _fileLabel() {
     final raw =
-        (message.text.trim().isNotEmpty ? message.text : message.mediaId) ??
+        (widget.message.text.trim().isNotEmpty
+            ? widget.message.text
+            : widget.message.mediaId) ??
         'file';
     return raw.split('/').last;
   }
 
   IconData _icon() {
-    if (message.type == 'm.video') {
+    if (widget.message.type == 'm.video') {
       return Icons.movie_outlined;
     }
     return Icons.insert_drive_file_outlined;
   }
 
-  Future<void> _openFile(BuildContext context) async {
-    final mediaRef = message.mediaId;
+  Future<void> _loadFile() async {
+    final mediaRef = widget.message.mediaId;
     if (mediaRef == null || mediaRef.isEmpty) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _error = Exception('File reference is missing');
+        _loading = false;
+      });
       return;
     }
 
-    final path = await svc.downloadMediaToTempFile(mediaRef);
-    await share.Share.shareXFiles([share.XFile(path)], subject: _fileLabel());
+    final cachedPath = widget.mediaDownloads[mediaRef];
+    if (cachedPath != null && await _pathExists(cachedPath)) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _localPath = cachedPath;
+        _loading = false;
+      });
+      return;
+    }
+
+    try {
+      final path = await widget.svc.downloadMediaToTempFile(mediaRef);
+      widget.mediaDownloads[mediaRef] = path;
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _localPath = path;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _error = error;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<String> _resolveFilePath() async {
+    final localPath = _localPath;
+    if (localPath != null && await _pathExists(localPath)) {
+      return localPath;
+    }
+
+    await _requestDownload();
+    if (_localPath != null) {
+      return _localPath!;
+    }
+    throw Exception(_error?.toString() ?? 'File reference is missing');
+  }
+
+  Future<void> _openFile(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final path = await _resolveFilePath();
+      await MediaFileService.open(path);
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
+    }
+  }
+
+  Future<void> _shareFile(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final path = await _resolveFilePath();
+      await MediaFileService.share(path, subject: _fileLabel());
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
+    }
+  }
+
+  Future<void> _saveFile(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final path = await _resolveFilePath();
+      final savedPath = await MediaFileService.saveAs(
+        path,
+        suggestedName: _fileLabel(),
+      );
+      if (!context.mounted || savedPath == null) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.fileDownloaded(savedPath))));
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (_localPath == null && (!_downloadRequested || _loading || _error != null)) {
+      return _DeferredMediaSurface(
+        width: double.infinity,
+        height: 92,
+        preview: _mediaPreviewFallback(context, _icon()),
+        loading: _loading,
+        onDownload: _requestDownload,
+        buttonLabel: l10n.mediaDownloadAction,
+        borderRadius: UITokens.cornerMd,
+      );
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -3649,6 +4467,27 @@ class _FileMessageWidget extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(width: UITokens.spaceSm),
+              IconButton(
+                tooltip: l10n.shareAction,
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints.tightFor(
+                  width: 34,
+                  height: 34,
+                ),
+                onPressed: () => _shareFile(context),
+                icon: const Icon(Icons.share_outlined, size: 18),
+              ),
+              IconButton(
+                tooltip: l10n.saveTooltip,
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints.tightFor(
+                  width: 34,
+                  height: 34,
+                ),
+                onPressed: () => _saveFile(context),
+                icon: const Icon(Icons.download_rounded, size: 18),
+              ),
             ],
           ),
         ),
@@ -3664,6 +4503,8 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
   Duration _position = Duration.zero;
   bool _playing = false;
   bool _preparing = false;
+  bool _downloadRequested = false;
+  Object? _error;
   AudioPlayer? _player;
   List<double> _waveform = [];
   StreamSubscription<Duration>? _durationSub;
@@ -3681,6 +4522,10 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
   @override
   void initState() {
     super.initState();
+    _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+    SettingsService.autoDownloadMediaNotifier.addListener(
+      _handleAutoDownloadChanged,
+    );
     _waveformPulse = AnimationController(
       vsync: this,
       duration: UITokens.duration2XL,
@@ -3690,6 +4535,50 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
       duration: UITokens.durationSmMd,
       value: 0,
     );
+    if (_downloadRequested) {
+      unawaited(_ensurePrepared());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _AudioMessageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message.mediaId != widget.message.mediaId) {
+      _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+      _localPath = null;
+      _error = null;
+      _duration = Duration.zero;
+      _position = Duration.zero;
+      _playing = false;
+      if (_downloadRequested) {
+        unawaited(_ensurePrepared());
+      }
+    }
+  }
+
+  void _handleAutoDownloadChanged() {
+    if (!mounted ||
+        !SettingsService.autoDownloadMediaNotifier.value ||
+        _downloadRequested ||
+        _localPath != null) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _error = null;
+    });
+    unawaited(_ensurePrepared());
+  }
+
+  Future<void> _requestDownload() async {
+    if (_preparing) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _error = null;
+    });
+    await _ensurePrepared();
   }
 
   void _syncInteractionAnimation() {
@@ -3740,9 +4629,14 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
       }
       try {
         final mediaRef = widget.message.mediaId ?? widget.message.text;
-        final path = await widget.svc.downloadMediaToTempFile(mediaRef);
+        final cachedPath = widget.mediaDownloads[mediaRef];
+        final path = cachedPath != null && await _pathExists(cachedPath)
+            ? cachedPath
+            : await widget.svc.downloadMediaToTempFile(mediaRef);
         if (!mounted) return;
+        widget.mediaDownloads[mediaRef] = path;
         _localPath = path;
+        _error = null;
 
         if (_waveform.isEmpty) {
           try {
@@ -3803,7 +4697,8 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
           });
           _syncWaveformAnimation();
         });
-      } catch (_) {
+      } catch (error) {
+        _error = error;
       } finally {
         _prepareFuture = null;
         if (mounted) {
@@ -3818,6 +4713,9 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
 
   @override
   void dispose() {
+    SettingsService.autoDownloadMediaNotifier.removeListener(
+      _handleAutoDownloadChanged,
+    );
     _durationSub?.cancel();
     _positionSub?.cancel();
     _completeSub?.cancel();
@@ -3863,8 +4761,102 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
     await _player!.seek(Duration(milliseconds: ms));
   }
 
+  Future<String?> _resolvedAudioPath() async {
+    await _ensurePrepared();
+    return _localPath;
+  }
+
+  String _audioLabel() {
+    final mediaRef = widget.message.mediaId;
+    if (mediaRef != null && mediaRef.trim().isNotEmpty) {
+      return MediaFileService.resolvedFileName(mediaRef);
+    }
+    final text = widget.message.text.trim();
+    if (text.isNotEmpty) {
+      return text.split('/').last;
+    }
+    return 'audio';
+  }
+
+  Future<void> _openAudioExternally() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final path = await _resolvedAudioPath();
+      if (path == null || path.isEmpty) {
+        return;
+      }
+      await MediaFileService.open(path);
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
+    }
+  }
+
+  Future<void> _shareAudio() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final path = await _resolvedAudioPath();
+      if (path == null || path.isEmpty) {
+        return;
+      }
+      await MediaFileService.share(path, subject: _audioLabel());
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
+    }
+  }
+
+  Future<void> _saveAudio() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final path = await _resolvedAudioPath();
+      if (path == null || path.isEmpty || !mounted) {
+        return;
+      }
+      final savedPath = await MediaFileService.saveAs(
+        path,
+        suggestedName: _audioLabel(),
+      );
+      if (!mounted || savedPath == null) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.fileDownloaded(savedPath))));
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (_localPath == null && (!_downloadRequested || _preparing || _error != null)) {
+      return _DeferredMediaSurface(
+        width: double.infinity,
+        height: 118,
+        preview: _mediaPreviewFallback(context, Icons.graphic_eq_rounded),
+        loading: _preparing,
+        onDownload: _requestDownload,
+        buttonLabel: l10n.mediaDownloadAction,
+        borderRadius: UITokens.corner2Lg,
+      );
+    }
+
     final theme = Theme.of(context);
     final samples = _waveform.isNotEmpty
         ? _waveform
@@ -4070,6 +5062,55 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                                                   ),
                                             ),
                                           ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: UITokens.spaceSm),
+                                      Tooltip(
+                                        message: l10n.previewTitle,
+                                        child: IconButton(
+                                          visualDensity: VisualDensity.compact,
+                                          constraints:
+                                              const BoxConstraints.tightFor(
+                                                width: 30,
+                                                height: 30,
+                                              ),
+                                          onPressed: _openAudioExternally,
+                                          icon: const Icon(
+                                            Icons.open_in_new_rounded,
+                                            size: 17,
+                                          ),
+                                        ),
+                                      ),
+                                      Tooltip(
+                                        message: l10n.shareAction,
+                                        child: IconButton(
+                                          visualDensity: VisualDensity.compact,
+                                          constraints:
+                                              const BoxConstraints.tightFor(
+                                                width: 30,
+                                                height: 30,
+                                              ),
+                                          onPressed: _shareAudio,
+                                          icon: const Icon(
+                                            Icons.share_outlined,
+                                            size: 17,
+                                          ),
+                                        ),
+                                      ),
+                                      Tooltip(
+                                        message: l10n.saveTooltip,
+                                        child: IconButton(
+                                          visualDensity: VisualDensity.compact,
+                                          constraints:
+                                              const BoxConstraints.tightFor(
+                                                width: 30,
+                                                height: 30,
+                                              ),
+                                          onPressed: _saveAudio,
+                                          icon: const Icon(
+                                            Icons.download_rounded,
+                                            size: 17,
+                                          ),
                                         ),
                                       ),
                                     ],

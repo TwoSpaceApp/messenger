@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,8 +23,10 @@ import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/main_screen.dart';
+import 'package:two_space_app/features/profile/presentation/screens/account_profile_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/account_settings_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/profile_screen.dart';
+import 'package:two_space_app/features/settings/presentation/screens/active_sessions_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/customization_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/dev_menu_screen.dart';
 import 'package:two_space_app/features/settings/presentation/screens/feedback_screen.dart';
@@ -38,7 +42,13 @@ class _RouterRefreshNotifier extends ChangeNotifier {
 }
 
 CustomTransitionPage<void> _buildPage(GoRouterState state, Widget child) {
-  return buildAppTransitionPage(state: state, child: child);
+  return buildAppTransitionPage(
+    state: state,
+    child: _RouteBackGuard(
+      fallbackRoute: _fallbackRouteFor(state.matchedLocation),
+      child: child,
+    ),
+  );
 }
 
 NoTransitionPage<void> _buildShellPage(
@@ -47,31 +57,81 @@ NoTransitionPage<void> _buildShellPage(
   required int selectedIndex,
   bool constrainBody = true,
   double maxBodyWidth = UITokens.readableContentMaxWidth,
+  bool showMobileNavBar = true,
 }) {
   return NoTransitionPage<void>(
     key: state.pageKey,
-    child: AppShellFrame(
-      selectedIndex: selectedIndex,
-      onItemSelected: (index) {
-        final context = rootNavigatorKey.currentContext;
-        if (context == null) {
-          return;
-        }
-        context.go(
-          switch (index) {
-            0 => AppStrings.routeHome,
-            1 => AppStrings.routeWidgets,
-            2 => AppStrings.routePeople,
-            3 => AppStrings.routeSettingsRoot,
-            _ => AppStrings.routeHome,
-          },
-        );
-      },
-      constrainBody: constrainBody,
-      maxBodyWidth: maxBodyWidth,
-      child: child,
+    child: _RouteBackGuard(
+      fallbackRoute: AppStrings.routeHome,
+      child: AppShellFrame(
+        selectedIndex: selectedIndex,
+        onItemSelected: (index) {
+          final context = rootNavigatorKey.currentContext;
+          if (context == null) {
+            return;
+          }
+          context.go(
+            switch (index) {
+              0 => AppStrings.routeHome,
+              1 => AppStrings.routeWidgets,
+              2 => AppStrings.routePeople,
+              3 => AppStrings.routeSettingsRoot,
+              _ => AppStrings.routeHome,
+            },
+          );
+        },
+        constrainBody: constrainBody,
+        maxBodyWidth: maxBodyWidth,
+        showMobileNavBar: showMobileNavBar,
+        child: child,
+      ),
     ),
   );
+}
+
+String _fallbackRouteFor(String matchedLocation) {
+  switch (matchedLocation) {
+    case AppStrings.routeSplash:
+    case AppStrings.routeLogin:
+    case AppStrings.routeRegister:
+    case AppStrings.routeForgot:
+      return AppStrings.routeLogin;
+    default:
+      return AppStrings.routeHome;
+  }
+}
+
+class _RouteBackGuard extends StatelessWidget {
+  const _RouteBackGuard({required this.fallbackRoute, required this.child});
+
+  final String fallbackRoute;
+  final Widget child;
+
+  Future<void> _handleBack(BuildContext context) async {
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+      return;
+    }
+
+    if (GoRouterState.of(context).matchedLocation != fallbackRoute) {
+      router.go(fallbackRoute);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope<void>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+        unawaited(_handleBack(context));
+      },
+      child: child,
+    );
+  }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -184,6 +244,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
       ),
       GoRoute(
+        path: AppStrings.routeActiveSessions,
+        pageBuilder: (context, state) =>
+            _buildShellPage(
+              state,
+              const ActiveSessionsScreen(embedded: true),
+              selectedIndex: 3,
+            ),
+      ),
+      GoRoute(
         path: AppStrings.routeAccountSettings,
         pageBuilder: (context, state) =>
             _buildShellPage(
@@ -229,6 +298,20 @@ final routerProvider = Provider<GoRouter>((ref) {
           }
           final authState = ref.read(authProvider).whenOrNull(data: (value) => value);
           final userId = userIdFromExtra ?? authState?.userId ?? '';
+          final isOwnProfile =
+              authState?.userId != null && authState!.userId == userId;
+
+          if (isOwnProfile && !startInEdit) {
+            return _buildShellPage(
+              state,
+              AccountProfileScreen(
+                userId: userId,
+                embedded: true,
+              ),
+              selectedIndex: 3,
+            );
+          }
+
           return _buildShellPage(
             state,
             ProfileScreen(
@@ -236,6 +319,21 @@ final routerProvider = Provider<GoRouter>((ref) {
               initialName: initialName,
               initialAvatar: initialAvatar,
               startInEdit: startInEdit,
+              embedded: true,
+            ),
+            selectedIndex: 3,
+          );
+        },
+      ),
+      GoRoute(
+        path: AppStrings.routeAccountProfile,
+        pageBuilder: (context, state) {
+          final authState = ref.read(authProvider).whenOrNull(data: (value) => value);
+          final userId = authState?.userId ?? '';
+          return _buildShellPage(
+            state,
+            AccountProfileScreen(
+              userId: userId,
               embedded: true,
             ),
             selectedIndex: 3,
@@ -313,6 +411,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ChatScreen(chat: chat),
             selectedIndex: 0,
             constrainBody: false,
+            showMobileNavBar: false,
           );
         },
       ),
@@ -340,7 +439,7 @@ class _WelcomeRouteLoaderState extends State<_WelcomeRouteLoader> {
   Future<void> _loadUserInfo() async {
     try {
       final svc = AegisChatService();
-      final info = await svc.getOwnUserInfo(forceRefresh: true);
+      final info = await svc.getOwnUserInfo();
       if (!mounted) {
         return;
       }

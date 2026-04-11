@@ -54,14 +54,16 @@ void main() {
       expect(logs.length >= 2, true); // ошибка + stacktrace
     });
 
-    test('сохраняет последние 200 логов', () {
+    test('сохраняет последние 400 логов', () {
       final logger = DevLogger('Buffer');
-      for (var i = 0; i < 250; i++) {
+      for (var i = 0; i < 450; i++) {
         logger.info('сообщение $i');
       }
       final logs = DevLogger.all;
-      expect(logs.length <= 200, true);
-      expect(logs.length, 200); // максимум 200
+      expect(logs.length <= 400, true);
+      expect(logs.length, 400); // максимум 400
+      expect(logs.first.contains('сообщение 449'), true);
+      expect(logs.last.contains('сообщение 50'), true);
     });
 
     test('включает тег в логи', () {

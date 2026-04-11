@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 
 class SettingsHeroCard extends StatelessWidget {
@@ -10,7 +11,7 @@ class SettingsHeroCard extends StatelessWidget {
     super.key,
     this.badges = const <Widget>[],
     this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(UITokens.spaceLg),
   });
 
   final IconData icon;
@@ -36,7 +37,7 @@ class SettingsHeroCard extends StatelessWidget {
                 width: 54,
                 height: 54,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(UITokens.cornerXLg),
                   gradient: LinearGradient(
                     colors: [
                       theme.colorScheme.primary.withValues(alpha: 0.9),
@@ -55,7 +56,7 @@ class SettingsHeroCard extends StatelessWidget {
                 ),
                 child: Icon(icon, color: Colors.white, size: 28),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: UITokens.spaceMd),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +67,7 @@ class SettingsHeroCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: UITokens.spaceXSm),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
@@ -80,11 +81,15 @@ class SettingsHeroCard extends StatelessWidget {
             ],
           ),
           if (badges.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Wrap(spacing: 8, runSpacing: 8, children: badges),
+            const SizedBox(height: UITokens.spaceMd),
+            Wrap(
+              spacing: UITokens.spaceSm,
+              runSpacing: UITokens.spaceSm,
+              children: badges,
+            ),
           ],
           if (child != null) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: UITokens.spaceLg),
             child!,
           ],
         ],
@@ -134,7 +139,7 @@ class SettingsSectionHeader extends StatelessWidget {
           ),
         ),
         if (trailing != null) ...[
-          const SizedBox(width: 12),
+          const SizedBox(width: UITokens.space),
           trailing!,
         ],
       ],
@@ -157,10 +162,13 @@ class SettingsPill extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.space,
+        vertical: UITokens.spaceSm,
+      ),
       decoration: BoxDecoration(
         color: theme.colorScheme.primaryContainer.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(UITokens.cornerPill),
         border: Border.all(
           color: theme.colorScheme.primary.withValues(alpha: 0.18),
         ),
@@ -170,7 +178,7 @@ class SettingsPill extends StatelessWidget {
         children: [
           if (icon != null) ...[
             Icon(icon, size: 14, color: theme.colorScheme.primary),
-            const SizedBox(width: 6),
+            const SizedBox(width: UITokens.spaceXSm),
           ],
           Text(
             label,
@@ -228,10 +236,10 @@ class SettingsStageTile extends StatelessWidget {
                 : Icon(Icons.circle_outlined, color: accent, size: 18);
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(UITokens.spaceMdSm),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
         border: Border.all(color: accent.withValues(alpha: 0.22)),
       ),
       child: Row(
@@ -246,7 +254,7 @@ class SettingsStageTile extends StatelessWidget {
             alignment: Alignment.center,
             child: icon,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: UITokens.space),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,7 +265,7 @@ class SettingsStageTile extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: UITokens.spaceXS),
                 Text(
                   subtitle,
                   style: theme.textTheme.bodySmall?.copyWith(

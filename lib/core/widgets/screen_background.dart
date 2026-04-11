@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -38,9 +39,25 @@ class _ScreenBackgroundState extends State<ScreenBackground>
 
   static const double _blob1Size = 350;
   static const double _blob2Size = 400;
-  static const Duration _animationTick = Duration(milliseconds: 33);
+  static const Duration _animationTick = Duration(milliseconds: 50);
   static const double _minVisualDelta = 0.12;
   static const double _tiltSmoothing = 0.18;
+
+  bool get _supportsDeviceParallax {
+    if (kIsWeb) {
+      return false;
+    }
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+      case TargetPlatform.iOS:
+        return true;
+      case TargetPlatform.fuchsia:
+      case TargetPlatform.linux:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
+        return false;
+    }
+  }
 
   void _syncMotionState() {
     final settings = SettingsService.themeNotifier.value;
@@ -57,7 +74,10 @@ class _ScreenBackgroundState extends State<ScreenBackground>
     }
 
     final shouldListenToAccel =
-        settings.enableParallax && settings.enableFloatingCircles && _appActive;
+      _supportsDeviceParallax &&
+      settings.enableParallax &&
+      settings.enableFloatingCircles &&
+      _appActive;
     if (!shouldListenToAccel) {
       _cancelAccelSub();
       _accelSub = null;

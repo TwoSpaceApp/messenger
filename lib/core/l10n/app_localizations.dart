@@ -300,6 +300,54 @@ abstract class AppLocalizations {
   /// **'Text copied'**
   String get textCopied;
 
+  /// Hint for username fields
+  ///
+  /// In en, this message translates to:
+  /// **'username'**
+  String get authUsernameHint;
+
+  /// Sign-in button label for Google
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// Sign-in button label for Apple
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
+  /// Sign-in button label for Yandex
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Yandex'**
+  String get continueWithYandex;
+
+  /// Validation prompt for choosing an Aegis username
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an Aegis username.'**
+  String get chooseAegisUsernamePrompt;
+
+  /// Validation text describing the allowed Aegis username format
+  ///
+  /// In en, this message translates to:
+  /// **'Username must be 3-32 chars and use Latin letters, digits, ., _ or -.'**
+  String get validationAegisUsernameFormat;
+
+  /// Helper text under the Aegis username field
+  ///
+  /// In en, this message translates to:
+  /// **'Aegis username: 3-32 chars, Latin letters, digits, ., _ or -'**
+  String get aegisUsernameHelper;
+
+  /// Cooldown message after too many failed login attempts
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in {seconds}s.'**
+  String loginCooldownMessage(int seconds);
+
   /// Online status
   ///
   /// In en, this message translates to:
@@ -876,6 +924,30 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profileLabel;
 
+  /// Title for the current user's account profile screen
+  ///
+  /// In en, this message translates to:
+  /// **'My account'**
+  String get accountProfileTitle;
+
+  /// Subtitle for the current user's account profile screen
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your public profile data and contact details'**
+  String get accountProfileSubtitle;
+
+  /// Subtitle while editing the current user's account profile
+  ///
+  /// In en, this message translates to:
+  /// **'Edit your visible profile data and save the changes here'**
+  String get accountProfileEditSubtitle;
+
+  /// Subtitle for another user's profile screen
+  ///
+  /// In en, this message translates to:
+  /// **'Public profile and available contact information'**
+  String get otherProfileSubtitle;
+
   /// Profile subtitle
   ///
   /// In en, this message translates to:
@@ -1107,7 +1179,7 @@ abstract class AppLocalizations {
   /// Biometrics subtitle
   ///
   /// In en, this message translates to:
-  /// **'Sign in with fingerprint'**
+  /// **'Use Face ID, fingerprint, or your device passcode'**
   String get biometricSubtitle;
 
   /// Active sessions label
@@ -1236,6 +1308,24 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profileTitle;
 
+  /// Primary action to start editing profile data
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get editProfileButton;
+
+  /// Primary action to save profile changes
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get saveProfileButton;
+
+  /// Action to copy the current user's Aegis ID
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Aegis ID'**
+  String get copyAegisIdButton;
+
   /// Save tooltip
   ///
   /// In en, this message translates to:
@@ -1247,6 +1337,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit'**
   String get editTooltip;
+
+  /// Manual media download button label
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get mediaDownloadAction;
 
   /// Write message button
   ///
@@ -1289,6 +1385,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name'**
   String get nameField;
+
+  /// Label for the Aegis ID row
+  ///
+  /// In en, this message translates to:
+  /// **'Aegis ID'**
+  String get aegisIdLabel;
+
+  /// Label for the profile registration date row
+  ///
+  /// In en, this message translates to:
+  /// **'Registered'**
+  String get registeredAtLabel;
+
+  /// Label for the profile status row
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get profileStatusLabel;
+
+  /// Title for the moderation placeholder notice on other user profiles
+  ///
+  /// In en, this message translates to:
+  /// **'Safety actions are not ready yet'**
+  String get profileModerationNoticeTitle;
+
+  /// Message for the moderation placeholder notice on other user profiles
+  ///
+  /// In en, this message translates to:
+  /// **'Blocking and reporting will appear here after the moderation flow is completed.'**
+  String get profileModerationNoticeMessage;
+
+  /// Action label to block a user
+  ///
+  /// In en, this message translates to:
+  /// **'Block user'**
+  String get blockUserAction;
+
+  /// Action label to report a user
+  ///
+  /// In en, this message translates to:
+  /// **'Report user'**
+  String get reportUserAction;
 
   /// Avatar upload not yet available
   ///
@@ -1896,6 +2034,24 @@ abstract class AppLocalizations {
   /// **'New chat'**
   String get newChatTitle;
 
+  /// No description provided for @newChatChooserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new conversation'**
+  String get newChatChooserTitle;
+
+  /// No description provided for @newChatChooserSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the kind of chat you want to create or join.'**
+  String get newChatChooserSubtitle;
+
+  /// No description provided for @createDirectChatSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a person or enter an Aegis ID manually.'**
+  String get createDirectChatSubtitle;
+
   /// Direct chat tab
   ///
   /// In en, this message translates to:
@@ -1907,6 +2063,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Group'**
   String get groupChatTab;
+
+  /// No description provided for @channelChatTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Channel'**
+  String get channelChatTab;
+
+  /// No description provided for @createGroupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up a group, pick participants and share the invite link right away.'**
+  String get createGroupSubtitle;
+
+  /// No description provided for @createChannelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create channel'**
+  String get createChannelTitle;
+
+  /// No description provided for @createChannelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a read-focused channel with avatar, description and shareable link.'**
+  String get createChannelSubtitle;
 
   /// Start direct chat title
   ///
@@ -2817,19 +2997,19 @@ abstract class AppLocalizations {
   /// Biometric auth label
   ///
   /// In en, this message translates to:
-  /// **'Biometric authentication'**
+  /// **'Device authentication'**
   String get biometricAuthLabel;
 
   /// Biometric auth subtitle
   ///
   /// In en, this message translates to:
-  /// **'Fingerprint or Face ID'**
+  /// **'Face ID, fingerprint, or your device passcode'**
   String get biometricAuthSubtitle;
 
   /// Biometrics enabled label
   ///
   /// In en, this message translates to:
-  /// **'Biometrics enabled'**
+  /// **'App lock enabled'**
   String get biometricEnabledLabel;
 
   /// About security label
@@ -2841,8 +3021,50 @@ abstract class AppLocalizations {
   /// About security content
   ///
   /// In en, this message translates to:
-  /// **'Choose a convenient authentication method to protect your account.'**
+  /// **'TwoSpace uses the unlock method already configured on this device and asks for it when the app returns to the foreground.'**
   String get aboutSecurityContent;
+
+  /// No description provided for @lockScreenFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t verify it\'s you'**
+  String get lockScreenFailedTitle;
+
+  /// No description provided for @lockScreenFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again or log out on this device.'**
+  String get lockScreenFailedMessage;
+
+  /// No description provided for @deviceAuthUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up Face ID, fingerprint, or a device passcode in system settings first.'**
+  String get deviceAuthUnavailableMessage;
+
+  /// No description provided for @authMethodFaceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID'**
+  String get authMethodFaceId;
+
+  /// No description provided for @authMethodFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint'**
+  String get authMethodFingerprint;
+
+  /// No description provided for @authMethodBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometrics'**
+  String get authMethodBiometric;
+
+  /// No description provided for @authMethodDevicePasscode.
+  ///
+  /// In en, this message translates to:
+  /// **'Device passcode'**
+  String get authMethodDevicePasscode;
 
   /// Set PIN code label
   ///
@@ -3546,6 +3768,24 @@ abstract class AppLocalizations {
   /// **'Find and message a user'**
   String get inviteUserSubtitle;
 
+  /// No description provided for @addParticipantAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add participant'**
+  String get addParticipantAction;
+
+  /// No description provided for @selectedParticipantsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get selectedParticipantsTitle;
+
+  /// No description provided for @groupParticipantsOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants are optional. You can create the group now and invite people later.'**
+  String get groupParticipantsOptionalHint;
+
   /// Join by code option title
   ///
   /// In en, this message translates to:
@@ -3557,6 +3797,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join a room using an invite code'**
   String get joinByCodeSubtitle;
+
+  /// No description provided for @joinRoomAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get joinRoomAction;
+
+  /// No description provided for @subscribeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe'**
+  String get subscribeAction;
 
   /// Subtitle for chats home screen
   ///
@@ -3581,6 +3833,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paste an invite link, alias or code'**
   String get joinLinkHint;
+
+  /// No description provided for @publicAliasLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Public alias'**
+  String get publicAliasLabel;
+
+  /// No description provided for @publicAliasHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Short public name without spaces, for example newsroom'**
+  String get publicAliasHint;
+
+  /// No description provided for @channelPublicLinkHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'This link will be used in search and invitations when the channel is public.'**
+  String get channelPublicLinkHelper;
+
+  /// No description provided for @channelLinkFormatError.
+  ///
+  /// In en, this message translates to:
+  /// **'Use only Latin letters, digits, dots, underscores or hyphens.'**
+  String get channelLinkFormatError;
+
+  /// No description provided for @inviteLinkReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite link is ready'**
+  String get inviteLinkReadyTitle;
+
+  /// No description provided for @inviteLinkReadySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share it now or keep it for later. Selected people will receive it in direct messages when possible.'**
+  String get inviteLinkReadySubtitle;
+
+  /// No description provided for @openChatAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get openChatAction;
 
   /// Font label
   ///
@@ -4263,7 +4557,7 @@ abstract class AppLocalizations {
   /// Section title for invite candidates
   ///
   /// In en, this message translates to:
-  /// **'Invite to TwoSpace'**
+  /// **'Not on TwoSpace yet'**
   String get peopleInviteTitle;
 
   /// Subtitle for invite-only contacts
@@ -4539,7 +4833,7 @@ abstract class AppLocalizations {
   /// No description provided for @timestampPrecisionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose how detailed timestamps look in chats and chat list.'**
+  /// **'Choose how detailed message times should be.'**
   String get timestampPrecisionSubtitle;
 
   /// No description provided for @timestampPrecisionMinutes.
@@ -5045,6 +5339,450 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Device'**
   String get devMenuDeviceLabel;
+
+  /// No description provided for @authRegisterVerifyEmailBeforeLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration is complete. Verify your email before signing in.'**
+  String get authRegisterVerifyEmailBeforeLogin;
+
+  /// No description provided for @authRegisterAutoLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created, but automatic sign-in failed: {error}'**
+  String authRegisterAutoLoginFailed(Object error);
+
+  /// No description provided for @authProfileUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update profile'**
+  String get authProfileUpdateFailed;
+
+  /// No description provided for @authAvatarUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update avatar'**
+  String get authAvatarUpdateFailed;
+
+  /// No description provided for @authLoginAppCredentialsRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The server rejected the app credentials. Check server configuration or handshake compatibility.'**
+  String get authLoginAppCredentialsRejected;
+
+  /// No description provided for @authSessionTokenMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not return a session token'**
+  String get authSessionTokenMissing;
+
+  /// No description provided for @authTotpSetupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to prepare two-factor authentication'**
+  String get authTotpSetupFailed;
+
+  /// No description provided for @authTotpDisableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to disable two-factor authentication'**
+  String get authTotpDisableFailed;
+
+  /// No description provided for @authTotpVerifyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to verify two-factor authentication'**
+  String get authTotpVerifyFailed;
+
+  /// No description provided for @authSessionsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load active sessions'**
+  String get authSessionsLoadFailed;
+
+  /// No description provided for @authSessionsRevokeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to end the session'**
+  String get authSessionsRevokeFailed;
+
+  /// No description provided for @authRegisterNotLoggedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration completed, but sign-in was not completed'**
+  String get authRegisterNotLoggedIn;
+
+  /// No description provided for @devMenuTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer menu'**
+  String get devMenuTitle;
+
+  /// No description provided for @devMenuTabActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get devMenuTabActions;
+
+  /// No description provided for @devMenuTabUiInspect.
+  ///
+  /// In en, this message translates to:
+  /// **'UI inspect'**
+  String get devMenuTabUiInspect;
+
+  /// No description provided for @devMenuTabLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs'**
+  String get devMenuTabLogs;
+
+  /// No description provided for @devMenuTabNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get devMenuTabNetwork;
+
+  /// No description provided for @devMenuTabFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Features'**
+  String get devMenuTabFeatures;
+
+  /// No description provided for @devMenuTabInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get devMenuTabInfo;
+
+  /// No description provided for @devMenuLogsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No application logs yet'**
+  String get devMenuLogsEmptyTitle;
+
+  /// No description provided for @devMenuLogsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the problematic screen or repeat the action. New records will appear here.'**
+  String get devMenuLogsEmptyMessage;
+
+  /// No description provided for @devMenuShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get devMenuShowAll;
+
+  /// No description provided for @devMenuOnlyErrors.
+  ///
+  /// In en, this message translates to:
+  /// **'Only errors'**
+  String get devMenuOnlyErrors;
+
+  /// No description provided for @devMenuAllEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'All entries ({count})'**
+  String devMenuAllEntries(Object count);
+
+  /// No description provided for @devMenuClearAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get devMenuClearAction;
+
+  /// No description provided for @devMenuScreenExplorerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen explorer'**
+  String get devMenuScreenExplorerTitle;
+
+  /// No description provided for @devMenuScreenSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by screen name, group, or file'**
+  String get devMenuScreenSearchHint;
+
+  /// No description provided for @devMenuAllScreens.
+  ///
+  /// In en, this message translates to:
+  /// **'All ({count})'**
+  String devMenuAllScreens(Object count);
+
+  /// No description provided for @devMenuScreensNotFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Screens not found'**
+  String get devMenuScreensNotFoundTitle;
+
+  /// No description provided for @devMenuScreensNotFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the search query or clear the group filter.'**
+  String get devMenuScreensNotFoundMessage;
+
+  /// No description provided for @devMenuUtilitiesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Utilities'**
+  String get devMenuUtilitiesTitle;
+
+  /// No description provided for @devMenuForceCrash.
+  ///
+  /// In en, this message translates to:
+  /// **'Force crash'**
+  String get devMenuForceCrash;
+
+  /// No description provided for @devMenuClearSecureStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear secure storage'**
+  String get devMenuClearSecureStorage;
+
+  /// No description provided for @devMenuClearCacheProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear profile cache'**
+  String get devMenuClearCacheProfile;
+
+  /// No description provided for @devMenuCheckOta.
+  ///
+  /// In en, this message translates to:
+  /// **'Check OTA'**
+  String get devMenuCheckOta;
+
+  /// No description provided for @devMenuOpenScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open screen'**
+  String get devMenuOpenScreen;
+
+  /// No description provided for @devMenuShowBounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Show bounds (debugPaintSize)'**
+  String get devMenuShowBounds;
+
+  /// No description provided for @devMenuShowBoundsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Displays paddings and borders of all widgets'**
+  String get devMenuShowBoundsSubtitle;
+
+  /// No description provided for @devMenuRepaintRainbow.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight repaints (RepaintRainbow)'**
+  String get devMenuRepaintRainbow;
+
+  /// No description provided for @devMenuRepaintRainbowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlights elements that are being repainted'**
+  String get devMenuRepaintRainbowSubtitle;
+
+  /// No description provided for @devMenuSlowAnimations.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow animations (timeDilation = 5.0)'**
+  String get devMenuSlowAnimations;
+
+  /// No description provided for @devMenuSlowAnimationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Slows down all animations in the app'**
+  String get devMenuSlowAnimationsSubtitle;
+
+  /// No description provided for @devMenuPerformanceOverlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance profiling'**
+  String get devMenuPerformanceOverlay;
+
+  /// No description provided for @devMenuPerformanceOverlaySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows the Performance Overlay on top of the app'**
+  String get devMenuPerformanceOverlaySubtitle;
+
+  /// No description provided for @devMenuSensitiveDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive data visibility'**
+  String get devMenuSensitiveDialogTitle;
+
+  /// No description provided for @devMenuSensitiveDialogMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'After enabling this option, new debug and network logs may contain tokens, keys, and other secrets in plain text. Existing records will not change. Continue?'**
+  String get devMenuSensitiveDialogMessage;
+
+  /// No description provided for @devMenuEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get devMenuEnable;
+
+  /// No description provided for @devMenuSensitiveEnableDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Keys, tokens, and passwords are masked by default. This switch affects only new logs.'**
+  String get devMenuSensitiveEnableDescription;
+
+  /// No description provided for @devMenuSensitiveDisabledDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive data is always hidden in this build.'**
+  String get devMenuSensitiveDisabledDescription;
+
+  /// No description provided for @devMenuRevealSensitiveData.
+  ///
+  /// In en, this message translates to:
+  /// **'Show sensitive data in new logs'**
+  String get devMenuRevealSensitiveData;
+
+  /// No description provided for @devMenuFlagNewChatUi.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable new chat UI'**
+  String get devMenuFlagNewChatUi;
+
+  /// No description provided for @devMenuFlagForceVideoCompression.
+  ///
+  /// In en, this message translates to:
+  /// **'Force video compression'**
+  String get devMenuFlagForceVideoCompression;
+
+  /// No description provided for @devMenuFlagAggressiveCaching.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable aggressive caching'**
+  String get devMenuFlagAggressiveCaching;
+
+  /// No description provided for @devMenuFlagIgnoreServerOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore server offline state'**
+  String get devMenuFlagIgnoreServerOffline;
+
+  /// No description provided for @devMenuFlagIgnoreServerOfflineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the current session and avoids returning to the sign-in screen when the server is unavailable.'**
+  String get devMenuFlagIgnoreServerOfflineSubtitle;
+
+  /// No description provided for @devMenuReleaseHiddenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive data is hidden'**
+  String get devMenuReleaseHiddenTitle;
+
+  /// No description provided for @devMenuReleaseHiddenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Public release and profile builds always show debug data only in masked form.'**
+  String get devMenuReleaseHiddenSubtitle;
+
+  /// No description provided for @devMenuNetworkEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No network logs yet'**
+  String get devMenuNetworkEmptyTitle;
+
+  /// No description provided for @devMenuNetworkEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open any screen that performs requests and logs will appear here.'**
+  String get devMenuNetworkEmptyMessage;
+
+  /// No description provided for @devMenuAllRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'All requests ({count})'**
+  String devMenuAllRequests(Object count);
+
+  /// No description provided for @devMenuNetworkProblemDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'problem detected'**
+  String get devMenuNetworkProblemDetected;
+
+  /// No description provided for @devMenuNetworkCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'completed'**
+  String get devMenuNetworkCompleted;
+
+  /// No description provided for @devMenuRequestHeaders.
+  ///
+  /// In en, this message translates to:
+  /// **'Request headers'**
+  String get devMenuRequestHeaders;
+
+  /// No description provided for @devMenuRequestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Request body · {type}'**
+  String devMenuRequestBody(Object type);
+
+  /// No description provided for @devMenuResponseHeaders.
+  ///
+  /// In en, this message translates to:
+  /// **'Response headers'**
+  String get devMenuResponseHeaders;
+
+  /// No description provided for @devMenuResponseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Response body · {type}'**
+  String devMenuResponseBody(Object type);
+
+  /// No description provided for @devMenuVersionWithBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'{version} (Build {buildNumber})'**
+  String devMenuVersionWithBuild(Object buildNumber, Object version);
+
+  /// No description provided for @notificationsInDevelopmentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed notification controls will arrive in a future update.'**
+  String get notificationsInDevelopmentSubtitle;
+
+  /// No description provided for @devMenuCopyVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy visible'**
+  String get devMenuCopyVisible;
+
+  /// No description provided for @devMenuExportLogFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Export log file'**
+  String get devMenuExportLogFile;
+
+  /// No description provided for @devMenuNewestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest first'**
+  String get devMenuNewestFirst;
+
+  /// No description provided for @devMenuOldestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get devMenuOldestFirst;
+
+  /// No description provided for @feedbackAttachLogsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach logs?'**
+  String get feedbackAttachLogsLabel;
+
+  /// No description provided for @feedbackAttachLogsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a diagnostic file with device info, application logs, and network logs.'**
+  String get feedbackAttachLogsSubtitle;
 }
 
 class _AppLocalizationsDelegate

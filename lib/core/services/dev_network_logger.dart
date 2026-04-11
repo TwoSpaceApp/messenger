@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
 
 enum DevNetworkLogKind {
@@ -123,7 +124,10 @@ class DevNetworkLog {
 class DevNetworkLogger {
   DevNetworkLogger._internal();
   static final DevNetworkLogger instance = DevNetworkLogger._internal();
-  static const int _maxEntries = 1000;
+  static const int _maxEntries = 400;
+  static const int _maxCollectionEntries = 48;
+  static const int _maxStringLength = 2400;
+  static const int _maxDepth = 5;
 
   final List<DevNetworkLog> _logs = [];
   final _controller = StreamController<List<DevNetworkLog>>.broadcast();
@@ -142,14 +146,26 @@ class DevNetworkLogger {
     Map<String, dynamic> responseHeaders = const {},
     String? errorMessage,
   }) {
+    if (!kDebugMode) {
+      return;
+    }
+
     final safeUrl = DebugDataSanitizer.sanitizeText(url);
-    final safeRequestHeaders = DebugDataSanitizer.sanitizeMap(requestHeaders);
-    final safeResponseHeaders = DebugDataSanitizer.sanitizeMap(responseHeaders);
-    final safeRequestBody = DebugDataSanitizer.sanitizeStructured(requestBody);
-    final safeResponseBody = DebugDataSanitizer.sanitizeStructured(responseBody);
+    final safeRequestHeaders = _compactForStorage(
+      DebugDataSanitizer.sanitizeMap(requestHeaders),
+    );
+    final safeResponseHeaders = _compactForStorage(
+      DebugDataSanitizer.sanitizeMap(responseHeaders),
+    );
+    final safeRequestBody = _compactForStorage(
+      DebugDataSanitizer.sanitizeStructured(requestBody),
+    );
+    final safeResponseBody = _compactForStorage(
+      DebugDataSanitizer.sanitizeStructured(responseBody),
+    );
     final safeErrorMessage = errorMessage == null
         ? null
-        : DebugDataSanitizer.sanitizeText(errorMessage);
+        : _compactForStorage(DebugDataSanitizer.sanitizeText(errorMessage));
 
     final log = DevNetworkLog(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -169,11 +185,63 @@ class DevNetworkLogger {
     if (_logs.length > _maxEntries) {
       _logs.removeLast();
     }
-    _controller.add(List<DevNetworkLog>.unmodifiable(_logs));
+    if (_controller.hasListener) {
+      _controller.add(List<DevNetworkLog>.unmodifiable(_logs));
+    }
   }
 
   void clear() {
     _logs.clear();
-    _controller.add(List<DevNetworkLog>.unmodifiable(_logs));
+    if (_controller.hasListener) {
+      _controller.add(List<DevNetworkLog>.unmodifiable(_logs));
+    }
+  }
+
+  dynamic _compactForStorage(dynamic value, {int depth = 0}) {
+    if (value == null || value is num || value is bool) {
+      return value;
+    }
+
+    if (value is String) {
+      if (value.length <= _maxStringLength) {
+        return value;
+      }
+      return '${value.substring(0, _maxStringLength)}… [truncated ${value.length - _maxStringLength} chars]';
+    }
+
+    if (depth >= _maxDepth) {
+      if (value is List) {
+        return '[truncated list depth=${depth + 1} size=${value.length}]';
+      }
+      if (value is Map) {
+        return '{truncated map depth=${depth + 1} size=${value.length}}';
+      }
+      return value.toString();
+    }
+
+    if (value is List) {
+      final visible = value.take(_maxCollectionEntries).map(
+        (item) => _compactForStorage(item, depth: depth + 1),
+      );
+      final result = visible.toList(growable: true);
+      if (value.length > _maxCollectionEntries) {
+        result.add('[${value.length - _maxCollectionEntries} more items]');
+      }
+      return result;
+    }
+
+    if (value is Map) {
+      final entries = value.entries.take(_maxCollectionEntries);
+      final result = <String, dynamic>{
+        for (final entry in entries)
+          entry.key.toString(): _compactForStorage(entry.value, depth: depth + 1),
+      };
+      if (value.length > _maxCollectionEntries) {
+        result['…'] = '${value.length - _maxCollectionEntries} more entries';
+      }
+      return result;
+    }
+
+    return _compactForStorage(value.toString(), depth: depth + 1);
   }
 }

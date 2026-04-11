@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
+import 'package:two_space_app/core/utils/user_content_sanitizer.dart';
 
 /// Message content types
 enum MessageContentType {
@@ -155,14 +156,24 @@ ParsedRichText parseRichTextContent(String content) {
       if (kind == 'rich-text' || kind == 'bot-rich-text') {
         final text = decoded['Text'] as String? ?? '';
         final parseMode = decoded['ParseMode'] as String?;
-        return ParsedRichText(text: text, parseMode: parseMode);
+        return ParsedRichText(
+          text: UserContentSanitizer.sanitizeRichTextDisplay(
+            text,
+            parseMode: parseMode,
+          ),
+          parseMode: (parseMode?.toLowerCase() == ParseMode.html.value)
+              ? null
+              : parseMode,
+        );
       }
     }
   } catch (_) {
     // Content is plain text.
   }
 
-  return ParsedRichText(text: content);
+  return ParsedRichText(
+    text: UserContentSanitizer.sanitizeRichTextDisplay(content),
+  );
 }
 
 /// Recursively converts a MessagePack-deserialized structure into
@@ -225,6 +236,25 @@ int? _parseNullableIntValue(dynamic value) {
     return int.tryParse(value);
   }
   return null;
+}
+
+bool _parseBoolValue(dynamic value, {bool fallback = false}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+      return false;
+    }
+  }
+  return fallback;
 }
 
 List<int> _parseIntList(dynamic value) {
@@ -3102,6 +3132,436 @@ class RoomSettingsUpdateResponse {
     return RoomSettingsUpdateResponse.fromJson(
       _normalizeMsgPack(raw) as Map<String, dynamic>,
     );
+  }
+}
+
+class SessionListRequest {
+  const SessionListRequest();
+
+  Map<String, dynamic> toJson() => const <String, dynamic>{};
+
+  List<int> toBytes() => msgpack.serialize(toJson());
+}
+
+class UserTypingRequest {
+  const UserTypingRequest({
+    required this.scope,
+    required this.targetId,
+    required this.isTyping,
+    this.toUserId,
+  });
+
+  final String scope;
+  final int targetId;
+  final bool isTyping;
+  final int? toUserId;
+
+  factory UserTypingRequest.privateChat({
+    required int toUserId,
+    required bool isTyping,
+  }) => UserTypingRequest(
+    scope: ChatScope.privateChat.value,
+    targetId: toUserId,
+    toUserId: toUserId,
+    isTyping: isTyping,
+  );
+
+  factory UserTypingRequest.channel({
+    required int channelId,
+    required bool isTyping,
+  }) => UserTypingRequest(
+    scope: ChatScope.channel.value,
+    targetId: channelId,
+    isTyping: isTyping,
+  );
+
+  factory UserTypingRequest.group({
+    required int groupId,
+    required bool isTyping,
+  }) => UserTypingRequest(
+    scope: ChatScope.group.value,
+    targetId: groupId,
+    isTyping: isTyping,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'Scope': scope,
+    'TargetId': targetId,
+    'IsTyping': isTyping,
+    if (toUserId != null) 'ToUserId': toUserId,
+  };
+
+  List<int> toBytes() => msgpack.serialize(toJson());
+}
+
+class UserTypingEventPayload {
+  const UserTypingEventPayload({
+    required this.scope,
+    required this.targetId,
+    required this.userId,
+    required this.isTyping,
+    required this.timestampUtc,
+  });
+
+  final String scope;
+  final int targetId;
+  final int userId;
+  final bool isTyping;
+  final DateTime timestampUtc;
+
+  factory UserTypingEventPayload.fromJson(Map<String, dynamic> json) {
+    return UserTypingEventPayload(
+      scope: json['Scope']?.toString() ?? ChatScope.privateChat.value,
+      targetId: _parseIntValue(json['TargetId'] ?? 0, fieldName: 'TargetId'),
+      userId: _parseIntValue(json['UserId'] ?? 0, fieldName: 'UserId'),
+      isTyping: _parseBoolValue(json['IsTyping']),
+      timestampUtc: _parseDateTimeValue(
+        json['TimestampUtc'] ?? json['Timestamp'] ?? DateTime.now().toUtc(),
+      ),
+    );
+  }
+
+  factory UserTypingEventPayload.fromBytes(List<int> bytes) {
+    return UserTypingEventPayload.fromJson(_decodePayloadMap(bytes));
+  }
+}
+
+class FileTransferRequest {
+  const FileTransferRequest({
+    required this.action,
+    this.transferId,
+    this.fileId,
+    this.fileName,
+    this.mimeType,
+    this.totalSize,
+    this.totalChunks,
+    this.chunkIndex,
+    this.chunkDataBase64,
+    this.allowedUserIds,
+  });
+
+  final String action;
+  final String? transferId;
+  final String? fileId;
+  final String? fileName;
+  final String? mimeType;
+  final int? totalSize;
+  final int? totalChunks;
+  final int? chunkIndex;
+  final String? chunkDataBase64;
+  final List<int>? allowedUserIds;
+
+  Map<String, dynamic> toJson() => {
+    'Action': action,
+    if (transferId != null) 'TransferId': transferId,
+    if (fileId != null) 'FileId': fileId,
+    if (fileName != null) 'FileName': fileName,
+    if (mimeType != null) 'MimeType': mimeType,
+    if (totalSize != null) 'TotalSize': totalSize,
+    if (totalChunks != null) 'TotalChunks': totalChunks,
+    if (chunkIndex != null) 'ChunkIndex': chunkIndex,
+    if (chunkDataBase64 != null) 'ChunkDataBase64': chunkDataBase64,
+    if (allowedUserIds != null) 'AllowedUserIds': allowedUserIds,
+  };
+
+  List<int> toBytes() => msgpack.serialize(toJson());
+}
+
+class FileTransferResponsePayload {
+  const FileTransferResponsePayload({
+    required this.success,
+    this.message,
+    this.transferId,
+    this.fileId,
+    this.chunkIndex,
+    this.totalChunks,
+    this.chunkDataBase64,
+    this.fileName,
+    this.mimeType,
+    this.totalSize,
+  });
+
+  final bool success;
+  final String? message;
+  final String? transferId;
+  final String? fileId;
+  final int? chunkIndex;
+  final int? totalChunks;
+  final String? chunkDataBase64;
+  final String? fileName;
+  final String? mimeType;
+  final int? totalSize;
+
+  factory FileTransferResponsePayload.fromJson(Map<String, dynamic> json) {
+    return FileTransferResponsePayload(
+      success: _parseBoolValue(json['Success']),
+      message: json['Message']?.toString(),
+      transferId: json['TransferId']?.toString(),
+      fileId: json['FileId']?.toString(),
+      chunkIndex: _parseNullableIntValue(json['ChunkIndex']),
+      totalChunks: _parseNullableIntValue(json['TotalChunks']),
+      chunkDataBase64: json['ChunkDataBase64']?.toString(),
+      fileName: json['FileName']?.toString(),
+      mimeType: json['MimeType']?.toString(),
+      totalSize: _parseNullableIntValue(json['TotalSize']),
+    );
+  }
+
+  factory FileTransferResponsePayload.fromBytes(List<int> bytes) {
+    return FileTransferResponsePayload.fromJson(_decodePayloadMap(bytes));
+  }
+}
+
+class SessionTerminatedEventPayload {
+  const SessionTerminatedEventPayload({
+    required this.reason,
+    required this.revokedByConnectionId,
+  });
+
+  final String reason;
+  final int revokedByConnectionId;
+
+  factory SessionTerminatedEventPayload.fromJson(Map<String, dynamic> json) {
+    return SessionTerminatedEventPayload(
+      reason: json['Reason']?.toString() ?? '',
+      revokedByConnectionId: _parseIntValue(
+        json['RevokedByConnectionId'] ?? 0,
+        fieldName: 'RevokedByConnectionId',
+      ),
+    );
+  }
+
+  factory SessionTerminatedEventPayload.fromBytes(List<int> bytes) {
+    return SessionTerminatedEventPayload.fromJson(_decodePayloadMap(bytes));
+  }
+}
+
+class ReadSyncEventPayload {
+  const ReadSyncEventPayload({
+    required this.messageIds,
+    required this.readAt,
+  });
+
+  final List<int> messageIds;
+  final DateTime readAt;
+
+  factory ReadSyncEventPayload.fromJson(Map<String, dynamic> json) {
+    return ReadSyncEventPayload(
+      messageIds: _parseIntList(json['MessageIds']),
+      readAt: _parseDateTimeValue(json['ReadAt'] ?? DateTime.now().toUtc()),
+    );
+  }
+
+  factory ReadSyncEventPayload.fromBytes(List<int> bytes) {
+    return ReadSyncEventPayload.fromJson(_decodePayloadMap(bytes));
+  }
+}
+
+class ActiveSessionInfo {
+  const ActiveSessionInfo({
+    required this.sessionId,
+    required this.clientInfo,
+    required this.isCurrent,
+    required this.isOnline,
+    this.deviceName,
+    this.platform,
+    this.appVersion,
+    this.ipAddress,
+    this.userAgent,
+    this.createdAt,
+    this.lastActivityAt,
+  });
+
+  final String sessionId;
+  final String clientInfo;
+  final bool isCurrent;
+  final bool isOnline;
+  final String? deviceName;
+  final String? platform;
+  final String? appVersion;
+  final String? ipAddress;
+  final String? userAgent;
+  final DateTime? createdAt;
+  final DateTime? lastActivityAt;
+
+  String? get title {
+    final candidates = <String?>[
+      clientInfo,
+      deviceName,
+      platform,
+      userAgent,
+      sessionId,
+    ];
+    for (final candidate in candidates) {
+      final trimmed = candidate?.trim();
+      if (trimmed != null && trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return null;
+  }
+
+  factory ActiveSessionInfo.fromJson(Map<String, dynamic> json) {
+    String? readString(List<String> keys) {
+      for (final key in keys) {
+        final value = json[key]?.toString().trim();
+        if (value != null && value.isNotEmpty && value.toLowerCase() != 'null') {
+          return value;
+        }
+      }
+      return null;
+    }
+
+    DateTime? readDateTime(List<String> keys) {
+      for (final key in keys) {
+        final parsed = _parseNullableDateTimeValue(json[key]);
+        if (parsed != null) {
+          return parsed;
+        }
+      }
+      return null;
+    }
+
+    return ActiveSessionInfo(
+      sessionId:
+          readString(const <String>[
+            'SessionId',
+            'Id',
+            'SessionTokenId',
+            'DeviceId',
+          ]) ??
+          '',
+      clientInfo: readString(const <String>['ClientInfo']) ?? '',
+      isCurrent: _parseBoolValue(
+        json['IsCurrent'] ?? json['Current'] ?? json['IsThisDevice'],
+      ),
+      isOnline: _parseBoolValue(json['IsOnline']),
+      deviceName: readString(const <String>[
+        'DeviceName',
+        'Device',
+        'DeviceTitle',
+        'ClientInfo',
+      ]),
+      platform: readString(const <String>[
+        'Platform',
+        'OsName',
+        'OS',
+        'System',
+      ]),
+      appVersion: readString(const <String>[
+        'AppVersion',
+        'Version',
+        'ClientVersion',
+      ]),
+      ipAddress: readString(const <String>[
+        'IpAddress',
+        'IPAddress',
+        'Ip',
+        'RemoteIp',
+      ]),
+      userAgent: readString(const <String>[
+        'UserAgent',
+        'Client',
+        'ClientName',
+      ]),
+      createdAt: readDateTime(const <String>[
+        'CreatedAtUtc',
+        'CreatedAt',
+        'IssuedAt',
+      ]),
+      lastActivityAt: readDateTime(const <String>[
+        'LastActivityAtUtc',
+        'LastActivityAt',
+        'LastSeenAt',
+        'LastSeen',
+      ]),
+    );
+  }
+}
+
+class SessionListResponse {
+  const SessionListResponse({
+    required this.success,
+    required this.sessions,
+    this.message,
+  });
+
+  final bool success;
+  final List<ActiveSessionInfo> sessions;
+  final String? message;
+
+  factory SessionListResponse.fromJson(Map<String, dynamic> json) {
+    final rawSessions = json['Sessions'] ?? json['ActiveSessions'] ?? json['Items'];
+    final sessions = rawSessions is List
+        ? rawSessions
+              .map((item) {
+                if (item is Map<String, dynamic>) {
+                  return ActiveSessionInfo.fromJson(item);
+                }
+                if (item is Map) {
+                  return ActiveSessionInfo.fromJson(
+                    item.map<String, dynamic>(
+                      (key, value) => MapEntry(key.toString(), value),
+                    ),
+                  );
+                }
+                return null;
+              })
+              .whereType<ActiveSessionInfo>()
+              .where((item) => item.sessionId.isNotEmpty)
+              .toList(growable: false)
+        : const <ActiveSessionInfo>[];
+
+    return SessionListResponse(
+      success:
+          json['Success'] == null || _parseBoolValue(json['Success']),
+      sessions: sessions,
+      message: json['Error']?.toString() ?? json['Message']?.toString(),
+    );
+  }
+
+  factory SessionListResponse.fromBytes(List<int> bytes) {
+    return SessionListResponse.fromJson(_decodePayloadMap(bytes));
+  }
+}
+
+class SessionRevokeRequest {
+  const SessionRevokeRequest({required this.sessionId});
+
+  final int sessionId;
+
+  Map<String, dynamic> toJson() => {'SessionId': sessionId};
+
+  List<int> toBytes() => msgpack.serialize(toJson());
+}
+
+class SessionRevokeResponse {
+  const SessionRevokeResponse({
+    required this.success,
+    this.sessionId,
+    this.revokedCurrentSession = false,
+    this.message,
+  });
+
+  final bool success;
+  final String? sessionId;
+  final bool revokedCurrentSession;
+  final String? message;
+
+  factory SessionRevokeResponse.fromJson(Map<String, dynamic> json) {
+    return SessionRevokeResponse(
+      success:
+          json['Success'] == null || _parseBoolValue(json['Success']),
+      sessionId: json['SessionId']?.toString() ?? json['Id']?.toString(),
+      revokedCurrentSession: _parseBoolValue(
+        json['RevokedCurrentSession'] ?? json['CurrentSessionRevoked'],
+      ),
+      message: json['Error']?.toString() ?? json['Message']?.toString(),
+    );
+  }
+
+  factory SessionRevokeResponse.fromBytes(List<int> bytes) {
+    return SessionRevokeResponse.fromJson(_decodePayloadMap(bytes));
   }
 }
 

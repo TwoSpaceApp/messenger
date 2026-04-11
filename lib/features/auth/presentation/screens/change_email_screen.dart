@@ -33,7 +33,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
 
   Future<void> _loadCurrent() async {
     try {
-      final profile = await _chatService.getOwnUserInfo(forceRefresh: true);
+      final profile = await _chatService.getOwnUserInfo();
       final email = profile['email']?.toString().trim();
       if (!mounted) return;
       setState(() {
@@ -52,18 +52,15 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     final email = _emailCtrl.text.trim();
-    _pwdCtrl.text.trim();
     if (email.isEmpty) return;
     setState(() => _loading = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      // Backend email management is not available yet.
       if (!mounted) return;
       await showFeatureInDevelopmentDialog(
         context,
         feature: l10n.changeEmailTitle,
       );
-      // navState.pop(true);
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -77,101 +74,103 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final body = ScreenBackground(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: UITokens.sectionContentMaxWidth,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(UITokens.spaceMd),
-            child: ValueListenableBuilder<bool>(
-              valueListenable: SettingsService.paleVioletNotifier,
-              builder: (c, pale, _) {
-                final theme = Theme.of(context).copyWith(
-                  inputDecorationTheme: InputDecorationTheme(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(UITokens.cornerSm),
-                    ),
-                    filled: pale,
-                    fillColor: pale ? const Color(0xFFF6F0FF) : null,
+    final content = Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: UITokens.sectionContentMaxWidth,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(UITokens.spaceMd),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: SettingsService.paleVioletNotifier,
+            builder: (c, pale, _) {
+              final theme = Theme.of(context).copyWith(
+                inputDecorationTheme: InputDecorationTheme(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(UITokens.cornerSm),
                   ),
-                );
-                return Theme(
-                  data: theme,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (widget.embedded) ...[
-                        SectionPageHeader(
-                          title: l10n.changeEmailTitle,
-                          subtitle: l10n.changeEmailDescription,
-                          leading: IconButton(
-                            onPressed: () => context.pop(),
-                            icon: const Icon(Icons.arrow_back_rounded),
-                          ),
-                        ),
-                        const SizedBox(height: UITokens.spaceMd),
-                      ],
-                      Text(l10n.changeEmailDescription),
-                      const SizedBox(height: UITokens.space),
-                      InlineNoticeCard(
-                        icon: Icons.construction_rounded,
-                        badge: l10n.featureInDevelopmentLabel,
+                  filled: pale,
+                  fillColor: pale ? const Color(0xFFF6F0FF) : null,
+                ),
+              );
+              return Theme(
+                data: theme,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (widget.embedded) ...[
+                      SectionPageHeader(
                         title: l10n.changeEmailTitle,
-                        message: l10n.featureInDevelopmentMessage(
-                          l10n.changeEmailTitle,
+                        subtitle: l10n.changeEmailDescription,
+                        leading: IconButton(
+                          onPressed: () => context.pop(),
+                          icon: const Icon(Icons.arrow_back_rounded),
                         ),
                       ),
-                      if (_currentEmail != null) ...[
-                        const SizedBox(height: UITokens.spaceSm),
-                        Text(
-                          l10n.currentPrefix,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          _currentEmail ?? '',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                      const SizedBox(height: UITokens.space),
-                      TextField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: l10n.newEmailLabel,
-                        ),
+                      const SizedBox(height: UITokens.spaceMd),
+                    ],
+                    Text(l10n.changeEmailDescription),
+                    const SizedBox(height: UITokens.space),
+                    InlineNoticeCard(
+                      icon: Icons.construction_rounded,
+                      badge: l10n.featureInDevelopmentLabel,
+                      title: l10n.changeEmailTitle,
+                      message: l10n.featureInDevelopmentMessage(
+                        l10n.changeEmailTitle,
                       ),
-                      const SizedBox(height: UITokens.space),
-                      TextField(
-                        controller: _pwdCtrl,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: l10n.currentPasswordLabel,
-                        ),
+                    ),
+                    if (_currentEmail != null) ...[
+                      const SizedBox(height: UITokens.spaceSm),
+                      Text(
+                        l10n.currentPrefix,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      const SizedBox(height: UITokens.spaceMdLg),
-                      ElevatedButton(
-                        onPressed: _loading ? null : _submit,
-                        child: _loading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: UITokens.borderThick,
-                                ),
-                              )
-                            : Text(l10n.changeEmailButton),
+                      Text(
+                        _currentEmail ?? '',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
-                  ),
-                );
-              },
-            ),
+                    const SizedBox(height: UITokens.space),
+                    TextField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        labelText: l10n.newEmailLabel,
+                      ),
+                    ),
+                    const SizedBox(height: UITokens.space),
+                    TextField(
+                      controller: _pwdCtrl,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: l10n.currentPasswordLabel,
+                      ),
+                    ),
+                    const SizedBox(height: UITokens.spaceMdLg),
+                    ElevatedButton(
+                      onPressed: _loading ? null : _submit,
+                      child: _loading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: UITokens.borderThick,
+                              ),
+                            )
+                          : Text(l10n.changeEmailButton),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
     );
+
+    final body = widget.embedded
+        ? content
+        : ScreenBackground(child: content);
 
     if (widget.embedded) {
       return body;

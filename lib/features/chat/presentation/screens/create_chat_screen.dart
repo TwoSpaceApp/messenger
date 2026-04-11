@@ -1,110 +1,33 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
-import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
-import 'package:two_space_app/features/chat/presentation/screens/group_settings_screen.dart';
+import 'package:two_space_app/features/chat/presentation/widgets/chat_creation_scaffold.dart';
 import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
-import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
-import 'package:two_space_app/core/models/group.dart';
-
-enum CreateChatMode { direct, group, join }
 
 class CreateChatScreen extends StatefulWidget {
-  const CreateChatScreen({
-    this.initialMode = CreateChatMode.direct,
-    super.key,
-  });
-
-  final CreateChatMode initialMode;
+  const CreateChatScreen({super.key});
 
   @override
   State<CreateChatScreen> createState() => _CreateChatScreenState();
 }
 
-class _CreateChatScreenState extends State<CreateChatScreen>
-    with SingleTickerProviderStateMixin {
+class _CreateChatScreenState extends State<CreateChatScreen> {
   final _userIdController = TextEditingController();
-  final _roomNameController = TextEditingController();
-  final _roomTopicController = TextEditingController();
-  final _joinLinkController = TextEditingController();
-  late TabController _tabController;
-  Uint8List? _groupAvatarBytes;
-  String? _groupAvatarFileName;
-
-  bool _loading = false;
-  bool _isPrivate = true;
-  bool _showGroupHistory = false;
-  bool _openGroupSettingsAfterCreate = true;
-  String? _errorMessage;
   final AegisChatService _chatService = AegisChatService();
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(
-      length: 3,
-      vsync: this,
-      initialIndex: widget.initialMode.index,
-    );
-  }
+  bool _loading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
     _userIdController.dispose();
-    _roomNameController.dispose();
-    _roomTopicController.dispose();
-    _joinLinkController.dispose();
-    _tabController.dispose();
     super.dispose();
-  }
-
-  String _friendlyError(Object error) {
-    return error.toString().replaceFirst(RegExp('^Exception: '), '');
-  }
-
-  Future<void> _pickGroupAvatar() async {
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        withData: true,
-      );
-      if (result == null || result.files.isEmpty) {
-        return;
-      }
-      final file = result.files.single;
-      if (file.bytes == null || file.bytes!.isEmpty) {
-        return;
-      }
-      setState(() {
-        _groupAvatarBytes = file.bytes;
-        _groupAvatarFileName = file.name;
-      });
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.filePickError(_friendlyError(error)))),
-      );
-    }
-  }
-
-  void _clearGroupAvatar() {
-    setState(() {
-      _groupAvatarBytes = null;
-      _groupAvatarFileName = null;
-    });
   }
 
   Future<void> _openContacts() async {
@@ -136,13 +59,15 @@ class _CreateChatScreenState extends State<CreateChatScreen>
       }
       setState(() {
         _loading = false;
-        _errorMessage = _friendlyError(error);
+        _errorMessage = chatCreationFriendlyError(error);
       });
     }
   }
 
   Future<void> _openChat(Chat chat) async {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     await Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => ChatScreen(chat: chat)),
@@ -179,830 +104,82 @@ class _CreateChatScreenState extends State<CreateChatScreen>
               : null,
         ),
       );
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _errorMessage = _friendlyError(e);
-        });
-      }
-    }
-  }
-
-  Future<void> _createGroupChat() async {
-    final l10n = AppLocalizations.of(context)!;
-    final roomName = _roomNameController.text.trim();
-    if (roomName.isEmpty) {
-      setState(() => _errorMessage = l10n.enterRoomNameError);
-      return;
-    }
-
-    setState(() {
-      _loading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final group = await _chatService.createGroupRoom(
-        name: roomName,
-        description: _roomTopicController.text.trim().isEmpty
-            ? null
-            : _roomTopicController.text.trim(),
-        visibility: _isPrivate
-            ? GroupVisibility.private
-            : GroupVisibility.public,
-        showMessageHistory: _showGroupHistory,
-        avatarBytes: _groupAvatarBytes,
-        avatarFileName: _groupAvatarFileName,
-      );
+    } catch (error) {
       if (!mounted) {
         return;
       }
-      if (_openGroupSettingsAfterCreate) {
-        await Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => GroupSettingsScreen(roomId: group.roomId),
-          ),
-        );
-        return;
-      }
-      await _openChat(
-        Chat(
-          id: group.roomId,
-          name: group.name,
-          members: group.members.map((member) => member.userId).toList(),
-          roomType: 'group',
-        ),
-      );
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _errorMessage = _friendlyError(e);
-        });
-      }
+      setState(() {
+        _loading = false;
+        _errorMessage = chatCreationFriendlyError(error);
+      });
     }
-  }
-
-  Future<void> _joinRoomByLink() async {
-    final linkOrAlias = _joinLinkController.text.trim();
-    if (linkOrAlias.isEmpty) {
-      setState(
-        () => _errorMessage = AppLocalizations.of(context)!.joinLinkHint,
-      );
-      return;
-    }
-
-    setState(() {
-      _loading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final chat = await _chatService.joinRoomByLink(linkOrAlias);
-      await _openChat(chat);
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _errorMessage = _friendlyError(e);
-        });
-      }
-    }
-  }
-
-  Future<void> _pasteJoinLink() async {
-    final l10n = AppLocalizations.of(context)!;
-    final data = await Clipboard.getData('text/plain');
-    final value = data?.text?.trim() ?? '';
-    if (value.isEmpty) {
-      return;
-    }
-    setState(() {
-      _joinLinkController.text = value;
-      _errorMessage = null;
-    });
-    if (!mounted) {
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.textCopied)),
-    );
-  }
-
-  InputDecoration _fieldDecoration({
-    required BuildContext context,
-    required String label,
-    required IconData icon,
-    String? hint,
-  }) {
-    final theme = Theme.of(context);
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      labelStyle: TextStyle(color: AppColors.subtitleText(context)),
-      hintStyle: TextStyle(color: AppColors.hintText(context)),
-      prefixIcon: Icon(icon, color: AppColors.subtitleText(context)),
-      filled: true,
-      fillColor: theme.colorScheme.surface.withValues(alpha: 0.46),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
-        borderSide: BorderSide(
-          color: theme.colorScheme.outline.withValues(alpha: 0.16),
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
-        borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.4),
-      ),
-    );
-  }
-
-  Widget _buildErrorBanner() {
-    final message = _errorMessage;
-    if (message == null) return const SizedBox.shrink();
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(UITokens.spaceMdSm),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
-        border: Border.all(
-          color: theme.colorScheme.error.withValues(alpha: 0.18),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.error_outline_rounded,
-            size: 18,
-            color: theme.colorScheme.error,
-          ),
-          const SizedBox(width: UITokens.spaceSmMd),
-          Expanded(
-            child: Text(
-              message,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.error,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPrimaryAction({
-    required VoidCallback? onPressed,
-    required Widget label,
-    IconData? icon,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton.icon(
-        onPressed: onPressed,
-        icon: icon == null ? const SizedBox.shrink() : Icon(icon),
-        label: label,
-        style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(54),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(UITokens.cornerXLg),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModeCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required List<Widget> children,
-  }) {
-    return GlassCard(
-      padding: const EdgeInsets.all(UITokens.spaceLg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SettingsSectionHeader(
-            title: title,
-            subtitle: subtitle,
-            trailing: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(UITokens.cornerLg),
-              ),
-              alignment: Alignment.center,
-              child: Icon(icon, color: Theme.of(context).colorScheme.primary),
-            ),
-          ),
-          const SizedBox(height: UITokens.spaceMdLg),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInlineInfo({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(UITokens.spaceMdSm),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withValues(alpha: 0.38),
-        borderRadius: BorderRadius.circular(UITokens.cornerXLg),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.12),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(UITokens.cornerMd),
-            ),
-            alignment: Alignment.center,
-            child: Icon(icon, size: 18, color: theme.colorScheme.primary),
-          ),
-          const SizedBox(width: UITokens.space),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: UITokens.spaceXS),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.subtitleText(context),
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: ScreenBackground(
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final maxWidth =
-                  constraints.maxWidth >= UITokens.desktopBreakpoint
-                  ? 920.0
-                  : double.infinity;
-              final isNarrow = constraints.maxWidth < UITokens.mobileBreakpoint;
-              return Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxWidth),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          UITokens.spaceMd,
-                          UITokens.space,
-                          UITokens.spaceMd,
-                          0,
-                        ),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                Icons.arrow_back,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                            Expanded(
-                              child: Text(
-                                l10n.newChatTitle,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: theme.colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          UITokens.spaceMd,
-                          UITokens.space,
-                          UITokens.spaceMd,
-                          0,
-                        ),
-                        child: GlassCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    width: 54,
-                                    height: 54,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(
-                                        UITokens.cornerXLg,
-                                      ),
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          theme.colorScheme.primary,
-                                          theme.colorScheme.tertiary,
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: const AppLogo(large: false),
-                                  ),
-                                  const SizedBox(width: UITokens.spaceMd),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          l10n.newChatTitle,
-                                          style: theme.textTheme.headlineSmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w800,
-                                                color:
-                                                    theme.colorScheme.onSurface,
-                                              ),
-                                        ),
-                                        const SizedBox(
-                                          height: UITokens.spaceXSm,
-                                        ),
-                                        Text(
-                                          l10n.chatsSubtitle,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: theme.textTheme.bodyMedium
-                                              ?.copyWith(
-                                                color: AppColors.subtitleText(
-                                                  context,
-                                                ),
-                                                height: 1.35,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: UITokens.spaceMdLg),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surface.withValues(
-                                    alpha: 0.46,
-                                  ),
-                                  borderRadius: BorderRadius.circular(
-                                    UITokens.corner2Lg,
-                                  ),
-                                  border: Border.all(
-                                    color: theme.colorScheme.outline.withValues(
-                                      alpha: 0.12,
-                                    ),
-                                  ),
-                                ),
-                                child: TabBar(
-                                  controller: _tabController,
-                                  isScrollable: isNarrow,
-                                  labelColor: theme.colorScheme.onPrimary,
-                                  unselectedLabelColor: AppColors.hintText(
-                                    context,
-                                  ),
-                                  indicator: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(
-                                      UITokens.cornerLg,
-                                    ),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        theme.colorScheme.primary,
-                                        theme.colorScheme.tertiary,
-                                      ],
-                                    ),
-                                  ),
-                                  dividerColor: Colors.transparent,
-                                  padding: const EdgeInsets.all(
-                                    UITokens.spaceXSm,
-                                  ),
-                                  tabs: [
-                                    Tab(text: l10n.directChatTab),
-                                    Tab(text: l10n.groupChatTab),
-                                    Tab(text: l10n.joinByCodeTitle),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: UITokens.spaceMd),
-                      Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildDirectChatTab(),
-                            _buildGroupChatTab(),
-                            _buildJoinChatTab(),
-                          ],
-                        ),
-                      ),
-                    ],
+    return ChatCreationScaffold(
+      title: l10n.newChatTitle,
+      subtitle: l10n.createDirectChatSubtitle,
+      icon: Icons.person_add_alt_1_rounded,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GlassCard(
+            padding: const EdgeInsets.all(UITokens.spaceLg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.contactIdExplanation,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: UITokens.spaceMd),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _loading ? null : _openContacts,
+                    icon: const Icon(Icons.manage_search_rounded),
+                    label: Text(l10n.searchContactsTitle),
                   ),
                 ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDirectChatTab() {
-    final l10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(UITokens.spaceMd),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildModeCard(
-            title: l10n.searchContactsTitle,
-            subtitle: l10n.inviteUserSubtitle,
-            icon: Icons.person_search_rounded,
-            children: [
-              _buildInlineInfo(
-                icon: Icons.bolt_rounded,
-                title: l10n.directChatTab,
-                subtitle: l10n.contactIdExplanation,
-              ),
-              const SizedBox(height: UITokens.spaceMdSm),
-              _buildPrimaryAction(
-                onPressed: _loading ? null : _openContacts,
-                icon: Icons.search_rounded,
-                label: Text(l10n.searchContactsTitle),
-              ),
-            ],
+                const SizedBox(height: UITokens.spaceMd),
+                TextField(
+                  controller: _userIdController,
+                  enabled: !_loading,
+                  decoration: chatCreationInputDecoration(
+                    context: context,
+                    label: l10n.contactIdLabel,
+                    hint: l10n.contactIdDescription,
+                    icon: Icons.alternate_email_rounded,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: UITokens.spaceMd),
-          _buildModeCard(
-            title: l10n.contactIdLabel,
-            subtitle: l10n.contactIdDescription,
-            icon: Icons.alternate_email_rounded,
-            children: [
-              TextField(
-                controller: _userIdController,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                decoration: _fieldDecoration(
-                  context: context,
-                  label: l10n.contactIdLabel,
-                  hint: l10n.contactIdExplanation,
-                  icon: Icons.person_outline_rounded,
-                ),
-              ),
-              if (_errorMessage != null && _tabController.index == 0) ...[
-                const SizedBox(height: UITokens.space),
-                _buildErrorBanner(),
-              ],
-              const SizedBox(height: UITokens.spaceMd),
-              _buildPrimaryAction(
-                onPressed: _loading ? null : _createDirectChat,
-                icon: Icons.send_rounded,
-                label: _loading
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: UITokens.borderThick,
-                        ),
-                      )
-                    : Text(l10n.startChatButton),
-              ),
-            ],
-          ),
-          const SizedBox(height: UITokens.spaceXLg),
-          _buildInlineInfo(
-            icon: Icons.info_outline_rounded,
-            title: l10n.hintCardTitle,
-            subtitle: l10n.contactIdExplanation,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGroupChatTab() {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(UITokens.spaceMd),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildModeCard(
-            title: l10n.createNewRoomTitle,
-            subtitle: _isPrivate
-                ? l10n.privateGroupSubtitle
-                : l10n.publicRoomSubtitle,
-            icon: Icons.groups_rounded,
-            children: [
-              TextField(
-                controller: _roomNameController,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                decoration: _fieldDecoration(
-                  context: context,
-                  label: l10n.roomNameLabel,
-                  icon: Icons.group_outlined,
-                ),
-              ),
-              const SizedBox(height: UITokens.spaceMdSm),
-              TextField(
-                controller: _roomTopicController,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                maxLines: 2,
-                decoration: _fieldDecoration(
-                  context: context,
-                  label: l10n.descriptionOptionalLabel,
-                  icon: Icons.edit_note_rounded,
-                ),
-              ),
-              const SizedBox(height: UITokens.spaceMdSm),
-              Container(
-                padding: const EdgeInsets.all(UITokens.spaceMdSm),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withValues(alpha: 0.38),
-                  borderRadius: BorderRadius.circular(UITokens.cornerXLg),
-                  border: Border.all(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.12),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 26,
-                      backgroundColor: theme.colorScheme.primaryContainer,
-                      foregroundImage: _groupAvatarBytes != null
-                          ? MemoryImage(_groupAvatarBytes!)
-                          : null,
-                      child: _groupAvatarBytes == null
-                          ? Icon(
-                              Icons.groups_rounded,
-                              color: theme.colorScheme.primary,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: UITokens.space),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.groupAvatarTitle,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: UITokens.spaceXS),
-                          Text(
-                            _groupAvatarFileName ?? l10n.groupAvatarSubtitle,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.subtitleText(context),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: UITokens.spaceSm),
-                    TextButton(
-                      onPressed: _loading ? null : _pickGroupAvatar,
-                      child: Text(l10n.chooseFileButton),
-                    ),
-                    if (_groupAvatarBytes != null)
-                      IconButton(
-                        onPressed: _loading ? null : _clearGroupAvatar,
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: UITokens.spaceMdSm),
-              Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surface.withValues(alpha: 0.38),
+          ChatCreationErrorBanner(message: _errorMessage),
+          if (_errorMessage != null) const SizedBox(height: UITokens.spaceMd),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _loading ? null : _createDirectChat,
+              icon: _loading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.chat_bubble_outline_rounded),
+              label: Text(l10n.createButton),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(54),
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(UITokens.cornerXLg),
                 ),
-                child: SwitchListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: UITokens.spaceMdSm,
-                  ),
-                  title: Text(
-                    l10n.privateGroupLabel,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  subtitle: Text(
-                    _isPrivate
-                        ? l10n.privateGroupSubtitle
-                        : l10n.publicRoomSubtitle,
-                    style: TextStyle(color: AppColors.subtitleText(context)),
-                  ),
-                  value: _isPrivate,
-                  onChanged: (v) => setState(() => _isPrivate = v),
-                ),
               ),
-              const SizedBox(height: UITokens.spaceMdSm),
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withValues(alpha: 0.38),
-                  borderRadius: BorderRadius.circular(UITokens.cornerXLg),
-                ),
-                child: SwitchListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: UITokens.spaceMdSm,
-                  ),
-                  title: Text(
-                    l10n.groupHistoryTitle,
-                    style: TextStyle(color: theme.colorScheme.onSurface),
-                  ),
-                  subtitle: Text(
-                    _showGroupHistory
-                        ? l10n.showHistorySubtitle
-                        : l10n.roomHistoryVisibilityJoinedDescription,
-                    style: TextStyle(color: AppColors.subtitleText(context)),
-                  ),
-                  value: _showGroupHistory,
-                  onChanged: (v) => setState(() => _showGroupHistory = v),
-                ),
-              ),
-              const SizedBox(height: UITokens.spaceMdSm),
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withValues(alpha: 0.38),
-                  borderRadius: BorderRadius.circular(UITokens.cornerXLg),
-                ),
-                child: SwitchListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: UITokens.spaceMdSm,
-                  ),
-                  title: Text(
-                    l10n.settingsTitle,
-                    style: TextStyle(color: theme.colorScheme.onSurface),
-                  ),
-                  subtitle: Text(
-                    l10n.inviteUserSubtitle,
-                    style: TextStyle(color: AppColors.subtitleText(context)),
-                  ),
-                  value: _openGroupSettingsAfterCreate,
-                  onChanged: (v) =>
-                      setState(() => _openGroupSettingsAfterCreate = v),
-                ),
-              ),
-              if (_errorMessage != null && _tabController.index == 1) ...[
-                const SizedBox(height: UITokens.space),
-                _buildErrorBanner(),
-              ],
-              const SizedBox(height: UITokens.spaceMd),
-              _buildPrimaryAction(
-                onPressed: _loading ? null : _createGroupChat,
-                icon: Icons.add_comment_rounded,
-                label: _loading
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: UITokens.borderThick,
-                        ),
-                      )
-                    : Text(l10n.createRoomButton),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildJoinChatTab() {
-    final l10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(UITokens.spaceMd),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildModeCard(
-            title: l10n.joinByCodeTitle,
-            subtitle: l10n.joinByCodeSubtitle,
-            icon: Icons.key_rounded,
-            children: [
-              _buildInlineInfo(
-                icon: Icons.link_rounded,
-                title: l10n.joinByCodeTitle,
-                subtitle: l10n.joinLinkHint,
-              ),
-              const SizedBox(height: UITokens.spaceMdSm),
-              TextField(
-                controller: _joinLinkController,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                decoration: _fieldDecoration(
-                  context: context,
-                  label: l10n.joinByCodeTitle,
-                  hint: l10n.joinLinkHint,
-                  icon: Icons.link_rounded,
-                ),
-              ),
-              const SizedBox(height: UITokens.spaceMdSm),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _loading ? null : _pasteJoinLink,
-                      icon: const Icon(Icons.content_paste_go_rounded),
-                      label: Text(l10n.copyLinkAction),
-                    ),
-                  ),
-                  const SizedBox(width: UITokens.spaceSmMd),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _loading
-                          ? null
-                          : () {
-                              setState(() {
-                                _joinLinkController.clear();
-                                _errorMessage = null;
-                              });
-                            },
-                      icon: const Icon(Icons.close_rounded),
-                      label: Text(l10n.storageAutoCleanSelectNone),
-                    ),
-                  ),
-                ],
-              ),
-              if (_errorMessage != null && _tabController.index == 2) ...[
-                const SizedBox(height: UITokens.space),
-                _buildErrorBanner(),
-              ],
-              const SizedBox(height: UITokens.spaceMd),
-              _buildPrimaryAction(
-                onPressed: _loading ? null : _joinRoomByLink,
-                icon: Icons.login_rounded,
-                label: _loading
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: UITokens.borderThick,
-                        ),
-                      )
-                    : Text(l10n.joinByCodeTitle),
-              ),
-            ],
+            ),
           ),
         ],
       ),

@@ -33,6 +33,15 @@ class AegisEventDispatcher {
       StreamController<MessageReactionEvent>.broadcast();
   final StreamController<MessagePinEvent> _pinEventController =
       StreamController<MessagePinEvent>.broadcast();
+    final StreamController<UserTypingEventPayload> _typingEventController =
+      StreamController<UserTypingEventPayload>.broadcast();
+    final StreamController<FileTransferResponsePayload> _fileChunkController =
+      StreamController<FileTransferResponsePayload>.broadcast();
+    final StreamController<SessionTerminatedEventPayload>
+      _sessionTerminatedController =
+      StreamController<SessionTerminatedEventPayload>.broadcast();
+    final StreamController<ReadSyncEventPayload> _readSyncController =
+      StreamController<ReadSyncEventPayload>.broadcast();
 
   AegisEventDispatcher(Stream<Message> source) {
     _subscription = source.listen(_route);
@@ -86,6 +95,37 @@ class AegisEventDispatcher {
   }
 
   Stream<MessagePinEvent> get messagePinEvents => _pinEventController.stream;
+  Stream<UserTypingEventPayload> get typingEvents =>
+      _typingEventController.stream;
+  Stream<FileTransferResponsePayload> get fileTransferChunks =>
+      _fileChunkController.stream;
+  Stream<SessionTerminatedEventPayload> get sessionTerminatedEvents =>
+      _sessionTerminatedController.stream;
+  Stream<ReadSyncEventPayload> get readSyncEvents => _readSyncController.stream;
+
+  StreamSubscription<UserTypingEventPayload> onTypingEvent(
+    void Function(UserTypingEventPayload event) handler,
+  ) {
+    return typingEvents.listen(handler);
+  }
+
+  StreamSubscription<FileTransferResponsePayload> onFileTransferChunk(
+    void Function(FileTransferResponsePayload event) handler,
+  ) {
+    return fileTransferChunks.listen(handler);
+  }
+
+  StreamSubscription<SessionTerminatedEventPayload> onSessionTerminated(
+    void Function(SessionTerminatedEventPayload event) handler,
+  ) {
+    return sessionTerminatedEvents.listen(handler);
+  }
+
+  StreamSubscription<ReadSyncEventPayload> onReadSyncEvent(
+    void Function(ReadSyncEventPayload event) handler,
+  ) {
+    return readSyncEvents.listen(handler);
+  }
 
   StreamSubscription<Message> onAck(void Function(Message message) handler) {
     return ackMessages.listen(handler);
@@ -145,6 +185,10 @@ class AegisEventDispatcher {
     await _groupEventController.close();
     await _reactionEventController.close();
     await _pinEventController.close();
+    await _typingEventController.close();
+    await _fileChunkController.close();
+    await _sessionTerminatedController.close();
+    await _readSyncController.close();
   }
 
   void _route(Message message) {
@@ -201,6 +245,26 @@ class AegisEventDispatcher {
       _tryEmit(
         () => MessagePinEvent.fromBytes(message.payload),
         _pinEventController,
+      );
+    } else if (message.type == MessageType.userTypingEvent) {
+      _tryEmit(
+        () => UserTypingEventPayload.fromBytes(message.payload),
+        _typingEventController,
+      );
+    } else if (message.type == MessageType.fileTransferChunk) {
+      _tryEmit(
+        () => FileTransferResponsePayload.fromBytes(message.payload),
+        _fileChunkController,
+      );
+    } else if (message.type == MessageType.sessionTerminatedEvent) {
+      _tryEmit(
+        () => SessionTerminatedEventPayload.fromBytes(message.payload),
+        _sessionTerminatedController,
+      );
+    } else if (message.type == MessageType.readSyncEvent) {
+      _tryEmit(
+        () => ReadSyncEventPayload.fromBytes(message.payload),
+        _readSyncController,
       );
     }
   }

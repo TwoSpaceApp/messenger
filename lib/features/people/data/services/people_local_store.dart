@@ -121,8 +121,9 @@ class PeopleLocalStore {
     final normalized = entry.copyWith(
       person: entry.person.copyWith(clearPhotoBytes: true),
     );
-    await _database.into(_database.aegisPeopleCallHistory).insertOnConflictUpdate(
+    await _database.into(_database.aegisPeopleCallHistory).insert(
           _callHistoryCompanionFromEntry(normalized),
+          mode: InsertMode.insertOrReplace,
         );
     await _trimCallHistory(limit: 200);
   }
@@ -210,7 +211,7 @@ class PeopleLocalStore {
 
       if (callHistory.isNotEmpty) {
         await _database.batch((batch) {
-          batch.insertAllOnConflictUpdate(
+          batch.insertAll(
             _database.aegisPeopleCallHistory,
             callHistory
                 .take(200)
@@ -222,6 +223,7 @@ class PeopleLocalStore {
                   ),
                 )
                 .toList(growable: false),
+            mode: InsertMode.insertOrReplace,
           );
         });
       }
@@ -307,11 +309,12 @@ class PeopleLocalStore {
   }
 
   Future<void> _writeMetadata(String key, String value) {
-    return _database.into(_database.aegisMetadata).insertOnConflictUpdate(
+    return _database.into(_database.aegisMetadata).insert(
           AegisMetadataCompanion.insert(
             key: key,
             value: value,
           ),
+          mode: InsertMode.insertOrReplace,
         );
   }
 

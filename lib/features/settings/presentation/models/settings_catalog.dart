@@ -60,7 +60,7 @@ List<SettingsSearchEntry> buildSettingsSearchEntries(AppLocalizations l10n) {
       onTap: (context) async {
         final userId = await AuthService().getCurrentUserId();
         if (context.mounted && userId != null) {
-          context.push(AppStrings.routeProfile, extra: userId);
+          context.push(AppStrings.routeAccountProfile);
         }
       },
     ),

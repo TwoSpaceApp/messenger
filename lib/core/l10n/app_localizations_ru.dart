@@ -105,6 +105,34 @@ class AppLocalizationsRu extends AppLocalizations {
   String get textCopied => 'Текст скопирован';
 
   @override
+  String get authUsernameHint => 'username';
+
+  @override
+  String get continueWithGoogle => 'Войти через Google';
+
+  @override
+  String get continueWithApple => 'Войти через Apple';
+
+  @override
+  String get continueWithYandex => 'Войти через Yandex';
+
+  @override
+  String get chooseAegisUsernamePrompt => 'Придумайте Aegis username.';
+
+  @override
+  String get validationAegisUsernameFormat =>
+      'Username должен быть длиной 3-32 символа и содержать только латиницу, цифры, ., _ или -.';
+
+  @override
+  String get aegisUsernameHelper =>
+      'Aegis username: 3-32 символа, латиница, цифры, ., _ или -';
+
+  @override
+  String loginCooldownMessage(int seconds) {
+    return 'Слишком много попыток. Попробуйте снова через $seconds сек.';
+  }
+
+  @override
   String get onlineLabel => 'Онлайн';
 
   @override
@@ -424,6 +452,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileLabel => 'Профиль';
 
   @override
+  String get accountProfileTitle => 'Мой аккаунт';
+
+  @override
+  String get accountProfileSubtitle =>
+      'Управление публичными данными профиля и контактами';
+
+  @override
+  String get accountProfileEditSubtitle =>
+      'Изменяйте видимые данные профиля и сохраняйте их прямо здесь';
+
+  @override
+  String get otherProfileSubtitle =>
+      'Публичный профиль и доступные контактные данные';
+
+  @override
   String get profileSubtitle => 'Изменить данные профиля';
 
   @override
@@ -540,7 +583,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get biometricLabel => 'Биометрия';
 
   @override
-  String get biometricSubtitle => 'Вход по отпечатку пальца';
+  String get biometricSubtitle =>
+      'Используйте Face ID, отпечаток пальца или код устройства';
 
   @override
   String get activeSessionsLabel => 'Активные сеансы';
@@ -607,10 +651,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileTitle => 'Профиль';
 
   @override
+  String get editProfileButton => 'Изменить данные';
+
+  @override
+  String get saveProfileButton => 'Сохранить изменения';
+
+  @override
+  String get copyAegisIdButton => 'Скопировать Aegis ID';
+
+  @override
   String get saveTooltip => 'Сохранить';
 
   @override
   String get editTooltip => 'Редактировать';
+
+  @override
+  String get mediaDownloadAction => 'Загрузить';
 
   @override
   String get writeMessageButton => 'Написать';
@@ -632,6 +688,29 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nameField => 'Имя';
+
+  @override
+  String get aegisIdLabel => 'Aegis ID';
+
+  @override
+  String get registeredAtLabel => 'Дата регистрации';
+
+  @override
+  String get profileStatusLabel => 'Статус';
+
+  @override
+  String get profileModerationNoticeTitle =>
+      'Действия безопасности пока не готовы';
+
+  @override
+  String get profileModerationNoticeMessage =>
+      'Блокировка и жалобы появятся здесь после завершения сценария модерации.';
+
+  @override
+  String get blockUserAction => 'Заблокировать';
+
+  @override
+  String get reportUserAction => 'Пожаловаться';
 
   @override
   String get avatarUploadLater => 'Загрузка аватара будет добавлена позже';
@@ -964,10 +1043,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get newChatTitle => 'Новый чат';
 
   @override
+  String get newChatChooserTitle => 'Начать новый диалог';
+
+  @override
+  String get newChatChooserSubtitle =>
+      'Выберите, что вы хотите создать или куда хотите войти.';
+
+  @override
+  String get createDirectChatSubtitle =>
+      'Найдите человека или введите Aegis ID вручную.';
+
+  @override
   String get directChatTab => 'Личный чат';
 
   @override
   String get groupChatTab => 'Группа';
+
+  @override
+  String get channelChatTab => 'Канал';
+
+  @override
+  String get createGroupSubtitle =>
+      'Настройте группу, выберите участников и сразу получите ссылку-приглашение.';
+
+  @override
+  String get createChannelTitle => 'Создать канал';
+
+  @override
+  String get createChannelSubtitle =>
+      'Создайте канал с аватаром, описанием и ссылкой.';
 
   @override
   String get startDirectChatTitle => 'Начать личный чат';
@@ -1094,35 +1198,35 @@ class AppLocalizationsRu extends AppLocalizations {
   String get navBarTimeoutLong => 'Спокойно';
 
   @override
-  String get presetQuietGlass => 'Quiet Glass';
+  String get presetQuietGlass => 'Тихий лёд';
 
   @override
   String get presetQuietGlassSubtitle =>
       'Холодная глубина, ровный контраст и спокойное движение.';
 
   @override
-  String get presetNightSignal => 'Night Signal';
+  String get presetNightSignal => 'Ночной эфир';
 
   @override
   String get presetNightSignalSubtitle =>
       'Более плотная компоновка, яркие акценты и тёмный пульс.';
 
   @override
-  String get presetEditorial => 'Editorial';
+  String get presetEditorial => 'Редакция под дождём';
 
   @override
   String get presetEditorialSubtitle =>
       'Сдержанное движение, спокойный цвет и акцент на чтении.';
 
   @override
-  String get presetSolarFlare => 'Solar Flare';
+  String get presetSolarFlare => 'Янтарный август';
 
   @override
   String get presetSolarFlareSubtitle =>
       'Тёплые акценты, светлее поверхности и более энергичный фон.';
 
   @override
-  String get presetRetroPulse => 'Retro Pulse';
+  String get presetRetroPulse => 'Клубника в декабре';
 
   @override
   String get presetRetroPulseSubtitle =>
@@ -1471,20 +1575,44 @@ class AppLocalizationsRu extends AppLocalizations {
   String get authMethodsLabel => 'Методы аутентификации';
 
   @override
-  String get biometricAuthLabel => 'Биометрическая аутентификация';
+  String get biometricAuthLabel => 'Аутентификация устройства';
 
   @override
-  String get biometricAuthSubtitle => 'Отпечаток пальца или Face ID';
+  String get biometricAuthSubtitle =>
+      'Face ID, отпечаток пальца или код устройства';
 
   @override
-  String get biometricEnabledLabel => 'Биометрия включена';
+  String get biometricEnabledLabel => 'Блокировка приложения включена';
 
   @override
   String get aboutSecurityLabel => 'О безопасности';
 
   @override
   String get aboutSecurityContent =>
-      'Выберите удобный метод аутентификации для защиты аккаунта.';
+      'TwoSpace использует способ разблокировки, уже настроенный на этом устройстве, и запрашивает его при возвращении в приложение.';
+
+  @override
+  String get lockScreenFailedTitle => 'Не удалось подтвердить вход';
+
+  @override
+  String get lockScreenFailedMessage =>
+      'Повторите попытку или выйдите из аккаунта на этом устройстве.';
+
+  @override
+  String get deviceAuthUnavailableMessage =>
+      'Сначала настройте Face ID, отпечаток пальца или код устройства в системных настройках.';
+
+  @override
+  String get authMethodFaceId => 'Face ID';
+
+  @override
+  String get authMethodFingerprint => 'Отпечаток пальца';
+
+  @override
+  String get authMethodBiometric => 'Биометрия';
+
+  @override
+  String get authMethodDevicePasscode => 'Код устройства';
 
   @override
   String get setPinCode => 'Установить PIN-код';
@@ -1886,11 +2014,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get inviteUserSubtitle => 'Найти и написать пользователю';
 
   @override
+  String get addParticipantAction => 'Добавить участника';
+
+  @override
+  String get selectedParticipantsTitle => 'Участники';
+
+  @override
+  String get groupParticipantsOptionalHint =>
+      'Участники необязательны. Группу можно создать сейчас, а пригласить людей позже.';
+
+  @override
   String get joinByCodeTitle => 'Присоединиться по коду';
 
   @override
   String get joinByCodeSubtitle =>
       'Присоединиться к комнате по пригласительному коду';
+
+  @override
+  String get joinRoomAction => 'Вступить';
+
+  @override
+  String get subscribeAction => 'Подписаться';
 
   @override
   String get chatsSubtitle =>
@@ -1904,6 +2048,31 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get joinLinkHint => 'Вставьте пригласительную ссылку, алиас или код';
+
+  @override
+  String get publicAliasLabel => 'Ссылка на канал';
+
+  @override
+  String get publicAliasHint =>
+      'Короткое имя без пробелов, например beyondblocks';
+
+  @override
+  String get channelPublicLinkHelper =>
+      'Эта ссылка будет использоваться в поиске и приглашениях для публичного канала.';
+
+  @override
+  String get channelLinkFormatError =>
+      'Используйте только латинские буквы, цифры, точки, подчёркивания или дефисы.';
+
+  @override
+  String get inviteLinkReadyTitle => 'Ссылка-приглашение готова';
+
+  @override
+  String get inviteLinkReadySubtitle =>
+      'Её можно сразу скопировать или оставить на потом. Выбранным людям ссылка отправится в личку, если это получится.';
+
+  @override
+  String get openChatAction => 'Открыть чат';
 
   @override
   String get fontLabel => 'Шрифт';
@@ -2274,7 +2443,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get peopleTwoSpaceTitle => 'Люди в TwoSpace';
 
   @override
-  String get peopleInviteTitle => 'Пригласить в TwoSpace';
+  String get peopleInviteTitle => 'Ещё не в TwoSpace';
 
   @override
   String get peopleInviteSubtitle => 'Пригласить этот контакт в TwoSpace';
@@ -2429,7 +2598,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get timestampPrecisionSubtitle =>
-      'Выберите, насколько подробно показывать время в чатах и списке чатов.';
+      'Выберите точность времени сообщений.';
 
   @override
   String get timestampPrecisionMinutes => 'Часы и минуты';
@@ -2728,4 +2897,264 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get devMenuDeviceLabel => 'Устройство';
+
+  @override
+  String get authRegisterVerifyEmailBeforeLogin =>
+      'Регистрация завершена. Подтвердите email перед входом.';
+
+  @override
+  String authRegisterAutoLoginFailed(Object error) {
+    return 'Аккаунт создан, но автоматический вход не выполнен: $error';
+  }
+
+  @override
+  String get authProfileUpdateFailed => 'Не удалось обновить профиль';
+
+  @override
+  String get authAvatarUpdateFailed => 'Не удалось обновить аватар';
+
+  @override
+  String get authLoginAppCredentialsRejected =>
+      'Сервер отклонил app credentials. Проверьте конфигурацию сервера или совместимость handshake.';
+
+  @override
+  String get authSessionTokenMissing => 'Сервер не вернул session token';
+
+  @override
+  String get authTotpSetupFailed =>
+      'Не удалось подготовить двухфакторную аутентификацию';
+
+  @override
+  String get authTotpDisableFailed =>
+      'Не удалось отключить двухфакторную аутентификацию';
+
+  @override
+  String get authTotpVerifyFailed =>
+      'Не удалось подтвердить двухфакторную аутентификацию';
+
+  @override
+  String get authSessionsLoadFailed => 'Не удалось загрузить активные сеансы';
+
+  @override
+  String get authSessionsRevokeFailed => 'Не удалось завершить сеанс';
+
+  @override
+  String get authRegisterNotLoggedIn =>
+      'Регистрация завершена, но вход не выполнен';
+
+  @override
+  String get devMenuTitle => 'Меню разработчика';
+
+  @override
+  String get devMenuTabActions => 'Действия';
+
+  @override
+  String get devMenuTabUiInspect => 'Инспектор UI';
+
+  @override
+  String get devMenuTabLogs => 'Логи';
+
+  @override
+  String get devMenuTabNetwork => 'Сеть';
+
+  @override
+  String get devMenuTabFeatures => 'Флаги';
+
+  @override
+  String get devMenuTabInfo => 'Инфо';
+
+  @override
+  String get devMenuLogsEmptyTitle => 'Пока нет логов приложения';
+
+  @override
+  String get devMenuLogsEmptyMessage =>
+      'Откройте проблемный экран или повторите действие. Новые записи появятся здесь.';
+
+  @override
+  String get devMenuShowAll => 'Показать всё';
+
+  @override
+  String get devMenuOnlyErrors => 'Только ошибки';
+
+  @override
+  String devMenuAllEntries(Object count) {
+    return 'Все записи ($count)';
+  }
+
+  @override
+  String get devMenuClearAction => 'Очистить';
+
+  @override
+  String get devMenuScreenExplorerTitle => 'Навигатор экранов';
+
+  @override
+  String get devMenuScreenSearchHint =>
+      'Поиск по имени экрана, группе или файлу';
+
+  @override
+  String devMenuAllScreens(Object count) {
+    return 'Все ($count)';
+  }
+
+  @override
+  String get devMenuScreensNotFoundTitle => 'Экраны не найдены';
+
+  @override
+  String get devMenuScreensNotFoundMessage =>
+      'Измените поисковый запрос или снимите фильтр группы.';
+
+  @override
+  String get devMenuUtilitiesTitle => 'Утилиты';
+
+  @override
+  String get devMenuForceCrash => 'Принудительный крэш';
+
+  @override
+  String get devMenuClearSecureStorage => 'Очистить защищённое хранилище';
+
+  @override
+  String get devMenuClearCacheProfile => 'Очистить кэш профиля';
+
+  @override
+  String get devMenuCheckOta => 'Проверить OTA';
+
+  @override
+  String get devMenuOpenScreen => 'Открыть экран';
+
+  @override
+  String get devMenuShowBounds => 'Показывать границы (debugPaintSize)';
+
+  @override
+  String get devMenuShowBoundsSubtitle =>
+      'Отображает отступы и границы всех виджетов';
+
+  @override
+  String get devMenuRepaintRainbow =>
+      'Подсвечивать перерисовки (RepaintRainbow)';
+
+  @override
+  String get devMenuRepaintRainbowSubtitle =>
+      'Подсвечивает элементы, которые перерисовываются';
+
+  @override
+  String get devMenuSlowAnimations => 'Медленные анимации (timeDilation = 5.0)';
+
+  @override
+  String get devMenuSlowAnimationsSubtitle =>
+      'Замедляет все анимации в приложении';
+
+  @override
+  String get devMenuPerformanceOverlay => 'Профилирование производительности';
+
+  @override
+  String get devMenuPerformanceOverlaySubtitle =>
+      'Показывает Performance Overlay поверх приложения';
+
+  @override
+  String get devMenuSensitiveDialogTitle => 'Показ чувствительных данных';
+
+  @override
+  String get devMenuSensitiveDialogMessage =>
+      'После включения новые debug- и network-логи могут содержать токены, ключи и другие секреты в явном виде. Уже сохранённые записи не изменятся. Продолжить?';
+
+  @override
+  String get devMenuEnable => 'Включить';
+
+  @override
+  String get devMenuSensitiveEnableDescription =>
+      'По умолчанию ключи, токены и пароли маскируются. Этот переключатель влияет только на новые логи.';
+
+  @override
+  String get devMenuSensitiveDisabledDescription =>
+      'В этой сборке чувствительные данные всегда скрыты.';
+
+  @override
+  String get devMenuRevealSensitiveData =>
+      'Показывать чувствительные данные в новых логах';
+
+  @override
+  String get devMenuFlagNewChatUi => 'Включить новый UI чата';
+
+  @override
+  String get devMenuFlagForceVideoCompression => 'Принудительное сжатие видео';
+
+  @override
+  String get devMenuFlagAggressiveCaching => 'Включить агрессивное кэширование';
+
+  @override
+  String get devMenuFlagIgnoreServerOffline =>
+      'Игнорировать недоступность сервера';
+
+  @override
+  String get devMenuFlagIgnoreServerOfflineSubtitle =>
+      'Сохраняет текущую сессию и не возвращает на экран входа, если сервер недоступен.';
+
+  @override
+  String get devMenuReleaseHiddenTitle => 'Чувствительные данные скрыты';
+
+  @override
+  String get devMenuReleaseHiddenSubtitle =>
+      'Публичные release/profile сборки всегда показывают debug-данные только в замаскированном виде.';
+
+  @override
+  String get devMenuNetworkEmptyTitle => 'Пока нет сетевых логов';
+
+  @override
+  String get devMenuNetworkEmptyMessage =>
+      'Откройте любой экран, который делает запросы, и логи появятся здесь.';
+
+  @override
+  String devMenuAllRequests(Object count) {
+    return 'Все запросы ($count)';
+  }
+
+  @override
+  String get devMenuNetworkProblemDetected => 'обнаружена проблема';
+
+  @override
+  String get devMenuNetworkCompleted => 'завершено';
+
+  @override
+  String get devMenuRequestHeaders => 'Заголовки запроса';
+
+  @override
+  String devMenuRequestBody(Object type) {
+    return 'Тело запроса · $type';
+  }
+
+  @override
+  String get devMenuResponseHeaders => 'Заголовки ответа';
+
+  @override
+  String devMenuResponseBody(Object type) {
+    return 'Тело ответа · $type';
+  }
+
+  @override
+  String devMenuVersionWithBuild(Object buildNumber, Object version) {
+    return '$version (сборка $buildNumber)';
+  }
+
+  @override
+  String get notificationsInDevelopmentSubtitle =>
+      'Подробные настройки уведомлений появятся в одном из ближайших обновлений.';
+
+  @override
+  String get devMenuCopyVisible => 'Копировать видимое';
+
+  @override
+  String get devMenuExportLogFile => 'Экспортировать файл логов';
+
+  @override
+  String get devMenuNewestFirst => 'Сначала новые';
+
+  @override
+  String get devMenuOldestFirst => 'Сначала старые';
+
+  @override
+  String get feedbackAttachLogsLabel => 'Приложить логи?';
+
+  @override
+  String get feedbackAttachLogsSubtitle =>
+      'Добавить диагностический файл с данными устройства, логами приложения и логами сети.';
 }

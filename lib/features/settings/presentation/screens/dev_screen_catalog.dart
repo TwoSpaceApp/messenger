@@ -18,9 +18,11 @@ import 'package:two_space_app/features/chat/presentation/screens/calls_screen.da
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_settings_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/create_channel_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_group_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/group_settings_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/home_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/join_room_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/main_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/account_settings_screen.dart';
 import 'package:two_space_app/features/profile/presentation/screens/contacts_screen.dart';
@@ -136,6 +138,18 @@ abstract final class DevScreenCatalog {
       source: 'chat/create_group_screen.dart',
       group: 'Chat',
       builder: (_) => const CreateGroupScreen(),
+    ),
+    DevScreenEntry(
+      title: 'CreateChannelScreen',
+      source: 'chat/create_channel_screen.dart',
+      group: 'Chat',
+      builder: (_) => const CreateChannelScreen(),
+    ),
+    DevScreenEntry(
+      title: 'JoinRoomScreen',
+      source: 'chat/join_room_screen.dart',
+      group: 'Chat',
+      builder: (_) => const JoinRoomScreen(),
     ),
     DevScreenEntry(
       title: 'CustomizationScreen',

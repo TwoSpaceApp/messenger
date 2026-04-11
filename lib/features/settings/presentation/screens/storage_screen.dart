@@ -653,125 +653,108 @@ class _StorageCleanupSection extends StatelessWidget {
             ),
             const SizedBox(height: UITokens.spaceMd),
             GlassCard(
-              child: Column(
-                children: [
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.storageAutoCleanTitle),
-                    subtitle: Text(l10n.storageAutoCleanSubtitle),
-                    value: autoCleanSettings.enabled,
-                    onChanged: onAutoCleanChanged,
-                  ),
-                  const Divider(height: 16),
-                  _StorageSheetField(
-                    icon: Icons.event_repeat_rounded,
-                    label: l10n.storageAutoCleanPeriodLabel,
-                    value: switch (autoCleanSettings.interval) {
-                      StorageAutoCleanInterval.daily =>
-                        l10n.storageAutoCleanPeriodDaily,
-                      StorageAutoCleanInterval.weekly =>
-                        l10n.storageAutoCleanPeriodWeekly,
-                      StorageAutoCleanInterval.monthly =>
-                        l10n.storageAutoCleanPeriodMonthly,
-                    },
-                    onTap: onAutoCleanIntervalPressed,
-                  ),
-                  const SizedBox(height: UITokens.spaceSmMd),
-                  _StorageSheetField(
-                    icon: Icons.speed_rounded,
-                    label: l10n.storageAutoCleanThresholdLabel,
-                    value: StorageService.formatBytes(
-                      autoCleanSettings.maxBytes,
-                    ),
-                    onTap: onAutoCleanThresholdPressed,
-                  ),
-                  const SizedBox(height: UITokens.spaceSmMd),
-                  _StorageSheetField(
-                    icon: Icons.tune_rounded,
-                    label: l10n.storageAutoCleanTypesLabel,
-                    value: [
-                      if (autoCleanSettings.clearPhotos)
-                        l10n.storagePhotosLabel,
-                      if (autoCleanSettings.clearVideos)
-                        l10n.storageVideosLabel,
-                      if (autoCleanSettings.clearFiles) l10n.filesLabel,
-                      if (autoCleanSettings.clearCache) l10n.storageCacheLabel,
-                    ].join(', '),
-                    onTap: onAutoCleanTypesPressed,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: UITokens.spaceMdSm),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(UITokens.spaceMdSm),
-              decoration: BoxDecoration(
-                color: autoCleanSettings.enabled
-                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.32)
-                    : theme.colorScheme.surface.withValues(alpha: 0.34),
-                borderRadius: BorderRadius.circular(UITokens.cornerXLg),
-                border: Border.all(
+              child: AnimatedContainer(
+                duration: UITokens.durationMd,
+                curve: Curves.easeOut,
+                padding: const EdgeInsets.all(UITokens.spaceMdSm),
+                decoration: BoxDecoration(
                   color: autoCleanSettings.enabled
-                      ? theme.colorScheme.primary.withValues(alpha: 0.14)
-                      : theme.colorScheme.outline.withValues(alpha: 0.12),
+                      ? theme.colorScheme.primaryContainer.withValues(
+                          alpha: 0.28,
+                        )
+                      : theme.colorScheme.surface.withValues(alpha: 0.36),
+                  borderRadius: BorderRadius.circular(UITokens.cornerXLg),
+                  border: Border.all(
+                    color: autoCleanSettings.enabled
+                        ? theme.colorScheme.primary.withValues(alpha: 0.16)
+                        : theme.colorScheme.outline.withValues(alpha: 0.12),
+                  ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        autoCleanSettings.enabled
-                            ? Icons.auto_mode_rounded
-                            : Icons.pause_circle_outline_rounded,
-                        size: 18,
-                        color: autoCleanSettings.enabled
-                            ? theme.colorScheme.primary
-                            : AppColors.subtitleText(context),
+                child: Column(
+                  children: [
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(l10n.storageAutoCleanTitle),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(l10n.storageAutoCleanSubtitle),
+                          const SizedBox(height: UITokens.spaceXS),
+                          Text(
+                            autoCleanSettings.enabled
+                                ? l10n.storageAutoCleanStatusEnabled
+                                : l10n.storageAutoCleanStatusDisabled,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.subtitleText(context),
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: UITokens.spaceSm),
-                      Text(
-                        l10n.storageAutoCleanStatusTitle,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: UITokens.spaceSm),
-                  Text(
-                    autoCleanSettings.enabled
-                        ? l10n.storageAutoCleanStatusEnabled
-                        : l10n.storageAutoCleanStatusDisabled,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.subtitleText(context),
-                      height: 1.35,
+                      value: autoCleanSettings.enabled,
+                      onChanged: onAutoCleanChanged,
                     ),
-                  ),
-                  const SizedBox(height: UITokens.space),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      _StorageSummaryPill(
-                        color: theme.colorScheme.primary,
-                        icon: Icons.history_rounded,
-                        label: l10n.storageAutoCleanLastRunLabel,
-                        value: lastRunLabel,
+                    const Divider(height: 16),
+                    _StorageSheetField(
+                      icon: Icons.event_repeat_rounded,
+                      label: l10n.storageAutoCleanPeriodLabel,
+                      value: switch (autoCleanSettings.interval) {
+                        StorageAutoCleanInterval.daily =>
+                          l10n.storageAutoCleanPeriodDaily,
+                        StorageAutoCleanInterval.weekly =>
+                          l10n.storageAutoCleanPeriodWeekly,
+                        StorageAutoCleanInterval.monthly =>
+                          l10n.storageAutoCleanPeriodMonthly,
+                      },
+                      onTap: onAutoCleanIntervalPressed,
+                    ),
+                    const SizedBox(height: UITokens.spaceSmMd),
+                    _StorageSheetField(
+                      icon: Icons.speed_rounded,
+                      label: l10n.storageAutoCleanThresholdLabel,
+                      value: StorageService.formatBytes(
+                        autoCleanSettings.maxBytes,
                       ),
-                      _StorageSummaryPill(
-                        color: theme.colorScheme.tertiary,
-                        icon: Icons.speed_rounded,
-                        label: l10n.storageAutoCleanThresholdLabel,
-                        value: StorageService.formatBytes(
-                          autoCleanSettings.maxBytes,
+                      onTap: onAutoCleanThresholdPressed,
+                    ),
+                    const SizedBox(height: UITokens.spaceSmMd),
+                    _StorageSheetField(
+                      icon: Icons.tune_rounded,
+                      label: l10n.storageAutoCleanTypesLabel,
+                      value: [
+                        if (autoCleanSettings.clearPhotos)
+                          l10n.storagePhotosLabel,
+                        if (autoCleanSettings.clearVideos)
+                          l10n.storageVideosLabel,
+                        if (autoCleanSettings.clearFiles) l10n.filesLabel,
+                        if (autoCleanSettings.clearCache) l10n.storageCacheLabel,
+                      ].join(', '),
+                      onTap: onAutoCleanTypesPressed,
+                    ),
+                    const SizedBox(height: UITokens.space),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        _StorageSummaryPill(
+                          color: theme.colorScheme.primary,
+                          icon: Icons.history_rounded,
+                          label: l10n.storageAutoCleanLastRunLabel,
+                          value: lastRunLabel,
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        _StorageSummaryPill(
+                          color: theme.colorScheme.tertiary,
+                          icon: Icons.speed_rounded,
+                          label: l10n.storageAutoCleanThresholdLabel,
+                          value: StorageService.formatBytes(
+                            autoCleanSettings.maxBytes,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: UITokens.spaceMd),

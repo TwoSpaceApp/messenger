@@ -12,7 +12,6 @@ import 'package:two_space_app/core/navigation/app_router.dart';
 import 'package:two_space_app/core/services/background_effects_performance_service.dart';
 import 'package:two_space_app/core/services/dev_tools_service.dart';
 import 'package:two_space_app/core/services/initialization_service.dart';
-import 'package:two_space_app/core/services/sentry_service.dart';
 import 'package:two_space_app/core/widgets/dev_fab.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/auth/presentation/screens/splash_screen.dart';
@@ -129,21 +128,21 @@ class AppBootstrapperState extends State<AppBootstrapper> {
 void _setupErrorHandlers() {
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    SentryService.captureException(
-      details.exception,
-      stackTrace: details.stack,
-      hint: {'flutter_error': true},
-    );
   };
 
   // Catch errors outside Flutter framework
   PlatformDispatcher.instance.onError = (error, stack) {
-    SentryService.captureException(
-      error,
-      stackTrace: stack,
-      hint: {'platform_error': true},
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stack,
+        library: 'dart:ui',
+        informationCollector: () sync* {
+          yield DiagnosticsNode.message('Unhandled platform error');
+        },
+      ),
     );
-    return true;
+    return false;
   };
 }
 
@@ -359,12 +358,36 @@ class _ThemeBuilder extends StatelessWidget {
 }
 
 class _AppLifecycleObserver with WidgetsBindingObserver {
+  static DateTime? _lastResumeHandledAt;
+  static Future<void>? _resumeRefreshInFlight;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
       return;
     }
-    unawaited(AegisAuthService().restoreSession().catchError((_) => false));
-    unawaited(AegisChatService().ensureReady().catchError((_) => null));
+
+    final now = DateTime.now();
+    final lastHandledAt = _lastResumeHandledAt;
+    if (lastHandledAt != null && now.difference(lastHandledAt) < const Duration(seconds: 8)) {
+      return;
+    }
+
+    final inFlight = _resumeRefreshInFlight;
+    if (inFlight != null) {
+      return;
+    }
+
+    _lastResumeHandledAt = now;
+    final future = () async {
+      await AegisAuthService().restoreSession().catchError((_) => false);
+      await AegisChatService().ensureReady().catchError((_) => null);
+    }();
+    _resumeRefreshInFlight = future;
+    future.whenComplete(() {
+      if (identical(_resumeRefreshInFlight, future)) {
+        _resumeRefreshInFlight = null;
+      }
+    });
   }
 }

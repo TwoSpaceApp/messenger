@@ -1,7 +1,7 @@
 name: two_space_app
 description: "A secure and feature-rich messenger."
 publish_to: 'none'
-version: 2.0.6-beta+42
+version: 2.0.7-beta+55
 
 environment:
   sdk: ^3.8.0
@@ -28,8 +28,7 @@ dependencies:
   riverpod_annotation: ^3.0.3
   riverpod: ^3.0.3
 
-  # ===== Monitoring & Error Tracking =====
-  sentry: ^9.16.0
+  # ===== Logging =====
   logger: ^2.4.0
 
   # ===== Security =====
@@ -83,6 +82,8 @@ dependencies:
   go_router: ^17.1.0
   freezed_annotation: ^3.0.0
   json_annotation: ^4.9.0
+  open_filex: ^4.7.0
+  file_selector: ^1.1.0
 
 dev_dependencies:
   flutter_test:

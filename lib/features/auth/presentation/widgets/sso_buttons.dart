@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/l10n/app_localizations.dart';
 
 class SsoButtons extends StatelessWidget {
   const SsoButtons({super.key});
@@ -17,26 +19,30 @@ class SsoButtons extends StatelessWidget {
       icon: Icon(icon),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        minimumSize: const Size(double.infinity, 50), // Make button full width
+        minimumSize: const Size(
+          double.infinity,
+          UITokens.authProviderButtonHeight,
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isSmallScreen = MediaQuery.of(context).size.width < 500;
     return isSmallScreen
         ? Column(
             children: [
               _buildSsoButton(
                 icon: Icons.login,
-                label: 'Login with Google',
+                label: l10n.continueWithGoogle,
                 onPressed: () => _handleSsoLogin('google'),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: UITokens.space),
               _buildSsoButton(
                 icon: Icons.person,
-                label: 'Login with Yandex',
+                label: l10n.continueWithYandex,
                 onPressed: () => _handleSsoLogin('yandex'),
               ),
             ],
@@ -47,15 +53,15 @@ class SsoButtons extends StatelessWidget {
               Expanded(
                 child: _buildSsoButton(
                   icon: Icons.login,
-                  label: 'Google',
+                  label: l10n.continueWithGoogle,
                   onPressed: () => _handleSsoLogin('google'),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: UITokens.space),
               Expanded(
                 child: _buildSsoButton(
                   icon: Icons.person,
-                  label: 'Yandex',
+                  label: l10n.continueWithYandex,
                   onPressed: () => _handleSsoLogin('yandex'),
                 ),
               ),

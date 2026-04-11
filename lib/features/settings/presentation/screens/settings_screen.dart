@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
@@ -12,16 +14,17 @@ import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/theme_switcher.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
+import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _loggingOut = false;
   String _appVersion = '';
 
@@ -43,7 +46,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _logout() async {
     final l10n = AppLocalizations.of(context)!;
     final width = MediaQuery.of(context).size.width;
-    final horizontalInset = (width * 0.08).clamp(12.0, 28.0);
+    final horizontalInset = (width * 0.08).clamp(
+      UITokens.dialogHorizontalInsetMin,
+      UITokens.dialogHorizontalInsetMax,
+    );
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -51,7 +57,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Text(l10n.logoutDialogContent),
         insetPadding: EdgeInsets.symmetric(
           horizontal: horizontalInset,
-          vertical: 24,
+          vertical: UITokens.spaceXLg,
         ),
         actions: [
           TextButton(
@@ -73,15 +79,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() => _loggingOut = true);
     try {
-      final auth = AuthService();
-      await auth.signOut();
+      await ref.read(authProvider.notifier).logout();
       if (!mounted) return;
-      context.go('/login');
+      context.go(AppStrings.routeLogin);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.errorLogout(e.toString()))));
+      ).showSnackBar(
+        SnackBar(content: Text(UserFacingError.format(e, l10n))),
+      );
       setState(() => _loggingOut = false);
     }
   }
@@ -268,7 +275,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                     ),
-                    // Appearance
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -288,8 +294,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.space,
                         ),
                         child: Column(
                           children: [
@@ -328,7 +334,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
 
-                    // Notifications
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -348,8 +353,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.spaceSm,
                         ),
                         child: Column(
                           children: [
@@ -363,28 +368,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 horizontal: UITokens.spaceSm,
                               ),
                             ),
-                            const Divider(height: UITokens.borderThin),
-                            ValueListenableBuilder<bool>(
-                              valueListenable:
-                                  SettingsService.doNotDisturbNotifier,
-                              builder: (context, enabled, _) {
-                                return SwitchListTile(
-                                  secondary: const Icon(Icons.do_not_disturb),
-                                  title: Text(l10n.settingsDoNotDisturb),
-                                  value: enabled,
-                                  onChanged: SettingsService.setDoNotDisturb,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: UITokens.spaceSm,
-                                  ),
-                                );
-                              },
-                            ),
                           ],
                         ),
                       ),
                     ),
 
-                    // Account
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -404,8 +392,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.space,
                         ),
                         child: Column(
                           children: [
@@ -418,7 +406,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 final auth = AuthService();
                                 final userId = await auth.getCurrentUserId();
                                 if (userId != null && context.mounted) {
-                                  context.push('/profile', extra: userId);
+                                  context.push(AppStrings.routeAccountProfile);
                                 }
                               },
                               contentPadding: const EdgeInsets.symmetric(
@@ -454,7 +442,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
 
-                    // General
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -474,8 +461,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.spaceSm,
                         ),
                         child: Column(
                           children: [
@@ -551,7 +538,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
 
-                    // Data & Storage
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -571,8 +557,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.spaceSm,
                         ),
                         child: Column(
                           children: [
@@ -609,7 +595,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     ),
-                    // About
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -629,8 +614,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.space,
                         ),
                         child: Column(
                           children: [
@@ -663,7 +648,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
 
-                    // Danger zone
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,

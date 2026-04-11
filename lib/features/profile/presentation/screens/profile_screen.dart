@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
@@ -10,7 +10,10 @@ import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/utils/user_content_sanitizer.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
+import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -18,6 +21,8 @@ import 'package:two_space_app/features/chat/data/services/chat_backend_factory.d
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+
+enum ProfileScreenVariant { account, contact }
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
@@ -27,12 +32,14 @@ class ProfileScreen extends StatefulWidget {
     this.initialAvatar,
     this.startInEdit = false,
     this.embedded = false,
+    this.variant = ProfileScreenVariant.contact,
   });
   final String userId;
   final String? initialName;
   final String? initialAvatar;
   final bool startInEdit;
   final bool embedded;
+  final ProfileScreenVariant variant;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -41,9 +48,11 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final AegisChatService _chatService = AegisChatService();
   Map<String, dynamic>? _user;
+  String? _loadErrorMessage;
   bool _loading = true;
   bool _actionLoading = false;
   bool _isMe = false;
+  bool _editMode = false;
   final ValueNotifier<double> _avatarStretch = ValueNotifier(0);
 
   final _nameController = TextEditingController();
@@ -55,9 +64,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _editMode = widget.startInEdit;
     _warmUpSettings();
     _loadUser();
   }
+
+  bool get _isAccountProfile => widget.variant == ProfileScreenVariant.account;
 
   @override
   void dispose() {
@@ -81,30 +93,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Map<String, dynamic> userInfo,
     String fallbackId,
   ) {
+    final normalizedUsername = _resolvedProfileUsername(userInfo);
+    final normalizedDisplayName =
+        _resolvedProfileDisplayName(userInfo, normalizedUsername);
     return <String, dynamic>{
       'id': userInfo['id']?.toString() ?? fallbackId,
-      'name':
-          userInfo['displayName'] ??
-          widget.initialName ??
-          userInfo['username'] ??
-          _fallbackProfileName(),
-      'username': userInfo['username'] ?? '',
+      'displayName': normalizedDisplayName,
+      'username': normalizedUsername,
       'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
       'avatars': userInfo['avatars'] ?? const <Map<String, dynamic>>[],
       'bio': userInfo['bio'] ?? '',
       'location': userInfo['location'] ?? '',
       'birthday': userInfo['birthday'] ?? '',
       'email': userInfo['email'],
-      'phone': userInfo['phone'],
+      'createdAt': userInfo['createdAt'],
       'presenceStatus': userInfo['presenceStatus'],
       'lastSeenAt': userInfo['lastSeenAt'],
-      'prefs': <String, dynamic>{
-        'nickname': userInfo['username'] ?? '',
-        'about': userInfo['bio'] ?? '',
-        'avatarUrl': userInfo['avatarUrl'] ?? widget.initialAvatar,
-        'showEmail': userInfo['showEmail'] == true,
-        'showPhone': userInfo['showPhone'] == true,
-      },
+      'showEmail': userInfo['showEmail'] == true,
+      'showPhone': userInfo['showPhone'] == true,
+    };
+  }
+
+  Map<String, dynamic> _fallbackProfileState() {
+    return <String, dynamic>{
+      'id': widget.userId,
+      'displayName': _fallbackProfileName(),
+      'username': _fallbackUsername(),
+      'avatar': widget.initialAvatar,
+      'avatars': const <Map<String, dynamic>>[],
+      'bio': '',
+      'location': '',
+      'birthday': '',
+      'email': null,
+      'createdAt': null,
+      'presenceStatus': null,
+      'lastSeenAt': null,
+      'showEmail': false,
+      'showPhone': false,
     };
   }
 
@@ -115,6 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _isMe = isMe;
       _user = _composeProfileState(userInfo, widget.userId);
+      _loadErrorMessage = null;
       _loading = false;
     });
     _initializeControllers();
@@ -122,6 +148,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUser() async {
     try {
+      if (_isAccountProfile) {
+        final userInfo = Map<String, dynamic>.from(
+          await _chatService.getOwnUserInfo(),
+        );
+        _applyLoadedUser(userInfo, isMe: true);
+        return;
+      }
+
       final currentUserId = await _chatService.getCurrentUserId();
       var userInfo = Map<String, dynamic>.from(
         await _chatService.getUserInfo(widget.userId),
@@ -132,25 +166,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         userInfo = <String, dynamic>{
           ...userInfo,
           ...Map<String, dynamic>.from(
-            await _chatService.getOwnUserInfo(forceRefresh: true),
+            await _chatService.getOwnUserInfo(),
           ),
         };
       }
 
       _applyLoadedUser(userInfo, isMe: _isMe);
-    } catch (_) {
+    } catch (error) {
+      final l10n = AppLocalizations.of(context);
       if (mounted) {
         setState(() {
           _loading = false;
-          _user = {
-            'id': widget.userId,
-            'name': _fallbackProfileName(),
-            'username': _fallbackUsername(),
-            'prefs': {
-              'nickname': _fallbackUsername(),
-              'about': '',
-            },
-          };
+          _user = _fallbackProfileState();
+          _loadErrorMessage = UserFacingError.format(error, l10n);
         });
         _initializeControllers();
       }
@@ -198,17 +226,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return _fallbackUsername();
   }
 
+  bool _isOpaqueProfileIdentity(String? value, {String? username}) {
+    final normalized = _normalizeProfileToken(value);
+    if (normalized.isEmpty) {
+      return true;
+    }
+
+    if (normalized == _normalizeProfileToken(widget.userId)) {
+      return true;
+    }
+
+    final normalizedUsername = _normalizeProfileToken(username);
+    final isNumeric = RegExp(r'^\d+$').hasMatch(normalized);
+    if (normalizedUsername.isNotEmpty &&
+        normalized == normalizedUsername &&
+        isNumeric) {
+      return true;
+    }
+
+    return normalized == _normalizeProfileToken(_fallbackUsername()) &&
+        isNumeric;
+  }
+
+  String _resolvedProfileUsername(Map<String, dynamic> userInfo) {
+    final username = UserContentSanitizer.sanitizeUsername(
+      userInfo['username']?.toString(),
+    );
+    return _isOpaqueProfileIdentity(username, username: username)
+        ? ''
+        : username;
+  }
+
+  String? _resolvedProfileDisplayName(
+    Map<String, dynamic> userInfo,
+    String normalizedUsername,
+  ) {
+    final displayName = UserContentSanitizer.sanitizeOptionalText(
+      userInfo['displayName']?.toString(),
+      maxLength: 120,
+    );
+    if (!_isOpaqueProfileIdentity(displayName, username: normalizedUsername)) {
+      return displayName;
+    }
+
+    final initial = widget.initialName?.trim();
+    if (initial != null && initial.isNotEmpty) {
+      return initial;
+    }
+
+    if (normalizedUsername.isNotEmpty) {
+      return normalizedUsername;
+    }
+
+    return null;
+  }
+
   void _initializeControllers() {
     if (_user != null) {
-      final prefs = (_user!['prefs'] is Map)
-          ? Map<String, dynamic>.from(_user!['prefs'])
-          : <String, dynamic>{};
-      _nameController.text = (_user!['name'] as String?)?.trim() ?? '';
-      _nicknameController.text = (prefs['nickname'] as String?)?.trim() ?? '';
-      _aboutController.text =
-          (prefs['about'] as String?)?.trim() ??
-          (_user!['bio'] as String?)?.trim() ??
-          '';
+      _nameController.text = (_user!['displayName'] as String?)?.trim() ?? '';
+      _nicknameController.text = (_user!['username'] as String?)?.trim() ?? '';
+      _aboutController.text = (_user!['bio'] as String?)?.trim() ?? '';
       _locationController.text = (_user!['location'] as String?)?.trim() ?? '';
       _birthdayController.text = (_user!['birthday'] as String?)?.trim() ?? '';
     }
@@ -220,6 +297,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     Uint8List? avatarBytes;
     String mimePathOrName = '';
+    Object? galleryError;
 
     try {
       final picker = ImagePicker();
@@ -228,8 +306,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         avatarBytes = await image.readAsBytes();
         mimePathOrName = image.path;
       }
-    } catch (_) {
-      // Ignore and fallback to FilePicker below.
+    } catch (error) {
+      galleryError = error;
     }
 
     if (avatarBytes == null) {
@@ -261,7 +339,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             content: Text(
               denied
                   ? l10n.filePickError(l10n.fileAccessDeniedMessage)
-                  : l10n.filePickError(e.toString()),
+                  : l10n.filePickError(
+                      UserFacingError.format(
+                        galleryError ?? e,
+                        AppLocalizations.of(context),
+                      ),
+                    ),
             ),
           ),
         );
@@ -297,7 +380,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           content: Text(
             denied
                 ? l10n.avatarFileAccessDeniedMessage
-                : e.toString().replaceAll('Exception: ', ''),
+                : UserFacingError.format(e, AppLocalizations.of(context)),
           ),
         ),
       );
@@ -311,52 +394,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveProfile() async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final displayName = _nameController.text.trim();
-      final username = _nicknameController.text.trim();
-      final bio = _aboutController.text.trim();
+      final displayName = UserContentSanitizer.sanitizeOptionalText(
+        _nameController.text,
+        maxLength: 120,
+      );
+      final username = UserContentSanitizer.sanitizeUsername(
+        _nicknameController.text,
+      );
+      final bio = UserContentSanitizer.sanitizeOptionalText(
+        _aboutController.text,
+        maxLength: 512,
+      );
+      final location = UserContentSanitizer.sanitizeOptionalText(
+        _locationController.text,
+        maxLength: 120,
+        preserveNewlines: false,
+      );
 
-      await _chatService.updateMyProfile(
-        displayName: displayName.isEmpty ? null : displayName,
+      final updated = await _chatService.updateMyProfile(
+        displayName: displayName,
         username: username.isEmpty ? null : username,
-        bio: bio.isEmpty ? null : bio,
-        location: _locationController.text.trim(),
+        bio: bio,
+        location: location,
         birthDate: _birthdayController.text.trim(),
       );
 
-      final refreshed = Map<String, dynamic>.from(
-        await _chatService.getOwnUserInfo(forceRefresh: true),
-      );
-
       if (!mounted) return;
-      _applyLoadedUser(refreshed, isMe: true);
+      _applyLoadedUser(Map<String, dynamic>.from(updated), isMe: true);
+      setState(() => _editMode = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.profileSaved)),
       );
-      if (widget.startInEdit && mounted) {
-        Navigator.of(context).pop(true);
-      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        SnackBar(
+          content: Text(
+            UserFacingError.format(e, AppLocalizations.of(context)),
+          ),
+        ),
       );
     }
   }
 
   String _displayName() {
-    try {
-      if (_user == null) return widget.initialName ?? widget.userId;
-      final prefs = (_user!['prefs'] is Map)
-          ? Map<String, dynamic>.from(_user!['prefs'])
-          : <String, dynamic>{};
-      final name = (_user!['name'] as String?)?.trim();
-      if (name != null && name.isNotEmpty) return name;
-      final nick = (prefs['nickname'] as String?)?.trim();
-      if (nick != null && nick.isNotEmpty) return nick;
-      final email = (_user!['email'] as String?) ?? '';
-      if (email.isNotEmpty) return email.split('@').first;
-    } catch (_) {}
+    if (_user == null) return widget.initialName ?? widget.userId;
+    final displayName = (_user!['displayName'] as String?)?.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      return displayName;
+    }
+    final username = (_user!['username'] as String?)?.trim();
+    if (username != null && username.isNotEmpty) {
+      return username;
+    }
+    final email = (_user!['email'] as String?)?.trim() ?? '';
+    if (email.isNotEmpty) {
+      return email.split('@').first;
+    }
     return _fallbackProfileName();
   }
 
@@ -364,11 +459,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_user == null) {
       return false;
     }
-    final name = (_user!['name'] as String?)?.trim() ?? '';
+    final name = (_user!['displayName'] as String?)?.trim() ?? '';
+    final username = (_user!['username'] as String?)?.trim();
     final bio = (_user!['bio'] as String?)?.trim() ?? '';
     final location = (_user!['location'] as String?)?.trim() ?? '';
     final birthday = (_user!['birthday'] as String?)?.trim() ?? '';
-    return name.isNotEmpty ||
+    final hasReadableName =
+        name.isNotEmpty && !_isOpaqueProfileIdentity(name, username: username);
+    return hasReadableName ||
         bio.isNotEmpty ||
         location.isNotEmpty ||
         birthday.isNotEmpty;
@@ -382,14 +480,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String? _avatarUrl() {
-    try {
-      if (_user != null) {
-        final prefs = (_user!['prefs'] is Map)
-            ? Map<String, dynamic>.from(_user!['prefs'])
-            : <String, dynamic>{};
-        return (prefs['avatarUrl'] as String?) ?? (_user!['avatar'] as String?);
-      }
-    } catch (_) {}
+    if (_user != null) {
+      return (_user!['avatar'] as String?) ?? widget.initialAvatar;
+    }
     return widget.initialAvatar;
   }
 
@@ -398,11 +491,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (usernameValue != null && usernameValue.isNotEmpty) {
       return usernameValue;
     }
-    final prefs = (_user?['prefs'] is Map)
-        ? Map<String, dynamic>.from(_user!['prefs'] as Map)
-        : <String, dynamic>{};
-    return (prefs['nickname'] as String?)?.trim() ??
-        widget.userId.replaceAll('@', '').split(':').first;
+    return '';
+  }
+
+  Future<void> _openDirectChat() async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _actionLoading = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final cs = createChatBackend();
+      final mappedChat = await cs.getOrCreateDirectChat(widget.userId);
+      final chat = Chat.fromMap(mappedChat);
+      if (!mounted) {
+        return;
+      }
+      await context.push(
+        '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
+        extra: chat,
+      );
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.createChatError(
+              UserFacingError.format(error, AppLocalizations.of(context)),
+            ),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _actionLoading = false);
+      }
+    }
+  }
+
+  void _openCall() {
+    final roomName =
+        'call_${widget.userId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_')}_${DateTime.now().millisecondsSinceEpoch}';
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CallScreen(
+          room: roomName,
+          isVideo: true,
+          displayName: _displayName(),
+          avatarUrl: _avatarUrl(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContactActionButtons(AppLocalizations l10n) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compactButtons = constraints.maxWidth < 680;
+        final messageButton = _buildActionButton(
+          icon: _actionLoading ? null : Icons.chat_bubble_outline,
+          label: l10n.writeMessageButton,
+          loading: _actionLoading,
+          fullWidth: true,
+          onPressed: _actionLoading ? null : _openDirectChat,
+        );
+        final callButton = _buildActionButton(
+          icon: Icons.call_outlined,
+          label: l10n.callButton,
+          fullWidth: true,
+          onPressed: _openCall,
+        );
+        final copyButton = _buildActionButton(
+          icon: Icons.copy_rounded,
+          label: l10n.copyAegisIdButton,
+          fullWidth: true,
+          onPressed: _copyProfileId,
+        );
+
+        if (compactButtons) {
+          return Column(
+            children: [
+              messageButton,
+              const SizedBox(height: UITokens.spaceSmMd),
+              callButton,
+              const SizedBox(height: UITokens.spaceSmMd),
+              copyButton,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: messageButton),
+            const SizedBox(width: UITokens.spaceSmMd),
+            Expanded(child: callButton),
+            const SizedBox(width: UITokens.spaceSmMd),
+            Expanded(child: copyButton),
+          ],
+        );
+      },
+    );
   }
 
   String _profileId() {
@@ -481,20 +666,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '${value.day}.${value.month.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _openEditScreen() async {
-    final changed = await context.push<bool>(
-      AppStrings.routeProfile,
-      extra: <String, dynamic>{
-        'userId': widget.userId,
-        'initialName': widget.initialName,
-        'initialAvatar': widget.initialAvatar,
-        'startInEdit': true,
-      },
-    );
-    if (changed == true && mounted) {
-      setState(() => _loading = true);
-      await _loadUser();
+  void _startInlineEdit() {
+    _initializeControllers();
+    setState(() => _editMode = true);
+  }
+
+  void _cancelInlineEdit() {
+    _initializeControllers();
+    setState(() => _editMode = false);
+  }
+
+  Future<void> _copyProfileId() async {
+    final l10n = AppLocalizations.of(context)!;
+    final profileId = _profileId();
+    if (profileId.isEmpty) {
+      return;
     }
+    await Clipboard.setData(ClipboardData(text: profileId));
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.textCopied)),
+    );
+  }
+
+  void _showModerationStub(String feature) {
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.featureInDevelopmentMessage(feature))),
+    );
   }
 
   bool _updateAvatarStretch(double next) {
@@ -513,6 +714,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final avatar = _avatarUrl();
     final username = _username();
     final profileId = _profileId();
+    final usernameLabel = username.isNotEmpty ? '@$username' : profileId;
     final presenceLabel = _presenceLabel(l10n);
     final body = _loading
         ? const AppLoadingState()
@@ -521,16 +723,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               final isWide = constraints.maxWidth >= UITokens.desktopBreakpoint;
               final isTablet =
                   constraints.maxWidth >= UITokens.tabletBreakpoint;
-              final horizontalPadding = constraints.maxWidth >= 1400
-                  ? 40.0
+              final horizontalPadding =
+                  constraints.maxWidth >= UITokens.ultraWideBreakpoint
+                  ? UITokens.space3XL
                   : isWide
-                  ? 28.0
+                  ? UITokens.space2XL
                   : isTablet
-                  ? 20.0
-                  : 14.0;
+                  ? UITokens.spaceLg
+                  : UITokens.spaceMdSm;
               final heroPanelWidth = (constraints.maxWidth * 0.34).clamp(
-                320.0,
-                420.0,
+                UITokens.compactSheetMaxWidth,
+                UITokens.dialogMaxWidth,
               );
               final heroPanel = ValueListenableBuilder<double>(
                 valueListenable: _avatarStretch,
@@ -539,7 +742,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   l10n: l10n,
                   name: name,
                   avatar: avatar,
-                  username: username,
+                  username: usernameLabel,
                   profileId: profileId,
                   presenceLabel: presenceLabel,
                   isWide: isWide,
@@ -596,32 +799,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           if (widget.embedded) ...[
                             SectionPageHeader(
-                              title: widget.startInEdit
-                                  ? l10n.editTooltip
+                              title: _isAccountProfile
+                                  ? l10n.accountProfileTitle
                                   : l10n.profileTitle,
-                              subtitle: widget.startInEdit
-                                  ? l10n.profileSubtitle
-                                  : l10n.peopleViewProfileAction,
+                              subtitle: _isAccountProfile
+                                  ? (_editMode
+                                        ? l10n.accountProfileEditSubtitle
+                                        : l10n.accountProfileSubtitle)
+                                  : l10n.otherProfileSubtitle,
                               leading: IconButton(
                                 onPressed: () => Navigator.of(context).pop(),
                                 icon: const Icon(Icons.arrow_back_rounded),
                               ),
-                              actions: [
-                                if (_isMe)
-                                  IconButton(
-                                    icon: Icon(
-                                      widget.startInEdit
-                                          ? Icons.check_rounded
-                                          : Icons.edit_rounded,
-                                    ),
-                                    onPressed: widget.startInEdit
-                                        ? _saveProfile
-                                        : _openEditScreen,
-                                    tooltip: widget.startInEdit
-                                        ? l10n.saveTooltip
-                                        : l10n.editTooltip,
-                                  ),
-                              ],
                             ),
                             const SizedBox(height: UITokens.spaceMd),
                           ],
@@ -670,18 +859,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text(widget.startInEdit ? l10n.editTooltip : l10n.profileTitle),
+        title: Text(
+          _isAccountProfile ? l10n.accountProfileTitle : l10n.profileTitle,
+        ),
         centerTitle: false,
-        actions: [
-          if (_isMe)
-            IconButton(
-              icon: Icon(
-                widget.startInEdit ? Icons.check_rounded : Icons.edit_rounded,
-              ),
-              onPressed: widget.startInEdit ? _saveProfile : _openEditScreen,
-              tooltip: widget.startInEdit ? l10n.saveTooltip : l10n.editTooltip,
-            ),
-        ],
+        actions: const [],
       ),
       body: ScreenBackground(child: body),
     );
@@ -720,7 +902,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        padding: EdgeInsets.all(isWide ? 28 : 20),
+        padding: EdgeInsets.all(
+          isWide ? UITokens.space2XL : UITokens.spaceLg,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -764,7 +948,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
-                    if (_isMe && widget.startInEdit)
+                    if (_isAccountProfile && _editMode)
                       Positioned(
                         right: -4,
                         bottom: -4,
@@ -798,7 +982,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: UITokens.spaceXSm),
                       Text(
-                        '@$username',
+                        username,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.titleSmall?.copyWith(
@@ -852,11 +1036,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               spacing: 10,
               runSpacing: 10,
               children: [
-                _buildMetaChip(
-                  context,
-                  icon: Icons.person_outline_rounded,
-                  label: '@$username',
-                ),
+                if (profileId.isNotEmpty)
+                  _buildMetaChip(
+                    context,
+                    icon: Icons.badge_outlined,
+                    label: profileId,
+                  ),
+                if (username.isNotEmpty)
+                  _buildMetaChip(
+                    context,
+                    icon: Icons.alternate_email_rounded,
+                    label: username,
+                  ),
                 if (_user?['email'] is String &&
                     (_user!['email'] as String).isNotEmpty)
                   _buildMetaChip(
@@ -866,148 +1057,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
               ],
             ),
-            if (!_isMe) ...[
+            if (_isAccountProfile) ...[
               const SizedBox(height: UITokens.spaceMd),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final compactButtons = constraints.maxWidth < 500;
-                  if (compactButtons) {
-                    return Column(
-                      children: [
-                        _buildActionButton(
-                          icon: _actionLoading
-                              ? null
-                              : Icons.chat_bubble_outline,
-                          label: l10n.writeMessageButton,
-                          loading: _actionLoading,
-                          fullWidth: true,
-                          onPressed: _actionLoading
-                              ? null
-                              : () async {
-                                  setState(() => _actionLoading = true);
-                                  final messenger = ScaffoldMessenger.of(
-                                    context,
-                                  );
-                                  try {
-                                    final cs = createChatBackend();
-                                    final m = await cs.getOrCreateDirectChat(
-                                      widget.userId,
-                                    );
-                                    final chat = Chat.fromMap(m);
-                                    if (!mounted) return;
-                                    await context.push(
-                                      '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
-                                      extra: chat,
-                                    );
-                                  } catch (e) {
-                                    messenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          l10n.createChatError(e.toString()),
-                                        ),
-                                      ),
-                                    );
-                                  } finally {
-                                    if (mounted) {
-                                      setState(() => _actionLoading = false);
-                                    }
-                                  }
-                                },
-                        ),
-                        const SizedBox(height: UITokens.spaceSmMd),
-                        _buildActionButton(
-                          icon: Icons.call_outlined,
-                          label: l10n.callButton,
-                          fullWidth: true,
-                          onPressed: () async {
-                            final roomName =
-                                'call_${widget.userId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_')}_${DateTime.now().millisecondsSinceEpoch}';
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => CallScreen(
-                                  room: roomName,
-                                  isVideo: true,
-                                  displayName: _displayName(),
-                                  avatarUrl: _avatarUrl(),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  }
-
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: _buildActionButton(
-                          icon: _actionLoading
-                              ? null
-                              : Icons.chat_bubble_outline,
-                          label: l10n.writeMessageButton,
-                          loading: _actionLoading,
-                          fullWidth: true,
-                          onPressed: _actionLoading
-                              ? null
-                              : () async {
-                                  setState(() => _actionLoading = true);
-                                  final messenger = ScaffoldMessenger.of(
-                                    context,
-                                  );
-                                  try {
-                                    final cs = createChatBackend();
-                                    final m = await cs.getOrCreateDirectChat(
-                                      widget.userId,
-                                    );
-                                    final chat = Chat.fromMap(m);
-                                    if (!mounted) return;
-                                    await context.push(
-                                      '${AppStrings.routeChat}/${Uri.encodeComponent(chat.id)}',
-                                      extra: chat,
-                                    );
-                                  } catch (e) {
-                                    messenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          l10n.createChatError(e.toString()),
-                                        ),
-                                      ),
-                                    );
-                                  } finally {
-                                    if (mounted) {
-                                      setState(() => _actionLoading = false);
-                                    }
-                                  }
-                                },
-                        ),
-                      ),
-                      const SizedBox(width: UITokens.spaceSmMd),
-                      Expanded(
-                        child: _buildActionButton(
-                          icon: Icons.call_outlined,
-                          label: l10n.callButton,
-                          fullWidth: true,
-                          onPressed: () async {
-                            final roomName =
-                                'call_${widget.userId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_')}_${DateTime.now().millisecondsSinceEpoch}';
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => CallScreen(
-                                  room: roomName,
-                                  isVideo: true,
-                                  displayName: _displayName(),
-                                  avatarUrl: _avatarUrl(),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-                },
+              Wrap(
+                spacing: UITokens.spaceSmMd,
+                runSpacing: UITokens.spaceSmMd,
+                children: [
+                  FilledButton.icon(
+                    onPressed: _actionLoading
+                        ? null
+                        : (_editMode ? _saveProfile : _startInlineEdit),
+                    icon: Icon(
+                      _editMode ? Icons.save_rounded : Icons.edit_rounded,
+                    ),
+                    label: Text(
+                      _editMode
+                          ? l10n.saveProfileButton
+                          : l10n.editProfileButton,
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _copyProfileId,
+                    icon: const Icon(Icons.copy_rounded),
+                    label: Text(l10n.copyAegisIdButton),
+                  ),
+                  if (_editMode)
+                    TextButton(
+                      onPressed: _cancelInlineEdit,
+                      child: Text(l10n.cancelButton),
+                    ),
+                ],
               ),
+            ] else ...[
+              const SizedBox(height: UITokens.spaceMd),
+              _buildContactActionButtons(l10n),
             ],
           ],
         ),
@@ -1034,23 +1117,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.startInEdit ? l10n.editTooltip : l10n.profileTitle,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
+            if (_loadErrorMessage != null) ...[
+              InlineNoticeCard(
+                icon: Icons.error_outline_rounded,
+                title: l10n.errorGeneric,
+                message: _loadErrorMessage!,
               ),
-            ),
-            const SizedBox(height: UITokens.spaceXSm),
-            Text(
-              widget.startInEdit
-                  ? l10n.profileSubtitle
-                  : l10n.peopleViewProfileAction,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: UITokens.spaceLg),
-            if (!widget.startInEdit && !_hasReadableProfileData()) ...[
+              const SizedBox(height: UITokens.spaceMd),
+            ],
+            if (_loadErrorMessage == null && !_editMode && !_hasReadableProfileData()) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(UITokens.spaceMdSm),
@@ -1087,7 +1162,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: UITokens.spaceMd),
             ],
-            if (widget.startInEdit)
+            if (!_isAccountProfile) ...[
+              InlineNoticeCard(
+                icon: Icons.shield_outlined,
+                badge: l10n.featureInDevelopmentLabel,
+                title: l10n.profileModerationNoticeTitle,
+                message: l10n.profileModerationNoticeMessage,
+              ),
+              const SizedBox(height: UITokens.spaceMd),
+              Wrap(
+                spacing: UITokens.spaceSmMd,
+                runSpacing: UITokens.spaceSmMd,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _showModerationStub(l10n.blockUserAction),
+                    icon: const Icon(Icons.block_outlined),
+                    label: Text(l10n.blockUserAction),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => _showModerationStub(l10n.reportUserAction),
+                    icon: const Icon(Icons.flag_outlined),
+                    label: Text(l10n.reportUserAction),
+                  ),
+                ],
+              ),
+              const SizedBox(height: UITokens.spaceMd),
+            ],
+            if (_editMode)
               Column(
                 children: [
                   _buildEditableField(
@@ -1205,53 +1306,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String username,
     String profileId,
   ) {
+    final displayName = (_user?['displayName'] as String?)?.trim();
+    final about = (_user?['bio'] as String?)?.trim();
+    final location = (_user?['location'] as String?)?.trim();
+    final birthday = (_user?['birthday'] as String?)?.trim();
+    final email = (_user?['email'] as String?)?.trim();
+    final createdAt = _formattedCreatedAt();
+    final status = _presenceLabel(l10n);
+
     final values = <({String label, String? value})>[
-      (
-        label: l10n.aboutField,
-        value: (_user != null)
-            ? (_user!['prefs']?['about'] ?? _user!['bio'] ?? '') as String?
-            : '',
-      ),
-    ];
-
-    if (_user != null) {
-      final prefs = (_user!['prefs'] is Map)
-          ? Map<String, dynamic>.from(_user!['prefs'] as Map)
-          : <String, dynamic>{};
-      final email = (_user!['email'] as String?) ?? '';
-      final phone = (_user!['phone'] as String?) ?? '';
-      final serverShowEmail = prefs['showEmail'] == true;
-      final serverShowPhone = prefs['showPhone'] == true;
-      final shouldShowEmail = _isMe
-          ? SettingsService.showEmailNotifier.value
-          : serverShowEmail;
-      final shouldShowPhone = _isMe
-          ? SettingsService.showPhoneNotifier.value
-          : serverShowPhone;
-
-      if (email.isNotEmpty && shouldShowEmail) {
-        values.add((label: l10n.emailLabel, value: email));
-      }
-      if (phone.isNotEmpty && shouldShowPhone) {
-        values.add((label: l10n.phoneLabel, value: phone));
-      }
-    }
-
-    values.addAll([
+      (label: l10n.nameField, value: displayName),
       (label: l10n.nicknameField, value: username),
-      (
-        label: l10n.locationField,
-        value: (_user != null) ? (_user!['location'] as String?) ?? '' : '',
-      ),
-      (
-        label: l10n.birthdayField,
-        value: (_user != null) ? (_user!['birthday'] as String?) ?? '' : '',
-      ),
-    ]);
-    if (_isMe || (profileId.isNotEmpty && profileId != username)) {
-      values.add((label: l10n.contactIdLabel, value: profileId));
-    }
+      (label: l10n.aboutField, value: about),
+      (label: l10n.locationField, value: location),
+      (label: l10n.birthdayField, value: birthday),
+      (label: l10n.emailLabel, value: email),
+      (label: l10n.profileStatusLabel, value: status),
+      (label: l10n.registeredAtLabel, value: createdAt),
+      (label: l10n.aegisIdLabel, value: profileId),
+    ];
     return values;
+  }
+
+  String? _formattedCreatedAt() {
+    final raw = _user?['createdAt']?.toString().trim();
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) {
+      return raw;
+    }
+    return '${parsed.day.toString().padLeft(2, '0')}.${parsed.month.toString().padLeft(2, '0')}.${parsed.year}';
   }
 
   Widget _buildMetaChip(

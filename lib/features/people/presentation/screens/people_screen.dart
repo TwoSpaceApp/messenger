@@ -20,6 +20,7 @@ import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/people/data/services/people_repository.dart';
 import 'package:two_space_app/features/people/presentation/controllers/people_controller.dart';
 import 'package:two_space_app/features/people/presentation/widgets/people_search_field.dart';
+import 'package:two_space_app/features/people/presentation/widgets/person_avatar.dart';
 import 'package:two_space_app/features/people/presentation/widgets/person_tile.dart';
 
 class PeopleScreen extends StatefulWidget {
@@ -81,6 +82,28 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final subtitle =
       widget.subtitleOverride ??
       (widget.autofocusSearch ? l10n.searchContactsHint : l10n.peopleSubtitle);
+    final segmentOptions = <({PeopleSegment value, String label, IconData icon})>[
+      (
+        value: PeopleSegment.all,
+        label: l10n.peopleSegmentAll,
+        icon: Icons.grid_view_rounded,
+      ),
+      (
+        value: PeopleSegment.twospace,
+        label: l10n.peopleSegmentTwoSpace,
+        icon: Icons.alternate_email_rounded,
+      ),
+      (
+        value: PeopleSegment.phonebook,
+        label: l10n.peopleSegmentPhonebook,
+        icon: Icons.contact_phone_outlined,
+      ),
+      (
+        value: PeopleSegment.recent,
+        label: l10n.peopleSegmentRecent,
+        icon: Icons.schedule_rounded,
+      ),
+    ];
     const pad = EdgeInsets.symmetric(horizontal: 16);
 
     return AnimatedBuilder(
@@ -161,75 +184,53 @@ class _PeopleScreenState extends State<PeopleScreen> {
                               ],
                             ),
                             const SizedBox(height: UITokens.spaceMd),
-                            Container(
-                              decoration: BoxDecoration(
-                                color:
-                                    theme.colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(
-                                  UITokens.corner2Lg,
-                                ),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 2,
-                              ),
-                              child: PeopleSearchField(
-                                controller: _searchController,
-                                focusNode: _searchFocusNode,
-                                autofocus: widget.autofocusSearch,
-                                hintText: searchHint,
-                                embedded: true,
-                                onChanged: _controller.updateQuery,
-                                onClear: () {
-                                  _searchController.clear();
-                                  _controller.clearSearch();
-                                },
-                              ),
+                            PeopleSearchField(
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              autofocus: widget.autofocusSearch,
+                              hintText: searchHint,
+                              embedded: true,
+                              onChanged: _controller.updateQuery,
+                              onClear: () {
+                                _searchController.clear();
+                                _controller.clearSearch();
+                              },
                             ),
                             if (!widget.simplified) ...[
                               const SizedBox(height: UITokens.spaceMdSm),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                keyboardDismissBehavior:
-                                    ScrollViewKeyboardDismissBehavior.onDrag,
-                                child: SegmentedButton<PeopleSegment>(
-                                  showSelectedIcon: false,
-                                  selected: <PeopleSegment>{
-                                    _controller.segment,
-                                  },
-                                  onSelectionChanged: (selection) {
-                                    final segment = selection.firstOrNull;
-                                    if (segment != null) {
-                                      _controller.setSegment(segment);
-                                    }
-                                  },
-                                  segments: [
-                                    ButtonSegment(
-                                      value: PeopleSegment.all,
-                                      label: Text(l10n.peopleSegmentAll),
-                                      icon: const Icon(Icons.grid_view_rounded),
+                              Wrap(
+                                spacing: UITokens.spaceSm,
+                                runSpacing: UITokens.spaceSm,
+                                children: segmentOptions.map((segment) {
+                                  final selected =
+                                      _controller.segment == segment.value;
+                                  return ChoiceChip(
+                                    selected: selected,
+                                    showCheckmark: false,
+                                    avatar: Icon(
+                                      segment.icon,
+                                      size: 18,
+                                      color: selected
+                                          ? theme.colorScheme.onPrimaryContainer
+                                          : theme.colorScheme.onSurfaceVariant,
                                     ),
-                                    ButtonSegment(
-                                      value: PeopleSegment.twospace,
-                                      label: Text(l10n.peopleSegmentTwoSpace),
-                                      icon: const Icon(
-                                        Icons.alternate_email_rounded,
+                                    label: Text(segment.label),
+                                    selectedColor: theme.colorScheme.primaryContainer
+                                        .withValues(alpha: 0.96),
+                                    side: BorderSide(
+                                      color: selected
+                                          ? theme.colorScheme.primary.withValues(alpha: 0.22)
+                                          : theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        UITokens.cornerXLg,
                                       ),
                                     ),
-                                    ButtonSegment(
-                                      value: PeopleSegment.phonebook,
-                                      label: Text(l10n.peopleSegmentPhonebook),
-                                      icon: const Icon(
-                                        Icons.contact_phone_outlined,
-                                      ),
-                                    ),
-                                    ButtonSegment(
-                                      value: PeopleSegment.recent,
-                                      label: Text(l10n.peopleSegmentRecent),
-                                      icon: const Icon(Icons.schedule_rounded),
-                                    ),
-                                  ],
-                                ),
+                                    onSelected: (_) =>
+                                        _controller.setSegment(segment.value),
+                                  );
+                                }).toList(growable: false),
                               ),
                             ],
                           ],
@@ -548,7 +549,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
       ),
       child: PersonTile(
         person: person,
-        trailingLabel: l10n.peopleTwoSpaceBadge,
+        trailingLabel: person.isTwoSpaceUser
+            ? l10n.peopleTwoSpaceBadge
+            : person.isInvitable
+            ? l10n.peopleInviteTitle
+            : null,
         subtitle: _subtitle(person, l10n),
         onTap: person.remoteUserId != null
             ? () => _handleRemotePersonTap(person)
@@ -737,6 +742,11 @@ class _PeopleScreenState extends State<PeopleScreen> {
 
   Future<void> _showPersonSheet(PersonEntry person) async {
     final l10n = AppLocalizations.of(context)!;
+    final badgeLabel = person.isTwoSpaceUser
+        ? l10n.peopleTwoSpaceBadge
+        : person.isInvitable
+        ? l10n.peopleInviteTitle
+        : null;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -776,15 +786,66 @@ class _PeopleScreenState extends State<PeopleScreen> {
                     UITokens.spaceXSm,
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      PersonAvatar(
+                        name: person.displayName,
+                        avatarUrl: person.avatarUrl,
+                        photoBytes: person.photoBytes,
+                        showOnline: person.isOnline,
+                      ),
+                      const SizedBox(width: UITokens.spaceMd),
                       Expanded(
-                        child: Text(
-                          person.displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              person.displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: UITokens.space2XS),
+                            Text(
+                              _subtitle(person, l10n),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            if (badgeLabel != null) ...[
+                              const SizedBox(height: UITokens.spaceSm),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: UITokens.spaceSmMd,
+                                  vertical: UITokens.spaceXSm,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: person.isInvitable && !person.isTwoSpaceUser
+                                      ? Theme.of(ctx)
+                                          .colorScheme
+                                          .surfaceContainerHighest
+                                          .withValues(alpha: 0.9)
+                                      : Theme.of(ctx)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.14),
+                                  borderRadius: BorderRadius.circular(
+                                    UITokens.cornerPill,
+                                  ),
+                                ),
+                                child: Text(
+                                  badgeLabel,
+                                  style: Theme.of(ctx).textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                       IconButton(
@@ -793,25 +854,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
                         icon: const Icon(Icons.close_rounded),
                       ),
                     ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    UITokens.spaceMd,
-                    0,
-                    UITokens.spaceMd,
-                    UITokens.spaceSm,
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      _subtitle(person, l10n),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
                   ),
                 ),
                 const Divider(height: UITokens.borderThin),

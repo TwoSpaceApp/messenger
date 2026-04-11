@@ -13,16 +13,8 @@ class EnvironmentValidator {
       final errors = <String>[];
       final warnings = <String>[];
 
-      if (Environment.aegisHost.isEmpty) {
-        errors.add('❌ AEGIS_HOST не задан');
-      }
-
       if (Environment.aegisPort <= 0 || Environment.aegisPort > 65535) {
         errors.add('❌ AEGIS_PORT должен быть в диапазоне 1..65535');
-      }
-
-      if (Environment.sentryDsn.isEmpty) {
-        warnings.add('⚠️  Опциональная переменная не установлена: SENTRY_DSN');
       }
 
       if (Environment.aegisConnectTimeout <= Duration.zero) {

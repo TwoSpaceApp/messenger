@@ -129,13 +129,16 @@ class _UpdateScreenState extends State<UpdateScreen> {
       if (!canInstall) {
         if (!mounted) return;
         final width = MediaQuery.of(context).size.width;
-        final horizontalInset = (width * 0.08).clamp(12.0, 28.0);
+        final horizontalInset = (width * 0.08).clamp(
+          UITokens.dialogHorizontalInsetMin,
+          UITokens.dialogHorizontalInsetMax,
+        );
         final openSettings = await showDialog<bool>(
           context: context,
           builder: (dialogContext) => AlertDialog(
             insetPadding: EdgeInsets.symmetric(
               horizontal: horizontalInset,
-              vertical: 24,
+              vertical: UITokens.spaceXLg,
             ),
             title: Text(l10n.installPermissionTitle),
             content: Text(l10n.installPermissionContent),

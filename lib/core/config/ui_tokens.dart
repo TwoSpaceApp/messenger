@@ -58,22 +58,44 @@ class UITokens {
   static const double dragHandleWidth = 40;
   static const double dragHandleHeight = 4;
   static const double buttonHeight = 48;
+  static const double authProviderButtonHeight = 50;
+  static const double authSocialIconSize = 32;
+  static const double authAvatarPickerSize = 140;
+  static const double authHelperTextSize = 12;
+  static const double authPrimaryButtonHorizontalPadding = 32;
+  static const double authPrimaryButtonVerticalPadding = 16;
+  static const double authPresetCardWidth = 208;
+  static const double authPresetListHeight = 174;
+  static const double authStepCardMinHeight = 392;
   static const double compactButtonWidth = 180;
   static const double compactSheetMaxWidth = 320;
   static const double dialogMaxWidth = 420;
+  static const double dialogHorizontalInsetMin = 12;
+  static const double dialogHorizontalInsetMax = 28;
   static const double heroCardMaxWidth = 540;
   static const double sheetContentMaxWidth = 560;
   static const double compactFormMaxWidth = 640;
   static const double sectionContentMaxWidth = 760;
   static const double panelContentMaxWidth = 860;
   static const double formContentMaxWidth = 920;
+  static const double settingsSidebarWidth = 300;
+  static const double settingsInfoBlockWidth = 260;
   static const double wideContentMaxWidth = 1320;
   static const double bottomBarClearance = 120;
+
+  // Validation and profile constraints
+  static const int aegisUsernameMinLength = 3;
+  static const int aegisUsernameMaxLength = 32;
+  static const int authPasswordMinLength = 6;
+  static const int profileNameMaxLength = 120;
+  static const int profileBioMaxLength = 512;
+  static const int profileLocationMaxLength = 120;
 
   // Responsive breakpoints
   static const double mobileBreakpoint = 540;
   static const double tabletBreakpoint = 760;
   static const double desktopBreakpoint = 1100;
+  static const double ultraWideBreakpoint = 1400;
   static const double contentMaxWidth = 1200;
   static const double readableContentMaxWidth = 920;
 

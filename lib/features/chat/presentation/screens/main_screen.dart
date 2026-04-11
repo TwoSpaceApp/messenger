@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
@@ -8,6 +9,7 @@ import 'package:two_space_app/core/services/biometric_service.dart';
 import 'package:two_space_app/core/widgets/app_shell_frame.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
+import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/home_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/widgets_screen.dart';
@@ -15,19 +17,21 @@ import 'package:two_space_app/features/people/presentation/screens/people_screen
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:two_space_app/features/settings/presentation/screens/settings_screen.dart';
 
-class MainScreen extends StatefulWidget {
+class MainScreen extends ConsumerStatefulWidget {
   static const routeName = '/main';
   const MainScreen({super.key, this.initialIndex = 0});
 
   final int initialIndex;
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
+class _MainScreenState extends ConsumerState<MainScreen>
+    with WidgetsBindingObserver {
   late int _currentIndex;
   bool _isLocked = false;
+  bool _unlockFailed = false;
   bool _biometricCheckInFlight = false;
   late final Set<int> _initializedTabs;
   int _totalUnread = 0;
@@ -89,23 +93,64 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _checkBiometrics() async {
-    if (!SettingsService.biometricsNotifier.value) return;
+    if (!SettingsService.biometricsNotifier.value) {
+      if (mounted && (_isLocked || _unlockFailed)) {
+        setState(() {
+          _isLocked = false;
+          _unlockFailed = false;
+        });
+      }
+      return;
+    }
 
     if (_biometricCheckInFlight) return;
     _biometricCheckInFlight = true;
     if (mounted && !_isLocked) {
-      setState(() => _isLocked = true);
+      setState(() {
+        _isLocked = true;
+        _unlockFailed = false;
+      });
     }
 
     try {
       final success = await BiometricService.authenticate(
         AppLocalizations.of(context)?.unlockApp ?? 'Unlock App',
       );
-      if (success && mounted && _isLocked) {
-        setState(() => _isLocked = false);
+      if (!mounted) {
+        return;
+      }
+
+      if (success) {
+        setState(() {
+          _isLocked = false;
+          _unlockFailed = false;
+        });
+      } else {
+        setState(() {
+          _isLocked = true;
+          _unlockFailed = true;
+        });
       }
     } finally {
       _biometricCheckInFlight = false;
+    }
+  }
+
+  Future<void> _logoutFromLock() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ref.read(authProvider.notifier).logout();
+      if (!mounted) {
+        return;
+      }
+      context.go(AppStrings.routeLogin);
+    } on Object catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.errorLogout(error.toString()))),
+      );
     }
   }
 
@@ -136,6 +181,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     if (_isLocked) {
       return Scaffold(
@@ -156,35 +202,67 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          Icons.lock_rounded,
+                          _unlockFailed
+                              ? Icons.error_outline_rounded
+                              : Icons.lock_rounded,
                           size: 54,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: _unlockFailed
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.primary,
                         ),
                         const SizedBox(height: UITokens.space),
                         Text(
-                          l10n.unlockApp,
+                          _unlockFailed
+                              ? l10n.lockScreenFailedTitle
+                              : l10n.unlockApp,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
+                          style: theme.textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                         ),
                         const SizedBox(height: UITokens.spaceSm),
                         Text(
-                          l10n.biometricSubtitle,
+                          _unlockFailed
+                              ? l10n.lockScreenFailedMessage
+                              : l10n.biometricSubtitle,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                                color: _unlockFailed
+                                    ? theme.colorScheme.error
+                                    : theme.colorScheme.onSurfaceVariant,
                               ),
                         ),
                         const SizedBox(height: UITokens.spaceLg),
                         FilledButton.icon(
-                          onPressed: _checkBiometrics,
-                          icon: const Icon(Icons.fingerprint_rounded),
-                          label: Text(l10n.unlockButton),
+                          onPressed: _biometricCheckInFlight
+                              ? null
+                              : _checkBiometrics,
+                          icon: Icon(
+                            _unlockFailed
+                                ? Icons.refresh_rounded
+                                : Icons.fingerprint_rounded,
+                          ),
+                          label: Text(
+                            _unlockFailed ? l10n.retry : l10n.unlockButton,
+                          ),
+                        ),
+                        const SizedBox(height: UITokens.spaceLg),
+                        GestureDetector(
+                          onTap: _logoutFromLock,
+                          behavior: HitTestBehavior.opaque,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: UITokens.spaceMd,
+                              vertical: UITokens.space2XS,
+                            ),
+                            child: Text(
+                              l10n.logoutAction,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),

@@ -6,6 +6,7 @@ import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/floating_nav_bar.dart';
+import 'package:two_space_app/core/widgets/screen_background.dart';
 
 class AppShellFrame extends StatelessWidget {
   const AppShellFrame({
@@ -16,6 +17,7 @@ class AppShellFrame extends StatelessWidget {
     this.chatUnreadCount = 0,
     this.constrainBody = false,
     this.maxBodyWidth = UITokens.contentMaxWidth,
+    this.showMobileNavBar = true,
   });
 
   final int selectedIndex;
@@ -24,6 +26,7 @@ class AppShellFrame extends StatelessWidget {
   final int chatUnreadCount;
   final bool constrainBody;
   final double maxBodyWidth;
+  final bool showMobileNavBar;
 
   @override
   Widget build(BuildContext context) {
@@ -42,19 +45,8 @@ class AppShellFrame extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         if (constrainBody)
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.backgroundGradientStart(context),
-                    AppColors.backgroundGradientEnd(context),
-                  ],
-                ),
-              ),
-            ),
+          const Positioned.fill(
+            child: ScreenBackground(child: SizedBox.shrink()),
           ),
         content,
         if (useWideNav)
@@ -68,7 +60,7 @@ class AppShellFrame extends StatelessWidget {
               chatUnreadCount: chatUnreadCount,
             ),
           )
-        else
+        else if (showMobileNavBar)
           Positioned.fill(
             child: IgnorePointer(
               ignoring: false,
@@ -121,7 +113,7 @@ class _ConstrainedShellBody extends StatelessWidget {
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxBodyWidth),
-            child: child,
+            child: SizedBox.expand(child: child),
           ),
         ),
       ),

@@ -1,13 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/core/services/sentry_service.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
+import 'package:two_space_app/features/auth/data/services/login_protection_service.dart';
 import 'package:two_space_app/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_background.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
@@ -27,11 +30,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtl = TextEditingController();
   final _passCtl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final LoginProtectionService _loginProtection = LoginProtectionService();
   bool _loading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
   bool _isCovering = true; // start hidden for entrance animation
   final bool _swapBlobs = false;
+  Timer? _cooldownTicker;
 
   @override
   void initState() {
@@ -44,14 +49,60 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
+    _cooldownTicker?.cancel();
     _emailCtl.dispose();
     _passCtl.dispose();
     super.dispose();
   }
 
+  void _startCooldownTicker() {
+    if (!_loginProtection.isCoolingDown) {
+      _cooldownTicker?.cancel();
+      _cooldownTicker = null;
+      return;
+    }
+    _cooldownTicker ??= Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) {
+        _cooldownTicker?.cancel();
+        _cooldownTicker = null;
+        return;
+      }
+      if (!_loginProtection.isCoolingDown) {
+        setState(() {
+          if ((_errorMessage ?? '').isNotEmpty) {
+            _errorMessage = null;
+          }
+        });
+        _cooldownTicker?.cancel();
+        _cooldownTicker = null;
+        return;
+      }
+      setState(() {});
+    });
+  }
+
+  void _recordFailedAttempt(AppLocalizations l10n) {
+    _loginProtection.recordFailure();
+    if (_loginProtection.isCoolingDown) {
+      _startCooldownTicker();
+      _errorMessage = l10n.loginCooldownMessage(
+        _loginProtection.remainingCooldownSeconds,
+      );
+    }
+  }
+
   Future<void> _handleLogin() async {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _errorMessage = null);
+    if (_loginProtection.isCoolingDown) {
+      setState(() {
+        _errorMessage = l10n.loginCooldownMessage(
+          _loginProtection.remainingCooldownSeconds,
+        );
+      });
+      _startCooldownTicker();
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loading = true);
@@ -74,20 +125,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       // Standard email + password login
       await notifier.login(identifier, password);
+      _loginProtection.recordSuccess();
       // Navigation happens automatically via auth listener
     } on TwoFactorRequiredException {
       await _completeTwoFactorLogin(identifier, password);
     } on TwoFactorInvalidException {
+      setState(() => _recordFailedAttempt(l10n));
       await _completeTwoFactorLogin(identifier, password, invalidCode: true);
-    } catch (e, stackTrace) {
-      SentryService.captureException(
-        e,
-        stackTrace: stackTrace,
-        hint: {'screen': 'login'},
-      );
+    } catch (e) {
       if (mounted) {
         setState(
-          () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+          () {
+            _recordFailedAttempt(l10n);
+            _errorMessage ??= UserFacingError.format(e, l10n);
+          },
         );
       }
     } finally {
@@ -100,7 +151,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     String password, {
     bool invalidCode = false,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
     while (mounted) {
+      if (_loginProtection.isCoolingDown) {
+        setState(() {
+          _errorMessage = l10n.loginCooldownMessage(
+            _loginProtection.remainingCooldownSeconds,
+          );
+        });
+        _startCooldownTicker();
+        return;
+      }
+
       final credentials = await _promptForTwoFactorCredentials(
         invalidCode: invalidCode,
       );
@@ -123,19 +185,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             );
         return;
       } on TwoFactorInvalidException {
+        setState(() => _recordFailedAttempt(l10n));
+        if (_loginProtection.isCoolingDown) {
+          return;
+        }
         invalidCode = true;
         continue;
-      } catch (e, stackTrace) {
-        SentryService.captureException(
-          e,
-          stackTrace: stackTrace,
-          hint: {'screen': 'login-2fa'},
-        );
+      } catch (e) {
         if (!mounted) {
           return;
         }
         setState(
-          () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+          () {
+            _recordFailedAttempt(l10n);
+            _errorMessage ??= UserFacingError.format(e, l10n);
+          },
         );
         return;
       }
@@ -312,7 +376,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     cursorColor: theme.colorScheme.primary,
                     decoration: InputDecoration(
                       labelText: l10n.emailOrUsernameLabel,
-                      hintText: 'username',
+                      hintText: l10n.authUsernameHint,
                       prefixIcon: Icon(
                         Icons.person_outline,
                         color: theme.colorScheme.primary,
@@ -430,7 +494,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             const SizedBox(height: UITokens.spaceXLg),
 
             ElevatedButton(
-              onPressed: _loading ? null : _handleLogin,
+              onPressed:
+                  (_loading || _loginProtection.isCoolingDown)
+                  ? null
+                  : _handleLogin,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: UITokens.spaceMd),
                 shape: RoundedRectangleBorder(
@@ -493,9 +560,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _socialButton(Icons.g_mobiledata, 'Google', () {}, isDark),
+                _socialButton(
+                  Icons.g_mobiledata,
+                  l10n.continueWithGoogle,
+                  () {},
+                  isDark,
+                ),
                 const SizedBox(width: UITokens.spaceMd),
-                _socialButton(Icons.apple, 'Apple', () {}, isDark),
+                _socialButton(
+                  Icons.apple,
+                  l10n.continueWithApple,
+                  () {},
+                  isDark,
+                ),
               ],
             ),
 
@@ -536,22 +613,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     VoidCallback onPressed,
     bool isDark,
   ) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(UITokens.corner),
-      child: Container(
-        padding: const EdgeInsets.all(UITokens.space),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isDark ? Colors.white24 : Colors.grey.shade300,
+    return Tooltip(
+      message: label,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(UITokens.corner),
+        child: Container(
+          padding: const EdgeInsets.all(UITokens.space),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isDark ? Colors.white24 : Colors.grey.shade300,
+            ),
+            borderRadius: BorderRadius.circular(UITokens.corner),
+            color: isDark ? Colors.white10 : Colors.white,
           ),
-          borderRadius: BorderRadius.circular(UITokens.corner),
-          color: isDark ? Colors.white10 : Colors.white,
-        ),
-        child: Icon(
-          icon,
-          size: 32,
-          color: isDark ? Colors.white : Colors.black87,
+          child: Icon(
+            icon,
+            size: UITokens.authSocialIconSize,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
       ),
     );

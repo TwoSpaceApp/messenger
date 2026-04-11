@@ -26,12 +26,14 @@ class TitleObserver extends NavigatorObserver {
       suffix = l10n.customizationLabel;
     } else if (name == AppStrings.routeProfile) {
       suffix = l10n.profileTitle;
+    } else if (name == AppStrings.routeAccountProfile) {
+      suffix = l10n.accountProfileTitle;
     } else if (name == AppStrings.routeAccountSettings) {
       suffix = l10n.accountSettingsTitle;
     } else if (name.startsWith(AppStrings.routeChat)) {
-      suffix = 'Chat'; // Can be improved later if we pass chat title
+      suffix = l10n.chatsTitle;
     } else if (name == AppStrings.routeFeedback) {
-      suffix = 'Feedback';
+      suffix = l10n.suggestImprovementLabel;
     }
 
     final newTitle = suffix.isNotEmpty ? 'TwoSpace - $suffix' : 'TwoSpace';

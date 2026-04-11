@@ -7,16 +7,33 @@ import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/theme_builder.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/core/services/sentry_service.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
 import 'package:two_space_app/features/auth/presentation/widgets/auth_background.dart';
 import 'package:two_space_app/features/auth/providers/auth_notifier.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+
+TextStyle _registerFontPreviewStyle(
+  String fontFamily, {
+  double? fontSize,
+  FontWeight? fontWeight,
+  Color? color,
+}) {
+  return AppThemeBuilder.applyFontFamily(
+    fontFamily,
+    textStyle: TextStyle(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+    ),
+  );
+}
 
 class _RegisterStylePreset {
   const _RegisterStylePreset({
@@ -199,7 +216,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   }
 
   int _getPasswordStrength(String password) {
-    if (password.length < 6) return 0;
+    if (password.length < UITokens.authPasswordMinLength) return 0;
     var strength = 1;
     if (password.length >= 8) strength++;
     if (RegExp('[0-9]').hasMatch(password)) strength++;
@@ -239,8 +256,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   Future<void> _handleRegistration() async {
     setState(() => _loading = true);
     try {
-      SentryService.addBreadcrumb('Начало регистрации', category: 'auth');
-
       final notifier = ref.read(authProvider.notifier);
 
       // Apply customization settings before registering/logging in
@@ -257,20 +272,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         avatarBytes: _avatarBytes,
       );
 
-      SentryService.addBreadcrumb('Регистрация успешна', category: 'auth');
-
       if (!mounted) return;
       context.go(AppStrings.routeWelcome);
-    } catch (e, stackTrace) {
-      SentryService.captureException(
-        e,
-        stackTrace: stackTrace,
-        hint: {'screen': 'register', 'step': _step},
-      );
-
+    } catch (e) {
       if (mounted) {
         setState(
-          () => _errorMessage = e.toString().replaceAll('Exception: ', ''),
+          () => _errorMessage = UserFacingError.format(e, AppLocalizations.of(context)),
         );
       }
     } finally {
@@ -299,17 +306,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   String? _validatePassword(String? value) {
     final l10n = AppLocalizations.of(context)!;
     if (value == null || value.isEmpty) return l10n.validationEnterPassword;
-    if (value.length < 6) return l10n.validationPasswordTooShort;
+    if (value.length < UITokens.authPasswordMinLength) {
+      return l10n.validationPasswordTooShort;
+    }
     return null;
   }
 
   String? _validateAegisUsername(String? value) {
+    final l10n = AppLocalizations.of(context)!;
     final trimmed = value?.trim() ?? '';
     if (trimmed.isEmpty) {
-      return 'Choose an Aegis username.';
+      return l10n.chooseAegisUsernamePrompt;
     }
     if (!_aegisUsernamePattern.hasMatch(trimmed)) {
-      return 'Username must be 3-32 chars and use Latin letters, digits, ., _ or -.';
+      return l10n.validationAegisUsernameFormat;
     }
     return null;
   }
@@ -446,12 +456,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         ),
                         title: Text(
                           font,
-                          style: TextStyle(fontFamily: font),
+                          style: _registerFontPreviewStyle(font),
                         ),
                         subtitle: Text(
                           'Аа',
-                          style: TextStyle(
-                            fontFamily: font,
+                          style: _registerFontPreviewStyle(
+                            font,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
@@ -566,7 +576,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               child: Container(
                 key: ValueKey<int>(_step),
                 width: double.infinity,
-                constraints: const BoxConstraints(minHeight: 392),
+                constraints: const BoxConstraints(
+                  minHeight: UITokens.authStepCardMinHeight,
+                ),
                 padding: const EdgeInsets.all(UITokens.spaceLg),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface.withValues(
@@ -611,8 +623,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   onPressed: (_loading || _isCovering) ? null : _nextStep,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
+                      horizontal: UITokens.authPrimaryButtonHorizontalPadding,
+                      vertical: UITokens.authPrimaryButtonVerticalPadding,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(UITokens.cornerLg),
@@ -671,7 +683,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
           decoration: _inputDecoration(
             theme,
-            'Email',
+            l10n.emailLabel,
             Icons.email_outlined,
             isDark,
           ),
@@ -785,9 +797,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            'Aegis username: 3-32 chars, Latin letters, digits, ., _ or -',
+            l10n.aegisUsernameHelper,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: UITokens.authHelperTextSize,
               color: isDark ? Colors.white60 : Colors.black54,
             ),
           ),
@@ -825,8 +837,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             scale: _avatarAnimController,
             child: AnimatedContainer(
               duration: UITokens.durationLgSm,
-              width: 140,
-              height: 140,
+              width: UITokens.authAvatarPickerSize,
+              height: UITokens.authAvatarPickerSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isDark ? Colors.white10 : theme.colorScheme.surface,
@@ -905,7 +917,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         ),
         const SizedBox(height: UITokens.space),
         SizedBox(
-          height: 174,
+          height: UITokens.authPresetListHeight,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _stylePresets.length,
@@ -917,7 +929,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   _selectedFont == preset.fontFamily;
               final color = Color(preset.color);
               return SizedBox(
-                width: 208,
+                width: UITokens.authPresetCardWidth,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -983,9 +995,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   alignment: Alignment.center,
                                   child: Text(
                                     'Аа',
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontFamily: preset.fontFamily,
+                                    style: _registerFontPreviewStyle(
+                                      preset.fontFamily,
+                                      fontSize: theme.textTheme.titleLarge?.fontSize,
                                       fontWeight: FontWeight.w700,
+                                      color: theme.textTheme.titleLarge?.color,
                                     ),
                                   ),
                                 ),
@@ -1051,9 +1065,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     alignment: Alignment.center,
                     child: Text(
                       'Аа',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontFamily: _selectedFont,
+                      style: _registerFontPreviewStyle(
+                        _selectedFont,
+                        fontSize: theme.textTheme.titleLarge?.fontSize,
                         fontWeight: FontWeight.w700,
+                        color: theme.textTheme.titleLarge?.color,
                       ),
                     ),
                   ),
@@ -1064,9 +1080,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       children: [
                         Text(
                           _selectedFont,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontFamily: _selectedFont,
+                          style: _registerFontPreviewStyle(
+                            _selectedFont,
+                            fontSize: theme.textTheme.titleMedium?.fontSize,
                             fontWeight: FontWeight.w700,
+                            color: theme.textTheme.titleMedium?.color,
                           ),
                         ),
                         const SizedBox(height: UITokens.spaceXS),

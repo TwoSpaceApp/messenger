@@ -1,20 +1,37 @@
 import 'package:riverpod/riverpod.dart';
-import 'package:riverpod/src/providers/future_provider.dart';
+import 'package:riverpod/misc.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
+
+const _roomMetadataBatchSize = 6;
+
+Future<List<T>> _mapInBatches<S, T>(
+  Iterable<S> items,
+  Future<T> Function(S item) mapper,
+) async {
+  final source = items.toList(growable: false);
+  final results = <T>[];
+  for (var index = 0; index < source.length; index += _roomMetadataBatchSize) {
+    final end = index + _roomMetadataBatchSize < source.length
+        ? index + _roomMetadataBatchSize
+        : source.length;
+    final batch = source.sublist(index, end);
+    results.addAll(await Future.wait(batch.map(mapper)));
+  }
+  return results;
+}
 
 final Provider<AegisChatService> chatService = Provider(
   (ref) => AegisChatService(),
 );
 
-// Get all joined rooms/chats
 final joinedChatsProvider = FutureProvider<List<Chat>>((ref) async {
   final service = ref.watch(chatService);
   final roomIds = await service.getJoinedRooms();
 
-  // Fetch all room metadata in parallel instead of sequentially.
-  final results = await Future.wait(
-    roomIds.map((id) async {
+  final results = await _mapInBatches<String, Chat?>(
+    roomIds,
+    (id) async {
       try {
         final meta = await service.getRoomNameAndAvatar(id);
         return Chat(
@@ -26,13 +43,12 @@ final joinedChatsProvider = FutureProvider<List<Chat>>((ref) async {
       } on Object catch (_) {
         return null;
       }
-    }),
+    },
   );
 
   return results.whereType<Chat>().toList();
 });
 
-// Get specific chat by ID
 final FutureProviderFamily<Chat?, String> chatByIdProvider =
     FutureProvider.family<Chat?, String>((
       ref,
@@ -52,7 +68,6 @@ final FutureProviderFamily<Chat?, String> chatByIdProvider =
       }
     });
 
-// Messages for a specific chat
 final FutureProviderFamily<List<dynamic>, String> chatMessagesProvider =
     FutureProvider.family<List<dynamic>, String>((
       ref,
@@ -62,7 +77,6 @@ final FutureProviderFamily<List<dynamic>, String> chatMessagesProvider =
       return service.loadMessages(roomId: chatId);
     });
 
-// Room members provider
 final FutureProviderFamily<List<Map<String, dynamic>>, String>
 roomMembersProvider = FutureProvider.family<List<Map<String, dynamic>>, String>(
   (
@@ -74,20 +88,16 @@ roomMembersProvider = FutureProvider.family<List<Map<String, dynamic>>, String>(
   },
 );
 
-// Chat notifier for handling message sending and chat actions
 class ChatNotifier extends Notifier<void> {
   @override
   void build() {}
 
   Future<void> sendMessage(String roomId, String message) async {
     final service = ref.watch(chatService);
-    try {
-      await service.sendMessage(roomId: roomId, text: message);
-      // Invalidate cache to refresh messages
-      ref.invalidate(chatMessagesProvider(roomId));
-    } on Object catch (e) {
-      print('Error sending message: $e');
-    }
+    await service.sendMessage(roomId: roomId, text: message);
+    ref.invalidate(chatMessagesProvider(roomId));
+    ref.invalidate(chatByIdProvider(roomId));
+    ref.invalidate(joinedChatsProvider);
   }
 }
 
@@ -95,6 +105,5 @@ final chatNotifierProvider = NotifierProvider<ChatNotifier, void>(
   ChatNotifier.new,
 );
 
-// Alias for backward compatibility with screen imports
 final FutureProvider<List<Chat>> chatListProvider = joinedChatsProvider;
 final FutureProviderFamily<Chat?, String> getChatProvider = chatByIdProvider;

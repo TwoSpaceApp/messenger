@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 
 /// Full-screen auth scaffold with an animated brand gradient background
 /// and a centered MD3 glass-card container for the form.
@@ -131,8 +132,6 @@ class _AuthBackgroundState extends State<AuthBackground>
   }
 }
 
-// ─────── Internal building-blocks ────────────────────────────────────────────
-
 class _AuthCard extends StatelessWidget {
   const _AuthCard({
     required this.cs,
@@ -146,11 +145,14 @@ class _AuthCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
+      padding: const EdgeInsets.symmetric(
+        horizontal: UITokens.space2XL,
+        vertical: UITokens.spaceXL + UITokens.spaceXS,
+      ),
       decoration: BoxDecoration(
         // MD3 tonal surface with slight transparency
         color: cs.surface.withValues(alpha: isDark ? 0.72 : 0.82),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(UITokens.corner2XL),
         border: Border.all(
           color: cs.outlineVariant.withValues(alpha: isDark ? 0.45 : 0.55),
         ),

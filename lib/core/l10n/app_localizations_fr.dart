@@ -106,6 +106,34 @@ class AppLocalizationsFr extends AppLocalizations {
   String get textCopied => 'Texte copié';
 
   @override
+  String get authUsernameHint => 'username';
+
+  @override
+  String get continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
+  String get continueWithYandex => 'Continue with Yandex';
+
+  @override
+  String get chooseAegisUsernamePrompt => 'Choose an Aegis username.';
+
+  @override
+  String get validationAegisUsernameFormat =>
+      'Username must be 3-32 chars and use Latin letters, digits, ., _ or -.';
+
+  @override
+  String get aegisUsernameHelper =>
+      'Aegis username: 3-32 chars, Latin letters, digits, ., _ or -';
+
+  @override
+  String loginCooldownMessage(int seconds) {
+    return 'Too many attempts. Try again in ${seconds}s.';
+  }
+
+  @override
   String get onlineLabel => 'En ligne';
 
   @override
@@ -426,6 +454,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileLabel => 'Profil';
 
   @override
+  String get accountProfileTitle => 'My account';
+
+  @override
+  String get accountProfileSubtitle =>
+      'Manage your public profile data and contact details';
+
+  @override
+  String get accountProfileEditSubtitle =>
+      'Edit your visible profile data and save the changes here';
+
+  @override
+  String get otherProfileSubtitle =>
+      'Public profile and available contact information';
+
+  @override
   String get profileSubtitle => 'Modifier les informations du profil';
 
   @override
@@ -545,7 +588,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get biometricLabel => 'Biométrie';
 
   @override
-  String get biometricSubtitle => 'Se connecter avec empreinte digitale';
+  String get biometricSubtitle =>
+      'Utilisez Face ID, votre empreinte ou le code de l\'appareil';
 
   @override
   String get activeSessionsLabel => 'Sessions actives';
@@ -614,10 +658,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get profileTitle => 'Profil';
 
   @override
+  String get editProfileButton => 'Edit profile';
+
+  @override
+  String get saveProfileButton => 'Save changes';
+
+  @override
+  String get copyAegisIdButton => 'Copy Aegis ID';
+
+  @override
   String get saveTooltip => 'Enregistrer';
 
   @override
   String get editTooltip => 'Modifier';
+
+  @override
+  String get mediaDownloadAction => 'Télécharger';
 
   @override
   String get writeMessageButton => 'Message';
@@ -639,6 +695,28 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nameField => 'Nom';
+
+  @override
+  String get aegisIdLabel => 'Aegis ID';
+
+  @override
+  String get registeredAtLabel => 'Registered';
+
+  @override
+  String get profileStatusLabel => 'Status';
+
+  @override
+  String get profileModerationNoticeTitle => 'Safety actions are not ready yet';
+
+  @override
+  String get profileModerationNoticeMessage =>
+      'Blocking and reporting will appear here after the moderation flow is completed.';
+
+  @override
+  String get blockUserAction => 'Block user';
+
+  @override
+  String get reportUserAction => 'Report user';
 
   @override
   String get avatarUploadLater =>
@@ -975,10 +1053,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get newChatTitle => 'Nouvelle discussion';
 
   @override
+  String get newChatChooserTitle => 'Start a new conversation';
+
+  @override
+  String get newChatChooserSubtitle =>
+      'Choose the kind of chat you want to create or join.';
+
+  @override
+  String get createDirectChatSubtitle =>
+      'Search for a person or enter an Aegis ID manually.';
+
+  @override
   String get directChatTab => 'Direct';
 
   @override
   String get groupChatTab => 'Groupe';
+
+  @override
+  String get channelChatTab => 'Channel';
+
+  @override
+  String get createGroupSubtitle =>
+      'Set up a group, pick participants and share the invite link right away.';
+
+  @override
+  String get createChannelTitle => 'Create channel';
+
+  @override
+  String get createChannelSubtitle =>
+      'Create a read-focused channel with avatar, description and shareable link.';
 
   @override
   String get startDirectChatTitle => 'Démarrer une discussion directe';
@@ -1482,20 +1585,44 @@ class AppLocalizationsFr extends AppLocalizations {
   String get authMethodsLabel => 'Méthodes d\'authentification';
 
   @override
-  String get biometricAuthLabel => 'Authentification biométrique';
+  String get biometricAuthLabel => 'Authentification de l\'appareil';
 
   @override
-  String get biometricAuthSubtitle => 'Empreinte digitale ou Face ID';
+  String get biometricAuthSubtitle =>
+      'Face ID, empreinte digitale ou code de l\'appareil';
 
   @override
-  String get biometricEnabledLabel => 'Biométrie activée';
+  String get biometricEnabledLabel => 'Verrouillage de l\'application activé';
 
   @override
   String get aboutSecurityLabel => 'À propos de la sécurité';
 
   @override
   String get aboutSecurityContent =>
-      'Choisissez une méthode d\'authentification pratique.';
+      'TwoSpace utilise la méthode de déverrouillage déjà configurée sur cet appareil et la demande au retour dans l\'application.';
+
+  @override
+  String get lockScreenFailedTitle => 'Impossible de vérifier votre identité';
+
+  @override
+  String get lockScreenFailedMessage =>
+      'Réessayez ou déconnectez-vous sur cet appareil.';
+
+  @override
+  String get deviceAuthUnavailableMessage =>
+      'Configurez d\'abord Face ID, une empreinte ou un code d\'appareil dans les réglages système.';
+
+  @override
+  String get authMethodFaceId => 'Face ID';
+
+  @override
+  String get authMethodFingerprint => 'Empreinte';
+
+  @override
+  String get authMethodBiometric => 'Biométrie';
+
+  @override
+  String get authMethodDevicePasscode => 'Code de l\'appareil';
 
   @override
   String get setPinCode => 'Définir le code PIN';
@@ -1899,11 +2026,27 @@ class AppLocalizationsFr extends AppLocalizations {
   String get inviteUserSubtitle => 'Trouver et écrire à un utilisateur';
 
   @override
+  String get addParticipantAction => 'Add participant';
+
+  @override
+  String get selectedParticipantsTitle => 'Participants';
+
+  @override
+  String get groupParticipantsOptionalHint =>
+      'Participants are optional. You can create the group now and invite people later.';
+
+  @override
   String get joinByCodeTitle => 'Rejoindre par code';
 
   @override
   String get joinByCodeSubtitle =>
       'Rejoindre un salon avec un code d\'invitation';
+
+  @override
+  String get joinRoomAction => 'Join';
+
+  @override
+  String get subscribeAction => 'Subscribe';
 
   @override
   String get chatsSubtitle =>
@@ -1918,6 +2061,31 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get joinLinkHint =>
       'Collez un lien d\'invitation, un alias ou un code';
+
+  @override
+  String get publicAliasLabel => 'Public alias';
+
+  @override
+  String get publicAliasHint =>
+      'Short public name without spaces, for example newsroom';
+
+  @override
+  String get channelPublicLinkHelper =>
+      'This link will be used in search and invitations when the channel is public.';
+
+  @override
+  String get channelLinkFormatError =>
+      'Use only Latin letters, digits, dots, underscores or hyphens.';
+
+  @override
+  String get inviteLinkReadyTitle => 'Invite link is ready';
+
+  @override
+  String get inviteLinkReadySubtitle =>
+      'Share it now or keep it for later. Selected people will receive it in direct messages when possible.';
+
+  @override
+  String get openChatAction => 'Open chat';
 
   @override
   String get fontLabel => 'Police';
@@ -2288,7 +2456,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get peopleTwoSpaceTitle => 'Personnes sur TwoSpace';
 
   @override
-  String get peopleInviteTitle => 'Inviter sur TwoSpace';
+  String get peopleInviteTitle => 'Pas encore sur TwoSpace';
 
   @override
   String get peopleInviteSubtitle => 'Inviter ce contact sur TwoSpace';
@@ -2445,7 +2613,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get timestampPrecisionSubtitle =>
-      'Choisissez le niveau de détail des horodatages dans les chats et dans la liste des chats.';
+      'Choisissez la précision d\'affichage de l\'heure des messages.';
 
   @override
   String get timestampPrecisionMinutes => 'Heures et minutes';
@@ -2748,4 +2916,261 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get devMenuDeviceLabel => 'Device';
+
+  @override
+  String get authRegisterVerifyEmailBeforeLogin =>
+      'Registration is complete. Verify your email before signing in.';
+
+  @override
+  String authRegisterAutoLoginFailed(Object error) {
+    return 'Account created, but automatic sign-in failed: $error';
+  }
+
+  @override
+  String get authProfileUpdateFailed => 'Failed to update profile';
+
+  @override
+  String get authAvatarUpdateFailed => 'Failed to update avatar';
+
+  @override
+  String get authLoginAppCredentialsRejected =>
+      'The server rejected the app credentials. Check server configuration or handshake compatibility.';
+
+  @override
+  String get authSessionTokenMissing =>
+      'The server did not return a session token';
+
+  @override
+  String get authTotpSetupFailed =>
+      'Failed to prepare two-factor authentication';
+
+  @override
+  String get authTotpDisableFailed =>
+      'Failed to disable two-factor authentication';
+
+  @override
+  String get authTotpVerifyFailed =>
+      'Failed to verify two-factor authentication';
+
+  @override
+  String get authSessionsLoadFailed => 'Failed to load active sessions';
+
+  @override
+  String get authSessionsRevokeFailed => 'Failed to end the session';
+
+  @override
+  String get authRegisterNotLoggedIn =>
+      'Registration completed, but sign-in was not completed';
+
+  @override
+  String get devMenuTitle => 'Developer menu';
+
+  @override
+  String get devMenuTabActions => 'Actions';
+
+  @override
+  String get devMenuTabUiInspect => 'UI inspect';
+
+  @override
+  String get devMenuTabLogs => 'Logs';
+
+  @override
+  String get devMenuTabNetwork => 'Network';
+
+  @override
+  String get devMenuTabFeatures => 'Features';
+
+  @override
+  String get devMenuTabInfo => 'Info';
+
+  @override
+  String get devMenuLogsEmptyTitle => 'No application logs yet';
+
+  @override
+  String get devMenuLogsEmptyMessage =>
+      'Open the problematic screen or repeat the action. New records will appear here.';
+
+  @override
+  String get devMenuShowAll => 'Show all';
+
+  @override
+  String get devMenuOnlyErrors => 'Only errors';
+
+  @override
+  String devMenuAllEntries(Object count) {
+    return 'All entries ($count)';
+  }
+
+  @override
+  String get devMenuClearAction => 'Clear';
+
+  @override
+  String get devMenuScreenExplorerTitle => 'Screen explorer';
+
+  @override
+  String get devMenuScreenSearchHint => 'Search by screen name, group, or file';
+
+  @override
+  String devMenuAllScreens(Object count) {
+    return 'All ($count)';
+  }
+
+  @override
+  String get devMenuScreensNotFoundTitle => 'Screens not found';
+
+  @override
+  String get devMenuScreensNotFoundMessage =>
+      'Change the search query or clear the group filter.';
+
+  @override
+  String get devMenuUtilitiesTitle => 'Utilities';
+
+  @override
+  String get devMenuForceCrash => 'Force crash';
+
+  @override
+  String get devMenuClearSecureStorage => 'Clear secure storage';
+
+  @override
+  String get devMenuClearCacheProfile => 'Clear profile cache';
+
+  @override
+  String get devMenuCheckOta => 'Check OTA';
+
+  @override
+  String get devMenuOpenScreen => 'Open screen';
+
+  @override
+  String get devMenuShowBounds => 'Show bounds (debugPaintSize)';
+
+  @override
+  String get devMenuShowBoundsSubtitle =>
+      'Displays paddings and borders of all widgets';
+
+  @override
+  String get devMenuRepaintRainbow => 'Highlight repaints (RepaintRainbow)';
+
+  @override
+  String get devMenuRepaintRainbowSubtitle =>
+      'Highlights elements that are being repainted';
+
+  @override
+  String get devMenuSlowAnimations => 'Slow animations (timeDilation = 5.0)';
+
+  @override
+  String get devMenuSlowAnimationsSubtitle =>
+      'Slows down all animations in the app';
+
+  @override
+  String get devMenuPerformanceOverlay => 'Performance profiling';
+
+  @override
+  String get devMenuPerformanceOverlaySubtitle =>
+      'Shows the Performance Overlay on top of the app';
+
+  @override
+  String get devMenuSensitiveDialogTitle => 'Sensitive data visibility';
+
+  @override
+  String get devMenuSensitiveDialogMessage =>
+      'After enabling this option, new debug and network logs may contain tokens, keys, and other secrets in plain text. Existing records will not change. Continue?';
+
+  @override
+  String get devMenuEnable => 'Enable';
+
+  @override
+  String get devMenuSensitiveEnableDescription =>
+      'Keys, tokens, and passwords are masked by default. This switch affects only new logs.';
+
+  @override
+  String get devMenuSensitiveDisabledDescription =>
+      'Sensitive data is always hidden in this build.';
+
+  @override
+  String get devMenuRevealSensitiveData => 'Show sensitive data in new logs';
+
+  @override
+  String get devMenuFlagNewChatUi => 'Enable new chat UI';
+
+  @override
+  String get devMenuFlagForceVideoCompression => 'Force video compression';
+
+  @override
+  String get devMenuFlagAggressiveCaching => 'Enable aggressive caching';
+
+  @override
+  String get devMenuFlagIgnoreServerOffline => 'Ignore server offline state';
+
+  @override
+  String get devMenuFlagIgnoreServerOfflineSubtitle =>
+      'Keeps the current session and avoids returning to the sign-in screen when the server is unavailable.';
+
+  @override
+  String get devMenuReleaseHiddenTitle => 'Sensitive data is hidden';
+
+  @override
+  String get devMenuReleaseHiddenSubtitle =>
+      'Public release and profile builds always show debug data only in masked form.';
+
+  @override
+  String get devMenuNetworkEmptyTitle => 'No network logs yet';
+
+  @override
+  String get devMenuNetworkEmptyMessage =>
+      'Open any screen that performs requests and logs will appear here.';
+
+  @override
+  String devMenuAllRequests(Object count) {
+    return 'All requests ($count)';
+  }
+
+  @override
+  String get devMenuNetworkProblemDetected => 'problem detected';
+
+  @override
+  String get devMenuNetworkCompleted => 'completed';
+
+  @override
+  String get devMenuRequestHeaders => 'Request headers';
+
+  @override
+  String devMenuRequestBody(Object type) {
+    return 'Request body · $type';
+  }
+
+  @override
+  String get devMenuResponseHeaders => 'Response headers';
+
+  @override
+  String devMenuResponseBody(Object type) {
+    return 'Response body · $type';
+  }
+
+  @override
+  String devMenuVersionWithBuild(Object buildNumber, Object version) {
+    return '$version (Build $buildNumber)';
+  }
+
+  @override
+  String get notificationsInDevelopmentSubtitle =>
+      'Des réglages de notification plus détaillés arriveront dans une prochaine mise à jour.';
+
+  @override
+  String get devMenuCopyVisible => 'Copier ce qui est visible';
+
+  @override
+  String get devMenuExportLogFile => 'Exporter le fichier de logs';
+
+  @override
+  String get devMenuNewestFirst => 'Plus récents d\'abord';
+
+  @override
+  String get devMenuOldestFirst => 'Plus anciens d\'abord';
+
+  @override
+  String get feedbackAttachLogsLabel => 'Joindre les logs ?';
+
+  @override
+  String get feedbackAttachLogsSubtitle =>
+      'Ajoute un fichier de diagnostic avec les informations de l\'appareil, les logs de l\'application et les logs réseau.';
 }

@@ -129,6 +129,43 @@
   "@textCopied": {
     "description": "Snackbar text when text is copied to clipboard"
   },
+  "authUsernameHint": "username",
+  "@authUsernameHint": {
+    "description": "Hint for username fields"
+  },
+  "continueWithGoogle": "Continue with Google",
+  "@continueWithGoogle": {
+    "description": "Sign-in button label for Google"
+  },
+  "continueWithApple": "Continue with Apple",
+  "@continueWithApple": {
+    "description": "Sign-in button label for Apple"
+  },
+  "continueWithYandex": "Continue with Yandex",
+  "@continueWithYandex": {
+    "description": "Sign-in button label for Yandex"
+  },
+  "chooseAegisUsernamePrompt": "Choose an Aegis username.",
+  "@chooseAegisUsernamePrompt": {
+    "description": "Validation prompt for choosing an Aegis username"
+  },
+  "validationAegisUsernameFormat": "Username must be 3-32 chars and use Latin letters, digits, ., _ or -.",
+  "@validationAegisUsernameFormat": {
+    "description": "Validation text describing the allowed Aegis username format"
+  },
+  "aegisUsernameHelper": "Aegis username: 3-32 chars, Latin letters, digits, ., _ or -",
+  "@aegisUsernameHelper": {
+    "description": "Helper text under the Aegis username field"
+  },
+  "loginCooldownMessage": "Too many attempts. Try again in {seconds}s.",
+  "@loginCooldownMessage": {
+    "description": "Cooldown message after too many failed login attempts",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "onlineLabel": "Online",
   "@onlineLabel": {
     "description": "Online status"
@@ -588,6 +625,22 @@
   "@profileLabel": {
     "description": "Profile label"
   },
+  "accountProfileTitle": "My account",
+  "@accountProfileTitle": {
+    "description": "Title for the current user's account profile screen"
+  },
+  "accountProfileSubtitle": "Manage your public profile data and contact details",
+  "@accountProfileSubtitle": {
+    "description": "Subtitle for the current user's account profile screen"
+  },
+  "accountProfileEditSubtitle": "Edit your visible profile data and save the changes here",
+  "@accountProfileEditSubtitle": {
+    "description": "Subtitle while editing the current user's account profile"
+  },
+  "otherProfileSubtitle": "Public profile and available contact information",
+  "@otherProfileSubtitle": {
+    "description": "Subtitle for another user's profile screen"
+  },
   "profileSubtitle": "Edit profile information",
   "@profileSubtitle": {
     "description": "Profile subtitle"
@@ -745,7 +798,7 @@
   "@biometricLabel": {
     "description": "Biometrics label"
   },
-  "biometricSubtitle": "Sign in with fingerprint",
+  "biometricSubtitle": "Use Face ID, fingerprint, or your device passcode",
   "@biometricSubtitle": {
     "description": "Biometrics subtitle"
   },
@@ -833,11 +886,27 @@
   "@profileTitle": {
     "description": "Profile screen title"
   },
+  "editProfileButton": "Edit profile",
+  "@editProfileButton": {
+    "description": "Primary action to start editing profile data"
+  },
+  "saveProfileButton": "Save changes",
+  "@saveProfileButton": {
+    "description": "Primary action to save profile changes"
+  },
+  "copyAegisIdButton": "Copy Aegis ID",
+  "@copyAegisIdButton": {
+    "description": "Action to copy the current user's Aegis ID"
+  },
   "saveTooltip": "Save",
   "@saveTooltip": {
     "description": "Save tooltip"
   },
   "editTooltip": "Edit",
+  "mediaDownloadAction": "Download",
+  "@mediaDownloadAction": {
+    "description": "Manual media download button label"
+  },
   "@editTooltip": {
     "description": "Edit tooltip"
   },
@@ -868,6 +937,34 @@
   "nameField": "Name",
   "@nameField": {
     "description": "Name field"
+  },
+  "aegisIdLabel": "Aegis ID",
+  "@aegisIdLabel": {
+    "description": "Label for the Aegis ID row"
+  },
+  "registeredAtLabel": "Registered",
+  "@registeredAtLabel": {
+    "description": "Label for the profile registration date row"
+  },
+  "profileStatusLabel": "Status",
+  "@profileStatusLabel": {
+    "description": "Label for the profile status row"
+  },
+  "profileModerationNoticeTitle": "Safety actions are not ready yet",
+  "@profileModerationNoticeTitle": {
+    "description": "Title for the moderation placeholder notice on other user profiles"
+  },
+  "profileModerationNoticeMessage": "Blocking and reporting will appear here after the moderation flow is completed.",
+  "@profileModerationNoticeMessage": {
+    "description": "Message for the moderation placeholder notice on other user profiles"
+  },
+  "blockUserAction": "Block user",
+  "@blockUserAction": {
+    "description": "Action label to block a user"
+  },
+  "reportUserAction": "Report user",
+  "@reportUserAction": {
+    "description": "Action label to report a user"
   },
   "avatarUploadLater": "Avatar upload will be added later",
   "@avatarUploadLater": {
@@ -1323,6 +1420,9 @@
   "@newChatTitle": {
     "description": "New chat screen title"
   },
+  "newChatChooserTitle": "Start a new conversation",
+  "newChatChooserSubtitle": "Choose the kind of chat you want to create or join.",
+  "createDirectChatSubtitle": "Search for a person or enter an Aegis ID manually.",
   "directChatTab": "Direct",
   "@directChatTab": {
     "description": "Direct chat tab"
@@ -1331,6 +1431,10 @@
   "@groupChatTab": {
     "description": "Group chat tab"
   },
+  "channelChatTab": "Channel",
+  "createGroupSubtitle": "Set up a group, pick participants and share the invite link right away.",
+  "createChannelTitle": "Create channel",
+  "createChannelSubtitle": "Create a read-focused channel with avatar, description and shareable link.",
   "startDirectChatTitle": "Start a direct chat",
   "@startDirectChatTitle": {
     "description": "Start direct chat title"
@@ -1962,15 +2066,15 @@
   "@authMethodsLabel": {
     "description": "Auth methods label"
   },
-  "biometricAuthLabel": "Biometric authentication",
+  "biometricAuthLabel": "Device authentication",
   "@biometricAuthLabel": {
     "description": "Biometric auth label"
   },
-  "biometricAuthSubtitle": "Fingerprint or Face ID",
+  "biometricAuthSubtitle": "Face ID, fingerprint, or your device passcode",
   "@biometricAuthSubtitle": {
     "description": "Biometric auth subtitle"
   },
-  "biometricEnabledLabel": "Biometrics enabled",
+  "biometricEnabledLabel": "App lock enabled",
   "@biometricEnabledLabel": {
     "description": "Biometrics enabled label"
   },
@@ -1978,7 +2082,14 @@
   "@aboutSecurityLabel": {
     "description": "About security label"
   },
-  "aboutSecurityContent": "Choose a convenient authentication method to protect your account.",
+  "aboutSecurityContent": "TwoSpace uses the unlock method already configured on this device and asks for it when the app returns to the foreground.",
+  "lockScreenFailedTitle": "Couldn't verify it's you",
+  "lockScreenFailedMessage": "Try again or log out on this device.",
+  "deviceAuthUnavailableMessage": "Set up Face ID, fingerprint, or a device passcode in system settings first.",
+  "authMethodFaceId": "Face ID",
+  "authMethodFingerprint": "Fingerprint",
+  "authMethodBiometric": "Biometrics",
+  "authMethodDevicePasscode": "Device passcode",
   "@aboutSecurityContent": {
     "description": "About security content"
   },
@@ -2510,6 +2621,9 @@
   "@inviteUserSubtitle": {
     "description": "Invite user option subtitle"
   },
+  "addParticipantAction": "Add participant",
+  "selectedParticipantsTitle": "Participants",
+  "groupParticipantsOptionalHint": "Participants are optional. You can create the group now and invite people later.",
   "joinByCodeTitle": "Join by code",
   "@joinByCodeTitle": {
     "description": "Join by code option title"
@@ -2518,6 +2632,8 @@
   "@joinByCodeSubtitle": {
     "description": "Join by code option subtitle"
   },
+  "joinRoomAction": "Join",
+  "subscribeAction": "Subscribe",
   "chatsSubtitle": "Private messages, groups and invite links in one place",
   "@chatsSubtitle": {
     "description": "Subtitle for chats home screen"
@@ -2534,6 +2650,13 @@
   "@joinLinkHint": {
     "description": "Hint for joining a room via invite link or alias"
   },
+  "publicAliasLabel": "Public alias",
+  "publicAliasHint": "Short public name without spaces, for example newsroom",
+  "channelPublicLinkHelper": "This link will be used in search and invitations when the channel is public.",
+  "channelLinkFormatError": "Use only Latin letters, digits, dots, underscores or hyphens.",
+  "inviteLinkReadyTitle": "Invite link is ready",
+  "inviteLinkReadySubtitle": "Share it now or keep it for later. Selected people will receive it in direct messages when possible.",
+  "openChatAction": "Open chat",
   "fontLabel": "Font",
   "@fontLabel": {
     "description": "Font label"
@@ -3031,7 +3154,7 @@
   "@peopleTwoSpaceTitle": {
     "description": "Section title for TwoSpace users"
   },
-  "peopleInviteTitle": "Invite to TwoSpace",
+  "peopleInviteTitle": "Not on TwoSpace yet",
   "@peopleInviteTitle": {
     "description": "Section title for invite candidates"
   },
@@ -3227,7 +3350,7 @@
     "description": "Detailed secure voice call description"
   },
   "timestampPrecisionLabel": "Message time precision",
-  "timestampPrecisionSubtitle": "Choose how detailed timestamps look in chats and chat list.",
+  "timestampPrecisionSubtitle": "Choose how detailed message times should be.",
   "timestampPrecisionMinutes": "Hours and minutes",
   "timestampPrecisionSeconds": "Hours, minutes and seconds",
   "timestampPrecisionMilliseconds": "Hours, minutes, seconds and milliseconds",
@@ -3409,5 +3532,79 @@
   "devMenuDeviceLabel": "Device",
   "@devMenuDeviceLabel": {
     "description": "Label for device details in debug menu info tab"
-  }
+  },
+  "authRegisterVerifyEmailBeforeLogin": "Registration is complete. Verify your email before signing in.",
+  "authRegisterAutoLoginFailed": "Account created, but automatic sign-in failed: {error}",
+  "authProfileUpdateFailed": "Failed to update profile",
+  "authAvatarUpdateFailed": "Failed to update avatar",
+  "authLoginAppCredentialsRejected": "The server rejected the app credentials. Check server configuration or handshake compatibility.",
+  "authSessionTokenMissing": "The server did not return a session token",
+  "authTotpSetupFailed": "Failed to prepare two-factor authentication",
+  "authTotpDisableFailed": "Failed to disable two-factor authentication",
+  "authTotpVerifyFailed": "Failed to verify two-factor authentication",
+  "authSessionsLoadFailed": "Failed to load active sessions",
+  "authSessionsRevokeFailed": "Failed to end the session",
+  "authRegisterNotLoggedIn": "Registration completed, but sign-in was not completed",
+  "devMenuTitle": "Developer menu",
+  "devMenuTabActions": "Actions",
+  "devMenuTabUiInspect": "UI inspect",
+  "devMenuTabLogs": "Logs",
+  "devMenuTabNetwork": "Network",
+  "devMenuTabFeatures": "Features",
+  "devMenuTabInfo": "Info",
+  "devMenuLogsEmptyTitle": "No application logs yet",
+  "devMenuLogsEmptyMessage": "Open the problematic screen or repeat the action. New records will appear here.",
+  "devMenuShowAll": "Show all",
+  "devMenuOnlyErrors": "Only errors",
+  "devMenuAllEntries": "All entries ({count})",
+  "devMenuClearAction": "Clear",
+  "devMenuScreenExplorerTitle": "Screen explorer",
+  "devMenuScreenSearchHint": "Search by screen name, group, or file",
+  "devMenuAllScreens": "All ({count})",
+  "devMenuScreensNotFoundTitle": "Screens not found",
+  "devMenuScreensNotFoundMessage": "Change the search query or clear the group filter.",
+  "devMenuUtilitiesTitle": "Utilities",
+  "devMenuForceCrash": "Force crash",
+  "devMenuClearSecureStorage": "Clear secure storage",
+  "devMenuClearCacheProfile": "Clear profile cache",
+  "devMenuCheckOta": "Check OTA",
+  "devMenuOpenScreen": "Open screen",
+  "devMenuShowBounds": "Show bounds (debugPaintSize)",
+  "devMenuShowBoundsSubtitle": "Displays paddings and borders of all widgets",
+  "devMenuRepaintRainbow": "Highlight repaints (RepaintRainbow)",
+  "devMenuRepaintRainbowSubtitle": "Highlights elements that are being repainted",
+  "devMenuSlowAnimations": "Slow animations (timeDilation = 5.0)",
+  "devMenuSlowAnimationsSubtitle": "Slows down all animations in the app",
+  "devMenuPerformanceOverlay": "Performance profiling",
+  "devMenuPerformanceOverlaySubtitle": "Shows the Performance Overlay on top of the app",
+  "devMenuSensitiveDialogTitle": "Sensitive data visibility",
+  "devMenuSensitiveDialogMessage": "After enabling this option, new debug and network logs may contain tokens, keys, and other secrets in plain text. Existing records will not change. Continue?",
+  "devMenuEnable": "Enable",
+  "devMenuSensitiveEnableDescription": "Keys, tokens, and passwords are masked by default. This switch affects only new logs.",
+  "devMenuSensitiveDisabledDescription": "Sensitive data is always hidden in this build.",
+  "devMenuRevealSensitiveData": "Show sensitive data in new logs",
+  "devMenuFlagNewChatUi": "Enable new chat UI",
+  "devMenuFlagForceVideoCompression": "Force video compression",
+  "devMenuFlagAggressiveCaching": "Enable aggressive caching",
+  "devMenuFlagIgnoreServerOffline": "Ignore server offline state",
+  "devMenuFlagIgnoreServerOfflineSubtitle": "Keeps the current session and avoids returning to the sign-in screen when the server is unavailable.",
+  "devMenuReleaseHiddenTitle": "Sensitive data is hidden",
+  "devMenuReleaseHiddenSubtitle": "Public release and profile builds always show debug data only in masked form.",
+  "devMenuNetworkEmptyTitle": "No network logs yet",
+  "devMenuNetworkEmptyMessage": "Open any screen that performs requests and logs will appear here.",
+  "devMenuAllRequests": "All requests ({count})",
+  "devMenuNetworkProblemDetected": "problem detected",
+  "devMenuNetworkCompleted": "completed",
+  "devMenuRequestHeaders": "Request headers",
+  "devMenuRequestBody": "Request body · {type}",
+  "devMenuResponseHeaders": "Response headers",
+  "devMenuResponseBody": "Response body · {type}",
+  "devMenuVersionWithBuild": "{version} (Build {buildNumber})",
+  "notificationsInDevelopmentSubtitle": "Detailed notification controls will arrive in a future update.",
+  "devMenuCopyVisible": "Copy visible",
+  "devMenuExportLogFile": "Export log file",
+  "devMenuNewestFirst": "Newest first",
+  "devMenuOldestFirst": "Oldest first",
+  "feedbackAttachLogsLabel": "Attach logs?",
+  "feedbackAttachLogsSubtitle": "Add a diagnostic file with device info, application logs, and network logs."
 }

@@ -1,5 +1,3 @@
-// ignore_for_file: unnecessary_underscores
-
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +13,19 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
 
 enum _PreviewSurface { rooms, conversation, settings }
+
+TextStyle? _fontPreviewStyle(
+  TextStyle? baseStyle,
+  String fontFamily, {
+  FontWeight? fontWeight,
+}) {
+  return AppThemeBuilder.applyFontFamily(
+    fontFamily,
+    textStyle: (baseStyle ?? const TextStyle()).copyWith(
+      fontWeight: fontWeight,
+    ),
+  );
+}
 
 class _ThemePreset {
   const _ThemePreset({
@@ -135,7 +146,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
       id: 'retroPulse',
       color: 0xFFE2558F,
       themeMode: ThemeMode.dark,
-      fontFamily: 'PressStart 2P',
+      fontFamily: 'Handjet',
       fontWeight: 700,
       enableFloatingCircles: true,
       backgroundMotionMode: BackgroundMotionMode.circles,
@@ -499,6 +510,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
 
   Widget _buildPreviewShell(BuildContext context) {
     final previewTheme = _previewTheme();
+    final previewHeight = MediaQuery.sizeOf(context).width < 560 ? 392.0 : 368.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,7 +522,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
           child: Theme(
             data: previewTheme,
             child: Container(
-              height: 328,
+              height: previewHeight,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -645,31 +657,44 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
           subtitle: l10n.stylePresetsSubtitle,
         ),
         const SizedBox(height: UITokens.spaceMdSm),
-        SizedBox(
-          height: 204,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _presets.length,
-            separatorBuilder: (_, __) => const SizedBox(width: UITokens.space),
-            itemBuilder: (context, index) {
-              final preset = _presets[index];
-              final selected =
-                  preset.color == _selectedColor &&
-                  preset.themeMode == _selectedThemeMode &&
-                  preset.fontFamily == _selectedFont &&
-                  preset.fontWeight == _selectedWeight &&
-                  preset.backgroundMotionMode == _backgroundMotionMode;
-              return _PresetCard(
-                title: _presetTitle(l10n, preset.id),
-                subtitle: _presetSubtitle(l10n, preset.id),
-                color: Color(preset.color),
-                fontFamily: preset.fontFamily,
-                themeModeLabel: _themeModeLabel(l10n, preset.themeMode),
-                selected: selected,
-                onTap: () => _applyPreset(preset),
-              );
-            },
-          ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 1040
+                ? 4
+                : constraints.maxWidth >= 760
+                ? 3
+                : constraints.maxWidth >= 520
+                ? 2
+                : 1;
+            const spacing = UITokens.spaceMdSm;
+            final cardWidth =
+                (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: _presets.map((preset) {
+                final selected =
+                    preset.color == _selectedColor &&
+                    preset.themeMode == _selectedThemeMode &&
+                    preset.fontFamily == _selectedFont &&
+                    preset.fontWeight == _selectedWeight &&
+                    preset.backgroundMotionMode == _backgroundMotionMode;
+                return SizedBox(
+                  width: cardWidth,
+                  child: _PresetCard(
+                    title: _presetTitle(l10n, preset.id),
+                    subtitle: _presetSubtitle(l10n, preset.id),
+                    color: Color(preset.color),
+                    fontFamily: preset.fontFamily,
+                    themeModeLabel: _themeModeLabel(l10n, preset.themeMode),
+                    selected: selected,
+                    onTap: () => _applyPreset(preset),
+                  ),
+                );
+              }).toList(growable: false),
+            );
+          },
         ),
         const SizedBox(height: UITokens.space2XL),
         SettingsSectionHeader(
@@ -686,7 +711,7 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
               itemCount: _colorChoices.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
-                mainAxisExtent: 112,
+                mainAxisExtent: 100,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
@@ -971,126 +996,122 @@ class _PresetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SizedBox(
-      width: 224,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(UITokens.cornerXL),
-          onTap: onTap,
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(UITokens.cornerXL),
-              border: Border.all(
-                color: selected
-                    ? color.withValues(alpha: 0.95)
-                    : theme.colorScheme.outline.withValues(alpha: 0.14),
-                width: selected ? 2 : 1,
-              ),
-              gradient: LinearGradient(
-                colors: [
-                  color.withValues(alpha: 0.16),
-                  theme.colorScheme.surface.withValues(alpha: 0.92),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.18),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ]
-                  : null,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(UITokens.cornerXL),
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(UITokens.cornerXL),
+            border: Border.all(
+              color: selected
+                  ? color.withValues(alpha: 0.95)
+                  : theme.colorScheme.outline.withValues(alpha: 0.14),
+              width: selected ? 2 : 1,
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(UITokens.spaceMd),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 70,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(
-                              UITokens.cornerXLg,
-                            ),
-                            gradient: LinearGradient(
-                              colors: [
-                                color.withValues(alpha: 0.86),
-                                color.withValues(alpha: 0.28),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: UITokens.spaceSmMd),
-                      Container(
-                        width: 64,
+            gradient: LinearGradient(
+              colors: [
+                color.withValues(alpha: 0.16),
+                theme.colorScheme.surface.withValues(alpha: 0.92),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.18),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(UITokens.spaceMd),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Container(
                         height: 70,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(
                             UITokens.cornerXLg,
                           ),
-                          color: theme.colorScheme.surface.withValues(
-                            alpha: 0.76,
+                          gradient: LinearGradient(
+                            colors: [
+                              color.withValues(alpha: 0.86),
+                              color.withValues(alpha: 0.28),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
                         ),
-                        alignment: Alignment.center,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: UITokens.spaceXSm,
-                            ),
-                            child: Text(
-                              'Аа',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontFamily: fontFamily,
-                                fontWeight: FontWeight.w700,
-                              ),
+                      ),
+                    ),
+                    const SizedBox(width: UITokens.spaceSmMd),
+                    Container(
+                      width: 64,
+                      height: 70,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(
+                          UITokens.cornerXLg,
+                        ),
+                        color: theme.colorScheme.surface.withValues(
+                          alpha: 0.76,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: UITokens.spaceXSm,
+                          ),
+                          child: Text(
+                            'Аа',
+                            style: _fontPreviewStyle(
+                              theme.textTheme.titleLarge,
+                              fontFamily,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: UITokens.spaceMdSm),
-                  Text(
-                    themeModeLabel,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w700,
                     ),
+                  ],
+                ),
+                const SizedBox(height: UITokens.spaceMdSm),
+                Text(
+                  themeModeLabel,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: UITokens.spaceSm),
-                  Text(
-                    title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                ),
+                const SizedBox(height: UITokens.spaceSm),
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: UITokens.spaceXS),
-                  Expanded(
-                    child: Text(
-                      subtitle,
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.subtitleText(context),
-                        height: 1.28,
-                      ),
-                    ),
+                ),
+                const SizedBox(height: UITokens.spaceXS),
+                Text(
+                  subtitle,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.subtitleText(context),
+                    height: 1.28,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -1166,34 +1187,40 @@ class _ColorChoiceCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        label,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          height: 1.15,
-                        ),
-                      ),
-                      const SizedBox(height: UITokens.spaceSm),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(
-                            UITokens.cornerPill,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              label,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                height: 1.15,
+                              ),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          toneLabel,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: color,
-                            fontWeight: FontWeight.w700,
+                          const SizedBox(width: UITokens.spaceSm),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(
+                                UITokens.cornerPill,
+                              ),
+                            ),
+                            child: Text(
+                              toneLabel,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: color,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -1252,8 +1279,9 @@ class _FontChoiceCard extends StatelessWidget {
                 children: [
                   Text(
                     'Аа',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontFamily: fontFamily,
+                    style: _fontPreviewStyle(
+                      theme.textTheme.headlineSmall,
+                      fontFamily,
                       fontWeight: previewWeight,
                     ),
                   ),
@@ -1262,8 +1290,9 @@ class _FontChoiceCard extends StatelessWidget {
                     fontFamily,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontFamily: fontFamily,
+                    style: _fontPreviewStyle(
+                      theme.textTheme.titleSmall,
+                      fontFamily,
                       fontWeight: previewWeight,
                     ),
                   ),
@@ -1520,8 +1549,12 @@ class _PreviewRoomsCard extends StatelessWidget {
               children: rooms.map((room) {
                 return Expanded(
                   child: Container(
-                    margin: EdgeInsets.only(bottom: room == rooms.last ? 0 : 9),
-                    padding: EdgeInsets.all(compactMode ? 12 : 14),
+                    margin: EdgeInsets.only(
+                      bottom: room == rooms.last ? 0 : UITokens.spaceSmMd,
+                    ),
+                    padding: EdgeInsets.all(
+                      compactMode ? UITokens.space : UITokens.spaceMdSm,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(
@@ -1595,7 +1628,7 @@ class _PreviewRoomsCard extends StatelessWidget {
                                 room.muted
                                     ? Icons.notifications_off_rounded
                                     : Icons.done_all_rounded,
-                                size: 16,
+                                size: UITokens.iconSm,
                                 color: room.muted
                                     ? AppColors.hintText(context)
                                     : AppColors.onlineStatus(context),
@@ -1652,8 +1685,8 @@ class _PreviewConversationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final messagePadding = compactMode ? 12.0 : 14.0;
-    final messageGap = compactMode ? 8.0 : 10.0;
+    final messagePadding = compactMode ? UITokens.space : UITokens.spaceMdSm;
+    final messageGap = compactMode ? UITokens.spaceSm : UITokens.spaceSmMd;
     final maxWidth = compactMode ? 214.0 : 236.0;
 
     return Padding(
@@ -1761,7 +1794,9 @@ class _PreviewSettingsCard extends StatelessWidget {
     Widget tile(IconData icon, String title, String subtitle) {
       return Container(
         margin: EdgeInsets.only(bottom: compactMode ? 8 : 10),
-        padding: EdgeInsets.all(compactMode ? 12 : 14),
+        padding: EdgeInsets.all(
+          compactMode ? UITokens.space : UITokens.spaceMdSm,
+        ),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface.withValues(alpha: 0.68),
           borderRadius: BorderRadius.circular(UITokens.cornerXLg),

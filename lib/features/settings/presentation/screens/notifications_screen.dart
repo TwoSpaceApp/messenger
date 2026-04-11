@@ -1,5 +1,3 @@
-// ignore_for_file: unnecessary_underscores
-
 import 'dart:async';
 import 'dart:io';
 
@@ -10,6 +8,7 @@ import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/sound/audio_player_service.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
+import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
@@ -121,9 +120,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               subtitle: l10n.notificationsHeroSubtitle,
               badges: [
                 _StatusBadge(
-                  label: enabled
-                      ? l10n.notificationsLabel
-                      : l10n.settingsDoNotDisturb,
+                  label: l10n.notificationsLabel,
                   active: enabled,
                 ),
               ],
@@ -132,54 +129,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
         const SizedBox(height: UITokens.spaceMd),
         GlassCard(
-          child: Column(
-            children: [
-              ValueListenableBuilder<bool>(
-                valueListenable: SettingsService.notificationsEnabledNotifier,
-                builder: (context, enabled, _) {
-                  return _ToggleTile(
-                    icon: Icons.notifications_rounded,
-                    title: l10n.notificationsLabel,
-                    subtitle: l10n.settingsNotificationNew,
-                    value: enabled,
-                    onChanged: SettingsService.setNotificationsEnabled,
-                  );
-                },
-              ),
-              const Divider(height: 18),
-              ValueListenableBuilder<bool>(
-                valueListenable: SettingsService.notificationsEnabledNotifier,
-                builder: (context, notificationsEnabled, _) {
-                  return ValueListenableBuilder<bool>(
-                    valueListenable: SettingsService.soundEnabledNotifier,
-                    builder: (context, enabled, __) {
-                      return _ToggleTile(
-                        icon: Icons.volume_up_rounded,
-                        title: l10n.soundLabel,
-                        subtitle: l10n.settingsSoundOptions,
-                        value: enabled,
-                        onChanged: notificationsEnabled
-                            ? SettingsService.setSoundEnabled
-                            : null,
-                      );
-                    },
-                  );
-                },
-              ),
-              const Divider(height: 18),
-              ValueListenableBuilder<bool>(
-                valueListenable: SettingsService.doNotDisturbNotifier,
-                builder: (context, enabled, _) {
-                  return _ToggleTile(
-                    icon: Icons.do_not_disturb_on_total_silence_rounded,
-                    title: l10n.settingsDoNotDisturb,
-                    subtitle: l10n.notificationsSection,
-                    value: enabled,
-                    onChanged: SettingsService.setDoNotDisturb,
-                  );
-                },
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(UITokens.spaceMd),
+            child: InlineNoticeCard(
+              icon: Icons.upcoming_rounded,
+              badge: l10n.featureInDevelopmentLabel,
+              title: l10n.settingsNotificationNew,
+              message: l10n.notificationsInDevelopmentSubtitle,
+            ),
           ),
         ),
         const SizedBox(height: UITokens.spaceXLg),
@@ -193,7 +150,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           builder: (context, tonePath, _) {
             return ValueListenableBuilder<String?>(
               valueListenable: SettingsService.notificationToneNameNotifier,
-              builder: (context, toneName, __) {
+              builder: (context, toneName, _) {
                 return _SoundCard(
                   icon: Icons.music_note_rounded,
                   title: l10n.notificationToneTitle,
@@ -221,7 +178,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           builder: (context, ringtonePath, _) {
             return ValueListenableBuilder<String?>(
               valueListenable: SettingsService.ringtoneNameNotifier,
-              builder: (context, ringtoneName, __) {
+              builder: (context, ringtoneName, _) {
                 return _SoundCard(
                   icon: Icons.ring_volume_rounded,
                   title: l10n.ringtoneTitle,
@@ -404,45 +361,6 @@ class _SoundCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ToggleTile extends StatelessWidget {
-  const _ToggleTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return SwitchListTile.adaptive(
-      contentPadding: EdgeInsets.zero,
-      secondary: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.42),
-          borderRadius: BorderRadius.circular(UITokens.cornerMd),
-        ),
-        alignment: Alignment.center,
-        child: Icon(icon, color: theme.colorScheme.primary),
-      ),
-      title: Text(title),
-      subtitle: Text(subtitle),
-      value: value,
-      onChanged: onChanged,
     );
   }
 }

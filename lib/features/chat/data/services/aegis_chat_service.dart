@@ -13,6 +13,7 @@ import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
+import 'package:two_space_app/core/utils/user_content_sanitizer.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/chat/data/local/aegis_chat_local_store.dart';
 import 'package:two_space_app/features/chat/data/services/offline_queue_service.dart';
@@ -213,7 +214,9 @@ class _StoredConversation {
 class AegisChatService {
   static const int _maxMediaUploadBytes = 15 * 1024 * 1024;
   static const int _mediaCacheMaxBytes = 512 * 1024 * 1024;
+  static const int _memberLookupBatchSize = 6;
   static const Duration _mediaCacheMaxAge = Duration(days: 14);
+  static const Duration _historyConsistencyWindow = Duration(minutes: 3);
 
   factory AegisChatService() => _instance;
   AegisChatService._internal();
@@ -233,6 +236,7 @@ class AegisChatService {
   Future<bool>? _bootstrapFuture;
   StreamSubscription<Message>? _incomingSub;
   StreamSubscription<MessageStatusEvent>? _messageStatusSub;
+  StreamSubscription<ReadSyncEventPayload>? _readSyncSub;
   StreamSubscription<void>? _sessionRestoredSub;
   late Directory _storeDir;
   final AegisChatLocalStore _localStore = AegisChatLocalStore();
@@ -454,6 +458,7 @@ class AegisChatService {
     _messageStatusSub ??= _auth.rawClient.messageStatusEvents.listen(
       _handleMessageStatusEvent,
     );
+    _readSyncSub ??= _auth.rawClient.readSyncEvents.listen(_handleReadSyncEvent);
   }
 
   Future<bool> _ensureChatBootstrap() async {
@@ -476,6 +481,7 @@ class AegisChatService {
     await _flushPersistNow();
     await _incomingSub?.cancel();
     await _messageStatusSub?.cancel();
+    await _readSyncSub?.cancel();
     await _sessionRestoredSub?.cancel();
     await _localStore.close();
     _attached = false;
@@ -803,6 +809,38 @@ class AegisChatService {
     return null;
   }
 
+  bool _profileCacheNeedsRefresh(int userId, Map<String, dynamic> info) {
+    final idText = userId.toString();
+    final username = info['username']?.toString().trim() ?? '';
+    final displayName = info['displayName']?.toString().trim() ?? '';
+    final avatarUrl = normalizeAegisAvatarUrl(info['avatarUrl']?.toString());
+    final avatars = info['avatars'];
+    final bio = info['bio']?.toString().trim() ?? '';
+    final location = info['location']?.toString().trim() ?? '';
+    final birthday = info['birthday']?.toString().trim() ?? '';
+    final email = info['email']?.toString().trim() ?? '';
+    final presenceStatus = info['presenceStatus']?.toString().trim() ?? '';
+    final lastSeenAt = info['lastSeenAt']?.toString().trim() ?? '';
+
+    final hasRichFields =
+        (avatarUrl?.isNotEmpty ?? false) ||
+        (avatars is List && avatars.isNotEmpty) ||
+        bio.isNotEmpty ||
+        location.isNotEmpty ||
+        birthday.isNotEmpty ||
+        email.isNotEmpty ||
+        presenceStatus.isNotEmpty ||
+        lastSeenAt.isNotEmpty;
+
+    final usernameLooksOpaque = username.isEmpty || username == idText;
+    final displayNameLooksOpaque =
+        displayName.isEmpty ||
+        displayName == idText ||
+        (displayName == username && usernameLooksOpaque);
+
+    return usernameLooksOpaque && displayNameLooksOpaque && !hasRichFields;
+  }
+
   bool _looksLikeOpaqueIdentity(
     String? value, {
     required int userId,
@@ -820,6 +858,57 @@ class AegisChatService {
       return false;
     }
     return text == normalizedUsername && RegExp(r'^\d+$').hasMatch(text);
+  }
+
+  bool _isAuthRejectionMessage(String? message) {
+    final normalized = message?.toLowerCase().trim() ?? '';
+    if (normalized.isEmpty) {
+      return false;
+    }
+    return normalized.contains('not authenticated') ||
+        normalized.contains('unauthorized') ||
+        normalized.contains('auth.not_authenticated') ||
+        normalized.contains('notauthenticatedexception');
+  }
+
+  bool _isUserNotFoundMessage(String? message) {
+    final normalized = message?.toLowerCase().trim() ?? '';
+    return normalized.contains('user not found');
+  }
+
+  Future<T> _retryAfterSessionRecovery<T>(Future<T> Function() action) async {
+    await _auth.recoverSession();
+    return action();
+  }
+
+  Future<T> _runAuthedRequest<T>(Future<T> Function() request) async {
+    try {
+      return await request();
+    } on Object catch (error) {
+      if (_isAuthRejectionMessage(error.toString())) {
+        return _retryAfterSessionRecovery(request);
+      }
+      rethrow;
+    }
+  }
+
+  Future<T> _runAuthedSuccessRequest<T>(
+    Future<T> Function() request, {
+    required bool Function(T response) isSuccess,
+    String? Function(T response)? messageOf,
+  }) async {
+    var response = await _runAuthedRequest(request);
+    if (!isSuccess(response) && _isAuthRejectionMessage(messageOf?.call(response))) {
+      response = await _retryAfterSessionRecovery(request);
+    }
+    return response;
+  }
+
+  Exception _profileResponseException(String? message, String fallback) {
+    final normalized = message?.trim();
+    return Exception(
+      normalized == null || normalized.isEmpty ? fallback : normalized,
+    );
   }
 
   Map<String, dynamic> _applyConversationProfileFallback(
@@ -849,6 +938,46 @@ class AegisChatService {
       if ((avatarUrl == null || avatarUrl.isEmpty) &&
           (fallbackAvatarUrl?.isNotEmpty ?? false))
         'avatarUrl': fallbackAvatarUrl,
+    };
+  }
+
+  Map<String, dynamic>? _profileRequestFallbackInfo(
+    String userId, {
+    int? parsedId,
+    Map<String, dynamic>? cached,
+  }) {
+    if (cached != null) {
+      final cachedCopy = Map<String, dynamic>.from(cached);
+      if (parsedId == null) {
+        return cachedCopy;
+      }
+      return _applyConversationProfileFallback(parsedId, cachedCopy);
+    }
+
+    if (parsedId == null) {
+      return null;
+    }
+
+    final fallback = _conversationProfileFallback(parsedId);
+    if (fallback == null) {
+      return null;
+    }
+
+    final normalizedUsername = userId.replaceFirst('@', '').split(':').first;
+    return <String, dynamic>{
+      'id': fallback['id']?.toString() ?? parsedId.toString(),
+      'username': normalizedUsername,
+      'displayName': fallback['displayName']?.toString(),
+      'avatarUrl': fallback['avatarUrl'],
+      'avatars': const <Map<String, dynamic>>[],
+      'presenceStatus': null,
+      'isOnline': false,
+      'bio': null,
+      'location': null,
+      'birthday': null,
+      'email': null,
+      'createdAt': null,
+      'lastSeenAt': null,
     };
   }
 
@@ -882,8 +1011,11 @@ class AegisChatService {
   Map<String, dynamic> _profileToInfo(dynamic profile) {
     return <String, dynamic>{
       'id': profile.id.toString(),
-      'username': profile.username,
-      'displayName': profile.displayName ?? profile.username,
+      'username': UserContentSanitizer.sanitizeUsername(profile.username),
+      'displayName': UserContentSanitizer.sanitizeOptionalText(
+        profile.displayName,
+        maxLength: 120,
+      ),
       'avatarUrl': normalizeAegisAvatarUrl(profile.avatarUrl),
       'avatars': profile.avatars
           .map(
@@ -897,10 +1029,22 @@ class AegisChatService {
           .toList(growable: false),
       'presenceStatus': profile.presenceStatus,
       'isOnline': profile.presenceStatus == 'online',
-      'bio': profile.bio,
-      'location': profile.location,
+      'bio': UserContentSanitizer.sanitizeOptionalText(
+        profile.bio,
+        maxLength: 512,
+      ),
+      'location': UserContentSanitizer.sanitizeOptionalText(
+        profile.location,
+        maxLength: 120,
+        preserveNewlines: false,
+      ),
       'birthday': profile.birthDate,
-      'email': profile.email,
+      'email': UserContentSanitizer.sanitizeOptionalText(
+        profile.email,
+        maxLength: 160,
+        preserveNewlines: false,
+      ),
+      'createdAt': profile.createdAt?.toIso8601String(),
       'lastSeenAt': profile.lastSeenAt?.toIso8601String(),
     };
   }
@@ -916,8 +1060,13 @@ class AegisChatService {
       userId.replaceFirst('@', '').split(':').first,
     );
     if (parsedId != null && _profileCache.containsKey(parsedId)) {
-      return _profileCache[parsedId]!;
+      final cached = _profileCache[parsedId]!;
+      if (!_profileCacheNeedsRefresh(parsedId, cached)) {
+        return cached;
+      }
     }
+    final cachedFallback =
+        parsedId != null ? _profileCache[parsedId] : null;
 
     final cacheKey = parsedId?.toString() ?? userId;
     final pending = _userInfoRequests[cacheKey];
@@ -926,12 +1075,51 @@ class AegisChatService {
     }
 
     final request = () async {
-      ProfileGetResponse response;
-      if (parsedId != null) {
-        response = await _auth.rawClient.getProfile(userId: parsedId);
-      } else {
+      Future<ProfileGetResponse> sendRequest() async {
+        if (parsedId != null) {
+          return _auth.rawClient.getProfile(userId: parsedId);
+        }
         final normalized = userId.replaceFirst('@', '').split(':').first;
-        response = await _auth.rawClient.getProfile(username: normalized);
+        return _auth.rawClient.getProfile(username: normalized);
+      }
+
+      ProfileGetResponse response;
+      try {
+        response = await sendRequest();
+      } on Object catch (error) {
+        if (_isAuthRejectionMessage(error.toString())) {
+          response = await _retryAfterSessionRecovery(sendRequest);
+        } else {
+          final fallback = _profileRequestFallbackInfo(
+            userId,
+            parsedId: parsedId,
+            cached: cachedFallback,
+          );
+          if (fallback != null) {
+            return fallback;
+          }
+          rethrow;
+        }
+      }
+
+      if (!response.success) {
+        if (_isAuthRejectionMessage(response.message)) {
+          response = await _retryAfterSessionRecovery(sendRequest);
+        }
+        if (!response.success && !_isUserNotFoundMessage(response.message)) {
+          final fallback = _profileRequestFallbackInfo(
+            userId,
+            parsedId: parsedId,
+            cached: cachedFallback,
+          );
+          if (fallback != null) {
+            return fallback;
+          }
+          throw _profileResponseException(
+            response.message,
+            'Unable to load profile',
+          );
+        }
       }
 
       final profile = response.profile;
@@ -987,14 +1175,54 @@ class AegisChatService {
   }) async {
     await ensureReady();
     final selfId = _auth.userId;
+    final cachedFallback = selfId != null ? _profileCache[selfId] : null;
     if (!forceRefresh && selfId != null) {
-      final cached = _profileCache[selfId];
-      if (cached != null) {
-        return cached;
+      if (cachedFallback != null && !_profileCacheNeedsRefresh(selfId, cachedFallback)) {
+        return cachedFallback;
       }
     }
 
-    final response = await _auth.rawClient.getOwnProfile();
+    Future<ProfileGetResponse> sendRequest() => _auth.rawClient.getOwnProfile();
+
+    ProfileGetResponse response;
+    try {
+      response = await sendRequest();
+    } on Object catch (error) {
+      if (_isAuthRejectionMessage(error.toString())) {
+        response = await _retryAfterSessionRecovery(sendRequest);
+      } else {
+        final fallback = _profileRequestFallbackInfo(
+          selfId?.toString() ?? '',
+          parsedId: selfId,
+          cached: cachedFallback,
+        );
+        if (fallback != null) {
+          return fallback;
+        }
+        rethrow;
+      }
+    }
+
+    if (!response.success) {
+      if (_isAuthRejectionMessage(response.message)) {
+        response = await _retryAfterSessionRecovery(sendRequest);
+      }
+      if (!response.success) {
+        final fallback = _profileRequestFallbackInfo(
+          selfId?.toString() ?? '',
+          parsedId: selfId,
+          cached: cachedFallback,
+        );
+        if (fallback != null) {
+          return fallback;
+        }
+        throw _profileResponseException(
+          response.message,
+          'Unable to load own profile',
+        );
+      }
+    }
+
     final profile = response.profile;
     if (profile == null) {
       final userId = await getCurrentUserId();
@@ -1054,10 +1282,14 @@ class AegisChatService {
     bool isPublic = false,
   }) async {
     await ensureReady();
-    final response = await _auth.rawClient.createChannel(
-      name,
-      description: topic,
-      type: isPublic ? ChannelType.public : ChannelType.private,
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.createChannel(
+        name,
+        description: topic,
+        type: isPublic ? ChannelType.public : ChannelType.private,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     final channelId = response.channelId > 0 ? response.channelId : null;
     if (!response.success || channelId == null) {
@@ -1180,9 +1412,13 @@ class AegisChatService {
     if (conversation.peerUserId != null || conversation.kind == 'direct') {
       final peerId = conversation.peerUserId;
       if (peerId == null) throw Exception('Missing peer user id');
-      final response = await _auth.rawClient.sendPrivateMessage(
-        peerId,
-        mediaFileId ?? text,
+      final response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.sendPrivateMessage(
+          peerId,
+          mediaFileId ?? text,
+        ),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.messageText,
       );
       messageId = response.messageId > 0 ? response.messageId : null;
       if (!response.success) {
@@ -1193,10 +1429,14 @@ class AegisChatService {
     } else if (conversation.kind == 'group') {
       final groupId = conversation.channelId;
       if (groupId == null) throw Exception('Missing group id');
-      final response = await _auth.rawClient.sendGroupMessage(
-        groupId,
-        mediaFileId ?? text,
-        replyToMessageId: replyToMessageId,
+      final response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.sendGroupMessage(
+          groupId,
+          mediaFileId ?? text,
+          replyToMessageId: replyToMessageId,
+        ),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.messageText,
       );
       messageId = response.messageId;
       if (!response.success) {
@@ -1205,10 +1445,14 @@ class AegisChatService {
     } else {
       final channelId = conversation.channelId;
       if (channelId == null) throw Exception('Missing channel id');
-      final response = await _auth.rawClient.sendChannelMessage(
-        channelId,
-        mediaFileId ?? text,
-        replyToMessageId: replyToMessageId,
+      final response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.sendChannelMessage(
+          channelId,
+          mediaFileId ?? text,
+          replyToMessageId: replyToMessageId,
+        ),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.messageText,
       );
       messageId = response.messageId > 0 ? response.messageId : null;
       if (!response.success) {
@@ -1279,14 +1523,18 @@ class AegisChatService {
       throw Exception('Missing chat target id');
     }
 
-    final response = await _auth.rawClient.sendMedia(
-      chatType: chatType,
-      chatId: chatId,
-      mediaBytes: bytes,
-      mediaKind: _mapMediaKind(messageType, mimeType),
-      caption: caption,
-      fileName: fileName,
-      mimeType: mimeType,
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.sendMedia(
+        chatType: chatType,
+        chatId: chatId,
+        mediaBytes: bytes,
+        mediaKind: _mapMediaKind(messageType, mimeType),
+        caption: caption,
+        fileName: fileName,
+        mimeType: mimeType,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.messageText,
     );
     if (!response.success) {
       throw Exception(response.messageText ?? 'Unable to send media');
@@ -1546,15 +1794,42 @@ class AegisChatService {
     required String body,
     String? formattedBody,
   }) async {
-    final replyToMessageId = int.tryParse(replyToId);
+    final replyToMessageId = _resolveCanonicalReplyToMessageId(
+      roomId,
+      replyToId,
+    );
     if (replyToMessageId == null) {
-      throw Exception('Unable to reply to a non-numeric message id');
+      throw Exception(
+        'Reply is only available after the original message is delivered',
+      );
     }
     await sendMessage(
       roomId: roomId,
       text: body,
       replyToMessageId: replyToMessageId,
     );
+  }
+
+  int? _resolveCanonicalReplyToMessageId(String roomId, String replyToId) {
+    final directId = int.tryParse(replyToId);
+    if (directId != null && directId > 0) {
+      return directId;
+    }
+
+    final roomMessages = _messages[roomId];
+    if (roomMessages == null) {
+      return null;
+    }
+
+    for (final message in roomMessages) {
+      if (message.id != replyToId) {
+        continue;
+      }
+      final canonicalId = int.tryParse(message.id);
+      return canonicalId != null && canonicalId > 0 ? canonicalId : null;
+    }
+
+    return null;
   }
 
   Future<void> editMessage(
@@ -1738,12 +2013,20 @@ class AegisChatService {
     final room = _conversations[roomId];
     if (room != null && room.kind != 'direct' && room.channelId != null) {
       if (room.kind == 'group') {
-        final response = await _auth.rawClient.leaveGroup(room.channelId!);
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.leaveGroup(room.channelId!),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
+        );
         if (!response.success) {
           throw Exception(response.message ?? 'Unable to leave group');
         }
       } else {
-        final response = await _auth.rawClient.leaveChannel(room.channelId!);
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.leaveChannel(room.channelId!),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
+        );
         if (!response.success) {
           throw Exception(response.message ?? 'Unable to leave room');
         }
@@ -1844,23 +2127,45 @@ class AegisChatService {
     _emitChanged();
   }
 
+  void _handleReadSyncEvent(ReadSyncEventPayload event) {
+    if (event.messageIds.isEmpty) {
+      return;
+    }
+
+    _handleMessageStatusEvent(
+      MessageStatusEvent(
+        success: true,
+        messageIds: event.messageIds,
+        processedAt: event.readAt,
+      ),
+    );
+  }
+
   Future<void> setRoomName(String roomId, String name) async {
     await ensureReady();
     final conversation = _conversations[roomId];
     if (conversation == null) return;
     if (conversation.channelId != null) {
       if (conversation.kind == 'group') {
-        final response = await _auth.rawClient.updateGroup(
-          conversation.channelId!,
-          name: name,
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.updateGroup(
+            conversation.channelId!,
+            name: name,
+          ),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
         );
         if (!response.success) {
           throw Exception(response.message ?? 'Unable to rename room');
         }
       } else {
-        final response = await _auth.rawClient.updateChannel(
-          conversation.channelId!,
-          name: name,
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.updateChannel(
+            conversation.channelId!,
+            name: name,
+          ),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
         );
         if (!response.success) {
           throw Exception(response.message ?? 'Unable to rename room');
@@ -1881,9 +2186,13 @@ class AegisChatService {
 
     if (conversation.channelId != null) {
       if (conversation.kind == 'group') {
-        final response = await _auth.rawClient.updateGroup(
-          conversation.channelId!,
-          description: description,
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.updateGroup(
+            conversation.channelId!,
+            description: description,
+          ),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
         );
         if (!response.success) {
           throw Exception(
@@ -1891,9 +2200,13 @@ class AegisChatService {
           );
         }
       } else {
-        final response = await _auth.rawClient.updateChannel(
-          conversation.channelId!,
-          description: description,
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.updateChannel(
+            conversation.channelId!,
+            description: description,
+          ),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
         );
         if (!response.success) {
           throw Exception(
@@ -1924,19 +2237,27 @@ class AegisChatService {
 
     if (conversation.channelId != null) {
       if (conversation.kind == 'group') {
-        final response = await _auth.rawClient.updateGroup(
-          conversation.channelId!,
-          name: name,
-          description: description,
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.updateGroup(
+            conversation.channelId!,
+            name: name,
+            description: description,
+          ),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
         );
         if (!response.success) {
           throw Exception(response.message ?? 'Unable to update room');
         }
       } else {
-        final response = await _auth.rawClient.updateChannel(
-          conversation.channelId!,
-          name: name,
-          description: description,
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.updateChannel(
+            conversation.channelId!,
+            name: name,
+            description: description,
+          ),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
         );
         if (!response.success) {
           throw Exception(response.message ?? 'Unable to update room');
@@ -1979,19 +2300,27 @@ class AegisChatService {
     if (conversation != null) {
       if (conversation.channelId != null) {
         if (conversation.kind == 'group') {
-          final response = await _auth.rawClient.uploadGroupAvatar(
-            conversation.channelId!,
-            Uint8List.fromList(payloadBytes),
-            mimeType: resolvedMimeType,
+          final response = await _runAuthedSuccessRequest(
+            () => _auth.rawClient.uploadGroupAvatar(
+              conversation.channelId!,
+              Uint8List.fromList(payloadBytes),
+              mimeType: resolvedMimeType,
+            ),
+            isSuccess: (response) => response.success,
+            messageOf: (response) => response.message,
           );
           if (!response.success) {
             throw Exception(response.message ?? 'Unable to update room avatar');
           }
         } else {
-          final response = await _auth.rawClient.uploadChannelAvatar(
-            conversation.channelId!,
-            Uint8List.fromList(payloadBytes),
-            mimeType: resolvedMimeType,
+          final response = await _runAuthedSuccessRequest(
+            () => _auth.rawClient.uploadChannelAvatar(
+              conversation.channelId!,
+              Uint8List.fromList(payloadBytes),
+              mimeType: resolvedMimeType,
+            ),
+            isSuccess: (response) => response.success,
+            messageOf: (response) => response.message,
           );
           if (!response.success) {
             throw Exception(response.message ?? 'Unable to update room avatar');
@@ -2153,7 +2482,11 @@ class AegisChatService {
     final room = _conversations[roomId];
     if (room == null) return const <Map<String, dynamic>>[];
     if (room.kind == 'group' && room.channelId != null) {
-      final response = await _auth.rawClient.getGroupMembers(room.channelId!);
+      final response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.getGroupMembers(room.channelId!),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.message,
+      );
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to load group members');
       }
@@ -2165,10 +2498,17 @@ class AegisChatService {
           updatedAt: DateTime.now(),
         ),
       );
-      return Future.wait(response.members.map(_memberSummaryToRoomMemberMap));
+      return _mapInBatches(
+        response.members,
+        _memberSummaryToRoomMemberMap,
+      );
     }
     if (room.kind != 'direct' && room.channelId != null) {
-      final response = await _auth.rawClient.getChannelMembers(room.channelId!);
+      final response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.getChannelMembers(room.channelId!),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.message,
+      );
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to load channel members');
       }
@@ -2180,12 +2520,15 @@ class AegisChatService {
           updatedAt: DateTime.now(),
         ),
       );
-      return Future.wait(response.members.map(_memberSummaryToRoomMemberMap));
+      return _mapInBatches(
+        response.members,
+        _memberSummaryToRoomMemberMap,
+      );
     }
     final ids = room.memberUserIds;
-    // Fetch all members in parallel with bounded concurrency.
-    final results = await Future.wait(
-      ids.map((id) async {
+    final results = await _mapInBatches<String, Map<String, dynamic>>(
+      ids,
+      (id) async {
         try {
           final info = await getUserInfo(id);
           return {
@@ -2196,8 +2539,22 @@ class AegisChatService {
         } catch (_) {
           return {'userId': id, 'displayName': id, 'avatarUrl': null};
         }
-      }),
+      },
     );
+    return results;
+  }
+
+  Future<List<T>> _mapInBatches<S, T>(
+    Iterable<S> items,
+    Future<T> Function(S item) mapper,
+  ) async {
+    final source = items.toList(growable: false);
+    final results = <T>[];
+    for (var index = 0; index < source.length; index += _memberLookupBatchSize) {
+      final end = math.min(index + _memberLookupBatchSize, source.length);
+      final chunk = source.sublist(index, end);
+      results.addAll(await Future.wait(chunk.map(mapper)));
+    }
     return results;
   }
 
@@ -2214,15 +2571,12 @@ class AegisChatService {
   Future<void> refreshChatIndex({
     int messageLimit = 50,
     int preloadRooms = 6,
+    bool forceRefresh = false,
   }) async {
-    try {
-      await ensureReady();
-    } on NotAuthenticatedException {
-      return;
-    }
+    await ensureReady();
 
     var changed = false;
-    changed = await _refreshChatsFromServer(force: true) || changed;
+    changed = await _refreshChatsFromServer(force: forceRefresh) || changed;
     if (changed) {
       _emitChanged();
     }
@@ -2334,7 +2688,9 @@ class AegisChatService {
     if (unreadIds.isNotEmpty) {
       unawaited(() async {
         try {
-          await _auth.rawClient.sendReadReceipt(unreadIds);
+          await _runAuthedRequest(
+            () => _auth.rawClient.sendReadReceipt(unreadIds),
+          );
         } catch (_) {}
       }());
     }
@@ -2354,10 +2710,14 @@ class AegisChatService {
     final room = _conversations[roomId];
     if (room == null) return;
     if (room.channelId != null && room.kind != 'direct') {
-      final response = await _auth.rawClient.updateRoomSettings(
-        _roomScope(room),
-        room.channelId!,
-        joinRule: joinRule,
+      final response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.updateRoomSettings(
+          _roomScope(room),
+          room.channelId!,
+          joinRule: joinRule,
+        ),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.message,
       );
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to update room visibility');
@@ -2380,9 +2740,13 @@ class AegisChatService {
       };
     }
 
-    final response = await _auth.rawClient.getRoomSettings(
-      _roomScope(room),
-      room.channelId!,
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.getRoomSettings(
+        _roomScope(room),
+        room.channelId!,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!response.success) {
       throw Exception(response.message ?? 'Unable to load room settings');
@@ -2413,15 +2777,23 @@ class AegisChatService {
 
     ChannelLinkResponse response;
     if (room.isPublic || regeneratePrivateInvite) {
-      response = await _auth.rawClient.updateChannelLinks(
-        room.channelId!,
-        publicAlias: room.isPublic
-            ? _buildChannelAlias(room.title, room.channelId!)
-            : null,
-        regeneratePrivateInvite: regeneratePrivateInvite,
+      response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.updateChannelLinks(
+          room.channelId!,
+          publicAlias: room.isPublic
+              ? _buildChannelAlias(room.title, room.channelId!)
+              : null,
+          regeneratePrivateInvite: regeneratePrivateInvite,
+        ),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.message,
       );
     } else {
-      response = await _auth.rawClient.getChannelLinks(room.channelId!);
+      response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.getChannelLinks(room.channelId!),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.message,
+      );
     }
 
     if (!response.success || response.link == null) {
@@ -2439,10 +2811,34 @@ class AegisChatService {
     };
   }
 
+  Future<void> updateRoomPublicAlias(String roomId, String publicAlias) async {
+    await ensureReady();
+    final room = _conversations[roomId];
+    if (room == null || room.channelId == null || !room.isPublic) {
+      throw Exception('Links are only available for public channels');
+    }
+
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.updateChannelLinks(
+        room.channelId!,
+        publicAlias: publicAlias.trim(),
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
+    );
+    if (!response.success) {
+      throw Exception(response.message ?? 'Unable to update room link');
+    }
+  }
+
   Future<Map<String, dynamic>> resolveRoomLink(String linkOrAlias) async {
     await ensureReady();
-    final response = await _auth.rawClient.resolveChannelLink(
-      linkOrAlias.trim(),
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.resolveChannelLink(
+        linkOrAlias.trim(),
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!response.success || response.channel == null) {
       throw Exception(response.message ?? 'Unable to resolve room link');
@@ -2464,8 +2860,12 @@ class AegisChatService {
 
   Future<Chat> joinRoomByLink(String linkOrAlias) async {
     await ensureReady();
-    final response = await _auth.rawClient.joinChannelByLink(
-      linkOrAlias.trim(),
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.joinChannelByLink(
+        linkOrAlias.trim(),
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!response.success || response.channel == null) {
       throw Exception(response.message ?? 'Unable to join room');
@@ -2615,9 +3015,13 @@ class AegisChatService {
     String? avatarFileName,
   }) async {
     await ensureReady();
-    final response = await _auth.rawClient.createGroup(
-      name,
-      description: description,
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.createGroup(
+        name,
+        description: description,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     final groupId = response.groupId > 0 ? response.groupId : null;
     if (!response.success || groupId == null) {
@@ -2638,11 +3042,15 @@ class AegisChatService {
         memberUserIds: <String>[me],
       ),
     );
-    final settingsResponse = await _auth.rawClient.updateRoomSettings(
-      'group',
-      groupId,
-      joinRule: visibility == GroupVisibility.public ? 0 : 1,
-      historyVisibility: showMessageHistory ? 1 : 2,
+    final settingsResponse = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.updateRoomSettings(
+        'group',
+        groupId,
+        joinRule: visibility == GroupVisibility.public ? 0 : 1,
+        historyVisibility: showMessageHistory ? 1 : 2,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!settingsResponse.success) {
       throw Exception(
@@ -2705,16 +3113,24 @@ class AegisChatService {
       return getGroupRoom(roomId);
     }
 
-    final settings = await _auth.rawClient.getRoomSettings(
-      'group',
-      room.channelId!,
+    final settings = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.getRoomSettings(
+        'group',
+        room.channelId!,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!settings.success) {
       throw Exception(settings.message ?? 'Unable to load group settings');
     }
 
-    final membersResponse = await _auth.rawClient.getGroupMembers(
-      room.channelId!,
+    final membersResponse = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.getGroupMembers(
+        room.channelId!,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!membersResponse.success) {
       throw Exception(
@@ -2760,6 +3176,7 @@ class AegisChatService {
         .role;
 
     await _persist();
+    _emitRoomChanged(roomId);
     _emitChanged();
     return GroupRoom(
       roomId: updatedRoom.id,
@@ -2790,10 +3207,14 @@ class AegisChatService {
     final room = _conversations[roomId];
     if (room == null) return;
     if (room.channelId != null && room.kind != 'direct') {
-      final response = await _auth.rawClient.updateRoomSettings(
-        _roomScope(room),
-        room.channelId!,
-        historyVisibility: historyVisibility,
+      final response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.updateRoomSettings(
+          _roomScope(room),
+          room.channelId!,
+          historyVisibility: historyVisibility,
+        ),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.message,
       );
       if (!response.success) {
         throw Exception(
@@ -2818,11 +3239,15 @@ class AegisChatService {
     if (room?.channelId == null || targetUserId == null) return;
     final targetId = room!.channelId!;
 
-    final response = await _auth.rawClient.updateMemberRole(
-      scope: _roomScope(room),
-      targetId: targetId,
-      targetUserId: targetUserId,
-      newRole: _mapGroupRole(role),
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.updateMemberRole(
+        scope: _roomScope(room),
+        targetId: targetId,
+        targetUserId: targetUserId,
+        newRole: _mapGroupRole(role),
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!response.success) {
       throw Exception(response.message ?? 'Unable to update member role');
@@ -2841,11 +3266,15 @@ class AegisChatService {
     if (room?.channelId == null || targetUserId == null) return;
     final targetId = room!.channelId!;
 
-    final response = await _auth.rawClient.updateMemberPermissions(
-      scope: _roomScope(room),
-      targetId: targetId,
-      targetUserId: targetUserId,
-      canSendMessages: false,
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.updateMemberPermissions(
+        scope: _roomScope(room),
+        targetId: targetId,
+        targetUserId: targetUserId,
+        canSendMessages: false,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!response.success) {
       throw Exception(response.message ?? 'Unable to freeze member');
@@ -2859,14 +3288,18 @@ class AegisChatService {
     if (room?.channelId == null || targetUserId == null) return;
     final targetId = room!.channelId!;
 
-    final response = await _auth.rawClient.updateMemberPermissions(
-      scope: _roomScope(room),
-      targetId: targetId,
-      targetUserId: targetUserId,
-      canSendMessages: false,
-      canInviteUsers: false,
-      canEditInfo: false,
-      canPinMessages: false,
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.updateMemberPermissions(
+        scope: _roomScope(room),
+        targetId: targetId,
+        targetUserId: targetUserId,
+        canSendMessages: false,
+        canInviteUsers: false,
+        canEditInfo: false,
+        canPinMessages: false,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!response.success) {
       throw Exception(response.message ?? 'Unable to restrict member');
@@ -2880,14 +3313,18 @@ class AegisChatService {
     if (room?.channelId == null || targetUserId == null) return;
     final targetId = room!.channelId!;
 
-    final response = await _auth.rawClient.updateMemberPermissions(
-      scope: _roomScope(room),
-      targetId: targetId,
-      targetUserId: targetUserId,
-      canSendMessages: true,
-      canInviteUsers: true,
-      canEditInfo: true,
-      canPinMessages: true,
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.updateMemberPermissions(
+        scope: _roomScope(room),
+        targetId: targetId,
+        targetUserId: targetUserId,
+        canSendMessages: true,
+        canInviteUsers: true,
+        canEditInfo: true,
+        canPinMessages: true,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!response.success) {
       throw Exception(response.message ?? 'Unable to restore member access');
@@ -2901,14 +3338,18 @@ class AegisChatService {
     if (room == null) return;
 
     if (room.channelId != null && targetUserId != null) {
-      final response = await _auth.rawClient.updateMemberPermissions(
-        scope: _roomScope(room),
-        targetId: room.channelId!,
-        targetUserId: targetUserId,
-        canSendMessages: false,
-        canInviteUsers: false,
-        canEditInfo: false,
-        canPinMessages: false,
+      final response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.updateMemberPermissions(
+          scope: _roomScope(room),
+          targetId: room.channelId!,
+          targetUserId: targetUserId,
+          canSendMessages: false,
+          canInviteUsers: false,
+          canEditInfo: false,
+          canPinMessages: false,
+        ),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.message,
       );
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to remove member');
@@ -2929,7 +3370,7 @@ class AegisChatService {
     );
   }
 
-  Future<void> updateMyProfile({
+  Future<Map<String, dynamic>> updateMyProfile({
     String? displayName,
     String? bio,
     String? username,
@@ -2938,7 +3379,7 @@ class AegisChatService {
     String? birthDate,
   }) async {
     await ensureReady();
-    final response = await _auth.rawClient.updateProfile(
+    Future<ProfileUpdateResponse> sendRequest() => _auth.rawClient.updateProfile(
       displayName: displayName,
       bio: bio,
       username: username,
@@ -2946,15 +3387,41 @@ class AegisChatService {
       location: location,
       birthDate: birthDate,
     );
-    if (!response.success) {
-      throw Exception(response.message ?? 'Unable to update profile');
+
+    ProfileUpdateResponse response;
+    try {
+      response = await sendRequest();
+    } on Object catch (error) {
+      if (_isAuthRejectionMessage(error.toString())) {
+        response = await _retryAfterSessionRecovery(sendRequest);
+      } else {
+        rethrow;
+      }
     }
+
+    if (!response.success) {
+      if (_isAuthRejectionMessage(response.message)) {
+        response = await _retryAfterSessionRecovery(sendRequest);
+      }
+      if (!response.success) {
+        throw _profileResponseException(
+          response.message,
+          'Unable to update profile',
+        );
+      }
+    }
+
     if (response.profile != null) {
       final profile = response.profile!;
-      _storeProfile(profile.id, _profileToInfo(profile));
+      final info = _profileToInfo(profile);
+      _storeProfile(profile.id, info);
+      _syncProfileIntoConversations(profile.id, info);
       await _persist();
       _emitChanged();
+      return info;
     }
+
+    return getOwnUserInfo(forceRefresh: true);
   }
 
   Future<Map<String, dynamic>> uploadMyAvatar(
@@ -2962,9 +3429,13 @@ class AegisChatService {
     String mimeType = 'image/jpeg',
   }) async {
     await ensureReady();
-    final response = await _auth.rawClient.uploadUserAvatar(
-      imageBytes,
-      mimeType: mimeType,
+    final response = await _runAuthedSuccessRequest(
+      () => _auth.rawClient.uploadUserAvatar(
+        imageBytes,
+        mimeType: mimeType,
+      ),
+      isSuccess: (response) => response.success,
+      messageOf: (response) => response.message,
     );
     if (!response.success) {
       throw Exception(response.message ?? 'Unable to update avatar');
@@ -2981,6 +3452,7 @@ class AegisChatService {
 
     final info = _profileToInfo(profile);
     _storeProfile(profile.id, info);
+    _syncProfileIntoConversations(profile.id, info);
     await _persist();
     _emitChanged();
     return info;
@@ -3124,7 +3596,9 @@ class AegisChatService {
             final messageId = int.tryParse(roomMessage.id);
             if (messageId != null && messageId > 0) {
               try {
-                await _auth.rawClient.sendDeliveryReceipt(<int>[messageId]);
+                await _runAuthedRequest(
+                  () => _auth.rawClient.sendDeliveryReceipt(<int>[messageId]),
+                );
               } catch (_) {}
             }
             if (_activeRoomId == roomId) {
@@ -3166,7 +3640,9 @@ class AegisChatService {
             final messageId = int.tryParse(roomMessage.id);
             if (messageId != null && messageId > 0) {
               try {
-                await _auth.rawClient.sendDeliveryReceipt(<int>[messageId]);
+                await _runAuthedRequest(
+                  () => _auth.rawClient.sendDeliveryReceipt(<int>[messageId]),
+                );
               } catch (_) {}
             }
             if (_activeRoomId == roomId) {
@@ -3203,7 +3679,9 @@ class AegisChatService {
             final messageId = int.tryParse(roomMessage.id);
             if (messageId != null && messageId > 0) {
               try {
-                await _auth.rawClient.sendDeliveryReceipt(<int>[messageId]);
+                await _runAuthedRequest(
+                  () => _auth.rawClient.sendDeliveryReceipt(<int>[messageId]),
+                );
               } catch (_) {}
             }
             if (_activeRoomId == roomId) {
@@ -3285,6 +3763,17 @@ class AegisChatService {
     try {
       return await operation();
     } on Object catch (error) {
+      if (_isAuthRejectionMessage(error.toString())) {
+        try {
+          await _auth.recoverSession();
+          return await operation();
+        } on Object catch (recoveredError) {
+          if (await _clearRoomIfUnavailable(roomId, recoveredError)) {
+            throw Exception(unavailableMessage);
+          }
+          rethrow;
+        }
+      }
       if (await _clearRoomIfUnavailable(roomId, error)) {
         throw Exception(unavailableMessage);
       }
@@ -3307,7 +3796,11 @@ class AegisChatService {
     }
 
     final future = () async {
-      final response = await _auth.rawClient.getChatList();
+      final response = await _runAuthedSuccessRequest(
+        () => _auth.rawClient.getChatList(),
+        isSuccess: (response) => response.success,
+        messageOf: (response) => response.message,
+      );
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to load chat list');
       }
@@ -3378,7 +3871,7 @@ class AegisChatService {
                   !_profileCache.containsKey(int.tryParse(peerId) ?? -1),
             )
             .toList(growable: false);
-        const batchSize = 6;
+        const batchSize = _memberLookupBatchSize;
         for (
           var index = 0;
           index < missingProfileIds.length;
@@ -3422,9 +3915,13 @@ class AegisChatService {
     List<AegisRoomMessage> nextMessages;
     try {
       if (conversation.kind == 'direct' && conversation.peerUserId != null) {
-        final response = await _auth.rawClient.getPrivateHistory(
-          conversation.peerUserId!,
-          limit: limit,
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.getPrivateHistory(
+            conversation.peerUserId!,
+            limit: limit,
+          ),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
         );
         if (!response.success) {
           throw Exception(response.message ?? 'Unable to load direct messages');
@@ -3447,9 +3944,13 @@ class AegisChatService {
           }),
         );
       } else if (conversation.kind == 'group' && conversation.channelId != null) {
-        final response = await _auth.rawClient.getGroupHistory(
-          conversation.channelId!,
-          limit: limit,
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.getGroupHistory(
+            conversation.channelId!,
+            limit: limit,
+          ),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
         );
         if (!response.success) {
           throw Exception(response.message ?? 'Unable to load room history');
@@ -3463,6 +3964,7 @@ class AegisChatService {
               content: item.content,
               contentType: item.contentType,
               createdAt: item.createdAt,
+              replyToMessageId: _extractHistoryReplyToMessageId(item),
               isDelivered: status.$1,
               isRead: status.$2,
               deliveredAt: status.$3,
@@ -3478,9 +3980,13 @@ class AegisChatService {
               .toList(growable: false),
         );
       } else if (conversation.channelId != null) {
-        final response = await _auth.rawClient.getChannelHistory(
-          conversation.channelId!,
-          limit: limit,
+        final response = await _runAuthedSuccessRequest(
+          () => _auth.rawClient.getChannelHistory(
+            conversation.channelId!,
+            limit: limit,
+          ),
+          isSuccess: (response) => response.success,
+          messageOf: (response) => response.message,
         );
         if (!response.success) {
           throw Exception(response.message ?? 'Unable to load room history');
@@ -3514,13 +4020,18 @@ class AegisChatService {
 
     nextMessages.sort((a, b) => a.time.compareTo(b.time));
     final currentMessages = _messages[roomId] ?? const <AegisRoomMessage>[];
-    if (_sameMessages(currentMessages, nextMessages)) {
+    final mergedMessages = _mergeServerMessagesWithLocalState(
+      roomId,
+      currentMessages,
+      nextMessages,
+    );
+    if (_sameMessages(currentMessages, mergedMessages)) {
       return false;
     }
-    _messages[roomId] = nextMessages;
+    _messages[roomId] = mergedMessages;
     _storedRoomIds.add(roomId);
     _hydratedRoomIds.add(roomId);
-    _markMessageBatchDirty(roomId, currentMessages, nextMessages);
+    _markMessageBatchDirty(roomId, currentMessages, mergedMessages);
     await _persist();
     return true;
   }
@@ -3573,6 +4084,50 @@ class AegisChatService {
       }
     }
     return true;
+  }
+
+  List<AegisRoomMessage> _mergeServerMessagesWithLocalState(
+    String roomId,
+    List<AegisRoomMessage> currentMessages,
+    List<AegisRoomMessage> serverMessages,
+  ) {
+    if (currentMessages.isEmpty) {
+      return serverMessages;
+    }
+
+    final serverIds = serverMessages.map((message) => message.id).toSet();
+    final deletedIds = _deletedMessageIdsByRoom[roomId];
+    final selfUserId = (_auth.userId ?? 0).toString();
+    final freshnessAnchor = serverMessages.isNotEmpty
+        ? serverMessages.last.time
+        : DateTime.now();
+
+    final mergedById = <String, AegisRoomMessage>{
+      for (final message in serverMessages) message.id: message,
+    };
+
+    for (final message in currentMessages) {
+      if (serverIds.contains(message.id) ||
+          (deletedIds?.contains(message.id) ?? false)) {
+        continue;
+      }
+
+      final isQueuedLocalMessage = message.id.startsWith('local:');
+      final isRecentOwnMessage =
+          message.senderId == selfUserId &&
+          message.time.isAfter(
+            freshnessAnchor.subtract(_historyConsistencyWindow),
+          );
+
+      if (!isQueuedLocalMessage && !isRecentOwnMessage) {
+        continue;
+      }
+
+      mergedById.putIfAbsent(message.id, () => message);
+    }
+
+    return mergedById.values.toList(growable: false)
+      ..sort((left, right) => left.time.compareTo(right.time));
   }
 
   (bool, bool, DateTime?, DateTime?) _extractHistoryStatus(dynamic item) {
@@ -3631,9 +4186,26 @@ class AegisChatService {
       } catch (_) {}
     }
     final profile = _profileCache[member.userId];
+    final profileUsername = profile?['username']?.toString();
+    final profileDisplayName = profile?['displayName']?.toString();
+    final fallbackDisplayName =
+        UserContentSanitizer.sanitizeOptionalText(
+          member.username,
+          maxLength: 120,
+        ) ??
+        member.userId.toString();
+    final resolvedDisplayName =
+        (profileDisplayName?.trim().isNotEmpty ?? false) &&
+            !_looksLikeOpaqueIdentity(
+              profileDisplayName,
+              userId: member.userId,
+              username: profileUsername,
+            )
+        ? profileDisplayName!.trim()
+        : fallbackDisplayName;
     return {
       'userId': member.userId.toString(),
-      'displayName': profile?['displayName'] ?? member.username,
+      'displayName': resolvedDisplayName,
       'avatarUrl': profile?['avatarUrl'],
       'role': member.role,
       'joinedAt': member.joinedAt.toIso8601String(),

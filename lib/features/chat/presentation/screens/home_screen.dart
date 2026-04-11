@@ -17,7 +17,12 @@ import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/unread_badge.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/create_channel_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/create_group_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/join_room_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
+
+enum _NewChatAction { direct, group, channel, join }
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -57,14 +62,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _loadUserAndRooms() async {
+  Future<void> _loadUserAndRooms({bool forceRefresh = false}) async {
     final inFlight = _roomRefreshInFlight;
     if (inFlight != null) {
       await inFlight;
       return;
     }
 
-    final future = _refreshRoomIndex();
+    final future = _refreshRoomIndex(forceRefresh: forceRefresh);
     _roomRefreshInFlight = future;
     try {
       await future;
@@ -75,7 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Future<void> _refreshRoomIndex() async {
+  Future<void> _refreshRoomIndex({bool forceRefresh = false}) async {
     if (!mounted) return;
     if (_rooms.isEmpty) {
       setState(() {
@@ -88,21 +93,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     try {
       await _chat.refreshChatIndex(
+        forceRefresh: forceRefresh,
         preloadRooms: 0,
         messageLimit: 0,
       );
     } catch (e) {
-      final text = e.toString().toLowerCase();
-      if (text.contains('notauthenticatedexception') ||
-          text.contains('необходима аутентификация')) {
-        if (mounted) {
-          setState(() {
-            _rooms = const <Map<String, dynamic>>[];
-            _errorMessage = null;
-          });
-        }
-        return;
-      }
       if (mounted) {
         setState(() => _errorMessage = e.toString());
       }
@@ -351,7 +346,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (!mounted) {
         return;
       }
-      await _loadUserAndRooms();
+      await _loadUserAndRooms(forceRefresh: true);
     } catch (e) {
       if (!mounted) {
         return;
@@ -404,9 +399,121 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _showStartChatSheet() async {
+    final l10n = AppLocalizations.of(context)!;
+    final action = await showModalBottomSheet<_NewChatAction>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final maxHeight = MediaQuery.sizeOf(context).height * 0.82;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              UITokens.spaceMd,
+              UITokens.spaceMd,
+              UITokens.spaceMd,
+              UITokens.spaceMd,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxHeight),
+              child: SectionCard(
+                radius: UITokens.corner2XL,
+                padding: const EdgeInsets.all(UITokens.spaceMd),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: UITokens.dragHandleWidth,
+                          height: UITokens.dragHandleHeight,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outlineVariant
+                                .withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(
+                              UITokens.cornerPill,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: UITokens.spaceMd),
+                      Text(
+                        l10n.newChatChooserTitle,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: UITokens.spaceXsSm),
+                      Text(
+                        l10n.newChatChooserSubtitle,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: UITokens.spaceSmMd),
+                      _NewChatActionTile(
+                        icon: Icons.person_add_alt_1_rounded,
+                        title: l10n.newChatTitle,
+                        subtitle: l10n.createDirectChatSubtitle,
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop(_NewChatAction.direct),
+                      ),
+                      const SizedBox(height: UITokens.spaceXsSm),
+                      _NewChatActionTile(
+                        icon: Icons.groups_rounded,
+                        title: l10n.groupChatTab,
+                        subtitle: l10n.createGroupSubtitle,
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop(_NewChatAction.group),
+                      ),
+                      const SizedBox(height: UITokens.spaceXsSm),
+                      _NewChatActionTile(
+                        icon: Icons.campaign_outlined,
+                        title: l10n.channelChatTab,
+                        subtitle: l10n.createChannelSubtitle,
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop(_NewChatAction.channel),
+                      ),
+                      const SizedBox(height: UITokens.spaceXsSm),
+                      _NewChatActionTile(
+                        icon: Icons.link_rounded,
+                        title: l10n.joinByCodeTitle,
+                        subtitle: l10n.joinByCodeSubtitle,
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop(_NewChatAction.join),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted || action == null) {
+      return;
+    }
+
+    final Widget destination = switch (action) {
+      _NewChatAction.direct => const CreateChatScreen(),
+      _NewChatAction.group => const CreateGroupScreen(),
+      _NewChatAction.channel => const CreateChannelScreen(),
+      _NewChatAction.join => const JoinRoomScreen(),
+    };
+
     final result = await Navigator.push<Object?>(
       context,
-      MaterialPageRoute(builder: (_) => const CreateChatScreen()),
+      MaterialPageRoute(builder: (_) => destination),
     );
     if (result != null) {
       unawaited(_chat.refreshChatsQuietly());
@@ -465,6 +572,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: const Icon(Icons.add_comment_outlined),
               tooltip: l10n.peopleQuickNewChat,
               style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.92),
+                foregroundColor: theme.colorScheme.primary,
+                side: BorderSide(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.64,
+                  ),
+                ),
                 minimumSize: const Size(56, 56),
               ),
             ),
@@ -517,7 +632,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: _loading
                               ? _buildShimmerLoading()
                               : RefreshIndicator.adaptive(
-                                  onRefresh: _loadUserAndRooms,
+                                  onRefresh: () =>
+                                      _loadUserAndRooms(forceRefresh: true),
                                   child: _buildChatList(),
                                 ),
                         ),
@@ -605,7 +721,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 title: AppLocalizations.of(context)!.errorGeneric,
                 message: _errorMessage!,
                 actionLabel: AppLocalizations.of(context)!.retry,
-                onAction: _loadUserAndRooms,
+                onAction: () => _loadUserAndRooms(forceRefresh: true),
               ),
             ),
           ),
@@ -686,7 +802,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: _loadUserAndRooms,
+                    onPressed: () => _loadUserAndRooms(forceRefresh: true),
                     child: Text(AppLocalizations.of(context)!.retry),
                   ),
                 ],
@@ -810,6 +926,75 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         isOnline: room['isOnline'] == true,
         presenceStatus: room['presenceStatus'] as String?,
         lastSeenAt: room['lastSeenAt'] as DateTime?,
+      ),
+    );
+  }
+}
+
+class _NewChatActionTile extends StatelessWidget {
+  const _NewChatActionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SectionCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(UITokens.spaceSmMd),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.9),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.18),
+              ),
+              borderRadius: BorderRadius.circular(UITokens.cornerLg),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              icon,
+              color: theme.colorScheme.onPrimaryContainer,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: UITokens.spaceSmMd),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: UITokens.space2XS),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: UITokens.spaceXsSm),
+          const Icon(Icons.chevron_right_rounded),
+        ],
       ),
     );
   }
