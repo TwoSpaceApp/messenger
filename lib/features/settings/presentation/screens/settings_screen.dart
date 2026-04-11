@@ -46,7 +46,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _logout() async {
     final l10n = AppLocalizations.of(context)!;
     final width = MediaQuery.of(context).size.width;
-    final horizontalInset = (width * 0.08).clamp(12.0, 28.0);
+    final horizontalInset = (width * 0.08).clamp(
+      UITokens.dialogHorizontalInsetMin,
+      UITokens.dialogHorizontalInsetMax,
+    );
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -54,7 +57,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         content: Text(l10n.logoutDialogContent),
         insetPadding: EdgeInsets.symmetric(
           horizontal: horizontalInset,
-          vertical: 24,
+          vertical: UITokens.spaceXLg,
         ),
         actions: [
           TextButton(
@@ -272,7 +275,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ],
                       ),
                     ),
-                    // Appearance
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -292,8 +294,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.space,
                         ),
                         child: Column(
                           children: [
@@ -332,7 +334,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
 
-                    // Notifications
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -352,8 +353,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.spaceSm,
                         ),
                         child: Column(
                           children: [
@@ -388,7 +389,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
 
-                    // Account
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -408,8 +408,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.space,
                         ),
                         child: Column(
                           children: [
@@ -458,7 +458,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
 
-                    // General
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -478,8 +477,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.spaceSm,
                         ),
                         child: Column(
                           children: [
@@ -555,7 +554,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
 
-                    // Data & Storage
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -575,8 +573,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.spaceSm,
                         ),
                         child: Column(
                           children: [
@@ -613,7 +611,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                       ),
                     ),
-                    // About
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,
@@ -633,8 +630,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                          horizontal: UITokens.spaceMd,
+                          vertical: UITokens.space,
                         ),
                         child: Column(
                           children: [
@@ -667,7 +664,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
 
-                    // Danger zone
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
                         UITokens.spaceMd,

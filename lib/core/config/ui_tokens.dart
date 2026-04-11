@@ -70,12 +70,16 @@ class UITokens {
   static const double compactButtonWidth = 180;
   static const double compactSheetMaxWidth = 320;
   static const double dialogMaxWidth = 420;
+  static const double dialogHorizontalInsetMin = 12;
+  static const double dialogHorizontalInsetMax = 28;
   static const double heroCardMaxWidth = 540;
   static const double sheetContentMaxWidth = 560;
   static const double compactFormMaxWidth = 640;
   static const double sectionContentMaxWidth = 760;
   static const double panelContentMaxWidth = 860;
   static const double formContentMaxWidth = 920;
+  static const double settingsSidebarWidth = 300;
+  static const double settingsInfoBlockWidth = 260;
   static const double wideContentMaxWidth = 1320;
   static const double bottomBarClearance = 120;
 
@@ -91,6 +95,7 @@ class UITokens {
   static const double mobileBreakpoint = 540;
   static const double tabletBreakpoint = 760;
   static const double desktopBreakpoint = 1100;
+  static const double ultraWideBreakpoint = 1400;
   static const double contentMaxWidth = 1200;
   static const double readableContentMaxWidth = 920;
 

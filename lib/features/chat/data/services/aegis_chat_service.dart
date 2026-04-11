@@ -214,7 +214,9 @@ class _StoredConversation {
 class AegisChatService {
   static const int _maxMediaUploadBytes = 15 * 1024 * 1024;
   static const int _mediaCacheMaxBytes = 512 * 1024 * 1024;
+  static const int _memberLookupBatchSize = 6;
   static const Duration _mediaCacheMaxAge = Duration(days: 14);
+  static const Duration _historyConsistencyWindow = Duration(minutes: 3);
 
   factory AegisChatService() => _instance;
   AegisChatService._internal();
@@ -2423,7 +2425,10 @@ class AegisChatService {
           updatedAt: DateTime.now(),
         ),
       );
-      return Future.wait(response.members.map(_memberSummaryToRoomMemberMap));
+      return _mapInBatches(
+        response.members,
+        _memberSummaryToRoomMemberMap,
+      );
     }
     if (room.kind != 'direct' && room.channelId != null) {
       final response = await _runAuthedSuccessRequest(
@@ -2442,12 +2447,15 @@ class AegisChatService {
           updatedAt: DateTime.now(),
         ),
       );
-      return Future.wait(response.members.map(_memberSummaryToRoomMemberMap));
+      return _mapInBatches(
+        response.members,
+        _memberSummaryToRoomMemberMap,
+      );
     }
     final ids = room.memberUserIds;
-    // Fetch all members in parallel with bounded concurrency.
-    final results = await Future.wait(
-      ids.map((id) async {
+    final results = await _mapInBatches<String, Map<String, dynamic>>(
+      ids,
+      (id) async {
         try {
           final info = await getUserInfo(id);
           return {
@@ -2458,8 +2466,22 @@ class AegisChatService {
         } catch (_) {
           return {'userId': id, 'displayName': id, 'avatarUrl': null};
         }
-      }),
+      },
     );
+    return results;
+  }
+
+  Future<List<T>> _mapInBatches<S, T>(
+    Iterable<S> items,
+    Future<T> Function(S item) mapper,
+  ) async {
+    final source = items.toList(growable: false);
+    final results = <T>[];
+    for (var index = 0; index < source.length; index += _memberLookupBatchSize) {
+      final end = math.min(index + _memberLookupBatchSize, source.length);
+      final chunk = source.sublist(index, end);
+      results.addAll(await Future.wait(chunk.map(mapper)));
+    }
     return results;
   }
 
@@ -3084,6 +3106,7 @@ class AegisChatService {
         .role;
 
     await _persist();
+    _emitRoomChanged(roomId);
     _emitChanged();
     return GroupRoom(
       roomId: updatedRoom.id,
@@ -3778,7 +3801,7 @@ class AegisChatService {
                   !_profileCache.containsKey(int.tryParse(peerId) ?? -1),
             )
             .toList(growable: false);
-        const batchSize = 6;
+        const batchSize = _memberLookupBatchSize;
         for (
           var index = 0;
           index < missingProfileIds.length;
@@ -3927,13 +3950,18 @@ class AegisChatService {
 
     nextMessages.sort((a, b) => a.time.compareTo(b.time));
     final currentMessages = _messages[roomId] ?? const <AegisRoomMessage>[];
-    if (_sameMessages(currentMessages, nextMessages)) {
+    final mergedMessages = _mergeServerMessagesWithLocalState(
+      roomId,
+      currentMessages,
+      nextMessages,
+    );
+    if (_sameMessages(currentMessages, mergedMessages)) {
       return false;
     }
-    _messages[roomId] = nextMessages;
+    _messages[roomId] = mergedMessages;
     _storedRoomIds.add(roomId);
     _hydratedRoomIds.add(roomId);
-    _markMessageBatchDirty(roomId, currentMessages, nextMessages);
+    _markMessageBatchDirty(roomId, currentMessages, mergedMessages);
     await _persist();
     return true;
   }
@@ -3986,6 +4014,50 @@ class AegisChatService {
       }
     }
     return true;
+  }
+
+  List<AegisRoomMessage> _mergeServerMessagesWithLocalState(
+    String roomId,
+    List<AegisRoomMessage> currentMessages,
+    List<AegisRoomMessage> serverMessages,
+  ) {
+    if (currentMessages.isEmpty) {
+      return serverMessages;
+    }
+
+    final serverIds = serverMessages.map((message) => message.id).toSet();
+    final deletedIds = _deletedMessageIdsByRoom[roomId];
+    final selfUserId = (_auth.userId ?? 0).toString();
+    final freshnessAnchor = serverMessages.isNotEmpty
+        ? serverMessages.last.time
+        : DateTime.now();
+
+    final mergedById = <String, AegisRoomMessage>{
+      for (final message in serverMessages) message.id: message,
+    };
+
+    for (final message in currentMessages) {
+      if (serverIds.contains(message.id) ||
+          (deletedIds?.contains(message.id) ?? false)) {
+        continue;
+      }
+
+      final isQueuedLocalMessage = message.id.startsWith('local:');
+      final isRecentOwnMessage =
+          message.senderId == selfUserId &&
+          message.time.isAfter(
+            freshnessAnchor.subtract(_historyConsistencyWindow),
+          );
+
+      if (!isQueuedLocalMessage && !isRecentOwnMessage) {
+        continue;
+      }
+
+      mergedById.putIfAbsent(message.id, () => message);
+    }
+
+    return mergedById.values.toList(growable: false)
+      ..sort((left, right) => left.time.compareTo(right.time));
   }
 
   (bool, bool, DateTime?, DateTime?) _extractHistoryStatus(dynamic item) {
@@ -4044,9 +4116,26 @@ class AegisChatService {
       } catch (_) {}
     }
     final profile = _profileCache[member.userId];
+    final profileUsername = profile?['username']?.toString();
+    final profileDisplayName = profile?['displayName']?.toString();
+    final fallbackDisplayName =
+        UserContentSanitizer.sanitizeOptionalText(
+          member.username,
+          maxLength: 120,
+        ) ??
+        member.userId.toString();
+    final resolvedDisplayName =
+        (profileDisplayName?.trim().isNotEmpty ?? false) &&
+            !_looksLikeOpaqueIdentity(
+              profileDisplayName,
+              userId: member.userId,
+              username: profileUsername,
+            )
+        ? profileDisplayName!.trim()
+        : fallbackDisplayName;
     return {
       'userId': member.userId.toString(),
-      'displayName': profile?['displayName'] ?? member.username,
+      'displayName': resolvedDisplayName,
       'avatarUrl': profile?['avatarUrl'],
       'role': member.role,
       'joinedAt': member.joinedAt.toIso8601String(),

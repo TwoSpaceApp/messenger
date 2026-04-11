@@ -3588,5 +3588,12 @@
   "devMenuRequestBody": "Request body · {type}",
   "devMenuResponseHeaders": "Response headers",
   "devMenuResponseBody": "Response body · {type}",
-  "devMenuVersionWithBuild": "{version} (Build {buildNumber})"
+  "devMenuVersionWithBuild": "{version} (Build {buildNumber})",
+  "notificationsInDevelopmentSubtitle": "Notification delivery and advanced controls are still being completed.",
+  "devMenuCopyVisible": "Copy visible",
+  "devMenuExportLogFile": "Export log file",
+  "devMenuNewestFirst": "Newest first",
+  "devMenuOldestFirst": "Oldest first",
+  "feedbackAttachLogsLabel": "Attach logs?",
+  "feedbackAttachLogsSubtitle": "Add a diagnostic file with device info, application logs, and network logs."
 }

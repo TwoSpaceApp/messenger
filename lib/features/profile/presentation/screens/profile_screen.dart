@@ -93,10 +93,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Map<String, dynamic> userInfo,
     String fallbackId,
   ) {
+    final normalizedUsername = _resolvedProfileUsername(userInfo);
+    final normalizedDisplayName =
+        _resolvedProfileDisplayName(userInfo, normalizedUsername);
     return <String, dynamic>{
       'id': userInfo['id']?.toString() ?? fallbackId,
-      'displayName': userInfo['displayName'] ?? widget.initialName,
-      'username': userInfo['username'] ?? '',
+      'displayName': normalizedDisplayName,
+      'username': normalizedUsername,
       'avatar': userInfo['avatarUrl'] ?? widget.initialAvatar,
       'avatars': userInfo['avatars'] ?? const <Map<String, dynamic>>[],
       'bio': userInfo['bio'] ?? '',
@@ -221,6 +224,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return initial;
     }
     return _fallbackUsername();
+  }
+
+  bool _isOpaqueProfileIdentity(String? value, {String? username}) {
+    final normalized = _normalizeProfileToken(value);
+    if (normalized.isEmpty) {
+      return true;
+    }
+
+    if (normalized == _normalizeProfileToken(widget.userId)) {
+      return true;
+    }
+
+    final normalizedUsername = _normalizeProfileToken(username);
+    final isNumeric = RegExp(r'^\d+$').hasMatch(normalized);
+    if (normalizedUsername.isNotEmpty &&
+        normalized == normalizedUsername &&
+        isNumeric) {
+      return true;
+    }
+
+    return normalized == _normalizeProfileToken(_fallbackUsername()) &&
+        isNumeric;
+  }
+
+  String _resolvedProfileUsername(Map<String, dynamic> userInfo) {
+    final username = UserContentSanitizer.sanitizeUsername(
+      userInfo['username']?.toString(),
+    );
+    return _isOpaqueProfileIdentity(username, username: username)
+        ? ''
+        : username;
+  }
+
+  String? _resolvedProfileDisplayName(
+    Map<String, dynamic> userInfo,
+    String normalizedUsername,
+  ) {
+    final displayName = UserContentSanitizer.sanitizeOptionalText(
+      userInfo['displayName']?.toString(),
+      maxLength: 120,
+    );
+    if (!_isOpaqueProfileIdentity(displayName, username: normalizedUsername)) {
+      return displayName;
+    }
+
+    final initial = widget.initialName?.trim();
+    if (initial != null && initial.isNotEmpty) {
+      return initial;
+    }
+
+    if (normalizedUsername.isNotEmpty) {
+      return normalizedUsername;
+    }
+
+    return null;
   }
 
   void _initializeControllers() {
@@ -402,10 +460,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return false;
     }
     final name = (_user!['displayName'] as String?)?.trim() ?? '';
+    final username = (_user!['username'] as String?)?.trim();
     final bio = (_user!['bio'] as String?)?.trim() ?? '';
     final location = (_user!['location'] as String?)?.trim() ?? '';
     final birthday = (_user!['birthday'] as String?)?.trim() ?? '';
-    return name.isNotEmpty ||
+    final hasReadableName =
+        name.isNotEmpty && !_isOpaqueProfileIdentity(name, username: username);
+    return hasReadableName ||
         bio.isNotEmpty ||
         location.isNotEmpty ||
         birthday.isNotEmpty;
@@ -652,16 +713,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               final isWide = constraints.maxWidth >= UITokens.desktopBreakpoint;
               final isTablet =
                   constraints.maxWidth >= UITokens.tabletBreakpoint;
-              final horizontalPadding = constraints.maxWidth >= 1400
-                  ? 40.0
+              final horizontalPadding =
+                  constraints.maxWidth >= UITokens.ultraWideBreakpoint
+                  ? UITokens.space3XL
                   : isWide
-                  ? 28.0
+                  ? UITokens.space2XL
                   : isTablet
-                  ? 20.0
-                  : 14.0;
+                  ? UITokens.spaceLg
+                  : UITokens.spaceMdSm;
               final heroPanelWidth = (constraints.maxWidth * 0.34).clamp(
-                320.0,
-                420.0,
+                UITokens.compactSheetMaxWidth,
+                UITokens.dialogMaxWidth,
               );
               final heroPanel = ValueListenableBuilder<double>(
                 valueListenable: _avatarStretch,
@@ -830,7 +892,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        padding: EdgeInsets.all(isWide ? 28 : 20),
+        padding: EdgeInsets.all(
+          isWide ? UITokens.space2XL : UITokens.spaceLg,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

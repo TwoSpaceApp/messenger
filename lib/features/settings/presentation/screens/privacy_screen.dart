@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/core/services/biometric_service.dart';
 import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
@@ -75,31 +73,18 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
         ),
         const SizedBox(height: UITokens.space),
         _buildSectionTitle(context, l10n.securitySection),
-        ValueListenableBuilder<bool>(
-          valueListenable: SettingsService.biometricsNotifier,
-          builder: (context, isEnabled, child) {
-            return SwitchListTile(
-              title: Text(l10n.biometricsEnable),
-              subtitle: Text(l10n.biometricsSetup),
-              secondary: const Icon(Icons.fingerprint),
-              value: isEnabled,
-              onChanged: _loading
-                  ? null
-                  : (v) async {
-                      if (v) {
-                        final authenticated =
-                            await BiometricService.authenticate(
-                              l10n.biometricsSetup,
-                            );
-                        if (authenticated) {
-                          await SettingsService.setBiometricsEnabled(true);
-                        }
-                      } else {
-                        await SettingsService.setBiometricsEnabled(false);
-                      }
-                    },
-            );
-          },
+        InlineNoticeCard(
+          icon: Icons.devices_rounded,
+          badge: l10n.featureInDevelopmentLabel,
+          title: l10n.activeSessionsLabel,
+          message: l10n.featureInDevelopmentMessage(l10n.activeSessionsLabel),
+        ),
+        const SizedBox(height: UITokens.spaceSm),
+        InlineNoticeCard(
+          icon: Icons.security_rounded,
+          badge: l10n.featureInDevelopmentLabel,
+          title: l10n.twoFactorLabel,
+          message: l10n.featureInDevelopmentMessage(l10n.twoFactorLabel),
         ),
         const SizedBox(height: UITokens.spaceSm),
         ValueListenableBuilder<int>(
@@ -164,7 +149,6 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                                           ) ??
                                           -1;
                                       if (v < 7 || v > 365) {
-                                        // show inline error
                                         ScaffoldMessenger.of(ctx).showSnackBar(
                                           SnackBar(
                                             content: Text(l10n.enterDaysError),
@@ -198,27 +182,6 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
               ],
             );
           },
-        ),
-        _buildSurfaceTile(
-          context,
-          ListTile(
-            leading: const Icon(Icons.devices_rounded),
-            title: Text(l10n.activeSessionsLabel),
-            subtitle: Text(l10n.activeSessionsSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppStrings.routeActiveSessions),
-          ),
-        ),
-        const SizedBox(height: UITokens.spaceSm),
-        _buildSurfaceTile(
-          context,
-          ListTile(
-            leading: const Icon(Icons.security),
-            title: Text(l10n.twoFactorLabel),
-            subtitle: Text(l10n.twoFactorPrivacySubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppStrings.routeTfaSetup),
-          ),
         ),
       ],
     );

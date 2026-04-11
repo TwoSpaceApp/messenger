@@ -52,18 +52,15 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     final email = _emailCtrl.text.trim();
-    _pwdCtrl.text.trim();
     if (email.isEmpty) return;
     setState(() => _loading = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      // Backend email management is not available yet.
       if (!mounted) return;
       await showFeatureInDevelopmentDialog(
         context,
         feature: l10n.changeEmailTitle,
       );
-      // navState.pop(true);
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(

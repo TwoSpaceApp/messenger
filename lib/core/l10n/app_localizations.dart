@@ -5693,6 +5693,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{version} (Build {buildNumber})'**
   String devMenuVersionWithBuild(Object buildNumber, Object version);
+
+  /// No description provided for @notificationsInDevelopmentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification delivery and advanced controls are still being completed.'**
+  String get notificationsInDevelopmentSubtitle;
+
+  /// No description provided for @devMenuCopyVisible.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy visible'**
+  String get devMenuCopyVisible;
+
+  /// No description provided for @devMenuExportLogFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Export log file'**
+  String get devMenuExportLogFile;
+
+  /// No description provided for @devMenuNewestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest first'**
+  String get devMenuNewestFirst;
+
+  /// No description provided for @devMenuOldestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first'**
+  String get devMenuOldestFirst;
+
+  /// No description provided for @feedbackAttachLogsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach logs?'**
+  String get feedbackAttachLogsLabel;
+
+  /// No description provided for @feedbackAttachLogsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a diagnostic file with device info, application logs, and network logs.'**
+  String get feedbackAttachLogsSubtitle;
 }
 
 class _AppLocalizationsDelegate

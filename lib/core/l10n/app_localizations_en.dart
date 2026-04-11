@@ -3094,4 +3094,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String devMenuVersionWithBuild(Object buildNumber, Object version) {
     return '$version (Build $buildNumber)';
   }
+
+  @override
+  String get notificationsInDevelopmentSubtitle =>
+      'Notification delivery and advanced controls are still being completed.';
+
+  @override
+  String get devMenuCopyVisible => 'Copy visible';
+
+  @override
+  String get devMenuExportLogFile => 'Export log file';
+
+  @override
+  String get devMenuNewestFirst => 'Newest first';
+
+  @override
+  String get devMenuOldestFirst => 'Oldest first';
+
+  @override
+  String get feedbackAttachLogsLabel => 'Attach logs?';
+
+  @override
+  String get feedbackAttachLogsSubtitle =>
+      'Add a diagnostic file with device info, application logs, and network logs.';
 }

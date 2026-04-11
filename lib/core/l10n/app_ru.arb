@@ -3410,5 +3410,12 @@
   "devMenuRequestBody": "Тело запроса · {type}",
   "devMenuResponseHeaders": "Заголовки ответа",
   "devMenuResponseBody": "Тело ответа · {type}",
-  "devMenuVersionWithBuild": "{version} (сборка {buildNumber})"
+  "devMenuVersionWithBuild": "{version} (сборка {buildNumber})",
+  "notificationsInDevelopmentSubtitle": "Доставка уведомлений и расширенные настройки ещё в разработке.",
+  "devMenuCopyVisible": "Копировать видимое",
+  "devMenuExportLogFile": "Экспортировать файл логов",
+  "devMenuNewestFirst": "Сначала новые",
+  "devMenuOldestFirst": "Сначала старые",
+  "feedbackAttachLogsLabel": "Приложить логи?",
+  "feedbackAttachLogsSubtitle": "Добавить диагностический файл с данными устройства, логами приложения и логами сети."
 }

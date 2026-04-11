@@ -3106,4 +3106,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String devMenuVersionWithBuild(Object buildNumber, Object version) {
     return '$version (сборка $buildNumber)';
   }
+
+  @override
+  String get notificationsInDevelopmentSubtitle =>
+      'Доставка уведомлений и расширенные настройки ещё в разработке.';
+
+  @override
+  String get devMenuCopyVisible => 'Копировать видимое';
+
+  @override
+  String get devMenuExportLogFile => 'Экспортировать файл логов';
+
+  @override
+  String get devMenuNewestFirst => 'Сначала новые';
+
+  @override
+  String get devMenuOldestFirst => 'Сначала старые';
+
+  @override
+  String get feedbackAttachLogsLabel => 'Приложить логи?';
+
+  @override
+  String get feedbackAttachLogsSubtitle =>
+      'Добавить диагностический файл с данными устройства, логами приложения и логами сети.';
 }

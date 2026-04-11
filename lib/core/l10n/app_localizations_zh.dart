@@ -3025,4 +3025,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String devMenuVersionWithBuild(Object buildNumber, Object version) {
     return '$version (Build $buildNumber)';
   }
+
+  @override
+  String get notificationsInDevelopmentSubtitle => '通知投递和高级控制仍在完善中。';
+
+  @override
+  String get devMenuCopyVisible => '复制当前可见内容';
+
+  @override
+  String get devMenuExportLogFile => '导出日志文件';
+
+  @override
+  String get devMenuNewestFirst => '最新在前';
+
+  @override
+  String get devMenuOldestFirst => '最旧在前';
+
+  @override
+  String get feedbackAttachLogsLabel => '附加日志？';
+
+  @override
+  String get feedbackAttachLogsSubtitle => '附加包含设备信息、应用日志和网络日志的诊断文件。';
 }

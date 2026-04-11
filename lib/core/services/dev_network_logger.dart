@@ -124,10 +124,10 @@ class DevNetworkLog {
 class DevNetworkLogger {
   DevNetworkLogger._internal();
   static final DevNetworkLogger instance = DevNetworkLogger._internal();
-  static const int _maxEntries = 200;
-  static const int _maxCollectionEntries = 24;
-  static const int _maxStringLength = 800;
-  static const int _maxDepth = 4;
+  static const int _maxEntries = 400;
+  static const int _maxCollectionEntries = 48;
+  static const int _maxStringLength = 2400;
+  static const int _maxDepth = 5;
 
   final List<DevNetworkLog> _logs = [];
   final _controller = StreamController<List<DevNetworkLog>>.broadcast();

@@ -410,6 +410,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             state,
             ChatScreen(chat: chat),
             selectedIndex: 0,
+            constrainBody: false,
             showMobileNavBar: false,
           );
         },

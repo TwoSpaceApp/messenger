@@ -3040,4 +3040,26 @@ class AppLocalizationsKo extends AppLocalizations {
   String devMenuVersionWithBuild(Object buildNumber, Object version) {
     return '$version (Build $buildNumber)';
   }
+
+  @override
+  String get notificationsInDevelopmentSubtitle => '알림 전달과 고급 설정은 아직 마무리 중입니다.';
+
+  @override
+  String get devMenuCopyVisible => '보이는 내용 복사';
+
+  @override
+  String get devMenuExportLogFile => '로그 파일 내보내기';
+
+  @override
+  String get devMenuNewestFirst => '최신순';
+
+  @override
+  String get devMenuOldestFirst => '오래된 순';
+
+  @override
+  String get feedbackAttachLogsLabel => '로그를 첨부할까요?';
+
+  @override
+  String get feedbackAttachLogsSubtitle =>
+      '기기 정보, 앱 로그, 네트워크 로그가 포함된 진단 파일을 첨부합니다.';
 }

@@ -6,23 +6,28 @@ import 'package:record/record.dart';
 
 /// Real VoiceService using the 'record' package for audio recording.
 class VoiceService {
-  factory VoiceService() => _instance;
-  VoiceService._internal();
-  static final VoiceService _instance = VoiceService._internal();
+  VoiceService();
 
   final AudioRecorder _recorder = AudioRecorder();
   bool _isRecording = false;
   bool _isInitialized = false;
+  bool _isDisposed = false;
   String? _currentRecordingPath;
-  final bool _isSupported = Platform.isAndroid || Platform.isIOS;
+  final bool _isSupported =
+      Platform.isAndroid ||
+      Platform.isIOS ||
+      Platform.isLinux ||
+      Platform.isMacOS ||
+      Platform.isWindows;
 
   bool get isRecording => _isRecording;
   bool get isInitialized => _isInitialized;
+  bool get isSupported => _isSupported;
   bool get isPlaying => false; // Playback not implemented here
 
   /// Initialize the voice service
   Future<void> init() async {
-    if (!_isSupported) {
+    if (!_isSupported || _isDisposed) {
       _isInitialized = false;
       return;
     }
@@ -35,32 +40,45 @@ class VoiceService {
 
   /// Dispose the recorder
   Future<void> dispose() async {
+    if (_isDisposed) {
+      return;
+    }
     try {
       if (_isRecording) {
         await _recorder.stop();
       }
       await _recorder.dispose();
     } catch (_) {}
+    _isRecording = false;
+    _isInitialized = false;
+    _currentRecordingPath = null;
+    _isDisposed = true;
   }
 
   /// Request microphone permission
   Future<bool> requestMicrophonePermission() async {
-    if (!_isSupported) return false;
+    if (!_isSupported || _isDisposed) return false;
     try {
-      final status = await Permission.microphone.request();
-      if (status.isGranted) {
-        _isInitialized = true;
-        return true;
+      if (Platform.isAndroid || Platform.isIOS) {
+        final status = await Permission.microphone.request();
+        if (!status.isGranted) {
+          _isInitialized = false;
+          return false;
+        }
       }
-      return false;
+
+      final hasPermission = await _recorder.hasPermission();
+      _isInitialized = hasPermission;
+      return hasPermission;
     } on Object catch (_) {
+      _isInitialized = false;
       return false;
     }
   }
 
   /// Start recording audio
   Future<String?> startRecording() async {
-    if (!_isSupported) return null;
+    if (!_isSupported || _isDisposed) return null;
 
     try {
       final hasPermission = await requestMicrophonePermission();
@@ -86,7 +104,7 @@ class VoiceService {
 
   /// Stop recording and return the file path
   Future<String?> stopRecording() async {
-    if (!_isRecording) return null;
+    if (!_isRecording || _isDisposed) return null;
 
     try {
       final path = await _recorder.stop();
@@ -108,6 +126,9 @@ class VoiceService {
 
   /// Cancel recording
   Future<void> cancelRecording() async {
+    if (_isDisposed) {
+      return;
+    }
     try {
       if (_isRecording) {
         await _recorder.stop();
@@ -127,7 +148,7 @@ class VoiceService {
 
   /// Get recording amplitude (for waveform visualization)
   Future<double?> getAmplitude() async {
-    if (!_isRecording) return null;
+    if (!_isRecording || _isDisposed) return null;
     try {
       final amp = await _recorder.getAmplitude();
       return amp.current;

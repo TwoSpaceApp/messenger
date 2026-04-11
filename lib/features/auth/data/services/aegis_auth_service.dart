@@ -44,17 +44,24 @@ class EmailNotVerifiedException implements Exception {
 /// Управляет жизненным циклом TCP-соединения, токенами сессии
 /// и предоставляет простой Flutter-friendly API.
 class AegisAuthService {
+  static const Duration _defaultRecoveryBackoff = Duration(seconds: 12);
+
   factory AegisAuthService() => _instance;
   AegisAuthService._internal() {
     _client.disconnects.listen((_) {
       _stopKeepAlive();
       _log.warning('Соединение с Aegis-сервером разорвано');
-      if (_suppressDisconnectRecovery) {
+      if (_skipDisconnectAutoRecovery) {
         _log.debug('Пропускаю auto-recovery для управляемого disconnect');
         return;
       }
       if (!_logoutInProgress && (_token?.isNotEmpty ?? false)) {
-        unawaited(_recoverSessionAfterKeepAliveFailure());
+        unawaited(
+          recoverSession(
+            reason: 'disconnect',
+            resetTransport: false,
+          ),
+        );
       }
     });
     _client.sessionTerminatedEvents.listen((event) {
@@ -80,9 +87,11 @@ class AegisAuthService {
   Future<bool>? _restoreSessionFuture;
   Future<void>? _connectFuture;
   Future<void>? _ensureSessionFuture;
-  Future<void>? _sessionRecoveryFuture;
+  Future<bool>? _sessionRecoveryFuture;
   bool _logoutInProgress = false;
-  bool _suppressDisconnectRecovery = false;
+  bool _skipDisconnectAutoRecovery = false;
+  DateTime? _recoveryBackoffUntil;
+  String? _lastRecoveryBackoffReason;
 
   bool get isConnected => _client.isConnected;
   bool get isAuthenticated => _client.isAuthenticated;
@@ -95,6 +104,7 @@ class AegisAuthService {
       Environment.aegisAppId != null ||
       (Environment.aegisAppHash?.isNotEmpty ?? false);
 
+  /// Batch secure-storage reads to avoid repeated startup I/O for each field.
   Future<void> _hydrateStoredSessionFields() async {
     final stored = await SecureStore.readMany(const <String>[
       _kAegisTokenKey,
@@ -189,8 +199,6 @@ class AegisAuthService {
     }
     return _username;
   }
-
-  // ─── Соединение ───────────────────────────────────────────────────────────
 
   /// Подключиться к Aegis-серверу (не аутентифицирует).
   Future<void> connect() async {
@@ -337,6 +345,10 @@ class AegisAuthService {
       _ensureKeepAlive();
       return true;
     }
+    if (_hasActiveRecoveryBackoff()) {
+      _logActiveRecoveryBackoff('restore_session');
+      return false;
+    }
     final inFlight = _restoreSessionFuture;
     if (inFlight != null) return inFlight;
 
@@ -380,6 +392,7 @@ class AegisAuthService {
       _username = _client.username ?? _username;
       _userId = _client.userId ?? _userId;
       await _saveSession();
+      _clearRecoveryBackoff();
       _ensureKeepAlive();
       _sessionRestoredController.add(null);
       _log.info('Сессия восстановлена для $_username');
@@ -428,9 +441,72 @@ class AegisAuthService {
     final message = error.toString().toLowerCase();
     return message.contains('unauthorized') ||
         message.contains('not authenticated') ||
-        message.contains('authentication failed') ||
         message.contains('auth.not_authenticated') ||
         message.contains('notauthenticatedexception');
+  }
+
+  bool _isTooManyAuthenticationAttempts(Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains('too many authentication attempts') ||
+        message.contains('too many auth attempts') ||
+        message.contains('auth.too_many_attempts') ||
+        message.contains('rate limit');
+  }
+
+  int? _retryAfterSeconds(Object error) {
+    final match = RegExp(
+      r'(?:retry|try again|after|wait)[^0-9]{0,12}(\d{1,3})\s*(?:s|sec|secs|second|seconds)?',
+      caseSensitive: false,
+    ).firstMatch(error.toString());
+    if (match == null) {
+      return null;
+    }
+    return int.tryParse(match.group(1) ?? '');
+  }
+
+  Duration _recoveryBackoffFor(Object error) {
+    final retryAfter = _retryAfterSeconds(error);
+    if (retryAfter != null && retryAfter > 0) {
+      return Duration(seconds: retryAfter.clamp(5, 180));
+    }
+    if (_isTooManyAuthenticationAttempts(error)) {
+      return const Duration(seconds: 30);
+    }
+    return _defaultRecoveryBackoff;
+  }
+
+  bool _hasActiveRecoveryBackoff() {
+    final until = _recoveryBackoffUntil;
+    return until != null && DateTime.now().isBefore(until);
+  }
+
+  void _clearRecoveryBackoff() {
+    _recoveryBackoffUntil = null;
+    _lastRecoveryBackoffReason = null;
+  }
+
+  void _scheduleRecoveryBackoff(Object error, {required String reason}) {
+    final duration = _recoveryBackoffFor(error);
+    _recoveryBackoffUntil = DateTime.now().add(duration);
+    _lastRecoveryBackoffReason = '$reason: ${UserFacingError.format(error)}';
+    _log.warning(
+      'Откладываю auto-recovery на ${duration.inSeconds}с ($reason): $error',
+    );
+  }
+
+  void _logActiveRecoveryBackoff(String reason) {
+    final until = _recoveryBackoffUntil;
+    if (until == null) {
+      return;
+    }
+    final secondsLeft = until.difference(DateTime.now()).inSeconds;
+    if (secondsLeft <= 0) {
+      return;
+    }
+    _log.debug(
+      'Пропускаю recovery ($reason), active backoff ${secondsLeft}s: '
+      '${_lastRecoveryBackoffReason ?? 'unknown'}',
+    );
   }
 
   Future<T> _runAuthedProtocolRequest<T>(Future<T> Function() request) async {
@@ -438,8 +514,13 @@ class AegisAuthService {
       return await request();
     } on Object catch (error) {
       if (_isRetryableAuthFailure(error)) {
-        await recoverSession();
-        return request();
+        final recovered = await recoverSession(
+          reason: 'protocol_request',
+          resetTransport: !_client.isConnected || !_client.isAuthenticated,
+        );
+        if (recovered) {
+          return request();
+        }
       }
       rethrow;
     }
@@ -451,14 +532,24 @@ class AegisAuthService {
     try {
       final response = await request();
       if (response.statusCode == 401 || response.statusCode == 403) {
-        await recoverSession();
-        return request();
+        final recovered = await recoverSession(
+          reason: 'http_${response.statusCode}',
+          resetTransport: !_client.isConnected || !_client.isAuthenticated,
+        );
+        if (recovered) {
+          return request();
+        }
       }
       return response;
     } on Object catch (error) {
       if (_isRetryableAuthFailure(error)) {
-        await recoverSession();
-        return request();
+        final recovered = await recoverSession(
+          reason: 'http_exception',
+          resetTransport: !_client.isConnected || !_client.isAuthenticated,
+        );
+        if (recovered) {
+          return request();
+        }
       }
       rethrow;
     }
@@ -603,6 +694,7 @@ class AegisAuthService {
     }
 
     await _saveSession();
+    _clearRecoveryBackoff();
     _ensureKeepAlive();
     _sessionRestoredController.add(null);
     _log.info('Вход выполнен: $_username');
@@ -625,6 +717,7 @@ class AegisAuthService {
     _userId = _client.userId ?? userId;
 
     await _saveSession();
+    _clearRecoveryBackoff();
     _ensureKeepAlive();
     _sessionRestoredController.add(null);
   }
@@ -783,6 +876,7 @@ class AegisAuthService {
     _token = null;
     _username = null;
     _userId = null;
+    _clearRecoveryBackoff();
     await SecureStore.delete(_kAegisTokenKey);
     await SecureStore.delete(_kAegisUsernameKey);
     await SecureStore.delete(_kAegisUserIdKey);
@@ -797,36 +891,69 @@ class AegisAuthService {
         await _client.ping();
       } on Object catch (e) {
         _log.debug('Ping keep-alive не удался: $e');
-        unawaited(_recoverSessionAfterKeepAliveFailure());
+        unawaited(
+          recoverSession(
+            reason: 'keep_alive',
+            resetTransport: true,
+          ),
+        );
       }
     });
   }
 
-  Future<void> _recoverSessionAfterKeepAliveFailure() async {
-    final inFlight = _sessionRecoveryFuture;
-    if (inFlight != null) {
-      await inFlight;
-      return;
+  Future<bool> _recoverSessionAfterFailure({
+    required String reason,
+    required bool resetTransport,
+  }) async {
+    if (_logoutInProgress) {
+      return false;
     }
 
-    final completer = Completer<void>();
+    if (_client.isConnected && _client.isAuthenticated) {
+      _ensureKeepAlive();
+      _clearRecoveryBackoff();
+      return true;
+    }
+
+    if (_hasActiveRecoveryBackoff()) {
+      _logActiveRecoveryBackoff(reason);
+      return false;
+    }
+
+    final inFlight = _sessionRecoveryFuture;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final completer = Completer<bool>();
     final future = completer.future;
     _sessionRecoveryFuture = future;
 
     unawaited(() async {
       try {
-        try {
-          if (_client.isConnected) {
-            await _disconnectClient();
+        if (resetTransport) {
+          try {
+            if (_client.isConnected) {
+              await _disconnectClient();
+            }
+          } catch (disconnectError) {
+            _log.debug(
+              'Disconnect during recovery ($reason) did not complete cleanly: $disconnectError',
+            );
           }
-        } catch (_) {}
+        }
 
         try {
-          await ensureSession();
+          final restored = await restoreSession();
+          if (restored) {
+            _clearRecoveryBackoff();
+            _ensureKeepAlive();
+          }
+          completer.complete(restored);
         } on Object catch (e) {
-          _log.debug('Автовосстановление сессии не удалось: $e');
+          _scheduleRecoveryBackoff(e, reason: reason);
+          completer.complete(false);
         }
-        completer.complete();
       } on Object catch (error, stackTrace) {
         completer.completeError(error, stackTrace);
       } finally {
@@ -840,16 +967,25 @@ class AegisAuthService {
   }
   
   Future<void> recoverSession() async {
-    await _recoverSessionAfterKeepAliveFailure();
+  Future<bool> recoverSession({
+    String reason = 'manual',
+    bool resetTransport = true,
+  }) async {
+    return _recoverSessionAfterFailure(
+      reason: reason,
+      resetTransport: resetTransport,
+    );
   }
 
+  /// Avoid disconnect-triggered recovery while we intentionally tear down the
+  /// socket during serialized recovery or logout flows.
   Future<void> _disconnectClient() async {
-    final previousSuppression = _suppressDisconnectRecovery;
-    _suppressDisconnectRecovery = true;
+    final previousSuppression = _skipDisconnectAutoRecovery;
+    _skipDisconnectAutoRecovery = true;
     try {
       await _client.disconnect();
     } finally {
-      _suppressDisconnectRecovery = previousSuppression;
+      _skipDisconnectAutoRecovery = previousSuppression;
     }
   }
 

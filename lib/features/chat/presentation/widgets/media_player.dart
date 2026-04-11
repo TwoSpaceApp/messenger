@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:two_space_app/core/services/media_file_service.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:video_player/video_player.dart';
 
@@ -48,6 +49,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
   static const List<double> _playbackSpeeds = <double>[0.75, 1, 1.25, 1.5, 2];
 
   String get _mediaKey => widget.localPath ?? widget.networkUrl!;
+  String get _mediaName => MediaFileService.resolvedFileName(_mediaKey);
 
   @override
   void initState() {
@@ -361,6 +363,53 @@ class _MediaPlayerState extends State<MediaPlayer> {
     _showControlsTemporarily();
   }
 
+  Future<void> _shareMedia() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final localPath = widget.localPath;
+      if (localPath == null || localPath.isEmpty) {
+        return;
+      }
+      await MediaFileService.share(localPath, subject: _mediaName);
+      _showControlsTemporarily();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
+    }
+  }
+
+  Future<void> _saveMedia() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final localPath = widget.localPath;
+      if (localPath == null || localPath.isEmpty) {
+        return;
+      }
+      final savedPath = await MediaFileService.saveAs(
+        localPath,
+        suggestedName: _mediaName,
+      );
+      if (!mounted || savedPath == null) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.fileDownloaded(savedPath))));
+      _showControlsTemporarily();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
+    }
+  }
+
   String _formatDuration(Duration duration) {
     String twoDigits(int value) => value.toString().padLeft(2, '0');
     final totalHours = duration.inHours;
@@ -561,6 +610,26 @@ class _MediaPlayerState extends State<MediaPlayer> {
                         icon: const Icon(Icons.arrow_back_ios_new),
                       ),
                       const Spacer(),
+                      if (widget.localPath != null) ...[
+                        Tooltip(
+                          message: AppLocalizations.of(context)!.shareAction,
+                          child: ShadIconButton.ghost(
+                            width: 40,
+                            height: 40,
+                            onPressed: _shareMedia,
+                            icon: const Icon(Icons.share_outlined),
+                          ),
+                        ),
+                        Tooltip(
+                          message: AppLocalizations.of(context)!.saveTooltip,
+                          child: ShadIconButton.ghost(
+                            width: 40,
+                            height: 40,
+                            onPressed: _saveMedia,
+                            icon: const Icon(Icons.download_rounded),
+                          ),
+                        ),
+                      ],
                       ShadIconButton.ghost(
                         width: 40,
                         height: 40,

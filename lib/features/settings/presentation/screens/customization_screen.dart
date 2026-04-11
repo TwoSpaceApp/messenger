@@ -1536,8 +1536,12 @@ class _PreviewRoomsCard extends StatelessWidget {
               children: rooms.map((room) {
                 return Expanded(
                   child: Container(
-                    margin: EdgeInsets.only(bottom: room == rooms.last ? 0 : 9),
-                    padding: EdgeInsets.all(compactMode ? 12 : 14),
+                    margin: EdgeInsets.only(
+                      bottom: room == rooms.last ? 0 : UITokens.spaceSmMd,
+                    ),
+                    padding: EdgeInsets.all(
+                      compactMode ? UITokens.space : UITokens.spaceMdSm,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(
@@ -1611,7 +1615,7 @@ class _PreviewRoomsCard extends StatelessWidget {
                                 room.muted
                                     ? Icons.notifications_off_rounded
                                     : Icons.done_all_rounded,
-                                size: 16,
+                                size: UITokens.iconSm,
                                 color: room.muted
                                     ? AppColors.hintText(context)
                                     : AppColors.onlineStatus(context),
@@ -1668,8 +1672,8 @@ class _PreviewConversationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final messagePadding = compactMode ? 12.0 : 14.0;
-    final messageGap = compactMode ? 8.0 : 10.0;
+    final messagePadding = compactMode ? UITokens.space : UITokens.spaceMdSm;
+    final messageGap = compactMode ? UITokens.spaceSm : UITokens.spaceSmMd;
     final maxWidth = compactMode ? 214.0 : 236.0;
 
     return Padding(
@@ -1777,7 +1781,9 @@ class _PreviewSettingsCard extends StatelessWidget {
     Widget tile(IconData icon, String title, String subtitle) {
       return Container(
         margin: EdgeInsets.only(bottom: compactMode ? 8 : 10),
-        padding: EdgeInsets.all(compactMode ? 12 : 14),
+        padding: EdgeInsets.all(
+          compactMode ? UITokens.space : UITokens.spaceMdSm,
+        ),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface.withValues(alpha: 0.68),
           borderRadius: BorderRadius.circular(UITokens.cornerXLg),

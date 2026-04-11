@@ -412,9 +412,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final action = await showModalBottomSheet<_NewChatAction>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         final theme = Theme.of(context);
+        final maxHeight = MediaQuery.sizeOf(context).height * 0.82;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -423,71 +425,84 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               UITokens.spaceMd,
               UITokens.spaceMd,
             ),
-            child: SectionCard(
-              radius: UITokens.corner2XL,
-              padding: const EdgeInsets.all(UITokens.spaceMd),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: UITokens.dragHandleWidth,
-                      height: UITokens.dragHandleHeight,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outlineVariant
-                            .withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(UITokens.cornerPill),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxHeight),
+              child: SectionCard(
+                radius: UITokens.corner2XL,
+                padding: const EdgeInsets.all(UITokens.spaceMd),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: UITokens.dragHandleWidth,
+                          height: UITokens.dragHandleHeight,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outlineVariant
+                                .withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(
+                              UITokens.cornerPill,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: UITokens.spaceMd),
+                      Text(
+                        l10n.newChatChooserTitle,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: UITokens.spaceXsSm),
+                      Text(
+                        l10n.newChatChooserSubtitle,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: UITokens.spaceSmMd),
+                      _NewChatActionTile(
+                        icon: Icons.person_add_alt_1_rounded,
+                        title: l10n.newChatTitle,
+                        subtitle: l10n.createDirectChatSubtitle,
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop(_NewChatAction.direct),
+                      ),
+                      const SizedBox(height: UITokens.spaceXsSm),
+                      _NewChatActionTile(
+                        icon: Icons.groups_rounded,
+                        title: l10n.groupChatTab,
+                        subtitle: l10n.createGroupSubtitle,
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop(_NewChatAction.group),
+                      ),
+                      const SizedBox(height: UITokens.spaceXsSm),
+                      _NewChatActionTile(
+                        icon: Icons.campaign_outlined,
+                        title: l10n.channelChatTab,
+                        subtitle: l10n.createChannelSubtitle,
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop(_NewChatAction.channel),
+                      ),
+                      const SizedBox(height: UITokens.spaceXsSm),
+                      _NewChatActionTile(
+                        icon: Icons.link_rounded,
+                        title: l10n.joinByCodeTitle,
+                        subtitle: l10n.joinByCodeSubtitle,
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop(_NewChatAction.join),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: UITokens.spaceMd),
-                  Text(
-                    l10n.newChatChooserTitle,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: UITokens.spaceXsSm),
-                  Text(
-                    l10n.newChatChooserSubtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: UITokens.spaceSmMd),
-                  _NewChatActionTile(
-                    icon: Icons.person_add_alt_1_rounded,
-                    title: l10n.newChatTitle,
-                    subtitle: l10n.createDirectChatSubtitle,
-                    onTap: () => Navigator.of(context).pop(_NewChatAction.direct),
-                  ),
-                  const SizedBox(height: UITokens.spaceXsSm),
-                  _NewChatActionTile(
-                    icon: Icons.groups_rounded,
-                    title: l10n.groupChatTab,
-                    subtitle: l10n.createGroupSubtitle,
-                    onTap: () => Navigator.of(context).pop(_NewChatAction.group),
-                  ),
-                  const SizedBox(height: UITokens.spaceXsSm),
-                  _NewChatActionTile(
-                    icon: Icons.campaign_outlined,
-                    title: l10n.channelChatTab,
-                    subtitle: l10n.createChannelSubtitle,
-                    onTap: () => Navigator.of(context).pop(_NewChatAction.channel),
-                  ),
-                  const SizedBox(height: UITokens.spaceXsSm),
-                  _NewChatActionTile(
-                    icon: Icons.link_rounded,
-                    title: l10n.joinByCodeTitle,
-                    subtitle: l10n.joinByCodeSubtitle,
-                    onTap: () => Navigator.of(context).pop(_NewChatAction.join),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -567,6 +582,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: const Icon(Icons.add_comment_outlined),
               tooltip: l10n.peopleQuickNewChat,
               style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.92),
+                foregroundColor: theme.colorScheme.primary,
+                side: BorderSide(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.64,
+                  ),
+                ),
                 minimumSize: const Size(56, 56),
               ),
             ),

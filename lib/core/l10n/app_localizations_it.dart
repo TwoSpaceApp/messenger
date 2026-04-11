@@ -3109,4 +3109,27 @@ class AppLocalizationsIt extends AppLocalizations {
   String devMenuVersionWithBuild(Object buildNumber, Object version) {
     return '$version (Build $buildNumber)';
   }
+
+  @override
+  String get notificationsInDevelopmentSubtitle =>
+      'La consegna delle notifiche e i controlli avanzati sono ancora in fase di completamento.';
+
+  @override
+  String get devMenuCopyVisible => 'Copia elementi visibili';
+
+  @override
+  String get devMenuExportLogFile => 'Esporta file di log';
+
+  @override
+  String get devMenuNewestFirst => 'Più recenti prima';
+
+  @override
+  String get devMenuOldestFirst => 'Più vecchi prima';
+
+  @override
+  String get feedbackAttachLogsLabel => 'Allegare i log?';
+
+  @override
+  String get feedbackAttachLogsSubtitle =>
+      'Aggiunge un file diagnostico con informazioni sul dispositivo, log dell\'applicazione e log di rete.';
 }

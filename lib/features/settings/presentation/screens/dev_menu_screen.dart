@@ -6,11 +6,13 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/services/dev_log_export_service.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/services/dev_network_logger.dart';
 import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
@@ -104,6 +106,67 @@ class _DevMenuLogsTab extends StatefulWidget {
 
 class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
   bool _showOnlyErrors = false;
+  bool _oldestFirst = false;
+  bool _exporting = false;
+
+  List<String> _visibleLogs(List<String> sourceLogs) {
+    final filtered = _showOnlyErrors
+        ? sourceLogs
+              .where((line) => line.contains(LogLevel.error.emoji))
+              .toList(growable: false)
+        : sourceLogs;
+    if (!_oldestFirst) {
+      return filtered;
+    }
+    return filtered.reversed.toList(growable: false);
+  }
+
+  Future<void> _copyVisibleLogs(List<String> logs) async {
+    if (logs.isEmpty) {
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: logs.join('\n')));
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.textCopied)));
+  }
+
+  Future<void> _exportLogs() async {
+    if (_exporting) {
+      return;
+    }
+    setState(() => _exporting = true);
+    try {
+      final savedPath = await DevLogExportService.exportBundle(
+        appLogs: DevLogger.all,
+        networkLogs: DevNetworkLogger.instance.logs,
+      );
+      if (!mounted || savedPath == null) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.fileDownloaded(savedPath)),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.genericError(error.toString())),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _exporting = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,11 +176,7 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
       initialData: DevLogger.all,
       builder: (context, snapshot) {
         final sourceLogs = snapshot.data ?? const <String>[];
-        final logs = _showOnlyErrors
-            ? sourceLogs
-                  .where((line) => line.contains(LogLevel.error.emoji))
-                  .toList()
-            : sourceLogs;
+        final logs = _visibleLogs(sourceLogs);
 
         if (logs.isEmpty) {
           return AppEmptyState(
@@ -140,7 +199,9 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
                 UITokens.space,
                 UITokens.spaceSm,
               ),
-              child: Row(
+              child: Wrap(
+                spacing: UITokens.spaceSm,
+                runSpacing: UITokens.spaceSm,
                 children: [
                   FilterChip(
                     label: Text(
@@ -152,9 +213,33 @@ class _DevMenuLogsTabState extends State<_DevMenuLogsTab> {
                     onSelected: (value) =>
                         setState(() => _showOnlyErrors = value),
                   ),
-                  const Spacer(),
+                  ChoiceChip(
+                    label: Text(
+                      _oldestFirst
+                          ? l10n.devMenuOldestFirst
+                          : l10n.devMenuNewestFirst,
+                    ),
+                    selected: _oldestFirst,
+                    onSelected: (value) => setState(() => _oldestFirst = value),
+                  ),
                   TextButton.icon(
-                    onPressed: DevLogger.clear,
+                    onPressed: logs.isEmpty ? null : () => _copyVisibleLogs(logs),
+                    icon: const Icon(Icons.copy_all_rounded),
+                    label: Text(l10n.devMenuCopyVisible),
+                  ),
+                  TextButton.icon(
+                    onPressed: sourceLogs.isEmpty || _exporting ? null : _exportLogs,
+                    icon: _exporting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.file_upload_outlined),
+                    label: Text(l10n.devMenuExportLogFile),
+                  ),
+                  TextButton.icon(
+                    onPressed: sourceLogs.isEmpty ? null : DevLogger.clear,
                     icon: const Icon(Icons.delete_sweep_outlined),
                     label: Text(l10n.devMenuClearAction),
                   ),
@@ -709,6 +794,67 @@ class _DevMenuNetworkTab extends StatefulWidget {
 
 class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
   bool _showOnlyErrors = false;
+  bool _oldestFirst = false;
+  bool _exporting = false;
+
+  List<DevNetworkLog> _visibleLogs(List<DevNetworkLog> sourceLogs) {
+    final filtered = _showOnlyErrors
+        ? sourceLogs.where((log) => log.isError).toList(growable: false)
+        : sourceLogs;
+    if (!_oldestFirst) {
+      return filtered;
+    }
+    return filtered.reversed.toList(growable: false);
+  }
+
+  Future<void> _copyVisibleLogs(List<DevNetworkLog> logs) async {
+    if (logs.isEmpty) {
+      return;
+    }
+    await Clipboard.setData(
+      ClipboardData(text: DevLogExportService.formatNetworkLogs(logs)),
+    );
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.textCopied)));
+  }
+
+  Future<void> _exportLogs() async {
+    if (_exporting) {
+      return;
+    }
+    setState(() => _exporting = true);
+    try {
+      final savedPath = await DevLogExportService.exportBundle(
+        appLogs: DevLogger.all,
+        networkLogs: DevNetworkLogger.instance.logs,
+      );
+      if (!mounted || savedPath == null) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.fileDownloaded(savedPath)),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.genericError(error.toString())),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _exporting = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -718,9 +864,7 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
       initialData: DevNetworkLogger.instance.logs,
       builder: (context, snapshot) {
         final sourceLogs = snapshot.data ?? [];
-        final logs = _showOnlyErrors
-            ? sourceLogs.where((log) => log.isError).toList()
-            : sourceLogs;
+        final logs = _visibleLogs(sourceLogs);
 
         if (logs.isEmpty) {
           return AppEmptyState(
@@ -743,7 +887,9 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                 UITokens.space,
                 UITokens.spaceSm,
               ),
-              child: Row(
+              child: Wrap(
+                spacing: UITokens.spaceSm,
+                runSpacing: UITokens.spaceSm,
                 children: [
                   FilterChip(
                     label: Text(
@@ -755,9 +901,35 @@ class _DevMenuNetworkTabState extends State<_DevMenuNetworkTab> {
                     onSelected: (value) =>
                         setState(() => _showOnlyErrors = value),
                   ),
-                  const Spacer(),
+                  ChoiceChip(
+                    label: Text(
+                      _oldestFirst
+                          ? l10n.devMenuOldestFirst
+                          : l10n.devMenuNewestFirst,
+                    ),
+                    selected: _oldestFirst,
+                    onSelected: (value) => setState(() => _oldestFirst = value),
+                  ),
                   TextButton.icon(
-                    onPressed: DevNetworkLogger.instance.clear,
+                    onPressed: logs.isEmpty ? null : () => _copyVisibleLogs(logs),
+                    icon: const Icon(Icons.copy_all_rounded),
+                    label: Text(l10n.devMenuCopyVisible),
+                  ),
+                  TextButton.icon(
+                    onPressed: sourceLogs.isEmpty || _exporting ? null : _exportLogs,
+                    icon: _exporting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.file_upload_outlined),
+                    label: Text(l10n.devMenuExportLogFile),
+                  ),
+                  TextButton.icon(
+                    onPressed: sourceLogs.isEmpty
+                        ? null
+                        : DevNetworkLogger.instance.clear,
                     icon: const Icon(Icons.delete_sweep_outlined),
                     label: Text(l10n.devMenuClearAction),
                   ),

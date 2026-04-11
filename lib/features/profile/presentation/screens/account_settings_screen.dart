@@ -53,37 +53,60 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Future<void> _loadAccountState() async {
-    try {
-      final results = await Future.wait<Object?>([
-        _chatService.getOwnUserInfo(),
-        _biometricAuthService.canAuthenticate(),
-        _biometricAuthService.isBiometricEnabled(),
-      ]);
-      if (!mounted) {
-        return;
-      }
-
+    if (mounted) {
       setState(() {
-        _accountProfile = Map<String, dynamic>.from(
-          results[0]! as Map<String, dynamic>,
-        );
-        _biometricsAvailable = results[1]! as bool;
-        _biometricsEnabled = results[2]! as bool;
+        _accountLoading = true;
         _accountError = null;
-        _accountLoading = false;
-      });
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _accountError = UserFacingError.format(
-          error,
-          AppLocalizations.of(context),
-        );
-        _accountLoading = false;
       });
     }
+
+    Object? profileError;
+
+    Future<Map<String, dynamic>?> loadProfile() async {
+      try {
+        final profile = await _chatService.getOwnUserInfo();
+        return Map<String, dynamic>.from(profile);
+      } catch (error) {
+        profileError = error;
+        return null;
+      }
+    }
+
+    Future<bool> loadBiometricAvailability() async {
+      try {
+        return await _biometricAuthService.canAuthenticate();
+      } catch (_) {
+        return false;
+      }
+    }
+
+    Future<bool> loadBiometricEnabled() async {
+      try {
+        return await _biometricAuthService.isBiometricEnabled();
+      } catch (_) {
+        return false;
+      }
+    }
+
+    final results = await Future.wait<Object?>([
+      loadProfile(),
+      loadBiometricAvailability(),
+      loadBiometricEnabled(),
+    ]);
+    if (!mounted) {
+      return;
+    }
+
+    final loadedProfile = results[0] as Map<String, dynamic>?;
+    setState(() {
+      _accountProfile = loadedProfile;
+      _biometricsAvailable = results[1]! as bool;
+      _biometricsEnabled = results[2]! as bool;
+      _accountError = loadedProfile == null && profileError != null
+          ? UserFacingError.format(profileError!, AppLocalizations.of(context))
+          : null;
+      _accountLoading = false;
+    });
   }
 
   Widget _buildSectionTitle(
@@ -293,7 +316,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   ) {
     return GlassCard(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: UITokens.spaceMd,
+          vertical: UITokens.space,
+        ),
         child: Column(
           children: [
             InlineNoticeCard(
@@ -335,18 +361,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   Widget _buildSecuritySection(AppLocalizations l10n) {
     return GlassCard(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: UITokens.spaceMd,
+          vertical: UITokens.space,
+        ),
         child: Column(
           children: [
-            ListTile(
-              leading: const Icon(Icons.security_rounded),
-              title: Text(l10n.twoFactorLabel),
-              subtitle: Text(l10n.twoFactorPrivacySubtitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppStrings.routeTfaSetup),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: UITokens.spaceSm,
-              ),
+            InlineNoticeCard(
+              icon: Icons.security_rounded,
+              badge: l10n.featureInDevelopmentLabel,
+              title: l10n.twoFactorLabel,
+              message: l10n.featureInDevelopmentMessage(l10n.twoFactorLabel),
             ),
             const Divider(height: UITokens.borderThin),
             ListTile(

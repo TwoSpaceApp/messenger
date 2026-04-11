@@ -30,11 +30,8 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
   }
 
   Future<void> _loadCurrentPhone() async {
-    try {
-      // Backend phone management is not available yet.
-      if (!mounted) return;
-      setState(() => _currentPhone = null);
-    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _currentPhone = null);
   }
 
   @override
@@ -47,18 +44,15 @@ class _ChangePhoneScreenState extends State<ChangePhoneScreen> {
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     final phone = _phoneCtrl.text.trim();
-    _pwdCtrl.text.trim();
     if (phone.isEmpty) return;
     setState(() => _loading = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      // Backend phone management is not available yet.
       if (!mounted) return;
       await showFeatureInDevelopmentDialog(
         context,
         feature: l10n.changePhoneTitle,
       );
-      // navState.pop(true);
     } catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(

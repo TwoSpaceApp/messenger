@@ -30,13 +30,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
     setState(() => _loading = true);
     try {
-      // Password reset flow is not connected to the backend yet.
       if (!mounted) return;
       await showFeatureInDevelopmentDialog(
         context,
         feature: l10n.forgotPasswordTitle,
       );
-      // appNavigatorKey.currentState?.pop();
     } catch (e) {
       if (!mounted) return;
       final navCtx = appNavigatorKey.currentContext;

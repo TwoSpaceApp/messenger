@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 
 /// Full-screen shell for auth-adjacent pages that don't use the animated
 /// AuthBackground (e.g. WelcomeScreen, OtpScreen, TfaSetupScreen).
@@ -12,8 +13,8 @@ class AuthSurface extends StatelessWidget {
     this.title,
     this.subtitle,
     this.icon,
-    this.maxWidth = 560,
-    this.padding = const EdgeInsets.all(24),
+    this.maxWidth = UITokens.sheetContentMaxWidth,
+    this.padding = const EdgeInsets.all(UITokens.spaceXLg),
   });
 
   final Widget child;
@@ -44,19 +45,23 @@ class AuthSurface extends StatelessWidget {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxWidth),
               child: ShadCard(
-                padding: const EdgeInsets.all(24),
-                radius: const BorderRadius.all(Radius.circular(22)),
+                padding: const EdgeInsets.all(UITokens.spaceXLg),
+                radius: const BorderRadius.all(
+                  Radius.circular(UITokens.corner2XLg),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (icon != null) ...[
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: UITokens.space4XL,
+                        height: UITokens.space4XL,
                         decoration: BoxDecoration(
                           color: cs.primaryContainer,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(
+                            UITokens.cornerMd,
+                          ),
                         ),
                         child: Icon(
                           icon,
@@ -64,7 +69,7 @@ class AuthSurface extends StatelessWidget {
                           size: 26,
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: UITokens.spaceMdSm),
                     ],
                     if ((title ?? '').isNotEmpty)
                       Text(
@@ -75,7 +80,7 @@ class AuthSurface extends StatelessWidget {
                         ),
                       ),
                     if ((subtitle ?? '').isNotEmpty) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: UITokens.spaceXSm),
                       Text(
                         subtitle!,
                         style: theme.textTheme.bodyMedium?.copyWith(
@@ -84,7 +89,7 @@ class AuthSurface extends StatelessWidget {
                       ),
                     ],
                     if ((title ?? '').isNotEmpty || (subtitle ?? '').isNotEmpty)
-                      const SizedBox(height: 20),
+                      const SizedBox(height: UITokens.spaceLg),
                     child,
                   ],
                 ),

@@ -3039,4 +3039,26 @@ class AppLocalizationsJa extends AppLocalizations {
   String devMenuVersionWithBuild(Object buildNumber, Object version) {
     return '$version (Build $buildNumber)';
   }
+
+  @override
+  String get notificationsInDevelopmentSubtitle => '通知配信と高度な設定は現在も仕上げ中です。';
+
+  @override
+  String get devMenuCopyVisible => '表示中をコピー';
+
+  @override
+  String get devMenuExportLogFile => 'ログファイルをエクスポート';
+
+  @override
+  String get devMenuNewestFirst => '新しい順';
+
+  @override
+  String get devMenuOldestFirst => '古い順';
+
+  @override
+  String get feedbackAttachLogsLabel => 'ログを添付しますか？';
+
+  @override
+  String get feedbackAttachLogsSubtitle =>
+      '端末情報、アプリログ、ネットワークログを含む診断ファイルを添付します。';
 }

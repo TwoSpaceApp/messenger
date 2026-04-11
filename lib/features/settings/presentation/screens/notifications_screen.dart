@@ -140,7 +140,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   return _ToggleTile(
                     icon: Icons.notifications_rounded,
                     title: l10n.notificationsLabel,
-                    subtitle: l10n.settingsNotificationNew,
+                    subtitle: l10n.notificationsInDevelopmentSubtitle,
                     value: enabled,
                     onChanged: SettingsService.setNotificationsEnabled,
                   );
