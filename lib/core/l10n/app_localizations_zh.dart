@@ -581,7 +581,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get biometricLabel => '生物识别';
 
   @override
-  String get biometricSubtitle => '使用指纹登录';
+  String get biometricSubtitle => '使用 Face ID、指纹或设备密码';
 
   @override
   String get activeSessionsLabel => '活跃会话';
@@ -660,6 +660,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get editTooltip => '编辑';
+
+  @override
+  String get mediaDownloadAction => '下载';
 
   @override
   String get writeMessageButton => '消息';
@@ -1552,19 +1555,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authMethodsLabel => '认证方式';
 
   @override
-  String get biometricAuthLabel => '生物识别认证';
+  String get biometricAuthLabel => '设备验证';
 
   @override
-  String get biometricAuthSubtitle => '指纹或面部识别';
+  String get biometricAuthSubtitle => 'Face ID、指纹或设备密码';
 
   @override
-  String get biometricEnabledLabel => '生物识别已启用';
+  String get biometricEnabledLabel => '已启用应用锁';
 
   @override
   String get aboutSecurityLabel => '关于安全';
 
   @override
-  String get aboutSecurityContent => '选择便捷的认证方式。';
+  String get aboutSecurityContent => 'TwoSpace 会使用此设备上已配置的解锁方式，并在返回应用时请求验证。';
+
+  @override
+  String get lockScreenFailedTitle => '无法确认是你本人';
+
+  @override
+  String get lockScreenFailedMessage => '请重试，或在此设备上退出登录。';
+
+  @override
+  String get deviceAuthUnavailableMessage => '请先在系统设置中配置 Face ID、指纹或设备密码。';
+
+  @override
+  String get authMethodFaceId => 'Face ID';
+
+  @override
+  String get authMethodFingerprint => '指纹';
+
+  @override
+  String get authMethodBiometric => '生物识别';
+
+  @override
+  String get authMethodDevicePasscode => '设备密码';
 
   @override
   String get setPinCode => '设置PIN码';
@@ -2373,7 +2397,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get peopleTwoSpaceTitle => 'TwoSpace 用户';
 
   @override
-  String get peopleInviteTitle => '邀请加入 TwoSpace';
+  String get peopleInviteTitle => '还不在 TwoSpace';
 
   @override
   String get peopleInviteSubtitle => '邀请此联系人加入 TwoSpace';
@@ -2519,7 +2543,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get timestampPrecisionLabel => '消息时间精度';
 
   @override
-  String get timestampPrecisionSubtitle => '选择在聊天内和聊天列表中显示多精细的时间戳。';
+  String get timestampPrecisionSubtitle => '选择消息时间显示的精细程度。';
 
   @override
   String get timestampPrecisionMinutes => '小时和分钟';
@@ -3027,7 +3051,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get notificationsInDevelopmentSubtitle => '通知投递和高级控制仍在完善中。';
+  String get notificationsInDevelopmentSubtitle => '更详细的通知设置将在后续更新中加入。';
 
   @override
   String get devMenuCopyVisible => '复制当前可见内容';

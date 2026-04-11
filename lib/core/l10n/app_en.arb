@@ -798,7 +798,7 @@
   "@biometricLabel": {
     "description": "Biometrics label"
   },
-  "biometricSubtitle": "Sign in with fingerprint",
+  "biometricSubtitle": "Use Face ID, fingerprint, or your device passcode",
   "@biometricSubtitle": {
     "description": "Biometrics subtitle"
   },
@@ -903,6 +903,10 @@
     "description": "Save tooltip"
   },
   "editTooltip": "Edit",
+  "mediaDownloadAction": "Download",
+  "@mediaDownloadAction": {
+    "description": "Manual media download button label"
+  },
   "@editTooltip": {
     "description": "Edit tooltip"
   },
@@ -2062,15 +2066,15 @@
   "@authMethodsLabel": {
     "description": "Auth methods label"
   },
-  "biometricAuthLabel": "Biometric authentication",
+  "biometricAuthLabel": "Device authentication",
   "@biometricAuthLabel": {
     "description": "Biometric auth label"
   },
-  "biometricAuthSubtitle": "Fingerprint or Face ID",
+  "biometricAuthSubtitle": "Face ID, fingerprint, or your device passcode",
   "@biometricAuthSubtitle": {
     "description": "Biometric auth subtitle"
   },
-  "biometricEnabledLabel": "Biometrics enabled",
+  "biometricEnabledLabel": "App lock enabled",
   "@biometricEnabledLabel": {
     "description": "Biometrics enabled label"
   },
@@ -2078,7 +2082,14 @@
   "@aboutSecurityLabel": {
     "description": "About security label"
   },
-  "aboutSecurityContent": "Choose a convenient authentication method to protect your account.",
+  "aboutSecurityContent": "TwoSpace uses the unlock method already configured on this device and asks for it when the app returns to the foreground.",
+  "lockScreenFailedTitle": "Couldn't verify it's you",
+  "lockScreenFailedMessage": "Try again or log out on this device.",
+  "deviceAuthUnavailableMessage": "Set up Face ID, fingerprint, or a device passcode in system settings first.",
+  "authMethodFaceId": "Face ID",
+  "authMethodFingerprint": "Fingerprint",
+  "authMethodBiometric": "Biometrics",
+  "authMethodDevicePasscode": "Device passcode",
   "@aboutSecurityContent": {
     "description": "About security content"
   },
@@ -3143,7 +3154,7 @@
   "@peopleTwoSpaceTitle": {
     "description": "Section title for TwoSpace users"
   },
-  "peopleInviteTitle": "Invite to TwoSpace",
+  "peopleInviteTitle": "Not on TwoSpace yet",
   "@peopleInviteTitle": {
     "description": "Section title for invite candidates"
   },
@@ -3339,7 +3350,7 @@
     "description": "Detailed secure voice call description"
   },
   "timestampPrecisionLabel": "Message time precision",
-  "timestampPrecisionSubtitle": "Choose how detailed timestamps look in chats and chat list.",
+  "timestampPrecisionSubtitle": "Choose how detailed message times should be.",
   "timestampPrecisionMinutes": "Hours and minutes",
   "timestampPrecisionSeconds": "Hours, minutes and seconds",
   "timestampPrecisionMilliseconds": "Hours, minutes, seconds and milliseconds",
@@ -3589,7 +3600,7 @@
   "devMenuResponseHeaders": "Response headers",
   "devMenuResponseBody": "Response body · {type}",
   "devMenuVersionWithBuild": "{version} (Build {buildNumber})",
-  "notificationsInDevelopmentSubtitle": "Notification delivery and advanced controls are still being completed.",
+  "notificationsInDevelopmentSubtitle": "Detailed notification controls will arrive in a future update.",
   "devMenuCopyVisible": "Copy visible",
   "devMenuExportLogFile": "Export log file",
   "devMenuNewestFirst": "Newest first",

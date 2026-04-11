@@ -583,7 +583,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get biometricLabel => 'Биометрия';
 
   @override
-  String get biometricSubtitle => 'Вход по отпечатку пальца';
+  String get biometricSubtitle =>
+      'Используйте Face ID, отпечаток пальца или код устройства';
 
   @override
   String get activeSessionsLabel => 'Активные сеансы';
@@ -663,6 +664,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get editTooltip => 'Редактировать';
+
+  @override
+  String get mediaDownloadAction => 'Загрузить';
 
   @override
   String get writeMessageButton => 'Написать';
@@ -1571,20 +1575,44 @@ class AppLocalizationsRu extends AppLocalizations {
   String get authMethodsLabel => 'Методы аутентификации';
 
   @override
-  String get biometricAuthLabel => 'Биометрическая аутентификация';
+  String get biometricAuthLabel => 'Аутентификация устройства';
 
   @override
-  String get biometricAuthSubtitle => 'Отпечаток пальца или Face ID';
+  String get biometricAuthSubtitle =>
+      'Face ID, отпечаток пальца или код устройства';
 
   @override
-  String get biometricEnabledLabel => 'Биометрия включена';
+  String get biometricEnabledLabel => 'Блокировка приложения включена';
 
   @override
   String get aboutSecurityLabel => 'О безопасности';
 
   @override
   String get aboutSecurityContent =>
-      'Выберите удобный метод аутентификации для защиты аккаунта.';
+      'TwoSpace использует способ разблокировки, уже настроенный на этом устройстве, и запрашивает его при возвращении в приложение.';
+
+  @override
+  String get lockScreenFailedTitle => 'Не удалось подтвердить вход';
+
+  @override
+  String get lockScreenFailedMessage =>
+      'Повторите попытку или выйдите из аккаунта на этом устройстве.';
+
+  @override
+  String get deviceAuthUnavailableMessage =>
+      'Сначала настройте Face ID, отпечаток пальца или код устройства в системных настройках.';
+
+  @override
+  String get authMethodFaceId => 'Face ID';
+
+  @override
+  String get authMethodFingerprint => 'Отпечаток пальца';
+
+  @override
+  String get authMethodBiometric => 'Биометрия';
+
+  @override
+  String get authMethodDevicePasscode => 'Код устройства';
 
   @override
   String get setPinCode => 'Установить PIN-код';
@@ -2415,7 +2443,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get peopleTwoSpaceTitle => 'Люди в TwoSpace';
 
   @override
-  String get peopleInviteTitle => 'Пригласить в TwoSpace';
+  String get peopleInviteTitle => 'Ещё не в TwoSpace';
 
   @override
   String get peopleInviteSubtitle => 'Пригласить этот контакт в TwoSpace';
@@ -2570,7 +2598,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get timestampPrecisionSubtitle =>
-      'Выберите, насколько подробно показывать время в чатах и списке чатов.';
+      'Выберите точность времени сообщений.';
 
   @override
   String get timestampPrecisionMinutes => 'Часы и минуты';
@@ -3109,7 +3137,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notificationsInDevelopmentSubtitle =>
-      'Доставка уведомлений и расширенные настройки ещё в разработке.';
+      'Подробные настройки уведомлений появятся в одном из ближайших обновлений.';
 
   @override
   String get devMenuCopyVisible => 'Копировать видимое';

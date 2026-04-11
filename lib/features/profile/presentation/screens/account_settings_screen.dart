@@ -5,7 +5,6 @@ import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/user_facing_error.dart';
-import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/feature_in_development_dialog.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/inline_notice_card.dart';
@@ -166,11 +165,30 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   ],
                 )
               : _accountProfile == null
-              ? AppErrorState(
-                  title: l10n.accountSettingsTitle,
-                  message: _accountError ?? l10n.errorGeneric,
-                  actionLabel: l10n.retry,
-                  onAction: _loadAccountState,
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      primaryLabel.isNotEmpty
+                          ? primaryLabel
+                          : l10n.accountSettingsTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: UITokens.spaceSm),
+                    InlineNoticeCard(
+                      icon: Icons.info_outline_rounded,
+                      title: l10n.accountSettingsTitle,
+                      message: _accountError ?? l10n.errorGeneric,
+                    ),
+                    const SizedBox(height: UITokens.spaceMd),
+                    OutlinedButton.icon(
+                      onPressed: _loadAccountState,
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: Text(l10n.retry),
+                    ),
+                  ],
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

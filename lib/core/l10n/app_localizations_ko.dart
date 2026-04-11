@@ -581,7 +581,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get biometricLabel => '생체 인증';
 
   @override
-  String get biometricSubtitle => '지문으로 로그인';
+  String get biometricSubtitle => 'Face ID, 지문 또는 기기 암호를 사용하세요';
 
   @override
   String get activeSessionsLabel => '활성 세션';
@@ -660,6 +660,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get editTooltip => '편집';
+
+  @override
+  String get mediaDownloadAction => '다운로드';
 
   @override
   String get writeMessageButton => '메시지';
@@ -1552,19 +1555,42 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authMethodsLabel => '인증 방법';
 
   @override
-  String get biometricAuthLabel => '생체 인증';
+  String get biometricAuthLabel => '기기 인증';
 
   @override
-  String get biometricAuthSubtitle => '지문 또는 Face ID';
+  String get biometricAuthSubtitle => 'Face ID, 지문 또는 기기 암호';
 
   @override
-  String get biometricEnabledLabel => '생체 인증 활성화됨';
+  String get biometricEnabledLabel => '앱 잠금이 켜졌습니다';
 
   @override
   String get aboutSecurityLabel => '보안 정보';
 
   @override
-  String get aboutSecurityContent => '편리한 인증 방법을 선택하세요.';
+  String get aboutSecurityContent =>
+      'TwoSpace는 이 기기에 이미 설정된 잠금 해제 방법을 사용하며 앱으로 돌아올 때 인증을 요청합니다.';
+
+  @override
+  String get lockScreenFailedTitle => '본인 확인에 실패했습니다';
+
+  @override
+  String get lockScreenFailedMessage => '다시 시도하거나 이 기기에서 로그아웃하세요.';
+
+  @override
+  String get deviceAuthUnavailableMessage =>
+      '먼저 시스템 설정에서 Face ID, 지문 또는 기기 암호를 설정하세요.';
+
+  @override
+  String get authMethodFaceId => 'Face ID';
+
+  @override
+  String get authMethodFingerprint => '지문';
+
+  @override
+  String get authMethodBiometric => '생체 인증';
+
+  @override
+  String get authMethodDevicePasscode => '기기 암호';
 
   @override
   String get setPinCode => 'PIN 코드 설정';
@@ -2375,7 +2401,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get peopleTwoSpaceTitle => 'TwoSpace 사용자';
 
   @override
-  String get peopleInviteTitle => 'TwoSpace로 초대';
+  String get peopleInviteTitle => '아직 TwoSpace에 없음';
 
   @override
   String get peopleInviteSubtitle => '이 연락처를 TwoSpace로 초대';
@@ -2522,8 +2548,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get timestampPrecisionLabel => '메시지 시간 정밀도';
 
   @override
-  String get timestampPrecisionSubtitle =>
-      '채팅 내부와 채팅 목록에서 시간을 얼마나 자세히 표시할지 선택하세요.';
+  String get timestampPrecisionSubtitle => '메시지 시간 표시를 얼마나 자세히 할지 선택하세요.';
 
   @override
   String get timestampPrecisionMinutes => '시와 분';
@@ -3042,7 +3067,8 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get notificationsInDevelopmentSubtitle => '알림 전달과 고급 설정은 아직 마무리 중입니다.';
+  String get notificationsInDevelopmentSubtitle =>
+      '자세한 알림 설정은 다음 업데이트 중 하나에서 제공될 예정입니다.';
 
   @override
   String get devMenuCopyVisible => '보이는 내용 복사';

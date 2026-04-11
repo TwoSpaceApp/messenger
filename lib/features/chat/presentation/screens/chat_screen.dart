@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
@@ -2298,12 +2299,17 @@ class _ChatScreenState extends State<ChatScreen>
                             message: m,
                             svc: _svc,
                             audioPlayers: _audioPlayers,
+                            mediaDownloads: _mediaDownloads,
                           ),
                         )
                       else if (m.type == 'm.file')
                         ConstrainedBox(
                           constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
-                          child: _FileMessageWidget(message: m, svc: _svc),
+                          child: _FileMessageWidget(
+                            message: m,
+                            svc: _svc,
+                            mediaDownloads: _mediaDownloads,
+                          ),
                         )
                       else
                         Text(
@@ -3258,6 +3264,137 @@ bool _sameIntMap(Map<String, int> left, Map<String, int> right) {
   return true;
 }
 
+Widget _mediaPreviewFallback(BuildContext context, IconData icon) {
+  return ColoredBox(
+    color: AppColors.mediaPlaceholder(context),
+    child: Center(
+      child: Icon(icon, size: 34, color: AppColors.iconMuted(context)),
+    ),
+  );
+}
+
+Widget _inlineImagePreview(
+  BuildContext context,
+  String mediaId, {
+  required IconData fallbackIcon,
+  BoxFit fit = BoxFit.cover,
+}) {
+  final normalized = mediaId.trim();
+  if (normalized.startsWith('data:')) {
+    try {
+      return Image.memory(
+        UriData.parse(normalized).contentAsBytes(),
+        fit: fit,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.low,
+        errorBuilder: (_, _, _) => _mediaPreviewFallback(
+          context,
+          fallbackIcon,
+        ),
+      );
+    } catch (_) {
+      return _mediaPreviewFallback(context, fallbackIcon);
+    }
+  }
+
+  return Image.file(
+    File(normalized),
+    fit: fit,
+    gaplessPlayback: true,
+    filterQuality: FilterQuality.low,
+    errorBuilder: (_, _, _) => _mediaPreviewFallback(context, fallbackIcon),
+  );
+}
+
+class _DeferredMediaSurface extends StatelessWidget {
+  const _DeferredMediaSurface({
+    required this.width,
+    required this.height,
+    required this.preview,
+    required this.loading,
+    required this.onDownload,
+    required this.buttonLabel,
+    this.borderRadius = UITokens.cornerLg,
+  });
+
+  final double width;
+  final double height;
+  final Widget preview;
+  final bool loading;
+  final VoidCallback onDownload;
+  final String buttonLabel;
+  final double borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.mediaSurface(context),
+          borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(color: AppColors.mediaBorder(context)),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ImageFiltered(
+              imageFilter: ui.ImageFilter.blur(sigmaX: 11, sigmaY: 11),
+              child: preview,
+            ),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.18),
+                      Colors.black.withValues(alpha: 0.34),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Center(
+              child: FilledButton.icon(
+                onPressed: loading ? null : onDownload,
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.surface.withValues(
+                    alpha: 0.94,
+                  ),
+                  foregroundColor: theme.colorScheme.onSurface,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: UITokens.spaceMd,
+                    vertical: UITokens.spaceSmMd,
+                  ),
+                ),
+                icon: loading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: UITokens.borderThick,
+                        ),
+                      )
+                    : const Icon(Icons.download_rounded, size: 18),
+                label: Text(
+                  loading ? l10n.downloadingLabel : buttonLabel,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ImageMessageWidget extends StatefulWidget {
   const _ImageMessageWidget({
     required this.mediaId,
@@ -3282,22 +3419,69 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
   String? _localPath;
   Object? _error;
   bool _loading = true;
+  bool _downloadRequested = false;
 
   @override
   void initState() {
     super.initState();
-    unawaited(_loadImage());
+    _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+    SettingsService.autoDownloadMediaNotifier.addListener(
+      _handleAutoDownloadChanged,
+    );
+    if (_downloadRequested) {
+      unawaited(_loadImage());
+    } else {
+      _loading = false;
+    }
   }
 
   @override
   void didUpdateWidget(covariant _ImageMessageWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.mediaId != widget.mediaId) {
+      _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
       _localPath = null;
       _error = null;
-      _loading = true;
-      unawaited(_loadImage());
+      _loading = _downloadRequested;
+      if (_downloadRequested) {
+        unawaited(_loadImage());
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    SettingsService.autoDownloadMediaNotifier.removeListener(
+      _handleAutoDownloadChanged,
+    );
+    super.dispose();
+  }
+
+  void _handleAutoDownloadChanged() {
+    if (!mounted ||
+        !SettingsService.autoDownloadMediaNotifier.value ||
+        _downloadRequested ||
+        _localPath != null) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    unawaited(_loadImage());
+  }
+
+  Future<void> _requestDownload() async {
+    if (_loading) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    await _loadImage();
   }
 
   Future<void> _loadImage() async {
@@ -3332,6 +3516,20 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    if (_localPath == null && (!_downloadRequested || _loading || _error != null)) {
+      return _DeferredMediaSurface(
+        width: widget.maxWidth,
+        height: widget.maxWidth * 0.62,
+        preview: _inlineImagePreview(
+          context,
+          widget.mediaId,
+          fallbackIcon: Icons.image_outlined,
+        ),
+        loading: _loading,
+        onDownload: _requestDownload,
+        buttonLabel: AppLocalizations.of(context)!.mediaDownloadAction,
+      );
+    }
     if (_loading) {
       return Container(
         width: widget.maxWidth,
@@ -3410,10 +3608,12 @@ class _AudioMessageWidget extends StatefulWidget {
   final _Msg message;
   final AegisChatService svc;
   final Map<String, AudioPlayer> audioPlayers;
+  final Map<String, String> mediaDownloads;
   const _AudioMessageWidget({
     required this.message,
     required this.svc,
     required this.audioPlayers,
+    required this.mediaDownloads,
   });
   @override
   State<_AudioMessageWidget> createState() => _AudioMessageWidgetState();
@@ -3441,23 +3641,70 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
   Uint8List? _thumbnailBytes;
   bool _loading = true;
   Object? _error;
+  bool _downloadRequested = false;
 
   @override
   void initState() {
     super.initState();
-    unawaited(_prepare());
+    _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+    SettingsService.autoDownloadMediaNotifier.addListener(
+      _handleAutoDownloadChanged,
+    );
+    if (_downloadRequested) {
+      unawaited(_prepare());
+    } else {
+      _loading = false;
+    }
   }
 
   @override
   void didUpdateWidget(covariant _VideoMessageWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.message.mediaId != widget.message.mediaId) {
+      _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
       _localPath = null;
       _thumbnailBytes = null;
       _error = null;
-      _loading = true;
-      unawaited(_prepare());
+      _loading = _downloadRequested;
+      if (_downloadRequested) {
+        unawaited(_prepare());
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    SettingsService.autoDownloadMediaNotifier.removeListener(
+      _handleAutoDownloadChanged,
+    );
+    super.dispose();
+  }
+
+  void _handleAutoDownloadChanged() {
+    if (!mounted ||
+        !SettingsService.autoDownloadMediaNotifier.value ||
+        _downloadRequested ||
+        _localPath != null) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    unawaited(_prepare());
+  }
+
+  Future<void> _requestDownload() async {
+    if (_loading) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    await _prepare();
   }
 
   Future<Uint8List?> _buildThumbnail(String path) {
@@ -3483,9 +3730,11 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
       }
       final cachedPath = widget.mediaDownloads[mediaRef];
       if (cachedPath != null && await _pathExists(cachedPath)) {
+        final thumbnail = await _buildThumbnail(cachedPath);
         if (!mounted) return;
         setState(() {
           _localPath = cachedPath;
+          _thumbnailBytes = thumbnail;
           _loading = false;
         });
         return;
@@ -3575,6 +3824,23 @@ class _VideoMessageWidgetState extends State<_VideoMessageWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (_localPath == null && (!_downloadRequested || _loading || _error != null)) {
+      return _DeferredMediaSurface(
+        width: widget.maxWidth,
+        height: widget.maxWidth * 0.56,
+        preview: _thumbnailBytes != null
+            ? Image.memory(
+                _thumbnailBytes!,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+              )
+            : _mediaPreviewFallback(context, Icons.movie_creation_outlined),
+        loading: _loading,
+        onDownload: _requestDownload,
+        buttonLabel: AppLocalizations.of(context)!.mediaDownloadAction,
+      );
+    }
+
     if (_loading) {
       return Container(
         width: widget.maxWidth,
@@ -3945,36 +4211,163 @@ class _ChatImageGalleryDialogState extends State<_ChatImageGalleryDialog> {
   }
 }
 
-class _FileMessageWidget extends StatelessWidget {
+class _FileMessageWidget extends StatefulWidget {
   const _FileMessageWidget({
     required this.message,
     required this.svc,
+    required this.mediaDownloads,
   });
 
   final _Msg message;
   final AegisChatService svc;
+  final Map<String, String> mediaDownloads;
+
+  @override
+  State<_FileMessageWidget> createState() => _FileMessageWidgetState();
+}
+
+class _FileMessageWidgetState extends State<_FileMessageWidget> {
+  String? _localPath;
+  Object? _error;
+  bool _loading = true;
+  bool _downloadRequested = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+    SettingsService.autoDownloadMediaNotifier.addListener(
+      _handleAutoDownloadChanged,
+    );
+    if (_downloadRequested) {
+      unawaited(_loadFile());
+    } else {
+      _loading = false;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _FileMessageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message.mediaId != widget.message.mediaId) {
+      _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+      _localPath = null;
+      _error = null;
+      _loading = _downloadRequested;
+      if (_downloadRequested) {
+        unawaited(_loadFile());
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    SettingsService.autoDownloadMediaNotifier.removeListener(
+      _handleAutoDownloadChanged,
+    );
+    super.dispose();
+  }
+
+  void _handleAutoDownloadChanged() {
+    if (!mounted ||
+        !SettingsService.autoDownloadMediaNotifier.value ||
+        _downloadRequested ||
+        _localPath != null) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    unawaited(_loadFile());
+  }
+
+  Future<void> _requestDownload() async {
+    if (_loading) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _loading = true;
+      _error = null;
+    });
+    await _loadFile();
+  }
 
   String _fileLabel() {
     final raw =
-        (message.text.trim().isNotEmpty ? message.text : message.mediaId) ??
+        (widget.message.text.trim().isNotEmpty
+            ? widget.message.text
+            : widget.message.mediaId) ??
         'file';
     return raw.split('/').last;
   }
 
   IconData _icon() {
-    if (message.type == 'm.video') {
+    if (widget.message.type == 'm.video') {
       return Icons.movie_outlined;
     }
     return Icons.insert_drive_file_outlined;
   }
 
-  Future<String> _resolveFilePath() async {
-    final mediaRef = message.mediaId;
+  Future<void> _loadFile() async {
+    final mediaRef = widget.message.mediaId;
     if (mediaRef == null || mediaRef.isEmpty) {
-      throw Exception('File reference is missing');
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _error = Exception('File reference is missing');
+        _loading = false;
+      });
+      return;
     }
 
-    return svc.downloadMediaToTempFile(mediaRef);
+    final cachedPath = widget.mediaDownloads[mediaRef];
+    if (cachedPath != null && await _pathExists(cachedPath)) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _localPath = cachedPath;
+        _loading = false;
+      });
+      return;
+    }
+
+    try {
+      final path = await widget.svc.downloadMediaToTempFile(mediaRef);
+      widget.mediaDownloads[mediaRef] = path;
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _localPath = path;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _error = error;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<String> _resolveFilePath() async {
+    final localPath = _localPath;
+    if (localPath != null && await _pathExists(localPath)) {
+      return localPath;
+    }
+
+    await _requestDownload();
+    if (_localPath != null) {
+      return _localPath!;
+    }
+    throw Exception(_error?.toString() ?? 'File reference is missing');
   }
 
   Future<void> _openFile(BuildContext context) async {
@@ -3986,9 +4379,9 @@ class _FileMessageWidget extends StatelessWidget {
       if (!context.mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.genericError(error.toString()))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
     }
   }
 
@@ -4001,9 +4394,9 @@ class _FileMessageWidget extends StatelessWidget {
       if (!context.mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.genericError(error.toString()))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
     }
   }
 
@@ -4025,15 +4418,28 @@ class _FileMessageWidget extends StatelessWidget {
       if (!context.mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.genericError(error.toString()))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.genericError(error.toString()))),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    if (_localPath == null && (!_downloadRequested || _loading || _error != null)) {
+      return _DeferredMediaSurface(
+        width: double.infinity,
+        height: 92,
+        preview: _mediaPreviewFallback(context, _icon()),
+        loading: _loading,
+        onDownload: _requestDownload,
+        buttonLabel: l10n.mediaDownloadAction,
+        borderRadius: UITokens.cornerMd,
+      );
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -4097,6 +4503,8 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
   Duration _position = Duration.zero;
   bool _playing = false;
   bool _preparing = false;
+  bool _downloadRequested = false;
+  Object? _error;
   AudioPlayer? _player;
   List<double> _waveform = [];
   StreamSubscription<Duration>? _durationSub;
@@ -4114,6 +4522,10 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
   @override
   void initState() {
     super.initState();
+    _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+    SettingsService.autoDownloadMediaNotifier.addListener(
+      _handleAutoDownloadChanged,
+    );
     _waveformPulse = AnimationController(
       vsync: this,
       duration: UITokens.duration2XL,
@@ -4123,6 +4535,50 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
       duration: UITokens.durationSmMd,
       value: 0,
     );
+    if (_downloadRequested) {
+      unawaited(_ensurePrepared());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _AudioMessageWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message.mediaId != widget.message.mediaId) {
+      _downloadRequested = SettingsService.autoDownloadMediaNotifier.value;
+      _localPath = null;
+      _error = null;
+      _duration = Duration.zero;
+      _position = Duration.zero;
+      _playing = false;
+      if (_downloadRequested) {
+        unawaited(_ensurePrepared());
+      }
+    }
+  }
+
+  void _handleAutoDownloadChanged() {
+    if (!mounted ||
+        !SettingsService.autoDownloadMediaNotifier.value ||
+        _downloadRequested ||
+        _localPath != null) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _error = null;
+    });
+    unawaited(_ensurePrepared());
+  }
+
+  Future<void> _requestDownload() async {
+    if (_preparing) {
+      return;
+    }
+    setState(() {
+      _downloadRequested = true;
+      _error = null;
+    });
+    await _ensurePrepared();
   }
 
   void _syncInteractionAnimation() {
@@ -4173,9 +4629,14 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
       }
       try {
         final mediaRef = widget.message.mediaId ?? widget.message.text;
-        final path = await widget.svc.downloadMediaToTempFile(mediaRef);
+        final cachedPath = widget.mediaDownloads[mediaRef];
+        final path = cachedPath != null && await _pathExists(cachedPath)
+            ? cachedPath
+            : await widget.svc.downloadMediaToTempFile(mediaRef);
         if (!mounted) return;
+        widget.mediaDownloads[mediaRef] = path;
         _localPath = path;
+        _error = null;
 
         if (_waveform.isEmpty) {
           try {
@@ -4236,7 +4697,8 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
           });
           _syncWaveformAnimation();
         });
-      } catch (_) {
+      } catch (error) {
+        _error = error;
       } finally {
         _prepareFuture = null;
         if (mounted) {
@@ -4251,6 +4713,9 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
 
   @override
   void dispose() {
+    SettingsService.autoDownloadMediaNotifier.removeListener(
+      _handleAutoDownloadChanged,
+    );
     _durationSub?.cancel();
     _positionSub?.cancel();
     _completeSub?.cancel();
@@ -4379,6 +4844,19 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    if (_localPath == null && (!_downloadRequested || _preparing || _error != null)) {
+      return _DeferredMediaSurface(
+        width: double.infinity,
+        height: 118,
+        preview: _mediaPreviewFallback(context, Icons.graphic_eq_rounded),
+        loading: _preparing,
+        onDownload: _requestDownload,
+        buttonLabel: l10n.mediaDownloadAction,
+        borderRadius: UITokens.corner2Lg,
+      );
+    }
+
     final theme = Theme.of(context);
     final samples = _waveform.isNotEmpty
         ? _waveform

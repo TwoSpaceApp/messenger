@@ -32,7 +32,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   bool _isPublic = false;
   bool _showHistory = true;
   int _step = 0;
-  List<int>? _avatarBytes;
+  Uint8List? _avatarBytes;
+  MemoryImage? _avatarImage;
   String? _avatarFileName;
   String? _errorMessage;
 
@@ -61,6 +62,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       }
       setState(() {
         _avatarBytes = bytes;
+        _avatarImage = MemoryImage(bytes);
         _avatarFileName = file.name;
       });
     } catch (error) {
@@ -379,9 +381,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                             onTap: _isLoading ? null : _pickAvatar,
                             child: CircleAvatar(
                               radius: 42,
-                              backgroundImage: _avatarBytes == null
-                                  ? null
-                                  : MemoryImage(Uint8List.fromList(_avatarBytes!)),
+                              backgroundImage: _avatarImage,
                               child: _avatarBytes == null
                                   ? const Icon(Icons.group_add_rounded, size: 30)
                                   : null,
@@ -458,12 +458,6 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                               ),
                             ),
                             const SizedBox(height: UITokens.spaceXsSm),
-                            Text(
-                              l10n.groupParticipantsOptionalHint,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
                             const SizedBox(height: UITokens.spaceSm),
                             Wrap(
                               spacing: UITokens.spaceSm,
@@ -513,27 +507,29 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                               ),
                             ),
                             const SizedBox(height: UITokens.spaceMd),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _participantController,
-                                    enabled: !_isLoading,
-                                    onSubmitted: (_) => _addParticipantById(),
-                                    decoration: chatCreationInputDecoration(
-                                      context: context,
-                                      label: l10n.contactIdLabel,
-                                      hint: l10n.contactIdDescription,
-                                      icon: Icons.alternate_email_rounded,
+                            ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: _participantController,
+                              builder: (context, value, _) {
+                                final hasQuery = value.text.trim().isNotEmpty;
+                                return TextField(
+                                  controller: _participantController,
+                                  enabled: !_isLoading,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) => _addParticipantById(),
+                                  decoration: chatCreationInputDecoration(
+                                    context: context,
+                                    label: l10n.contactIdLabel,
+                                    hint: l10n.contactIdDescription,
+                                    icon: Icons.alternate_email_rounded,
+                                    suffixIcon: IconButton(
+                                      onPressed: _isLoading || !hasQuery
+                                          ? null
+                                          : _addParticipantById,
+                                      icon: const Icon(Icons.check_rounded),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: UITokens.space),
-                                FilledButton(
-                                  onPressed: _isLoading ? null : _addParticipantById,
-                                  child: Text(l10n.addParticipantAction),
-                                ),
-                              ],
+                                );
+                              },
                             ),
                             if (_participants.isNotEmpty) ...[
                               const SizedBox(height: UITokens.spaceMd),

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
 
@@ -26,7 +27,7 @@ class PersonAvatar extends StatelessWidget {
     final imageProvider = photoBytes != null
         ? MemoryImage(photoBytes!) as ImageProvider<Object>
       : (normalizedAvatarUrl != null && normalizedAvatarUrl.isNotEmpty)
-        ? NetworkImage(normalizedAvatarUrl)
+        ? CachedNetworkImageProvider(normalizedAvatarUrl)
             : null;
 
     return Stack(

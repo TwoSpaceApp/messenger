@@ -12,7 +12,9 @@ class BiometricAuthService {
   /// Check if device supports biometric authentication
   Future<bool> canAuthenticate() async {
     try {
-      return await _auth.canCheckBiometrics;
+      final canCheckBiometrics = await _auth.canCheckBiometrics;
+      final isDeviceSupported = await _auth.isDeviceSupported();
+      return canCheckBiometrics || isDeviceSupported;
     } on Object catch (_) {
       return false;
     }
@@ -27,12 +29,12 @@ class BiometricAuthService {
     }
   }
 
-  /// Authenticate with biometric
-  Future<bool> authenticate() async {
+  /// Authenticate with system device security.
+  Future<bool> authenticate({String? localizedReason}) async {
     try {
       return await _auth.authenticate(
-        localizedReason: 'Аутентификация для доступа к TwoSpace',
-        biometricOnly: true,
+        localizedReason:
+            localizedReason ?? 'Authenticate to continue in TwoSpace',
         persistAcrossBackgrounding: true,
       );
     } on Object catch (_) {

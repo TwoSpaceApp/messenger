@@ -18,8 +18,10 @@ InputDecoration chatCreationInputDecoration({
   required IconData icon,
   String? hint,
   String? helper,
+  Widget? suffixIcon,
 }) {
   final theme = Theme.of(context);
+  final iconColor = theme.colorScheme.onSurfaceVariant;
   return InputDecoration(
     labelText: label,
     hintText: hint,
@@ -29,7 +31,8 @@ InputDecoration chatCreationInputDecoration({
     helperStyle: theme.textTheme.bodySmall?.copyWith(
       color: AppColors.subtitleText(context),
     ),
-    prefixIcon: Icon(icon, color: AppColors.subtitleText(context)),
+    prefixIcon: Icon(icon, color: iconColor),
+    suffixIcon: suffixIcon,
     filled: true,
     fillColor: theme.colorScheme.surface.withValues(alpha: 0.46),
     enabledBorder: OutlineInputBorder(
@@ -106,6 +109,12 @@ class ChatCreationScaffold extends StatelessWidget {
                                       .colorScheme
                                       .primaryContainer
                                       .withValues(alpha: 0.92),
+                                  border: Border.all(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .outline
+                                        .withValues(alpha: 0.16),
+                                  ),
                                   borderRadius: BorderRadius.circular(
                                     UITokens.cornerLg,
                                   ),
@@ -113,7 +122,9 @@ class ChatCreationScaffold extends StatelessWidget {
                                 alignment: Alignment.center,
                                 child: Icon(
                                   icon,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
                                 ),
                               ),
                               const SizedBox(width: UITokens.spaceMd),

@@ -585,7 +585,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get biometricLabel => 'Biometría';
 
   @override
-  String get biometricSubtitle => 'Iniciar sesión con huella digital';
+  String get biometricSubtitle =>
+      'Usa Face ID, tu huella o el código del dispositivo';
 
   @override
   String get activeSessionsLabel => 'Sesiones activas';
@@ -667,6 +668,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editTooltip => 'Editar';
+
+  @override
+  String get mediaDownloadAction => 'Descargar';
 
   @override
   String get writeMessageButton => 'Mensaje';
@@ -1571,20 +1575,44 @@ class AppLocalizationsEs extends AppLocalizations {
   String get authMethodsLabel => 'Métodos de autenticación';
 
   @override
-  String get biometricAuthLabel => 'Autenticación biométrica';
+  String get biometricAuthLabel => 'Autenticación del dispositivo';
 
   @override
-  String get biometricAuthSubtitle => 'Huella digital o Face ID';
+  String get biometricAuthSubtitle =>
+      'Face ID, huella o código del dispositivo';
 
   @override
-  String get biometricEnabledLabel => 'Biometría activada';
+  String get biometricEnabledLabel => 'Bloqueo de la app activado';
 
   @override
   String get aboutSecurityLabel => 'Sobre seguridad';
 
   @override
   String get aboutSecurityContent =>
-      'Elija un método de autenticación conveniente.';
+      'TwoSpace usa el método de desbloqueo ya configurado en este dispositivo y lo solicita al volver a abrir la app.';
+
+  @override
+  String get lockScreenFailedTitle => 'No pudimos verificar tu identidad';
+
+  @override
+  String get lockScreenFailedMessage =>
+      'Inténtalo de nuevo o cierra sesión en este dispositivo.';
+
+  @override
+  String get deviceAuthUnavailableMessage =>
+      'Primero configura Face ID, huella o un código de dispositivo en los ajustes del sistema.';
+
+  @override
+  String get authMethodFaceId => 'Face ID';
+
+  @override
+  String get authMethodFingerprint => 'Huella';
+
+  @override
+  String get authMethodBiometric => 'Biometría';
+
+  @override
+  String get authMethodDevicePasscode => 'Código del dispositivo';
 
   @override
   String get setPinCode => 'Establecer código PIN';
@@ -2416,7 +2444,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get peopleTwoSpaceTitle => 'Personas en TwoSpace';
 
   @override
-  String get peopleInviteTitle => 'Invitar a TwoSpace';
+  String get peopleInviteTitle => 'Aún no está en TwoSpace';
 
   @override
   String get peopleInviteSubtitle => 'Invitar este contacto a TwoSpace';
@@ -2571,7 +2599,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get timestampPrecisionSubtitle =>
-      'Elige cuánto detalle mostrar en la hora dentro de los chats y en la lista de chats.';
+      'Elige cuánto detalle mostrar en la hora de los mensajes.';
 
   @override
   String get timestampPrecisionMinutes => 'Horas y minutos';
@@ -3110,7 +3138,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificationsInDevelopmentSubtitle =>
-      'La entrega de notificaciones y los controles avanzados aún se están terminando.';
+      'Los controles detallados de notificaciones llegarán en una próxima actualización.';
 
   @override
   String get devMenuCopyVisible => 'Copiar lo visible';

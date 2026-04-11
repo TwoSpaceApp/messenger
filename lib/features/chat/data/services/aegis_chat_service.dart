@@ -941,6 +941,46 @@ class AegisChatService {
     };
   }
 
+  Map<String, dynamic>? _profileRequestFallbackInfo(
+    String userId, {
+    int? parsedId,
+    Map<String, dynamic>? cached,
+  }) {
+    if (cached != null) {
+      final cachedCopy = Map<String, dynamic>.from(cached);
+      if (parsedId == null) {
+        return cachedCopy;
+      }
+      return _applyConversationProfileFallback(parsedId, cachedCopy);
+    }
+
+    if (parsedId == null) {
+      return null;
+    }
+
+    final fallback = _conversationProfileFallback(parsedId);
+    if (fallback == null) {
+      return null;
+    }
+
+    final normalizedUsername = userId.replaceFirst('@', '').split(':').first;
+    return <String, dynamic>{
+      'id': fallback['id']?.toString() ?? parsedId.toString(),
+      'username': normalizedUsername,
+      'displayName': fallback['displayName']?.toString(),
+      'avatarUrl': fallback['avatarUrl'],
+      'avatars': const <Map<String, dynamic>>[],
+      'presenceStatus': null,
+      'isOnline': false,
+      'bio': null,
+      'location': null,
+      'birthday': null,
+      'email': null,
+      'createdAt': null,
+      'lastSeenAt': null,
+    };
+  }
+
   void _seedProfileFromChatListItem(ChatListItem item) {
     final peerUserId = item.peerUserId;
     if (peerUserId == null) {
@@ -973,10 +1013,9 @@ class AegisChatService {
       'id': profile.id.toString(),
       'username': UserContentSanitizer.sanitizeUsername(profile.username),
       'displayName': UserContentSanitizer.sanitizeOptionalText(
-            profile.displayName,
-            maxLength: 120,
-          ) ??
-          UserContentSanitizer.sanitizeUsername(profile.username),
+        profile.displayName,
+        maxLength: 120,
+      ),
       'avatarUrl': normalizeAegisAvatarUrl(profile.avatarUrl),
       'avatars': profile.avatars
           .map(
@@ -1026,6 +1065,8 @@ class AegisChatService {
         return cached;
       }
     }
+    final cachedFallback =
+        parsedId != null ? _profileCache[parsedId] : null;
 
     final cacheKey = parsedId?.toString() ?? userId;
     final pending = _userInfoRequests[cacheKey];
@@ -1049,6 +1090,14 @@ class AegisChatService {
         if (_isAuthRejectionMessage(error.toString())) {
           response = await _retryAfterSessionRecovery(sendRequest);
         } else {
+          final fallback = _profileRequestFallbackInfo(
+            userId,
+            parsedId: parsedId,
+            cached: cachedFallback,
+          );
+          if (fallback != null) {
+            return fallback;
+          }
           rethrow;
         }
       }
@@ -1058,6 +1107,14 @@ class AegisChatService {
           response = await _retryAfterSessionRecovery(sendRequest);
         }
         if (!response.success && !_isUserNotFoundMessage(response.message)) {
+          final fallback = _profileRequestFallbackInfo(
+            userId,
+            parsedId: parsedId,
+            cached: cachedFallback,
+          );
+          if (fallback != null) {
+            return fallback;
+          }
           throw _profileResponseException(
             response.message,
             'Unable to load profile',
@@ -1118,10 +1175,10 @@ class AegisChatService {
   }) async {
     await ensureReady();
     final selfId = _auth.userId;
+    final cachedFallback = selfId != null ? _profileCache[selfId] : null;
     if (!forceRefresh && selfId != null) {
-      final cached = _profileCache[selfId];
-      if (cached != null && !_profileCacheNeedsRefresh(selfId, cached)) {
-        return cached;
+      if (cachedFallback != null && !_profileCacheNeedsRefresh(selfId, cachedFallback)) {
+        return cachedFallback;
       }
     }
 
@@ -1134,6 +1191,14 @@ class AegisChatService {
       if (_isAuthRejectionMessage(error.toString())) {
         response = await _retryAfterSessionRecovery(sendRequest);
       } else {
+        final fallback = _profileRequestFallbackInfo(
+          selfId?.toString() ?? '',
+          parsedId: selfId,
+          cached: cachedFallback,
+        );
+        if (fallback != null) {
+          return fallback;
+        }
         rethrow;
       }
     }
@@ -1143,6 +1208,14 @@ class AegisChatService {
         response = await _retryAfterSessionRecovery(sendRequest);
       }
       if (!response.success) {
+        final fallback = _profileRequestFallbackInfo(
+          selfId?.toString() ?? '',
+          parsedId: selfId,
+          cached: cachedFallback,
+        );
+        if (fallback != null) {
+          return fallback;
+        }
         throw _profileResponseException(
           response.message,
           'Unable to load own profile',
@@ -2498,15 +2571,12 @@ class AegisChatService {
   Future<void> refreshChatIndex({
     int messageLimit = 50,
     int preloadRooms = 6,
+    bool forceRefresh = false,
   }) async {
-    try {
-      await ensureReady();
-    } on NotAuthenticatedException {
-      return;
-    }
+    await ensureReady();
 
     var changed = false;
-    changed = await _refreshChatsFromServer(force: true) || changed;
+    changed = await _refreshChatsFromServer(force: forceRefresh) || changed;
     if (changed) {
       _emitChanged();
     }

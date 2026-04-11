@@ -587,7 +587,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get biometricLabel => 'Biometrie';
 
   @override
-  String get biometricSubtitle => 'Mit Fingerabdruck anmelden';
+  String get biometricSubtitle =>
+      'Verwende Face ID, Fingerabdruck oder den Gerätecode';
 
   @override
   String get activeSessionsLabel => 'Aktive Sitzungen';
@@ -667,6 +668,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get editTooltip => 'Bearbeiten';
+
+  @override
+  String get mediaDownloadAction => 'Herunterladen';
 
   @override
   String get writeMessageButton => 'Nachricht';
@@ -1573,20 +1577,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String get authMethodsLabel => 'Authentifizierungsmethoden';
 
   @override
-  String get biometricAuthLabel => 'Biometrische Authentifizierung';
+  String get biometricAuthLabel => 'Geräteauthentifizierung';
 
   @override
-  String get biometricAuthSubtitle => 'Fingerabdruck oder Face ID';
+  String get biometricAuthSubtitle => 'Face ID, Fingerabdruck oder Gerätecode';
 
   @override
-  String get biometricEnabledLabel => 'Biometrie aktiviert';
+  String get biometricEnabledLabel => 'App-Sperre aktiviert';
 
   @override
   String get aboutSecurityLabel => 'Über Sicherheit';
 
   @override
   String get aboutSecurityContent =>
-      'Wählen Sie eine bequeme Authentifizierungsmethode.';
+      'TwoSpace verwendet die Entsperrmethode, die bereits auf diesem Gerät eingerichtet ist, und fragt sie beim Zurückkehren in die App ab.';
+
+  @override
+  String get lockScreenFailedTitle => 'Identität konnte nicht bestätigt werden';
+
+  @override
+  String get lockScreenFailedMessage =>
+      'Versuche es erneut oder melde dich auf diesem Gerät ab.';
+
+  @override
+  String get deviceAuthUnavailableMessage =>
+      'Richte zuerst Face ID, Fingerabdruck oder einen Gerätecode in den Systemeinstellungen ein.';
+
+  @override
+  String get authMethodFaceId => 'Face ID';
+
+  @override
+  String get authMethodFingerprint => 'Fingerabdruck';
+
+  @override
+  String get authMethodBiometric => 'Biometrie';
+
+  @override
+  String get authMethodDevicePasscode => 'Gerätecode';
 
   @override
   String get setPinCode => 'PIN-Code festlegen';
@@ -2419,7 +2446,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get peopleTwoSpaceTitle => 'Personen in TwoSpace';
 
   @override
-  String get peopleInviteTitle => 'Zu TwoSpace einladen';
+  String get peopleInviteTitle => 'Noch nicht bei TwoSpace';
 
   @override
   String get peopleInviteSubtitle => 'Diesen Kontakt zu TwoSpace einladen';
@@ -2574,7 +2601,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get timestampPrecisionSubtitle =>
-      'Wählen Sie, wie detailliert Zeitstempel in Chats und in der Chatliste angezeigt werden.';
+      'Wähle, wie genau Nachrichtenzeiten angezeigt werden.';
 
   @override
   String get timestampPrecisionMinutes => 'Stunden und Minuten';
@@ -3114,7 +3141,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notificationsInDevelopmentSubtitle =>
-      'Zustellung von Benachrichtigungen und erweiterte Einstellungen werden noch fertiggestellt.';
+      'Detaillierte Benachrichtigungseinstellungen kommen in einem der nächsten Updates.';
 
   @override
   String get devMenuCopyVisible => 'Sichtbare Einträge kopieren';

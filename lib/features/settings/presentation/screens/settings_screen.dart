@@ -368,22 +368,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 horizontal: UITokens.spaceSm,
                               ),
                             ),
-                            const Divider(height: UITokens.borderThin),
-                            ValueListenableBuilder<bool>(
-                              valueListenable:
-                                  SettingsService.doNotDisturbNotifier,
-                              builder: (context, enabled, _) {
-                                return SwitchListTile(
-                                  secondary: const Icon(Icons.do_not_disturb),
-                                  title: Text(l10n.settingsDoNotDisturb),
-                                  value: enabled,
-                                  onChanged: SettingsService.setDoNotDisturb,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: UITokens.spaceSm,
-                                  ),
-                                );
-                              },
-                            ),
                           ],
                         ),
                       ),

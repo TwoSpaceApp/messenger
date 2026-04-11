@@ -62,14 +62,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _loadUserAndRooms() async {
+  Future<void> _loadUserAndRooms({bool forceRefresh = false}) async {
     final inFlight = _roomRefreshInFlight;
     if (inFlight != null) {
       await inFlight;
       return;
     }
 
-    final future = _refreshRoomIndex();
+    final future = _refreshRoomIndex(forceRefresh: forceRefresh);
     _roomRefreshInFlight = future;
     try {
       await future;
@@ -80,7 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Future<void> _refreshRoomIndex() async {
+  Future<void> _refreshRoomIndex({bool forceRefresh = false}) async {
     if (!mounted) return;
     if (_rooms.isEmpty) {
       setState(() {
@@ -93,21 +93,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     try {
       await _chat.refreshChatIndex(
+        forceRefresh: forceRefresh,
         preloadRooms: 0,
         messageLimit: 0,
       );
     } catch (e) {
-      final text = e.toString().toLowerCase();
-      if (text.contains('notauthenticatedexception') ||
-          text.contains('необходима аутентификация')) {
-        if (mounted) {
-          setState(() {
-            _rooms = const <Map<String, dynamic>>[];
-            _errorMessage = null;
-          });
-        }
-        return;
-      }
       if (mounted) {
         setState(() => _errorMessage = e.toString());
       }
@@ -356,7 +346,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (!mounted) {
         return;
       }
-      await _loadUserAndRooms();
+      await _loadUserAndRooms(forceRefresh: true);
     } catch (e) {
       if (!mounted) {
         return;
@@ -642,7 +632,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           child: _loading
                               ? _buildShimmerLoading()
                               : RefreshIndicator.adaptive(
-                                  onRefresh: _loadUserAndRooms,
+                                  onRefresh: () =>
+                                      _loadUserAndRooms(forceRefresh: true),
                                   child: _buildChatList(),
                                 ),
                         ),
@@ -730,7 +721,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 title: AppLocalizations.of(context)!.errorGeneric,
                 message: _errorMessage!,
                 actionLabel: AppLocalizations.of(context)!.retry,
-                onAction: _loadUserAndRooms,
+                onAction: () => _loadUserAndRooms(forceRefresh: true),
               ),
             ),
           ),
@@ -811,7 +802,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: _loadUserAndRooms,
+                    onPressed: () => _loadUserAndRooms(forceRefresh: true),
                     child: Text(AppLocalizations.of(context)!.retry),
                   ),
                 ],
@@ -966,10 +957,17 @@ class _NewChatActionTile extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer.withValues(alpha: 0.9),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.18),
+              ),
               borderRadius: BorderRadius.circular(UITokens.cornerLg),
             ),
             alignment: Alignment.center,
-            child: Icon(icon, color: theme.colorScheme.primary, size: 20),
+            child: Icon(
+              icon,
+              color: theme.colorScheme.onPrimaryContainer,
+              size: 20,
+            ),
           ),
           const SizedBox(width: UITokens.spaceSmMd),
           Expanded(

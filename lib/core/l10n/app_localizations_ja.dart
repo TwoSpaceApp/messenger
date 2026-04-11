@@ -581,7 +581,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get biometricLabel => '生体認証';
 
   @override
-  String get biometricSubtitle => '指紋でログイン';
+  String get biometricSubtitle => 'Face ID、指紋、または端末のパスコードを使います';
 
   @override
   String get activeSessionsLabel => 'アクティブセッション';
@@ -660,6 +660,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get editTooltip => '編集';
+
+  @override
+  String get mediaDownloadAction => 'ダウンロード';
 
   @override
   String get writeMessageButton => 'メッセージ';
@@ -1552,19 +1555,42 @@ class AppLocalizationsJa extends AppLocalizations {
   String get authMethodsLabel => '認証方法';
 
   @override
-  String get biometricAuthLabel => '生体認証';
+  String get biometricAuthLabel => '端末認証';
 
   @override
-  String get biometricAuthSubtitle => '指紋またはFace ID';
+  String get biometricAuthSubtitle => 'Face ID、指紋、または端末のパスコード';
 
   @override
-  String get biometricEnabledLabel => '生体認証が有効';
+  String get biometricEnabledLabel => 'アプリのロックを有効にしました';
 
   @override
   String get aboutSecurityLabel => 'セキュリティについて';
 
   @override
-  String get aboutSecurityContent => '便利な認証方法を選択してください。';
+  String get aboutSecurityContent =>
+      'TwoSpace はこの端末ですでに設定されているロック解除方法を使い、アプリに戻ったときに認証を求めます。';
+
+  @override
+  String get lockScreenFailedTitle => '本人確認に失敗しました';
+
+  @override
+  String get lockScreenFailedMessage => '再試行するか、この端末でログアウトしてください。';
+
+  @override
+  String get deviceAuthUnavailableMessage =>
+      'まずシステム設定で Face ID、指紋、または端末のパスコードを設定してください。';
+
+  @override
+  String get authMethodFaceId => 'Face ID';
+
+  @override
+  String get authMethodFingerprint => '指紋';
+
+  @override
+  String get authMethodBiometric => '生体認証';
+
+  @override
+  String get authMethodDevicePasscode => '端末のパスコード';
 
   @override
   String get setPinCode => 'PINコードを設定';
@@ -2375,7 +2401,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get peopleTwoSpaceTitle => 'TwoSpaceの人々';
 
   @override
-  String get peopleInviteTitle => 'TwoSpaceに招待';
+  String get peopleInviteTitle => 'まだ TwoSpace にいません';
 
   @override
   String get peopleInviteSubtitle => 'この連絡先をTwoSpaceに招待';
@@ -2522,7 +2548,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get timestampPrecisionLabel => 'メッセージ時刻の精度';
 
   @override
-  String get timestampPrecisionSubtitle => 'チャット内とチャット一覧で時刻をどこまで細かく表示するか選択します。';
+  String get timestampPrecisionSubtitle => 'メッセージ時刻の細かさを選択します。';
 
   @override
   String get timestampPrecisionMinutes => '時と分';
@@ -3041,7 +3067,7 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get notificationsInDevelopmentSubtitle => '通知配信と高度な設定は現在も仕上げ中です。';
+  String get notificationsInDevelopmentSubtitle => '詳細な通知設定は今後のアップデートで追加されます。';
 
   @override
   String get devMenuCopyVisible => '表示中をコピー';

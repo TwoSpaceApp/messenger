@@ -32,63 +32,74 @@ class PersonTile extends StatelessWidget {
   final VoidCallback? onMoreTap;
   final String? trailingLabel;
 
+  Widget _buildBadge(BuildContext context) {
+    final theme = Theme.of(context);
+    final isInvite = person.isInvitable && !person.isTwoSpaceUser;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 10.s(context),
+        vertical: 5.s(context),
+      ),
+      decoration: BoxDecoration(
+        color: isInvite
+            ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8)
+            : theme.colorScheme.primary.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: isInvite
+              ? theme.colorScheme.outline.withValues(alpha: 0.18)
+              : theme.colorScheme.primary.withValues(alpha: 0.18),
+        ),
+      ),
+      child: Text(
+        trailingLabel ?? '',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: isInvite
+              ? theme.colorScheme.onSurfaceVariant
+              : theme.colorScheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _actionIcon(
+    BuildContext context, {
+    required IconData icon,
+    required VoidCallback? onPressed,
+    Color? iconColor,
+  }) {
+    final theme = Theme.of(context);
+    final iconSize = 20.s(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.62),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.24),
+        ),
+      ),
+      child: ShadIconButton.ghost(
+        width: 36.s(context),
+        height: 36.s(context),
+        iconSize: iconSize - 1,
+        onPressed: onPressed,
+        icon: Icon(
+          icon,
+          color: iconColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.82),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isCompact = MediaQuery.sizeOf(context).width < 520;
-    final iconSize = 20.s(context);
-    final badgeHorizontal = 8.s(context);
-    final badgeVertical = 4.s(context);
-
-    Widget buildBadge() {
-      return Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: badgeHorizontal,
-          vertical: badgeVertical,
-        ),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          trailingLabel ?? 'TwoSpace',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurface,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      );
-    }
-
-    Widget actionIcon({
-      required IconData icon,
-      required VoidCallback? onPressed,
-      String? tooltip,
-      Color? iconColor,
-    }) {
-      return Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.62),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.24),
-          ),
-        ),
-        child: ShadIconButton.ghost(
-          width: 36.s(context),
-          height: 36.s(context),
-          iconSize: iconSize - 1,
-          onPressed: onPressed,
-          icon: Icon(
-            icon,
-            color: iconColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.82),
-          ),
-        ),
-      );
-    }
+    final isCompact = MediaQuery.sizeOf(context).width < 560;
 
     final inlineActions = <Widget>[
-      actionIcon(
+      _actionIcon(
+        context,
         icon:
             person.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
         onPressed: onFavoriteTap,
@@ -97,135 +108,107 @@ class PersonTile extends StatelessWidget {
             : AppColors.favoriteInactive(context),
       ),
       if (onInviteTap != null)
-        actionIcon(
+        _actionIcon(
+          context,
           icon: Icons.share_rounded,
           onPressed: onInviteTap,
         )
       else if (onMessageTap != null)
-        actionIcon(
+        _actionIcon(
+          context,
           icon: Icons.chat_bubble_outline_rounded,
           onPressed: onMessageTap,
         ),
       if (onMoreTap != null)
-        actionIcon(
+        _actionIcon(
+          context,
           icon: Icons.more_horiz_rounded,
           onPressed: onMoreTap,
         ),
     ];
 
+    final identityBadge = trailingLabel == null
+        ? null
+        : _buildBadge(context);
+    final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurface.withValues(alpha: 0.74),
+    );
+
     return GlassCard(
       padding: EdgeInsets.symmetric(
-        horizontal: 4.s(context),
-        vertical: 2.s(context),
+        horizontal: 8.s(context),
+        vertical: 8.s(context),
       ),
       onTap: onTap,
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: 8.s(context),
-          vertical: 3.s(context),
+          vertical: 6.s(context),
         ),
-        child: isCompact
-            ? Column(
-                children: [
-                  Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PersonAvatar(
+                  name: person.displayName,
+                  avatarUrl: person.avatarUrl,
+                  photoBytes: person.photoBytes,
+                  radius: 22.s(context),
+                  showOnline: person.isOnline,
+                ),
+                SizedBox(width: 12.s(context)),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      PersonAvatar(
-                        name: person.displayName,
-                        avatarUrl: person.avatarUrl,
-                        photoBytes: person.photoBytes,
-                        radius: 21.s(context),
-                        showOnline: person.isOnline,
-                      ),
-                      SizedBox(width: 12.s(context)),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    person.displayName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      color: theme.colorScheme.onSurface,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                                if (person.isTwoSpaceUser) buildBadge(),
-                              ],
-                            ),
-                            SizedBox(height: 4.s(context)),
-                            Text(
-                              subtitle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.74),
-                              ),
-                            ),
-                          ],
+                      Text(
+                        person.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w700,
                         ),
+                      ),
+                      SizedBox(height: 5.s(context)),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: subtitleStyle,
                       ),
                     ],
                   ),
-                  SizedBox(height: 6.s(context)),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Wrap(
-                      spacing: 6.s(context),
-                      runSpacing: 6.s(context),
-                      children: inlineActions,
-                    ),
-                  ),
-                ],
-              )
-            : Row(
+                ),
+              ],
+            ),
+            SizedBox(height: 10.s(context)),
+            if (isCompact) ...[
+              if (identityBadge != null) ...[
+                identityBadge,
+                SizedBox(height: 8.s(context)),
+              ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(
+                  spacing: 6.s(context),
+                  runSpacing: 6.s(context),
+                  children: inlineActions,
+                ),
+              ),
+            ] else
+              Row(
                 children: [
-                  PersonAvatar(
-                    name: person.displayName,
-                    avatarUrl: person.avatarUrl,
-                    photoBytes: person.photoBytes,
-                    radius: 21.s(context),
-                    showOnline: person.isOnline,
-                  ),
-                  SizedBox(width: 12.s(context)),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                person.displayName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: theme.colorScheme.onSurface,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            if (person.isTwoSpaceUser) buildBadge(),
-                          ],
-                        ),
-                        SizedBox(height: 4.s(context)),
-                        Text(
-                          subtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.74),
+                    child: identityBadge == null
+                        ? const SizedBox.shrink()
+                        : Align(
+                            alignment: Alignment.centerLeft,
+                            child: identityBadge,
                           ),
-                        ),
-                      ],
-                    ),
                   ),
-                  SizedBox(width: 8.s(context)),
                   Wrap(
                     spacing: 6.s(context),
                     runSpacing: 6.s(context),
@@ -233,6 +216,8 @@ class PersonTile extends StatelessWidget {
                   ),
                 ],
               ),
+          ],
+        ),
       ),
     );
   }

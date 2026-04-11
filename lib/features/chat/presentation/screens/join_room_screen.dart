@@ -72,9 +72,10 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
       });
       return;
     }
+    final silent = !_looksLikeInviteCandidate(value);
     _previewDebounce = Timer(
       const Duration(milliseconds: 650),
-      () => unawaited(_resolvePreview(silent: true)),
+      () => unawaited(_resolvePreview(silent: silent)),
     );
   }
 
@@ -196,15 +197,23 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
                     label: l10n.joinByCodeTitle,
                     icon: Icons.qr_code_rounded,
                     hint: l10n.joinLinkHint,
-                  ),
-                ),
-                const SizedBox(height: UITokens.spaceMd),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _loading ? null : _resolvePreview,
-                    icon: const Icon(Icons.visibility_outlined),
-                    label: Text(l10n.searchButton),
+                    suffixIcon: _loading
+                        ? const Padding(
+                            padding: EdgeInsets.all(UITokens.spaceSmMd),
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: UITokens.borderThick,
+                              ),
+                            ),
+                          )
+                        : preview != null
+                        ? Icon(
+                            Icons.verified_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                          )
+                        : null,
                   ),
                 ),
               ],

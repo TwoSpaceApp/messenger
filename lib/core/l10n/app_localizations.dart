@@ -1179,7 +1179,7 @@ abstract class AppLocalizations {
   /// Biometrics subtitle
   ///
   /// In en, this message translates to:
-  /// **'Sign in with fingerprint'**
+  /// **'Use Face ID, fingerprint, or your device passcode'**
   String get biometricSubtitle;
 
   /// Active sessions label
@@ -1337,6 +1337,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit'**
   String get editTooltip;
+
+  /// Manual media download button label
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get mediaDownloadAction;
 
   /// Write message button
   ///
@@ -2991,19 +2997,19 @@ abstract class AppLocalizations {
   /// Biometric auth label
   ///
   /// In en, this message translates to:
-  /// **'Biometric authentication'**
+  /// **'Device authentication'**
   String get biometricAuthLabel;
 
   /// Biometric auth subtitle
   ///
   /// In en, this message translates to:
-  /// **'Fingerprint or Face ID'**
+  /// **'Face ID, fingerprint, or your device passcode'**
   String get biometricAuthSubtitle;
 
   /// Biometrics enabled label
   ///
   /// In en, this message translates to:
-  /// **'Biometrics enabled'**
+  /// **'App lock enabled'**
   String get biometricEnabledLabel;
 
   /// About security label
@@ -3015,8 +3021,50 @@ abstract class AppLocalizations {
   /// About security content
   ///
   /// In en, this message translates to:
-  /// **'Choose a convenient authentication method to protect your account.'**
+  /// **'TwoSpace uses the unlock method already configured on this device and asks for it when the app returns to the foreground.'**
   String get aboutSecurityContent;
+
+  /// No description provided for @lockScreenFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t verify it\'s you'**
+  String get lockScreenFailedTitle;
+
+  /// No description provided for @lockScreenFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again or log out on this device.'**
+  String get lockScreenFailedMessage;
+
+  /// No description provided for @deviceAuthUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up Face ID, fingerprint, or a device passcode in system settings first.'**
+  String get deviceAuthUnavailableMessage;
+
+  /// No description provided for @authMethodFaceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID'**
+  String get authMethodFaceId;
+
+  /// No description provided for @authMethodFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint'**
+  String get authMethodFingerprint;
+
+  /// No description provided for @authMethodBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometrics'**
+  String get authMethodBiometric;
+
+  /// No description provided for @authMethodDevicePasscode.
+  ///
+  /// In en, this message translates to:
+  /// **'Device passcode'**
+  String get authMethodDevicePasscode;
 
   /// Set PIN code label
   ///
@@ -4509,7 +4557,7 @@ abstract class AppLocalizations {
   /// Section title for invite candidates
   ///
   /// In en, this message translates to:
-  /// **'Invite to TwoSpace'**
+  /// **'Not on TwoSpace yet'**
   String get peopleInviteTitle;
 
   /// Subtitle for invite-only contacts
@@ -4785,7 +4833,7 @@ abstract class AppLocalizations {
   /// No description provided for @timestampPrecisionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose how detailed timestamps look in chats and chat list.'**
+  /// **'Choose how detailed message times should be.'**
   String get timestampPrecisionSubtitle;
 
   /// No description provided for @timestampPrecisionMinutes.
@@ -5697,7 +5745,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationsInDevelopmentSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Notification delivery and advanced controls are still being completed.'**
+  /// **'Detailed notification controls will arrive in a future update.'**
   String get notificationsInDevelopmentSubtitle;
 
   /// No description provided for @devMenuCopyVisible.

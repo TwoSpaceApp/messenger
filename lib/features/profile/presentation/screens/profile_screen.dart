@@ -544,7 +544,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildContactActionButtons(AppLocalizations l10n) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compactButtons = constraints.maxWidth < 500;
+        final compactButtons = constraints.maxWidth < 680;
         final messageButton = _buildActionButton(
           icon: _actionLoading ? null : Icons.chat_bubble_outline,
           label: l10n.writeMessageButton,
@@ -558,6 +558,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           fullWidth: true,
           onPressed: _openCall,
         );
+        final copyButton = _buildActionButton(
+          icon: Icons.copy_rounded,
+          label: l10n.copyAegisIdButton,
+          fullWidth: true,
+          onPressed: _copyProfileId,
+        );
 
         if (compactButtons) {
           return Column(
@@ -565,6 +571,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               messageButton,
               const SizedBox(height: UITokens.spaceSmMd),
               callButton,
+              const SizedBox(height: UITokens.spaceSmMd),
+              copyButton,
             ],
           );
         }
@@ -574,6 +582,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Expanded(child: messageButton),
             const SizedBox(width: UITokens.spaceSmMd),
             Expanded(child: callButton),
+            const SizedBox(width: UITokens.spaceSmMd),
+            Expanded(child: copyButton),
           ],
         );
       },
