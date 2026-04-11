@@ -894,7 +894,6 @@ class AegisAuthService {
         unawaited(
           recoverSession(
             reason: 'keep_alive',
-            resetTransport: true,
           ),
         );
       }
@@ -963,10 +962,9 @@ class AegisAuthService {
       }
     }());
 
-    await future;
+    return future;
   }
   
-  Future<void> recoverSession() async {
   Future<bool> recoverSession({
     String reason = 'manual',
     bool resetTransport = true,
