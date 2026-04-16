@@ -3157,4 +3157,50 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get feedbackAttachLogsSubtitle =>
       'Добавить диагностический файл с данными устройства, логами приложения и логами сети.';
+
+  @override
+  String get notificationsForegroundServiceTitle => 'Фоновый сервис';
+
+  @override
+  String get notificationsForegroundServiceSubtitle =>
+      'Приложение работает в фоне';
+
+  @override
+  String get notificationsForegroundServiceEnabled => 'Включить фоновый сервис';
+
+  @override
+  String get notificationsForegroundServiceDescription =>
+      'Постоянно слушать входящие сообщения с постоянным уведомлением';
+
+  @override
+  String get notificationsTypesSection => 'Типы уведомлений';
+
+  @override
+  String get notificationsTypesSectionSubtitle =>
+      'Выберите события, о которых вас уведомлять';
+
+  @override
+  String get notificationsMessagesTitle => 'Сообщения';
+
+  @override
+  String get notificationsMessagesDescription => 'Новые сообщения в чатах';
+
+  @override
+  String get notificationsChatTitle => 'Чаты и группы';
+
+  @override
+  String get notificationsChatDescription =>
+      'Новые чаты и приглашения в группы';
+
+  @override
+  String get notificationsPostTitle => 'Посты';
+
+  @override
+  String get notificationsPostDescription => 'Новые посты в каналах';
+
+  @override
+  String get notificationsReactionTitle => 'Реакции';
+
+  @override
+  String get notificationsReactionDescription => 'Реакции на ваши сообщения';
 }

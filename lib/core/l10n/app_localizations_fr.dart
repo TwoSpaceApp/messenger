@@ -3173,4 +3173,53 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get feedbackAttachLogsSubtitle =>
       'Ajoute un fichier de diagnostic avec les informations de l\'appareil, les logs de l\'application et les logs réseau.';
+
+  @override
+  String get notificationsForegroundServiceTitle => 'Service en Arrière-Plan';
+
+  @override
+  String get notificationsForegroundServiceSubtitle =>
+      'Garder l\'application s\'exécutant en arrière-plan';
+
+  @override
+  String get notificationsForegroundServiceEnabled =>
+      'Activer le Service en Arrière-Plan';
+
+  @override
+  String get notificationsForegroundServiceDescription =>
+      'Écoutez continuellement les messages avec notification persistante';
+
+  @override
+  String get notificationsTypesSection => 'Types de Notification';
+
+  @override
+  String get notificationsTypesSectionSubtitle =>
+      'Choisissez quels événements vous notifient';
+
+  @override
+  String get notificationsMessagesTitle => 'Messages';
+
+  @override
+  String get notificationsMessagesDescription =>
+      'Nouveaux messages dans les conversations';
+
+  @override
+  String get notificationsChatTitle => 'Conversations et Groupes';
+
+  @override
+  String get notificationsChatDescription =>
+      'Nouvelles conversations et invitations de groupe';
+
+  @override
+  String get notificationsPostTitle => 'Publications';
+
+  @override
+  String get notificationsPostDescription =>
+      'Nouvelles publications dans les canaux';
+
+  @override
+  String get notificationsReactionTitle => 'Réactions';
+
+  @override
+  String get notificationsReactionDescription => 'Réactions à vos messages';
 }

@@ -3070,4 +3070,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get feedbackAttachLogsSubtitle => '附加包含设备信息、应用日志和网络日志的诊断文件。';
+
+  @override
+  String get notificationsForegroundServiceTitle => '后台服务';
+
+  @override
+  String get notificationsForegroundServiceSubtitle => '保持应用在后台运行';
+
+  @override
+  String get notificationsForegroundServiceEnabled => '启用后台服务';
+
+  @override
+  String get notificationsForegroundServiceDescription => '持续监听消息并显示持久通知';
+
+  @override
+  String get notificationsTypesSection => '通知类型';
+
+  @override
+  String get notificationsTypesSectionSubtitle => '选择哪些事件会通知您';
+
+  @override
+  String get notificationsMessagesTitle => '消息';
+
+  @override
+  String get notificationsMessagesDescription => '聊天中的新消息';
+
+  @override
+  String get notificationsChatTitle => '聊天和群组';
+
+  @override
+  String get notificationsChatDescription => '新的聊天和群组邀请';
+
+  @override
+  String get notificationsPostTitle => '帖子';
+
+  @override
+  String get notificationsPostDescription => '频道中的新帖子';
+
+  @override
+  String get notificationsReactionTitle => '反应';
+
+  @override
+  String get notificationsReactionDescription => '对您消息的反应';
 }

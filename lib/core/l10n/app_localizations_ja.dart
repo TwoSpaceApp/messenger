@@ -3087,4 +3087,47 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get feedbackAttachLogsSubtitle =>
       '端末情報、アプリログ、ネットワークログを含む診断ファイルを添付します。';
+
+  @override
+  String get notificationsForegroundServiceTitle => 'バックグラウンドサービス';
+
+  @override
+  String get notificationsForegroundServiceSubtitle => 'アプリをバックグラウンドで実行し続ける';
+
+  @override
+  String get notificationsForegroundServiceEnabled => 'バックグラウンドサービスを有効にする';
+
+  @override
+  String get notificationsForegroundServiceDescription =>
+      '永続的な通知でメッセージを継続的にリッスンする';
+
+  @override
+  String get notificationsTypesSection => '通知タイプ';
+
+  @override
+  String get notificationsTypesSectionSubtitle => 'どのイベントについて通知を受けるかを選択してください';
+
+  @override
+  String get notificationsMessagesTitle => 'メッセージ';
+
+  @override
+  String get notificationsMessagesDescription => 'チャットの新しいメッセージ';
+
+  @override
+  String get notificationsChatTitle => 'チャット＆グループ';
+
+  @override
+  String get notificationsChatDescription => '新しいチャットとグループ招待';
+
+  @override
+  String get notificationsPostTitle => '投稿';
+
+  @override
+  String get notificationsPostDescription => 'チャネルの新しい投稿';
+
+  @override
+  String get notificationsReactionTitle => 'リアクション';
+
+  @override
+  String get notificationsReactionDescription => 'あなたのメッセージへのリアクション';
 }

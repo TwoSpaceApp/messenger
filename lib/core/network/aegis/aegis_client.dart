@@ -1494,6 +1494,16 @@ class AegisClient {
     if (expectedTypes == null || expectedTypes.isEmpty) {
       throw ArgumentError('expectedTypes must not be empty');
     }
+    if (allowAnySequenceForExpectedTypes) {
+      final isHandshakeOnly =
+          expectedTypes.length == 1 &&
+          expectedTypes.contains(MessageType.handshake);
+      if (!isHandshakeOnly) {
+        throw ArgumentError(
+          'allowAnySequenceForExpectedTypes is only allowed for handshake',
+        );
+      }
+    }
 
     message.sequenceId = _nextSeqId++;
     message.flags |= ProtocolConstants.flagRequiresAck;
@@ -1516,11 +1526,12 @@ class AegisClient {
       final isSeqZero = msg.sequenceId == 0;
 
       if (msg.type == MessageType.error || msg.type == MessageType.nack) {
-        // Some server error paths may publish sequence-less errors.
-        if ((isMatchingSeq || isSeqZero) && !completer.isCompleted) {
-          completer.completeError(
-            Exception(_extractProtocolErrorMessage(msg)),
-          );
+        final canAcceptSeqZeroError = allowSeqZeroForExpectedTypes && isSeqZero;
+        if (!isMatchingSeq && !canAcceptSeqZeroError) {
+          return;
+        }
+        if (!completer.isCompleted) {
+          completer.completeError(Exception(_extractProtocolErrorMessage(msg)));
         }
         return;
       }
@@ -1671,6 +1682,10 @@ class AegisClient {
     Duration timeout = const Duration(seconds: 10),
   }) async {
     final normalizedIds = messageIds.toSet().toList(growable: false)..sort();
+    final message = Message.withType(requestType, payload)
+      ..sequenceId = _nextSeqId++
+      ..flags |= ProtocolConstants.flagRequiresAck;
+    final requestSeqId = message.sequenceId;
     final completer = Completer<MessageReceiptResponse>();
     late final StreamSubscription<Message> subscription;
     Timer? timeoutTimer;
@@ -1702,9 +1717,17 @@ class AegisClient {
       }
 
       if (msg.type == MessageType.error || msg.type == MessageType.nack) {
+        final isMatchingErrorSeq =
+            msg.sequenceId == requestSeqId || msg.sequenceId == 0;
+        if (!isMatchingErrorSeq) {
+          return;
+        }
         if (!completer.isCompleted) {
           completer.completeError(Exception(_extractProtocolErrorMessage(msg)));
         }
+        return;
+      }
+      if (msg.sequenceId != requestSeqId) {
         return;
       }
 
@@ -1729,10 +1752,6 @@ class AegisClient {
         );
       }
     });
-
-    final message = Message.withType(requestType, payload)
-      ..sequenceId = _nextSeqId++
-      ..flags |= ProtocolConstants.flagRequiresAck;
     await _transport.sendMessage(message);
 
     try {

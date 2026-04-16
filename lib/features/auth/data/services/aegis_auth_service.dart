@@ -425,10 +425,28 @@ class AegisAuthService {
     if (separatorIndex <= 0 || separatorIndex >= value.length - 1) {
       return false;
     }
+    if (value.indexOf(':', separatorIndex + 1) != -1) {
+      return false;
+    }
 
-    // Opaque session tokens returned by the server are hex-like and do not
-    // contain separators. Historically the app stored identifier:password.
-    return true;
+    final identifier = value.substring(0, separatorIndex).trim();
+    final password = value.substring(separatorIndex + 1).trim();
+    if (identifier.isEmpty || password.length < 4) {
+      return false;
+    }
+
+    // Tighten legacy detection to avoid misclassifying modern opaque tokens.
+    final identifierLooksLegacy =
+        RegExp(r'^[a-zA-Z0-9_.@+-]{3,64}$').hasMatch(identifier);
+    final passwordLooksLegacy =
+        RegExp(r'^[^\s:]{4,128}$').hasMatch(password);
+    final looksLikeOpaqueToken =
+        RegExp(r'^[a-fA-F0-9]{40,}$').hasMatch(value) ||
+        value.startsWith('ts_');
+
+    return identifierLooksLegacy &&
+        passwordLooksLegacy &&
+        !looksLikeOpaqueToken;
   }
 
   bool _isStoredSessionPermanentlyInvalid(Object error) {

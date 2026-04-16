@@ -3158,4 +3158,51 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get feedbackAttachLogsSubtitle =>
       'Adjunta un archivo de diagnóstico con información del dispositivo, registros de la aplicación y registros de red.';
+
+  @override
+  String get notificationsForegroundServiceTitle => 'Servicio en Segundo Plano';
+
+  @override
+  String get notificationsForegroundServiceSubtitle =>
+      'Mantener la aplicación ejecutándose en segundo plano';
+
+  @override
+  String get notificationsForegroundServiceEnabled =>
+      'Habilitar Servicio en Segundo Plano';
+
+  @override
+  String get notificationsForegroundServiceDescription =>
+      'Escuche continuamente mensajes con notificación persistente';
+
+  @override
+  String get notificationsTypesSection => 'Tipos de Notificación';
+
+  @override
+  String get notificationsTypesSectionSubtitle =>
+      'Elija qué eventos le notifiquen';
+
+  @override
+  String get notificationsMessagesTitle => 'Mensajes';
+
+  @override
+  String get notificationsMessagesDescription => 'Nuevos mensajes en chats';
+
+  @override
+  String get notificationsChatTitle => 'Chats y Grupos';
+
+  @override
+  String get notificationsChatDescription =>
+      'Nuevos chats e invitaciones a grupos';
+
+  @override
+  String get notificationsPostTitle => 'Publicaciones';
+
+  @override
+  String get notificationsPostDescription => 'Nuevas publicaciones en canales';
+
+  @override
+  String get notificationsReactionTitle => 'Reacciones';
+
+  @override
+  String get notificationsReactionDescription => 'Reacciones a tus mensajes';
 }

@@ -3155,4 +3155,49 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get feedbackAttachLogsSubtitle =>
       'Dołącza plik diagnostyczny z informacjami o urządzeniu, logami aplikacji i logami sieci.';
+
+  @override
+  String get notificationsForegroundServiceTitle => 'Usługa w Tle';
+
+  @override
+  String get notificationsForegroundServiceSubtitle =>
+      'Utrzymuj aplikację uruchomioną w tle';
+
+  @override
+  String get notificationsForegroundServiceEnabled => 'Włącz Usługę w Tle';
+
+  @override
+  String get notificationsForegroundServiceDescription =>
+      'Ciągle nasłuchuj wiadomości z trwałym powiadomieniem';
+
+  @override
+  String get notificationsTypesSection => 'Typy Powiadomień';
+
+  @override
+  String get notificationsTypesSectionSubtitle =>
+      'Wybierz, które zdarzenia będą Cię powiadamiać';
+
+  @override
+  String get notificationsMessagesTitle => 'Wiadomości';
+
+  @override
+  String get notificationsMessagesDescription => 'Nowe wiadomości w czatach';
+
+  @override
+  String get notificationsChatTitle => 'Czaty i Grupy';
+
+  @override
+  String get notificationsChatDescription => 'Nowe czaty i zaproszenia do grup';
+
+  @override
+  String get notificationsPostTitle => 'Posty';
+
+  @override
+  String get notificationsPostDescription => 'Nowe posty w kanałach';
+
+  @override
+  String get notificationsReactionTitle => 'Reakcje';
+
+  @override
+  String get notificationsReactionDescription => 'Reakcje na Twoje wiadomości';
 }

@@ -3431,5 +3431,61 @@
   "devMenuRequestBody": "Request body · {type}",
   "devMenuResponseHeaders": "Response headers",
   "devMenuResponseBody": "Response body · {type}",
-  "devMenuVersionWithBuild": "{version} (Build {buildNumber})"
+  "devMenuVersionWithBuild": "{version} (Build {buildNumber})",
+  "notificationsForegroundServiceTitle": "Hintergrunddienst",
+  "@notificationsForegroundServiceTitle": {
+    "description": "Background service section title in notifications screen"
+  },
+  "notificationsForegroundServiceSubtitle": "App im Hintergrund ausführen",
+  "@notificationsForegroundServiceSubtitle": {
+    "description": "Background service section subtitle"
+  },
+  "notificationsForegroundServiceEnabled": "Hintergrunddienst aktivieren",
+  "@notificationsForegroundServiceEnabled": {
+    "description": "Background service toggle title"
+  },
+  "notificationsForegroundServiceDescription": "Kontinuierlich auf Nachrichten mit persistenter Benachrichtigung überwachen",
+  "@notificationsForegroundServiceDescription": {
+    "description": "Background service toggle description"
+  },
+  "notificationsTypesSection": "Benachrichtigungstypen",
+  "@notificationsTypesSection": {
+    "description": "Notification types section title"
+  },
+  "notificationsTypesSectionSubtitle": "Wählen Sie, welche Ereignisse Sie benachrichtigen",
+  "@notificationsTypesSectionSubtitle": {
+    "description": "Notification types section subtitle"
+  },
+  "notificationsMessagesTitle": "Nachrichten",
+  "@notificationsMessagesTitle": {
+    "description": "Messages notification toggle title"
+  },
+  "notificationsMessagesDescription": "Neue Nachrichten in Chats",
+  "@notificationsMessagesDescription": {
+    "description": "Messages notification toggle description"
+  },
+  "notificationsChatTitle": "Chats & Gruppen",
+  "@notificationsChatTitle": {
+    "description": "Chats and groups notification toggle title"
+  },
+  "notificationsChatDescription": "Neue Chats und Gruppeneinladungen",
+  "@notificationsChatDescription": {
+    "description": "Chats and groups notification toggle description"
+  },
+  "notificationsPostTitle": "Beiträge",
+  "@notificationsPostTitle": {
+    "description": "Posts notification toggle title"
+  },
+  "notificationsPostDescription": "Neue Beiträge in Kanälen",
+  "@notificationsPostDescription": {
+    "description": "Posts notification toggle description"
+  },
+  "notificationsReactionTitle": "Reaktionen",
+  "@notificationsReactionTitle": {
+    "description": "Reactions notification toggle title"
+  },
+  "notificationsReactionDescription": "Reaktionen auf Ihre Nachrichten",
+  "@notificationsReactionDescription": {
+    "description": "Reactions notification toggle description"
+  }
 }

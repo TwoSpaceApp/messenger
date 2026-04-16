@@ -3088,4 +3088,47 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get feedbackAttachLogsSubtitle =>
       '기기 정보, 앱 로그, 네트워크 로그가 포함된 진단 파일을 첨부합니다.';
+
+  @override
+  String get notificationsForegroundServiceTitle => '백그라운드 서비스';
+
+  @override
+  String get notificationsForegroundServiceSubtitle => '백그라운드에서 앱 실행 유지';
+
+  @override
+  String get notificationsForegroundServiceEnabled => '백그라운드 서비스 활성화';
+
+  @override
+  String get notificationsForegroundServiceDescription =>
+      '지속적인 알림으로 메시지를 계속 수신하기';
+
+  @override
+  String get notificationsTypesSection => '알림 유형';
+
+  @override
+  String get notificationsTypesSectionSubtitle => '어떤 이벤트에 대해 알림을 받을지 선택하세요';
+
+  @override
+  String get notificationsMessagesTitle => '메시지';
+
+  @override
+  String get notificationsMessagesDescription => '채팅의 새 메시지';
+
+  @override
+  String get notificationsChatTitle => '채팅 및 그룹';
+
+  @override
+  String get notificationsChatDescription => '새로운 채팅 및 그룹 초대';
+
+  @override
+  String get notificationsPostTitle => '게시물';
+
+  @override
+  String get notificationsPostDescription => '채널의 새 게시물';
+
+  @override
+  String get notificationsReactionTitle => '반응';
+
+  @override
+  String get notificationsReactionDescription => '메시지에 대한 반응';
 }
