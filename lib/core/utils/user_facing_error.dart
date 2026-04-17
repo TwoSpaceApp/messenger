@@ -1,4 +1,5 @@
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/services/error_handler_service.dart';
 
 class UserFacingError {
   UserFacingError._();
@@ -7,13 +8,29 @@ class UserFacingError {
   static const String _autoLoginErrorPrefix =
       'auth.register.auto_login_failed::';
 
+  /// Форматировать ошибку для отображения пользователю
+  /// Использует новый ErrorHandlerService для лучшей категоризации
   static String format(Object error, [AppLocalizations? l10n]) {
+    // Используем новый сервис для обработки ошибок
+    final structured = ErrorHandlerService.handle(error, context: 'UserFacingError.format');
+    
+    // Получаем локализованное сообщение
+    if (l10n != null) {
+      return ErrorHandlerService.getUserMessage(structured, l10n);
+    }
+
+    // Fallback на старую логику для совместимости
     final raw = error.toString().trim();
     final cleaned = raw.replaceFirst(_exceptionPrefix, '').trim();
     final normalized = cleaned.isEmpty ? raw : cleaned;
-    if (l10n == null) {
-      return normalized;
-    }
+
+    // Проверяем специфичные коды ошибок
+    return _mapSpecificErrors(normalized, l10n) ?? normalized;
+  }
+
+  /// Маппировать специфичные коды ошибок на локализованные сообщения
+  static String? _mapSpecificErrors(String normalized, AppLocalizations? l10n) {
+    if (l10n == null) return null;
 
     switch (normalized) {
       case 'auth.register.verify_email_before_login':
@@ -47,6 +64,6 @@ class UserFacingError {
       return l10n.authRegisterAutoLoginFailed(format(detail, l10n));
     }
 
-    return normalized;
+    return null;
   }
 }
