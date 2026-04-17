@@ -733,8 +733,8 @@ class User {
     publicKey: json['PublicKey'] as String,
     identityKeyFingerprint: json['IdentityKeyFingerprint'] as String?,
     isActive: json['IsActive'] as bool,
-    createdAt: _parseDateTimeValue(json['CreatedAt']),
-    updatedAt: _parseDateTimeValue(json['UpdatedAt']),
+    createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
+    updatedAt: _parseNullableDateTimeValue(json['UpdatedAt']) ?? DateTime.now().toUtc(),
     lastSeenAt: _parseNullableDateTimeValue(json['LastSeenAt']),
   );
 }
@@ -881,7 +881,7 @@ class ChannelMessage {
     contentType: MessageContentType.fromValue(
       _parseIntValue(json['ContentType'], fieldName: 'ChannelMessage.ContentType'),
     ),
-    createdAt: _parseDateTimeValue(json['CreatedAt']),
+    createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
     editedAt: _parseNullableDateTimeValue(json['EditedAt']),
     isEdited: json['IsEdited'] as bool? ?? false,
     replyToMessageId: _parseNullableIntValue(json['ReplyToMessageId']),
@@ -1000,8 +1000,8 @@ class Channel {
       json['CreatedByUserId'],
       fieldName: 'Channel.CreatedByUserId',
     ),
-    createdAt: _parseDateTimeValue(json['CreatedAt']),
-    updatedAt: _parseDateTimeValue(json['UpdatedAt']),
+    createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
+    updatedAt: _parseNullableDateTimeValue(json['UpdatedAt']) ?? DateTime.now().toUtc(),
     isActive: json['IsActive'] as bool,
     inviteCode: json['InviteCode'] as String?,
     publicAlias: json['PublicAlias'] as String?,
@@ -1310,7 +1310,7 @@ class PrivateChatHistoryItem {
       contentType: MessageContentType.fromValue(
         _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
-      createdAt: _parseDateTimeValue(json['CreatedAt']),
+      createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
       deliveredTo: _parseIntList(json['DeliveredTo']),
       readBy: _parseIntList(json['ReadBy']),
       parseMode: parsed.parseMode,
@@ -1424,7 +1424,7 @@ class ChannelHistoryItem {
       contentType: MessageContentType.fromValue(
         _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
-      createdAt: _parseDateTimeValue(json['CreatedAt']),
+      createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
       deliveredTo: _parseIntList(json['DeliveredTo']),
       readBy: _parseIntList(json['ReadBy']),
       parseMode: parsed.parseMode,
@@ -1620,7 +1620,7 @@ class PrivateChatMessageEvent {
       contentType: MessageContentType.fromValue(
         _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
-      createdAt: _parseDateTimeValue(json['CreatedAt']),
+      createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
       replyToMessageId: _parseNullableIntValue(json['ReplyToMessageId']),
       deliveredTo: _parseIntList(json['DeliveredTo']),
       readBy: _parseIntList(json['ReadBy']),
@@ -1689,7 +1689,7 @@ class ChannelMessageEvent {
       contentType: MessageContentType.fromValue(
         _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
-      createdAt: _parseDateTimeValue(json['CreatedAt']),
+      createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
       replyToMessageId: _parseNullableIntValue(json['ReplyToMessageId']),
       deliveredTo: _parseIntList(json['DeliveredTo']),
       readBy: _parseIntList(json['ReadBy']),
@@ -1780,7 +1780,7 @@ class ChatMessage {
       isDelivered: json['IsDelivered'] as bool? ?? false,
       isRead: json['IsRead'] as bool? ?? false,
       parseMode: parsed.parseMode,
-      createdAt: _parseDateTimeValue(json['CreatedAt']),
+      createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
       deliveredAt: _parseNullableDateTimeValue(json['DeliveredAt']),
       readAt: _parseNullableDateTimeValue(json['ReadAt']),
     );
@@ -1832,7 +1832,7 @@ class PrivateChat {
     id: _parseIntValue(json['Id'], fieldName: 'PrivateChat.Id'),
     user1Id: _parseIntValue(json['User1Id'], fieldName: 'PrivateChat.User1Id'),
     user2Id: _parseIntValue(json['User2Id'], fieldName: 'PrivateChat.User2Id'),
-    createdAt: _parseDateTimeValue(json['CreatedAt']),
+    createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
     lastActivityAt: _parseNullableDateTimeValue(json['LastActivityAt']),
     lastMessageId: _parseNullableIntValue(json['LastMessageId']),
     isActive: json['IsActive'] as bool? ?? true,
@@ -1932,7 +1932,7 @@ class ProfileAvatarData {
         id: json['Id'] as int,
         avatarUrl: json['AvatarUrl'] as String,
         isPrimary: json['IsPrimary'] as bool? ?? false,
-        createdAt: _parseDateTimeValue(json['CreatedAt']),
+        createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
       );
 }
 
@@ -2435,7 +2435,7 @@ class GroupHistoryItem {
       contentType: MessageContentType.fromValue(
         _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
-      createdAt: _parseDateTimeValue(json['CreatedAt']),
+      createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
       deliveredTo: _parseIntList(json['DeliveredTo']),
       readBy: _parseIntList(json['ReadBy']),
       isPinned: json['IsPinned'] as bool? ?? false,
@@ -2531,7 +2531,7 @@ class GroupMessageEvent {
       contentType: MessageContentType.fromValue(
         _parseNullableIntValue(json['ContentType']) ?? 0,
       ),
-      createdAt: _parseDateTimeValue(json['CreatedAt']),
+      createdAt: _parseNullableDateTimeValue(json['CreatedAt']) ?? DateTime.now().toUtc(),
       deliveredTo: _parseIntList(json['DeliveredTo']),
       readBy: _parseIntList(json['ReadBy']),
       fromUsername: json['FromUsername'] as String?,
@@ -3348,7 +3348,7 @@ class ReadSyncEventPayload {
   factory ReadSyncEventPayload.fromJson(Map<String, dynamic> json) {
     return ReadSyncEventPayload(
       messageIds: _parseIntList(json['MessageIds']),
-      readAt: _parseDateTimeValue(json['ReadAt'] ?? DateTime.now().toUtc()),
+      readAt: _parseNullableDateTimeValue(json['ReadAt']) ?? DateTime.now().toUtc(),
     );
   }
 

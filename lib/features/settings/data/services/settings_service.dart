@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/services/notification_service.dart';
 import 'package:two_space_app/core/utils/secure_store.dart';
 
 enum MessageTimestampPrecision { minutes, seconds, milliseconds }
@@ -481,6 +482,11 @@ class SettingsService {
             valueOf(_notificationsPostEnabledKey) != 'false';
       }
       _deferredSettingsLoaded = true;
+      
+      // Start foreground service if enabled
+      if (foregroundServiceEnabledNotifier.value) {
+        unawaited(NotificationService().startForegroundService());
+      }
     }();
 
     _loadDeferredSettingsFuture = future;
@@ -626,6 +632,13 @@ class SettingsService {
     _deferredLocallyModifiedKeys.add(_foregroundServiceEnabledKey);
     foregroundServiceEnabledNotifier.value = value;
     await SecureStore.write(_foregroundServiceEnabledKey, value.toString());
+    
+    // Start or stop the foreground service
+    if (value) {
+      await NotificationService().startForegroundService();
+    } else {
+      await NotificationService().stopForegroundService();
+    }
   }
 
   static Future<void> setNotificationsMessageEnabled(bool value) async {

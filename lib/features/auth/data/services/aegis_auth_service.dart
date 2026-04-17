@@ -15,6 +15,8 @@ import 'package:two_space_app/features/auth/data/services/aegis_identity_service
 export 'package:two_space_app/core/network/aegis/message_payloads.dart'
   show
     ActiveSessionInfo,
+    ProfileData,
+    ProfileGetResponse,
     RegisteredUserInfo,
     User,
     UserSearchResponse,
@@ -1193,6 +1195,12 @@ class AegisAuthService {
       throw error;
     }
     throw Exception(error.toString());
+  }
+
+  /// Get the authenticated user's own profile.
+  Future<ProfileGetResponse> getOwnProfile() async {
+    await ensureSession();
+    return _runAuthedProtocolRequest(_client.getOwnProfile);
   }
 
   AegisClient get rawClient => _client;

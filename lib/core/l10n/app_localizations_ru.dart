@@ -1515,6 +1515,33 @@ class AppLocalizationsRu extends AppLocalizations {
   String get changeEmailButton => 'Изменить email';
 
   @override
+  String get emailRequired => 'Email необходимо заполнить';
+
+  @override
+  String get emailInvalid => 'Некорректный адрес email';
+
+  @override
+  String get passwordRequired => 'Пароль необходимо заполнить';
+
+  @override
+  String get emailUnchanged => 'Новый email совпадает с текущим';
+
+  @override
+  String get changeEmailNotYetSupported =>
+      'Изменение email ещё не поддерживается';
+
+  @override
+  String get changeEmailNotAvailable =>
+      'Изменение email ещё недоступно. Свяжитесь с поддержкой.';
+
+  @override
+  String get changeEmailRequiresServerSupport =>
+      'Эта функция требует поддержку на сервере. Клиент готов, но ожидает обновления протокола.';
+
+  @override
+  String get emailHintExample => 'пример@example.com';
+
+  @override
   String changeEmailError(String error) {
     return 'Не удалось изменить email: $error';
   }

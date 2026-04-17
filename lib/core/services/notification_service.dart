@@ -43,13 +43,21 @@ class NotificationService {
     _initialized = true;
     _log.info('NotificationService initialized');
 
-    // Request iOS permissions
+    // Request permissions
     try {
+      // iOS permissions
       await _plugin
           .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions();
-    } catch (_) {
-      // Ignore if permission request fails
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+      
+      // Android 13+ permissions
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        await androidPlugin.requestNotificationsPermission();
+      }
+    } catch (e) {
+      _log.warning('Failed to request notification permissions: $e');
     }
   }
 

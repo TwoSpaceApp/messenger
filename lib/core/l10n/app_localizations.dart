@@ -2892,6 +2892,54 @@ abstract class AppLocalizations {
   /// **'Change email'**
   String get changeEmailButton;
 
+  /// Email required validation message
+  ///
+  /// In en, this message translates to:
+  /// **'Email is required'**
+  String get emailRequired;
+
+  /// Invalid email validation message
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email address'**
+  String get emailInvalid;
+
+  /// Password required validation message
+  ///
+  /// In en, this message translates to:
+  /// **'Password is required'**
+  String get passwordRequired;
+
+  /// Email unchanged validation message
+  ///
+  /// In en, this message translates to:
+  /// **'New email is the same as current'**
+  String get emailUnchanged;
+
+  /// Email change not supported error
+  ///
+  /// In en, this message translates to:
+  /// **'Email change is not yet supported'**
+  String get changeEmailNotYetSupported;
+
+  /// Email change not available message
+  ///
+  /// In en, this message translates to:
+  /// **'Email change is not yet available. Please contact support.'**
+  String get changeEmailNotAvailable;
+
+  /// Email change feature status message
+  ///
+  /// In en, this message translates to:
+  /// **'This feature requires server-side support. The client is prepared but awaits protocol updates.'**
+  String get changeEmailRequiresServerSupport;
+
+  /// Email input hint example
+  ///
+  /// In en, this message translates to:
+  /// **'user@example.com'**
+  String get emailHintExample;
+
   /// Change email error
   ///
   /// In en, this message translates to:
