@@ -38,6 +38,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String? _errorMessage;
   StreamSubscription<List<Chat>>? _roomsSub;
   Future<void>? _roomRefreshInFlight;
+  Timer? _authErrorRecoveryTimer;
+  int _authErrorRetryCount = 0;
+  static const int _maxAuthErrorRetries = 3;
+  static const Duration _authErrorRetryDelay = Duration(seconds: 3);
 
   final String _searchQuery = '';
 
@@ -59,6 +63,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _roomsSub?.cancel();
+    _authErrorRecoveryTimer?.cancel();
     super.dispose();
   }
 
@@ -168,14 +173,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _rooms = nextRooms;
           _loading = false;
           _errorMessage = null;
+          _authErrorRetryCount = 0; // Reset retry counter on success
+          _authErrorRecoveryTimer?.cancel();
+          _authErrorRecoveryTimer = null;
         });
       },
       onError: (Object error) {
         if (!mounted) return;
+        
+        final errorText = error.toString().toLowerCase();
+        final isAuthError = errorText.contains('notauthenticatedException') ||
+            errorText.contains('auth.not_authenticated') ||
+            errorText.contains('authenticated');
+        
         setState(() {
           _errorMessage = error.toString();
           _loading = false;
         });
+
+        // Auto-retry on auth errors after delay
+        if (isAuthError && _authErrorRetryCount < _maxAuthErrorRetries) {
+          _authErrorRecoveryTimer?.cancel();
+          _authErrorRetryCount++;
+          _authErrorRecoveryTimer = Timer(_authErrorRetryDelay, () {
+            if (mounted && _errorMessage != null) {
+              unawaited(_loadUserAndRooms(forceRefresh: true));
+            }
+          });
+        }
       },
     );
   }

@@ -98,11 +98,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
         label: l10n.peopleSegmentPhonebook,
         icon: Icons.contact_phone_outlined,
       ),
-      (
-        value: PeopleSegment.recent,
-        label: l10n.peopleSegmentRecent,
-        icon: Icons.schedule_rounded,
-      ),
     ];
     const pad = EdgeInsets.symmetric(horizontal: 16);
 
@@ -177,7 +172,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                 ),
                                 if (widget.showCallsShortcut)
                                   _HeaderIcon(
-                                    icon: Icons.history_rounded,
+                                    icon: Icons.phone_rounded,
                                     tooltip: l10n.callsTitle,
                                     onTap: _openCallsHistory,
                                   ),
@@ -207,12 +202,15 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                   return ChoiceChip(
                                     selected: selected,
                                     showCheckmark: false,
-                                    avatar: Icon(
-                                      segment.icon,
-                                      size: 18,
-                                      color: selected
-                                          ? theme.colorScheme.onPrimaryContainer
-                                          : theme.colorScheme.onSurfaceVariant,
+                                    avatar: Transform.translate(
+                                      offset: const Offset(0, -1),
+                                      child: Icon(
+                                        segment.icon,
+                                        size: 18,
+                                        color: selected
+                                            ? theme.colorScheme.onPrimaryContainer
+                                            : theme.colorScheme.onSurfaceVariant,
+                                      ),
                                     ),
                                     label: Text(segment.label),
                                     selectedColor: theme.colorScheme.primaryContainer
@@ -382,8 +380,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
         );
       case PeopleSegment.phonebook:
         w.addAll(_phonebookContent(d, l10n));
-      case PeopleSegment.recent:
-        section(l10n.peopleRecentTitle, d.recentPeople);
     }
     return w;
   }
@@ -578,8 +574,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
         return people.where((p) => p.isTwoSpaceUser).toList();
       case PeopleSegment.phonebook:
         return people.where((p) => p.isDeviceContact).toList();
-      case PeopleSegment.recent:
-        return people.where((p) => p.lastInteractionAt != null).toList();
     }
   }
 

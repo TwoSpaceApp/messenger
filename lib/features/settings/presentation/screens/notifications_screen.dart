@@ -112,22 +112,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ValueListenableBuilder<bool>(
           valueListenable: SettingsService.notificationsEnabledNotifier,
           builder: (context, enabled, _) {
-            return SettingsHeroCard(
+            return _NotificationToggle(
               icon: enabled
                   ? Icons.notifications_active_rounded
                   : Icons.notifications_off_rounded,
               title: l10n.settingsNotificationNew,
               subtitle: l10n.notificationsHeroSubtitle,
-              badges: [
-                _StatusBadge(
-                  label: l10n.notificationsLabel,
-                  active: enabled,
-                ),
-              ],
+              value: enabled,
+              onChanged: SettingsService.setNotificationsEnabled,
             );
           },
         ),
-        const SizedBox(height: UITokens.spaceMd),
+        const SizedBox(height: UITokens.spaceXLg),
 
         // Foreground service toggle
         SettingsSectionHeader(
@@ -140,7 +136,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               SettingsService.foregroundServiceEnabledNotifier,
           builder: (context, enabled, _) {
             return _NotificationToggle(
-              icon: Icons.publish_rounded,
+              icon: Icons.cloud_done_rounded,
               title: l10n.notificationsForegroundServiceEnabled,
               subtitle: l10n.notificationsForegroundServiceDescription,
               value: enabled,
@@ -161,7 +157,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               SettingsService.notificationsMessageEnabledNotifier,
           builder: (context, enabled, _) {
             return _NotificationToggle(
-              icon: Icons.message_rounded,
+              icon: Icons.mail_rounded,
               title: l10n.notificationsMessagesTitle,
               subtitle: l10n.notificationsMessagesDescription,
               value: enabled,
@@ -175,7 +171,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               SettingsService.notificationsChatEnabledNotifier,
           builder: (context, enabled, _) {
             return _NotificationToggle(
-              icon: Icons.group_add_rounded,
+              icon: Icons.chat_rounded,
               title: l10n.notificationsChatTitle,
               subtitle: l10n.notificationsChatDescription,
               value: enabled,
@@ -189,7 +185,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               SettingsService.notificationsPostEnabledNotifier,
           builder: (context, enabled, _) {
             return _NotificationToggle(
-              icon: Icons.feed_rounded,
+              icon: Icons.article_rounded,
               title: l10n.notificationsPostTitle,
               subtitle: l10n.notificationsPostDescription,
               value: enabled,
@@ -203,7 +199,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               SettingsService.notificationsReactionEnabledNotifier,
           builder: (context, enabled, _) {
             return _NotificationToggle(
-              icon: Icons.favorite_rounded,
+              icon: Icons.emoji_emotions_rounded,
               title: l10n.notificationsReactionTitle,
               subtitle: l10n.notificationsReactionDescription,
               value: enabled,
@@ -434,40 +430,6 @@ class _SoundCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.label, required this.active});
-
-  final String label;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: UITokens.spaceSmMd,
-        vertical: UITokens.spaceXSm,
-      ),
-      decoration: BoxDecoration(
-        color: active
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.72)
-            : theme.colorScheme.surface.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(UITokens.cornerPill),
-      ),
-      child: Text(
-        label,
-        style: theme.textTheme.labelLarge?.copyWith(
-          color: active
-              ? theme.colorScheme.primary
-              : AppColors.subtitleText(context),
-          fontWeight: FontWeight.w700,
-        ),
       ),
     );
   }

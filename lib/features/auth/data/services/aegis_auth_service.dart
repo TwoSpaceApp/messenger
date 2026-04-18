@@ -1207,6 +1207,10 @@ class AegisAuthService {
 }
 
 class NotAuthenticatedException implements Exception {
+  final String? message;
+
+  NotAuthenticatedException([this.message]);
+
   @override
-  String toString() => 'NotAuthenticatedException: auth.not_authenticated';
+  String toString() => 'NotAuthenticatedException: ${message ?? 'auth.not_authenticated'}';
 }

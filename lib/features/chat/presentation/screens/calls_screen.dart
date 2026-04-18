@@ -17,7 +17,6 @@ import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/people/presentation/controllers/calls_controller.dart';
 import 'package:two_space_app/features/people/presentation/widgets/people_search_field.dart';
 import 'package:two_space_app/features/people/presentation/widgets/person_avatar.dart';
-import 'package:two_space_app/features/profile/presentation/screens/search_contacts_screen.dart';
 
 class CallsScreen extends StatefulWidget {
   const CallsScreen({super.key});
@@ -69,6 +68,46 @@ class _CallsScreenState extends State<CallsScreen> {
 
         return Scaffold(
           backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Text(_selectionMode
+                ? '${l10n.callsTitle} • ${_selectedThreadKeys.length}'
+                : l10n.callsTitle),
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            actions: [
+              if (_selectionMode)
+                IconButton(
+                  onPressed: () => _selectAllVisible(sections),
+                  icon: const Icon(Icons.select_all_rounded),
+                  tooltip: l10n.storageAutoCleanSelectAll,
+                ),
+              if (_selectionMode)
+                IconButton(
+                  onPressed: _selectedThreadKeys.isEmpty
+                      ? null
+                      : () => _deleteSelected(sections),
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    color: _selectedThreadKeys.isEmpty ? theme.colorScheme.onSurface.withValues(alpha: 0.35) : theme.colorScheme.error,
+                  ),
+                  tooltip: l10n.delete,
+                ),
+              IconButton(
+                onPressed: _selectionMode
+                    ? _clearSelection
+                    : _openStartCall,
+                icon: Icon(
+                  _selectionMode
+                      ? Icons.close_rounded
+                      : Icons.add_ic_call_outlined,
+                ),
+                tooltip: _selectionMode
+                    ? l10n.cancelButton
+                    : l10n.callsStartCallAction,
+              ),
+            ],
+          ),
           body: ScreenBackground(
             child: SafeArea(
               child: Center(
@@ -79,70 +118,8 @@ class _CallsScreenState extends State<CallsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // ── Header row ──
                       Padding(
-                        padding: pad.copyWith(top: 14, bottom: 4),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _selectionMode
-                                    ? '${l10n.callsTitle} • ${_selectedThreadKeys.length}'
-                                    : l10n.callsTitle,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  color: theme.colorScheme.onSurface,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            if (_selectionMode)
-                              IconButton(
-                                onPressed: () => _selectAllVisible(sections),
-                                icon: Icon(
-                                  Icons.select_all_rounded,
-                                  color: theme.colorScheme.onSurface,
-                                  size: 20,
-                                ),
-                                tooltip: l10n.storageAutoCleanSelectAll,
-                                visualDensity: VisualDensity.compact,
-                              ),
-                            if (_selectionMode)
-                              IconButton(
-                                onPressed: _selectedThreadKeys.isEmpty
-                                    ? null
-                                    : () => _deleteSelected(sections),
-                                icon: Icon(
-                                  Icons.delete_outline_rounded,
-                                  color: _selectedThreadKeys.isEmpty
-                                      ? theme.colorScheme.onSurface.withValues(alpha: 0.35)
-                                      : theme.colorScheme.error,
-                                  size: 20,
-                                ),
-                                tooltip: l10n.delete,
-                                visualDensity: VisualDensity.compact,
-                              ),
-                            IconButton(
-                              onPressed: _selectionMode
-                                  ? _clearSelection
-                                  : _openStartCall,
-                              icon: Icon(
-                                _selectionMode
-                                    ? Icons.close_rounded
-                                    : Icons.add_ic_call_outlined,
-                                color: theme.colorScheme.onSurface,
-                                size: 20,
-                              ),
-                              tooltip: _selectionMode
-                                  ? l10n.cancelButton
-                                  : l10n.callsStartCallAction,
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ],
-                        ),
-                      ),
-                      // ── Search ──
-                      Padding(
-                        padding: pad.copyWith(top: 6, bottom: 6),
+                        padding: pad.copyWith(top: 16, bottom: 6),
                         child: PeopleSearchField(
                           controller: _searchController,
                           hintText: l10n.callsSearchHint,
@@ -550,19 +527,12 @@ class _CallsScreenState extends State<CallsScreen> {
 
   // ──────────────────────── Actions ──────────────────────────
 
-  Future<void> _openStartCall() async {
-    final selected = await Navigator.of(context).push<PersonEntry>(
-      MaterialPageRoute(
-        builder: (_) => const SearchContactsScreen(
-          purpose: SearchContactsPurpose.call,
-        ),
-      ),
-    );
-    if (selected != null && mounted) {
-      await _startCall(selected, false);
-      return;
+  void _openStartCall() {
+    // Start call action: in selection mode, clear selection;
+    // otherwise, user can click top contacts or history to initiate calls
+    if (_selectionMode) {
+      _clearSelection();
     }
-    await _controller.load();
   }
 
   Future<void> _openChat(PersonEntry person) async {

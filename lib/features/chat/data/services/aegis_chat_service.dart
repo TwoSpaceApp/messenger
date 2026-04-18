@@ -257,6 +257,7 @@ class AegisChatService {
   Future<void>? _persistInFlight;
   Future<bool>? _chatRefreshInFlight;
   Future<void>? _offlineFlushInFlight;
+  int _authRecoveryAttempts = 0;
   final Map<String, Map<String, AegisRoomMessage>> _dirtyMessagesByRoom =
       <String, Map<String, AegisRoomMessage>>{};
   final Map<String, Set<String>> _deletedMessageIdsByRoom =
@@ -269,6 +270,8 @@ class AegisChatService {
 
   static const Duration _persistDebounce = Duration(seconds: 4);
   static const Duration _chatRefreshCooldown = Duration(seconds: 20);
+  static const int _maxAuthRecoveryAttempts = 3;
+  static const Duration _authRecoveryInitialDelay = Duration(milliseconds: 500);
 
   final Map<String, _StoredConversation> _conversations = {};
 
@@ -1001,17 +1004,64 @@ class AegisChatService {
     return normalized.contains('user not found');
   }
 
-  Future<T> _retryAfterSessionRecovery<T>(Future<T> Function() action) async {
-    await _auth.recoverSession();
-    return action();
+  Future<T> _retryAfterSessionRecovery<T>(
+    Future<T> Function() action, {
+    required String operationName,
+  }) async {
+    if (_authRecoveryAttempts >= _maxAuthRecoveryAttempts) {
+      throw NotAuthenticatedException(
+        'Session recovery failed after $_maxAuthRecoveryAttempts attempts',
+      );
+    }
+
+    _authRecoveryAttempts++;
+    try {
+      // Apply exponential backoff: 500ms, 1s, 2s, etc.
+      final delayMs = _authRecoveryInitialDelay.inMilliseconds *
+          (1 << (_authRecoveryAttempts - 1)); // Bitshift instead of pow
+      final delay = Duration(milliseconds: delayMs);
+
+      _log.debug(
+        'Session recovery attempt $_authRecoveryAttempts/$_maxAuthRecoveryAttempts '
+        'for $operationName after ${delay.inMilliseconds}ms delay',
+      );
+
+      await Future<void>.delayed(delay);
+
+      final recovered = await _auth.recoverSession(reason: 'authed_$operationName');
+      if (!recovered) {
+        throw NotAuthenticatedException(
+          'Session recovery returned false (backoff active or recovery in progress)',
+        );
+      }
+
+      _log.debug('Session recovery succeeded on attempt $_authRecoveryAttempts');
+      _authRecoveryAttempts = 0; // Reset on success
+      return action();
+    } catch (e) {
+      _log.warning(
+        'Session recovery attempt $_authRecoveryAttempts failed: $e',
+      );
+      if (_authRecoveryAttempts >= _maxAuthRecoveryAttempts) {
+        _authRecoveryAttempts = 0; // Reset counter
+        rethrow;
+      }
+      rethrow;
+    }
   }
 
-  Future<T> _runAuthedRequest<T>(Future<T> Function() request) async {
+  Future<T> _runAuthedRequest<T>(
+    Future<T> Function() request, {
+    String operationName = 'request',
+  }) async {
     try {
       return await request();
     } on Object catch (error) {
       if (_isAuthRejectionMessage(error.toString())) {
-        return _retryAfterSessionRecovery(request);
+        return _retryAfterSessionRecovery(
+          request,
+          operationName: operationName,
+        );
       }
       rethrow;
     }
@@ -1021,10 +1071,17 @@ class AegisChatService {
     Future<T> Function() request, {
     required bool Function(T response) isSuccess,
     String? Function(T response)? messageOf,
+    String operationName = 'request',
   }) async {
-    var response = await _runAuthedRequest(request);
+    var response = await _runAuthedRequest(
+      request,
+      operationName: operationName,
+    );
     if (!isSuccess(response) && _isAuthRejectionMessage(messageOf?.call(response))) {
-      response = await _retryAfterSessionRecovery(request);
+      response = await _retryAfterSessionRecovery(
+        request,
+        operationName: operationName,
+      );
     }
     return response;
   }
@@ -1214,7 +1271,10 @@ class AegisChatService {
         response = await sendRequest();
       } on Object catch (error) {
         if (_isAuthRejectionMessage(error.toString())) {
-          response = await _retryAfterSessionRecovery(sendRequest);
+          response = await _retryAfterSessionRecovery(
+            sendRequest,
+            operationName: 'getProfile_$userId',
+          );
         } else {
           final fallback = _profileRequestFallbackInfo(
             userId,
@@ -1230,7 +1290,10 @@ class AegisChatService {
 
       if (!response.success) {
         if (_isAuthRejectionMessage(response.message)) {
-          response = await _retryAfterSessionRecovery(sendRequest);
+          response = await _retryAfterSessionRecovery(
+            sendRequest,
+            operationName: 'getProfile_retry_$userId',
+          );
         }
         if (!response.success && !_isUserNotFoundMessage(response.message)) {
           final fallback = _profileRequestFallbackInfo(
@@ -1315,7 +1378,10 @@ class AegisChatService {
       response = await sendRequest();
     } on Object catch (error) {
       if (_isAuthRejectionMessage(error.toString())) {
-        response = await _retryAfterSessionRecovery(sendRequest);
+        response = await _retryAfterSessionRecovery(
+          sendRequest,
+          operationName: 'getOwnProfile',
+        );
       } else {
         final fallback = _profileRequestFallbackInfo(
           selfId?.toString() ?? '',
@@ -1331,7 +1397,10 @@ class AegisChatService {
 
     if (!response.success) {
       if (_isAuthRejectionMessage(response.message)) {
-        response = await _retryAfterSessionRecovery(sendRequest);
+        response = await _retryAfterSessionRecovery(
+          sendRequest,
+          operationName: 'getOwnProfile_retry',
+        );
       }
       if (!response.success) {
         final fallback = _profileRequestFallbackInfo(
@@ -1416,6 +1485,7 @@ class AegisChatService {
       ),
       isSuccess: (response) => response.success,
       messageOf: (response) => response.message,
+      operationName: 'createChannel',
     );
     final channelId = response.channelId > 0 ? response.channelId : null;
     if (!response.success || channelId == null) {
@@ -1547,6 +1617,7 @@ class AegisChatService {
         ),
         isSuccess: (response) => response.success,
         messageOf: (response) => response.messageText,
+        operationName: 'sendPrivateMessage',
       );
       messageId = response.messageId > 0 ? response.messageId : null;
       if (!response.success) {
@@ -3537,7 +3608,10 @@ class AegisChatService {
       response = await sendRequest();
     } on Object catch (error) {
       if (_isAuthRejectionMessage(error.toString())) {
-        response = await _retryAfterSessionRecovery(sendRequest);
+        response = await _retryAfterSessionRecovery(
+          sendRequest,
+          operationName: 'updateProfile',
+        );
       } else {
         rethrow;
       }
@@ -3545,7 +3619,10 @@ class AegisChatService {
 
     if (!response.success) {
       if (_isAuthRejectionMessage(response.message)) {
-        response = await _retryAfterSessionRecovery(sendRequest);
+        response = await _retryAfterSessionRecovery(
+          sendRequest,
+          operationName: 'updateProfile_retry',
+        );
       }
       if (!response.success) {
         throw _profileResponseException(
@@ -4009,6 +4086,7 @@ class AegisChatService {
         () => _auth.rawClient.getChatList(),
         isSuccess: (response) => response.success,
         messageOf: (response) => response.message,
+        operationName: 'getChatList',
       );
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to load chat list');
