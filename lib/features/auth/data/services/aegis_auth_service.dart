@@ -11,6 +11,8 @@ import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/utils/secure_store.dart';
 import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_identity_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart'
+    show AegisChatService;
 
 export 'package:two_space_app/core/network/aegis/message_payloads.dart'
   show
@@ -853,6 +855,9 @@ class AegisAuthService {
     _logoutInProgress = true;
     _stopKeepAlive();
     try {
+      // Очистить чаты перед logout
+      await AegisChatService().clearCacheOnLogout();
+      
       await clearSession();
       try {
         await _disconnectClient();

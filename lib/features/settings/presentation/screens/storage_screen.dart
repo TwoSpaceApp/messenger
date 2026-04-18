@@ -675,22 +675,13 @@ class _StorageCleanupSection extends StatelessWidget {
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       title: Text(l10n.storageAutoCleanTitle),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(l10n.storageAutoCleanSubtitle),
-                          const SizedBox(height: UITokens.spaceXS),
-                          Text(
-                            autoCleanSettings.enabled
-                                ? l10n.storageAutoCleanStatusEnabled
-                                : l10n.storageAutoCleanStatusDisabled,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.subtitleText(context),
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
+                      subtitle: Text(
+                        autoCleanSettings.enabled
+                            ? l10n.storageAutoCleanStatusEnabled
+                            : l10n.storageAutoCleanStatusDisabled,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.subtitleText(context),
+                        ),
                       ),
                       value: autoCleanSettings.enabled,
                       onChanged: onAutoCleanChanged,
@@ -709,7 +700,7 @@ class _StorageCleanupSection extends StatelessWidget {
                       },
                       onTap: onAutoCleanIntervalPressed,
                     ),
-                    const SizedBox(height: UITokens.spaceSmMd),
+                    const SizedBox(height: UITokens.spaceSm),
                     _StorageSheetField(
                       icon: Icons.speed_rounded,
                       label: l10n.storageAutoCleanThresholdLabel,
@@ -718,7 +709,7 @@ class _StorageCleanupSection extends StatelessWidget {
                       ),
                       onTap: onAutoCleanThresholdPressed,
                     ),
-                    const SizedBox(height: UITokens.spaceSmMd),
+                    const SizedBox(height: UITokens.spaceSm),
                     _StorageSheetField(
                       icon: Icons.tune_rounded,
                       label: l10n.storageAutoCleanTypesLabel,
@@ -732,10 +723,10 @@ class _StorageCleanupSection extends StatelessWidget {
                       ].join(', '),
                       onTap: onAutoCleanTypesPressed,
                     ),
-                    const SizedBox(height: UITokens.space),
+                    const SizedBox(height: UITokens.spaceSm),
                     Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         _StorageSummaryPill(
                           color: theme.colorScheme.primary,
@@ -820,30 +811,33 @@ class _StorageSummaryPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: UITokens.space,
-        vertical: UITokens.spaceSmMd,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withValues(alpha: 0.42),
-        borderRadius: BorderRadius.circular(UITokens.cornerLg),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.12),
+    return Tooltip(
+      message: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: UITokens.space,
+          vertical: UITokens.spaceSmMd,
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: UITokens.spaceSm),
-          Text(
-            '$label: $value',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface.withValues(alpha: 0.42),
+          borderRadius: BorderRadius.circular(UITokens.cornerLg),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.12),
           ),
-        ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: UITokens.spaceSm),
+            Text(
+              value,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -883,34 +877,23 @@ class _StorageSheetField extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: 18, color: theme.colorScheme.primary),
-              const SizedBox(width: UITokens.spaceSmMd),
+              Tooltip(
+                message: label,
+                child: Icon(icon, size: 18, color: theme.colorScheme.primary),
+              ),
+              const SizedBox(width: UITokens.space),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.72,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: UITokens.space2XS),
-                    Text(
-                      value.isEmpty ? '—' : value,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  value.isEmpty ? '—' : value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(width: UITokens.spaceSm),
-              const Icon(Icons.expand_more_rounded),
+              const Icon(Icons.expand_more_rounded, size: 20),
             ],
           ),
         ),

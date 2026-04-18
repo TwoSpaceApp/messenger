@@ -167,6 +167,15 @@ class AegisChatLocalStore {
 
   Future<void> close() => _database.close();
 
+  /// Удалить все чаты и сообщения из локального хранилища.
+  /// Используется при logout для очистки кэша.
+  Future<void> clearAllChats() async {
+    await _database.transaction(() async {
+      await _database.delete(_database.aegisMessages).go();
+      await _database.delete(_database.aegisConversations).go();
+    });
+  }
+
   Future<void> _prepareLegacyPaths() async {
     final documentsDir = await getApplicationDocumentsDirectory();
     _legacyStoreFile = File(p.join(documentsDir.path, 'aegis_chat_store.json'));

@@ -522,6 +522,42 @@ class AegisChatService {
     _roomChanges.clear();
   }
 
+  /// Очистить весь кэш чатов при logout.
+  /// Это необходимо, чтобы при re-login показывались актуальные чаты.
+  Future<void> clearCacheOnLogout() async {
+    _log.info('Очистка кэша чатов перед logout');
+    _conversations.clear();
+    _messages.clear();
+    _profileCache.clear();
+    _peerUserIdToRoomIds.clear();
+    _messageAccessOrder.clear();
+    _roomReactions.clear();
+    _pinnedEventIdsByRoom.clear();
+    _deletedMessageIdsByRoom.clear();
+    _deletedRoomIds.clear();
+    _storedRoomIds.clear();
+    _hydratedRoomIds.clear();
+    _userInfoRequests.clear();
+    _mediaPathCache.clear();
+    _mediaResolveInFlight.clear();
+    _conversationsDirty = false;
+    _profilesDirty = false;
+    _chatChangeQueued = false;
+    _authRecoveryAttempts = 0;
+    
+    // Закрыть все room change контроллеры
+    for (final controller in _roomChanges.values) {
+      await controller.close();
+    }
+    _roomChanges.clear();
+    
+    // Эмитить пустой список чатов чтобы UI обновился
+    _chatChanges.add(null);
+    
+    // Очистить локальное хранилище
+    await _localStore.clearAllChats();
+  }
+
   bool get _shouldExposeChatCache =>
       _auth.isAuthenticated || _conversations.isNotEmpty;
 
