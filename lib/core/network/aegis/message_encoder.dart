@@ -2,6 +2,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:two_space_app/core/network/aegis/buffer_pool.dart';
+import 'package:two_space_app/core/network/aegis/typed_data_compat.dart';
 import 'package:two_space_app/core/network/aegis/crc32.dart';
 import 'package:two_space_app/core/network/aegis/errors.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
@@ -81,7 +82,7 @@ class MessageEncoder {
     buffer[5] = message.versionMinor;
     buffer[6] = flags;
     bd.setUint16(7, message.type.value);
-    bd.setUint64(9, message.sequenceId);
+    bd.setUint64Compat(9, message.sequenceId);
     bd.setUint32(17, payload.length);
 
     if (payload.isNotEmpty) {
@@ -163,7 +164,7 @@ class MessageEncoder {
     }
 
     // ── Sequence ID ────────────────────────────────────────────────
-    message.sequenceId = bd.getUint64(9);
+    message.sequenceId = bd.getUint64Compat(9);
 
     // ── Payload length (validated BEFORE allocation) ───────────────
     final payloadLength = bd.getUint32(17);

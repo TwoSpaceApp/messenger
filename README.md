@@ -68,7 +68,7 @@ TwoSpace использует **Aegis** — собственный бинарн�
 
 По умолчанию клиент передаёт встроенные app credentials. Для приватного/кастомного стенда можно переопределить их через `AEGIS_APP_ID` и `AEGIS_APP_HASH`.
 
-Полный гайд для разработки (зависимости для Linux/Windows, команды сборки, pre-commit checks) — в [CONTRIBUTING.md](CONTRIBUTING.md).
+Полный гайд для разработки ищите в [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -78,16 +78,12 @@ TwoSpace использует **Aegis** — собственный бинарн�
 
 ### Android (workflow: Build Android)
 
-- Debug (PR): `app-debug.apk`
-- Release: split APKs: `app-*-release.apk` (несколько файлов по ABI) + `app-release.aab`
-
-Установка:
-- Скачайте ZIP-архив из GitHub Releases или GitHub Actions → Artifacts
+- Скачайте ZIP-архив или APK-файл из GitHub Releases или GitHub Actions → Artifacts
 - Распакуйте вложенный APK для вашей архитектуры на телефон и установите (может потребоваться разрешить установку из неизвестных источников)
 
 ### Windows (workflow: Build Desktop)
 
-- Скачайте ZIP-архив из GitHub Releases или GitHub Actions → Artifacts
+- Скачайте ZIP-архив или EXE-установщик из GitHub Releases или GitHub Actions → Artifacts
 - Распакуйте и запустите `two_space_app.exe`
 
 ### Linux (workflow: Build Desktop)
@@ -113,6 +109,8 @@ sudo apt-get install -y --no-install-recommends \
 
 Официальный сайт с подробностями:
 🔗 [**Сайт TwoSpace**](https://twospace.ru) (на данный момент в разработке)
+
+Отправляйте коммиты и issues в репозиторий, а также делитесь отзывами в Telegram-канале. Ваше мнение важно для нас!
 
 ---
 

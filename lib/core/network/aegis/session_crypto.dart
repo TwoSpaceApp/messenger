@@ -9,6 +9,7 @@ import 'package:two_space_app/core/network/aegis/handshake_crypto.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/security_utils.dart';
+import 'package:two_space_app/core/network/aegis/typed_data_compat.dart';
 
 class AegisHandshakeContext {
   final ECPrivateKey _privateKey;
@@ -302,7 +303,7 @@ class AegisSessionCrypto {
     header[5] = message.versionMinor;
     header[6] = message.flags;
     bd.setUint16(7, message.type.value);
-    bd.setUint64(9, message.sequenceId);
+    bd.setUint64Compat(9, message.sequenceId);
     bd.setUint32(17, message.payloadLength);
     return header;
   }

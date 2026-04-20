@@ -1,0 +1,27 @@
+{
+  "name": "twospace-websocket-proxy",
+  "version": "1.0.0",
+  "description": "WebSocket to TCP bridge for Aegis protocol",
+  "main": "websocket-proxy.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node websocket-proxy.js",
+    "start:ssl": "USE_SSL=true node websocket-proxy.js",
+    "start:dev": "USE_TCP_HOST=localhost USE_TCP_PORT=8888 node websocket-proxy.js"
+  },
+  "keywords": [
+    "websocket",
+    "tcp",
+    "proxy",
+    "bridge",
+    "aegis"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.15.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
