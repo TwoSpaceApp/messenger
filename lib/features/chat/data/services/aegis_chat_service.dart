@@ -384,8 +384,17 @@ class AegisChatService {
 
   Future<void> _handleSessionRestored() async {
     _ensureIncomingAttached();
+    
+    // Force refresh of chat list from server now that session is restored
+    // This ensures UI shows chats quickly after login/reconnection
+    try {
+      _log.info('Session restored - refreshing chat list from server');
+      await _refreshChatsFromServer(force: true);
+    } on Object catch (error, stackTrace) {
+      _logHandledError('handleSessionRestored.refreshChats', error, stackTrace);
+    }
+    
     await _flushOfflineQueue();
-    unawaited(_refreshChatsQuietly());
   }
 
   void _markConversationsDirty() {

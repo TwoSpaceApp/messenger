@@ -16,6 +16,7 @@ import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/session_crypto.dart';
 import 'package:two_space_app/core/network/aegis/transport.dart';
 import 'package:two_space_app/core/services/dev_network_logger.dart';
+import 'package:two_space_app/core/utils/image_utils.dart';
 
 bool _isAppCredentialHandshakeError(Object error) {
   final text = error.toString().toLowerCase();
@@ -1312,11 +1313,24 @@ class AegisClient {
   ///
   /// The bytes are base64-encoded into a data URL and stored as the avatar.
   /// [mimeType] defaults to `'image/jpeg'`.
+  ///
+  /// Large images are automatically compressed to fit protocol limits (~500 KB).
   Future<ProfileUpdateResponse> uploadUserAvatar(
     Uint8List imageBytes, {
     String mimeType = 'image/jpeg',
   }) async {
-    final dataUrl = 'data:$mimeType;base64,${base64Encode(imageBytes)}';
+    var bytesToUpload = imageBytes;
+    
+    // Compress if image is too large for protocol payload
+    // Leave room for base64 encoding (~33% overhead) and data URL wrapper
+    if (bytesToUpload.length > 1048000) {
+      final compressed = ImageUtils.compressImage(bytesToUpload);
+      if (compressed != null) {
+        bytesToUpload = compressed;
+      }
+    }
+    
+    final dataUrl = 'data:$mimeType;base64,${base64Encode(bytesToUpload)}';
     final result = await addProfileAvatar(dataUrl, makePrimary: true);
     return ProfileUpdateResponse(
       success: result.success,

@@ -5915,6 +5915,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reactions to your messages'**
   String get notificationsReactionDescription;
+
+  /// Error message when image file is too large for upload
+  ///
+  /// In en, this message translates to:
+  /// **'Image too large'**
+  String get imageTooLarge;
+
+  /// Info message when image is automatically compressed
+  ///
+  /// In en, this message translates to:
+  /// **'Image was compressed to fit protocol limits'**
+  String get imageCompressed;
 }
 
 class _AppLocalizationsDelegate

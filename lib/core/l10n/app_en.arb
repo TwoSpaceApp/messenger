@@ -3694,5 +3694,13 @@
   "notificationsReactionDescription": "Reactions to your messages",
   "@notificationsReactionDescription": {
     "description": "Reactions notification toggle description"
+  },
+  "imageTooLarge": "Image too large",
+  "@imageTooLarge": {
+    "description": "Error message when image file is too large for upload"
+  },
+  "imageCompressed": "Image was compressed to fit protocol limits",
+  "@imageCompressed": {
+    "description": "Info message when image is automatically compressed"
   }
 }

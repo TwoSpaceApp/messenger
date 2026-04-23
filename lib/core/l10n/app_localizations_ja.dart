@@ -3156,4 +3156,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get notificationsReactionDescription => 'あなたのメッセージへのリアクション';
+
+  @override
+  String get imageTooLarge => 'Image too large';
+
+  @override
+  String get imageCompressed => 'Image was compressed to fit protocol limits';
 }

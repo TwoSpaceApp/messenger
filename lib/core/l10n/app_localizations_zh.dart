@@ -3138,4 +3138,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notificationsReactionDescription => '对您消息的反应';
+
+  @override
+  String get imageTooLarge => 'Image too large';
+
+  @override
+  String get imageCompressed => 'Image was compressed to fit protocol limits';
 }

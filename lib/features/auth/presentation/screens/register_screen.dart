@@ -12,6 +12,7 @@ import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/utils/image_utils.dart';
 import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
@@ -824,13 +825,46 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               );
               if (res != null && res.files.isNotEmpty) {
                 final file = res.files.single;
+                Uint8List imageData = file.bytes!;
+                
+                // Validate and compress image if necessary
+                if (ImageUtils.isImageTooLarge(imageData)) {
+                  final l10n = AppLocalizations.of(context)!;
+                  
+                  // Try to compress the image
+                  final compressed = ImageUtils.compressImage(imageData);
+                  if (compressed == null) {
+                    _showError(
+                      '${l10n.imageTooLarge}: ${ImageUtils.formatBytes(imageData.length)} > ${ImageUtils.formatBytes(ImageUtils.maxImageFileSize)}',
+                    );
+                    return;
+                  }
+                  
+                  if (compressed.length > ImageUtils.maxImageFileSize) {
+                    _showError(
+                      '${l10n.imageTooLarge}: ${ImageUtils.formatBytes(compressed.length)} > ${ImageUtils.formatBytes(ImageUtils.maxImageFileSize)}',
+                    );
+                    return;
+                  }
+                  
+                  imageData = compressed;
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.imageCompressed),
+                        backgroundColor: Colors.green,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                }
+                
                 setState(() {
-                  // _avatarPath = file.path;
-                  _avatarBytes = file.bytes;
+                  _avatarBytes = imageData;
                 });
               }
             } catch (e) {
-              _showError(l10n.filePickError(e.toString()));
+              _showError(AppLocalizations.of(context)!.filePickError(e.toString()));
             }
           },
           child: ScaleTransition(

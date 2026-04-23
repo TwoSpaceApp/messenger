@@ -3248,4 +3248,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get notificationsReactionDescription => 'Réactions à vos messages';
+
+  @override
+  String get imageTooLarge => 'Image too large';
+
+  @override
+  String get imageCompressed => 'Image was compressed to fit protocol limits';
 }

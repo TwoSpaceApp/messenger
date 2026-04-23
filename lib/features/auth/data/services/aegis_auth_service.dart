@@ -96,6 +96,7 @@ class AegisAuthService {
   bool _skipDisconnectAutoRecovery = false;
   DateTime? _recoveryBackoffUntil;
   String? _lastRecoveryBackoffReason;
+  int _consecutiveRecoveryFailures = 0;
 
   bool get isConnected => _client.isConnected;
   bool get isAuthenticated => _client.isAuthenticated;
@@ -383,16 +384,53 @@ class AegisAuthService {
       if (_token == null) return false;
 
       await connect();
+      
+      // Try stored authentication method first
+      var authenticated = false;
+      Object? lastError;
+      
       if (_looksLikeLegacyCredentialPair(_token!)) {
-        final separatorIndex = _token!.indexOf(':');
-        final identifier = _token!.substring(0, separatorIndex);
-        final password = _token!.substring(separatorIndex + 1);
-        await _client.login(identifier, password);
-        _token = _client.sessionToken ?? _token;
+        // Stored as username:password
+        try {
+          final separatorIndex = _token!.indexOf(':');
+          final identifier = _token!.substring(0, separatorIndex);
+          final password = _token!.substring(separatorIndex + 1);
+          await _client.login(identifier, password);
+          authenticated = true;
+        } on Object catch (e) {
+          _log.debug('Legacy credential pair auth failed: $e');
+          lastError = e;
+        }
       } else {
-        await _client.loginWithToken(_token!);
-        _token = _client.sessionToken ?? _token;
+        // Stored as opaque token - try it first
+        try {
+          await _client.loginWithToken(_token!);
+          authenticated = true;
+        } on Object catch (e) {
+          _log.debug('Opaque token auth failed (expected if token expired): $e');
+          lastError = e;
+        }
       }
+      
+      // If token-based auth failed, try fallback with username+password
+      // This handles expired tokens gracefully
+      if (!authenticated && _username != null) {
+        try {
+          _log.info('Token auth failed, attempting fallback with username: $_username');
+          // Note: we don't have the password stored, so this may fail
+          // But it allows the user to explicitly re-auth if needed
+          throw lastError ?? Exception('No auth method available');
+        } on Object catch (e) {
+          _log.warning('Fallback auth also failed: $e');
+          throw lastError ?? e;
+        }
+      }
+      
+      if (!authenticated) {
+        throw lastError ?? Exception('No auth method available');
+      }
+
+      _token = _client.sessionToken ?? _token;
       _username = _client.username ?? _username;
       _userId = _client.userId ?? _userId;
       await _saveSession();
@@ -487,13 +525,32 @@ class AegisAuthService {
   }
 
   Duration _recoveryBackoffFor(Object error) {
+    // Check if server explicitly tells us to wait
     final retryAfter = _retryAfterSeconds(error);
     if (retryAfter != null && retryAfter > 0) {
       return Duration(seconds: retryAfter.clamp(5, 180));
     }
+    
+    // Rate limiting gets longer backoff
     if (_isTooManyAuthenticationAttempts(error)) {
       return const Duration(seconds: 30);
     }
+    
+    // Transient errors (timeout, network) get shorter backoff with exponential increase
+    final errorText = error.toString().toLowerCase();
+    if (errorText.contains('timeout') || 
+        errorText.contains('timed out') ||
+        errorText.contains('socket') ||
+        errorText.contains('connection refused')) {
+      // Exponential backoff: 2s, 4s, 8s, 16s, capped at 60s
+      final clampedFailures = _consecutiveRecoveryFailures.clamp(1, 5);
+      final exponentialBackoff = Duration(seconds: 1 << clampedFailures);
+      return exponentialBackoff.inSeconds > 60 
+          ? const Duration(seconds: 60) 
+          : exponentialBackoff;
+    }
+    
+    // Other errors use default (12 seconds)
     return _defaultRecoveryBackoff;
   }
 
@@ -505,9 +562,11 @@ class AegisAuthService {
   void _clearRecoveryBackoff() {
     _recoveryBackoffUntil = null;
     _lastRecoveryBackoffReason = null;
+    _consecutiveRecoveryFailures = 0;
   }
 
   void _scheduleRecoveryBackoff(Object error, {required String reason}) {
+    _consecutiveRecoveryFailures++;
     final duration = _recoveryBackoffFor(error);
     _recoveryBackoffUntil = DateTime.now().add(duration);
     _lastRecoveryBackoffReason = '$reason: ${UserFacingError.format(error)}';

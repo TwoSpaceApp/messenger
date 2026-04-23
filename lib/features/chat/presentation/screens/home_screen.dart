@@ -15,6 +15,7 @@ import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/unread_badge.dart';
+import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_channel_screen.dart';
@@ -33,10 +34,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final AegisChatService _chat = AegisChatService();
+  final AegisAuthService _auth = AegisAuthService();
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
   String? _errorMessage;
   StreamSubscription<List<Chat>>? _roomsSub;
+  StreamSubscription<void>? _sessionRestoredSub;
   Future<void>? _roomRefreshInFlight;
   Timer? _authErrorRecoveryTimer;
   int _authErrorRetryCount = 0;
@@ -57,12 +60,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _subscribeToRooms();
+    _subscribeToSessionRestored();
     unawaited(_loadUserAndRooms());
+  }
+
+  void _subscribeToSessionRestored() {
+    _sessionRestoredSub?.cancel();
+    _sessionRestoredSub = _auth.sessionRestored.listen(
+      (_) {
+        if (mounted) {
+          // Session was restored - refresh chat list immediately
+          unawaited(_loadUserAndRooms(forceRefresh: true));
+        }
+      },
+      onError: (Object error) {
+        // Log but don't crash on session restoration issues
+        debugPrint('Session restored event error: $error');
+      },
+    );
   }
 
   @override
   void dispose() {
     _roomsSub?.cancel();
+    _sessionRestoredSub?.cancel();
     _authErrorRecoveryTimer?.cancel();
     super.dispose();
   }

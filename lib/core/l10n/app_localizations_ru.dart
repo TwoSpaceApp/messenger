@@ -3230,4 +3230,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notificationsReactionDescription => 'Реакции на ваши сообщения';
+
+  @override
+  String get imageTooLarge => 'Изображение слишком большое';
+
+  @override
+  String get imageCompressed =>
+      'Изображение сжато для совместимости с протоколом';
 }

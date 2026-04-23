@@ -3492,5 +3492,13 @@
   "notificationsReactionDescription": "Реакции на ваши сообщения",
   "@notificationsReactionDescription": {
     "description": "Reactions notification toggle description"
+  },
+  "imageTooLarge": "Изображение слишком большое",
+  "@imageTooLarge": {
+    "description": "Error message when image file is too large for upload"
+  },
+  "imageCompressed": "Изображение сжато для совместимости с протоколом",
+  "@imageCompressed": {
+    "description": "Info message when image is automatically compressed"
   }
 }
