@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
+import 'package:two_space_app/core/network/aegis/message_payloads_v2_1.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 
 /// Unified dispatcher that splits raw protocol messages into typed streams.
@@ -42,6 +43,18 @@ class AegisEventDispatcher {
       StreamController<SessionTerminatedEventPayload>.broadcast();
     final StreamController<ReadSyncEventPayload> _readSyncController =
       StreamController<ReadSyncEventPayload>.broadcast();
+
+  // v2.1+ Protocol Event Controllers
+  final StreamController<TokenExpired> _tokenExpiredController =
+      StreamController<TokenExpired>.broadcast();
+  final StreamController<DisconnectReason> _disconnectReasonController =
+      StreamController<DisconnectReason>.broadcast();
+  final StreamController<SessionConflict> _sessionConflictController =
+      StreamController<SessionConflict>.broadcast();
+  final StreamController<Pong> _pongController =
+      StreamController<Pong>.broadcast();
+  final StreamController<ServerOverloaded> _serverOverloadedController =
+      StreamController<ServerOverloaded>.broadcast();
 
   AegisEventDispatcher(Stream<Message> source) {
     _subscription = source.listen(_route);
@@ -171,6 +184,44 @@ class AegisEventDispatcher {
     return chatListResponses.listen(handler);
   }
 
+  // v2.1+ Protocol Getters
+  Stream<TokenExpired> get tokenExpiredEvents => _tokenExpiredController.stream;
+  Stream<DisconnectReason> get disconnectReasonEvents =>
+      _disconnectReasonController.stream;
+  Stream<SessionConflict> get sessionConflictEvents =>
+      _sessionConflictController.stream;
+  Stream<Pong> get pongEvents => _pongController.stream;
+  Stream<ServerOverloaded> get serverOverloadedEvents =>
+      _serverOverloadedController.stream;
+
+  StreamSubscription<TokenExpired> onTokenExpired(
+    void Function(TokenExpired event) handler,
+  ) {
+    return tokenExpiredEvents.listen(handler);
+  }
+
+  StreamSubscription<DisconnectReason> onDisconnectReason(
+    void Function(DisconnectReason event) handler,
+  ) {
+    return disconnectReasonEvents.listen(handler);
+  }
+
+  StreamSubscription<SessionConflict> onSessionConflict(
+    void Function(SessionConflict event) handler,
+  ) {
+    return sessionConflictEvents.listen(handler);
+  }
+
+  StreamSubscription<Pong> onPong(void Function(Pong event) handler) {
+    return pongEvents.listen(handler);
+  }
+
+  StreamSubscription<ServerOverloaded> onServerOverloaded(
+    void Function(ServerOverloaded event) handler,
+  ) {
+    return serverOverloadedEvents.listen(handler);
+  }
+
   Future<void> dispose() async {
     await _subscription.cancel();
     await _ackController.close();
@@ -189,6 +240,12 @@ class AegisEventDispatcher {
     await _fileChunkController.close();
     await _sessionTerminatedController.close();
     await _readSyncController.close();
+    // v2.1+ controllers
+    await _tokenExpiredController.close();
+    await _disconnectReasonController.close();
+    await _sessionConflictController.close();
+    await _pongController.close();
+    await _serverOverloadedController.close();
   }
 
   void _route(Message message) {
@@ -265,6 +322,33 @@ class AegisEventDispatcher {
       _tryEmit(
         () => ReadSyncEventPayload.fromBytes(message.payload),
         _readSyncController,
+      );
+    }
+    // v2.1+ Protocol handlers
+    else if (message.type == MessageType.tokenExpired) {
+      _tryEmit(
+        () => TokenExpired.fromBytes(message.payload),
+        _tokenExpiredController,
+      );
+    } else if (message.type == MessageType.disconnectReason) {
+      _tryEmit(
+        () => DisconnectReason.fromBytes(message.payload),
+        _disconnectReasonController,
+      );
+    } else if (message.type == MessageType.sessionConflict) {
+      _tryEmit(
+        () => SessionConflict.fromBytes(message.payload),
+        _sessionConflictController,
+      );
+    } else if (message.type == MessageType.pong) {
+      _tryEmit(
+        () => Pong.fromBytes(message.payload),
+        _pongController,
+      );
+    } else if (message.type == MessageType.serverOverloaded) {
+      _tryEmit(
+        () => ServerOverloaded.fromBytes(message.payload),
+        _serverOverloadedController,
       );
     }
   }

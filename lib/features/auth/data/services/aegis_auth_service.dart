@@ -419,15 +419,27 @@ class AegisAuthService {
           _log.info('Token auth failed, attempting fallback with username: $_username');
           // Note: we don't have the password stored, so this may fail
           // But it allows the user to explicitly re-auth if needed
-          throw lastError ?? Exception('No auth method available');
+          if (lastError is Exception) {
+            throw lastError;
+          } else {
+            throw Exception('No auth method available');
+          }
         } on Object catch (e) {
           _log.warning('Fallback auth also failed: $e');
-          throw lastError ?? e;
+          if (lastError is Exception) {
+            throw lastError;
+          } else {
+            throw Exception(e);
+          }
         }
       }
       
       if (!authenticated) {
-        throw lastError ?? Exception('No auth method available');
+        if (lastError is Exception) {
+          throw lastError;
+        } else {
+          throw Exception('No auth method available');
+        }
       }
 
       _token = _client.sessionToken ?? _token;

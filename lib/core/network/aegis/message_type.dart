@@ -131,7 +131,18 @@ enum MessageType {
   sessionRevokeRequest(94),
   sessionRevokeResponse(95),
   sessionTerminatedEvent(96),
-  readSyncEvent(97);
+  readSyncEvent(97),
+
+  // v2.1+ Protocol improvements
+  pong(98),
+  keepAliveExponential(99),
+  tokenExpired(100),
+  disconnectReason(101),
+  sessionConflict(102),
+  profilesBatch(103),
+  chatListStream(104),
+  chatListChunk(105),
+  serverOverloaded(106);
 
   const MessageType(this.value);
   final int value;
