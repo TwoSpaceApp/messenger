@@ -68,7 +68,7 @@ jobs:
         run: flutter gen-l10n
 
       - name: Regenerate code
-        run: dart build --delete-conflicting-outputs
+        run: dart build
 
       - name: Analyze code
         run: flutter analyze --no-fatal-infos
