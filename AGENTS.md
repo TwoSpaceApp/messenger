@@ -60,15 +60,15 @@ Project commands:
 
 - Install dependencies: `flutter pub get`
 - Regenerate localizations: `flutter gen-l10n`
-- Regenerate generated Dart code and env bindings: `dart run build_runner build -d`
+- Regenerate generated Dart code and env bindings: `dart build -d`
 
-If `.env` changes, regenerate Envied output with `dart run build_runner build -d`.
+If `.env` changes, regenerate Envied output with `dart build -d`.
 
 GOOD:
 
 - Run `flutter analyze` only for touched files after a focused Dart/UI change.
 - Run `flutter gen-l10n` after adding or changing ARB strings.
-- Run `dart run build_runner build -d` after changing `freezed`, `json_serializable`, `riverpod`, or `envied` inputs.
+- Run `dart build -d` after changing `freezed`, `json_serializable`, `riverpod`, or `envied` inputs.
 
 BAD:
 

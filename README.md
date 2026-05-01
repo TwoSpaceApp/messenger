@@ -56,7 +56,7 @@ TwoSpace использует **Aegis** — собственный бинарн�
 Коротко:
 
 1) `cp .env.example .env`
-2) `dart run build_runner build -d`
+2) `dart build -d`
 3) `flutter pub get`
 4) `flutter run`
 

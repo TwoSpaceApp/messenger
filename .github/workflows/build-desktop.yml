@@ -116,7 +116,7 @@ jobs:
         run: flutter gen-l10n
 
       - name: Regenerate code
-        run: dart run build_runner build --delete-conflicting-outputs
+        run: dart build --delete-conflicting-outputs
 
       - name: Prepare build env from GitHub secrets
         shell: bash
@@ -157,8 +157,8 @@ jobs:
       - name: Force regenerate code for build env
         run: |
           flutter gen-l10n
-          dart run build_runner clean
-          dart run build_runner build --delete-conflicting-outputs
+          dart build clean
+          dart build --delete-conflicting-outputs
 
       - name: Verify build env values are embedded
         shell: bash

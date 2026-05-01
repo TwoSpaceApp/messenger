@@ -47,7 +47,7 @@ flutter pub get
 
 # Run code generation if needed
 echo "🔄 Running code generation..."
-dart run build_runner build -d
+dart build -d
 
 # Generate localizations
 echo "🌍 Generating localizations..."

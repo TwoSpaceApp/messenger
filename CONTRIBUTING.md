@@ -34,7 +34,7 @@
    ```bash
    cp .env.example .env
    # Отредактируйте .env с нужными значениями
-   dart run build_runner build -d
+   dart build -d
    ```
 
    Правила работы с env:
@@ -126,7 +126,7 @@ lib/
 4. **Модели данных и Стейты**: Для описания моделей и стейтов провайдеров используйте пакет `freezed` (и `@freezed`). Это дает иммутабельность, генерацию `copyWith` и безопасные union-типы.
 5. **Кодогенерация**: При изменении классов с аннотациями (`@riverpod`, `@freezed`, `@JsonSerializable`) обязательно запускайте генератор:
    ```bash
-   dart run build_runner build -d
+   dart build -d
    ```
 
-6. **Изменения env**: После правки `.env` тоже запускайте `dart run build_runner build -d`, потому что `Envied` генерирует compile-time файл [lib/core/config/env.g.dart](lib/core/config/env.g.dart).
+6. **Изменения env**: После правки `.env` тоже запускайте `dart build -d`, потому что `Envied` генерирует compile-time файл [lib/core/config/env.g.dart](lib/core/config/env.g.dart).

@@ -81,7 +81,7 @@ BAD:
 
 - Prefer `flutter analyze <changed files>` first.
 - Run `flutter gen-l10n` when localization inputs change.
-- Run `dart run build_runner build -d` when `freezed`, `json_serializable`, `riverpod`, or `envied` inputs change.
+- Run `dart build -d` when `freezed`, `json_serializable`, `riverpod`, or `envied` inputs change.
 - Run focused tests when behavior changed in a tested area.
 
 ## Avoid

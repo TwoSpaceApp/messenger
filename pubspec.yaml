@@ -1,7 +1,7 @@
 name: two_space_app
 description: "A secure and feature-rich messenger."
 publish_to: 'none'
-version: 2.0.8-beta+66
+version: 2.0.8-beta+67
 
 environment:
   sdk: ^3.8.0
@@ -93,12 +93,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   very_good_analysis: ^10.1.0
-  build_runner: ^2.4.13
+  build_runner: ^2.4.14
   riverpod_generator: ^3.0.3
   drift_dev: ^2.31.0
   flutter_launcher_icons: ^0.14.4
-  freezed: ^3.2.3
-  json_serializable: ^6.11.2
+  freezed: ^3.3.0
+  json_serializable: ^7.0.0
 flutter:
   uses-material-design: true
   generate: true
