@@ -110,13 +110,16 @@ jobs:
         run: cp .env.example .env
 
       - name: Install dependencies
-        run: flutter pub get
+        run: flutter pub get && apt install libgtk-3-dev && apt install mesa-utils
 
       - name: Regenerate localizations
         run: flutter gen-l10n
 
       - name: Regenerate code
-        run: dart run build_runner build --delete-conflicting-outputs
+        run: 
+          flutter pub upgrade build_runner
+          rm -rf .dart_tool/build/
+          dart run build_runner build --delete-conflicting-outputs
 
       - name: Prepare build env from GitHub secrets
         shell: bash
@@ -158,6 +161,8 @@ jobs:
         run: |
           flutter gen-l10n
           dart build clean
+          flutter pub upgrade build_runner
+          rm -rf .dart_tool/build/
           dart run build_runner build --delete-conflicting-outputs
 
       - name: Verify build env values are embedded
