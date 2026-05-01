@@ -93,7 +93,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   very_good_analysis: ^10.1.0
-  build_runner: ^2.4.14
+  build_runner: ^2.4.10
   riverpod_generator: ^3.0.3
   drift_dev: ^2.31.0
   flutter_launcher_icons: ^0.14.4
