@@ -68,7 +68,7 @@ jobs:
         run: flutter gen-l10n
 
       - name: Regenerate code
-        run: dart build
+        run: flutter pub run build_runner build
 
       - name: Analyze code
         run: flutter analyze --no-fatal-infos
