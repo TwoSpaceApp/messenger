@@ -36,8 +36,8 @@ Future<void> _disposeShell(WidgetTester tester) async {
 }
 
 void main() {
-  group('MessageStatusIcon', () {
-    testWidgets('renders pending state first', (tester) async {
+  group("MessageStatusIcon", () {
+    testWidgets("renders pending state first", (tester) async {
       await _pumpInShell(
         tester,
         const MessageStatusIcon(
@@ -51,7 +51,7 @@ void main() {
       await _disposeShell(tester);
     });
 
-    testWidgets('animates from sent to read state', (tester) async {
+    testWidgets("animates from sent to read state", (tester) async {
       await _pumpInShell(
         tester,
         const MessageStatusIcon(
@@ -82,20 +82,20 @@ void main() {
     });
   });
 
-  group('UnreadBadge', () {
-    testWidgets('hides when count is zero', (tester) async {
+  group("UnreadBadge", () {
+    testWidgets("hides when count is zero", (tester) async {
       await _pumpInShell(tester, const UnreadBadge(count: 0));
 
       expect(find.byType(ShadBadge), findsNothing);
-      expect(find.text('0'), findsNothing);
+      expect(find.text("0"), findsNothing);
       await _disposeShell(tester);
     });
 
-    testWidgets('shows compact capped count', (tester) async {
+    testWidgets("shows compact capped count", (tester) async {
       await _pumpInShell(tester, const UnreadBadge(count: 142));
 
       expect(find.byType(ShadBadge), findsOneWidget);
-      expect(find.text('99+'), findsOneWidget);
+      expect(find.text("99+"), findsOneWidget);
       await _disposeShell(tester);
     });
   });

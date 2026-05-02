@@ -38,7 +38,7 @@ class StructuredError {
   final Object? originalError;
 
   @override
-  String toString() => 'StructuredError($category, $code): $message';
+  String toString() => '[$category.name] $code: $message';
 }
 
 /// Сервис для централизованной обработки и логирования ошибок

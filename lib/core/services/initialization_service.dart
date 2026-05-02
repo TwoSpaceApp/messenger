@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/config/environment_validator.dart';
 import 'package:two_space_app/core/services/notification_service.dart';
+import 'package:two_space_app/core/services/time_out_exception.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 /// Result of an initialization step
@@ -346,10 +347,3 @@ class _SettingsStep implements InitializationStep {
   }
 }
 
-class TimeoutException implements Exception {
-  TimeoutException(this.message);
-  final String message;
-
-  @override
-  String toString() => 'TimeoutException: $message';
-}

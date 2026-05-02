@@ -48,14 +48,14 @@ void main() {
         .setMockMethodCallHandler(secureStorageChannel, null);
   });
 
-  group('InitializationService', () {
-    test('initialize completes without crashing', () async {
+  group("InitializationService", () {
+    test("initialize completes without crashing", () async {
       final result = await InitializationService.initialize();
       expect(result, isNotNull);
       expect(result.steps, isNotEmpty);
     });
 
-    test('initialization result contains step information', () async {
+    test("initialization result contains step information", () async {
       final result = await InitializationService.initialize();
       expect(result.totalDuration, isNotNull);
       expect(result.steps.length, greaterThan(0));
@@ -66,13 +66,13 @@ void main() {
       }
     });
 
-    test('toJson produces valid structure', () async {
+    test("toJson produces valid structure", () async {
       final result = await InitializationService.initialize();
       final json = result.toJson();
 
-      expect(json['totalDuration'], isNotNull);
-      expect(json['hasFailures'], isA<bool>());
-      expect(json['steps'], isA<List>());
+      expect(json["totalDuration"], isNotNull);
+      expect(json["hasFailures"], isA<bool>());
+      expect(json["steps"], isA<List>());
     });
   });
 }

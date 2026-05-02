@@ -64,8 +64,10 @@ class WebAegisConnection implements AegisConnection {
       // Build WebSocket URL
       // On web, we use the same scheme as the page (secure HTTPS → wss://, plain HTTP → ws://)
       final wsScheme = html.window.location.protocol == 'https:' ? 'wss' : 'ws';
-      final pageHost = html.window.location.hostname ?? 'localhost';
-      final pagePort = html.window.location.port ?? (wsScheme == 'wss' ? '443' : '80');
+       final pageHost = html.window.location.hostname ?? 'localhost';
+       final pagePort = html.window.location.port != null 
+           ? html.window.location.port 
+           : (wsScheme == 'wss' ? '443' : '80');
       
       // Connect to WebSocket proxy on the same origin, on path /ws
       // This assumes nginx is configured to proxy /ws to localhost:9999

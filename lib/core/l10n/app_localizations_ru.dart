@@ -24,8 +24,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get errorInitialization => 'Ошибка инициализации';
 
   @override
-  String get errorInitializationFull =>
-      'Ошибка инициализации. Пожалуйста, перезапустите приложение.';
+  String get errorInitializationFull => 'Ошибка инициализации. Пожалуйста, перезапустите приложение.';
 
   @override
   String get errorNetwork => 'Ошибка сети. Проверьте подключение.';
@@ -120,12 +119,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chooseAegisUsernamePrompt => 'Придумайте Aegis username.';
 
   @override
-  String get validationAegisUsernameFormat =>
-      'Username должен быть длиной 3-32 символа и содержать только латиницу, цифры, ., _ или -.';
+  String get validationAegisUsernameFormat => 'Username должен быть длиной 3-32 символа и содержать только латиницу, цифры, ., _ или -.';
 
   @override
-  String get aegisUsernameHelper =>
-      'Aegis username: 3-32 символа, латиница, цифры, ., _ или -';
+  String get aegisUsernameHelper => 'Aegis username: 3-32 символа, латиница, цифры, ., _ или -';
 
   @override
   String loginCooldownMessage(int seconds) {
@@ -359,8 +356,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get fileSent => 'Файл отправлен';
 
   @override
-  String get voiceNotSupported =>
-      'Запись голоса не поддерживается на этой платформе';
+  String get voiceNotSupported => 'Запись голоса не поддерживается на этой платформе';
 
   @override
   String get microphonePermRequired => 'Нужно разрешение микрофона';
@@ -455,16 +451,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accountProfileTitle => 'Мой аккаунт';
 
   @override
-  String get accountProfileSubtitle =>
-      'Управление публичными данными профиля и контактами';
+  String get accountProfileSubtitle => 'Управление публичными данными профиля и контактами';
 
   @override
-  String get accountProfileEditSubtitle =>
-      'Изменяйте видимые данные профиля и сохраняйте их прямо здесь';
+  String get accountProfileEditSubtitle => 'Изменяйте видимые данные профиля и сохраняйте их прямо здесь';
 
   @override
-  String get otherProfileSubtitle =>
-      'Публичный профиль и доступные контактные данные';
+  String get otherProfileSubtitle => 'Публичный профиль и доступные контактные данные';
 
   @override
   String get profileSubtitle => 'Изменить данные профиля';
@@ -583,8 +576,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get biometricLabel => 'Биометрия';
 
   @override
-  String get biometricSubtitle =>
-      'Используйте Face ID, отпечаток пальца или код устройства';
+  String get biometricSubtitle => 'Используйте Face ID, отпечаток пальца или код устройства';
 
   @override
   String get activeSessionsLabel => 'Активные сеансы';
@@ -641,8 +633,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deleteAccountTitle => 'Удаление аккаунта';
 
   @override
-  String get deleteAccountContent =>
-      'Вы уверены, что хотите удалить аккаунт? Это действие необратимо.';
+  String get deleteAccountContent => 'Вы уверены, что хотите удалить аккаунт? Это действие необратимо.';
 
   @override
   String get deleteFeatureLater => 'Функция удаления будет добавлена позже';
@@ -699,12 +690,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get profileStatusLabel => 'Статус';
 
   @override
-  String get profileModerationNoticeTitle =>
-      'Действия безопасности пока не готовы';
+  String get profileModerationNoticeTitle => 'Действия безопасности пока не готовы';
 
   @override
-  String get profileModerationNoticeMessage =>
-      'Блокировка и жалобы появятся здесь после завершения сценария модерации.';
+  String get profileModerationNoticeMessage => 'Блокировка и жалобы появятся здесь после завершения сценария модерации.';
 
   @override
   String get blockUserAction => 'Заблокировать';
@@ -730,8 +719,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get hideFromSearch => 'Скрыть из поиска';
 
   @override
-  String get hideFromSearchSubtitle =>
-      'Не показывать меня в результатах поиска';
+  String get hideFromSearchSubtitle => 'Не показывать меня в результатах поиска';
 
   @override
   String get hideLastSeen => 'Скрывать статус «был(а) в сети»';
@@ -751,8 +739,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sessionExpiryDaysTitle => 'Срок действия входа (дни)';
 
   @override
-  String get sessionExpiryDaysContent =>
-      'Выберите количество дней (мин: 7, макс: 365).';
+  String get sessionExpiryDaysContent => 'Выберите количество дней (мин: 7, макс: 365).';
 
   @override
   String get daysLabel => 'Дней';
@@ -800,12 +787,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get contactsAccessTitle => 'Доступ к контактам';
 
   @override
-  String get contactsPermDeniedPermanent =>
-      'Разрешение отклонено навсегда. Откройте настройки для доступа к контактам.';
+  String get contactsPermDeniedPermanent => 'Разрешение отклонено навсегда. Откройте настройки для доступа к контактам.';
 
   @override
-  String get contactsPermRequired =>
-      'Для отображения контактов необходимо разрешение.';
+  String get contactsPermRequired => 'Для отображения контактов необходимо разрешение.';
 
   @override
   String get openSettingsButton => 'Открыть настройки';
@@ -902,8 +887,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get privateRoomOption => 'Частная комната';
 
   @override
-  String get privateRoomSubtitle =>
-      'Только приглашённые пользователи могут присоединиться';
+  String get privateRoomSubtitle => 'Только приглашённые пользователи могут присоединиться';
 
   @override
   String get publicRoomOption => 'Общедоступная комната';
@@ -915,8 +899,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get showHistoryLabel => 'Показывать историю сообщений';
 
   @override
-  String get showHistorySubtitle =>
-      'Новые пользователи смогут видеть предыдущие сообщения';
+  String get showHistorySubtitle => 'Новые пользователи смогут видеть предыдущие сообщения';
 
   @override
   String get enterRoomNameError => 'Пожалуйста, введите название комнаты';
@@ -989,8 +972,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deleteGroupLabel => 'Удалить группу';
 
   @override
-  String get deleteGroupWarning =>
-      'Это действие НЕОБРАТИМО. Группа будет удалена навсегда.';
+  String get deleteGroupWarning => 'Это действие НЕОБРАТИМО. Группа будет удалена навсегда.';
 
   @override
   String get confirmDeleteTitle => 'Подтвердить удаление';
@@ -1046,12 +1028,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get newChatChooserTitle => 'Начать новый диалог';
 
   @override
-  String get newChatChooserSubtitle =>
-      'Выберите, что вы хотите создать или куда хотите войти.';
+  String get newChatChooserSubtitle => 'Выберите, что вы хотите создать или куда хотите войти.';
 
   @override
-  String get createDirectChatSubtitle =>
-      'Найдите человека или введите Aegis ID вручную.';
+  String get createDirectChatSubtitle => 'Найдите человека или введите Aegis ID вручную.';
 
   @override
   String get directChatTab => 'Личный чат';
@@ -1063,22 +1043,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get channelChatTab => 'Канал';
 
   @override
-  String get createGroupSubtitle =>
-      'Настройте группу, выберите участников и сразу получите ссылку-приглашение.';
+  String get createGroupSubtitle => 'Настройте группу, выберите участников и сразу получите ссылку-приглашение.';
 
   @override
   String get createChannelTitle => 'Создать канал';
 
   @override
-  String get createChannelSubtitle =>
-      'Создайте канал с аватаром, описанием и ссылкой.';
+  String get createChannelSubtitle => 'Создайте канал с аватаром, описанием и ссылкой.';
 
   @override
   String get startDirectChatTitle => 'Начать личный чат';
 
   @override
-  String get contactIdDescription =>
-      'Введите username или Aegis ID пользователя';
+  String get contactIdDescription => 'Введите username или Aegis ID пользователя';
 
   @override
   String get contactIdLabel => 'Username или Aegis ID';
@@ -1090,8 +1067,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get hintCardTitle => 'Подсказка';
 
   @override
-  String get contactIdExplanation =>
-      'Можно использовать username или числовой Aegis ID пользователя';
+  String get contactIdExplanation => 'Можно использовать username или числовой Aegis ID пользователя';
 
   @override
   String get enterUserIdError => 'Введите ID пользователя';
@@ -1106,8 +1082,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get privateGroupLabel => 'Приватная группа';
 
   @override
-  String get privateGroupSubtitle =>
-      'Только приглашённые пользователи могут присоединиться';
+  String get privateGroupSubtitle => 'Только приглашённые пользователи могут присоединиться';
 
   @override
   String get createRoomButton => 'Создать комнату';
@@ -1119,12 +1094,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get customizationHeroTitle => 'Соберите интерфейс под свой ритм';
 
   @override
-  String get customizationHeroSubtitle =>
-      'Настраивайте стиль через живое превью, готовые пресеты, движение и плотность интерфейса.';
+  String get customizationHeroSubtitle => 'Настраивайте стиль через живое превью, готовые пресеты, движение и плотность интерфейса.';
 
   @override
-  String get notificationsHeroSubtitle =>
-      'Настройте оповещения, звук и пользовательские превью так, чтобы всё ощущалось спокойно и аккуратно.';
+  String get notificationsHeroSubtitle => 'Настройте оповещения, звук и пользовательские превью так, чтобы всё ощущалось спокойно и аккуратно.';
 
   @override
   String get livePreviewBadge => 'Живое превью';
@@ -1133,36 +1106,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get stylePresetsTitle => 'Пресеты стиля';
 
   @override
-  String get stylePresetsSubtitle =>
-      'Начните с готового визуального направления, затем доведите детали вручную.';
+  String get stylePresetsSubtitle => 'Начните с готового визуального направления, затем доведите детали вручную.';
 
   @override
   String get moodSectionTitle => 'Характер';
 
   @override
-  String get moodSectionSubtitle =>
-      'Выберите акцент, который задаёт фон, подсветки и общий тон интерфейса.';
+  String get moodSectionSubtitle => 'Выберите акцент, который задаёт фон, подсветки и общий тон интерфейса.';
 
   @override
   String get typeSectionTitle => 'Типографика';
 
   @override
-  String get typeSectionSubtitle =>
-      'Подберите семейство шрифта, насыщенность и размер для всего приложения.';
+  String get typeSectionSubtitle => 'Подберите семейство шрифта, насыщенность и размер для всего приложения.';
 
   @override
   String get motionSectionTitle => 'Движение';
 
   @override
-  String get motionSectionSubtitle =>
-      'Управляйте тем, насколько живо ведут себя фон и световые слои.';
+  String get motionSectionSubtitle => 'Управляйте тем, насколько живо ведут себя фон и световые слои.';
 
   @override
   String get densitySectionTitle => 'Плотность';
 
   @override
-  String get densitySectionSubtitle =>
-      'Настройте отступы, форму пузырей и скорость исчезновения навигации.';
+  String get densitySectionSubtitle => 'Настройте отступы, форму пузырей и скорость исчезновения навигации.';
 
   @override
   String get themeModeLabel => 'Баланс света';
@@ -1171,8 +1139,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dynamicBubblesLabel => 'Динамические пузыри';
 
   @override
-  String get dynamicBubblesSubtitle =>
-      'Добавляет направленные углы пузырям сообщений для более живого ритма диалога.';
+  String get dynamicBubblesSubtitle => 'Добавляет направленные углы пузырям сообщений для более живого ритма диалога.';
 
   @override
   String get bubbleRoundingLabel => 'Скругление пузырей';
@@ -1201,36 +1168,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get presetQuietGlass => 'Тихий лёд';
 
   @override
-  String get presetQuietGlassSubtitle =>
-      'Холодная глубина, ровный контраст и спокойное движение.';
+  String get presetQuietGlassSubtitle => 'Холодная глубина, ровный контраст и спокойное движение.';
 
   @override
   String get presetNightSignal => 'Ночной эфир';
 
   @override
-  String get presetNightSignalSubtitle =>
-      'Более плотная компоновка, яркие акценты и тёмный пульс.';
+  String get presetNightSignalSubtitle => 'Более плотная компоновка, яркие акценты и тёмный пульс.';
 
   @override
   String get presetEditorial => 'Редакция под дождём';
 
   @override
-  String get presetEditorialSubtitle =>
-      'Сдержанное движение, спокойный цвет и акцент на чтении.';
+  String get presetEditorialSubtitle => 'Сдержанное движение, спокойный цвет и акцент на чтении.';
 
   @override
   String get presetSolarFlare => 'Янтарный август';
 
   @override
-  String get presetSolarFlareSubtitle =>
-      'Тёплые акценты, светлее поверхности и более энергичный фон.';
+  String get presetSolarFlareSubtitle => 'Тёплые акценты, светлее поверхности и более энергичный фон.';
 
   @override
   String get presetRetroPulse => 'Клубника в декабре';
 
   @override
-  String get presetRetroPulseSubtitle =>
-      'Компактно, игриво и намеренно стилизовано.';
+  String get presetRetroPulseSubtitle => 'Компактно, игриво и намеренно стилизовано.';
 
   @override
   String get previewRoomsLabel => 'Комнаты';
@@ -1245,22 +1207,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get previewRoomsTitle => 'Утренний обзор';
 
   @override
-  String get previewRoomsSubtitle =>
-      'Компактный список комнат с живыми фразами и более понятными статусами.';
+  String get previewRoomsSubtitle => 'Компактный список комнат с живыми фразами и более понятными статусами.';
 
   @override
   String get previewConversationTitle => 'Короткий диалог';
 
   @override
-  String get previewConversationSubtitle =>
-      'Проверьте, как в небольшом разговоре читаются ритм, отступы и форма пузырей.';
+  String get previewConversationSubtitle => 'Проверьте, как в небольшом разговоре читаются ритм, отступы и форма пузырей.';
 
   @override
   String get previewSettingsTitle => 'Настройки под рукой';
 
   @override
-  String get previewSettingsSubtitle =>
-      'Сразу видно, как будут собираться карточки параметров до применения ко всему приложению.';
+  String get previewSettingsSubtitle => 'Сразу видно, как будут собираться карточки параметров до применения ко всему приложению.';
 
   @override
   String get previewLiveLabel => 'Live';
@@ -1269,46 +1228,37 @@ class AppLocalizationsRu extends AppLocalizations {
   String get previewRoomDesignSync => 'Design Sync';
 
   @override
-  String get previewRoomDesignSyncSubtitle =>
-      'Доброе утро. Свежие макеты уже лежат в закрепе.';
+  String get previewRoomDesignSyncSubtitle => 'Доброе утро. Свежие макеты уже лежат в закрепе.';
 
   @override
   String get previewRoomReleaseCheck => 'Release Check';
 
   @override
-  String get previewRoomReleaseCheckSubtitle =>
-      'Знаешь, который час стартуем релиз? Я собираю чек-лист.';
+  String get previewRoomReleaseCheckSubtitle => 'Знаешь, который час стартуем релиз? Я собираю чек-лист.';
 
   @override
   String get previewRoomAlphaOps => 'Alpha Ops';
 
   @override
-  String get previewRoomAlphaOpsSubtitle =>
-      'В Токио уже утро. Ночные логи выглядят спокойно.';
+  String get previewRoomAlphaOpsSubtitle => 'В Токио уже утро. Ночные логи выглядят спокойно.';
 
   @override
-  String get previewIncomingMessage =>
-      'Доброе утро. Фон уже перестал ощущаться как тестовый экран?';
+  String get previewIncomingMessage => 'Доброе утро. Фон уже перестал ощущаться как тестовый экран?';
 
   @override
-  String get previewOutgoingMessage =>
-      'Почти. Теперь это больше похоже на живой чат: спокойнее ритм, чище типографика.';
+  String get previewOutgoingMessage => 'Почти. Теперь это больше похоже на живой чат: спокойнее ритм, чище типографика.';
 
   @override
-  String get previewTypingStatus =>
-      'Набор, углы и ритм сообщений меняются здесь сразу.';
+  String get previewTypingStatus => 'Набор, углы и ритм сообщений меняются здесь сразу.';
 
   @override
-  String get previewSettingsAppearanceSubtitle =>
-      'Выберите шаблон, подкрутите движение и проверьте цельность оболочки.';
+  String get previewSettingsAppearanceSubtitle => 'Выберите шаблон, подкрутите движение и проверьте цельность оболочки.';
 
   @override
-  String get previewSettingsNotificationsSubtitle =>
-      'Так будет выглядеть стек вторичных карточек настроек.';
+  String get previewSettingsNotificationsSubtitle => 'Так будет выглядеть стек вторичных карточек настроек.';
 
   @override
-  String get previewSettingsPrivacySubtitle =>
-      'Проверьте иерархию, контраст и вес иконок до применения.';
+  String get previewSettingsPrivacySubtitle => 'Проверьте иерархию, контраст и вес иконок до применения.';
 
   @override
   String get themeColorAegisViolet => 'Aegis Violet';
@@ -1350,26 +1300,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get backgroundMotionToggleLabel => 'Анимированный фон';
 
   @override
-  String get backgroundMotionOnSubtitle =>
-      'Световые слои продолжают мягко двигаться за интерфейсом.';
+  String get backgroundMotionOnSubtitle => 'Световые слои продолжают мягко двигаться за интерфейсом.';
 
   @override
-  String get backgroundMotionOffSubtitle =>
-      'Фон становится статичным и спокойным без лишнего движения.';
+  String get backgroundMotionOffSubtitle => 'Фон становится статичным и спокойным без лишнего движения.';
 
   @override
   String get motionModeCircles => 'Орбиты';
 
   @override
-  String get motionModeCirclesSubtitle =>
-      'Плавающие световые сферы с мягким параллаксом.';
+  String get motionModeCirclesSubtitle => 'Плавающие световые сферы с мягким параллаксом.';
 
   @override
   String get motionModeWaves => 'Волны';
 
   @override
-  String get motionModeWavesSubtitle =>
-      'Слоистые нижние волны, похожие на мягкое атмосферное свечение.';
+  String get motionModeWavesSubtitle => 'Слоистые нижние волны, похожие на мягкое атмосферное свечение.';
 
   @override
   String get colorsTab => 'Цвета';
@@ -1384,8 +1330,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get selectColorTheme => 'Выберите цветовую тему';
 
   @override
-  String get themeAppliesEverywhere =>
-      'Выбранная тема применяется во всём приложении';
+  String get themeAppliesEverywhere => 'Выбранная тема применяется во всём приложении';
 
   @override
   String get fontSettingsTitle => 'Настройки шрифта';
@@ -1489,15 +1434,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get forgotPasswordTitle => 'Восстановление пароля';
 
   @override
-  String get forgotPasswordDescription =>
-      'Введите email, на который будет отправлена ссылка для сброса';
+  String get forgotPasswordDescription => 'Введите email, на который будет отправлена ссылка для сброса';
 
   @override
   String get sendResetButton => 'Отправить';
 
   @override
-  String get forgotPasswordUnavailable =>
-      'Функция восстановления пароля недоступна';
+  String get forgotPasswordUnavailable => 'Функция восстановления пароля недоступна';
 
   @override
   String get changeEmailTitle => 'Изменить email';
@@ -1527,16 +1470,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get emailUnchanged => 'Новый email совпадает с текущим';
 
   @override
-  String get changeEmailNotYetSupported =>
-      'Изменение email ещё не поддерживается';
+  String get changeEmailNotYetSupported => 'Изменение email ещё не поддерживается';
 
   @override
-  String get changeEmailNotAvailable =>
-      'Изменение email ещё недоступно. Свяжитесь с поддержкой.';
+  String get changeEmailNotAvailable => 'Изменение email ещё недоступно. Свяжитесь с поддержкой.';
 
   @override
-  String get changeEmailRequiresServerSupport =>
-      'Эта функция требует поддержку на сервере. Клиент готов, но ожидает обновления протокола.';
+  String get changeEmailRequiresServerSupport => 'Эта функция требует поддержку на сервере. Клиент готов, но ожидает обновления протокола.';
 
   @override
   String get emailHintExample => 'пример@example.com';
@@ -1550,8 +1490,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get changePhoneTitle => 'Изменить номер телефона';
 
   @override
-  String get changePhoneDescription =>
-      'Введите новый номер телефона и текущий пароль.';
+  String get changePhoneDescription => 'Введите новый номер телефона и текущий пароль.';
 
   @override
   String get newPhoneLabel => 'Новый номер (+7...)';
@@ -1605,8 +1544,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get biometricAuthLabel => 'Аутентификация устройства';
 
   @override
-  String get biometricAuthSubtitle =>
-      'Face ID, отпечаток пальца или код устройства';
+  String get biometricAuthSubtitle => 'Face ID, отпечаток пальца или код устройства';
 
   @override
   String get biometricEnabledLabel => 'Блокировка приложения включена';
@@ -1615,19 +1553,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get aboutSecurityLabel => 'О безопасности';
 
   @override
-  String get aboutSecurityContent =>
-      'TwoSpace использует способ разблокировки, уже настроенный на этом устройстве, и запрашивает его при возвращении в приложение.';
+  String get aboutSecurityContent => 'TwoSpace использует способ разблокировки, уже настроенный на этом устройстве, и запрашивает его при возвращении в приложение.';
 
   @override
   String get lockScreenFailedTitle => 'Не удалось подтвердить вход';
 
   @override
-  String get lockScreenFailedMessage =>
-      'Повторите попытку или выйдите из аккаунта на этом устройстве.';
+  String get lockScreenFailedMessage => 'Повторите попытку или выйдите из аккаунта на этом устройстве.';
 
   @override
-  String get deviceAuthUnavailableMessage =>
-      'Сначала настройте Face ID, отпечаток пальца или код устройства в системных настройках.';
+  String get deviceAuthUnavailableMessage => 'Сначала настройте Face ID, отпечаток пальца или код устройства в системных настройках.';
 
   @override
   String get authMethodFaceId => 'Face ID';
@@ -1651,8 +1586,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get updateHeroTitle => 'Релиз готов к установке';
 
   @override
-  String get updateHeroSubtitle =>
-      'Посмотрите состав релиза, проверьте целостность и пройдите установку по понятным шагам.';
+  String get updateHeroSubtitle => 'Посмотрите состав релиза, проверьте целостность и пройдите установку по понятным шагам.';
 
   @override
   String get updateStatusRequired => 'Обязательно';
@@ -1664,36 +1598,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get updatePipelineTitle => 'Пайплайн обновления';
 
   @override
-  String get updatePipelineSubtitle =>
-      'Каждый этап показывает, что происходит сейчас и что будет следующим шагом.';
+  String get updatePipelineSubtitle => 'Каждый этап показывает, что происходит сейчас и что будет следующим шагом.';
 
   @override
   String get updateStageDownloadTitle => 'Скачать пакет';
 
   @override
-  String get updateStageDownloadSubtitle =>
-      'Сохранить установочный пакет в локальное хранилище.';
+  String get updateStageDownloadSubtitle => 'Сохранить установочный пакет в локальное хранилище.';
 
   @override
   String get updateStageVerifyTitle => 'Проверить целостность';
 
   @override
-  String get updateStageVerifySubtitle =>
-      'Сверить скачанный файл с опубликованным SHA-256 хэшем.';
+  String get updateStageVerifySubtitle => 'Сверить скачанный файл с опубликованным SHA-256 хэшем.';
 
   @override
   String get updateStageInstallTitle => 'Установить релиз';
 
   @override
-  String get updateStageInstallSubtitle =>
-      'При необходимости запросить разрешение и передать пакет системному установщику.';
+  String get updateStageInstallSubtitle => 'При необходимости запросить разрешение и передать пакет системному установщику.';
 
   @override
   String get releaseSummaryTitle => 'Сводка релиза';
 
   @override
-  String get releaseSummarySubtitle =>
-      'Изменения сгруппированы так, чтобы их было проще просканировать, чем читать сырой changelog.';
+  String get releaseSummarySubtitle => 'Изменения сгруппированы так, чтобы их было проще просканировать, чем читать сырой changelog.';
 
   @override
   String get releaseSectionNew => 'Новое';
@@ -1711,8 +1640,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get updateTrustTitle => 'Доверие и совместимость';
 
   @override
-  String get updateTrustSubtitle =>
-      'Откуда пришёл пакет, как он проверяется и какую именно сборку вы собираетесь установить.';
+  String get updateTrustSubtitle => 'Откуда пришёл пакет, как он проверяется и какую именно сборку вы собираетесь установить.';
 
   @override
   String get updateTrustSource => 'Источник';
@@ -1745,12 +1673,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get updatePreviewModeTitle => 'Карточка превью релиза';
 
   @override
-  String get updatePreviewModeSubtitle =>
-      'Этот экран открыт из debug-каталога, поэтому здесь показан оформленный плейсхолдер вместо реальных заметок релиза.';
+  String get updatePreviewModeSubtitle => 'Этот экран открыт из debug-каталога, поэтому здесь показан оформленный плейсхолдер вместо реальных заметок релиза.';
 
   @override
-  String get updatePreviewModeEmptyNotes =>
-      'Для этого тестового релиза заметки пока не заданы.';
+  String get updatePreviewModeEmptyNotes => 'Для этого тестового релиза заметки пока не заданы.';
 
   @override
   String get updateCurrentVersionLabel => 'Текущая';
@@ -1794,15 +1720,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get downloadFailed => 'Не удалось скачать обновление';
 
   @override
-  String get integrityCheckFailed =>
-      'Скачанный файл не прошёл проверку целостности (sha256)';
+  String get integrityCheckFailed => 'Скачанный файл не прошёл проверку целостности (sha256)';
 
   @override
   String get installPermissionTitle => 'Разрешение на установку';
 
   @override
-  String get installPermissionContent =>
-      'Чтобы установить обновление, разрешите установку из неизвестных источников.';
+  String get installPermissionContent => 'Чтобы установить обновление, разрешите установку из неизвестных источников.';
 
   @override
   String get installPermissionRequired => 'Нужны разрешения для установки';
@@ -1811,8 +1735,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get installFailed => 'Установка не удалась';
 
   @override
-  String get ssoFeatureRequired =>
-      'Функция требует конфигурации webview_flutter';
+  String get ssoFeatureRequired => 'Функция требует конфигурации webview_flutter';
 
   @override
   String ssoLoginVia(String idpId) {
@@ -1858,8 +1781,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get leaveRoomTitle => 'Покинуть комнату?';
 
   @override
-  String get leaveRoomContent =>
-      'Вы не сможете вернуться в эту комнату, если вас не пригласят заново.';
+  String get leaveRoomContent => 'Вы не сможете вернуться в эту комнату, если вас не пригласят заново.';
 
   @override
   String get leaveAction => 'Покинуть';
@@ -1939,8 +1861,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get loginRequired => 'Требуется вход';
 
   @override
-  String get loginRequiredContent =>
-      'Для поиска контактов необходим вход в аккаунт. Хотите перейти на экран входа?';
+  String get loginRequiredContent => 'Для поиска контактов необходим вход в аккаунт. Хотите перейти на экран входа?';
 
   @override
   String get loginAction => 'Войти';
@@ -1983,53 +1904,43 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shortDescriptionHint => 'Например: \"Бэкап чатов в облако\"';
 
   @override
-  String get feedbackValidation =>
-      'Выберите хотя бы одну идею или напишите описание';
+  String get feedbackValidation => 'Выберите хотя бы одну идею или напишите описание';
 
   @override
   String get detailsOptionalLabel => 'Детали (опционально)';
 
   @override
-  String get detailsHint =>
-      'Что именно должно работать, как сейчас и как хотелось бы?';
+  String get detailsHint => 'Что именно должно работать, как сейчас и как хотелось бы?';
 
   @override
-  String get bigFeaturesTitle =>
-      'Большие нововведения (выберите, что интереснее всего)';
+  String get bigFeaturesTitle => 'Большие нововведения (выберите, что интереснее всего)';
 
   @override
-  String get feedbackE2E =>
-      'Сквозное E2E-шифрование (Olm/Megolm) + верификация устройств';
+  String get feedbackE2E => 'Сквозное E2E-шифрование (Olm/Megolm) + верификация устройств';
 
   @override
-  String get feedbackBackup =>
-      'Резервное копирование чатов (локально/облако) + перенос на новое устройство';
+  String get feedbackBackup => 'Резервное копирование чатов (локально/облако) + перенос на новое устройство';
 
   @override
-  String get feedbackThreads =>
-      'Треды, реакции и упоминания, улучшенный поиск по сообщениям';
+  String get feedbackThreads => 'Треды, реакции и упоминания, улучшенный поиск по сообщениям';
 
   @override
   String get feedbackCalls => 'Голосовые/видео-звонки и быстрые voice rooms';
 
   @override
-  String get feedbackFolders =>
-      'Папки/категории чатов и умные фильтры уведомлений';
+  String get feedbackFolders => 'Папки/категории чатов и умные фильтры уведомлений';
 
   @override
-  String get feedbackBots =>
-      'Боты и интеграции (вебхуки, GitHub/Jira, напоминания)';
+  String get feedbackBots => 'Боты и интеграции (вебхуки, GitHub/Jira, напоминания)';
 
   @override
-  String get feedbackSlowNet =>
-      'Режим «медленного интернета» + агрессивное кэширование медиа';
+  String get feedbackSlowNet => 'Режим «медленного интернета» + агрессивное кэширование медиа';
 
   @override
   String get startChatTitle => 'Начать чат';
 
   @override
-  String get startDirectChatSubtitle =>
-      'Открыть приватный диалог с одним человеком';
+  String get startDirectChatSubtitle => 'Открыть приватный диалог с одним человеком';
 
   @override
   String get createRoomSubtitle => 'Приватная или публичная группа';
@@ -2047,15 +1958,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get selectedParticipantsTitle => 'Участники';
 
   @override
-  String get groupParticipantsOptionalHint =>
-      'Участники необязательны. Группу можно создать сейчас, а пригласить людей позже.';
+  String get groupParticipantsOptionalHint => 'Участники необязательны. Группу можно создать сейчас, а пригласить людей позже.';
 
   @override
   String get joinByCodeTitle => 'Присоединиться по коду';
 
   @override
-  String get joinByCodeSubtitle =>
-      'Присоединиться к комнате по пригласительному коду';
+  String get joinByCodeSubtitle => 'Присоединиться к комнате по пригласительному коду';
 
   @override
   String get joinRoomAction => 'Вступить';
@@ -2064,8 +1973,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get subscribeAction => 'Подписаться';
 
   @override
-  String get chatsSubtitle =>
-      'Личные чаты, группы и пригласительные ссылки в одном месте';
+  String get chatsSubtitle => 'Личные чаты, группы и пригласительные ссылки в одном месте';
 
   @override
   String get chatsQuickStartTitle => 'Начните новый диалог';
@@ -2080,23 +1988,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get publicAliasLabel => 'Ссылка на канал';
 
   @override
-  String get publicAliasHint =>
-      'Короткое имя без пробелов, например beyondblocks';
+  String get publicAliasHint => 'Короткое имя без пробелов, например beyondblocks';
 
   @override
-  String get channelPublicLinkHelper =>
-      'Эта ссылка будет использоваться в поиске и приглашениях для публичного канала.';
+  String get channelPublicLinkHelper => 'Эта ссылка будет использоваться в поиске и приглашениях для публичного канала.';
 
   @override
-  String get channelLinkFormatError =>
-      'Используйте только латинские буквы, цифры, точки, подчёркивания или дефисы.';
+  String get channelLinkFormatError => 'Используйте только латинские буквы, цифры, точки, подчёркивания или дефисы.';
 
   @override
   String get inviteLinkReadyTitle => 'Ссылка-приглашение готова';
 
   @override
-  String get inviteLinkReadySubtitle =>
-      'Её можно сразу скопировать или оставить на потом. Выбранным людям ссылка отправится в личку, если это получится.';
+  String get inviteLinkReadySubtitle => 'Её можно сразу скопировать или оставить на потом. Выбранным людям ссылка отправится в личку, если это получится.';
 
   @override
   String get openChatAction => 'Открыть чат';
@@ -2226,12 +2130,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get voiceRecordingUnsupported =>
-      'Запись голоса не поддерживается на этой платформе';
+  String get voiceRecordingUnsupported => 'Запись голоса не поддерживается на этой платформе';
 
   @override
-  String get microphonePermissionRequired =>
-      'Требуется разрешение на использование микрофона';
+  String get microphonePermissionRequired => 'Требуется разрешение на использование микрофона';
 
   @override
   String genericError(String error) {
@@ -2269,15 +2171,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationToneTitle => 'Звук уведомлений';
 
   @override
-  String get notificationToneSubtitle =>
-      'Выберите локальный аудиофайл для превью сообщений и оповещений.';
+  String get notificationToneSubtitle => 'Выберите локальный аудиофайл для превью сообщений и оповещений.';
 
   @override
   String get ringtoneTitle => 'Рингтон';
 
   @override
-  String get ringtoneSubtitle =>
-      'Используйте отдельный локальный файл для превью входящих звонков.';
+  String get ringtoneSubtitle => 'Используйте отдельный локальный файл для превью входящих звонков.';
 
   @override
   String get chooseSoundLabel => 'Выбрать файл';
@@ -2337,8 +2237,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get storageAutoCleanTitle => 'Автоочистка';
 
   @override
-  String get storageAutoCleanSubtitle =>
-      'Запускайте очистку по расписанию или сразу, когда объём данных превысит выбранный порог.';
+  String get storageAutoCleanSubtitle => 'Запускайте очистку по расписанию или сразу, когда объём данных превысит выбранный порог.';
 
   @override
   String get storageAutoCleanPeriodLabel => 'Период очистки';
@@ -2362,12 +2261,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get storageAutoCleanStatusTitle => 'Статус автоочистки';
 
   @override
-  String get storageAutoCleanStatusEnabled =>
-      'Автоочистка активна и запустится по расписанию или при превышении порога хранилища.';
+  String get storageAutoCleanStatusEnabled => 'Автоочистка активна и запустится по расписанию или при превышении порога хранилища.';
 
   @override
-  String get storageAutoCleanStatusDisabled =>
-      'Автоочистка выключена. Сейчас будет работать только ручная очистка.';
+  String get storageAutoCleanStatusDisabled => 'Автоочистка выключена. Сейчас будет работать только ручная очистка.';
 
   @override
   String get storageAutoCleanLastRunLabel => 'Последний запуск';
@@ -2412,8 +2309,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get peopleTitle => 'Люди';
 
   @override
-  String get peopleSubtitle =>
-      'Контакты, избранные, поиск и приглашения в одном месте';
+  String get peopleSubtitle => 'Контакты, избранные, поиск и приглашения в одном месте';
 
   @override
   String get peopleQuickNewChat => 'Новый чат';
@@ -2446,19 +2342,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get peopleNoPeopleTitle => 'Пока никого нет';
 
   @override
-  String get peopleNoPeopleMessage =>
-      'Здесь появятся избранные, недавние диалоги и контакты.';
+  String get peopleNoPeopleMessage => 'Здесь появятся избранные, недавние диалоги и контакты.';
 
   @override
   String get peoplePermissionCardTitle => 'Доступ к контактам ограничен';
 
   @override
-  String get peoplePermissionCardMessage =>
-      'Разрешите доступ к контактам, чтобы видеть телефонную книгу и быстрее приглашать людей.';
+  String get peoplePermissionCardMessage => 'Разрешите доступ к контактам, чтобы видеть телефонную книгу и быстрее приглашать людей.';
 
   @override
-  String get peoplePermissionCardMessageSettings =>
-      'Включите доступ к контактам в системных настройках, чтобы вернуть раздел телефонной книги.';
+  String get peoplePermissionCardMessageSettings => 'Включите доступ к контактам в системных настройках, чтобы вернуть раздел телефонной книги.';
 
   @override
   String get peopleFavoritesFrequentTitle => 'Избранные и частые';
@@ -2491,8 +2384,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get peopleSearchEmptyTitle => 'Люди не найдены';
 
   @override
-  String get peopleSearchEmptyMessage =>
-      'Попробуйте другой запрос, ник или номер телефона.';
+  String get peopleSearchEmptyMessage => 'Попробуйте другой запрос, ник или номер телефона.';
 
   @override
   String get peopleTwoSpaceBadge => 'TwoSpace';
@@ -2501,8 +2393,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get peopleNoDetails => 'Пока без дополнительных данных';
 
   @override
-  String get peopleInviteShareText =>
-      'Присоединяйся ко мне в TwoSpace — это защищённый мессенджер для чатов и звонков.';
+  String get peopleInviteShareText => 'Присоединяйся ко мне в TwoSpace — это защищённый мессенджер для чатов и звонков.';
 
   @override
   String peopleInviteSpecificShareText(String personName) {
@@ -2519,19 +2410,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get peopleAddFavoriteAction => 'Добавить в избранное';
 
   @override
-  String get callsSubtitle =>
-      'Недавние звонки, быстрый перезвон и история вокруг людей';
+  String get callsSubtitle => 'Недавние звонки, быстрый перезвон и история вокруг людей';
 
   @override
-  String get widgetsSubtitle =>
-      'Скоро здесь появятся тёплые новые способы оставаться ближе друг к другу.';
+  String get widgetsSubtitle => 'Скоро здесь появятся тёплые новые способы оставаться ближе друг к другу.';
 
   @override
   String get widgetsComingTitle => 'Новые форматы общения уже в пути';
 
   @override
-  String get widgetsComingBody =>
-      'В одном из следующих обновлений здесь появятся спокойные совместные виджеты и лёгкие способы держать связь с близкими.';
+  String get widgetsComingBody => 'В одном из следующих обновлений здесь появятся спокойные совместные виджеты и лёгкие способы держать связь с близкими.';
 
   @override
   String get callsStartCallAction => 'Начать звонок';
@@ -2540,8 +2428,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callsQuickStartTitle => 'Позвонить сейчас';
 
   @override
-  String get callsQuickStartSubtitle =>
-      'Откройте раздел людей, найдите человека и начните защищённый голосовой или видеозвонок.';
+  String get callsQuickStartSubtitle => 'Откройте раздел людей, найдите человека и начните защищённый голосовой или видеозвонок.';
 
   @override
   String get callsSearchHint => 'Поиск по истории звонков';
@@ -2559,12 +2446,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callsEmptyTitle => 'Звонков пока нет';
 
   @override
-  String get callsEmptyMessage =>
-      'История звонков появится здесь после первого голосового или видеозвонка.';
+  String get callsEmptyMessage => 'История звонков появится здесь после первого голосового или видеозвонка.';
 
   @override
-  String get callsEmptySearchMessage =>
-      'По текущему поиску или фильтру звонков ничего не найдено.';
+  String get callsEmptySearchMessage => 'По текущему поиску или фильтру звонков ничего не найдено.';
 
   @override
   String get callsTodaySection => 'Сегодня';
@@ -2613,19 +2498,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callsRingingDetail => 'Ждём, пока собеседник ответит.';
 
   @override
-  String get callsVideoSecureDetail =>
-      'Видео защищено и проходит через текущую безопасную сессию.';
+  String get callsVideoSecureDetail => 'Видео защищено и проходит через текущую безопасную сессию.';
 
   @override
-  String get callsVoiceSecureDetail =>
-      'Голос защищён и проходит через текущую безопасную сессию.';
+  String get callsVoiceSecureDetail => 'Голос защищён и проходит через текущую безопасную сессию.';
 
   @override
   String get timestampPrecisionLabel => 'Точность времени сообщений';
 
   @override
-  String get timestampPrecisionSubtitle =>
-      'Выберите точность времени сообщений.';
+  String get timestampPrecisionSubtitle => 'Выберите точность времени сообщений.';
 
   @override
   String get timestampPrecisionMinutes => 'Часы и минуты';
@@ -2634,19 +2516,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get timestampPrecisionSeconds => 'Часы, минуты и секунды';
 
   @override
-  String get timestampPrecisionMilliseconds =>
-      'Часы, минуты, секунды и миллисекунды';
+  String get timestampPrecisionMilliseconds => 'Часы, минуты, секунды и миллисекунды';
 
   @override
   String get startupTitle => 'Подготавливаем TwoSpace';
 
   @override
-  String get startupSubtitle =>
-      'Проверяем защищённую сессию и открываем ваши чаты.';
+  String get startupSubtitle => 'Проверяем защищённую сессию и открываем ваши чаты.';
 
   @override
-  String get startupFooter =>
-      'Этот экран показывается только во время запуска приложения.';
+  String get startupFooter => 'Этот экран показывается только во время запуска приложения.';
 
   @override
   String get startupStepEnvironment => 'Загружаем конфигурацию';
@@ -2670,20 +2549,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callsDemoBannerTitle => 'Пример, нерабочий функционал';
 
   @override
-  String get callsDemoBannerVoiceMessage =>
-      'Голосовые звонки пока показаны только как визуальный прототип. Передача аудио ещё не подключена.';
+  String get callsDemoBannerVoiceMessage => 'Голосовые звонки пока показаны только как визуальный прототип. Передача аудио ещё не подключена.';
 
   @override
-  String get callsDemoBannerVideoMessage =>
-      'Видеозвонки пока показаны только как визуальный прототип. Удалённый видеопоток недоступен, но локальный предпросмотр камеры работает.';
+  String get callsDemoBannerVideoMessage => 'Видеозвонки пока показаны только как визуальный прототип. Удалённый видеопоток недоступен, но локальный предпросмотр камеры работает.';
 
   @override
-  String get callsCameraPermissionMessage =>
-      'Разрешите доступ к камере, чтобы показывать ваш локальный предпросмотр во время видеозвонка.';
+  String get callsCameraPermissionMessage => 'Разрешите доступ к камере, чтобы показывать ваш локальный предпросмотр во время видеозвонка.';
 
   @override
-  String get callsCameraPermissionSettingsMessage =>
-      'Доступ к камере заблокирован. Откройте системные настройки и включите локальный видеопросмотр.';
+  String get callsCameraPermissionSettingsMessage => 'Доступ к камере заблокирован. Откройте системные настройки и включите локальный видеопросмотр.';
 
   @override
   String get callsCameraPermissionAction => 'Разрешить камеру';
@@ -2692,16 +2567,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callsCameraUnavailableTitle => 'Камера недоступна';
 
   @override
-  String get callsCameraUnavailableMessage =>
-      'Не удалось запустить локальный предпросмотр камеры на этом устройстве.';
+  String get callsCameraUnavailableMessage => 'Не удалось запустить локальный предпросмотр камеры на этом устройстве.';
 
   @override
-  String get callsCameraUnsupportedMessage =>
-      'На этой платформе локальный видеопросмотр не поддерживается.';
+  String get callsCameraUnsupportedMessage => 'На этой платформе локальный видеопросмотр не поддерживается.';
 
   @override
-  String get callsCameraOffMessage =>
-      'Предпросмотр камеры отключён для этого демонстрационного звонка.';
+  String get callsCameraOffMessage => 'Предпросмотр камеры отключён для этого демонстрационного звонка.';
 
   @override
   String get callsFrontCameraLabel => 'Фронтальная камера';
@@ -2713,12 +2585,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get backgroundOptimizationDisabledTitle => 'Фоновые эффекты упрощены';
 
   @override
-  String get backgroundOptimizationDisabledMessage =>
-      'TwoSpace заметил стабильные просадки кадров и отключил тяжёлые фоновые эффекты, чтобы прокрутка и работа с чатами оставались плавными.';
+  String get backgroundOptimizationDisabledMessage => 'TwoSpace заметил стабильные просадки кадров и отключил тяжёлые фоновые эффекты, чтобы прокрутка и работа с чатами оставались плавными.';
 
   @override
-  String get backgroundOptimizationOpenSettings =>
-      'Открыть настройки оформления';
+  String get backgroundOptimizationOpenSettings => 'Открыть настройки оформления';
 
   @override
   String get roomJoinRuleLabel => 'Кто может вступить';
@@ -2727,22 +2597,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get roomJoinRulePublic => 'Открыто для всех';
 
   @override
-  String get roomJoinRulePublicDescription =>
-      'Любой пользователь может найти и вступить в эту комнату.';
+  String get roomJoinRulePublicDescription => 'Любой пользователь может найти и вступить в эту комнату.';
 
   @override
   String get roomJoinRuleInviteOnly => 'Только по приглашению';
 
   @override
-  String get roomJoinRuleInviteOnlyDescription =>
-      'Вступить в эту комнату могут только приглашённые пользователи.';
+  String get roomJoinRuleInviteOnlyDescription => 'Вступить в эту комнату могут только приглашённые пользователи.';
 
   @override
   String get roomJoinRuleApproval => 'Требуется одобрение';
 
   @override
-  String get roomJoinRuleApprovalDescription =>
-      'Пользователи могут запросить доступ, но вступление требует одобрения.';
+  String get roomJoinRuleApprovalDescription => 'Пользователи могут запросить доступ, но вступление требует одобрения.';
 
   @override
   String get roomHistoryVisibilityLabel => 'Кто видит историю';
@@ -2751,38 +2618,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get roomHistoryVisibilityWorldReadable => 'Все';
 
   @override
-  String get roomHistoryVisibilityWorldReadableDescription =>
-      'Любой пользователь может просматривать предыдущие сообщения.';
+  String get roomHistoryVisibilityWorldReadableDescription => 'Любой пользователь может просматривать предыдущие сообщения.';
 
   @override
   String get roomHistoryVisibilityJoined => 'Вступившие участники';
 
   @override
-  String get roomHistoryVisibilityJoinedDescription =>
-      'Предыдущие сообщения видят только вступившие участники.';
+  String get roomHistoryVisibilityJoinedDescription => 'Предыдущие сообщения видят только вступившие участники.';
 
   @override
   String get roomHistoryVisibilityInvited => 'Только приглашённые';
 
   @override
-  String get roomHistoryVisibilityInvitedDescription =>
-      'Предыдущие сообщения видят только приглашённые пользователи.';
+  String get roomHistoryVisibilityInvitedDescription => 'Предыдущие сообщения видят только приглашённые пользователи.';
 
   @override
-  String get loginUsernameOnlyError =>
-      'Для входа используйте username TwoSpace.';
+  String get loginUsernameOnlyError => 'Для входа используйте username TwoSpace.';
 
   @override
-  String get twoFactorInvalidCodeMessage =>
-      'Код 2FA или recovery phrase неверны. Попробуйте ещё раз.';
+  String get twoFactorInvalidCodeMessage => 'Код 2FA или recovery phrase неверны. Попробуйте ещё раз.';
 
   @override
-  String get twoFactorCodeRequiredMessage =>
-      'Введите код из приложения-аутентификатора или используйте recovery phrase.';
+  String get twoFactorCodeRequiredMessage => 'Введите код из приложения-аутентификатора или используйте recovery phrase.';
 
   @override
-  String get twoFactorEnabledMessage =>
-      'Двухфакторная аутентификация включена.';
+  String get twoFactorEnabledMessage => 'Двухфакторная аутентификация включена.';
 
   @override
   String twoFactorEnableFailed(String error) {
@@ -2793,55 +2653,46 @@ class AppLocalizationsRu extends AppLocalizations {
   String get twoFactorSetupTitle => 'Настройка двухфакторной аутентификации';
 
   @override
-  String get twoFactorSetupDescription =>
-      'Сканируйте QR-код в приложении-аутентификаторе, сохраните recovery phrase и затем подтвердите включение свежим TOTP-кодом.';
+  String get twoFactorSetupDescription => 'Сканируйте QR-код в приложении-аутентификаторе, сохраните recovery phrase и затем подтвердите включение свежим TOTP-кодом.';
 
   @override
   String get twoFactorSecretTitle => 'Или введите этот секретный ключ вручную';
 
   @override
-  String get twoFactorRecoveryPhraseTitle =>
-      'Recovery phrase. Сохраните её в безопасном месте перед включением 2FA.';
+  String get twoFactorRecoveryPhraseTitle => 'Recovery phrase. Сохраните её в безопасном месте перед включением 2FA.';
 
   @override
   String get twoFactorVerificationCodeLabel => 'Код подтверждения';
 
   @override
-  String get twoFactorVerificationCodeHint =>
-      'Введите текущий код из приложения-аутентификатора';
+  String get twoFactorVerificationCodeHint => 'Введите текущий код из приложения-аутентификатора';
 
   @override
   String get twoFactorVerifyEnableAction => 'Подтвердить и включить 2FA';
 
   @override
-  String get twoFactorDisableSectionTitle =>
-      'Отключить двухфакторную аутентификацию';
+  String get twoFactorDisableSectionTitle => 'Отключить двухфакторную аутентификацию';
 
   @override
-  String get twoFactorDisableSectionDescription =>
-      'Выключите 2FA с помощью актуального кода из аутентификатора или одноразовой recovery phrase.';
+  String get twoFactorDisableSectionDescription => 'Выключите 2FA с помощью актуального кода из аутентификатора или одноразовой recovery phrase.';
 
   @override
-  String get twoFactorDisableCodeHint =>
-      'Введите актуальный код из аутентификатора';
+  String get twoFactorDisableCodeHint => 'Введите актуальный код из аутентификатора';
 
   @override
   String get twoFactorRecoveryPhraseFieldLabel => 'Recovery phrase';
 
   @override
-  String get twoFactorRecoveryPhraseFieldHint =>
-      'Вставьте recovery phrase, если доступа к приложению-аутентификатору больше нет';
+  String get twoFactorRecoveryPhraseFieldHint => 'Вставьте recovery phrase, если доступа к приложению-аутентификатору больше нет';
 
   @override
   String get twoFactorDisableAction => 'Отключить 2FA';
 
   @override
-  String get twoFactorDisableCredentialsRequired =>
-      'Чтобы отключить 2FA, введите код из аутентификатора или recovery phrase.';
+  String get twoFactorDisableCredentialsRequired => 'Чтобы отключить 2FA, введите код из аутентификатора или recovery phrase.';
 
   @override
-  String get twoFactorDisabledMessage =>
-      'Двухфакторная аутентификация отключена.';
+  String get twoFactorDisabledMessage => 'Двухфакторная аутентификация отключена.';
 
   @override
   String twoFactorDisableFailed(String error) {
@@ -2849,8 +2700,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get twoFactorLoginRecoveryHint =>
-      'Или вставьте recovery phrase вместо кода';
+  String get twoFactorLoginRecoveryHint => 'Или вставьте recovery phrase вместо кода';
 
   @override
   String get chatListTimeoutTitle => 'Сервер отвечает слишком долго';
@@ -2872,8 +2722,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupAvatarTitle => 'Аватар группы';
 
   @override
-  String get groupAvatarSubtitle =>
-      'Аватар можно добавить сразу при создании группы.';
+  String get groupAvatarSubtitle => 'Аватар можно добавить сразу при создании группы.';
 
   @override
   String get chooseFileButton => 'Выбрать файл';
@@ -2885,20 +2734,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get fileAccessDeniedMessage => 'Нет доступа к выбранному файлу.';
 
   @override
-  String get avatarFileAccessDeniedMessage =>
-      'Нет доступа к файлу аватара. Попробуйте выбрать другой файл.';
+  String get avatarFileAccessDeniedMessage => 'Нет доступа к файлу аватара. Попробуйте выбрать другой файл.';
 
   @override
-  String get profileEmptySelfHint =>
-      'Профиль пока выглядит пустым. Добавьте имя, описание или локацию, чтобы он выглядел полноценно.';
+  String get profileEmptySelfHint => 'Профиль пока выглядит пустым. Добавьте имя, описание или локацию, чтобы он выглядел полноценно.';
 
   @override
-  String get profileEmptyOtherHint =>
-      'Пользователь ещё не заполнил профиль или сервер не вернул подробные поля.';
+  String get profileEmptyOtherHint => 'Пользователь ещё не заполнил профиль или сервер не вернул подробные поля.';
 
   @override
-  String get twoFactorDisableConfirmContent =>
-      'Отключить двухфакторную аутентификацию для этого аккаунта? Чтобы вернуть дополнительную защиту, её придётся настроить заново.';
+  String get twoFactorDisableConfirmContent => 'Отключить двухфакторную аутентификацию для этого аккаунта? Чтобы вернуть дополнительную защиту, её придётся настроить заново.';
 
   @override
   String get betaTestLabel => 'Бета-тест';
@@ -2907,8 +2752,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeBetaWelcomeTitle => 'Приветствуем в бета-тесте TwoSpace!';
 
   @override
-  String get homeBetaWelcomeBody =>
-      'Функционал может часто меняться. Отправляйте предложения.';
+  String get homeBetaWelcomeBody => 'Функционал может часто меняться. Отправляйте предложения.';
 
   @override
   String get devMenuInfoLoading => 'Собираем сведения об устройстве…';
@@ -2926,8 +2770,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devMenuDeviceLabel => 'Устройство';
 
   @override
-  String get authRegisterVerifyEmailBeforeLogin =>
-      'Регистрация завершена. Подтвердите email перед входом.';
+  String get authRegisterVerifyEmailBeforeLogin => 'Регистрация завершена. Подтвердите email перед входом.';
 
   @override
   String authRegisterAutoLoginFailed(Object error) {
@@ -2941,23 +2784,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get authAvatarUpdateFailed => 'Не удалось обновить аватар';
 
   @override
-  String get authLoginAppCredentialsRejected =>
-      'Сервер отклонил app credentials. Проверьте конфигурацию сервера или совместимость handshake.';
+  String get authLoginAppCredentialsRejected => 'Сервер отклонил app credentials. Проверьте конфигурацию сервера или совместимость handshake.';
 
   @override
   String get authSessionTokenMissing => 'Сервер не вернул session token';
 
   @override
-  String get authTotpSetupFailed =>
-      'Не удалось подготовить двухфакторную аутентификацию';
+  String get authTotpSetupFailed => 'Не удалось подготовить двухфакторную аутентификацию';
 
   @override
-  String get authTotpDisableFailed =>
-      'Не удалось отключить двухфакторную аутентификацию';
+  String get authTotpDisableFailed => 'Не удалось отключить двухфакторную аутентификацию';
 
   @override
-  String get authTotpVerifyFailed =>
-      'Не удалось подтвердить двухфакторную аутентификацию';
+  String get authTotpVerifyFailed => 'Не удалось подтвердить двухфакторную аутентификацию';
 
   @override
   String get authSessionsLoadFailed => 'Не удалось загрузить активные сеансы';
@@ -2966,8 +2805,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get authSessionsRevokeFailed => 'Не удалось завершить сеанс';
 
   @override
-  String get authRegisterNotLoggedIn =>
-      'Регистрация завершена, но вход не выполнен';
+  String get authRegisterNotLoggedIn => 'Регистрация завершена, но вход не выполнен';
 
   @override
   String get devMenuTitle => 'Меню разработчика';
@@ -2994,8 +2832,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devMenuLogsEmptyTitle => 'Пока нет логов приложения';
 
   @override
-  String get devMenuLogsEmptyMessage =>
-      'Откройте проблемный экран или повторите действие. Новые записи появятся здесь.';
+  String get devMenuLogsEmptyMessage => 'Откройте проблемный экран или повторите действие. Новые записи появятся здесь.';
 
   @override
   String get devMenuShowAll => 'Показать всё';
@@ -3015,8 +2852,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devMenuScreenExplorerTitle => 'Навигатор экранов';
 
   @override
-  String get devMenuScreenSearchHint =>
-      'Поиск по имени экрана, группе или файлу';
+  String get devMenuScreenSearchHint => 'Поиск по имени экрана, группе или файлу';
 
   @override
   String devMenuAllScreens(Object count) {
@@ -3027,8 +2863,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devMenuScreensNotFoundTitle => 'Экраны не найдены';
 
   @override
-  String get devMenuScreensNotFoundMessage =>
-      'Измените поисковый запрос или снимите фильтр группы.';
+  String get devMenuScreensNotFoundMessage => 'Измените поисковый запрос или снимите фильтр группы.';
 
   @override
   String get devMenuUtilitiesTitle => 'Утилиты';
@@ -3052,52 +2887,43 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devMenuShowBounds => 'Показывать границы (debugPaintSize)';
 
   @override
-  String get devMenuShowBoundsSubtitle =>
-      'Отображает отступы и границы всех виджетов';
+  String get devMenuShowBoundsSubtitle => 'Отображает отступы и границы всех виджетов';
 
   @override
-  String get devMenuRepaintRainbow =>
-      'Подсвечивать перерисовки (RepaintRainbow)';
+  String get devMenuRepaintRainbow => 'Подсвечивать перерисовки (RepaintRainbow)';
 
   @override
-  String get devMenuRepaintRainbowSubtitle =>
-      'Подсвечивает элементы, которые перерисовываются';
+  String get devMenuRepaintRainbowSubtitle => 'Подсвечивает элементы, которые перерисовываются';
 
   @override
   String get devMenuSlowAnimations => 'Медленные анимации (timeDilation = 5.0)';
 
   @override
-  String get devMenuSlowAnimationsSubtitle =>
-      'Замедляет все анимации в приложении';
+  String get devMenuSlowAnimationsSubtitle => 'Замедляет все анимации в приложении';
 
   @override
   String get devMenuPerformanceOverlay => 'Профилирование производительности';
 
   @override
-  String get devMenuPerformanceOverlaySubtitle =>
-      'Показывает Performance Overlay поверх приложения';
+  String get devMenuPerformanceOverlaySubtitle => 'Показывает Performance Overlay поверх приложения';
 
   @override
   String get devMenuSensitiveDialogTitle => 'Показ чувствительных данных';
 
   @override
-  String get devMenuSensitiveDialogMessage =>
-      'После включения новые debug- и network-логи могут содержать токены, ключи и другие секреты в явном виде. Уже сохранённые записи не изменятся. Продолжить?';
+  String get devMenuSensitiveDialogMessage => 'После включения новые debug- и network-логи могут содержать токены, ключи и другие секреты в явном виде. Уже сохранённые записи не изменятся. Продолжить?';
 
   @override
   String get devMenuEnable => 'Включить';
 
   @override
-  String get devMenuSensitiveEnableDescription =>
-      'По умолчанию ключи, токены и пароли маскируются. Этот переключатель влияет только на новые логи.';
+  String get devMenuSensitiveEnableDescription => 'По умолчанию ключи, токены и пароли маскируются. Этот переключатель влияет только на новые логи.';
 
   @override
-  String get devMenuSensitiveDisabledDescription =>
-      'В этой сборке чувствительные данные всегда скрыты.';
+  String get devMenuSensitiveDisabledDescription => 'В этой сборке чувствительные данные всегда скрыты.';
 
   @override
-  String get devMenuRevealSensitiveData =>
-      'Показывать чувствительные данные в новых логах';
+  String get devMenuRevealSensitiveData => 'Показывать чувствительные данные в новых логах';
 
   @override
   String get devMenuFlagNewChatUi => 'Включить новый UI чата';
@@ -3109,26 +2935,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get devMenuFlagAggressiveCaching => 'Включить агрессивное кэширование';
 
   @override
-  String get devMenuFlagIgnoreServerOffline =>
-      'Игнорировать недоступность сервера';
+  String get devMenuFlagIgnoreServerOffline => 'Игнорировать недоступность сервера';
 
   @override
-  String get devMenuFlagIgnoreServerOfflineSubtitle =>
-      'Сохраняет текущую сессию и не возвращает на экран входа, если сервер недоступен.';
+  String get devMenuFlagIgnoreServerOfflineSubtitle => 'Сохраняет текущую сессию и не возвращает на экран входа, если сервер недоступен.';
 
   @override
   String get devMenuReleaseHiddenTitle => 'Чувствительные данные скрыты';
 
   @override
-  String get devMenuReleaseHiddenSubtitle =>
-      'Публичные release/profile сборки всегда показывают debug-данные только в замаскированном виде.';
+  String get devMenuReleaseHiddenSubtitle => 'Публичные release/profile сборки всегда показывают debug-данные только в замаскированном виде.';
 
   @override
   String get devMenuNetworkEmptyTitle => 'Пока нет сетевых логов';
 
   @override
-  String get devMenuNetworkEmptyMessage =>
-      'Откройте любой экран, который делает запросы, и логи появятся здесь.';
+  String get devMenuNetworkEmptyMessage => 'Откройте любой экран, который делает запросы, и логи появятся здесь.';
 
   @override
   String devMenuAllRequests(Object count) {
@@ -3163,8 +2985,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get notificationsInDevelopmentSubtitle =>
-      'Подробные настройки уведомлений появятся в одном из ближайших обновлений.';
+  String get notificationsInDevelopmentSubtitle => 'Подробные настройки уведомлений появятся в одном из ближайших обновлений.';
 
   @override
   String get devMenuCopyVisible => 'Копировать видимое';
@@ -3182,29 +3003,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get feedbackAttachLogsLabel => 'Приложить логи?';
 
   @override
-  String get feedbackAttachLogsSubtitle =>
-      'Добавить диагностический файл с данными устройства, логами приложения и логами сети.';
+  String get feedbackAttachLogsSubtitle => 'Добавить диагностический файл с данными устройства, логами приложения и логами сети.';
 
   @override
   String get notificationsForegroundServiceTitle => 'Фоновый сервис';
 
   @override
-  String get notificationsForegroundServiceSubtitle =>
-      'Приложение работает в фоне';
+  String get notificationsForegroundServiceSubtitle => 'Приложение работает в фоне';
 
   @override
   String get notificationsForegroundServiceEnabled => 'Включить фоновый сервис';
 
   @override
-  String get notificationsForegroundServiceDescription =>
-      'Постоянно слушать входящие сообщения с постоянным уведомлением';
+  String get notificationsForegroundServiceDescription => 'Постоянно слушать входящие сообщения с постоянным уведомлением';
 
   @override
   String get notificationsTypesSection => 'Типы уведомлений';
 
   @override
-  String get notificationsTypesSectionSubtitle =>
-      'Выберите события, о которых вас уведомлять';
+  String get notificationsTypesSectionSubtitle => 'Выберите события, о которых вас уведомлять';
 
   @override
   String get notificationsMessagesTitle => 'Сообщения';
@@ -3216,8 +3033,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get notificationsChatTitle => 'Чаты и группы';
 
   @override
-  String get notificationsChatDescription =>
-      'Новые чаты и приглашения в группы';
+  String get notificationsChatDescription => 'Новые чаты и приглашения в группы';
 
   @override
   String get notificationsPostTitle => 'Посты';
@@ -3235,6 +3051,5 @@ class AppLocalizationsRu extends AppLocalizations {
   String get imageTooLarge => 'Изображение слишком большое';
 
   @override
-  String get imageCompressed =>
-      'Изображение сжато для совместимости с протоколом';
+  String get imageCompressed => 'Изображение сжато для совместимости с протоколом';
 }
