@@ -28,7 +28,7 @@ void main() {
     });
 
     test("duration is set when provided", () {
-      final duration = Duration(minutes: 2);
+      const duration = Duration(minutes: 2);
       final exception = TimeoutException("With duration", duration);
       expect(exception.duration, duration);
     });

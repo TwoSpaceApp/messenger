@@ -296,7 +296,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_actionLoading) return;
 
     Uint8List? avatarBytes;
-    String mimePathOrName = '';
+    var mimePathOrName = '';
     Object? galleryError;
 
     try {

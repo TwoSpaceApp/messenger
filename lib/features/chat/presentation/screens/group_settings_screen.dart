@@ -103,7 +103,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       }
     });
 
-    GroupRoom? nextGroup = _currentGroup ?? _chatService.getGroupRoom(widget.roomId);
+    var nextGroup = _currentGroup ?? _chatService.getGroupRoom(widget.roomId);
     Map<String, dynamic>? settings;
     Object? loadError;
 

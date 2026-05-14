@@ -159,13 +159,13 @@ class AegisPeopleCallHistory extends Table {
 )
 class AegisChatDatabase extends _$AegisChatDatabase {
   factory AegisChatDatabase() => _shared;
+
+  AegisChatDatabase.forExecutor(super.executor);
   AegisChatDatabase._internal() : super(openDatabase());
 
   static final AegisChatDatabase _shared = AegisChatDatabase._internal();
 
   static AegisChatDatabase get instance => _shared;
-
-  AegisChatDatabase.forExecutor(super.executor);
 
   @override
   int get schemaVersion => 6;

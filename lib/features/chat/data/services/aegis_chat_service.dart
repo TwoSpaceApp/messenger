@@ -225,14 +225,14 @@ class _StoredConversation {
 }
 
 class AegisChatService {
+
+  factory AegisChatService() => _instance;
+  AegisChatService._internal();
   static const int _maxMediaUploadBytes = 15 * 1024 * 1024;
   static const int _mediaCacheMaxBytes = 512 * 1024 * 1024;
   static const int _memberLookupBatchSize = 6;
   static const Duration _mediaCacheMaxAge = Duration(days: 14);
   static const Duration _historyConsistencyWindow = Duration(minutes: 3);
-
-  factory AegisChatService() => _instance;
-  AegisChatService._internal();
 
   static final AegisChatService _instance = AegisChatService._internal();
 

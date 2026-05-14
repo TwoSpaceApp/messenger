@@ -95,22 +95,9 @@ extension MessageTimestampPrecisionX on MessageTimestampPrecision {
 
 /// Data class for theme settings
 class ThemeSettings {
-  final String fontFamily;
-  final int primaryColorValue;
-  final int fontWeight;
-  final double bubbleRounding;
-  final bool dynamicBubbles;
-  final bool compactMode;
-  final int navBarHideTimeoutSeconds;
-  final bool enableParallax;
-  final bool enableFloatingCircles;
-  final BackgroundMotionMode backgroundMotionMode;
-  final double floatingCirclesSpeed;
-  final double floatingCirclesOpacity;
-  final ShapeVariant shapeVariant;
 
   const ThemeSettings({
-    this.fontFamily = 'Inter',
+    this.fontFamily = "Inter",
     this.primaryColorValue = 0xFF6200EE,
     this.fontWeight = 400,
     this.bubbleRounding = 16.0,
@@ -124,6 +111,19 @@ class ThemeSettings {
     this.floatingCirclesOpacity = 0.5,
     this.shapeVariant = ShapeVariant.rounded,
   });
+  final String fontFamily;
+  final int primaryColorValue;
+  final int fontWeight;
+  final double bubbleRounding;
+  final bool dynamicBubbles;
+  final bool compactMode;
+  final int navBarHideTimeoutSeconds;
+  final bool enableParallax;
+  final bool enableFloatingCircles;
+  final BackgroundMotionMode backgroundMotionMode;
+  final double floatingCirclesSpeed;
+  final double floatingCirclesOpacity;
+  final ShapeVariant shapeVariant;
 
   ThemeSettings copyWith({
     String? fontFamily,

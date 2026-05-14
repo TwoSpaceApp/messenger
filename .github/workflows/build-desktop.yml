@@ -110,14 +110,16 @@ jobs:
         run: cp .env.example .env
 
       - name: Install dependencies
-        run: flutter pub get && apt install libgtk-3-dev && apt install mesa-utils
+        run: flutter pub get
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev mesa-utils
 
       - name: Regenerate localizations
         run: flutter gen-l10n
-
-      - name: Regenerate code
-        run: 
-          dart build -d
 
       - name: Prepare build env from GitHub secrets
         shell: bash

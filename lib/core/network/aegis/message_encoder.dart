@@ -52,8 +52,8 @@ class MessageEncoder {
     _validateForEncode(message);
 
     // Brotli-compress when payload exceeds threshold (per server spec).
-    Uint8List payload = message.payload;
-    int flags = message.flags;
+    var payload = message.payload;
+    var flags = message.flags;
     final isEncrypted = (flags & ProtocolConstants.flagEncrypted) != 0;
     final isCompressed = (flags & ProtocolConstants.flagCompressed) != 0;
     if (!isEncrypted &&

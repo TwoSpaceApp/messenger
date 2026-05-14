@@ -12,10 +12,10 @@ import 'package:two_space_app/core/network/aegis/security_utils.dart';
 import 'package:two_space_app/core/network/aegis/typed_data_compat.dart';
 
 class AegisHandshakeContext {
-  final ECPrivateKey _privateKey;
-  final Uint8List publicKey;
 
   AegisHandshakeContext._(this._privateKey, this.publicKey);
+  final ECPrivateKey _privateKey;
+  final Uint8List publicKey;
 
   static Future<AegisHandshakeContext> create() async {
     final handshake = await AegisHandshakeCrypto.createHandshake();
@@ -95,15 +95,15 @@ class AegisHandshakeVerifier {
 }
 
 class AegisV2SessionKeys {
-  final Uint8List clientToServerKey;
-  final Uint8List serverToClientKey;
-  final Uint8List ackKey;
 
   const AegisV2SessionKeys({
     required this.clientToServerKey,
     required this.serverToClientKey,
     required this.ackKey,
   });
+  final Uint8List clientToServerKey;
+  final Uint8List serverToClientKey;
+  final Uint8List ackKey;
 }
 
 class AegisSecureProtocolV2 {
@@ -209,16 +209,16 @@ class AegisSecureProtocolV2 {
 }
 
 class AegisSessionCrypto {
-  static final AesGcm _aesGcm = AesGcm.with256bits();
-
-  final Uint8List _sessionKey;
 
   AegisSessionCrypto(Uint8List sessionKey)
     : _sessionKey = Uint8List.fromList(sessionKey) {
     if (_sessionKey.length != 32) {
-      throw ArgumentError('Session key must be 32 bytes');
+      throw ArgumentError("Session key must be 32 bytes");
     }
   }
+  static final AesGcm _aesGcm = AesGcm.with256bits();
+
+  final Uint8List _sessionKey;
 
   Future<Message> encryptMessage(Message message) async {
     final nonce = SecureBufferUtils.secureRandomBytes(12);

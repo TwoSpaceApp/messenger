@@ -210,17 +210,17 @@ class SettingsStageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bool isActive = state == SettingsStageState.active;
-    final bool isComplete = state == SettingsStageState.complete;
-    final bool isError = state == SettingsStageState.error;
+    final isActive = state == SettingsStageState.active;
+    final isComplete = state == SettingsStageState.complete;
+    final isError = state == SettingsStageState.error;
 
-    final Color accent = isError
+    final accent = isError
         ? theme.colorScheme.error
         : isActive || isComplete
             ? theme.colorScheme.primary
             : theme.colorScheme.outline;
 
-    final Widget icon = isComplete
+    final icon = isComplete
         ? Icon(Icons.check_rounded, color: accent, size: 18)
         : isError
             ? Icon(Icons.close_rounded, color: accent, size: 18)

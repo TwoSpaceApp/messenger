@@ -61,6 +61,23 @@ class CallHistoryEntry {
     this.isVideo = false,
   });
 
+  factory CallHistoryEntry.fromJson(Map<String, dynamic> json) {
+    return CallHistoryEntry(
+      id: json["id"]?.toString() ?? "",
+      person: PersonEntry.fromJson(
+        Map<String, dynamic>.from(
+          json["person"] as Map<dynamic, dynamic>? ?? const <String, dynamic>{},
+        ),
+      ),
+      startedAt:
+          DateTime.tryParse(json["startedAt"]?.toString() ?? "") ?? DateTime.now(),
+      duration: Duration(milliseconds: json["durationMs"] as int? ?? 0),
+      isVideo: json["isVideo"] == true,
+      direction: _directionFromWire(json["direction"]?.toString()),
+      outcome: _outcomeFromWire(json["outcome"]?.toString()),
+    );
+  }
+
   final String id;
   final PersonEntry person;
   final DateTime startedAt;
@@ -88,23 +105,6 @@ class CallHistoryEntry {
       isVideo: isVideo ?? this.isVideo,
       direction: direction ?? this.direction,
       outcome: outcome ?? this.outcome,
-    );
-  }
-
-  factory CallHistoryEntry.fromJson(Map<String, dynamic> json) {
-    return CallHistoryEntry(
-      id: json['id']?.toString() ?? '',
-      person: PersonEntry.fromJson(
-        Map<String, dynamic>.from(
-          json['person'] as Map<dynamic, dynamic>? ?? const <String, dynamic>{},
-        ),
-      ),
-      startedAt:
-          DateTime.tryParse(json['startedAt']?.toString() ?? '') ?? DateTime.now(),
-      duration: Duration(milliseconds: json['durationMs'] as int? ?? 0),
-      isVideo: json['isVideo'] == true,
-      direction: _directionFromWire(json['direction']?.toString()),
-      outcome: _outcomeFromWire(json['outcome']?.toString()),
     );
   }
 

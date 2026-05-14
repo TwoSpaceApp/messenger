@@ -77,6 +77,38 @@ extension _MediaSendResponseCompat on MediaSendResponse {
 
 /// Main Aegis client class
 class AegisClient {
+
+  /// Create a new Aegis client.
+  ///
+  /// By default the first-party official app credentials are attached to the
+  /// handshake so the client works against servers with
+  /// `RequireAppCredentials=true`.
+  AegisClient({
+    bool useOfficialApiCredentials = true,
+    AegisApiCredentials? apiCredentials,
+  }) : _apiCredentials =
+           apiCredentials ??
+           (useOfficialApiCredentials
+               ? AegisOfficialApiCredentials.credentials
+               : null) {
+    _transport = AegisTransport();
+    events = AegisEventDispatcher(_transport.messages);
+    channels = AegisChannelFacade._(this);
+    groups = AegisGroupFacade._(this);
+    direct = AegisDirectFacade._(this);
+  }
+
+  /// Create a client that explicitly uses the built-in official credentials.
+  AegisClient.official() : this();
+
+  /// Create a client that uses a custom app credential pair.
+  AegisClient.withApiCredentials(AegisApiCredentials apiCredentials)
+    : this(useOfficialApiCredentials: false, apiCredentials: apiCredentials);
+
+  /// Create a client that does not send app credentials in the handshake.
+  ///
+  /// This only works against servers that do not enforce app credentials.
+  AegisClient.withoutApiCredentials() : this(useOfficialApiCredentials: false);
   late AegisTransport _transport;
   bool _isAuthenticated = false;
   int? _userId;
@@ -157,38 +189,6 @@ class AegisClient {
   /// When null, the client will not include `AppId` / `AppHash` in the
   /// handshake payload.
   AegisApiCredentials? get apiCredentials => _apiCredentials;
-
-  /// Create a new Aegis client.
-  ///
-  /// By default the first-party official app credentials are attached to the
-  /// handshake so the client works against servers with
-  /// `RequireAppCredentials=true`.
-  AegisClient({
-    bool useOfficialApiCredentials = true,
-    AegisApiCredentials? apiCredentials,
-  }) : _apiCredentials =
-           apiCredentials ??
-           (useOfficialApiCredentials
-               ? AegisOfficialApiCredentials.credentials
-               : null) {
-    _transport = AegisTransport();
-    events = AegisEventDispatcher(_transport.messages);
-    channels = AegisChannelFacade._(this);
-    groups = AegisGroupFacade._(this);
-    direct = AegisDirectFacade._(this);
-  }
-
-  /// Create a client that explicitly uses the built-in official credentials.
-  AegisClient.official() : this();
-
-  /// Create a client that uses a custom app credential pair.
-  AegisClient.withApiCredentials(AegisApiCredentials apiCredentials)
-    : this(useOfficialApiCredentials: false, apiCredentials: apiCredentials);
-
-  /// Create a client that does not send app credentials in the handshake.
-  ///
-  /// This only works against servers that do not enforce app credentials.
-  AegisClient.withoutApiCredentials() : this(useOfficialApiCredentials: false);
 
   // ─── Connection ────────────────────────────────────────────────────────────
 
@@ -3115,9 +3115,9 @@ class AegisClient {
 }
 
 class AegisChannelFacade {
-  final AegisClient _client;
 
   AegisChannelFacade._(this._client);
+  final AegisClient _client;
 
   Future<ChannelCreateResponse> create(
     String name, {
@@ -3199,9 +3199,9 @@ class AegisChannelFacade {
 }
 
 class AegisGroupFacade {
-  final AegisClient _client;
 
   AegisGroupFacade._(this._client);
+  final AegisClient _client;
 
   Future<GroupCreateResponse> create(
     String name, {
@@ -3275,9 +3275,9 @@ class AegisGroupFacade {
 }
 
 class AegisDirectFacade {
-  final AegisClient _client;
 
   AegisDirectFacade._(this._client);
+  final AegisClient _client;
 
   Future<PrivateChatMessageResponse> sendMessage(
     int toUserId,

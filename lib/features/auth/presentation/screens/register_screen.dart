@@ -825,7 +825,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               );
               if (res != null && res.files.isNotEmpty) {
                 final file = res.files.single;
-                Uint8List imageData = file.bytes!;
+                var imageData = file.bytes!;
                 
                 // Validate and compress image if necessary
                 if (ImageUtils.isImageTooLarge(imageData)) {

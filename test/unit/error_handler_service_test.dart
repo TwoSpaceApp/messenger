@@ -58,7 +58,7 @@ void main() {
         userMessage: "Wrong format",
         details: "Testing context",
         stackTrace: stackTrace,
-        originalError: FormatException("bad"),
+        originalError: const FormatException("bad"),
       );
       expect(error.category, ErrorCategory.validation);
       expect(error.code, "validation_error");
@@ -81,7 +81,7 @@ void main() {
 
     test("network error is detected from SocketException", () {
       final error = ErrorHandlerService.handle(
-        io.SocketException("Connection failed"),
+        const io.SocketException("Connection failed"),
         context: "test",
       );
       expect(error.category, ErrorCategory.network);
@@ -245,7 +245,7 @@ void main() {
     });
 
     test("originalError is preserved", () {
-      final original = FormatException("bad format");
+      const original = FormatException("bad format");
       final error = ErrorHandlerService.handle(
         original,
         context: "test",

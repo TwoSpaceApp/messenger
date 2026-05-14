@@ -1,13 +1,13 @@
 /// Application credentials sent during the Aegis protocol handshake.
 class AegisApiCredentials {
-  final int appId;
-  final String appHash;
 
   const AegisApiCredentials({
     required this.appId,
     required this.appHash,
-  })  : assert(appId > 0, 'appId must be positive'),
-        assert(appHash != '', 'appHash must not be empty');
+  })  : assert(appId > 0, "appId must be positive"),
+        assert(appHash != "", "appHash must not be empty");
+  final int appId;
+  final String appHash;
 }
 
 /// Built-in credentials for the first-party Aegis Dart client.

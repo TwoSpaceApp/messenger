@@ -16,6 +16,10 @@ analyzer:
     strict-inference: false
     strict-raw-types: false
 
+  errors:
+    prefer_single_quotes: ignore
+    prefer_double_quotes: ignore
+
 linter:
   rules:
     avoid_print: false
@@ -34,11 +38,9 @@ linter:
     prefer_final_locals: true
     unnecessary_this: true
     avoid_redundant_argument_values: true
-    prefer_double_quotes: true
     
     # Relaxed rules (from original)
     avoid_setters_without_getters: false
-    use_setters_to_change_elements: false
     omit_local_variable_types: true
     avoid_positional_boolean_parameters: false
     flutter_style_todos: true

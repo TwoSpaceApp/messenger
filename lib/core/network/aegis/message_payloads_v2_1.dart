@@ -7,18 +7,18 @@ import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 // ─── Type 98: Pong (Response to Ping with latency) ───────────────────────
 
 class Pong {
-  final int latencyMs;
 
   Pong({required this.latencyMs});
 
   factory Pong.fromJson(Map<String, dynamic> json) => Pong(
-    latencyMs: (json['LatencyMs'] as num? ?? 0).toInt(),
+    latencyMs: (json["LatencyMs"] as num? ?? 0).toInt(),
   );
 
   factory Pong.fromBytes(List<int> bytes) {
     final json = _decodePayloadMap(bytes);
     return Pong.fromJson(json);
   }
+  final int latencyMs;
 
   Map<String, dynamic> toJson() => {'LatencyMs': latencyMs};
   List<int> toBytes() => msgpack.serialize(toJson());
@@ -27,8 +27,6 @@ class Pong {
 // ─── Type 99: KeepAliveExponential ────────────────────────────────────────
 
 class KeepAliveExponential {
-  final int lastSeqReceived;
-  final int backoffLevel;
 
   KeepAliveExponential({
     required this.lastSeqReceived,
@@ -37,9 +35,11 @@ class KeepAliveExponential {
 
   factory KeepAliveExponential.fromJson(Map<String, dynamic> json) =>
       KeepAliveExponential(
-        lastSeqReceived: (json['LastSeqReceived'] as num? ?? 0).toInt(),
-        backoffLevel: (json['BackoffLevel'] as num? ?? 0).toInt(),
+        lastSeqReceived: (json["LastSeqReceived"] as num? ?? 0).toInt(),
+        backoffLevel: (json["BackoffLevel"] as num? ?? 0).toInt(),
       );
+  final int lastSeqReceived;
+  final int backoffLevel;
 
   Map<String, dynamic> toJson() => {
     'LastSeqReceived': lastSeqReceived,
@@ -50,24 +50,22 @@ class KeepAliveExponential {
 }
 
 class KeepAliveExponentialResponse {
-  final bool success;
 
   KeepAliveExponentialResponse({required this.success});
 
   factory KeepAliveExponentialResponse.fromJson(Map<String, dynamic> json) =>
       KeepAliveExponentialResponse(
-        success: json['Success'] as bool? ?? false,
+        success: json["Success"] as bool? ?? false,
       );
 
   factory KeepAliveExponentialResponse.fromBytes(List<int> bytes) =>
       KeepAliveExponentialResponse.fromJson(_decodePayloadMap(bytes));
+  final bool success;
 }
 
 // ─── Type 100: TokenExpired ───────────────────────────────────────────────
 
 class TokenExpired {
-  final DateTime expiresAt;
-  final String? refreshToken;
 
   TokenExpired({
     required this.expiresAt,
@@ -75,12 +73,14 @@ class TokenExpired {
   });
 
   factory TokenExpired.fromJson(Map<String, dynamic> json) => TokenExpired(
-    expiresAt: _parseDateTime(json['ExpiresAtMs'], defaultValue: DateTime.now()),
-    refreshToken: json['RefreshToken'] as String?,
+    expiresAt: _parseDateTime(json["ExpiresAtMs"], defaultValue: DateTime.now()),
+    refreshToken: json["RefreshToken"] as String?,
   );
 
   factory TokenExpired.fromBytes(List<int> bytes) =>
       TokenExpired.fromJson(_decodePayloadMap(bytes));
+  final DateTime expiresAt;
+  final String? refreshToken;
 
   Map<String, dynamic> toJson() => {
     'ExpiresAtMs': expiresAt.millisecondsSinceEpoch,
@@ -91,9 +91,6 @@ class TokenExpired {
 // ─── Type 101: DisconnectReason ───────────────────────────────────────────
 
 class DisconnectReason {
-  final String reason;
-  final int? retryAfterMs;
-  final String? alternateServerUrl;
 
   DisconnectReason({
     required this.reason,
@@ -103,13 +100,16 @@ class DisconnectReason {
 
   factory DisconnectReason.fromJson(Map<String, dynamic> json) =>
       DisconnectReason(
-        reason: json['Reason'] as String? ?? 'unknown',
-        retryAfterMs: (json['RetryAfterMs'] as num?)?.toInt(),
-        alternateServerUrl: json['AlternateServerUrl'] as String?,
+        reason: json["Reason"] as String? ?? "unknown",
+        retryAfterMs: (json["RetryAfterMs"] as num?)?.toInt(),
+        alternateServerUrl: json["AlternateServerUrl"] as String?,
       );
 
   factory DisconnectReason.fromBytes(List<int> bytes) =>
       DisconnectReason.fromJson(_decodePayloadMap(bytes));
+  final String reason;
+  final int? retryAfterMs;
+  final String? alternateServerUrl;
 
   Map<String, dynamic> toJson() => {
     'Reason': reason,
@@ -120,28 +120,28 @@ class DisconnectReason {
 
 // ─── Type 102: SessionConflict ────────────────────────────────────────────
 
-class SessionConflict {
-  final String newSessionId;
-  final DeviceInfo newDeviceInfo;
-  final String action; // "disconnect_old", "disconnect_new", "allow_concurrent"
+class SessionConflict { // "disconnect_old", "disconnect_new", "allow_concurrent"
 
   SessionConflict({
     required this.newSessionId,
     required this.newDeviceInfo,
-    this.action = 'disconnect_old',
+    this.action = "disconnect_old",
   });
 
   factory SessionConflict.fromJson(Map<String, dynamic> json) {
-    final deviceData = json['NewDeviceInfo'] as Map<String, dynamic>? ?? {};
+    final deviceData = json["NewDeviceInfo"] as Map<String, dynamic>? ?? {};
     return SessionConflict(
-      newSessionId: json['NewSessionId'] as String? ?? '',
+      newSessionId: json["NewSessionId"] as String? ?? "",
       newDeviceInfo: DeviceInfo.fromJson(deviceData),
-      action: json['Action'] as String? ?? 'disconnect_old',
+      action: json["Action"] as String? ?? "disconnect_old",
     );
   }
 
   factory SessionConflict.fromBytes(List<int> bytes) =>
       SessionConflict.fromJson(_decodePayloadMap(bytes));
+  final String newSessionId;
+  final DeviceInfo newDeviceInfo;
+  final String action;
 
   Map<String, dynamic> toJson() => {
     'NewSessionId': newSessionId,
@@ -151,9 +151,6 @@ class SessionConflict {
 }
 
 class DeviceInfo {
-  final String? os;
-  final String? version;
-  final String? deviceName;
 
   DeviceInfo({
     this.os,
@@ -162,10 +159,13 @@ class DeviceInfo {
   });
 
   factory DeviceInfo.fromJson(Map<String, dynamic> json) => DeviceInfo(
-    os: json['Os'] as String?,
-    version: json['Version'] as String?,
-    deviceName: json['DeviceName'] as String?,
+    os: json["Os"] as String?,
+    version: json["Version"] as String?,
+    deviceName: json["DeviceName"] as String?,
   );
+  final String? os;
+  final String? version;
+  final String? deviceName;
 
   Map<String, dynamic> toJson() => {
     if (os != null) 'Os': os,
@@ -177,25 +177,22 @@ class DeviceInfo {
 // ─── Type 103: ProfilesBatch ──────────────────────────────────────────────
 
 class ProfilesBatchRequest {
-  final List<int> profileIds;
 
   ProfilesBatchRequest({required this.profileIds});
 
   factory ProfilesBatchRequest.fromJson(Map<String, dynamic> json) =>
       ProfilesBatchRequest(
-        profileIds: (json['ProfileIds'] as List<dynamic>? ?? [])
+        profileIds: (json["ProfileIds"] as List<dynamic>? ?? [])
             .map((id) => (id as num).toInt())
             .toList(),
       );
+  final List<int> profileIds;
 
   Map<String, dynamic> toJson() => {'ProfileIds': profileIds};
   List<int> toBytes() => msgpack.serialize(toJson());
 }
 
 class ProfilesBatchResponse {
-  final bool success;
-  final List<UserProfileItem> profiles;
-  final String? message;
 
   ProfilesBatchResponse({
     required this.success,
@@ -205,25 +202,21 @@ class ProfilesBatchResponse {
 
   factory ProfilesBatchResponse.fromJson(Map<String, dynamic> json) =>
       ProfilesBatchResponse(
-        success: json['Success'] as bool? ?? false,
-        profiles: (json['Profiles'] as List<dynamic>? ?? [])
+        success: json["Success"] as bool? ?? false,
+        profiles: (json["Profiles"] as List<dynamic>? ?? [])
             .map((p) => UserProfileItem.fromJson(p as Map<String, dynamic>))
             .toList(),
-        message: json['Message'] as String?,
+        message: json["Message"] as String?,
       );
 
   factory ProfilesBatchResponse.fromBytes(List<int> bytes) =>
       ProfilesBatchResponse.fromJson(_decodePayloadMap(bytes));
+  final bool success;
+  final List<UserProfileItem> profiles;
+  final String? message;
 }
 
 class UserProfileItem {
-  final int userId;
-  final String username;
-  final String? displayName;
-  final String? avatarUrl;
-  final String? bio;
-  final bool isOnline;
-  final DateTime? lastSeenAt;
 
   UserProfileItem({
     required this.userId,
@@ -237,14 +230,21 @@ class UserProfileItem {
 
   factory UserProfileItem.fromJson(Map<String, dynamic> json) =>
       UserProfileItem(
-        userId: (json['UserId'] as num? ?? 0).toInt(),
-        username: json['Username'] as String? ?? '',
-        displayName: json['DisplayName'] as String?,
-        avatarUrl: json['AvatarUrl'] as String?,
-        bio: json['Bio'] as String?,
-        isOnline: json['IsOnline'] as bool? ?? false,
-        lastSeenAt: _parseNullableDateTime(json['LastSeenAt']),
+        userId: (json["UserId"] as num? ?? 0).toInt(),
+        username: json["Username"] as String? ?? "",
+        displayName: json["DisplayName"] as String?,
+        avatarUrl: json["AvatarUrl"] as String?,
+        bio: json["Bio"] as String?,
+        isOnline: json["IsOnline"] as bool? ?? false,
+        lastSeenAt: _parseNullableDateTime(json["LastSeenAt"]),
       );
+  final int userId;
+  final String username;
+  final String? displayName;
+  final String? avatarUrl;
+  final String? bio;
+  final bool isOnline;
+  final DateTime? lastSeenAt;
 
   Map<String, dynamic> toJson() => {
     'UserId': userId,
@@ -261,8 +261,6 @@ class UserProfileItem {
 // ─── Type 104: ChatListStream ──────────────────────────────────────────────
 
 class ChatListStreamRequest {
-  final int chunkSize;
-  final String? compressionMethod;
 
   ChatListStreamRequest({
     this.chunkSize = 100,
@@ -271,9 +269,11 @@ class ChatListStreamRequest {
 
   factory ChatListStreamRequest.fromJson(Map<String, dynamic> json) =>
       ChatListStreamRequest(
-        chunkSize: (json['ChunkSize'] as num? ?? 100).toInt(),
-        compressionMethod: json['CompressionMethod'] as String?,
+        chunkSize: (json["ChunkSize"] as num? ?? 100).toInt(),
+        compressionMethod: json["CompressionMethod"] as String?,
       );
+  final int chunkSize;
+  final String? compressionMethod;
 
   Map<String, dynamic> toJson() => {
     'ChunkSize': chunkSize,
@@ -286,11 +286,6 @@ class ChatListStreamRequest {
 // ─── Type 105: ChatListChunk ──────────────────────────────────────────────
 
 class ChatListChunk {
-  final bool success;
-  final int chunkIndex;
-  final int totalChunks;
-  final List<ChatListItem> chunkData;
-  final String? message;
 
   ChatListChunk({
     required this.success,
@@ -301,31 +296,26 @@ class ChatListChunk {
   });
 
   factory ChatListChunk.fromJson(Map<String, dynamic> json) => ChatListChunk(
-    success: json['Success'] as bool? ?? false,
-    chunkIndex: (json['ChunkIndex'] as num? ?? 0).toInt(),
-    totalChunks: (json['TotalChunks'] as num? ?? 0).toInt(),
-    chunkData: (json['ChunkData'] as List<dynamic>? ?? [])
+    success: json["Success"] as bool? ?? false,
+    chunkIndex: (json["ChunkIndex"] as num? ?? 0).toInt(),
+    totalChunks: (json["TotalChunks"] as num? ?? 0).toInt(),
+    chunkData: (json["ChunkData"] as List<dynamic>? ?? [])
         .map((item) => ChatListItem.fromJson(item as Map<String, dynamic>))
         .toList(),
-    message: json['Message'] as String?,
+    message: json["Message"] as String?,
   );
 
   factory ChatListChunk.fromBytes(List<int> bytes) =>
       ChatListChunk.fromJson(_decodePayloadMap(bytes));
+  final bool success;
+  final int chunkIndex;
+  final int totalChunks;
+  final List<ChatListItem> chunkData;
+  final String? message;
 }
 
 // ChatListItem - reused from existing message_payloads.dart
 class ChatListItem {
-  final int chatId;
-  final String type;
-  final String title;
-  final String? avatarUrl;
-  final String? presenceStatus;
-  final String? lastMessage;
-  final DateTime? lastMessageAt;
-  final int unreadCount;
-  final int? peerUserId;
-  final int? channelId;
 
   ChatListItem({
     required this.chatId,
@@ -341,46 +331,56 @@ class ChatListItem {
   });
 
   factory ChatListItem.fromJson(Map<String, dynamic> json) => ChatListItem(
-    chatId: (json['ChatId'] as num? ?? 0).toInt(),
-    type: json['Type'] as String? ?? '',
-    title: json['Title'] as String? ?? '',
-    avatarUrl: json['AvatarUrl'] as String?,
-    presenceStatus: json['PresenceStatus'] as String?,
-    lastMessage: json['LastMessage'] as String?,
-    lastMessageAt: _parseNullableDateTime(json['LastMessageAt']),
-    unreadCount: (json['UnreadCount'] as num? ?? 0).toInt(),
-    peerUserId: (json['PeerUserId'] as num?)?.toInt(),
-    channelId: (json['ChannelId'] as num?)?.toInt(),
+    chatId: (json["ChatId"] as num? ?? 0).toInt(),
+    type: json["Type"] as String? ?? "",
+    title: json["Title"] as String? ?? "",
+    avatarUrl: json["AvatarUrl"] as String?,
+    presenceStatus: json["PresenceStatus"] as String?,
+    lastMessage: json["LastMessage"] as String?,
+    lastMessageAt: _parseNullableDateTime(json["LastMessageAt"]),
+    unreadCount: (json["UnreadCount"] as num? ?? 0).toInt(),
+    peerUserId: (json["PeerUserId"] as num?)?.toInt(),
+    channelId: (json["ChannelId"] as num?)?.toInt(),
   );
+  final int chatId;
+  final String type;
+  final String title;
+  final String? avatarUrl;
+  final String? presenceStatus;
+  final String? lastMessage;
+  final DateTime? lastMessageAt;
+  final int unreadCount;
+  final int? peerUserId;
+  final int? channelId;
 
   int get roomTargetId => peerUserId ?? channelId ?? chatId;
 }
 
 // ─── Type 106: ServerOverloaded ────────────────────────────────────────────
 
-class ServerOverloaded {
-  final String reason;
-  final int suggestedBackoffMs;
-  final int retryAfterMs;
-  final String recommendedAction; // "wait", "switch_server", "reduce_features"
+class ServerOverloaded { // "wait", "switch_server", "reduce_features"
 
   ServerOverloaded({
     required this.reason,
     this.suggestedBackoffMs = 60000,
     this.retryAfterMs = 120000,
-    this.recommendedAction = 'wait',
+    this.recommendedAction = "wait",
   });
 
   factory ServerOverloaded.fromJson(Map<String, dynamic> json) =>
       ServerOverloaded(
-        reason: json['Reason'] as String? ?? 'server_overloaded',
-        suggestedBackoffMs: (json['SuggestedBackoffMs'] as num? ?? 60000).toInt(),
-        retryAfterMs: (json['RetryAfterMs'] as num? ?? 120000).toInt(),
-        recommendedAction: json['RecommendedAction'] as String? ?? 'wait',
+        reason: json["Reason"] as String? ?? "server_overloaded",
+        suggestedBackoffMs: (json["SuggestedBackoffMs"] as num? ?? 60000).toInt(),
+        retryAfterMs: (json["RetryAfterMs"] as num? ?? 120000).toInt(),
+        recommendedAction: json["RecommendedAction"] as String? ?? "wait",
       );
 
   factory ServerOverloaded.fromBytes(List<int> bytes) =>
       ServerOverloaded.fromJson(_decodePayloadMap(bytes));
+  final String reason;
+  final int suggestedBackoffMs;
+  final int retryAfterMs;
+  final String recommendedAction;
 
   Map<String, dynamic> toJson() => {
     'Reason': reason,

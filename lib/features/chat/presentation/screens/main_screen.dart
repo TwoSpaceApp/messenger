@@ -18,8 +18,8 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 import 'package:two_space_app/features/settings/presentation/screens/settings_screen.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
-  static const routeName = '/main';
   const MainScreen({super.key, this.initialIndex = 0});
+  static const routeName = '/main';
 
   final int initialIndex;
 

@@ -2,13 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Mock call history model
 class CallHistory {
-  final String id;
-  final String contactId;
-  final String contactName;
-  final String? contactAvatar;
-  final DateTime timestamp;
-  final Duration? duration;
-  final bool isIncoming;
 
   CallHistory({
     required this.id,
@@ -19,6 +12,13 @@ class CallHistory {
     this.contactAvatar,
     this.duration,
   });
+  final String id;
+  final String contactId;
+  final String contactName;
+  final String? contactAvatar;
+  final DateTime timestamp;
+  final Duration? duration;
+  final bool isIncoming;
 }
 
 // Call history provider

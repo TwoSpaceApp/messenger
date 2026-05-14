@@ -497,7 +497,7 @@ class _BlobPainter extends CustomPainter {
     path.lineTo(0, startY);
 
     double previousX = 0;
-    double previousY = startY;
+    var previousY = startY;
     for (var index = 1; index <= 4; index++) {
       final x = step * index;
       final progress = (phase + index / 4) % 1.0;

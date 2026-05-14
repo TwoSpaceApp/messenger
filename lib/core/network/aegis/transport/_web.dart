@@ -65,9 +65,7 @@ class WebAegisConnection implements AegisConnection {
       // On web, we use the same scheme as the page (secure HTTPS → wss://, plain HTTP → ws://)
       final wsScheme = html.window.location.protocol == 'https:' ? 'wss' : 'ws';
        final pageHost = html.window.location.hostname ?? 'localhost';
-       final pagePort = html.window.location.port != null 
-           ? html.window.location.port 
-           : (wsScheme == 'wss' ? '443' : '80');
+       final pagePort = html.window.location.port ?? (wsScheme == "wss" ? "443" : "80");
       
       // Connect to WebSocket proxy on the same origin, on path /ws
       // This assumes nginx is configured to proxy /ws to localhost:9999
@@ -114,7 +112,7 @@ class WebAegisConnection implements AegisConnection {
       _webSocket!.onError.listen((event) {
         if (_disposed) return;
         _isConnected = false;
-        final error = 'WebSocket error: ${event.toString()}';
+        final error = 'WebSocket error: $event';
         AegisLogger.error(error);
         _errorController.add(Exception(error));
         _connectCompleter?.completeError(error);

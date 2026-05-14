@@ -47,10 +47,6 @@ Future<bool> _pathExists(String path) async {
 }
 
 class ChatScreen extends StatefulWidget {
-  final Chat chat;
-  final String? searchQuery;
-  final String? searchType; // 'all' | 'messages' | 'media' | 'users'
-  final String? scrollToEventId;
 
   const ChatScreen({
     required this.chat,
@@ -59,6 +55,10 @@ class ChatScreen extends StatefulWidget {
     this.searchType,
     this.scrollToEventId,
   });
+  final Chat chat;
+  final String? searchQuery;
+  final String? searchType; // 'all' | 'messages' | 'media' | 'users'
+  final String? scrollToEventId;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -827,7 +827,7 @@ class _ChatScreenState extends State<ChatScreen>
         final senderAvatar = cached['avatarUrl'];
 
         // Determine isOwn in a tolerant way
-        bool isOwn = false;
+        var isOwn = false;
         try {
           String normalize(String? mx) {
             if (mx == null || mx.isEmpty) return '';
@@ -2907,20 +2907,6 @@ class _ChatScreenState extends State<ChatScreen>
 }
 
 class _Msg {
-  final String id;
-  final String text;
-  final bool isOwn;
-  final DateTime time;
-  final String? senderId;
-  final String? senderName;
-  final String? senderAvatar;
-  final String? type;
-  final String? mediaId;
-  final bool isDelivered;
-  final bool isRead;
-  final DateTime? deliveredAt;
-  final DateTime? readAt;
-  final bool isPending;
 
   _Msg({
     required this.id,
@@ -2938,6 +2924,20 @@ class _Msg {
     this.readAt,
     this.isPending = false,
   });
+  final String id;
+  final String text;
+  final bool isOwn;
+  final DateTime time;
+  final String? senderId;
+  final String? senderName;
+  final String? senderAvatar;
+  final String? type;
+  final String? mediaId;
+  final bool isDelivered;
+  final bool isRead;
+  final DateTime? deliveredAt;
+  final DateTime? readAt;
+  final bool isPending;
 }
 
 class _ComposerAttachment {
@@ -3605,16 +3605,16 @@ class _ImageMessageWidgetState extends State<_ImageMessageWidget>
 }
 
 class _AudioMessageWidget extends StatefulWidget {
-  final _Msg message;
-  final AegisChatService svc;
-  final Map<String, AudioPlayer> audioPlayers;
-  final Map<String, String> mediaDownloads;
   const _AudioMessageWidget({
     required this.message,
     required this.svc,
     required this.audioPlayers,
     required this.mediaDownloads,
   });
+  final _Msg message;
+  final AegisChatService svc;
+  final Map<String, AudioPlayer> audioPlayers;
+  final Map<String, String> mediaDownloads;
   @override
   State<_AudioMessageWidget> createState() => _AudioMessageWidgetState();
 }
@@ -5232,11 +5232,6 @@ class _DateSeparator extends StatelessWidget {
 }
 
 class _SquishyBubble extends StatefulWidget {
-  final Widget child;
-  final bool isOwn;
-  final bool highlighted;
-  final double bubbleRounding;
-  final bool dynamicBubbles;
 
   const _SquishyBubble({
     required this.child,
@@ -5245,6 +5240,11 @@ class _SquishyBubble extends StatefulWidget {
     required this.dynamicBubbles,
     this.highlighted = false,
   });
+  final Widget child;
+  final bool isOwn;
+  final bool highlighted;
+  final double bubbleRounding;
+  final bool dynamicBubbles;
 
   @override
   State<_SquishyBubble> createState() => _SquishyBubbleState();

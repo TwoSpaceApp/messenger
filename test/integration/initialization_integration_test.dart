@@ -41,7 +41,7 @@ void main() {
     });
   });
 
-  tearDown(() => store.clear());
+  tearDown(store.clear);
 
   tearDownAll(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -118,7 +118,7 @@ void main() {
       for (final name in names) {
         expect(name, isNotEmpty);
         expect(name.length, greaterThan(3),
-            reason: "Step name \"$name\" seems too short to be descriptive");
+            reason: 'Step name "$name" seems too short to be descriptive');
       }
     });
 
@@ -148,11 +148,11 @@ void main() {
            progressUpdates.add(stepName);
            final now = DateTime.now().millisecondsSinceEpoch.toDouble();
            progressTimestamps.add(now);
-           if (lastProgressTime != null) {
-             expect(now, greaterThan(lastProgressTime.millisecondsSinceEpoch.toDouble()),
-                 reason: "Progress timestamps should be increasing");
-           }
-           lastProgressTime = DateTime.fromMillisecondsSinceEpoch(now.toInt());
+            if (lastProgressTime != null) {
+              expect(now, greaterThan(lastProgressTime!.millisecondsSinceEpoch.toDouble()),
+                  reason: "Progress timestamps should be increasing");
+            }
+            lastProgressTime = DateTime.fromMillisecondsSinceEpoch(now.toInt());
 
            expect(progress, greaterThanOrEqualTo(0.0));
            expect(progress, lessThanOrEqualTo(1.0));

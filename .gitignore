@@ -82,3 +82,28 @@ Aegis-main-new
 # Flutter build artifacts
 /build/**
 !**/build/**/
+
+# Firebase configuration files (contain sensitive API keys)
+# Android
+/android/app/google-services.json
+
+# iOS/macOS
+/ios/Runner/GoogleService-Info.plist
+/macos/Runner/GoogleService-Info.plist
+
+# Web
+/web/firebase-config.js
+/web/firebase-messaging-sw.js
+
+# Windows
+/windows/firebase_options.dart
+
+# Firebase CLI
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# FCM service account keys (server-side)
+**/serviceAccountKey.json
+**/firebase-adminsdk-*.json

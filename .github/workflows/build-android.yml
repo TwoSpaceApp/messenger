@@ -79,10 +79,6 @@ jobs:
       - name: Regenerate localizations
         run: flutter gen-l10n
 
-      - name: Regenerate code
-        run: 
-          dart build -d
-
       - name: Prepare build env from GitHub secrets
         shell: bash
         env:

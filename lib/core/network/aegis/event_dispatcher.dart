@@ -8,6 +8,10 @@ import 'package:two_space_app/core/network/aegis/message_type.dart';
 
 /// Unified dispatcher that splits raw protocol messages into typed streams.
 class AegisEventDispatcher {
+
+  AegisEventDispatcher(Stream<Message> source) {
+    _subscription = source.listen(_route);
+  }
   late final StreamSubscription<Message> _subscription;
 
   final StreamController<Message> _ackController =
@@ -55,10 +59,6 @@ class AegisEventDispatcher {
       StreamController<Pong>.broadcast();
   final StreamController<ServerOverloaded> _serverOverloadedController =
       StreamController<ServerOverloaded>.broadcast();
-
-  AegisEventDispatcher(Stream<Message> source) {
-    _subscription = source.listen(_route);
-  }
 
   Stream<Message> get ackMessages => _ackController.stream;
   Stream<Message> get errorMessages => _errorController.stream;

@@ -16,9 +16,9 @@ enum LogLevel {
 
 /// Журнал для разработчиков с поддержкой уровней логирования
 class DevLogger {
+  DevLogger(this._tag);
   static const int _maxEntries = 400;
   static const int _maxLineLength = 12000;
-  DevLogger(this._tag);
   static final List<String> _logs = [];
   static final StreamController<List<String>> _ctrl =
       StreamController.broadcast();

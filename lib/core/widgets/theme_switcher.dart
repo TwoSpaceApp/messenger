@@ -126,11 +126,6 @@ class ThemeSwitcherButton extends StatelessWidget {
 }
 
 class _ThemeOption extends StatelessWidget {
-  final ThemeMode mode;
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
 
   const _ThemeOption({
     required this.mode,
@@ -139,6 +134,11 @@ class _ThemeOption extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
   });
+  final ThemeMode mode;
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {

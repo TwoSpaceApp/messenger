@@ -18,8 +18,8 @@ extension Uint64CompatByteData on ByteData {
     final low = value & 0xFFFFFFFF;
     
     // Write high part at offset, low part at offset + 4
-    setUint32(byteOffset, high, Endian.big);
-    setUint32(byteOffset + 4, low, Endian.big);
+    setUint32(byteOffset, high);
+    setUint32(byteOffset + 4, low);
   }
 
   /// Get a 64-bit unsigned integer at [byteOffset] in big-endian format.
@@ -28,8 +28,8 @@ extension Uint64CompatByteData on ByteData {
   /// Combines two 32-bit parts into a 64-bit value.
   int getUint64Compat(int byteOffset) {
     // Read high and low parts
-    final high = getUint32(byteOffset, Endian.big);
-    final low = getUint32(byteOffset + 4, Endian.big);
+    final high = getUint32(byteOffset);
+    final low = getUint32(byteOffset + 4);
     
     // Combine: high becomes upper 32 bits, low becomes lower 32 bits
     // In Dart, integers are arbitrary precision, so this works fine

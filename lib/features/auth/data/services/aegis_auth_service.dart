@@ -48,34 +48,34 @@ class EmailNotVerifiedException implements Exception {
 /// Управляет жизненным циклом TCP-соединения, токенами сессии
 /// и предоставляет простой Flutter-friendly API.
 class AegisAuthService {
-  static const Duration _defaultRecoveryBackoff = Duration(seconds: 12);
 
   factory AegisAuthService() => _instance;
   AegisAuthService._internal() {
     _client.disconnects.listen((_) {
       _stopKeepAlive();
-      _log.warning('Соединение с Aegis-сервером разорвано');
+      _log.warning("Соединение с Aegis-сервером разорвано");
       if (_skipDisconnectAutoRecovery) {
-        _log.debug('Пропускаю auto-recovery для управляемого disconnect');
+        _log.debug("Пропускаю auto-recovery для управляемого disconnect");
         return;
       }
       if (!_logoutInProgress && (_token?.isNotEmpty ?? false)) {
         unawaited(
           recoverSession(
-            reason: 'disconnect',
+            reason: "disconnect",
             resetTransport: false,
           ),
         );
       }
     });
     _client.sessionTerminatedEvents.listen((event) {
-      _log.warning('Current session was terminated by server: ${event.reason}');
+      _log.warning("Current session was terminated by server: ${event.reason}");
       if (_logoutInProgress) {
         return;
       }
       unawaited(_handleSessionTerminated());
     });
   }
+  static const Duration _defaultRecoveryBackoff = Duration(seconds: 12);
   static final AegisAuthService _instance = AegisAuthService._internal();
 
   final DevLogger _log = DevLogger('AegisAuthService');
@@ -1283,9 +1283,9 @@ class AegisAuthService {
 }
 
 class NotAuthenticatedException implements Exception {
-  final String? message;
 
   NotAuthenticatedException([this.message]);
+  final String? message;
 
   @override
   String toString() => 'NotAuthenticatedException: ${message ?? 'auth.not_authenticated'}';

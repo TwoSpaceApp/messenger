@@ -1,18 +1,55 @@
+import 'dart:async';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
-/// Notification service for local notifications and foreground service.
+// ignore_for_file: unreachable_from_main
+// Service is used through NotificationService() singleton, not from main.
+
+/// Handler for background FCM messages.
+/// Must be a top-level function or static method.
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Initialize Firebase for background handler
+  await Firebase.initializeApp();
+
+  final log = DevLogger('FCMBackground');
+  log.info('Background message received: ${message.messageId}');
+  log.debug('Message data: ${message.data}');
+
+  // Background messages are handled by the system, but we can log them here
+  // The actual notification display is handled by FCM automatically when
+  // the message contains a notification payload
+}
+
+/// Notification service for local notifications, foreground service, and push notifications.
 /// Handles message notifications, chat updates, and persistent service status.
 class NotificationService {
+  factory NotificationService() => _instance;
+  NotificationService._internal();
   static final NotificationService _instance = NotificationService._internal();
   static final DevLogger _log = DevLogger('NotificationService');
 
-  factory NotificationService() => _instance;
-  NotificationService._internal();
-
   late FlutterLocalNotificationsPlugin _plugin;
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   bool _initialized = false;
+  String? _fcmToken;
+
+  // Stream controllers for notification events
+  final StreamController<String> _onChatOpened = StreamController<String>.broadcast();
+  final StreamController<String> _onMessageOpened = StreamController<String>.broadcast();
+
+  /// Stream of chat IDs when user taps on a chat notification
+  Stream<String> get onChatOpened => _onChatOpened.stream;
+
+  /// Stream of message IDs when user taps on a message/reaction notification
+  Stream<String> get onMessageOpened => _onMessageOpened.stream;
+
+  /// Current FCM token for push notifications
+  String? get fcmToken => _fcmToken;
 
   /// Initialize the notification service.
   /// Should be called during app startup (e.g., in main.dart before runApp).
@@ -21,11 +58,27 @@ class NotificationService {
 
     _plugin = FlutterLocalNotificationsPlugin();
 
+    // Initialize local notifications
+    await _initializeLocalNotifications();
+
+    // Initialize Firebase Cloud Messaging
+    await _initializeFirebaseMessaging();
+
+    _initialized = true;
+    _log.info('NotificationService initialized');
+  }
+
+  /// Initialize local notifications plugin
+  Future<void> _initializeLocalNotifications() async {
     // Android initialization
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
 
     // iOS initialization
-    const iosSettings = DarwinInitializationSettings();
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: false, // We'll request permissions separately
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
 
     const settings = InitializationSettings(
       android: androidSettings,
@@ -40,16 +93,71 @@ class NotificationService {
     // Create notification channels for Android 8+
     await _createNotificationChannels();
 
-    _initialized = true;
-    _log.info('NotificationService initialized');
+    // Request permissions for local notifications
+    await _requestLocalNotificationPermissions();
+  }
 
-    // Request permissions
+  /// Initialize Firebase Cloud Messaging
+  Future<void> _initializeFirebaseMessaging() async {
+    try {
+      // Set background message handler
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+      // Request permission for push notifications
+      await _requestPushNotificationPermissions();
+
+      // Get FCM token
+      await _updateFcmToken();
+
+      // Listen for token refresh
+      _firebaseMessaging.onTokenRefresh.listen(
+        (newToken) {
+          _fcmToken = newToken;
+          _log.info('FCM token refreshed');
+          // TODO(wakcedon): Send new token to server
+        },
+        onError: (error) {
+          _log.error('FCM token refresh error: $error');
+        },
+      );
+
+      // Handle foreground messages
+      FirebaseMessaging.onMessage.listen(
+        _handleForegroundMessage,
+        onError: (error) {
+          _log.error('FCM foreground message error: $error');
+        },
+      );
+
+      // Handle notification open events (when app is in background/terminated)
+      FirebaseMessaging.onMessageOpenedApp.listen(
+        _handleMessageOpenedApp,
+        onError: (error) {
+          _log.error('FCM message opened app error: $error');
+        },
+      );
+
+      // Check if app was opened from a notification (when terminated)
+      final initialMessage = await _firebaseMessaging.getInitialMessage();
+      if (initialMessage != null) {
+        _log.info('App opened from terminated state via notification');
+        _handleMessageOpenedApp(initialMessage);
+      }
+
+      _log.info('Firebase Messaging initialized');
+    } catch (e, stackTrace) {
+      _log.exception('Failed to initialize Firebase Messaging', e, stackTrace);
+    }
+  }
+
+  /// Request permissions for local notifications
+  Future<void> _requestLocalNotificationPermissions() async {
     try {
       // iOS permissions
       await _plugin
           .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
           ?.requestPermissions(alert: true, badge: true, sound: true);
-      
+
       // Android 13+ permissions
       final androidPlugin = _plugin
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
@@ -57,7 +165,119 @@ class NotificationService {
         await androidPlugin.requestNotificationsPermission();
       }
     } catch (e) {
-      _log.warning('Failed to request notification permissions: $e');
+      _log.warning('Failed to request local notification permissions: $e');
+    }
+  }
+
+  /// Request permissions for push notifications
+  Future<void> _requestPushNotificationPermissions() async {
+    try {
+      final settings = await _firebaseMessaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      _log.info('Push notification permission status: ${settings.authorizationStatus}');
+    } catch (e) {
+      _log.warning('Failed to request push notification permissions: $e');
+    }
+  }
+
+  /// Update and retrieve FCM token
+  Future<void> _updateFcmToken() async {
+    try {
+      _fcmToken = await _firebaseMessaging.getToken();
+      if (_fcmToken != null) {
+        _log.info('FCM token retrieved successfully');
+        _log.debug('Token: ${_fcmToken!.substring(0, _fcmToken!.length > 20 ? 20 : _fcmToken!.length)}...');
+      } else {
+        _log.warning('FCM token is null');
+      }
+    } catch (e) {
+      _log.error('Failed to get FCM token: $e');
+    }
+  }
+
+  /// Handle foreground FCM messages
+  Future<void> _handleForegroundMessage(RemoteMessage message) async {
+    _log.info('Foreground FCM message received: ${message.messageId}');
+    _log.debug('Message data: ${message.data}');
+
+    final notification = message.notification;
+    if (notification != null) {
+      _log.debug('Notification title: ${notification.title}');
+      _log.debug('Notification body: ${notification.body}');
+
+      // Show local notification for foreground messages
+      // This is needed because FCM doesn't show notifications automatically
+      // when the app is in foreground
+      await _showLocalNotificationFromFcm(message);
+    }
+  }
+
+  /// Show local notification from FCM message
+  Future<void> _showLocalNotificationFromFcm(RemoteMessage message) async {
+    final notification = message.notification;
+    if (notification == null) return;
+
+    final data = message.data;
+    final type = data['type'] ?? 'message';
+    final chatId = data['chat_id'] ?? data['room_id'];
+    final messageId = data['message_id'];
+
+    switch (type) {
+      case 'message':
+        if (chatId != null) {
+          await showMessageNotification(
+            title: notification.title ?? 'New Message',
+            body: notification.body ?? '',
+            chatId: chatId,
+          );
+        }
+      case 'chat':
+      case 'group':
+        if (chatId != null) {
+          await showChatUpdateNotification(
+            title: notification.title ?? 'New Chat',
+            body: notification.body ?? '',
+            chatId: chatId,
+          );
+        }
+      case 'reaction':
+        if (messageId != null) {
+          await showReactionNotification(
+            title: notification.title ?? 'New Reaction',
+            body: notification.body ?? '',
+            messageId: messageId,
+          );
+        }
+    }
+  }
+
+  /// Handle notification tap when app is in background/terminated
+  void _handleMessageOpenedApp(RemoteMessage message) {
+    _log.info('Notification opened app: ${message.messageId}');
+    _log.debug('Message data: ${message.data}');
+
+    final data = message.data;
+    final type = data['type'] ?? 'message';
+    final chatId = data['chat_id'] ?? data['room_id'];
+    final messageId = data['message_id'];
+
+    switch (type) {
+      case 'message':
+      case 'chat':
+      case 'group':
+        if (chatId != null) {
+          _navigateToChat(chatId);
+          _onChatOpened.add(chatId);
+        }
+      case 'reaction':
+        if (messageId != null) {
+          _navigateToMessage(messageId);
+          _onMessageOpened.add(messageId);
+        }
     }
   }
 
@@ -96,6 +316,16 @@ class NotificationService {
           description: 'Persistent notification for app service status',
           importance: Importance.low,
           showBadge: false,
+        ),
+      );
+
+      // FCM channel (for push notifications)
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'fcm_fallback_notification_channel',
+          'Push Notifications',
+          description: 'Notifications from server',
+          importance: Importance.high,
         ),
       );
     } catch (e) {
@@ -323,12 +553,15 @@ class NotificationService {
     if (payload.startsWith('chat:')) {
       final roomId = payload.substring(5);
       _navigateToChat(roomId);
+      _onChatOpened.add(roomId);
     } else if (payload.startsWith('chat_new:')) {
       final chatId = payload.substring(9);
       _navigateToChat(chatId);
+      _onChatOpened.add(chatId);
     } else if (payload.startsWith('reaction:')) {
       final messageId = payload.substring(9);
       _navigateToMessage(messageId);
+      _onMessageOpened.add(messageId);
     } else if (payload == 'service:foreground') {
       _openApp();
     }
@@ -336,12 +569,12 @@ class NotificationService {
 
   void _navigateToChat(String roomId) {
     _log.debug('Navigate to chat: $roomId');
-    // This will be handled by the app's router
+    // This will be handled by the app's router via onChatOpened stream
   }
 
   void _navigateToMessage(String messageId) {
     _log.debug('Navigate to message: $messageId');
-    // This will be handled by the app's router
+    // This will be handled by the app's router via onMessageOpened stream
   }
 
   void _openApp() {
@@ -378,5 +611,42 @@ class NotificationService {
     } catch (error) {
       _log.error('Failed to stop foreground service: $error');
     }
+  }
+
+  /// Subscribe to a topic for push notifications
+  Future<void> subscribeToTopic(String topic) async {
+    try {
+      await _firebaseMessaging.subscribeToTopic(topic);
+      _log.info('Subscribed to topic: $topic');
+    } catch (e) {
+      _log.error('Failed to subscribe to topic $topic: $e');
+    }
+  }
+
+  /// Unsubscribe from a topic
+  Future<void> unsubscribeFromTopic(String topic) async {
+    try {
+      await _firebaseMessaging.unsubscribeFromTopic(topic);
+      _log.info('Unsubscribed from topic: $topic');
+    } catch (e) {
+      _log.error('Failed to unsubscribe from topic $topic: $e');
+    }
+  }
+
+  /// Delete FCM token (e.g., on logout)
+  Future<void> deleteFcmToken() async {
+    try {
+      await _firebaseMessaging.deleteToken();
+      _fcmToken = null;
+      _log.info('FCM token deleted');
+    } catch (e) {
+      _log.error('Failed to delete FCM token: $e');
+    }
+  }
+
+  /// Dispose the service
+  Future<void> dispose() async {
+    await _onChatOpened.close();
+    await _onMessageOpened.close();
   }
 }

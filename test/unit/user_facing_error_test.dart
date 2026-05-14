@@ -18,7 +18,7 @@ void main() {
     // });
 
     test("format handles TimeoutException properly", () {
-      final error = TimeoutException("Request timed out", Duration(seconds: 30));
+      final error = TimeoutException("Request timed out", const Duration(seconds: 30));
       final result = UserFacingError.format(error);
       expect(result, "Request timed out");
     });

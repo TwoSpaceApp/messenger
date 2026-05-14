@@ -24,6 +24,10 @@ import 'package:two_space_app/core/network/aegis/transport/_shared.dart'
 /// 
 /// Supports both native TCP sockets and WebSocket on web platforms.
 class AegisTransport {
+
+  /// Create a transport with optional [maxBufferSize] for backpressure.
+  AegisTransport({int maxBufferSize = 4 * 1024 * 1024})
+    : _maxBufferSize = maxBufferSize;
   late AegisConnection _connection;
   bool _isConnected = false;
   int _nextSequenceId = 1;
@@ -61,10 +65,6 @@ class AegisTransport {
 
   /// Whether the transport is connected.
   bool get isConnected => _isConnected;
-
-  /// Create a transport with optional [maxBufferSize] for backpressure.
-  AegisTransport({int maxBufferSize = 4 * 1024 * 1024})
-    : _maxBufferSize = maxBufferSize;
 
   // ── Connection ──────────────────────────────────────────────────────
 

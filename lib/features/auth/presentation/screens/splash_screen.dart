@@ -7,14 +7,14 @@ import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 
 class SplashScreen extends StatefulWidget {
-  final String? currentStep;
-  final double? progress;
 
   const SplashScreen({
     super.key,
     this.currentStep,
     this.progress,
   });
+  final String? currentStep;
+  final double? progress;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();

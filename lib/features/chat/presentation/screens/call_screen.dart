@@ -115,7 +115,7 @@ class _CallScreenState extends State<CallScreen> {
       _cameraError = null;
     });
 
-    PermissionStatus status = await Permission.camera.status;
+    var status = await Permission.camera.status;
     if (requestPermission && !status.isGranted) {
       status = await Permission.camera.request();
     }
@@ -600,10 +600,10 @@ class _VideoPreviewStack extends StatelessWidget {
     final isCompact = width < 390;
     final isTablet = width >= UITokens.tabletBreakpoint;
     final isDesktop = width >= UITokens.desktopBreakpoint;
-    final double previewHeight = isDesktop
-        ? math.min(height * 0.48, 420)
+    final previewHeight = isDesktop
+        ? math.min(height * 0.48, 420).toDouble()
         : isTablet
-        ? math.min(height * 0.44, 380)
+        ? math.min(height * 0.44, 380).toDouble()
         : (height < 760 ? 260.s(context) : 320.s(context));
 
     return SizedBox(

@@ -716,7 +716,7 @@ class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
       },
     );
 
-    if (approved == true) {
+    if (approved ?? false) {
       DevSensitiveDataPolicy.setRevealSensitiveData(true);
     }
   }
@@ -1189,8 +1189,8 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
       if (!mounted) return;
 
       // Load device info with timeout
-      String devInfo = '';
-      bool hasDeviceError = false;
+      var devInfo = '';
+      var hasDeviceError = false;
 
       try {
         final deviceInfoPlugin = DeviceInfoPlugin();

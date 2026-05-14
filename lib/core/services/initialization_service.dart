@@ -1,9 +1,11 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/config/environment_validator.dart';
 import 'package:two_space_app/core/services/notification_service.dart';
 import 'package:two_space_app/core/services/time_out_exception.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+import 'package:two_space_app/firebase_options.dart';
 
 /// Result of an initialization step
 class InitStepResult {
@@ -77,6 +79,9 @@ class InitializationService {
   static Future<void>? _deferredStartupFuture;
 
   static final List<List<InitializationStep>> _stepPhases = [
+    <InitializationStep>[
+      _FirebaseStep(),
+    ],
     <InitializationStep>[
       _EnvironmentStep(),
     ],
@@ -344,6 +349,24 @@ class _SettingsStep implements InitializationStep {
   @override
   Future<void> execute() async {
     await SettingsService.loadSettings();
+  }
+}
+
+class _FirebaseStep implements InitializationStep {
+  @override
+  String get name => 'Firebase Initialization';
+
+  @override
+  bool get critical => false; // App can work without Firebase
+
+  @override
+  Duration get timeout => const Duration(seconds: 10);
+
+  @override
+  Future<void> execute() async {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   }
 }
 

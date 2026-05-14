@@ -7,6 +7,8 @@ import 'dart:typed_data';
 ///
 /// See: src/Aegis.Protocol/MessageEncoder.cs — server-side error paths.
 class ProtocolError implements Exception {
+
+  ProtocolError(this.message, [this.frameData]);
   /// Human-readable description of the error.
   final String message;
 
@@ -14,8 +16,6 @@ class ProtocolError implements Exception {
   ///
   /// Used by [hexDump] to produce a diagnostic hex dump.
   final Uint8List? frameData;
-
-  ProtocolError(this.message, [this.frameData]);
 
   /// Hex dump of [frameData] for diagnostic logging.
   ///
