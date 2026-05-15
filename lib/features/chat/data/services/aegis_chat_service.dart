@@ -4429,43 +4429,70 @@ class AegisChatService {
     List<AegisRoomMessage> currentMessages,
     List<AegisRoomMessage> serverMessages,
   ) {
+    // If no current messages, return server messages directly
     if (currentMessages.isEmpty) {
       return serverMessages;
+    }
+
+    // If no server messages, keep all current messages (don't lose local data)
+    if (serverMessages.isEmpty) {
+      return currentMessages;
     }
 
     final serverIds = serverMessages.map((message) => message.id).toSet();
     final deletedIds = _deletedMessageIdsByRoom[roomId];
     final selfUserId = (_auth.userId ?? 0).toString();
-    final freshnessAnchor = serverMessages.isNotEmpty
-        ? serverMessages.last.time
-        : DateTime.now();
+    
+    // Find the time range of server messages to determine what's "recent"
+    final serverTimeRange = serverMessages.isNotEmpty
+        ? (
+            serverMessages.map((m) => m.time).reduce((a, b) => a.isBefore(b) ? a : b),
+            serverMessages.map((m) => m.time).reduce((a, b) => a.isAfter(b) ? a : b),
+          )
+        : (DateTime.now(), DateTime.now());
+    final oldestServerTime = serverTimeRange.$1;
+    final newestServerTime = serverTimeRange.$2;
 
     final mergedById = <String, AegisRoomMessage>{
       for (final message in serverMessages) message.id: message,
     };
 
     for (final message in currentMessages) {
-      if (serverIds.contains(message.id) ||
-          (deletedIds?.contains(message.id) ?? false)) {
+      // Skip if already in server messages (server is authoritative)
+      if (serverIds.contains(message.id)) {
+        continue;
+      }
+      
+      // Skip deleted messages
+      if (deletedIds?.contains(message.id) ?? false) {
         continue;
       }
 
       final isQueuedLocalMessage = message.id.startsWith('local:');
-      final isRecentOwnMessage =
-          message.senderId == selfUserId &&
-          message.time.isAfter(
-            freshnessAnchor.subtract(_historyConsistencyWindow),
-          );
-
-      if (!isQueuedLocalMessage && !isRecentOwnMessage) {
+      final isOwnMessage = message.senderId == selfUserId;
+      
+      // Keep queued messages that haven't been confirmed by server yet
+      if (isQueuedLocalMessage) {
+        // Only keep if it's newer than the oldest server message
+        // (older queued messages that weren't confirmed are likely failed)
+        if (message.time.isAfter(oldestServerTime.subtract(const Duration(minutes: 5)))) {
+          mergedById.putIfAbsent(message.id, () => message);
+        }
         continue;
       }
-
-      mergedById.putIfAbsent(message.id, () => message);
+      
+      // Keep all local messages that fall within or near the server time range
+      // This preserves messages that might not have been returned by the server
+      // due to pagination limits, but discards very old messages
+      if (message.time.isAfter(oldestServerTime.subtract(const Duration(hours: 1))) ||
+          message.time.isBefore(newestServerTime.add(const Duration(hours: 1)))) {
+        mergedById.putIfAbsent(message.id, () => message);
+      }
     }
 
-    return mergedById.values.toList(growable: false)
+    final result = mergedById.values.toList(growable: false)
       ..sort((left, right) => left.time.compareTo(right.time));
+    return result;
   }
 
   (bool, bool, DateTime?, DateTime?) _extractHistoryStatus(dynamic item) {

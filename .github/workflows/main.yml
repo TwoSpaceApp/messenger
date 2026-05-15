@@ -67,6 +67,9 @@ jobs:
       - name: Regenerate localizations
         run: flutter gen-l10n
 
+      - name: Generate code (env, models, etc.)
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
       - name: Analyze code
         run: flutter analyze --no-fatal-infos
 
