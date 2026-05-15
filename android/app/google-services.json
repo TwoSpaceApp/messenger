@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "730330720509",
+    "project_id": "twospace-push",
+    "storage_bucket": "twospace-push.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:730330720509:android:089c73193632da75d57694",
+        "android_client_info": {
+          "package_name": "com.synapse.twospace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQdOToRKC2dfGgRqT8bQcN9TOcTCfgovM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
