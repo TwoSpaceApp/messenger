@@ -364,8 +364,13 @@ class _FirebaseStep implements InitializationStep {
 
   @override
   Future<void> execute() async {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    FirebaseOptions? options;
+    try {
+      options = DefaultFirebaseOptions.currentPlatform;
+    } catch (_) {
+      // Firebase is not configured for this platform — non-critical.
+      return;
+    }
+    await Firebase.initializeApp(options: options);
   }
 }

@@ -24,7 +24,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get errorInitialization => 'Błąd inicjalizacji';
 
   @override
-  String get errorInitializationFull => 'Błąd inicjalizacji. Uruchom ponownie aplikację.';
+  String get errorInitializationFull =>
+      'Błąd inicjalizacji. Uruchom ponownie aplikację.';
 
   @override
   String get errorNetwork => 'Błąd sieci. Sprawdź połączenie.';
@@ -119,10 +120,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get chooseAegisUsernamePrompt => 'Choose an Aegis username.';
 
   @override
-  String get validationAegisUsernameFormat => 'Username must be 3-32 chars and use Latin letters, digits, ., _ or -.';
+  String get validationAegisUsernameFormat =>
+      'Username must be 3-32 chars and use Latin letters, digits, ., _ or -.';
 
   @override
-  String get aegisUsernameHelper => 'Aegis username: 3-32 chars, Latin letters, digits, ., _ or -';
+  String get aegisUsernameHelper =>
+      'Aegis username: 3-32 chars, Latin letters, digits, ., _ or -';
 
   @override
   String loginCooldownMessage(int seconds) {
@@ -356,7 +359,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get fileSent => 'Plik wysłany';
 
   @override
-  String get voiceNotSupported => 'Nagrywanie głosu nie jest obsługiwane na tej platformie';
+  String get voiceNotSupported =>
+      'Nagrywanie głosu nie jest obsługiwane na tej platformie';
 
   @override
   String get microphonePermRequired => 'Wymagane uprawnienie do mikrofonu';
@@ -451,13 +455,16 @@ class AppLocalizationsPl extends AppLocalizations {
   String get accountProfileTitle => 'My account';
 
   @override
-  String get accountProfileSubtitle => 'Manage your public profile data and contact details';
+  String get accountProfileSubtitle =>
+      'Manage your public profile data and contact details';
 
   @override
-  String get accountProfileEditSubtitle => 'Edit your visible profile data and save the changes here';
+  String get accountProfileEditSubtitle =>
+      'Edit your visible profile data and save the changes here';
 
   @override
-  String get otherProfileSubtitle => 'Public profile and available contact information';
+  String get otherProfileSubtitle =>
+      'Public profile and available contact information';
 
   @override
   String get profileSubtitle => 'Edytuj informacje profilowe';
@@ -553,7 +560,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get languageUkrainian => 'Ukraiński';
 
   @override
-  String get clientDescription => 'Klient TwoSpace stworzony za pomocą Flutter/Dart';
+  String get clientDescription =>
+      'Klient TwoSpace stworzony za pomocą Flutter/Dart';
 
   @override
   String errorLogout(String error) {
@@ -576,7 +584,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get biometricLabel => 'Biometria';
 
   @override
-  String get biometricSubtitle => 'Użyj Face ID, odcisku palca lub kodu urządzenia';
+  String get biometricSubtitle =>
+      'Użyj Face ID, odcisku palca lub kodu urządzenia';
 
   @override
   String get activeSessionsLabel => 'Aktywne sesje';
@@ -633,7 +642,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get deleteAccountTitle => 'Usuń konto';
 
   @override
-  String get deleteAccountContent => 'Czy na pewno chcesz usunąć konto? Ta operacja jest nieodwracalna.';
+  String get deleteAccountContent =>
+      'Czy na pewno chcesz usunąć konto? Ta operacja jest nieodwracalna.';
 
   @override
   String get deleteFeatureLater => 'Usuwanie konta będzie dostępne później';
@@ -693,7 +703,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get profileModerationNoticeTitle => 'Safety actions are not ready yet';
 
   @override
-  String get profileModerationNoticeMessage => 'Blocking and reporting will appear here after the moderation flow is completed.';
+  String get profileModerationNoticeMessage =>
+      'Blocking and reporting will appear here after the moderation flow is completed.';
 
   @override
   String get blockUserAction => 'Block user';
@@ -719,7 +730,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get hideFromSearch => 'Ukryj z wyszukiwania';
 
   @override
-  String get hideFromSearchSubtitle => 'Nie pokazuj mnie w wynikach wyszukiwania';
+  String get hideFromSearchSubtitle =>
+      'Nie pokazuj mnie w wynikach wyszukiwania';
 
   @override
   String get hideLastSeen => 'Ukryj ostatnią aktywność';
@@ -739,7 +751,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get sessionExpiryDaysTitle => 'Wygaśnięcie sesji (dni)';
 
   @override
-  String get sessionExpiryDaysContent => 'Wybierz liczbę dni (min: 7, maks: 365).';
+  String get sessionExpiryDaysContent =>
+      'Wybierz liczbę dni (min: 7, maks: 365).';
 
   @override
   String get daysLabel => 'Dni';
@@ -759,7 +772,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get changeEmailSubtitle => 'Zaktualizuj adres e-mail';
 
   @override
-  String get twoFactorPrivacySubtitle => 'Włącz lub wyłącz zaawansowaną ochronę';
+  String get twoFactorPrivacySubtitle =>
+      'Włącz lub wyłącz zaawansowaną ochronę';
 
   @override
   String get changePhoneLabel => 'Zmień telefon';
@@ -787,7 +801,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get contactsAccessTitle => 'Dostęp do kontaktów';
 
   @override
-  String get contactsPermDeniedPermanent => 'Uprawnienie trwale odmówione. Otwórz ustawienia.';
+  String get contactsPermDeniedPermanent =>
+      'Uprawnienie trwale odmówione. Otwórz ustawienia.';
 
   @override
   String get contactsPermRequired => 'Wymagane uprawnienie do kontaktów.';
@@ -887,7 +902,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get privateRoomOption => 'Prywatny pokój';
 
   @override
-  String get privateRoomSubtitle => 'Tylko zaproszeni użytkownicy mogą dołączyć';
+  String get privateRoomSubtitle =>
+      'Tylko zaproszeni użytkownicy mogą dołączyć';
 
   @override
   String get publicRoomOption => 'Publiczny pokój';
@@ -899,7 +915,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get showHistoryLabel => 'Pokaż historię wiadomości';
 
   @override
-  String get showHistorySubtitle => 'Nowi członkowie mogą zobaczyć poprzednie wiadomości';
+  String get showHistorySubtitle =>
+      'Nowi członkowie mogą zobaczyć poprzednie wiadomości';
 
   @override
   String get enterRoomNameError => 'Wpisz nazwę pokoju';
@@ -972,13 +989,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get deleteGroupLabel => 'Usuń grupę';
 
   @override
-  String get deleteGroupWarning => 'Ta akcja jest NIEODWRACALNA. Grupa zostanie trwale usunięta.';
+  String get deleteGroupWarning =>
+      'Ta akcja jest NIEODWRACALNA. Grupa zostanie trwale usunięta.';
 
   @override
   String get confirmDeleteTitle => 'Potwierdź usunięcie';
 
   @override
-  String get confirmDeleteContent => 'Jesteś pewny? Ta akcja jest nieodwracalna.';
+  String get confirmDeleteContent =>
+      'Jesteś pewny? Ta akcja jest nieodwracalna.';
 
   @override
   String get changeRoleTitle => 'Zmień rolę';
@@ -1028,10 +1047,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get newChatChooserTitle => 'Start a new conversation';
 
   @override
-  String get newChatChooserSubtitle => 'Choose the kind of chat you want to create or join.';
+  String get newChatChooserSubtitle =>
+      'Choose the kind of chat you want to create or join.';
 
   @override
-  String get createDirectChatSubtitle => 'Search for a person or enter an Aegis ID manually.';
+  String get createDirectChatSubtitle =>
+      'Search for a person or enter an Aegis ID manually.';
 
   @override
   String get directChatTab => 'Bezpośredni';
@@ -1043,19 +1064,22 @@ class AppLocalizationsPl extends AppLocalizations {
   String get channelChatTab => 'Channel';
 
   @override
-  String get createGroupSubtitle => 'Set up a group, pick participants and share the invite link right away.';
+  String get createGroupSubtitle =>
+      'Set up a group, pick participants and share the invite link right away.';
 
   @override
   String get createChannelTitle => 'Create channel';
 
   @override
-  String get createChannelSubtitle => 'Create a read-focused channel with avatar, description and shareable link.';
+  String get createChannelSubtitle =>
+      'Create a read-focused channel with avatar, description and shareable link.';
 
   @override
   String get startDirectChatTitle => 'Rozpocznij czat bezpośredni';
 
   @override
-  String get contactIdDescription => 'Wpisz nazwę użytkownika lub identyfikator Aegis';
+  String get contactIdDescription =>
+      'Wpisz nazwę użytkownika lub identyfikator Aegis';
 
   @override
   String get contactIdLabel => 'Nazwa użytkownika lub ID Aegis';
@@ -1067,7 +1091,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get hintCardTitle => 'Wskazówka';
 
   @override
-  String get contactIdExplanation => 'Możesz użyć nazwy użytkownika lub numerycznego identyfikatora Aegis';
+  String get contactIdExplanation =>
+      'Możesz użyć nazwy użytkownika lub numerycznego identyfikatora Aegis';
 
   @override
   String get enterUserIdError => 'Wpisz ID użytkownika';
@@ -1082,7 +1107,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get privateGroupLabel => 'Prywatna grupa';
 
   @override
-  String get privateGroupSubtitle => 'Tylko zaproszeni użytkownicy mogą dołączyć';
+  String get privateGroupSubtitle =>
+      'Tylko zaproszeni użytkownicy mogą dołączyć';
 
   @override
   String get createRoomButton => 'Utwórz pokój';
@@ -1094,10 +1120,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get customizationHeroTitle => 'Shape the app around your rhythm';
 
   @override
-  String get customizationHeroSubtitle => 'Build a distinct look with live preview, curated presets, motion, and density controls.';
+  String get customizationHeroSubtitle =>
+      'Build a distinct look with live preview, curated presets, motion, and density controls.';
 
   @override
-  String get notificationsHeroSubtitle => 'Tune alerts, sound behavior, and custom previews so incoming activity feels calm and readable.';
+  String get notificationsHeroSubtitle =>
+      'Tune alerts, sound behavior, and custom previews so incoming activity feels calm and readable.';
 
   @override
   String get livePreviewBadge => 'Live preview';
@@ -1106,31 +1134,36 @@ class AppLocalizationsPl extends AppLocalizations {
   String get stylePresetsTitle => 'Style presets';
 
   @override
-  String get stylePresetsSubtitle => 'Start with a strong visual direction, then tune the details.';
+  String get stylePresetsSubtitle =>
+      'Start with a strong visual direction, then tune the details.';
 
   @override
   String get moodSectionTitle => 'Mood';
 
   @override
-  String get moodSectionSubtitle => 'Choose the accent that drives surfaces, highlights, and the background atmosphere.';
+  String get moodSectionSubtitle =>
+      'Choose the accent that drives surfaces, highlights, and the background atmosphere.';
 
   @override
   String get typeSectionTitle => 'Type';
 
   @override
-  String get typeSectionSubtitle => 'Pair a font family with the weight and size that feels right across the whole UI.';
+  String get typeSectionSubtitle =>
+      'Pair a font family with the weight and size that feels right across the whole UI.';
 
   @override
   String get motionSectionTitle => 'Motion';
 
   @override
-  String get motionSectionSubtitle => 'Control how much the interface breathes, drifts, and reacts in the background.';
+  String get motionSectionSubtitle =>
+      'Control how much the interface breathes, drifts, and reacts in the background.';
 
   @override
   String get densitySectionTitle => 'Density';
 
   @override
-  String get densitySectionSubtitle => 'Tighten spacing, bubble geometry, and navigation timing for a sharper layout.';
+  String get densitySectionSubtitle =>
+      'Tighten spacing, bubble geometry, and navigation timing for a sharper layout.';
 
   @override
   String get themeModeLabel => 'Light balance';
@@ -1139,7 +1172,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get dynamicBubblesLabel => 'Dynamic bubbles';
 
   @override
-  String get dynamicBubblesSubtitle => 'Give chat bubbles directional corners for a more conversational rhythm.';
+  String get dynamicBubblesSubtitle =>
+      'Give chat bubbles directional corners for a more conversational rhythm.';
 
   @override
   String get bubbleRoundingLabel => 'Bubble rounding';
@@ -1168,31 +1202,36 @@ class AppLocalizationsPl extends AppLocalizations {
   String get presetQuietGlass => 'Quiet Glass';
 
   @override
-  String get presetQuietGlassSubtitle => 'Balanced contrast with cool depth and steady motion.';
+  String get presetQuietGlassSubtitle =>
+      'Balanced contrast with cool depth and steady motion.';
 
   @override
   String get presetNightSignal => 'Night Signal';
 
   @override
-  String get presetNightSignalSubtitle => 'Tighter density, stronger highlights, and a darker pulse.';
+  String get presetNightSignalSubtitle =>
+      'Tighter density, stronger highlights, and a darker pulse.';
 
   @override
   String get presetEditorial => 'Editorial';
 
   @override
-  String get presetEditorialSubtitle => 'Calmer motion, restrained color, and a more reading-focused tone.';
+  String get presetEditorialSubtitle =>
+      'Calmer motion, restrained color, and a more reading-focused tone.';
 
   @override
   String get presetSolarFlare => 'Solar Flare';
 
   @override
-  String get presetSolarFlareSubtitle => 'Warm highlights and brighter surfaces with energetic movement.';
+  String get presetSolarFlareSubtitle =>
+      'Warm highlights and brighter surfaces with energetic movement.';
 
   @override
   String get presetRetroPulse => 'Retro Pulse';
 
   @override
-  String get presetRetroPulseSubtitle => 'Compact, playful, and intentionally stylized.';
+  String get presetRetroPulseSubtitle =>
+      'Compact, playful, and intentionally stylized.';
 
   @override
   String get previewRoomsLabel => 'Rooms';
@@ -1207,19 +1246,22 @@ class AppLocalizationsPl extends AppLocalizations {
   String get previewRoomsTitle => 'Room list preview';
 
   @override
-  String get previewRoomsSubtitle => 'A compact room list with real-sounding snippets and cleaner status markers.';
+  String get previewRoomsSubtitle =>
+      'A compact room list with real-sounding snippets and cleaner status markers.';
 
   @override
   String get previewConversationTitle => 'Chat bubble preview';
 
   @override
-  String get previewConversationSubtitle => 'Check how tone, spacing, and bubble shape read in a short live dialog.';
+  String get previewConversationSubtitle =>
+      'Check how tone, spacing, and bubble shape read in a short live dialog.';
 
   @override
   String get previewSettingsTitle => 'Controls at hand';
 
   @override
-  String get previewSettingsSubtitle => 'Preview how the settings stack feels before applying anything globally.';
+  String get previewSettingsSubtitle =>
+      'Preview how the settings stack feels before applying anything globally.';
 
   @override
   String get previewLiveLabel => 'Live';
@@ -1234,31 +1276,39 @@ class AppLocalizationsPl extends AppLocalizations {
   String get previewRoomReleaseCheck => 'Release Check';
 
   @override
-  String get previewRoomReleaseCheckSubtitle => 'Notes are grouped by security and fixes.';
+  String get previewRoomReleaseCheckSubtitle =>
+      'Notes are grouped by security and fixes.';
 
   @override
   String get previewRoomAlphaOps => 'Alpha Ops';
 
   @override
-  String get previewRoomAlphaOpsSubtitle => 'Motion is tuned for a calmer startup.';
+  String get previewRoomAlphaOpsSubtitle =>
+      'Motion is tuned for a calmer startup.';
 
   @override
-  String get previewIncomingMessage => 'The preview should feel like the real app, not a generic demo.';
+  String get previewIncomingMessage =>
+      'The preview should feel like the real app, not a generic demo.';
 
   @override
-  String get previewOutgoingMessage => 'Agreed. Let the color, density, and type speak immediately.';
+  String get previewOutgoingMessage =>
+      'Agreed. Let the color, density, and type speak immediately.';
 
   @override
-  String get previewTypingStatus => 'Typing indicator, spacing, and corners update here in real time.';
+  String get previewTypingStatus =>
+      'Typing indicator, spacing, and corners update here in real time.';
 
   @override
-  String get previewSettingsAppearanceSubtitle => 'Pick a template, adjust motion, and keep the whole shell consistent.';
+  String get previewSettingsAppearanceSubtitle =>
+      'Pick a template, adjust motion, and keep the whole shell consistent.';
 
   @override
-  String get previewSettingsNotificationsSubtitle => 'Preview how secondary settings cards will stack.';
+  String get previewSettingsNotificationsSubtitle =>
+      'Preview how secondary settings cards will stack.';
 
   @override
-  String get previewSettingsPrivacySubtitle => 'Check hierarchy, contrast, and icon weight before applying.';
+  String get previewSettingsPrivacySubtitle =>
+      'Check hierarchy, contrast, and icon weight before applying.';
 
   @override
   String get themeColorAegisViolet => 'Aegis Violet';
@@ -1300,22 +1350,26 @@ class AppLocalizationsPl extends AppLocalizations {
   String get backgroundMotionToggleLabel => 'Animated background';
 
   @override
-  String get backgroundMotionOnSubtitle => 'The atmosphere layer stays alive behind the UI.';
+  String get backgroundMotionOnSubtitle =>
+      'The atmosphere layer stays alive behind the UI.';
 
   @override
-  String get backgroundMotionOffSubtitle => 'Use a still backdrop for a quieter, flatter surface.';
+  String get backgroundMotionOffSubtitle =>
+      'Use a still backdrop for a quieter, flatter surface.';
 
   @override
   String get motionModeCircles => 'Orbit';
 
   @override
-  String get motionModeCirclesSubtitle => 'Floating light blobs with soft parallax drift.';
+  String get motionModeCirclesSubtitle =>
+      'Floating light blobs with soft parallax drift.';
 
   @override
   String get motionModeWaves => 'Waves';
 
   @override
-  String get motionModeWavesSubtitle => 'Layered bottom waves that move more like ambient light.';
+  String get motionModeWavesSubtitle =>
+      'Layered bottom waves that move more like ambient light.';
 
   @override
   String get colorsTab => 'Kolory';
@@ -1330,7 +1384,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get selectColorTheme => 'Wybierz motyw kolorów';
 
   @override
-  String get themeAppliesEverywhere => 'Wybrany motyw jest stosowany w całej aplikacji';
+  String get themeAppliesEverywhere =>
+      'Wybrany motyw jest stosowany w całej aplikacji';
 
   @override
   String get fontSettingsTitle => 'Ustawienia czcionki';
@@ -1434,7 +1489,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get forgotPasswordTitle => 'Odzyskaj hasło';
 
   @override
-  String get forgotPasswordDescription => 'Wpisz e-mail, aby otrzymać link resetowania';
+  String get forgotPasswordDescription =>
+      'Wpisz e-mail, aby otrzymać link resetowania';
 
   @override
   String get sendResetButton => 'Wyślij';
@@ -1473,10 +1529,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get changeEmailNotYetSupported => 'Email change is not yet supported';
 
   @override
-  String get changeEmailNotAvailable => 'Email change is not yet available. Please contact support.';
+  String get changeEmailNotAvailable =>
+      'Email change is not yet available. Please contact support.';
 
   @override
-  String get changeEmailRequiresServerSupport => 'This feature requires server-side support. The client is prepared but awaits protocol updates.';
+  String get changeEmailRequiresServerSupport =>
+      'This feature requires server-side support. The client is prepared but awaits protocol updates.';
 
   @override
   String get emailHintExample => 'user@example.com';
@@ -1490,7 +1548,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get changePhoneTitle => 'Zmień numer telefonu';
 
   @override
-  String get changePhoneDescription => 'Wpisz nowy numer telefonu i aktualne hasło.';
+  String get changePhoneDescription =>
+      'Wpisz nowy numer telefonu i aktualne hasło.';
 
   @override
   String get newPhoneLabel => 'Nowy numer (+48...)';
@@ -1544,7 +1603,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get biometricAuthLabel => 'Uwierzytelnianie urządzenia';
 
   @override
-  String get biometricAuthSubtitle => 'Face ID, odcisk palca lub kod urządzenia';
+  String get biometricAuthSubtitle =>
+      'Face ID, odcisk palca lub kod urządzenia';
 
   @override
   String get biometricEnabledLabel => 'Blokada aplikacji włączona';
@@ -1553,16 +1613,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get aboutSecurityLabel => 'O bezpieczeństwie';
 
   @override
-  String get aboutSecurityContent => 'TwoSpace korzysta z metody odblokowania już skonfigurowanej na tym urządzeniu i poprosi o nią po powrocie do aplikacji.';
+  String get aboutSecurityContent =>
+      'TwoSpace korzysta z metody odblokowania już skonfigurowanej na tym urządzeniu i poprosi o nią po powrocie do aplikacji.';
 
   @override
   String get lockScreenFailedTitle => 'Nie udało się potwierdzić tożsamości';
 
   @override
-  String get lockScreenFailedMessage => 'Spróbuj ponownie albo wyloguj się na tym urządzeniu.';
+  String get lockScreenFailedMessage =>
+      'Spróbuj ponownie albo wyloguj się na tym urządzeniu.';
 
   @override
-  String get deviceAuthUnavailableMessage => 'Najpierw skonfiguruj Face ID, odcisk palca lub kod urządzenia w ustawieniach systemowych.';
+  String get deviceAuthUnavailableMessage =>
+      'Najpierw skonfiguruj Face ID, odcisk palca lub kod urządzenia w ustawieniach systemowych.';
 
   @override
   String get authMethodFaceId => 'Face ID';
@@ -1586,7 +1649,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get updateHeroTitle => 'Release ready to install';
 
   @override
-  String get updateHeroSubtitle => 'Review the release, verify its integrity, and move through installation with a clear step-by-step flow.';
+  String get updateHeroSubtitle =>
+      'Review the release, verify its integrity, and move through installation with a clear step-by-step flow.';
 
   @override
   String get updateStatusRequired => 'Required';
@@ -1598,31 +1662,36 @@ class AppLocalizationsPl extends AppLocalizations {
   String get updatePipelineTitle => 'Update pipeline';
 
   @override
-  String get updatePipelineSubtitle => 'Each stage exposes what is happening now and what comes next.';
+  String get updatePipelineSubtitle =>
+      'Each stage exposes what is happening now and what comes next.';
 
   @override
   String get updateStageDownloadTitle => 'Download package';
 
   @override
-  String get updateStageDownloadSubtitle => 'Fetch the installer package to local storage.';
+  String get updateStageDownloadSubtitle =>
+      'Fetch the installer package to local storage.';
 
   @override
   String get updateStageVerifyTitle => 'Verify integrity';
 
   @override
-  String get updateStageVerifySubtitle => 'Check the downloaded file against the published SHA-256 digest.';
+  String get updateStageVerifySubtitle =>
+      'Check the downloaded file against the published SHA-256 digest.';
 
   @override
   String get updateStageInstallTitle => 'Install release';
 
   @override
-  String get updateStageInstallSubtitle => 'Request permission if needed and hand the package to the system installer.';
+  String get updateStageInstallSubtitle =>
+      'Request permission if needed and hand the package to the system installer.';
 
   @override
   String get releaseSummaryTitle => 'Release summary';
 
   @override
-  String get releaseSummarySubtitle => 'Important changes are grouped to make scanning faster than reading a raw changelog.';
+  String get releaseSummarySubtitle =>
+      'Important changes are grouped to make scanning faster than reading a raw changelog.';
 
   @override
   String get releaseSectionNew => 'New';
@@ -1640,7 +1709,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get updateTrustTitle => 'Trust and compatibility';
 
   @override
-  String get updateTrustSubtitle => 'See where the package comes from, how it is verified, and what build you are about to install.';
+  String get updateTrustSubtitle =>
+      'See where the package comes from, how it is verified, and what build you are about to install.';
 
   @override
   String get updateTrustSource => 'Source';
@@ -1673,10 +1743,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get updatePreviewModeTitle => 'Preview release card';
 
   @override
-  String get updatePreviewModeSubtitle => 'This entry was opened from the debug catalog, so it shows a styled placeholder instead of real release notes.';
+  String get updatePreviewModeSubtitle =>
+      'This entry was opened from the debug catalog, so it shows a styled placeholder instead of real release notes.';
 
   @override
-  String get updatePreviewModeEmptyNotes => 'Preview notes were not provided for this mock release.';
+  String get updatePreviewModeEmptyNotes =>
+      'Preview notes were not provided for this mock release.';
 
   @override
   String get updateCurrentVersionLabel => 'Current';
@@ -1720,13 +1792,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get downloadFailed => 'Nie można pobrać aktualizacji';
 
   @override
-  String get integrityCheckFailed => 'Pobrany plik nie przeszedł kontroli integralności (sha256)';
+  String get integrityCheckFailed =>
+      'Pobrany plik nie przeszedł kontroli integralności (sha256)';
 
   @override
   String get installPermissionTitle => 'Uprawnienie instalacji';
 
   @override
-  String get installPermissionContent => 'Zezwól na instalację z nieznanych źródeł.';
+  String get installPermissionContent =>
+      'Zezwól na instalację z nieznanych źródeł.';
 
   @override
   String get installPermissionRequired => 'Wymagane uprawnienie do instalacji';
@@ -1735,7 +1809,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get installFailed => 'Instalacja nie powiodła się';
 
   @override
-  String get ssoFeatureRequired => 'Ta funkcja wymaga konfiguracji webview_flutter';
+  String get ssoFeatureRequired =>
+      'Ta funkcja wymaga konfiguracji webview_flutter';
 
   @override
   String ssoLoginVia(String idpId) {
@@ -1781,7 +1856,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get leaveRoomTitle => 'Opuścić pokój?';
 
   @override
-  String get leaveRoomContent => 'Nie będziesz mógł wrócić bez ponownego zaproszenia.';
+  String get leaveRoomContent =>
+      'Nie będziesz mógł wrócić bez ponownego zaproszenia.';
 
   @override
   String get leaveAction => 'Opuść';
@@ -1795,7 +1871,8 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get reportNotImplemented => 'Funkcja zgłaszania nie jest jeszcze zaimplementowana';
+  String get reportNotImplemented =>
+      'Funkcja zgłaszania nie jest jeszcze zaimplementowana';
 
   @override
   String get featureInDevelopmentLabel => 'W przygotowaniu';
@@ -1861,7 +1938,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get loginRequired => 'Wymagane logowanie';
 
   @override
-  String get loginRequiredContent => 'Musisz być zalogowany, aby szukać kontaktów. Przejść do logowania?';
+  String get loginRequiredContent =>
+      'Musisz być zalogowany, aby szukać kontaktów. Przejść do logowania?';
 
   @override
   String get loginAction => 'Zaloguj się';
@@ -1904,43 +1982,53 @@ class AppLocalizationsPl extends AppLocalizations {
   String get shortDescriptionHint => 'Np. \"Kopia zapasowa czatów w chmurze\"';
 
   @override
-  String get feedbackValidation => 'Wybierz co najmniej jeden pomysł lub wpisz opis';
+  String get feedbackValidation =>
+      'Wybierz co najmniej jeden pomysł lub wpisz opis';
 
   @override
   String get detailsOptionalLabel => 'Szczegóły (opcjonalnie)';
 
   @override
-  String get detailsHint => 'Co powinno działać, jak to działa teraz i jak chciałbyś?';
+  String get detailsHint =>
+      'Co powinno działać, jak to działa teraz i jak chciałbyś?';
 
   @override
-  String get bigFeaturesTitle => 'Główne funkcje (zaznacz co Cię najbardziej interesuje)';
+  String get bigFeaturesTitle =>
+      'Główne funkcje (zaznacz co Cię najbardziej interesuje)';
 
   @override
-  String get feedbackE2E => 'Szyfrowanie E2E end-to-end (Olm/Megolm) + weryfikacja urządzeń';
+  String get feedbackE2E =>
+      'Szyfrowanie E2E end-to-end (Olm/Megolm) + weryfikacja urządzeń';
 
   @override
-  String get feedbackBackup => 'Kopia zapasowa czatów (lokalna/chmura) + przeniesienie na nowe urządzenie';
+  String get feedbackBackup =>
+      'Kopia zapasowa czatów (lokalna/chmura) + przeniesienie na nowe urządzenie';
 
   @override
-  String get feedbackThreads => 'Wątki, reakcje, wzmianki, ulepszone wyszukiwanie wiadomości';
+  String get feedbackThreads =>
+      'Wątki, reakcje, wzmianki, ulepszone wyszukiwanie wiadomości';
 
   @override
   String get feedbackCalls => 'Rozmowy głosowe/wideo i szybkie pokoje głosowe';
 
   @override
-  String get feedbackFolders => 'Foldery/kategorie czatów i inteligentne filtry powiadomień';
+  String get feedbackFolders =>
+      'Foldery/kategorie czatów i inteligentne filtry powiadomień';
 
   @override
-  String get feedbackBots => 'Boty i integracje (webhook, GitHub/Jira, przypomnienia)';
+  String get feedbackBots =>
+      'Boty i integracje (webhook, GitHub/Jira, przypomnienia)';
 
   @override
-  String get feedbackSlowNet => 'Tryb \"powolny internet\" + agresywne buforowanie multimediów';
+  String get feedbackSlowNet =>
+      'Tryb \"powolny internet\" + agresywne buforowanie multimediów';
 
   @override
   String get startChatTitle => 'Rozpocznij czat';
 
   @override
-  String get startDirectChatSubtitle => 'Open a private conversation with one person';
+  String get startDirectChatSubtitle =>
+      'Open a private conversation with one person';
 
   @override
   String get createRoomSubtitle => 'Prywatna lub publiczna grupa';
@@ -1958,7 +2046,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get selectedParticipantsTitle => 'Participants';
 
   @override
-  String get groupParticipantsOptionalHint => 'Participants are optional. You can create the group now and invite people later.';
+  String get groupParticipantsOptionalHint =>
+      'Participants are optional. You can create the group now and invite people later.';
 
   @override
   String get joinByCodeTitle => 'Dołącz przez kod';
@@ -1973,7 +2062,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get subscribeAction => 'Subscribe';
 
   @override
-  String get chatsSubtitle => 'Wiadomości prywatne, grupy i linki zaproszeń w jednym miejscu';
+  String get chatsSubtitle =>
+      'Wiadomości prywatne, grupy i linki zaproszeń w jednym miejscu';
 
   @override
   String get chatsQuickStartTitle => 'Zacznij coś nowego';
@@ -1988,19 +2078,23 @@ class AppLocalizationsPl extends AppLocalizations {
   String get publicAliasLabel => 'Public alias';
 
   @override
-  String get publicAliasHint => 'Short public name without spaces, for example newsroom';
+  String get publicAliasHint =>
+      'Short public name without spaces, for example newsroom';
 
   @override
-  String get channelPublicLinkHelper => 'This link will be used in search and invitations when the channel is public.';
+  String get channelPublicLinkHelper =>
+      'This link will be used in search and invitations when the channel is public.';
 
   @override
-  String get channelLinkFormatError => 'Use only Latin letters, digits, dots, underscores or hyphens.';
+  String get channelLinkFormatError =>
+      'Use only Latin letters, digits, dots, underscores or hyphens.';
 
   @override
   String get inviteLinkReadyTitle => 'Invite link is ready';
 
   @override
-  String get inviteLinkReadySubtitle => 'Share it now or keep it for later. Selected people will receive it in direct messages when possible.';
+  String get inviteLinkReadySubtitle =>
+      'Share it now or keep it for later. Selected people will receive it in direct messages when possible.';
 
   @override
   String get openChatAction => 'Open chat';
@@ -2130,10 +2224,12 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get voiceRecordingUnsupported => 'Nagrywanie głosu nie jest obsługiwane na tej platformie';
+  String get voiceRecordingUnsupported =>
+      'Nagrywanie głosu nie jest obsługiwane na tej platformie';
 
   @override
-  String get microphonePermissionRequired => 'Wymagane uprawnienie do mikrofonu';
+  String get microphonePermissionRequired =>
+      'Wymagane uprawnienie do mikrofonu';
 
   @override
   String genericError(String error) {
@@ -2171,13 +2267,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get notificationToneTitle => 'Notification sound';
 
   @override
-  String get notificationToneSubtitle => 'Choose a local audio file for message and alert previews.';
+  String get notificationToneSubtitle =>
+      'Choose a local audio file for message and alert previews.';
 
   @override
   String get ringtoneTitle => 'Ringtone';
 
   @override
-  String get ringtoneSubtitle => 'Use a separate local audio file for incoming call previews.';
+  String get ringtoneSubtitle =>
+      'Use a separate local audio file for incoming call previews.';
 
   @override
   String get chooseSoundLabel => 'Choose file';
@@ -2237,7 +2335,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get storageAutoCleanTitle => 'Auto-clean';
 
   @override
-  String get storageAutoCleanSubtitle => 'Run cleanup automatically on a schedule or when storage grows beyond the selected limit.';
+  String get storageAutoCleanSubtitle =>
+      'Run cleanup automatically on a schedule or when storage grows beyond the selected limit.';
 
   @override
   String get storageAutoCleanPeriodLabel => 'Cleanup period';
@@ -2261,10 +2360,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get storageAutoCleanStatusTitle => 'Automation status';
 
   @override
-  String get storageAutoCleanStatusEnabled => 'Auto-clean is active and will run when the schedule arrives or the storage threshold is exceeded.';
+  String get storageAutoCleanStatusEnabled =>
+      'Auto-clean is active and will run when the schedule arrives or the storage threshold is exceeded.';
 
   @override
-  String get storageAutoCleanStatusDisabled => 'Auto-clean is off. Only manual cleanup will run until you enable it again.';
+  String get storageAutoCleanStatusDisabled =>
+      'Auto-clean is off. Only manual cleanup will run until you enable it again.';
 
   @override
   String get storageAutoCleanLastRunLabel => 'Last run';
@@ -2309,7 +2410,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get peopleTitle => 'Ludzie';
 
   @override
-  String get peopleSubtitle => 'Kontakty, ulubione, wyszukiwanie i zaproszenia w jednym miejscu';
+  String get peopleSubtitle =>
+      'Kontakty, ulubione, wyszukiwanie i zaproszenia w jednym miejscu';
 
   @override
   String get peopleQuickNewChat => 'Nowy czat';
@@ -2342,16 +2444,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get peopleNoPeopleTitle => 'Jeszcze nikogo nie ma';
 
   @override
-  String get peopleNoPeopleMessage => 'Tutaj pojawią się ulubione, ostatnie rozmowy i kontakty.';
+  String get peopleNoPeopleMessage =>
+      'Tutaj pojawią się ulubione, ostatnie rozmowy i kontakty.';
 
   @override
   String get peoplePermissionCardTitle => 'Ograniczony dostęp do kontaktów';
 
   @override
-  String get peoplePermissionCardMessage => 'Zezwól na dostęp do kontaktów, aby wyświetlać książkę kontaktów i szybciej zapraszać osoby.';
+  String get peoplePermissionCardMessage =>
+      'Zezwól na dostęp do kontaktów, aby wyświetlać książkę kontaktów i szybciej zapraszać osoby.';
 
   @override
-  String get peoplePermissionCardMessageSettings => 'Włącz dostęp do kontaktów w ustawieniach systemowych, aby przywrócić sekcję książki kontaktów.';
+  String get peoplePermissionCardMessageSettings =>
+      'Włącz dostęp do kontaktów w ustawieniach systemowych, aby przywrócić sekcję książki kontaktów.';
 
   @override
   String get peopleFavoritesFrequentTitle => 'Ulubione i częste';
@@ -2384,7 +2489,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get peopleSearchEmptyTitle => 'Brak pasujących osób';
 
   @override
-  String get peopleSearchEmptyMessage => 'Spróbuj innej nazwy, nicku lub numeru telefonu.';
+  String get peopleSearchEmptyMessage =>
+      'Spróbuj innej nazwy, nicku lub numeru telefonu.';
 
   @override
   String get peopleTwoSpaceBadge => 'TwoSpace';
@@ -2393,7 +2499,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get peopleNoDetails => 'Brak dodatkowych szczegółów';
 
   @override
-  String get peopleInviteShareText => 'Dołącz do mnie na TwoSpace — bezpiecznym komunikatorze do czatów i rozmów.';
+  String get peopleInviteShareText =>
+      'Dołącz do mnie na TwoSpace — bezpiecznym komunikatorze do czatów i rozmów.';
 
   @override
   String peopleInviteSpecificShareText(String personName) {
@@ -2410,16 +2517,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get peopleAddFavoriteAction => 'Dodaj do ulubionych';
 
   @override
-  String get callsSubtitle => 'Ostatnie połączenia, szybkie oddzwanianie i historia skupiona na osobach';
+  String get callsSubtitle =>
+      'Ostatnie połączenia, szybkie oddzwanianie i historia skupiona na osobach';
 
   @override
-  String get widgetsSubtitle => 'Home, lock-screen, and glanceable surfaces for your conversations';
+  String get widgetsSubtitle =>
+      'Home, lock-screen, and glanceable surfaces for your conversations';
 
   @override
   String get widgetsComingTitle => 'Widgets are on the way';
 
   @override
-  String get widgetsComingBody => 'We are preparing flexible widget layouts for quick actions, unread counters, and compact conversation previews.';
+  String get widgetsComingBody =>
+      'We are preparing flexible widget layouts for quick actions, unread counters, and compact conversation previews.';
 
   @override
   String get callsStartCallAction => 'Rozpocznij połączenie';
@@ -2428,7 +2538,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get callsQuickStartTitle => 'Zadzwoń teraz';
 
   @override
-  String get callsQuickStartSubtitle => 'Otwórz Ludzie, znajdź osobę i rozpocznij bezpieczne połączenie głosowe lub wideo.';
+  String get callsQuickStartSubtitle =>
+      'Otwórz Ludzie, znajdź osobę i rozpocznij bezpieczne połączenie głosowe lub wideo.';
 
   @override
   String get callsSearchHint => 'Szukaj w historii połączeń';
@@ -2446,10 +2557,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get callsEmptyTitle => 'Brak połączeń';
 
   @override
-  String get callsEmptyMessage => 'Historia połączeń pojawi się tutaj po pierwszym połączeniu głosowym lub wideo.';
+  String get callsEmptyMessage =>
+      'Historia połączeń pojawi się tutaj po pierwszym połączeniu głosowym lub wideo.';
 
   @override
-  String get callsEmptySearchMessage => 'Żadne połączenie nie pasuje do bieżącego wyszukiwania lub filtra.';
+  String get callsEmptySearchMessage =>
+      'Żadne połączenie nie pasuje do bieżącego wyszukiwania lub filtra.';
 
   @override
   String get callsTodaySection => 'Dzisiaj';
@@ -2498,16 +2611,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get callsRingingDetail => 'Oczekiwanie na odpowiedź drugiej osoby.';
 
   @override
-  String get callsVideoSecureDetail => 'Wideo jest chronione i przesyłane przez bieżącą bezpieczną sesję.';
+  String get callsVideoSecureDetail =>
+      'Wideo jest chronione i przesyłane przez bieżącą bezpieczną sesję.';
 
   @override
-  String get callsVoiceSecureDetail => 'Głos jest chroniony i przesyłany przez bieżącą bezpieczną sesję.';
+  String get callsVoiceSecureDetail =>
+      'Głos jest chroniony i przesyłany przez bieżącą bezpieczną sesję.';
 
   @override
   String get timestampPrecisionLabel => 'Dokładność czasu wiadomości';
 
   @override
-  String get timestampPrecisionSubtitle => 'Wybierz, jak dokładnie mają być pokazywane czasy wiadomości.';
+  String get timestampPrecisionSubtitle =>
+      'Wybierz, jak dokładnie mają być pokazywane czasy wiadomości.';
 
   @override
   String get timestampPrecisionMinutes => 'Godziny i minuty';
@@ -2516,16 +2632,19 @@ class AppLocalizationsPl extends AppLocalizations {
   String get timestampPrecisionSeconds => 'Godziny, minuty i sekundy';
 
   @override
-  String get timestampPrecisionMilliseconds => 'Godziny, minuty, sekundy i milisekundy';
+  String get timestampPrecisionMilliseconds =>
+      'Godziny, minuty, sekundy i milisekundy';
 
   @override
   String get startupTitle => 'Przygotowywanie TwoSpace';
 
   @override
-  String get startupSubtitle => 'Sprawdzamy bezpieczną sesję i otwieramy Twoje czaty.';
+  String get startupSubtitle =>
+      'Sprawdzamy bezpieczną sesję i otwieramy Twoje czaty.';
 
   @override
-  String get startupFooter => 'Ten ekran jest wyświetlany tylko podczas uruchamiania aplikacji.';
+  String get startupFooter =>
+      'Ten ekran jest wyświetlany tylko podczas uruchamiania aplikacji.';
 
   @override
   String get startupStepEnvironment => 'Ładowanie konfiguracji';
@@ -2549,16 +2668,20 @@ class AppLocalizationsPl extends AppLocalizations {
   String get callsDemoBannerTitle => 'Przykład, niedziałająca funkcja';
 
   @override
-  String get callsDemoBannerVoiceMessage => 'Połączenia głosowe są obecnie pokazane tylko jako wizualny prototyp. Transmisja audio nie jest jeszcze podłączona.';
+  String get callsDemoBannerVoiceMessage =>
+      'Połączenia głosowe są obecnie pokazane tylko jako wizualny prototyp. Transmisja audio nie jest jeszcze podłączona.';
 
   @override
-  String get callsDemoBannerVideoMessage => 'Połączenia wideo są obecnie pokazane tylko jako wizualny prototyp. Zdalny obraz nie jest jeszcze dostępny, ale lokalny podgląd kamery działa.';
+  String get callsDemoBannerVideoMessage =>
+      'Połączenia wideo są obecnie pokazane tylko jako wizualny prototyp. Zdalny obraz nie jest jeszcze dostępny, ale lokalny podgląd kamery działa.';
 
   @override
-  String get callsCameraPermissionMessage => 'Zezwól na dostęp do kamery, aby wyświetlać lokalny podgląd podczas połączenia wideo.';
+  String get callsCameraPermissionMessage =>
+      'Zezwól na dostęp do kamery, aby wyświetlać lokalny podgląd podczas połączenia wideo.';
 
   @override
-  String get callsCameraPermissionSettingsMessage => 'Dostęp do kamery jest zablokowany. Otwórz ustawienia systemowe, aby włączyć lokalny podgląd wideo.';
+  String get callsCameraPermissionSettingsMessage =>
+      'Dostęp do kamery jest zablokowany. Otwórz ustawienia systemowe, aby włączyć lokalny podgląd wideo.';
 
   @override
   String get callsCameraPermissionAction => 'Zezwól na kamerę';
@@ -2567,13 +2690,16 @@ class AppLocalizationsPl extends AppLocalizations {
   String get callsCameraUnavailableTitle => 'Kamera niedostępna';
 
   @override
-  String get callsCameraUnavailableMessage => 'Nie udało się uruchomić lokalnego podglądu kamery na tym urządzeniu.';
+  String get callsCameraUnavailableMessage =>
+      'Nie udało się uruchomić lokalnego podglądu kamery na tym urządzeniu.';
 
   @override
-  String get callsCameraUnsupportedMessage => 'Ta platforma nie obsługuje lokalnego podglądu wideo.';
+  String get callsCameraUnsupportedMessage =>
+      'Ta platforma nie obsługuje lokalnego podglądu wideo.';
 
   @override
-  String get callsCameraOffMessage => 'Podgląd kamery jest wyłączony dla tego połączenia demonstracyjnego.';
+  String get callsCameraOffMessage =>
+      'Podgląd kamery jest wyłączony dla tego połączenia demonstracyjnego.';
 
   @override
   String get callsFrontCameraLabel => 'Przednia kamera';
@@ -2582,10 +2708,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get callsRearCameraLabel => 'Tylna kamera';
 
   @override
-  String get backgroundOptimizationDisabledTitle => 'Efekty tła zostały uproszczone';
+  String get backgroundOptimizationDisabledTitle =>
+      'Efekty tła zostały uproszczone';
 
   @override
-  String get backgroundOptimizationDisabledMessage => 'TwoSpace wykrył długotrwałe spadki płynności i wyłączył ciężkie efekty tła, aby przewijanie i obsługa czatów pozostały płynne.';
+  String get backgroundOptimizationDisabledMessage =>
+      'TwoSpace wykrył długotrwałe spadki płynności i wyłączył ciężkie efekty tła, aby przewijanie i obsługa czatów pozostały płynne.';
 
   @override
   String get backgroundOptimizationOpenSettings => 'Otwórz ustawienia wyglądu';
@@ -2597,19 +2725,22 @@ class AppLocalizationsPl extends AppLocalizations {
   String get roomJoinRulePublic => 'Otwarte dla wszystkich';
 
   @override
-  String get roomJoinRulePublicDescription => 'Każdy może znaleźć i dołączyć do tego pokoju.';
+  String get roomJoinRulePublicDescription =>
+      'Każdy może znaleźć i dołączyć do tego pokoju.';
 
   @override
   String get roomJoinRuleInviteOnly => 'Tylko na zaproszenie';
 
   @override
-  String get roomJoinRuleInviteOnlyDescription => 'Tylko zaproszeni użytkownicy mogą dołączyć do tego pokoju.';
+  String get roomJoinRuleInviteOnlyDescription =>
+      'Tylko zaproszeni użytkownicy mogą dołączyć do tego pokoju.';
 
   @override
   String get roomJoinRuleApproval => 'Wymagana akceptacja';
 
   @override
-  String get roomJoinRuleApprovalDescription => 'Użytkownicy mogą poprosić o dostęp i muszą zostać zaakceptowani przed dołączeniem.';
+  String get roomJoinRuleApprovalDescription =>
+      'Użytkownicy mogą poprosić o dostęp i muszą zostać zaakceptowani przed dołączeniem.';
 
   @override
   String get roomHistoryVisibilityLabel => 'Kto może zobaczyć historię';
@@ -2618,31 +2749,38 @@ class AppLocalizationsPl extends AppLocalizations {
   String get roomHistoryVisibilityWorldReadable => 'Wszyscy';
 
   @override
-  String get roomHistoryVisibilityWorldReadableDescription => 'Każdy może zobaczyć wcześniejsze wiadomości.';
+  String get roomHistoryVisibilityWorldReadableDescription =>
+      'Każdy może zobaczyć wcześniejsze wiadomości.';
 
   @override
   String get roomHistoryVisibilityJoined => 'Dołączeni członkowie';
 
   @override
-  String get roomHistoryVisibilityJoinedDescription => 'Tylko członkowie, którzy już dołączyli, mogą zobaczyć wcześniejsze wiadomości.';
+  String get roomHistoryVisibilityJoinedDescription =>
+      'Tylko członkowie, którzy już dołączyli, mogą zobaczyć wcześniejsze wiadomości.';
 
   @override
   String get roomHistoryVisibilityInvited => 'Tylko zaproszeni użytkownicy';
 
   @override
-  String get roomHistoryVisibilityInvitedDescription => 'Tylko zaproszeni użytkownicy mogą zobaczyć wcześniejsze wiadomości.';
+  String get roomHistoryVisibilityInvitedDescription =>
+      'Tylko zaproszeni użytkownicy mogą zobaczyć wcześniejsze wiadomości.';
 
   @override
-  String get loginUsernameOnlyError => 'Do logowania użyj swojej nazwy użytkownika TwoSpace.';
+  String get loginUsernameOnlyError =>
+      'Do logowania użyj swojej nazwy użytkownika TwoSpace.';
 
   @override
-  String get twoFactorInvalidCodeMessage => 'Kod 2FA lub fraza odzyskiwania są nieprawidłowe. Spróbuj ponownie.';
+  String get twoFactorInvalidCodeMessage =>
+      'Kod 2FA lub fraza odzyskiwania są nieprawidłowe. Spróbuj ponownie.';
 
   @override
-  String get twoFactorCodeRequiredMessage => 'Wpisz kod z aplikacji uwierzytelniającej lub użyj frazy odzyskiwania.';
+  String get twoFactorCodeRequiredMessage =>
+      'Wpisz kod z aplikacji uwierzytelniającej lub użyj frazy odzyskiwania.';
 
   @override
-  String get twoFactorEnabledMessage => 'Uwierzytelnianie dwuskładnikowe zostało włączone.';
+  String get twoFactorEnabledMessage =>
+      'Uwierzytelnianie dwuskładnikowe zostało włączone.';
 
   @override
   String twoFactorEnableFailed(String error) {
@@ -2650,49 +2788,59 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get twoFactorSetupTitle => 'Skonfiguruj uwierzytelnianie dwuskładnikowe';
+  String get twoFactorSetupTitle =>
+      'Skonfiguruj uwierzytelnianie dwuskładnikowe';
 
   @override
-  String get twoFactorSetupDescription => 'Zeskanuj kod QR w aplikacji uwierzytelniającej, zapisz frazę odzyskiwania, a następnie potwierdź świeżym kodem TOTP.';
+  String get twoFactorSetupDescription =>
+      'Zeskanuj kod QR w aplikacji uwierzytelniającej, zapisz frazę odzyskiwania, a następnie potwierdź świeżym kodem TOTP.';
 
   @override
   String get twoFactorSecretTitle => 'Lub wpisz ten tajny klucz ręcznie';
 
   @override
-  String get twoFactorRecoveryPhraseTitle => 'Fraza odzyskiwania. Zapisz ją w bezpiecznym miejscu przed włączeniem 2FA.';
+  String get twoFactorRecoveryPhraseTitle =>
+      'Fraza odzyskiwania. Zapisz ją w bezpiecznym miejscu przed włączeniem 2FA.';
 
   @override
   String get twoFactorVerificationCodeLabel => 'Kod weryfikacyjny';
 
   @override
-  String get twoFactorVerificationCodeHint => 'Wpisz bieżący kod z aplikacji uwierzytelniającej';
+  String get twoFactorVerificationCodeHint =>
+      'Wpisz bieżący kod z aplikacji uwierzytelniającej';
 
   @override
   String get twoFactorVerifyEnableAction => 'Zweryfikuj i włącz 2FA';
 
   @override
-  String get twoFactorDisableSectionTitle => 'Wyłącz uwierzytelnianie dwuskładnikowe';
+  String get twoFactorDisableSectionTitle =>
+      'Wyłącz uwierzytelnianie dwuskładnikowe';
 
   @override
-  String get twoFactorDisableSectionDescription => 'Wyłącz 2FA za pomocą poprawnego kodu z aplikacji uwierzytelniającej lub jednorazowej frazy odzyskiwania.';
+  String get twoFactorDisableSectionDescription =>
+      'Wyłącz 2FA za pomocą poprawnego kodu z aplikacji uwierzytelniającej lub jednorazowej frazy odzyskiwania.';
 
   @override
-  String get twoFactorDisableCodeHint => 'Wpisz bieżący kod z aplikacji uwierzytelniającej';
+  String get twoFactorDisableCodeHint =>
+      'Wpisz bieżący kod z aplikacji uwierzytelniającej';
 
   @override
   String get twoFactorRecoveryPhraseFieldLabel => 'Fraza odzyskiwania';
 
   @override
-  String get twoFactorRecoveryPhraseFieldHint => 'Wklej frazę odzyskiwania, jeśli nie masz już dostępu do aplikacji uwierzytelniającej';
+  String get twoFactorRecoveryPhraseFieldHint =>
+      'Wklej frazę odzyskiwania, jeśli nie masz już dostępu do aplikacji uwierzytelniającej';
 
   @override
   String get twoFactorDisableAction => 'Wyłącz 2FA';
 
   @override
-  String get twoFactorDisableCredentialsRequired => 'Aby wyłączyć 2FA, wpisz kod z aplikacji uwierzytelniającej lub frazę odzyskiwania.';
+  String get twoFactorDisableCredentialsRequired =>
+      'Aby wyłączyć 2FA, wpisz kod z aplikacji uwierzytelniającej lub frazę odzyskiwania.';
 
   @override
-  String get twoFactorDisabledMessage => 'Uwierzytelnianie dwuskładnikowe zostało wyłączone.';
+  String get twoFactorDisabledMessage =>
+      'Uwierzytelnianie dwuskładnikowe zostało wyłączone.';
 
   @override
   String twoFactorDisableFailed(String error) {
@@ -2700,7 +2848,8 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get twoFactorLoginRecoveryHint => 'Lub wklej frazę odzyskiwania zamiast kodu';
+  String get twoFactorLoginRecoveryHint =>
+      'Lub wklej frazę odzyskiwania zamiast kodu';
 
   @override
   String get chatListTimeoutTitle => 'The server is taking too long to respond';
@@ -2722,7 +2871,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get groupAvatarTitle => 'Group avatar';
 
   @override
-  String get groupAvatarSubtitle => 'You can add an avatar right when creating the group.';
+  String get groupAvatarSubtitle =>
+      'You can add an avatar right when creating the group.';
 
   @override
   String get chooseFileButton => 'Choose file';
@@ -2731,19 +2881,24 @@ class AppLocalizationsPl extends AppLocalizations {
   String get groupHistoryTitle => 'Keep history for new members';
 
   @override
-  String get fileAccessDeniedMessage => 'Access to the selected file is blocked.';
+  String get fileAccessDeniedMessage =>
+      'Access to the selected file is blocked.';
 
   @override
-  String get avatarFileAccessDeniedMessage => 'Access to the avatar file is blocked. Try another file.';
+  String get avatarFileAccessDeniedMessage =>
+      'Access to the avatar file is blocked. Try another file.';
 
   @override
-  String get profileEmptySelfHint => 'Your profile is still sparse. Add a name, bio, or location so it looks complete.';
+  String get profileEmptySelfHint =>
+      'Your profile is still sparse. Add a name, bio, or location so it looks complete.';
 
   @override
-  String get profileEmptyOtherHint => 'This user has not filled out their profile yet, or the server did not return the detailed fields.';
+  String get profileEmptyOtherHint =>
+      'This user has not filled out their profile yet, or the server did not return the detailed fields.';
 
   @override
-  String get twoFactorDisableConfirmContent => 'Disable two-factor authentication for this account? You will need to set it up again to restore extra protection.';
+  String get twoFactorDisableConfirmContent =>
+      'Disable two-factor authentication for this account? You will need to set it up again to restore extra protection.';
 
   @override
   String get betaTestLabel => 'Beta test';
@@ -2752,7 +2907,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get homeBetaWelcomeTitle => 'Welcome to the TwoSpace beta test';
 
   @override
-  String get homeBetaWelcomeBody => 'Features may change often. Send us your suggestions.';
+  String get homeBetaWelcomeBody =>
+      'Features may change often. Send us your suggestions.';
 
   @override
   String get devMenuInfoLoading => 'Collecting device information…';
@@ -2770,7 +2926,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get devMenuDeviceLabel => 'Device';
 
   @override
-  String get authRegisterVerifyEmailBeforeLogin => 'Registration is complete. Verify your email before signing in.';
+  String get authRegisterVerifyEmailBeforeLogin =>
+      'Registration is complete. Verify your email before signing in.';
 
   @override
   String authRegisterAutoLoginFailed(Object error) {
@@ -2784,19 +2941,24 @@ class AppLocalizationsPl extends AppLocalizations {
   String get authAvatarUpdateFailed => 'Failed to update avatar';
 
   @override
-  String get authLoginAppCredentialsRejected => 'The server rejected the app credentials. Check server configuration or handshake compatibility.';
+  String get authLoginAppCredentialsRejected =>
+      'The server rejected the app credentials. Check server configuration or handshake compatibility.';
 
   @override
-  String get authSessionTokenMissing => 'The server did not return a session token';
+  String get authSessionTokenMissing =>
+      'The server did not return a session token';
 
   @override
-  String get authTotpSetupFailed => 'Failed to prepare two-factor authentication';
+  String get authTotpSetupFailed =>
+      'Failed to prepare two-factor authentication';
 
   @override
-  String get authTotpDisableFailed => 'Failed to disable two-factor authentication';
+  String get authTotpDisableFailed =>
+      'Failed to disable two-factor authentication';
 
   @override
-  String get authTotpVerifyFailed => 'Failed to verify two-factor authentication';
+  String get authTotpVerifyFailed =>
+      'Failed to verify two-factor authentication';
 
   @override
   String get authSessionsLoadFailed => 'Failed to load active sessions';
@@ -2805,7 +2967,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get authSessionsRevokeFailed => 'Failed to end the session';
 
   @override
-  String get authRegisterNotLoggedIn => 'Registration completed, but sign-in was not completed';
+  String get authRegisterNotLoggedIn =>
+      'Registration completed, but sign-in was not completed';
 
   @override
   String get devMenuTitle => 'Developer menu';
@@ -2832,7 +2995,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get devMenuLogsEmptyTitle => 'No application logs yet';
 
   @override
-  String get devMenuLogsEmptyMessage => 'Open the problematic screen or repeat the action. New records will appear here.';
+  String get devMenuLogsEmptyMessage =>
+      'Open the problematic screen or repeat the action. New records will appear here.';
 
   @override
   String get devMenuShowAll => 'Show all';
@@ -2863,7 +3027,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get devMenuScreensNotFoundTitle => 'Screens not found';
 
   @override
-  String get devMenuScreensNotFoundMessage => 'Change the search query or clear the group filter.';
+  String get devMenuScreensNotFoundMessage =>
+      'Change the search query or clear the group filter.';
 
   @override
   String get devMenuUtilitiesTitle => 'Utilities';
@@ -2887,40 +3052,47 @@ class AppLocalizationsPl extends AppLocalizations {
   String get devMenuShowBounds => 'Show bounds (debugPaintSize)';
 
   @override
-  String get devMenuShowBoundsSubtitle => 'Displays paddings and borders of all widgets';
+  String get devMenuShowBoundsSubtitle =>
+      'Displays paddings and borders of all widgets';
 
   @override
   String get devMenuRepaintRainbow => 'Highlight repaints (RepaintRainbow)';
 
   @override
-  String get devMenuRepaintRainbowSubtitle => 'Highlights elements that are being repainted';
+  String get devMenuRepaintRainbowSubtitle =>
+      'Highlights elements that are being repainted';
 
   @override
   String get devMenuSlowAnimations => 'Slow animations (timeDilation = 5.0)';
 
   @override
-  String get devMenuSlowAnimationsSubtitle => 'Slows down all animations in the app';
+  String get devMenuSlowAnimationsSubtitle =>
+      'Slows down all animations in the app';
 
   @override
   String get devMenuPerformanceOverlay => 'Performance profiling';
 
   @override
-  String get devMenuPerformanceOverlaySubtitle => 'Shows the Performance Overlay on top of the app';
+  String get devMenuPerformanceOverlaySubtitle =>
+      'Shows the Performance Overlay on top of the app';
 
   @override
   String get devMenuSensitiveDialogTitle => 'Sensitive data visibility';
 
   @override
-  String get devMenuSensitiveDialogMessage => 'After enabling this option, new debug and network logs may contain tokens, keys, and other secrets in plain text. Existing records will not change. Continue?';
+  String get devMenuSensitiveDialogMessage =>
+      'After enabling this option, new debug and network logs may contain tokens, keys, and other secrets in plain text. Existing records will not change. Continue?';
 
   @override
   String get devMenuEnable => 'Enable';
 
   @override
-  String get devMenuSensitiveEnableDescription => 'Keys, tokens, and passwords are masked by default. This switch affects only new logs.';
+  String get devMenuSensitiveEnableDescription =>
+      'Keys, tokens, and passwords are masked by default. This switch affects only new logs.';
 
   @override
-  String get devMenuSensitiveDisabledDescription => 'Sensitive data is always hidden in this build.';
+  String get devMenuSensitiveDisabledDescription =>
+      'Sensitive data is always hidden in this build.';
 
   @override
   String get devMenuRevealSensitiveData => 'Show sensitive data in new logs';
@@ -2938,19 +3110,22 @@ class AppLocalizationsPl extends AppLocalizations {
   String get devMenuFlagIgnoreServerOffline => 'Ignore server offline state';
 
   @override
-  String get devMenuFlagIgnoreServerOfflineSubtitle => 'Keeps the current session and avoids returning to the sign-in screen when the server is unavailable.';
+  String get devMenuFlagIgnoreServerOfflineSubtitle =>
+      'Keeps the current session and avoids returning to the sign-in screen when the server is unavailable.';
 
   @override
   String get devMenuReleaseHiddenTitle => 'Sensitive data is hidden';
 
   @override
-  String get devMenuReleaseHiddenSubtitle => 'Public release and profile builds always show debug data only in masked form.';
+  String get devMenuReleaseHiddenSubtitle =>
+      'Public release and profile builds always show debug data only in masked form.';
 
   @override
   String get devMenuNetworkEmptyTitle => 'No network logs yet';
 
   @override
-  String get devMenuNetworkEmptyMessage => 'Open any screen that performs requests and logs will appear here.';
+  String get devMenuNetworkEmptyMessage =>
+      'Open any screen that performs requests and logs will appear here.';
 
   @override
   String devMenuAllRequests(Object count) {
@@ -2985,7 +3160,8 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get notificationsInDevelopmentSubtitle => 'Szczegółowe ustawienia powiadomień pojawią się w jednej z kolejnych aktualizacji.';
+  String get notificationsInDevelopmentSubtitle =>
+      'Szczegółowe ustawienia powiadomień pojawią się w jednej z kolejnych aktualizacji.';
 
   @override
   String get devMenuCopyVisible => 'Kopiuj widoczne';
@@ -3003,25 +3179,29 @@ class AppLocalizationsPl extends AppLocalizations {
   String get feedbackAttachLogsLabel => 'Dołączyć logi?';
 
   @override
-  String get feedbackAttachLogsSubtitle => 'Dołącza plik diagnostyczny z informacjami o urządzeniu, logami aplikacji i logami sieci.';
+  String get feedbackAttachLogsSubtitle =>
+      'Dołącza plik diagnostyczny z informacjami o urządzeniu, logami aplikacji i logami sieci.';
 
   @override
   String get notificationsForegroundServiceTitle => 'Usługa w Tle';
 
   @override
-  String get notificationsForegroundServiceSubtitle => 'Utrzymuj aplikację uruchomioną w tle';
+  String get notificationsForegroundServiceSubtitle =>
+      'Utrzymuj aplikację uruchomioną w tle';
 
   @override
   String get notificationsForegroundServiceEnabled => 'Włącz Usługę w Tle';
 
   @override
-  String get notificationsForegroundServiceDescription => 'Ciągle nasłuchuj wiadomości z trwałym powiadomieniem';
+  String get notificationsForegroundServiceDescription =>
+      'Ciągle nasłuchuj wiadomości z trwałym powiadomieniem';
 
   @override
   String get notificationsTypesSection => 'Typy Powiadomień';
 
   @override
-  String get notificationsTypesSectionSubtitle => 'Wybierz, które zdarzenia będą Cię powiadamiać';
+  String get notificationsTypesSectionSubtitle =>
+      'Wybierz, które zdarzenia będą Cię powiadamiać';
 
   @override
   String get notificationsMessagesTitle => 'Wiadomości';

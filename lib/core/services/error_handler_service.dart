@@ -38,7 +38,7 @@ class StructuredError {
   final Object? originalError;
 
   @override
-  String toString() => '[$category.name] $code: $message';
+  String toString() => '[${category.name}] $code: $message';
 }
 
 /// Сервис для централизованной обработки и логирования ошибок
@@ -73,6 +73,18 @@ class ErrorHandlerService {
     return error.message;
   }
 
+  /// Убирает common exception prefix из строки ошибки
+  static final RegExp _exceptionPrefix = RegExp(r'^[A-Za-z]*Exception:\s*');
+
+  static String _cleanMessage(String errorString) {
+    var result = errorString;
+    while (true) {
+      final cleaned = result.replaceFirst(_exceptionPrefix, '');
+      if (cleaned == result) return result.trim();
+      result = cleaned;
+    }
+  }
+
   /// Парсить ошибку и определить её категорию
   static StructuredError _parseError(
     Object error,
@@ -86,7 +98,7 @@ class ErrorHandlerService {
       return StructuredError(
         category: ErrorCategory.network,
         code: 'network_error',
-        message: errorString,
+        message: _cleanMessage(errorString),
         details: context,
         stackTrace: stackTrace,
         originalError: error,
@@ -98,7 +110,7 @@ class ErrorHandlerService {
       return StructuredError(
         category: ErrorCategory.authentication,
         code: _extractAuthErrorCode(errorString),
-        message: errorString,
+        message: _cleanMessage(errorString),
         details: context,
         stackTrace: stackTrace,
         originalError: error,
@@ -110,7 +122,7 @@ class ErrorHandlerService {
       return StructuredError(
         category: ErrorCategory.validation,
         code: 'validation_error',
-        message: errorString,
+        message: _cleanMessage(errorString),
         details: context,
         stackTrace: stackTrace,
         originalError: error,
@@ -134,7 +146,7 @@ class ErrorHandlerService {
       return StructuredError(
         category: ErrorCategory.server,
         code: _extractServerErrorCode(errorString),
-        message: errorString,
+        message: _cleanMessage(errorString),
         details: context,
         stackTrace: stackTrace,
         originalError: error,
@@ -169,7 +181,7 @@ class ErrorHandlerService {
     return StructuredError(
       category: ErrorCategory.unknown,
       code: 'unknown_error',
-      message: errorString,
+      message: _cleanMessage(errorString),
       details: context,
       stackTrace: stackTrace,
       originalError: error,
@@ -223,7 +235,9 @@ class ErrorHandlerService {
         error.contains('Failed to connect') ||
         error.contains('No internet') ||
         error.contains('Connection timeout') ||
-        error.contains('Connection reset');
+        error.contains('Connection reset') ||
+        error.contains('Network error') ||
+        error.contains('network error');
   }
 
   static bool _isAuthError(String error) {

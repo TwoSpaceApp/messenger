@@ -1,3 +1,4 @@
+import 'package:firebase_core_platform_interface/test.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:two_space_app/core/services/initialization_service.dart';
@@ -7,9 +8,12 @@ void main() {
 
   const secureStorageChannel =
       MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+
   final store = <String, String>{};
 
   setUpAll(() async {
+    setupFirebaseCoreMocks();
+
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(secureStorageChannel, (call) async {
       final arguments = (call.arguments as Map<Object?, Object?>?) ?? const {};

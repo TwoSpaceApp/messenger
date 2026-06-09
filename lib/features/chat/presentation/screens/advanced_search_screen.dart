@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
@@ -22,20 +23,30 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
   DateTime? _dateTo;
   List<Map<String, dynamic>> _results = [];
   bool _isSearching = false;
+  String? _errorMessage;
 
   Future<void> _performSearch() async {
     if (_queryController.text.isEmpty) return;
 
-    setState(() => _isSearching = true);
+    setState(() {
+      _isSearching = true;
+      _errorMessage = null;
+    });
     try {
       final chatService = AegisChatService();
       final searchResults = await chatService.searchMessages(
         query: _queryController.text,
         type: _searchType,
       );
-      setState(() => _results = searchResults);
+      setState(() {
+        _results = searchResults;
+        _errorMessage = null;
+      });
     } catch (e) {
-      setState(() => _results = []);
+      setState(() {
+        _results = [];
+        _errorMessage = e.toString();
+      });
     } finally {
       setState(() => _isSearching = false);
     }
@@ -213,47 +224,58 @@ class _AdvancedSearchScreenState extends State<AdvancedSearchScreen> {
                         const SizedBox(height: UITokens.spaceXLg),
 
                         // Results
-                        if (_results.isNotEmpty)
+                        if (_errorMessage != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: UITokens.space),
+                            child: AppErrorState(
+                              title: l10n.searchError(_errorMessage!),
+                              message: _errorMessage!,
+                              actionLabel: l10n.retry,
+                              onAction: _performSearch,
+                            ),
+                          )
+                        else if (_results.isNotEmpty) ...[
                           Text(
                             l10n.resultsCount(_results.length),
                             style: Theme.of(context).textTheme.titleMedium,
-                          )
-                        else if (!_isSearching &&
-                            _queryController.text.isNotEmpty)
-                          Text(
-                            l10n.noResultsFound,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.outline,
-                                ),
                           ),
-                        const SizedBox(height: UITokens.space),
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _results.length,
-                          separatorBuilder: (_, __) => const Divider(),
-                          itemBuilder: (context, index) {
-                            final result = _results[index];
-                            final sender =
-                                result['sender']?.toString() ?? 'Unknown';
-                            final body =
-                                result['content']?['body']?.toString() ?? '';
-                            return ListTile(
-                              leading: CircleAvatar(
-                                child: Text(
-                                  sender.isNotEmpty ? sender[0] : '?',
+                          const SizedBox(height: UITokens.space),
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _results.length,
+                            separatorBuilder: (_, __) => const Divider(),
+                            itemBuilder: (context, index) {
+                              final result = _results[index];
+                              final sender =
+                                  result['sender']?.toString() ?? 'Unknown';
+                              final body =
+                                  result['content']?['body']?.toString() ?? '';
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  child: Text(
+                                    sender.isNotEmpty ? sender[0] : '?',
+                                  ),
                                 ),
-                              ),
-                              title: Text(sender),
-                              subtitle: Text(
-                                body,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          },
-                        ),
+                                title: Text(sender),
+                                subtitle: Text(
+                                  body,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            },
+                          ),
+                        ] else if (!_isSearching &&
+                            _queryController.text.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: UITokens.space),
+                            child: AppEmptyState(
+                              icon: Icons.search_off_rounded,
+                              title: l10n.noResultsFound,
+                              message: l10n.searchQueryHint,
+                            ),
+                          ),
                       ],
                     ),
                   ),

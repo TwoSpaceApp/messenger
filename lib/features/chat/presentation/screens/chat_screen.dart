@@ -25,6 +25,7 @@ import 'package:two_space_app/core/services/media_file_service.dart';
 import 'package:two_space_app/core/sound/waveform_painter.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/utils/storage_service.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_group_service.dart';
@@ -2224,6 +2225,16 @@ class _ChatScreenState extends State<ChatScreen>
             }
 
             final visibleMessages = _visibleMessagesFor(timeline.messages);
+            if (!timeline.loadingMoreHistory && visibleMessages.isEmpty) {
+              return Center(
+                child: AppEmptyState(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  title: l10n.noMessages,
+                  message: l10n.startChatTitle,
+                ),
+              );
+            }
+
             final viewportWidth = MediaQuery.of(context).size.width;
             final bubbleMaxWidth = math.min<double>(viewportWidth * 0.72, 560);
             return ListView.custom(

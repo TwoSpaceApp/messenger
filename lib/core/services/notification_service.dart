@@ -3,8 +3,12 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
+import 'package:two_space_app/core/navigation/app_router.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+import 'package:two_space_app/firebase_options.dart';
 
 // Service is used through NotificationService() singleton, not from main.
 // ignore_for_file: unreachable_from_main
@@ -13,16 +17,16 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 /// Must be a top-level function or static method.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Initialize Firebase for background handler
-  await Firebase.initializeApp();
+  try {
+    final options = DefaultFirebaseOptions.currentPlatform;
+    await Firebase.initializeApp(options: options);
+  } catch (_) {
+    return;
+  }
 
   final log = DevLogger('FCMBackground');
   log.info('Background message received: ${message.messageId}');
   log.debug('Message data: ${message.data}');
-
-  // Background messages are handled by the system, but we can log them here
-  // The actual notification display is handled by FCM automatically when
-  // the message contains a notification payload
 }
 
 /// Notification service for local notifications, foreground service, and push notifications.
@@ -34,7 +38,7 @@ class NotificationService {
   static final DevLogger _log = DevLogger('NotificationService');
 
   late FlutterLocalNotificationsPlugin _plugin;
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  FirebaseMessaging? _firebaseMessaging;
   bool _initialized = false;
   String? _fcmToken;
 
@@ -100,6 +104,8 @@ class NotificationService {
   /// Initialize Firebase Cloud Messaging
   Future<void> _initializeFirebaseMessaging() async {
     try {
+      _firebaseMessaging = FirebaseMessaging.instance;
+
       // Set background message handler
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -110,7 +116,7 @@ class NotificationService {
       await _updateFcmToken();
 
       // Listen for token refresh
-      _firebaseMessaging.onTokenRefresh.listen(
+      _firebaseMessaging!.onTokenRefresh.listen(
         (newToken) {
           _fcmToken = newToken;
           _log.info('FCM token refreshed');
@@ -138,7 +144,7 @@ class NotificationService {
       );
 
       // Check if app was opened from a notification (when terminated)
-      final initialMessage = await _firebaseMessaging.getInitialMessage();
+      final initialMessage = await _firebaseMessaging!.getInitialMessage();
       if (initialMessage != null) {
         _log.info('App opened from terminated state via notification');
         _handleMessageOpenedApp(initialMessage);
@@ -147,6 +153,7 @@ class NotificationService {
       _log.info('Firebase Messaging initialized');
     } catch (e, stackTrace) {
       _log.exception('Failed to initialize Firebase Messaging', e, stackTrace);
+      _firebaseMessaging = null;
     }
   }
 
@@ -171,8 +178,10 @@ class NotificationService {
 
   /// Request permissions for push notifications
   Future<void> _requestPushNotificationPermissions() async {
+    final fm = _firebaseMessaging;
+    if (fm == null) return;
     try {
-      final settings = await _firebaseMessaging.requestPermission();
+      final settings = await fm.requestPermission();
 
       _log.info('Push notification permission status: ${settings.authorizationStatus}');
     } catch (e) {
@@ -182,8 +191,10 @@ class NotificationService {
 
   /// Update and retrieve FCM token
   Future<void> _updateFcmToken() async {
+    final fm = _firebaseMessaging;
+    if (fm == null) return;
     try {
-      _fcmToken = await _firebaseMessaging.getToken();
+      _fcmToken = await fm.getToken();
       if (_fcmToken != null) {
         _log.info('FCM token retrieved successfully');
         _log.debug('Token: ${_fcmToken!.substring(0, _fcmToken!.length > 20 ? 20 : _fcmToken!.length)}...');
@@ -565,17 +576,23 @@ class NotificationService {
 
   void _navigateToChat(String roomId) {
     _log.debug('Navigate to chat: $roomId');
-    // This will be handled by the app's router via onChatOpened stream
+    final context = rootNavigatorKey.currentContext;
+    if (context != null) {
+      GoRouter.of(context).go('${AppStrings.routeChat}/$roomId');
+    }
   }
 
   void _navigateToMessage(String messageId) {
     _log.debug('Navigate to message: $messageId');
-    // This will be handled by the app's router via onMessageOpened stream
+    _log.warning('Message-level deep link not yet implemented: $messageId');
   }
 
   void _openApp() {
     _log.debug('Open app from notification');
-    // App will be brought to foreground automatically
+    final context = rootNavigatorKey.currentContext;
+    if (context != null) {
+      GoRouter.of(context).go(AppStrings.routeHome);
+    }
   }
 
   /// Start the foreground service (Android only).
@@ -611,8 +628,10 @@ class NotificationService {
 
   /// Subscribe to a topic for push notifications
   Future<void> subscribeToTopic(String topic) async {
+    final fm = _firebaseMessaging;
+    if (fm == null) return;
     try {
-      await _firebaseMessaging.subscribeToTopic(topic);
+      await fm.subscribeToTopic(topic);
       _log.info('Subscribed to topic: $topic');
     } catch (e) {
       _log.error('Failed to subscribe to topic $topic: $e');
@@ -621,8 +640,10 @@ class NotificationService {
 
   /// Unsubscribe from a topic
   Future<void> unsubscribeFromTopic(String topic) async {
+    final fm = _firebaseMessaging;
+    if (fm == null) return;
     try {
-      await _firebaseMessaging.unsubscribeFromTopic(topic);
+      await fm.unsubscribeFromTopic(topic);
       _log.info('Unsubscribed from topic: $topic');
     } catch (e) {
       _log.error('Failed to unsubscribe from topic $topic: $e');
@@ -631,8 +652,10 @@ class NotificationService {
 
   /// Delete FCM token (e.g., on logout)
   Future<void> deleteFcmToken() async {
+    final fm = _firebaseMessaging;
+    if (fm == null) return;
     try {
-      await _firebaseMessaging.deleteToken();
+      await fm.deleteToken();
       _fcmToken = null;
       _log.info('FCM token deleted');
     } catch (e) {

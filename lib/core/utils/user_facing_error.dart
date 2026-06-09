@@ -4,28 +4,23 @@ import 'package:two_space_app/core/services/error_handler_service.dart';
 class UserFacingError {
   UserFacingError._();
 
-  static final RegExp _exceptionPrefix = RegExp(r'^[A-Za-z]+Exception:\s*');
   static const String _autoLoginErrorPrefix =
       'auth.register.auto_login_failed::';
 
   /// Форматировать ошибку для отображения пользователю
   /// Использует новый ErrorHandlerService для лучшей категоризации
   static String format(Object error, [AppLocalizations? l10n]) {
-    // Используем новый сервис для обработки ошибок
     final structured = ErrorHandlerService.handle(error, context: 'UserFacingError.format');
-    
-    // Получаем локализованное сообщение
+
     if (l10n != null) {
       return ErrorHandlerService.getUserMessage(structured, l10n);
     }
 
-    // Fallback на старую логику для совместимости
-    final raw = error.toString().trim();
-    final cleaned = raw.replaceFirst(_exceptionPrefix, '').trim();
-    final normalized = cleaned.isEmpty ? raw : cleaned;
+    // Используем очищенное сообщение из StructuredError
+    final message = structured.message;
 
     // Проверяем специфичные коды ошибок
-    return _mapSpecificErrors(normalized, l10n) ?? normalized;
+    return _mapSpecificErrors(message, l10n) ?? message;
   }
 
   /// Маппировать специфичные коды ошибок на локализованные сообщения

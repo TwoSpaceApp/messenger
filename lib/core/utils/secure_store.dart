@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 class AppSecureStorage {
   static const AndroidOptions _androidOptions = AndroidOptions(
-    sharedPreferencesName: 'two_space_secure_storage',
+    storageNamespace: 'two_space_secure_storage',
     preferencesKeyPrefix: 'two_space_',
   );
 

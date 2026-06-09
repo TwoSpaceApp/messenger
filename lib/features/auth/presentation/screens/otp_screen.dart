@@ -15,7 +15,6 @@ class OtpScreen extends StatefulWidget {
 
 class _OtpScreenState extends State<OtpScreen> {
   final TextEditingController _controller = TextEditingController();
-  final bool _loading = false;
   int _secondsLeft = 30;
   Timer? _timer;
 
@@ -91,17 +90,8 @@ class _OtpScreenState extends State<OtpScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                     ),
-                    onPressed: _loading ? null : _submit,
-                    child: _loading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(l10n.confirmButton),
+                    onPressed: _submit,
+                    child: Text(l10n.confirmButton),
                   ),
                   const SizedBox(height: UITokens.spaceSm),
                   TextButton(

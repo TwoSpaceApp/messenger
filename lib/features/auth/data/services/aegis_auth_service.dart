@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/network/aegis/aegis_client.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
@@ -50,7 +50,13 @@ class EmailNotVerifiedException implements Exception {
 class AegisAuthService {
 
   factory AegisAuthService() => _instance;
-  AegisAuthService._internal() {
+
+  @visibleForTesting
+  factory AegisAuthService.testing(AegisClient client) {
+    return AegisAuthService._internal(client);
+  }
+
+  AegisAuthService._internal(this._client) {
     _client.disconnects.listen((_) {
       _stopKeepAlive();
       _log.warning("Соединение с Aegis-сервером разорвано");
@@ -76,10 +82,11 @@ class AegisAuthService {
     });
   }
   static const Duration _defaultRecoveryBackoff = Duration(seconds: 12);
-  static final AegisAuthService _instance = AegisAuthService._internal();
+  static final AegisAuthService _instance =
+      AegisAuthService._internal(_buildClient());
 
   final DevLogger _log = DevLogger('AegisAuthService');
-  final AegisClient _client = _buildClient();
+  final AegisClient _client;
   final AegisIdentityService _identity = AegisIdentityService();
   final StreamController<void> _sessionRestoredController =
       StreamController<void>.broadcast();

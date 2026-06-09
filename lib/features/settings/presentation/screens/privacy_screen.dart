@@ -17,8 +17,6 @@ class PrivacyScreen extends StatefulWidget {
 }
 
 class _PrivacyScreenState extends State<PrivacyScreen> {
-  final bool _loading = false;
-
   @override
   void initState() {
     super.initState();
@@ -94,9 +92,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                     title: Text(l10n.sessionExpiry),
                     subtitle: Text(l10n.sessionExpirySubtitle(days)),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: _loading
-                        ? null
-                        : () async {
+                    onTap: () async {
                             final width = MediaQuery.of(context).size.width;
                             final horizontalInset = (width * 0.08).clamp(
                               12.0,
