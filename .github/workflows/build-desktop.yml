@@ -160,7 +160,7 @@ jobs:
       - name: Force regenerate code for build env
         run: |
           flutter gen-l10n
-          flutter pub run build_runner build --delete-conflicting-outputs
+          flutter pub run build_runner build --force-jit
 
       - name: Verify build env values are embedded
         shell: bash
