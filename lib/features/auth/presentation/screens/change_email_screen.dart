@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/core/widgets/section_page_header.dart';
+import 'package:two_space_app/core/services/dev_logger.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
-import 'package:two_space_app/core/services/dev_logger.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
-import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class ChangeEmailScreen extends StatefulWidget {
@@ -34,6 +34,8 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: email load result handled within the method
+    // ignore: discarded_futures
     _loadCurrentEmail();
   }
 
@@ -111,7 +113,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     try {
       _logger.info('Attempting to change email to: $newEmail');
       
-      // TODO: This requires server-side support for email change via protocol.
+      // TODO(dev): This requires server-side support for email change via protocol.
       // For now, we show an informative message about what the backend needs to support.
       
       // Once the server supports it, the call would be:
@@ -152,6 +154,8 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
 
   void _showErrorDialog({required String title, required String message}) {
     final l10n = AppLocalizations.of(context)!;
+    // Fire-and-forget: dialog is self-contained
+    // ignore: discarded_futures
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(

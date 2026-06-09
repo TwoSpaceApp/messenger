@@ -83,6 +83,8 @@ class ErrorDisplayHelper {
     _logger.error('Error occurred: $error');
 
     if (useDialog) {
+      // Fire-and-forget; dialog result not needed
+      // ignore: discarded_futures
       showErrorDialog(
         context,
         error,

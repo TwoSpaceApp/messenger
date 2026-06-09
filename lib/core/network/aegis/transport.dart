@@ -6,10 +6,10 @@ import 'package:two_space_app/core/network/aegis/exceptions.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_encoder.dart';
-import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/ring_buffer.dart';
+import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
 import 'package:two_space_app/core/network/aegis/security_utils.dart';
 import 'package:two_space_app/core/network/aegis/session_crypto.dart';
 import 'package:two_space_app/core/network/aegis/transport/_shared.dart'
@@ -388,8 +388,8 @@ class AegisTransport {
     if (_isConnected) {
       disconnect().ignore();
     }
-    if (!_messageController.isClosed) _messageController.close();
-    if (!_disconnectController.isClosed) _disconnectController.close();
+    unawaited(_messageController.close());
+    unawaited(_disconnectController.close());
   }
 
   Future<Message> _prepareOutboundMessage(Message message) async {

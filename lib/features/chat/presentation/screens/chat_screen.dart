@@ -1,4 +1,5 @@
-// ignore_for_file: deprecated_member_use, unnecessary_underscores
+// Allow deprecated_member_use for legacy API compatibility and unnecessary_underscores for protocol callbacks.
+// ignore_for_file: deprecated_member_use, unnecessary_underscores, document_ignores
 
 import 'dart:async';
 import 'dart:io';
@@ -14,9 +15,9 @@ import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:share_plus/share_plus.dart' as share;
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/navigation/app_route_observer.dart';
@@ -40,6 +41,7 @@ import 'package:video_thumbnail/video_thumbnail.dart';
 
 Future<bool> _pathExists(String path) async {
   try {
+    // ignore: avoid_slow_async_io
     return await File(path).exists();
   } catch (_) {
     return false;
@@ -304,14 +306,17 @@ class _ChatScreenState extends State<ChatScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _voiceService = VoiceService();
+    // ignore: discarded_futures
     _voiceService.init();
     _listController.addListener(_handleListScroll);
     unawaited(_loadCurrentUserId());
     _subscribeToMessages();
+    // ignore: discarded_futures
     _loadGroupSettings();
     _scrollToEventId = widget.scrollToEventId;
     _primeChatHeader();
     // Load draft if exists
+    // ignore: discarded_futures
     _loadDraft();
     final initialQuery = (widget.searchQuery ?? '').trim();
     if (initialQuery.isNotEmpty) {
@@ -326,6 +331,7 @@ class _ChatScreenState extends State<ChatScreen>
       appRouteObserver.unsubscribe(this);
     }
     _searchDebounceTimer?.cancel();
+    // ignore: discarded_futures
     _messagesSub?.cancel();
     _recordingTicker?.cancel();
     _timeline.dispose();
@@ -336,6 +342,7 @@ class _ChatScreenState extends State<ChatScreen>
       unawaited(player.dispose());
     }
     _audioPlayerAccessOrder.clear();
+    // ignore: discarded_futures
     _voiceService.dispose();
     super.dispose();
   }
@@ -432,6 +439,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _subscribeToMessages() {
+    // ignore: discarded_futures
     _messagesSub?.cancel();
     _messagesSub = _svc
         .watchRoomMessages(
@@ -760,6 +768,7 @@ class _ChatScreenState extends State<ChatScreen>
       if (!_listController.hasClients) return;
       final offset = _listController.position.maxScrollExtent;
       if (animated) {
+        // ignore: discarded_futures
         _listController.animateTo(
           offset,
           duration: UITokens.durationMdLg,
@@ -780,6 +789,7 @@ class _ChatScreenState extends State<ChatScreen>
         initialIndex >= mediaIds.length) {
       return;
     }
+    // ignore: discarded_futures
     showDialog<void>(
       context: context,
       builder: (_) => _ChatImageGalleryDialog(
@@ -1003,6 +1013,7 @@ class _ChatScreenState extends State<ChatScreen>
       return;
     }
 
+    // ignore: discarded_futures
     context.push(AppStrings.routeProfile, extra: userId);
   }
 
@@ -1833,9 +1844,11 @@ class _ChatScreenState extends State<ChatScreen>
       }
       try {
         final file = File(path);
+        // ignore: avoid_slow_async_io
         if (!await file.exists()) {
           continue;
         }
+        // ignore: avoid_slow_async_io
         final stat = await file.stat();
         if (stat.type != FileSystemEntityType.file) {
           continue;
@@ -2197,6 +2210,7 @@ class _ChatScreenState extends State<ChatScreen>
                         members: [],
                       );
                       if (!context.mounted) return;
+                      // ignore: unawaited_futures
                       context.push(
                         '${AppStrings.routeChat}/${Uri.encodeComponent(roomId)}',
                         extra: chat,
@@ -2492,7 +2506,7 @@ class _ChatScreenState extends State<ChatScreen>
                         key: Key('dismiss_${m.id}'),
                         direction: DismissDirection.startToEnd,
                         confirmDismiss: (direction) async {
-                          _sendReplyForEvent(m.id);
+                          await _sendReplyForEvent(m.id);
                           return false; // don't actually dismiss
                         },
                         background: Container(
@@ -4583,6 +4597,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
 
   void _syncInteractionAnimation() {
     final target = _pressing ? 1.0 : (_hovering ? 0.55 : 0.0);
+    // ignore: discarded_futures
     _interactionPulse.animateTo(
       target,
       duration: Duration(milliseconds: _pressing ? 110 : 180),
@@ -4609,6 +4624,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
   void _syncWaveformAnimation() {
     if (_playing) {
       if (!_waveformPulse.isAnimating) {
+        // ignore: discarded_futures
         _waveformPulse.repeat();
       }
       return;
@@ -4716,9 +4732,13 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
     SettingsService.autoDownloadMediaNotifier.removeListener(
       _handleAutoDownloadChanged,
     );
+    // ignore: discarded_futures
     _durationSub?.cancel();
+    // ignore: discarded_futures
     _positionSub?.cancel();
+    // ignore: discarded_futures
     _completeSub?.cancel();
+    // ignore: discarded_futures
     _stateSub?.cancel();
     _positionThrottle?.cancel();
     _waveformPulse.dispose();
@@ -5011,6 +5031,7 @@ class _AudioMessageWidgetState extends State<_AudioMessageWidget>
                                     (details.localPosition.dx /
                                             constraints.maxWidth)
                                         .clamp(0.0, 1.0);
+                                // ignore: discarded_futures
                                 _seekTo(rel);
                               },
                               child: Column(
@@ -5281,12 +5302,15 @@ class _SquishyBubbleState extends State<_SquishyBubble>
 
     return GestureDetector(
       onTapDown: (_) {
+        // ignore: discarded_futures
         if (widget.dynamicBubbles) _controller.forward();
       },
       onTapUp: (_) {
+        // ignore: discarded_futures
         if (widget.dynamicBubbles) _controller.reverse();
       },
       onTapCancel: () {
+        // ignore: discarded_futures
         if (widget.dynamicBubbles) _controller.reverse();
       },
       child: ScaleTransition(

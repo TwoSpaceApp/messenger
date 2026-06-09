@@ -40,6 +40,8 @@ class _AuthBackgroundState extends State<AuthBackground>
     _gradientCtrl = AnimationController(
       duration: const Duration(seconds: 18),
       vsync: this,
+    // Fire-and-forget: gradient animation runs indefinitely
+    // ignore: discarded_futures
     )..repeat();
 
     _coverCtrl = AnimationController(
@@ -59,8 +61,12 @@ class _AuthBackgroundState extends State<AuthBackground>
     super.didUpdateWidget(oldWidget);
     if (widget.isCovering != oldWidget.isCovering) {
       if (widget.isCovering) {
+        // Fire-and-forget: cover animation
+        // ignore: discarded_futures
         _coverCtrl.forward(from: 0);
       } else {
+        // Fire-and-forget: cover animation
+        // ignore: discarded_futures
         _coverCtrl.reverse(from: 1);
       }
     }

@@ -1,14 +1,14 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use // Needed for deprecated member usage in older API calls
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/loading_skeletons.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
@@ -56,7 +56,10 @@ class _PeopleScreenState extends State<PeopleScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = PeopleController()..load();
+    _controller = PeopleController()
+      // Fire-and-forget: load result handled within controller
+      // ignore: discarded_futures
+      ..load();
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
   }
@@ -188,6 +191,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                               onChanged: _controller.updateQuery,
                               onClear: () {
                                 _searchController.clear();
+                                // Fire-and-forget: clear search results
+                                // ignore: discarded_futures
                                 _controller.clearSearch();
                               },
                             ),
@@ -861,6 +866,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(l10n.peopleViewProfileAction),
                           onTap: () {
                             Navigator.pop(ctx);
+                            // Fire-and-forget: profile navigation
+                            // ignore: discarded_futures
                             _openProfile(person);
                           },
                         ),
@@ -871,6 +878,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(l10n.writeMessageAction),
                           onTap: () {
                             Navigator.pop(ctx);
+                            // Fire-and-forget: chat navigation
+                            // ignore: discarded_futures
                             _openChat(person);
                           },
                         ),
@@ -879,6 +888,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(l10n.voiceCallLabel),
                           onTap: () {
                             Navigator.pop(ctx);
+                            // Fire-and-forget: voice call
+                            // ignore: discarded_futures
                             _startCall(person, false);
                           },
                         ),
@@ -887,6 +898,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(l10n.videoCallLabel),
                           onTap: () {
                             Navigator.pop(ctx);
+                            // Fire-and-forget: video call
+                            // ignore: discarded_futures
                             _startCall(person, true);
                           },
                         ),
@@ -897,6 +910,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(l10n.inviteAction),
                           onTap: () {
                             Navigator.pop(ctx);
+                            // Fire-and-forget: invite action
+                            // ignore: discarded_futures
                             _invitePerson(person);
                           },
                         ),
@@ -916,6 +931,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                         ),
                         onTap: () {
                           Navigator.pop(ctx);
+                          // Fire-and-forget: favorite toggle
+                          // ignore: discarded_futures
                           _controller.toggleFavorite(person);
                         },
                       ),

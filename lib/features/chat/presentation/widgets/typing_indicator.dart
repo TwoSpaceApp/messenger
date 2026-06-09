@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+// ignore_for_file: document_ignores
+
 import 'package:flutter/material.dart';
 
 class TypingIndicator extends StatefulWidget {
@@ -20,7 +22,9 @@ class _TypingIndicatorState extends State<TypingIndicator>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
-    )..repeat();
+    );
+    // ignore: discarded_futures
+    _controller.repeat();
   }
 
   @override

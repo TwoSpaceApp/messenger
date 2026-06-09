@@ -138,8 +138,8 @@ class NativeAegisConnection implements AegisConnection {
   @override
   void dispose() {
     close().ignore();
-    if (!_dataController.isClosed) _dataController.close();
-    if (!_errorController.isClosed) _errorController.close();
-    if (!_closeController.isClosed) _closeController.close();
+    unawaited(_dataController.close());
+    unawaited(_errorController.close());
+    unawaited(_closeController.close());
   }
 }

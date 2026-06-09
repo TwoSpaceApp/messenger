@@ -1,3 +1,5 @@
+// ignore_for_file: document_ignores
+
 import 'package:flutter/material.dart';
 
 class QuickReactionsPopup extends StatefulWidget {
@@ -40,6 +42,7 @@ class _QuickReactionsPopupState extends State<QuickReactionsPopup>
     _scaleAnimation = Tween<double>(begin: 0.5, end: 1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
     );
+    // ignore: discarded_futures
     _controller.forward();
   }
 

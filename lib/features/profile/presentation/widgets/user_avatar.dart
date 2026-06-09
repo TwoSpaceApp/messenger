@@ -68,6 +68,8 @@ class _UserAvatarState extends State<UserAvatar> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: avatar load result handled within the method
+    // ignore: discarded_futures
     _loadIfNeeded();
   }
 
@@ -77,6 +79,8 @@ class _UserAvatarState extends State<UserAvatar> {
     if (oldWidget.avatarFileId != widget.avatarFileId ||
         oldWidget.avatarUrl != widget.avatarUrl) {
       _bytes = null;
+      // Fire-and-forget: avatar reload result handled within the method
+      // ignore: discarded_futures
       _loadIfNeeded();
     }
   }
@@ -95,6 +99,7 @@ class _UserAvatarState extends State<UserAvatar> {
     final future = () async {
       try {
         final file = File(path);
+        // ignore: avoid_slow_async_io -- Local file check during avatar loading
         if (!await file.exists()) {
           return null;
         }
@@ -110,6 +115,7 @@ class _UserAvatarState extends State<UserAvatar> {
     try {
       return await future;
     } finally {
+      // ignore: unawaited_futures -- Map removal is synchronous
       _bytesInFlight.remove(path);
     }
   }

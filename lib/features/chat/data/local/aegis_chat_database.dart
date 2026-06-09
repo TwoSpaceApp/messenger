@@ -160,7 +160,7 @@ class AegisPeopleCallHistory extends Table {
 class AegisChatDatabase extends _$AegisChatDatabase {
   factory AegisChatDatabase() => _shared;
 
-  AegisChatDatabase.forExecutor(super.executor);
+  AegisChatDatabase.forExecutor(super.e);
   AegisChatDatabase._internal() : super(openDatabase());
 
   static final AegisChatDatabase _shared = AegisChatDatabase._internal();

@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
+import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/navigation/app_route_observer.dart';
 import 'package:two_space_app/core/navigation/app_transitions.dart';
 import 'package:two_space_app/core/navigation/title_observer.dart';
-import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/app_shell_frame.dart';
 import 'package:two_space_app/features/auth/presentation/screens/biometric_setup_screen.dart';
 import 'package:two_space_app/features/auth/presentation/screens/change_email_screen.dart';
@@ -433,6 +433,8 @@ class _WelcomeRouteLoaderState extends State<_WelcomeRouteLoader> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget user info loading is intentional
+    // ignore: discarded_futures
     _loadUserInfo();
   }
 

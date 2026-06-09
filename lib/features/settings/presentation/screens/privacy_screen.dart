@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/inline_notice_card.dart';
-import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
 class PrivacyScreen extends StatefulWidget {
@@ -22,6 +22,8 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: deferred settings load
+    // ignore: discarded_futures
     SettingsService.loadDeferredSettings();
   }
 

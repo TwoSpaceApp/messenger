@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// Needed for FutureProvider type access; no public API alternative
+// ignore: implementation_imports
 import 'package:riverpod/src/providers/future_provider.dart';
 import 'package:two_space_app/core/providers/service_providers.dart';
 

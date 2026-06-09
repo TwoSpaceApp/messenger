@@ -101,10 +101,14 @@ class SecureStore {
     final future = () async {
       final baseDir = await getApplicationSupportDirectory();
       final dir = Directory('${baseDir.path}/secure_store');
+      // File IO is intentional in storage fallback
+      // ignore: avoid_slow_async_io
       if (!await dir.exists()) {
         await dir.create(recursive: true);
       }
       final file = File('${dir.path}/fallback_store.json');
+      // File IO is intentional in storage fallback
+      // ignore: avoid_slow_async_io
       if (!await file.exists()) {
         await file.writeAsString('{}', flush: true);
       }

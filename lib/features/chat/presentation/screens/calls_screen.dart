@@ -1,8 +1,9 @@
-// ignore_for_file: unnecessary_underscores
+// Allow unnecessary underscores to align with protocol layer callback parameter names.
+// ignore_for_file: unnecessary_underscores, document_ignores
 
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
@@ -34,7 +35,9 @@ class _CallsScreenState extends State<CallsScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = CallsController()..load();
+    _controller = CallsController();
+    // ignore: discarded_futures
+    _controller.load();
     _searchController = TextEditingController();
   }
 
@@ -601,6 +604,7 @@ class _CallsScreenState extends State<CallsScreen> {
                 title: Text(l10n.voiceCallLabel),
                 onTap: () {
                   Navigator.of(ctx).pop();
+                  // ignore: discarded_futures
                   _startCall(thread.person, false);
                 },
               ),
@@ -609,6 +613,7 @@ class _CallsScreenState extends State<CallsScreen> {
                 title: Text(l10n.videoCallLabel),
                 onTap: () {
                   Navigator.of(ctx).pop();
+                  // ignore: discarded_futures
                   _startCall(thread.person, true);
                 },
               ),
@@ -618,6 +623,7 @@ class _CallsScreenState extends State<CallsScreen> {
                   title: Text(l10n.sendMessageCallAction),
                   onTap: () {
                     Navigator.of(ctx).pop();
+                    // ignore: discarded_futures
                     _openChat(thread.person);
                   },
                 ),

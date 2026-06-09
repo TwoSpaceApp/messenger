@@ -1,16 +1,17 @@
-// ignore_for_file: deprecated_member_use, unnecessary_underscores
+// Allow deprecated_member_use for legacy API compatibility and unnecessary_underscores for protocol callbacks.
+// ignore_for_file: deprecated_member_use, unnecessary_underscores, document_ignores
 
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart' as share;
+import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
@@ -85,6 +86,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       return;
     }
 
+    // ignore: discarded_futures
     context.push(
       AppStrings.routeProfile,
       extra: <String, dynamic>{
@@ -101,6 +103,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
     _nameController.text = widget.initialName;
     _joinRule = widget.roomType == 'public' ? 0 : 1;
     _overviewFuture = _loadOverview();
+    // ignore: discarded_futures
     _loadRoomSettings();
   }
 
@@ -666,6 +669,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
               if (userId.isEmpty) {
                 return;
               }
+              // ignore: discarded_futures
               context.push(
                 AppStrings.routeProfile,
                 extra: <String, dynamic>{

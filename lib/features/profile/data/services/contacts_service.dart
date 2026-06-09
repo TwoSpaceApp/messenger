@@ -20,7 +20,7 @@ class ContactsService {
     }
   }
 
-  // ignore: unused_element
+  // ignore: unused_element -- Reserved for future flutter_contacts integration
   static String _normalizePhone(String raw) {
     // Remove spaces, parentheses, dashes and keep leading + if present.
     // Reserved for future use with flutter_contacts integration.

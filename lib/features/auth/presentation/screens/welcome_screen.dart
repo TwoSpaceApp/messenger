@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/constants/greeting_constants.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
@@ -54,6 +54,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       end: GreetingConstants.scaleEnd,
     ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
 
+    // Fire-and-forget: animation forward
+    // ignore: discarded_futures
     _ctrl.forward();
 
     // Transition to MainScreen after displaying welcome message
@@ -64,6 +66,8 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   void _transitionToMain() {
+    // Fire-and-forget: navigation handled in the callback
+    // ignore: discarded_futures
     _ctrl.reverse().then((_) {
       if (mounted) {
         context.go(AppStrings.routeHome);

@@ -70,6 +70,8 @@ class BackgroundOptimizationNotice extends StatelessWidget {
                             TextButton(
                               onPressed: () {
                                 BackgroundEffectsPerformanceService.dismissNotice();
+                                // Fire-and-forget; navigation result not needed
+                                // ignore: discarded_futures
                                 context.push(AppStrings.routeCustomization);
                               },
                               child: Text(l10n.backgroundOptimizationOpenSettings),

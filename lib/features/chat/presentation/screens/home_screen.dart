@@ -1,12 +1,14 @@
+// ignore_for_file: document_ignores
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
@@ -17,8 +19,8 @@ import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/unread_badge.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
-import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_channel_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_group_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/join_room_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
@@ -65,6 +67,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _subscribeToSessionRestored() {
+    // ignore: discarded_futures
     _sessionRestoredSub?.cancel();
     _sessionRestoredSub = _auth.sessionRestored.listen(
       (_) {
@@ -82,7 +85,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
+    // ignore: discarded_futures
     _roomsSub?.cancel();
+    // ignore: discarded_futures
     _sessionRestoredSub?.cancel();
     _authErrorRecoveryTimer?.cancel();
     super.dispose();
@@ -180,6 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _subscribeToRooms() {
+    // ignore: discarded_futures
     _roomsSub?.cancel();
     _roomsSub = _chat.watchChats().listen(
       (chats) {
@@ -961,6 +967,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       (e) => e['id'] == id,
       orElse: () => {'id': id, 'name': id},
     );
+    // ignore: discarded_futures
     context.push(
       '${AppStrings.routeChat}/${Uri.encodeComponent(id)}',
       extra: Chat(

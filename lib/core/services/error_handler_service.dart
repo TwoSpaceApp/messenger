@@ -13,8 +13,8 @@ enum ErrorCategory {
   server('Server'),
   unknown('Unknown');
 
-  final String name;
   const ErrorCategory(this.name);
+  final String name;
 }
 
 /// Структурированная ошибка с контекстом

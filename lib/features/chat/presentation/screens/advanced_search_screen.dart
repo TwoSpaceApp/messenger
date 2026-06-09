@@ -1,3 +1,4 @@
+// Ignore unnecessary_underscores to allow underscores in callback params matching protocol field names.
 // ignore_for_file: unnecessary_underscores
 
 import 'package:flutter/material.dart';

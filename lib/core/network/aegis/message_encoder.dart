@@ -2,14 +2,14 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:two_space_app/core/network/aegis/buffer_pool.dart';
-import 'package:two_space_app/core/network/aegis/typed_data_compat.dart';
 import 'package:two_space_app/core/network/aegis/crc32.dart';
 import 'package:two_space_app/core/network/aegis/errors.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
-import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
+import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
+import 'package:two_space_app/core/network/aegis/typed_data_compat.dart';
 
 // Re-export error types so callers that import only this file still see them.
 export 'errors.dart'

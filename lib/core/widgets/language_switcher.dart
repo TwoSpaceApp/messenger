@@ -116,6 +116,8 @@ class _LanguageButton extends StatelessWidget {
   }
 
   void _showPicker(BuildContext context) {
+    // Fire-and-forget; sheet result handled via callbacks
+    // ignore: discarded_futures
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -203,6 +205,8 @@ class _LanguagePickerSheet extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         onTap: () {
                           Navigator.pop(context);
+                          // Fire-and-forget; language change handled reactively
+                          // ignore: discarded_futures
                           SettingsService.setLanguage(lang.code);
                         },
                         child: Padding(

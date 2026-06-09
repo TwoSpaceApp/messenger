@@ -98,6 +98,8 @@ class UpdateService {
   static Future<bool> verifySha256(String filePath, String expectedHex) async {
     try {
       final f = File(filePath);
+      // Sha256 verification requires file IO
+      // ignore: avoid_slow_async_io
       if (!await f.exists()) return false;
       final bytes = await f.readAsBytes();
       final digest = sha256.convert(bytes);
@@ -129,7 +131,7 @@ class UpdateDialog {
     if (info == null) return;
     if (!context.mounted) return;
     // Push a full-screen update page that looks like Telegram's update prompt
-    Navigator.of(context)
+    await Navigator.of(context)
         .push(MaterialPageRoute(builder: (c) => UpdateScreen(info: info)));
   }
 }

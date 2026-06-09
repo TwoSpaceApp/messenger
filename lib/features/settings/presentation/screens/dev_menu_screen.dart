@@ -1,4 +1,4 @@
-// ignore_for_file: unnecessary_underscores
+// ignore_for_file: unnecessary_underscores // Needed for underscore-prefixed unused parameters
 
 import 'dart:async';
 import 'dart:convert';
@@ -7,11 +7,11 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/dev_log_export_service.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
@@ -1166,6 +1166,8 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: info load result handled within the method
+    // ignore: discarded_futures
     _loadInfo();
   }
 
@@ -1286,6 +1288,8 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
                     _deviceInfoError = false;
                     _errorMessage = null;
                   });
+                  // Fire-and-forget: retry load
+                  // ignore: discarded_futures
                   _loadInfo();
                 },
                 child: const Text('Retry'),

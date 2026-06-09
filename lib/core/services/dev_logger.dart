@@ -10,8 +10,8 @@ enum LogLevel {
   warning('⚠️'),
   error('🔴');
 
-  final String emoji;
   const LogLevel(this.emoji);
+  final String emoji;
 }
 
 /// Журнал для разработчиков с поддержкой уровней логирования

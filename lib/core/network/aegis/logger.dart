@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:msgpack_dart/msgpack_dart.dart' as msgpack;
 import 'package:two_space_app/core/network/aegis/message.dart';
-import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
 import 'package:two_space_app/core/services/dev_logger.dart' as dev;
+import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
 
 /// Simple logger for Aegis client
 class AegisLogger {
@@ -24,6 +24,7 @@ class AegisLogger {
   static set level(LogLevel value) => _level = value;
 
   /// Get current log level
+  // ignore: unnecessary_getters_setters — part of public API alongside setter
   static LogLevel get level => _level;
 
   /// Log debug message

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
-import 'package:two_space_app/core/network/aegis/message_payloads_v2_1.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 
 /// Unified dispatcher that splits raw protocol messages into typed streams.

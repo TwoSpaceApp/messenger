@@ -66,6 +66,8 @@ class _DevFabState extends State<DevFab> with SingleTickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final nav = rootNavigatorKey.currentState;
       if (nav != null && mounted) {
+        // Fire-and-forget; navigation result not needed
+        // ignore: discarded_futures
         nav.push(MaterialPageRoute(builder: (_) => const DevMenuScreen()));
       }
     });

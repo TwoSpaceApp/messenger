@@ -8,8 +8,8 @@ import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/feature_in_development_dialog.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/inline_notice_card.dart';
-import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/auth/data/services/biometric_auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 
@@ -40,6 +40,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: account state load result handled within the method
+    // ignore: discarded_futures
     _loadAccountState();
   }
 

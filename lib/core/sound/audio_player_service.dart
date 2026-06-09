@@ -16,6 +16,8 @@ class AudioPlayerService {
       return;
     }
 
+    // Local file existence check is intentional for audio playback
+    // ignore: avoid_slow_async_io
     if (await File(source).exists()) {
       await _player.play(DeviceFileSource(source));
       return;

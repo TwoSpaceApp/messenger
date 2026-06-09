@@ -19,7 +19,7 @@ class ProtocolError implements Exception {
 
   /// Hex dump of [frameData] for diagnostic logging.
   ///
-  /// Displays up to [maxBytes] bytes in a traditional hex-dump layout
+  /// Displays up to maxBytes bytes in a traditional hex-dump layout
   /// with offsets and hex values.
   String get hexDump =>
       frameData != null ? _toHexDump(frameData!) : '<no frame data>';

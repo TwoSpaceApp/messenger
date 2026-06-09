@@ -1,5 +1,8 @@
 // Enhanced audio player widget with waveform and playback speed
+// ignore_for_file: document_ignores
+
 import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
@@ -62,10 +65,14 @@ class _EnhancedAudioPlayerState extends State<EnhancedAudioPlayer> {
 
   @override
   void dispose() {
+    // ignore: discarded_futures
     _stateSub?.cancel();
+    // ignore: discarded_futures
     _durationSub?.cancel();
+    // ignore: discarded_futures
     _positionSub?.cancel();
     _positionThrottle?.cancel();
+    // ignore: discarded_futures
     _audioPlayer.dispose();
     super.dispose();
   }

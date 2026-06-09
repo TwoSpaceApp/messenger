@@ -1,13 +1,13 @@
-// ignore_for_file: unnecessary_underscores
+// ignore_for_file: unnecessary_underscores // Needed for underscore-prefixed unused parameters
 
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/highlighted_text.dart';
-import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/settings/presentation/models/settings_catalog.dart';
 
 class SettingsSearchScreen extends StatefulWidget {

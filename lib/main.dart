@@ -463,6 +463,8 @@ class _AppLifecycleObserver with WidgetsBindingObserver {
       await AegisChatService().ensureReady().catchError((_) => null);
     }();
     _resumeRefreshInFlight = future;
+    // Fire-and-forget: cleanup handled inline
+    // ignore: discarded_futures
     future.whenComplete(() {
       if (identical(_resumeRefreshInFlight, future)) {
         _resumeRefreshInFlight = null;

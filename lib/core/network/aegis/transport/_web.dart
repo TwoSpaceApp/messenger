@@ -1,6 +1,8 @@
+// ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter — web-only transport
+
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:html' as html;
+import 'dart:typed_data';
 
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/transport/_connection.dart';
@@ -64,8 +66,8 @@ class WebAegisConnection implements AegisConnection {
       // Build WebSocket URL
       // On web, we use the same scheme as the page (secure HTTPS → wss://, plain HTTP → ws://)
       final wsScheme = html.window.location.protocol == 'https:' ? 'wss' : 'ws';
-       final pageHost = html.window.location.hostname ?? 'localhost';
-       final pagePort = html.window.location.port ?? (wsScheme == "wss" ? "443" : "80");
+       final pageHost = html.window.location.hostname;
+       final pagePort = html.window.location.port;
       
       // Connect to WebSocket proxy on the same origin, on path /ws
       // This assumes nginx is configured to proxy /ws to localhost:9999
@@ -205,10 +207,12 @@ class WebAegisConnection implements AegisConnection {
   void dispose() {
     _disposed = true;
     close().ignore();
+    // Fire-and-forget: subscription cleanup in dispose.
+    // ignore: discarded_futures
     _subscription?.cancel();
     
-    if (!_dataController.isClosed) _dataController.close();
-    if (!_errorController.isClosed) _errorController.close();
-    if (!_closeController.isClosed) _closeController.close();
+    unawaited(_dataController.close());
+    unawaited(_errorController.close());
+    unawaited(_closeController.close());
   }
 }

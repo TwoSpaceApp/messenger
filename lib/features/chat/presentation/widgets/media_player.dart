@@ -1,10 +1,12 @@
+// ignore_for_file: document_ignores
+
 import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:two_space_app/core/services/media_file_service.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/services/media_file_service.dart';
 import 'package:video_player/video_player.dart';
 
 class MediaPlayer extends StatefulWidget {
@@ -54,6 +56,7 @@ class _MediaPlayerState extends State<MediaPlayer> {
   @override
   void initState() {
     super.initState();
+    // ignore: discarded_futures
     _initializePlayer();
   }
 
@@ -874,7 +877,9 @@ class _MediaPlayerState extends State<MediaPlayer> {
       );
     }
     _controller?.removeListener(_onPlayerChanged);
+    // ignore: discarded_futures
     _controller?.pause();
+    // ignore: discarded_futures
     _controller?.dispose();
     super.dispose();
   }

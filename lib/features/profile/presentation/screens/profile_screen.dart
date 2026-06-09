@@ -5,17 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/utils/user_content_sanitizer.dart';
 import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/inline_notice_card.dart';
-import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/data/services/chat_backend_factory.dart';
 import 'package:two_space_app/features/chat/presentation/screens/call_screen.dart';
@@ -65,7 +65,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _editMode = widget.startInEdit;
+    // Fire-and-forget: settings warm-up result handled within the method
+    // ignore: discarded_futures
     _warmUpSettings();
+    // Fire-and-forget: user load result handled within the method
+    // ignore: discarded_futures
     _loadUser();
   }
 
@@ -529,6 +533,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _openCall() {
     final roomName =
         'call_${widget.userId.replaceAll(RegExp('[^a-zA-Z0-9_-]'), '_')}_${DateTime.now().millisecondsSinceEpoch}';
+    // Fire-and-forget: call screen navigation
+    // ignore: discarded_futures
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => CallScreen(
@@ -955,7 +961,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: FilledButton(
                           onPressed: _pickAvatar,
                           style: FilledButton.styleFrom(
-                            minimumSize: const Size(0, 0),
+                            minimumSize: Size.zero,
                             padding: const EdgeInsets.all(UITokens.spaceSmMd),
                             shape: const CircleBorder(),
                           ),

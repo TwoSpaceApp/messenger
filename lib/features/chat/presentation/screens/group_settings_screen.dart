@@ -1,4 +1,5 @@
-// ignore_for_file: deprecated_member_use
+// Allow deprecated_member_use for legacy API compatibility.
+// ignore_for_file: deprecated_member_use, document_ignores
 
 import 'dart:io';
 
@@ -7,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart' as share;
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/group.dart';
 import 'package:two_space_app/core/utils/user_facing_error.dart';
@@ -63,6 +64,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
   void initState() {
     super.initState();
     _groupService = AegisGroupService();
+    // ignore: discarded_futures
     _loadGroupData();
   }
 
@@ -84,6 +86,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
       return;
     }
 
+    // ignore: discarded_futures
     context.push(
       AppStrings.routeProfile,
       extra: <String, dynamic>{
@@ -1026,6 +1029,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                           onChanged: (value) {
                             if (value == null) return;
                             setState(() => _joinRule = value);
+                            // ignore: discarded_futures
                             _updateJoinRule(value);
                           },
                         ),
@@ -1048,6 +1052,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
                           onChanged: (value) {
                             if (value == null) return;
                             setState(() => _historyVisibility = value);
+                            // ignore: discarded_futures
                             _updateHistoryVisibility(value);
                           },
                         ),
@@ -1493,6 +1498,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
 
   void _showRoleDialog(GroupMember member) {
     final l10n = AppLocalizations.of(context)!;
+    // ignore: discarded_futures
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1554,6 +1560,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
 
   void _showFreezeDialog(GroupMember member) {
     final l10n = AppLocalizations.of(context)!;
+    // ignore: discarded_futures
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1610,6 +1617,7 @@ class _GroupSettingsScreenState extends State<GroupSettingsScreen> {
 
   void _showDeleteConfirmation() {
     final l10n = AppLocalizations.of(context)!;
+    // ignore: discarded_futures
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(

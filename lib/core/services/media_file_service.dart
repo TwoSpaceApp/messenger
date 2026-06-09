@@ -36,6 +36,8 @@ class MediaFileService {
     String? suggestedName,
   }) async {
     final sourceFile = File(sourcePath);
+    // File IO is intentional in save-as flow
+    // ignore: avoid_slow_async_io
     if (!await sourceFile.exists()) {
       throw Exception('File not found');
     }
@@ -70,9 +72,13 @@ class MediaFileService {
 
     final targetFile = File(targetPath);
     final parentDir = targetFile.parent;
+    // File IO is intentional in save-as flow
+    // ignore: avoid_slow_async_io
     if (!await parentDir.exists()) {
       await parentDir.create(recursive: true);
     }
+    // File IO is intentional in save-as flow
+    // ignore: avoid_slow_async_io
     if (await targetFile.exists()) {
       await targetFile.delete();
     }

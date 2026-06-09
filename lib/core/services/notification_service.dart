@@ -6,8 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 
-// ignore_for_file: unreachable_from_main
 // Service is used through NotificationService() singleton, not from main.
+// ignore_for_file: unreachable_from_main
 
 /// Handler for background FCM messages.
 /// Must be a top-level function or static method.
@@ -172,11 +172,7 @@ class NotificationService {
   /// Request permissions for push notifications
   Future<void> _requestPushNotificationPermissions() async {
     try {
-      final settings = await _firebaseMessaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      final settings = await _firebaseMessaging.requestPermission();
 
       _log.info('Push notification permission status: ${settings.authorizationStatus}');
     } catch (e) {

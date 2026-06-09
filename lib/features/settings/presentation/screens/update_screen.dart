@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/update_service.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
@@ -39,6 +39,8 @@ class _UpdateScreenState extends State<UpdateScreen> {
   void initState() {
     super.initState();
     _selectedAbi = widget.info.selectedAbi ?? '';
+    // Fire-and-forget: current version load result handled within the method
+    // ignore: discarded_futures
     _loadCurrentVersion();
   }
 

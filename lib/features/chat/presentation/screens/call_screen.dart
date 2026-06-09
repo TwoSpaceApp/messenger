@@ -1,3 +1,5 @@
+// ignore_for_file: document_ignores
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -93,6 +95,7 @@ class _CallScreenState extends State<CallScreen> {
     _durationTicker?.cancel();
     _stopwatch.stop();
     unawaited(_disposeCamera());
+    // ignore: discarded_futures
     _recordCallIfNeeded();
     super.dispose();
   }
@@ -441,7 +444,7 @@ class _CallScreenState extends State<CallScreen> {
   }
 
   Future<void> _endCall() async {
-    _recordCallIfNeeded();
+    await _recordCallIfNeeded();
     if (mounted) Navigator.of(context).pop();
   }
 

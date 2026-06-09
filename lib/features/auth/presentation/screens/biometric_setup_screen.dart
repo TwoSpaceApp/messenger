@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/inline_notice_card.dart';
@@ -30,6 +30,7 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
   @override
   void initState() {
     super.initState();
+    // ignore: discarded_futures - initState cannot be async
     _loadState();
   }
 
