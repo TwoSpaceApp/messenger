@@ -1,3 +1,5 @@
+// ignore_for_file: document_ignores
+
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
@@ -113,6 +115,7 @@ class VoiceService {
       // Verify file exists and has content
       if (path != null && path.isNotEmpty) {
         final file = File(path);
+        // ignore: avoid_slow_async_io
         if (await file.exists() && await file.length() > 0) {
           return path;
         }
@@ -136,6 +139,7 @@ class VoiceService {
         // Delete the file if it exists
         if (_currentRecordingPath != null) {
           final file = File(_currentRecordingPath!);
+          // ignore: avoid_slow_async_io
           if (await file.exists()) {
             await file.delete();
           }

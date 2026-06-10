@@ -34,7 +34,7 @@
    ```bash
    cp .env.example .env
    # Отредактируйте .env с нужными значениями
-   dart run build_runner build -d
+   dart build -d
    ```
 
    Правила работы с env:
@@ -126,7 +126,80 @@ lib/
 4. **Модели данных и Стейты**: Для описания моделей и стейтов провайдеров используйте пакет `freezed` (и `@freezed`). Это дает иммутабельность, генерацию `copyWith` и безопасные union-типы.
 5. **Кодогенерация**: При изменении классов с аннотациями (`@riverpod`, `@freezed`, `@JsonSerializable`) обязательно запускайте генератор:
    ```bash
-   dart run build_runner build -d
+   dart build -d
    ```
 
-6. **Изменения env**: После правки `.env` тоже запускайте `dart run build_runner build -d`, потому что `Envied` генерирует compile-time файл [lib/core/config/env.g.dart](lib/core/config/env.g.dart).
+6. **Изменения env**: После правки `.env` тоже запускайте `dart build -d`, потому что `Envied` генерирует compile-time файл [lib/core/config/env.g.dart](lib/core/config/env.g.dart).
+
+### 🧪 Тестирование
+
+#### Запуск тестов
+
+```bash
+# Запуск всех тестов
+flutter test
+
+# Запуск конкретных тестов
+flutter test test/unit/aegis_chat_local_store_test.dart
+
+# Запуск с подробным выводом
+flutter test --reporter=expanded
+```
+
+#### Как писать тесты
+
+1. **Unit-тесты**: Размещайте в `test/unit/` или `test/features/<feature>/`. Тестируйте сервисы, утилиты и бизнес-логику без UI.
+2. **Integration-тесты**: Размещайте в `test/integration/`. Тестируйте потоки через реальные провайдеры и сервисы.
+3. **Widget-тесты**: Размещайте рядом с фичей в `test/features/<feature>/widget_tests/`. Тестируйте конкретные виджеты с моками.
+4. Используйте `Mock` классы для `AegisAuthService`, `AegisChatService` и других внешних зависимостей.
+5. Не зависите от реальных сетевых вызовов в тестах — мокайте всё через ` dio` и `AegisProtocolClient`.
+
+#### Пример мока сервиса:
+
+```dart
+class MockAegisAuthService extends Mock implements AegisAuthService {}
+
+final provider = Provider<AegisAuthService>((ref) {
+  return ref.watch(authServiceProvider);
+});
+
+testWidgets('...', (tester) async {
+  final mockAuth = MockAegisAuthService();
+  when(mockAuth.getUser()).thenReturn(User(id: '123'));
+  
+  // ... тест
+});
+```
+
+### 🔨 Build Runner и Кодогенерация
+
+Если вы меняете классы с аннотациями (`@freezed`, `@JsonSerializable`, `@riverpod`), необходимо запустить генератор:
+
+```bash
+# Стандартный способ (предпочтительный)
+dart run build_runner build --delete-conflicting-outputs
+
+# Альтернативный (watch mode — для разработки)
+dart run build_runner watch
+
+# Через алиас в проекте (если настроен)
+dart build -d
+```
+
+**Важно:**
+- `--delete-conflicting-outputs` удаляет сгенерированные файлы перед созданием новых. Используйте это всегда при изменении моделей.
+- Если `build_runner` падает с ошибкой памяти, увеличьте лимит: `export PUB_CACHE_MEMORY=2048` (или больше).
+- Никогда не редактируйте `*.g.dart`, `*.freezed.dart` и `env.g.dart` вручную — изменения будут перезаписаны.
+- Если генератор зависает, попробуйте `rm -rf build/ && dart run build_runner build --delete-conflicting-outputs`.
+
+### 📋 Процесс Pull Request
+
+1. Создайте ветку от `main`: `git checkout -b feat/your-feature-name`
+2. Внесите изменения, следуйте правилам из `AGENTS.md`
+3. Убедитесь, что `flutter analyze` не выдает ошибок в изменённых файлах:
+   ```bash
+   flutter analyze lib/core/services/your_new_file.dart
+   ```
+4. Добавьте/обновите тесты для ваших изменений
+5. Коммитьте с понятным сообщением на английском: `feat: add login retry mechanism`
+6. Отправьте PR с описанием изменений и связанных issue

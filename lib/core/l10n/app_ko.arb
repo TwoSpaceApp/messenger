@@ -3431,5 +3431,61 @@
   "devMenuRequestBody": "Request body · {type}",
   "devMenuResponseHeaders": "Response headers",
   "devMenuResponseBody": "Response body · {type}",
-  "devMenuVersionWithBuild": "{version} (Build {buildNumber})"
+  "devMenuVersionWithBuild": "{version} (Build {buildNumber})",
+  "notificationsForegroundServiceTitle": "백그라운드 서비스",
+  "@notificationsForegroundServiceTitle": {
+    "description": "Background service section title in notifications screen"
+  },
+  "notificationsForegroundServiceSubtitle": "백그라운드에서 앱 실행 유지",
+  "@notificationsForegroundServiceSubtitle": {
+    "description": "Background service section subtitle"
+  },
+  "notificationsForegroundServiceEnabled": "백그라운드 서비스 활성화",
+  "@notificationsForegroundServiceEnabled": {
+    "description": "Background service toggle title"
+  },
+  "notificationsForegroundServiceDescription": "지속적인 알림으로 메시지를 계속 수신하기",
+  "@notificationsForegroundServiceDescription": {
+    "description": "Background service toggle description"
+  },
+  "notificationsTypesSection": "알림 유형",
+  "@notificationsTypesSection": {
+    "description": "Notification types section title"
+  },
+  "notificationsTypesSectionSubtitle": "어떤 이벤트에 대해 알림을 받을지 선택하세요",
+  "@notificationsTypesSectionSubtitle": {
+    "description": "Notification types section subtitle"
+  },
+  "notificationsMessagesTitle": "메시지",
+  "@notificationsMessagesTitle": {
+    "description": "Messages notification toggle title"
+  },
+  "notificationsMessagesDescription": "채팅의 새 메시지",
+  "@notificationsMessagesDescription": {
+    "description": "Messages notification toggle description"
+  },
+  "notificationsChatTitle": "채팅 및 그룹",
+  "@notificationsChatTitle": {
+    "description": "Chats and groups notification toggle title"
+  },
+  "notificationsChatDescription": "새로운 채팅 및 그룹 초대",
+  "@notificationsChatDescription": {
+    "description": "Chats and groups notification toggle description"
+  },
+  "notificationsPostTitle": "게시물",
+  "@notificationsPostTitle": {
+    "description": "Posts notification toggle title"
+  },
+  "notificationsPostDescription": "채널의 새 게시물",
+  "@notificationsPostDescription": {
+    "description": "Posts notification toggle description"
+  },
+  "notificationsReactionTitle": "반응",
+  "@notificationsReactionTitle": {
+    "description": "Reactions notification toggle title"
+  },
+  "notificationsReactionDescription": "메시지에 대한 반응",
+  "@notificationsReactionDescription": {
+    "description": "Reactions notification toggle description"
+  }
 }

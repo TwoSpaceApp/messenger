@@ -368,6 +368,8 @@ class StorageService {
 
   Future<int> _directorySize(Directory directory) async {
     try {
+      // Directory IO is intentional in storage service
+      // ignore: avoid_slow_async_io
       if (!await directory.exists()) return 0;
 
       var total = 0;
@@ -388,6 +390,8 @@ class StorageService {
     bool Function(File file) predicate,
   ) async {
     try {
+      // Directory IO is intentional in storage service
+      // ignore: avoid_slow_async_io
       if (!await directory.exists()) return 0;
 
       var total = 0;
@@ -407,6 +411,8 @@ class StorageService {
     bool Function(File file) predicate,
   ) async {
     try {
+      // Directory IO is intentional in storage service
+      // ignore: avoid_slow_async_io
       if (!await directory.exists()) return 0;
 
       var total = 0;
@@ -427,6 +433,8 @@ class StorageService {
     bool Function(File file) predicate,
   ) async {
     try {
+      // Directory IO is intentional in storage service
+      // ignore: avoid_slow_async_io
       if (!await directory.exists()) return;
 
       await for (final entity in directory.list(followLinks: false)) {
@@ -444,6 +452,8 @@ class StorageService {
     bool Function(File file) predicate,
   ) async {
     try {
+      // Directory IO is intentional in storage service
+      // ignore: avoid_slow_async_io
       if (!await directory.exists()) return;
 
       await for (final entity
@@ -459,6 +469,8 @@ class StorageService {
 
   Future<void> _deleteDirectoryContents(Directory directory) async {
     try {
+      // Directory IO is intentional in storage service
+      // ignore: avoid_slow_async_io
       if (!await directory.exists()) return;
       await for (final entity in directory.list(followLinks: false)) {
         try {

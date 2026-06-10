@@ -1516,6 +1516,32 @@ class AppLocalizationsDe extends AppLocalizations {
   String get changeEmailButton => 'E-Mail ändern';
 
   @override
+  String get emailRequired => 'Email is required';
+
+  @override
+  String get emailInvalid => 'Invalid email address';
+
+  @override
+  String get passwordRequired => 'Password is required';
+
+  @override
+  String get emailUnchanged => 'New email is the same as current';
+
+  @override
+  String get changeEmailNotYetSupported => 'Email change is not yet supported';
+
+  @override
+  String get changeEmailNotAvailable =>
+      'Email change is not yet available. Please contact support.';
+
+  @override
+  String get changeEmailRequiresServerSupport =>
+      'This feature requires server-side support. The client is prepared but awaits protocol updates.';
+
+  @override
+  String get emailHintExample => 'user@example.com';
+
+  @override
   String changeEmailError(String error) {
     return 'E-Mail konnte nicht geändert werden: $error';
   }
@@ -3161,4 +3187,58 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get feedbackAttachLogsSubtitle =>
       'Eine Diagnosedatei mit Geräteinfos, App-Logs und Netzwerk-Logs anhängen.';
+
+  @override
+  String get notificationsForegroundServiceTitle => 'Hintergrunddienst';
+
+  @override
+  String get notificationsForegroundServiceSubtitle =>
+      'App im Hintergrund ausführen';
+
+  @override
+  String get notificationsForegroundServiceEnabled =>
+      'Hintergrunddienst aktivieren';
+
+  @override
+  String get notificationsForegroundServiceDescription =>
+      'Kontinuierlich auf Nachrichten mit persistenter Benachrichtigung überwachen';
+
+  @override
+  String get notificationsTypesSection => 'Benachrichtigungstypen';
+
+  @override
+  String get notificationsTypesSectionSubtitle =>
+      'Wählen Sie, welche Ereignisse Sie benachrichtigen';
+
+  @override
+  String get notificationsMessagesTitle => 'Nachrichten';
+
+  @override
+  String get notificationsMessagesDescription => 'Neue Nachrichten in Chats';
+
+  @override
+  String get notificationsChatTitle => 'Chats & Gruppen';
+
+  @override
+  String get notificationsChatDescription =>
+      'Neue Chats und Gruppeneinladungen';
+
+  @override
+  String get notificationsPostTitle => 'Beiträge';
+
+  @override
+  String get notificationsPostDescription => 'Neue Beiträge in Kanälen';
+
+  @override
+  String get notificationsReactionTitle => 'Reaktionen';
+
+  @override
+  String get notificationsReactionDescription =>
+      'Reaktionen auf Ihre Nachrichten';
+
+  @override
+  String get imageTooLarge => 'Image too large';
+
+  @override
+  String get imageCompressed => 'Image was compressed to fit protocol limits';
 }

@@ -13,6 +13,14 @@ import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 ///
 /// See: `src/Aegis.Protocol/Message.cs`
 class Message {
+
+  Message();
+
+  /// Create a message with the given [type] and optional [payload].
+  Message.withType(this.type, [List<int>? payload])
+    : payload = payload != null ? Uint8List.fromList(payload) : Uint8List(0) {
+    payloadLength = this.payload.length;
+  }
   /// Protocol magic — must equal [ProtocolConstants.magic].
   int magic = ProtocolConstants.magic;
 
@@ -39,14 +47,6 @@ class Message {
 
   /// MessagePack-encoded body. Empty for control frames (ping, ack, …).
   Uint8List payload = Uint8List(0);
-
-  Message();
-
-  /// Create a message with the given [type] and optional [payload].
-  Message.withType(this.type, [List<int>? payload])
-    : payload = payload != null ? Uint8List.fromList(payload) : Uint8List(0) {
-    payloadLength = this.payload.length;
-  }
 
   /// Total frame size on the wire (header + payload + MAC).
   int get totalSize =>

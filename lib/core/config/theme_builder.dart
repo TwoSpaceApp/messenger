@@ -235,7 +235,7 @@ class AppThemeBuilder {
 
     final fontName = settings.fontFamily;
 
-    TextTheme textTheme = buildTextTheme(fontName, mainTextTheme);
+    var textTheme = buildTextTheme(fontName, mainTextTheme);
 
     textTheme = _applyFontWeights(
       textTheme,

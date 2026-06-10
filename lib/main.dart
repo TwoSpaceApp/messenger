@@ -54,6 +54,7 @@ class AppBootstrapper extends StatefulWidget {
 
 class AppBootstrapperState extends State<AppBootstrapper> {
   InitializationResult? _initResult;
+  Object? _initError;
   String _currentStep = 'Starting...';
   double _progress = 0;
   DateTime _lastProgressUiUpdate = DateTime.fromMillisecondsSinceEpoch(0);
@@ -72,27 +73,43 @@ class AppBootstrapperState extends State<AppBootstrapper> {
   final WidgetsBindingObserver _lifecycleObserver = _AppLifecycleObserver();
 
   Future<void> _startInit() async {
-    final result = await InitializationService.initialize(
-      onProgress: (stepName, progress) {
-        final now = DateTime.now();
-        final canUpdateByTime =
-            now.difference(_lastProgressUiUpdate) >= _progressUiThrottle;
-        final shouldForceUpdate =
-            progress >= 1.0 ||
-            (_currentStep != stepName && progress > _progress);
-        if (!canUpdateByTime && !shouldForceUpdate) {
-          return;
-        }
-        _lastProgressUiUpdate = now;
+    try {
+      final result = await InitializationService.initialize(
+        onProgress: (stepName, progress) {
+          final now = DateTime.now();
+          final canUpdateByTime =
+              now.difference(_lastProgressUiUpdate) >= _progressUiThrottle;
+          final shouldForceUpdate =
+              progress >= 1.0 ||
+              (_currentStep != stepName && progress > _progress);
+          if (!canUpdateByTime && !shouldForceUpdate) {
+            return;
+          }
+          _lastProgressUiUpdate = now;
+          setState(() {
+            _currentStep = stepName;
+            _progress = progress;
+          });
+        },
+      );
+      if (mounted) {
         setState(() {
-          _currentStep = stepName;
-          _progress = progress;
+          _initResult = result;
+          _initError = null;
         });
-      },
-    );
-    if (mounted) {
+      }
+    } on Object catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'AppBootstrapper',
+          context: ErrorDescription('while bootstrapping application'),
+        ),
+      );
+      if (!mounted) return;
       setState(() {
-        _initResult = result;
+        _initError = error;
       });
     }
   }
@@ -105,6 +122,9 @@ class AppBootstrapperState extends State<AppBootstrapper> {
 
   @override
   Widget build(BuildContext context) {
+    if (_initError != null) {
+      return _buildBootstrapErrorApp(_initError!);
+    }
     if (_initResult == null) {
       return _buildShadShell(
         themeMode: ThemeMode.dark,
@@ -122,6 +142,65 @@ class AppBootstrapperState extends State<AppBootstrapper> {
       );
     }
     return TwoSpaceApp(initializationResult: _initResult!);
+  }
+
+  Widget _buildBootstrapErrorApp(Object error) {
+    return _buildShadShell(
+      themeMode: ThemeMode.dark,
+      appBuilder: (_) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        themeMode: ThemeMode.dark,
+        darkTheme: ThemeData.dark(),
+        builder: (context, child) =>
+            ShadAppBuilder(child: child ?? const SizedBox()),
+        home: Scaffold(
+          backgroundColor: AppColors.backgroundError,
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: AppColors.error,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Initialization failed',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    error.toString(),
+                    style: const TextStyle(color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _initError = null;
+                        _progress = 0;
+                        _currentStep = 'Restarting...';
+                      });
+                      unawaited(_startInit());
+                    },
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -202,7 +281,7 @@ class TwoSpaceApp extends ConsumerWidget {
     // Show critical initialization errors
     if (initializationResult.hasFailures) {
       final criticalFailures = initializationResult.failures
-          .where((f) => f.stepName.contains('Critical'))
+          .where((f) => f.critical)
           .toList();
 
       if (criticalFailures.isNotEmpty && !kDebugMode) {
@@ -384,6 +463,8 @@ class _AppLifecycleObserver with WidgetsBindingObserver {
       await AegisChatService().ensureReady().catchError((_) => null);
     }();
     _resumeRefreshInFlight = future;
+    // Fire-and-forget: cleanup handled inline
+    // ignore: discarded_futures
     future.whenComplete(() {
       if (identical(_resumeRefreshInFlight, future)) {
         _resumeRefreshInFlight = null;

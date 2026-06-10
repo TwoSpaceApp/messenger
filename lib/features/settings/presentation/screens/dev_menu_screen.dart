@@ -1,16 +1,17 @@
-// ignore_for_file: unnecessary_underscores
+// ignore_for_file: unnecessary_underscores // Needed for underscore-prefixed unused parameters
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/dev_log_export_service.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
@@ -715,7 +716,7 @@ class _DevMenuFeatureFlagsTabState extends State<_DevMenuFeatureFlagsTab> {
       },
     );
 
-    if (approved == true) {
+    if (approved ?? false) {
       DevSensitiveDataPolicy.setRevealSensitiveData(true);
     }
   }
@@ -1155,55 +1156,150 @@ class _DevMenuInfoTab extends StatefulWidget {
 }
 
 class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
+  static final DevLogger _logger = DevLogger('DevMenuInfo');
+  
   PackageInfo? _packageInfo;
   String _deviceInfo = '';
+  bool _deviceInfoError = false;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: info load result handled within the method
+    // ignore: discarded_futures
     _loadInfo();
   }
 
   Future<void> _loadInfo() async {
-    final info = await PackageInfo.fromPlatform();
-    final deviceInfoPlugin = DeviceInfoPlugin();
-    var devInfo = '';
+    try {
+      // Load package info with timeout
+      PackageInfo? info;
+      try {
+        info = await PackageInfo.fromPlatform().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            throw TimeoutException('PackageInfo.fromPlatform timed out');
+          },
+        );
+      } catch (e) {
+        if (!mounted) return;
+        _logger.warning('PackageInfo load failed: $e');
+        info = null;
+      }
 
-    if (Platform.isAndroid) {
-      final androidInfo = await deviceInfoPlugin.androidInfo;
-      final abis = androidInfo.supportedAbis
-          .where((abi) => abi.isNotEmpty)
-          .join(', ');
-      devInfo = [
-        '${androidInfo.manufacturer} ${androidInfo.model}'.trim(),
-        'Android ${androidInfo.version.release} • SDK ${androidInfo.version.sdkInt}',
-        '${androidInfo.device} • ${androidInfo.product}',
-        if (abis.isNotEmpty) abis,
-      ].where((line) => line.trim().isNotEmpty).join('\n');
-    } else if (Platform.isIOS) {
-      final iosInfo = await deviceInfoPlugin.iosInfo;
-      devInfo = [
-        iosInfo.name,
-        '${iosInfo.model} • ${iosInfo.systemName} ${iosInfo.systemVersion}',
-      ].where((line) => line.trim().isNotEmpty).join('\n');
-    } else {
-      devInfo = [
-        Platform.localHostname,
-        Platform.operatingSystem,
-        Platform.operatingSystemVersion,
-      ].where((line) => line.trim().isNotEmpty).join('\n');
+      if (!mounted) return;
+
+      // Load device info with timeout
+      var devInfo = '';
+      var hasDeviceError = false;
+
+      try {
+        final deviceInfoPlugin = DeviceInfoPlugin();
+
+        if (Platform.isAndroid) {
+          final androidInfo = await deviceInfoPlugin.androidInfo.timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              throw TimeoutException('androidInfo call timed out');
+            },
+          );
+          final abis = androidInfo.supportedAbis
+              .where((abi) => abi.isNotEmpty)
+              .join(', ');
+          devInfo = [
+            '${androidInfo.manufacturer} ${androidInfo.model}'.trim(),
+            'Android ${androidInfo.version.release} • SDK ${androidInfo.version.sdkInt}',
+            '${androidInfo.device} • ${androidInfo.product}',
+            if (abis.isNotEmpty) abis,
+          ].where((line) => line.trim().isNotEmpty).join('\n');
+        } else if (Platform.isIOS) {
+          final iosInfo = await deviceInfoPlugin.iosInfo.timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              throw TimeoutException('iosInfo call timed out');
+            },
+          );
+          devInfo = [
+            iosInfo.name,
+            '${iosInfo.model} • ${iosInfo.systemName} ${iosInfo.systemVersion}',
+          ].where((line) => line.trim().isNotEmpty).join('\n');
+        } else {
+          devInfo = [
+            Platform.localHostname,
+            Platform.operatingSystem,
+            Platform.operatingSystemVersion,
+          ].where((line) => line.trim().isNotEmpty).join('\n');
+        }
+      } on TimeoutException catch (e) {
+        if (!mounted) return;
+        _logger.warning('Device info collection timed out: $e');
+        hasDeviceError = true;
+        devInfo = '[Device info collection timeout after 5 seconds]';
+      } catch (e) {
+        if (!mounted) return;
+        _logger.error('Device info collection failed: $e');
+        hasDeviceError = true;
+        devInfo = '[Device info collection failed: $e]';
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _packageInfo = info;
+        _deviceInfo = devInfo;
+        _deviceInfoError = hasDeviceError;
+        _errorMessage = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      _logger.error('Failed to load app info: $e');
+      setState(() {
+        _packageInfo = null;
+        _errorMessage = 'Failed to load app info: $e';
+      });
     }
-
-    if (!mounted) return;
-    setState(() {
-      _packageInfo = info;
-      _deviceInfo = devInfo;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    
+    if (_packageInfo == null && _errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(UITokens.spaceMd),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.orange),
+              const SizedBox(height: UITokens.spaceMd),
+              Text(
+                _errorMessage ?? 'Unknown error',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: UITokens.spaceMd),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _packageInfo = null;
+                    _deviceInfo = '';
+                    _deviceInfoError = false;
+                    _errorMessage = null;
+                  });
+                  // Fire-and-forget: retry load
+                  // ignore: discarded_futures
+                  _loadInfo();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
     if (_packageInfo == null) {
       return AppLoadingState(label: l10n.devMenuInfoLoading);
     }
@@ -1232,9 +1328,18 @@ class _DevMenuInfoTabState extends State<_DevMenuInfoTab> {
           subtitle: Text(_packageInfo!.packageName),
         ),
         ListTile(
-          leading: const Icon(Icons.phone_android),
+          leading: _deviceInfoError 
+              ? const Icon(Icons.warning, color: Colors.orange)
+              : const Icon(Icons.phone_android),
           title: Text(l10n.devMenuDeviceLabel),
           subtitle: Text(_deviceInfo.isEmpty ? l10n.noData : _deviceInfo),
+          trailing: _deviceInfoError
+              ? IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loadInfo,
+                  tooltip: 'Retry device info',
+                )
+              : null,
         ),
       ],
     );

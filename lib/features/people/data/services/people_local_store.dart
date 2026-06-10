@@ -319,6 +319,7 @@ class PeopleLocalStore {
   }
 
   Future<Map<String, dynamic>?> _loadLegacyData() async {
+    // ignore: avoid_slow_async_io -- Called once during migration; acceptable
     if (!await _legacyStoreFile.exists()) {
       return null;
     }

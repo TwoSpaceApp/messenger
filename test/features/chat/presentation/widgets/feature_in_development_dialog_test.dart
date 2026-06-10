@@ -28,17 +28,17 @@ Widget _buildShell() {
 }
 
 void main() {
-  testWidgets('shows localized in-development dialog content', (tester) async {
+  testWidgets("shows localized in-development dialog content", (tester) async {
     await tester.pumpWidget(_buildShell());
 
-    await tester.tap(find.text('Open'));
+    await tester.tap(find.text("Open"));
     await tester.pumpAndSettle();
 
-    expect(find.text('In development'), findsOneWidget);
-    expect(find.text('Leave room'), findsOneWidget);
+    expect(find.text("In development"), findsOneWidget);
+    expect(find.text("Leave room"), findsOneWidget);
     expect(
       find.text(
-        'Leave room is in development and will appear here in a future update.',
+        "Leave room is in development and will appear here in a future update.",
       ),
       findsOneWidget,
     );

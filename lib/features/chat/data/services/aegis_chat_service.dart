@@ -1,3 +1,5 @@
+// ignore_for_file: document_ignores
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
@@ -12,6 +14,7 @@ import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
+import 'package:two_space_app/core/services/notification_service.dart';
 import 'package:two_space_app/core/utils/aegis_avatar_url.dart';
 import 'package:two_space_app/core/utils/user_content_sanitizer.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
@@ -25,6 +28,18 @@ class AegisFeatureInDevelopmentException implements Exception {
 
   @override
   String toString() => message;
+}
+
+enum _ConversationKind { direct, group, channel }
+
+class AegisChatException implements Exception {
+  const AegisChatException(this.code, this.message);
+
+  final String code;
+  final String message;
+
+  @override
+  String toString() => '$code: $message';
 }
 
 class AegisRoomMessage {
@@ -212,14 +227,13 @@ class _StoredConversation {
 }
 
 class AegisChatService {
+
+  factory AegisChatService() => _instance;
+  AegisChatService._internal();
   static const int _maxMediaUploadBytes = 15 * 1024 * 1024;
   static const int _mediaCacheMaxBytes = 512 * 1024 * 1024;
   static const int _memberLookupBatchSize = 6;
   static const Duration _mediaCacheMaxAge = Duration(days: 14);
-  static const Duration _historyConsistencyWindow = Duration(minutes: 3);
-
-  factory AegisChatService() => _instance;
-  AegisChatService._internal();
 
   static final AegisChatService _instance = AegisChatService._internal();
 
@@ -244,6 +258,7 @@ class AegisChatService {
   Future<void>? _persistInFlight;
   Future<bool>? _chatRefreshInFlight;
   Future<void>? _offlineFlushInFlight;
+  int _authRecoveryAttempts = 0;
   final Map<String, Map<String, AegisRoomMessage>> _dirtyMessagesByRoom =
       <String, Map<String, AegisRoomMessage>>{};
   final Map<String, Set<String>> _deletedMessageIdsByRoom =
@@ -256,6 +271,8 @@ class AegisChatService {
 
   static const Duration _persistDebounce = Duration(seconds: 4);
   static const Duration _chatRefreshCooldown = Duration(seconds: 20);
+  static const int _maxAuthRecoveryAttempts = 3;
+  static const Duration _authRecoveryInitialDelay = Duration(milliseconds: 500);
 
   final Map<String, _StoredConversation> _conversations = {};
 
@@ -293,6 +310,7 @@ class AegisChatService {
     final dir = await getApplicationDocumentsDirectory();
     _storeDir = Directory(p.join(dir.path, 'aegis_chat_store'));
 
+    // ignore: avoid_slow_async_io
     if (!await _storeDir.exists()) {
       await _storeDir.create(recursive: true);
     }
@@ -302,13 +320,16 @@ class AegisChatService {
     final bootstrap = await _localStore.initialize();
     await OfflineQueueService.initialize();
     for (final item in bootstrap.conversations) {
-      final conversation = _StoredConversation.fromJson(item);
-      _conversations[conversation.id] = conversation;
+      final conversation = _normalizeStoredConversation(
+        _StoredConversation.fromJson(item),
+      );
+      final merged = _mergeConversations(_conversations[conversation.id], conversation);
+      _conversations[merged.id] = merged;
       // Build reverse index for fast profile→conversation sync.
-      if (conversation.peerUserId != null) {
+      if (merged.peerUserId != null) {
         _peerUserIdToRoomIds
-            .putIfAbsent(conversation.peerUserId!, () => <String>{})
-            .add(conversation.id);
+            .putIfAbsent(merged.peerUserId!, () => <String>{})
+            .add(merged.id);
       }
     }
     _profileCache.addAll(bootstrap.profiles);
@@ -365,8 +386,17 @@ class AegisChatService {
 
   Future<void> _handleSessionRestored() async {
     _ensureIncomingAttached();
+    
+    // Force refresh of chat list from server now that session is restored
+    // This ensures UI shows chats quickly after login/reconnection
+    try {
+      _log.info('Session restored - refreshing chat list from server');
+      await _refreshChatsFromServer(force: true);
+    } on Object catch (error, stackTrace) {
+      _logHandledError('handleSessionRestored.refreshChats', error, stackTrace);
+    }
+    
     await _flushOfflineQueue();
-    unawaited(_refreshChatsQuietly());
   }
 
   void _markConversationsDirty() {
@@ -378,20 +408,26 @@ class AegisChatService {
   }
 
   void _storeConversation(_StoredConversation conversation) {
-    final existing = _conversations[conversation.id];
-    if (existing != null && _storedConversationEquals(existing, conversation)) {
+    final normalizedConversation = _normalizeStoredConversation(conversation);
+    final mergedConversation = _mergeConversations(
+      _conversations[normalizedConversation.id],
+      normalizedConversation,
+    );
+    final existing = _conversations[mergedConversation.id];
+    if (existing != null &&
+        _storedConversationEquals(existing, mergedConversation)) {
       return;
     }
     // Maintain reverse index for fast profile→conversation sync.
     if (existing?.peerUserId != null) {
-      _peerUserIdToRoomIds[existing!.peerUserId!]?.remove(conversation.id);
+      _peerUserIdToRoomIds[existing!.peerUserId!]?.remove(mergedConversation.id);
     }
-    if (conversation.peerUserId != null) {
+    if (mergedConversation.peerUserId != null) {
       _peerUserIdToRoomIds
-          .putIfAbsent(conversation.peerUserId!, () => <String>{})
-          .add(conversation.id);
+          .putIfAbsent(mergedConversation.peerUserId!, () => <String>{})
+          .add(mergedConversation.id);
     }
-    _conversations[conversation.id] = conversation;
+    _conversations[mergedConversation.id] = mergedConversation;
     _markConversationsDirty();
   }
 
@@ -444,9 +480,7 @@ class AegisChatService {
       final keysToRemove = _profileCache.keys
           .take(_profileCache.length - _maxProfileCacheSize)
           .toList(growable: false);
-      for (final key in keysToRemove) {
-        _profileCache.remove(key);
-      }
+      keysToRemove.forEach(_profileCache.remove);
     }
     _markProfilesDirty();
   }
@@ -495,6 +529,42 @@ class AegisChatService {
       await controller.close();
     }
     _roomChanges.clear();
+  }
+
+  /// Очистить весь кэш чатов при logout.
+  /// Это необходимо, чтобы при re-login показывались актуальные чаты.
+  Future<void> clearCacheOnLogout() async {
+    _log.info('Очистка кэша чатов перед logout');
+    _conversations.clear();
+    _messages.clear();
+    _profileCache.clear();
+    _peerUserIdToRoomIds.clear();
+    _messageAccessOrder.clear();
+    _roomReactions.clear();
+    _pinnedEventIdsByRoom.clear();
+    _deletedMessageIdsByRoom.clear();
+    _deletedRoomIds.clear();
+    _storedRoomIds.clear();
+    _hydratedRoomIds.clear();
+    _userInfoRequests.clear();
+    _mediaPathCache.clear();
+    _mediaResolveInFlight.clear();
+    _conversationsDirty = false;
+    _profilesDirty = false;
+    _chatChangeQueued = false;
+    _authRecoveryAttempts = 0;
+    
+    // Закрыть все room change контроллеры
+    for (final controller in _roomChanges.values) {
+      await controller.close();
+    }
+    _roomChanges.clear();
+    
+    // Эмитить пустой список чатов чтобы UI обновился
+    _chatChanges.add(null);
+    
+    // Очистить локальное хранилище
+    await _localStore.clearAllChats();
   }
 
   bool get _shouldExposeChatCache =>
@@ -553,7 +623,9 @@ class AegisChatService {
     if ((_messages[roomId] ?? const <AegisRoomMessage>[]).length < limit) {
       try {
         await loadMessages(roomId: roomId, limit: limit);
-      } catch (_) {}
+      } on Object catch (error, stackTrace) {
+        _logHandledError('watchRoomMessages.preload', error, stackTrace);
+      }
     }
     yield _roomMessagesSnapshot(roomId, limit: limit);
     await for (final _ in _roomChangeController(roomId).stream) {
@@ -702,7 +774,9 @@ class AegisChatService {
     if (!_conversations.containsKey(roomId)) {
       try {
         await _ensureChatBootstrap();
-      } catch (_) {}
+      } on Object catch (error, stackTrace) {
+        _logHandledError('loadMessages.bootstrap', error, stackTrace);
+      }
     }
 
     final cached = _roomMessagesSnapshot(roomId, limit: limit);
@@ -715,7 +789,16 @@ class AegisChatService {
                 _emitChanged();
               }
             })
-            .catchError((_) {}),
+            .catchError(
+              (Object error, StackTrace stackTrace) {
+                _logHandledError(
+                  'loadMessages.backgroundRefresh',
+                  error,
+                  stackTrace,
+                );
+                return null;
+              },
+            ),
       );
       return cached;
     }
@@ -726,7 +809,8 @@ class AegisChatService {
         _emitRoomChanged(roomId);
         _emitChanged();
       }
-    } catch (_) {
+    } on Object catch (error, stackTrace) {
+      _logHandledError('loadMessages.refresh', error, stackTrace);
       if (cached.isNotEmpty) return cached;
     }
     return _roomMessagesSnapshot(roomId, limit: limit);
@@ -754,29 +838,118 @@ class AegisChatService {
   }
 
   String _normalizeConversationKind(String rawType, {int? peerUserId}) {
-    if (peerUserId != null) {
-      return 'direct';
-    }
+    return _conversationKindFromRaw(rawType, peerUserId: peerUserId).name;
+  }
 
+  _ConversationKind _conversationKindFromRaw(String rawType, {int? peerUserId}) {
+    if (peerUserId != null) {
+      return _ConversationKind.direct;
+    }
     switch (rawType.trim().toLowerCase()) {
       case 'direct':
       case 'dm':
       case 'privatechat':
       case 'private_chat':
-        return 'direct';
-      case 'channel':
-      case 'public':
-      case 'broadcast':
-        return 'channel';
+        return _ConversationKind.direct;
       case 'group':
       case 'chat':
-      case 'private':
       case 'private_group':
       case 'privategroup':
-        return 'group';
+        return _ConversationKind.group;
+      case 'private':
+      case 'public':
+      case 'broadcast':
+      case 'channel':
       default:
-        return rawType.trim().isEmpty ? 'channel' : rawType.trim().toLowerCase();
+        return _ConversationKind.channel;
     }
+  }
+
+  _StoredConversation _normalizeStoredConversation(_StoredConversation source) {
+    final kind = _conversationKindFromRaw(
+      source.kind,
+      peerUserId: source.peerUserId,
+    );
+    final normalizedKind = kind.name;
+    final normalizedId = _canonicalRoomId(
+      kind: kind,
+      currentId: source.id,
+      peerUserId: source.peerUserId,
+      channelId: source.channelId,
+    );
+    return _StoredConversation(
+      id: normalizedId,
+      title: source.title,
+      kind: normalizedKind,
+      updatedAt: source.updatedAt,
+      lastMessage: source.lastMessage,
+      unreadCount: source.unreadCount,
+      avatarUrl: source.avatarUrl,
+      description: source.description,
+      peerUserId: source.peerUserId,
+      peerUsername: source.peerUsername,
+      channelId: source.channelId,
+      isPublic: source.isPublic,
+      showMessageHistory: source.showMessageHistory,
+      memberUserIds: source.memberUserIds,
+    );
+  }
+
+  _StoredConversation _mergeConversations(
+    _StoredConversation? existing,
+    _StoredConversation incoming,
+  ) {
+    if (existing == null) {
+      return incoming;
+    }
+    return incoming.copyWith(
+      updatedAt: incoming.updatedAt.isAfter(existing.updatedAt)
+          ? incoming.updatedAt
+          : existing.updatedAt,
+      lastMessage: (incoming.lastMessage?.isNotEmpty ?? false)
+          ? incoming.lastMessage
+          : existing.lastMessage,
+      unreadCount: incoming.unreadCount > 0
+          ? incoming.unreadCount
+          : existing.unreadCount,
+      avatarUrl: (incoming.avatarUrl?.isNotEmpty ?? false)
+          ? incoming.avatarUrl
+          : existing.avatarUrl,
+      description: (incoming.description?.isNotEmpty ?? false)
+          ? incoming.description
+          : existing.description,
+      isPublic: incoming.isPublic || existing.isPublic,
+      showMessageHistory:
+          incoming.showMessageHistory || existing.showMessageHistory,
+      memberUserIds: incoming.memberUserIds.isNotEmpty
+          ? incoming.memberUserIds
+          : existing.memberUserIds,
+    );
+  }
+
+  String _canonicalRoomId({
+    required _ConversationKind kind,
+    required String currentId,
+    int? peerUserId,
+    int? channelId,
+  }) {
+    switch (kind) {
+      case _ConversationKind.direct:
+        final id = peerUserId ?? int.tryParse(currentId.replaceFirst('dm:', ''));
+        return id == null ? currentId : 'dm:$id';
+      case _ConversationKind.group:
+        final id =
+            channelId ?? int.tryParse(currentId.replaceFirst('group:', '').replaceFirst('channel:', ''));
+        return id == null ? currentId : 'group:$id';
+      case _ConversationKind.channel:
+        final id =
+            channelId ?? int.tryParse(currentId.replaceFirst('channel:', ''));
+        return id == null ? currentId : 'channel:$id';
+    }
+  }
+
+  Never _chatError(String code, String message) {
+    throw AegisChatException(code, message);
   }
 
   Map<String, dynamic>? _conversationProfileFallback(int userId) {
@@ -876,17 +1049,64 @@ class AegisChatService {
     return normalized.contains('user not found');
   }
 
-  Future<T> _retryAfterSessionRecovery<T>(Future<T> Function() action) async {
-    await _auth.recoverSession();
-    return action();
+  Future<T> _retryAfterSessionRecovery<T>(
+    Future<T> Function() action, {
+    required String operationName,
+  }) async {
+    if (_authRecoveryAttempts >= _maxAuthRecoveryAttempts) {
+      throw NotAuthenticatedException(
+        'Session recovery failed after $_maxAuthRecoveryAttempts attempts',
+      );
+    }
+
+    _authRecoveryAttempts++;
+    try {
+      // Apply exponential backoff: 500ms, 1s, 2s, etc.
+      final delayMs = _authRecoveryInitialDelay.inMilliseconds *
+          (1 << (_authRecoveryAttempts - 1)); // Bitshift instead of pow
+      final delay = Duration(milliseconds: delayMs);
+
+      _log.debug(
+        'Session recovery attempt $_authRecoveryAttempts/$_maxAuthRecoveryAttempts '
+        'for $operationName after ${delay.inMilliseconds}ms delay',
+      );
+
+      await Future<void>.delayed(delay);
+
+      final recovered = await _auth.recoverSession(reason: 'authed_$operationName');
+      if (!recovered) {
+        throw NotAuthenticatedException(
+          'Session recovery returned false (backoff active or recovery in progress)',
+        );
+      }
+
+      _log.debug('Session recovery succeeded on attempt $_authRecoveryAttempts');
+      _authRecoveryAttempts = 0; // Reset on success
+      return action();
+    } catch (e) {
+      _log.warning(
+        'Session recovery attempt $_authRecoveryAttempts failed: $e',
+      );
+      if (_authRecoveryAttempts >= _maxAuthRecoveryAttempts) {
+        _authRecoveryAttempts = 0; // Reset counter
+        rethrow;
+      }
+      rethrow;
+    }
   }
 
-  Future<T> _runAuthedRequest<T>(Future<T> Function() request) async {
+  Future<T> _runAuthedRequest<T>(
+    Future<T> Function() request, {
+    String operationName = 'request',
+  }) async {
     try {
       return await request();
     } on Object catch (error) {
       if (_isAuthRejectionMessage(error.toString())) {
-        return _retryAfterSessionRecovery(request);
+        return _retryAfterSessionRecovery(
+          request,
+          operationName: operationName,
+        );
       }
       rethrow;
     }
@@ -896,17 +1116,25 @@ class AegisChatService {
     Future<T> Function() request, {
     required bool Function(T response) isSuccess,
     String? Function(T response)? messageOf,
+    String operationName = 'request',
   }) async {
-    var response = await _runAuthedRequest(request);
+    var response = await _runAuthedRequest(
+      request,
+      operationName: operationName,
+    );
     if (!isSuccess(response) && _isAuthRejectionMessage(messageOf?.call(response))) {
-      response = await _retryAfterSessionRecovery(request);
+      response = await _retryAfterSessionRecovery(
+        request,
+        operationName: operationName,
+      );
     }
     return response;
   }
 
   Exception _profileResponseException(String? message, String fallback) {
     final normalized = message?.trim();
-    return Exception(
+    return AegisChatException(
+      'chat.profile.request_failed',
       normalized == null || normalized.isEmpty ? fallback : normalized,
     );
   }
@@ -1088,7 +1316,10 @@ class AegisChatService {
         response = await sendRequest();
       } on Object catch (error) {
         if (_isAuthRejectionMessage(error.toString())) {
-          response = await _retryAfterSessionRecovery(sendRequest);
+          response = await _retryAfterSessionRecovery(
+            sendRequest,
+            operationName: 'getProfile_$userId',
+          );
         } else {
           final fallback = _profileRequestFallbackInfo(
             userId,
@@ -1104,7 +1335,10 @@ class AegisChatService {
 
       if (!response.success) {
         if (_isAuthRejectionMessage(response.message)) {
-          response = await _retryAfterSessionRecovery(sendRequest);
+          response = await _retryAfterSessionRecovery(
+            sendRequest,
+            operationName: 'getProfile_retry_$userId',
+          );
         }
         if (!response.success && !_isUserNotFoundMessage(response.message)) {
           final fallback = _profileRequestFallbackInfo(
@@ -1159,7 +1393,7 @@ class AegisChatService {
     try {
       return await request;
     } finally {
-      _userInfoRequests.remove(cacheKey);
+      unawaited(_userInfoRequests.remove(cacheKey));
     }
   }
 
@@ -1189,7 +1423,10 @@ class AegisChatService {
       response = await sendRequest();
     } on Object catch (error) {
       if (_isAuthRejectionMessage(error.toString())) {
-        response = await _retryAfterSessionRecovery(sendRequest);
+        response = await _retryAfterSessionRecovery(
+          sendRequest,
+          operationName: 'getOwnProfile',
+        );
       } else {
         final fallback = _profileRequestFallbackInfo(
           selfId?.toString() ?? '',
@@ -1205,7 +1442,10 @@ class AegisChatService {
 
     if (!response.success) {
       if (_isAuthRejectionMessage(response.message)) {
-        response = await _retryAfterSessionRecovery(sendRequest);
+        response = await _retryAfterSessionRecovery(
+          sendRequest,
+          operationName: 'getOwnProfile_retry',
+        );
       }
       if (!response.success) {
         final fallback = _profileRequestFallbackInfo(
@@ -1290,17 +1530,18 @@ class AegisChatService {
       ),
       isSuccess: (response) => response.success,
       messageOf: (response) => response.message,
+      operationName: 'createChannel',
     );
     final channelId = response.channelId > 0 ? response.channelId : null;
     if (!response.success || channelId == null) {
-      throw Exception(response.message ?? 'Unable to create room');
+      _chatError('chat.room.create_failed', response.message ?? 'Unable to create room');
     }
     final roomId = 'channel:$channelId';
     _storeConversation(
       _StoredConversation(
         id: roomId,
         title: name,
-        kind: isPublic ? 'public' : 'private',
+        kind: 'channel',
         updatedAt: DateTime.now(),
         description: topic,
         channelId: channelId,
@@ -1326,7 +1567,7 @@ class AegisChatService {
     await _init();
     final conversation = _conversations[roomId];
     if (conversation == null) {
-      throw Exception('Unknown conversation');
+      _chatError('chat.room.unknown', 'Unknown conversation');
     }
 
     try {
@@ -1370,11 +1611,12 @@ class AegisChatService {
   }) async {
     final conversation = _conversations[roomId];
     if (conversation == null) {
-      throw Exception('Unknown conversation');
+      _chatError('chat.room.unknown', 'Unknown conversation');
     }
 
     if (mediaFileId != null && mediaFileId.isNotEmpty && type != 'm.text') {
       final mediaFile = File(mediaFileId);
+      // ignore: avoid_slow_async_io
       if (!await mediaFile.exists()) {
         throw Exception('Media file not found');
       }
@@ -1411,7 +1653,9 @@ class AegisChatService {
     int? messageId;
     if (conversation.peerUserId != null || conversation.kind == 'direct') {
       final peerId = conversation.peerUserId;
-      if (peerId == null) throw Exception('Missing peer user id');
+      if (peerId == null) {
+        _chatError('chat.direct.missing_peer', 'Missing peer user id');
+      }
       final response = await _runAuthedSuccessRequest(
         () => _auth.rawClient.sendPrivateMessage(
           peerId,
@@ -1419,16 +1663,20 @@ class AegisChatService {
         ),
         isSuccess: (response) => response.success,
         messageOf: (response) => response.messageText,
+        operationName: 'sendPrivateMessage',
       );
       messageId = response.messageId > 0 ? response.messageId : null;
       if (!response.success) {
-        throw Exception(
+        _chatError(
+          'chat.direct.send_failed',
           _normalizeDirectSendError(response.messageText),
         );
       }
     } else if (conversation.kind == 'group') {
       final groupId = conversation.channelId;
-      if (groupId == null) throw Exception('Missing group id');
+      if (groupId == null) {
+        _chatError('chat.group.missing_id', 'Missing group id');
+      }
       final response = await _runAuthedSuccessRequest(
         () => _auth.rawClient.sendGroupMessage(
           groupId,
@@ -1440,11 +1688,16 @@ class AegisChatService {
       );
       messageId = response.messageId;
       if (!response.success) {
-        throw Exception(response.messageText ?? 'Unable to send message');
+        _chatError(
+          'chat.group.send_failed',
+          response.messageText ?? 'Unable to send message',
+        );
       }
     } else {
       final channelId = conversation.channelId;
-      if (channelId == null) throw Exception('Missing channel id');
+      if (channelId == null) {
+        _chatError('chat.channel.missing_id', 'Missing channel id');
+      }
       final response = await _runAuthedSuccessRequest(
         () => _auth.rawClient.sendChannelMessage(
           channelId,
@@ -1456,7 +1709,10 @@ class AegisChatService {
       );
       messageId = response.messageId > 0 ? response.messageId : null;
       if (!response.success) {
-        throw Exception(response.messageText ?? 'Unable to send message');
+        _chatError(
+          'chat.channel.send_failed',
+          response.messageText ?? 'Unable to send message',
+        );
       }
     }
 
@@ -2121,9 +2377,7 @@ class AegisChatService {
     }
 
     unawaited(_persist());
-    for (final roomId in updatedRooms) {
-      _emitRoomChanged(roomId);
-    }
+    updatedRooms.forEach(_emitRoomChanged);
     _emitChanged();
   }
 
@@ -2284,6 +2538,7 @@ class AegisChatService {
     await ensureReady();
     final dir = await getApplicationDocumentsDirectory();
     final mediaDir = Directory(p.join(dir.path, 'aegis_media'));
+    // ignore: avoid_slow_async_io
     if (!await mediaDir.exists()) {
       await mediaDir.create(recursive: true);
     }
@@ -2358,6 +2613,7 @@ class AegisChatService {
     }
 
     final cachedPath = _mediaPathCache[normalizedId];
+    // ignore: avoid_slow_async_io
     if (cachedPath != null && await File(cachedPath).exists()) {
       return cachedPath;
     }
@@ -2383,6 +2639,7 @@ class AegisChatService {
       }
 
       final file = File(normalizedId);
+      // ignore: avoid_slow_async_io
       if (await file.exists()) {
         _mediaPathCache[normalizedId] = file.path;
         return file.path;
@@ -2394,12 +2651,14 @@ class AegisChatService {
     try {
       return await resolveFuture;
     } finally {
+      // ignore: unawaited_futures
       _mediaResolveInFlight.remove(normalizedId);
     }
   }
 
   void startSync([Function(Map<String, dynamic>)? onEvent]) {
     if (onEvent == null) return;
+    // ignore: discarded_futures
     _syncSub?.cancel();
     _syncSub = watchChats().listen((_) {
       onEvent(<String, dynamic>{
@@ -2420,6 +2679,7 @@ class AegisChatService {
   }
 
   void stopSync() {
+    // ignore: discarded_futures
     _syncSub?.cancel();
     _syncSub = null;
   }
@@ -2536,7 +2796,8 @@ class AegisChatService {
             'displayName': info['displayName'] ?? info['username'] ?? id,
             'avatarUrl': info['avatarUrl'],
           };
-        } catch (_) {
+        } on Object catch (error, stackTrace) {
+          _logHandledError('resolveRoomMembers.getUserInfo', error, stackTrace);
           return {'userId': id, 'displayName': id, 'avatarUrl': null};
         }
       },
@@ -2620,7 +2881,8 @@ class AegisChatService {
   Future<void> _refreshChatsQuietly() async {
     try {
       await refreshChats();
-    } catch (_) {
+    } on Object catch (error, stackTrace) {
+      _logHandledError('refreshChatsQuietly', error, stackTrace);
       // Keep cached chats visible when the network is unavailable.
     }
   }
@@ -2691,7 +2953,9 @@ class AegisChatService {
           await _runAuthedRequest(
             () => _auth.rawClient.sendReadReceipt(unreadIds),
           );
-        } catch (_) {}
+        } on Object catch (error, stackTrace) {
+          _logHandledError('ensureChatBootstrap.seedDirect', error, stackTrace);
+        }
       }());
     }
   }
@@ -2868,15 +3132,15 @@ class AegisChatService {
       messageOf: (response) => response.message,
     );
     if (!response.success || response.channel == null) {
-      throw Exception(response.message ?? 'Unable to join room');
+      _chatError('chat.room.join_failed', response.message ?? 'Unable to join room');
     }
 
     final channel = response.channel!;
     final roomId = 'channel:${channel.id}';
     final roomKind = switch (channel.type) {
       ChannelType.group => 'group',
-      ChannelType.private => 'private',
-      ChannelType.public => 'public',
+      ChannelType.private => 'channel',
+      ChannelType.public => 'channel',
     };
 
     final existing = _conversations[roomId];
@@ -2938,12 +3202,14 @@ class AegisChatService {
       }
       try {
         resolvedPath = await downloadMediaToTempFile(mediaId);
-      } catch (_) {
+      } on Object catch (error, stackTrace) {
+        _logHandledError('getWaveformForMedia.download', error, stackTrace);
         return const <double>[];
       }
     }
 
     final file = File(resolvedPath);
+    // ignore: avoid_slow_async_io
     if (!await file.exists()) {
       return const <double>[];
     }
@@ -3027,7 +3293,7 @@ class AegisChatService {
     if (!response.success || groupId == null) {
       throw Exception(response.message ?? '');
     }
-    final roomId = 'channel:$groupId';
+    final roomId = 'group:$groupId';
     final me = (_auth.userId ?? 0).toString();
     _storeConversation(
       _StoredConversation(
@@ -3393,7 +3659,10 @@ class AegisChatService {
       response = await sendRequest();
     } on Object catch (error) {
       if (_isAuthRejectionMessage(error.toString())) {
-        response = await _retryAfterSessionRecovery(sendRequest);
+        response = await _retryAfterSessionRecovery(
+          sendRequest,
+          operationName: 'updateProfile',
+        );
       } else {
         rethrow;
       }
@@ -3401,7 +3670,10 @@ class AegisChatService {
 
     if (!response.success) {
       if (_isAuthRejectionMessage(response.message)) {
-        response = await _retryAfterSessionRecovery(sendRequest);
+        response = await _retryAfterSessionRecovery(
+          sendRequest,
+          operationName: 'updateProfile_retry',
+        );
       }
       if (!response.success) {
         throw _profileResponseException(
@@ -3599,10 +3871,27 @@ class AegisChatService {
                 await _runAuthedRequest(
                   () => _auth.rawClient.sendDeliveryReceipt(<int>[messageId]),
                 );
-              } catch (_) {}
+              } on Object catch (error, stackTrace) {
+                _logHandledError(
+                  'incoming.private.deliveryReceipt',
+                  error,
+                  stackTrace,
+                );
+              }
             }
             if (_activeRoomId == roomId) {
               await markRoomRead(roomId);
+            } else {
+              // Show notification only if user is not viewing this chat
+              unawaited(
+                NotificationService().showMessageNotification(
+                  title: event.fromUsername ?? event.username ?? 'User',
+                  body: event.content,
+                  chatId: roomId,
+                ).catchError((e) {
+                  DevLogger('AegisChat').error('Failed to show message notification: $e');
+                }),
+              );
             }
           }
         }());
@@ -3643,10 +3932,27 @@ class AegisChatService {
                 await _runAuthedRequest(
                   () => _auth.rawClient.sendDeliveryReceipt(<int>[messageId]),
                 );
-              } catch (_) {}
+              } on Object catch (error, stackTrace) {
+                _logHandledError(
+                  'incoming.channel.deliveryReceipt',
+                  error,
+                  stackTrace,
+                );
+              }
             }
             if (_activeRoomId == roomId) {
               await markRoomRead(roomId);
+            } else {
+              // Show notification only if user is not viewing this chat
+              unawaited(
+                NotificationService().showMessageNotification(
+                  title: event.channelName ?? 'Channel',
+                  body: event.content,
+                  chatId: roomId,
+                ).catchError((e) {
+                  DevLogger('AegisChat').error('Failed to show channel message notification: $e');
+                }),
+              );
             }
           }
         }());
@@ -3654,7 +3960,7 @@ class AegisChatService {
 
       if (message.type == MessageType.groupMessageEvent) {
         final event = GroupMessageEvent.fromBytes(message.payload);
-        final roomId = 'channel:${event.groupId}';
+        final roomId = 'group:${event.groupId}';
         _conversations.putIfAbsent(
           roomId,
           () => _StoredConversation(
@@ -3682,10 +3988,27 @@ class AegisChatService {
                 await _runAuthedRequest(
                   () => _auth.rawClient.sendDeliveryReceipt(<int>[messageId]),
                 );
-              } catch (_) {}
+              } on Object catch (error, stackTrace) {
+                _logHandledError(
+                  'incoming.group.deliveryReceipt',
+                  error,
+                  stackTrace,
+                );
+              }
             }
             if (_activeRoomId == roomId) {
               await markRoomRead(roomId);
+            } else {
+              // Show notification only if user is not viewing this chat
+              unawaited(
+                NotificationService().showMessageNotification(
+                  title: event.groupName ?? 'Group',
+                  body: event.content,
+                  chatId: roomId,
+                ).catchError((e) {
+                  DevLogger('AegisChat').error('Failed to show group message notification: $e');
+                }),
+              );
             }
           }
         }());
@@ -3701,6 +4024,18 @@ class AegisChatService {
             event.reactions,
           );
           _emitRoomChanged(roomId);
+          // Show notification about reactions if user is not viewing this chat
+          if (_activeRoomId != roomId) {
+            unawaited(
+              NotificationService().showReactionNotification(
+                title: 'New reaction',
+                body: 'Someone reacted to your message',
+                messageId: event.messageId.toString(),
+              ).catchError((e) {
+                DevLogger('AegisChat').error('Failed to show reaction notification: $e');
+              }),
+            );
+          }
         }
       }
 
@@ -3720,7 +4055,9 @@ class AegisChatService {
           _emitRoomChanged(roomId);
         }
       }
-    } catch (_) {}
+    } on Object catch (error, stackTrace) {
+      _logHandledError('handleIncomingMessage', error, stackTrace);
+    }
   }
 
   String _lastMessage(String roomId) {
@@ -3800,6 +4137,7 @@ class AegisChatService {
         () => _auth.rawClient.getChatList(),
         isSuccess: (response) => response.success,
         messageOf: (response) => response.message,
+        operationName: 'getChatList',
       );
       if (!response.success) {
         throw Exception(response.message ?? 'Unable to load chat list');
@@ -3812,8 +4150,14 @@ class AegisChatService {
 
       for (final item in response.chats) {
         _seedProfileFromChatListItem(item);
+        final normalizedKind = _normalizeConversationKind(
+          item.type,
+          peerUserId: item.peerUserId,
+        );
         final roomId = item.peerUserId != null
             ? 'dm:${item.peerUserId}'
+            : normalizedKind == 'group'
+            ? 'group:${item.channelId ?? item.chatId}'
             : 'channel:${item.channelId ?? item.chatId}';
         seenRoomIds.add(roomId);
         if (item.peerUserId != null) {
@@ -4091,50 +4435,72 @@ class AegisChatService {
     List<AegisRoomMessage> currentMessages,
     List<AegisRoomMessage> serverMessages,
   ) {
+    // If no current messages, return server messages directly
     if (currentMessages.isEmpty) {
       return serverMessages;
     }
 
+    // If no server messages, keep all current messages (don't lose local data)
+    if (serverMessages.isEmpty) {
+      return currentMessages;
+    }
+
     final serverIds = serverMessages.map((message) => message.id).toSet();
     final deletedIds = _deletedMessageIdsByRoom[roomId];
-    final selfUserId = (_auth.userId ?? 0).toString();
-    final freshnessAnchor = serverMessages.isNotEmpty
-        ? serverMessages.last.time
-        : DateTime.now();
+    
+    // Find the time range of server messages to determine what's "recent"
+    final serverTimeRange = serverMessages.isNotEmpty
+        ? (
+            serverMessages.map((m) => m.time).reduce((a, b) => a.isBefore(b) ? a : b),
+            serverMessages.map((m) => m.time).reduce((a, b) => a.isAfter(b) ? a : b),
+          )
+        : (DateTime.now(), DateTime.now());
+    final oldestServerTime = serverTimeRange.$1;
+    final newestServerTime = serverTimeRange.$2;
 
     final mergedById = <String, AegisRoomMessage>{
       for (final message in serverMessages) message.id: message,
     };
 
     for (final message in currentMessages) {
-      if (serverIds.contains(message.id) ||
-          (deletedIds?.contains(message.id) ?? false)) {
+      // Skip if already in server messages (server is authoritative)
+      if (serverIds.contains(message.id)) {
+        continue;
+      }
+      
+      // Skip deleted messages
+      if (deletedIds?.contains(message.id) ?? false) {
         continue;
       }
 
       final isQueuedLocalMessage = message.id.startsWith('local:');
-      final isRecentOwnMessage =
-          message.senderId == selfUserId &&
-          message.time.isAfter(
-            freshnessAnchor.subtract(_historyConsistencyWindow),
-          );
-
-      if (!isQueuedLocalMessage && !isRecentOwnMessage) {
+      // Keep queued messages that haven't been confirmed by server yet
+      if (isQueuedLocalMessage) {
+        // Only keep if it's newer than the oldest server message
+        // (older queued messages that weren't confirmed are likely failed)
+        if (message.time.isAfter(oldestServerTime.subtract(const Duration(minutes: 5)))) {
+          mergedById.putIfAbsent(message.id, () => message);
+        }
         continue;
       }
-
-      mergedById.putIfAbsent(message.id, () => message);
+      
+      // Keep all local messages that fall within or near the server time range
+      // This preserves messages that might not have been returned by the server
+      // due to pagination limits, but discards very old messages
+      if (message.time.isAfter(oldestServerTime.subtract(const Duration(hours: 1))) ||
+          message.time.isBefore(newestServerTime.add(const Duration(hours: 1)))) {
+        mergedById.putIfAbsent(message.id, () => message);
+      }
     }
 
-    return mergedById.values.toList(growable: false)
+    final result = mergedById.values.toList(growable: false)
       ..sort((left, right) => left.time.compareTo(right.time));
+    return result;
   }
 
   (bool, bool, DateTime?, DateTime?) _extractHistoryStatus(dynamic item) {
-    Map<String, dynamic> payload;
-    try {
-      payload = Map<String, dynamic>.from((item as dynamic).toJson() as Map);
-    } catch (_) {
+    final payload = _extractHistoryPayload(item);
+    if (payload == null) {
       return (false, false, null, null);
     }
 
@@ -4164,15 +4530,39 @@ class AegisChatService {
   }
 
   int? _extractHistoryReplyToMessageId(dynamic item) {
-    Map<String, dynamic> payload;
-    try {
-      payload = Map<String, dynamic>.from((item as dynamic).toJson() as Map);
-    } catch (_) {
+    final payload = _extractHistoryPayload(item);
+    if (payload == null) {
       return null;
     }
 
     final value = payload['replyToMessageId'] ?? payload['ReplyToMessageId'];
     return (value as num?)?.toInt();
+  }
+
+  Map<String, dynamic>? _extractHistoryPayload(dynamic item) {
+    if (item is Map<String, dynamic>) {
+      return item;
+    }
+    if (item is Map) {
+      return Map<String, dynamic>.from(
+        item.map((key, value) => MapEntry(key.toString(), value)),
+      );
+    }
+    try {
+      final encoded = (item as dynamic).toJson();
+      if (encoded is Map<String, dynamic>) {
+        return encoded;
+      }
+      if (encoded is Map) {
+        return Map<String, dynamic>.from(
+          encoded.map((key, value) => MapEntry(key.toString(), value)),
+        );
+      }
+    } on Object catch (error, stackTrace) {
+      _logHandledError('extractHistoryPayload.toJson', error, stackTrace);
+      return null;
+    }
+    return null;
   }
 
   Future<Map<String, dynamic>> _memberSummaryToRoomMemberMap(
@@ -4183,7 +4573,13 @@ class AegisChatService {
       try {
         final info = await getUserInfo(member.userId.toString());
         _storeProfile(member.userId, info);
-      } catch (_) {}
+      } on Object catch (error, stackTrace) {
+        _logHandledError(
+          'memberSummaryToRoomMemberMap.getUserInfo',
+          error,
+          stackTrace,
+        );
+      }
     }
     final profile = _profileCache[member.userId];
     final profileUsername = profile?['username']?.toString();
@@ -4244,11 +4640,16 @@ class AegisChatService {
   String? _roomIdForScope(String scope, int targetId) {
     switch (scope) {
       case 'group':
+        return 'group:$targetId';
       case 'channel':
         return 'channel:$targetId';
       default:
         return null;
     }
+  }
+
+  void _logHandledError(String context, Object error, StackTrace stackTrace) {
+    _log.debug('Handled error [$context]: $error\n$stackTrace');
   }
 
   String? _findRoomIdByMessageId(int messageId) {
@@ -4409,10 +4810,12 @@ class AegisChatService {
       throw Exception('Media bytes are empty');
     }
     final mediaDir = Directory(p.join(_storeDir.path, 'aegis_media'));
+    // ignore: avoid_slow_async_io
     if (!await mediaDir.exists()) {
       await mediaDir.create(recursive: true);
     }
     final target = File(p.join(mediaDir.path, preferredFileName));
+    // ignore: avoid_slow_async_io
     if (await target.exists()) {
       final currentLength = await target.length();
       if (currentLength == bytes.length) {
@@ -4427,6 +4830,7 @@ class AegisChatService {
     try {
       await _init();
       final mediaDir = Directory(p.join(_storeDir.path, 'aegis_media'));
+      // ignore: avoid_slow_async_io
       if (!await mediaDir.exists()) {
         return;
       }
@@ -4443,6 +4847,7 @@ class AegisChatService {
 
       for (final file in entities) {
         try {
+          // ignore: avoid_slow_async_io
           final stat = await file.stat();
           final age = now.difference(stat.modified);
           if (age > _mediaCacheMaxAge) {
@@ -4457,7 +4862,9 @@ class AegisChatService {
               modified: stat.modified,
             ),
           );
-        } catch (_) {}
+        } on Object catch (error, stackTrace) {
+          _logHandledError('cleanMediaCache.statDelete', error, stackTrace);
+        }
       }
 
       if (totalBytes > _mediaCacheMaxBytes) {
@@ -4471,12 +4878,20 @@ class AegisChatService {
           try {
             await entry.file.delete();
             totalBytes -= entry.size;
-          } catch (_) {}
+          } on Object catch (error, stackTrace) {
+            _logHandledError(
+              'cleanMediaCache.trimDelete',
+              error,
+              stackTrace,
+            );
+          }
         }
       }
 
       _mediaPathCache.removeWhere((_, value) => !File(value).existsSync());
-    } catch (_) {}
+    } on Object catch (error, stackTrace) {
+      _logHandledError('cleanMediaCache', error, stackTrace);
+    }
   }
 
   String _sanitizeFileName(String value) {

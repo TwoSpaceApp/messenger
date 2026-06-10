@@ -3431,5 +3431,61 @@
   "devMenuRequestBody": "Request body · {type}",
   "devMenuResponseHeaders": "Response headers",
   "devMenuResponseBody": "Response body · {type}",
-  "devMenuVersionWithBuild": "{version} (Build {buildNumber})"
+  "devMenuVersionWithBuild": "{version} (Build {buildNumber})",
+  "notificationsForegroundServiceTitle": "Servizio in Background",
+  "@notificationsForegroundServiceTitle": {
+    "description": "Background service section title in notifications screen"
+  },
+  "notificationsForegroundServiceSubtitle": "Mantieni l'app in esecuzione in background",
+  "@notificationsForegroundServiceSubtitle": {
+    "description": "Background service section subtitle"
+  },
+  "notificationsForegroundServiceEnabled": "Abilita Servizio in Background",
+  "@notificationsForegroundServiceEnabled": {
+    "description": "Background service toggle title"
+  },
+  "notificationsForegroundServiceDescription": "Ascolta continuamente i messaggi con notifica persistente",
+  "@notificationsForegroundServiceDescription": {
+    "description": "Background service toggle description"
+  },
+  "notificationsTypesSection": "Tipi di Notifiche",
+  "@notificationsTypesSection": {
+    "description": "Notification types section title"
+  },
+  "notificationsTypesSectionSubtitle": "Scegli quali eventi ti notificano",
+  "@notificationsTypesSectionSubtitle": {
+    "description": "Notification types section subtitle"
+  },
+  "notificationsMessagesTitle": "Messaggi",
+  "@notificationsMessagesTitle": {
+    "description": "Messages notification toggle title"
+  },
+  "notificationsMessagesDescription": "Nuovi messaggi nelle chat",
+  "@notificationsMessagesDescription": {
+    "description": "Messages notification toggle description"
+  },
+  "notificationsChatTitle": "Chat e Gruppi",
+  "@notificationsChatTitle": {
+    "description": "Chats and groups notification toggle title"
+  },
+  "notificationsChatDescription": "Nuove chat e inviti ai gruppi",
+  "@notificationsChatDescription": {
+    "description": "Chats and groups notification toggle description"
+  },
+  "notificationsPostTitle": "Post",
+  "@notificationsPostTitle": {
+    "description": "Posts notification toggle title"
+  },
+  "notificationsPostDescription": "Nuovi post nei canali",
+  "@notificationsPostDescription": {
+    "description": "Posts notification toggle description"
+  },
+  "notificationsReactionTitle": "Reazioni",
+  "@notificationsReactionTitle": {
+    "description": "Reactions notification toggle title"
+  },
+  "notificationsReactionDescription": "Reazioni ai tuoi messaggi",
+  "@notificationsReactionDescription": {
+    "description": "Reactions notification toggle description"
+  }
 }

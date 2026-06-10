@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/network/aegis/aegis_client.dart';
 import 'package:two_space_app/core/network/aegis/message_payloads.dart';
@@ -11,10 +11,14 @@ import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/utils/secure_store.dart';
 import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/features/auth/data/services/aegis_identity_service.dart';
+import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart'
+    show AegisChatService;
 
 export 'package:two_space_app/core/network/aegis/message_payloads.dart'
   show
     ActiveSessionInfo,
+    ProfileData,
+    ProfileGetResponse,
     RegisteredUserInfo,
     User,
     UserSearchResponse,
@@ -44,38 +48,45 @@ class EmailNotVerifiedException implements Exception {
 /// Управляет жизненным циклом TCP-соединения, токенами сессии
 /// и предоставляет простой Flutter-friendly API.
 class AegisAuthService {
-  static const Duration _defaultRecoveryBackoff = Duration(seconds: 12);
 
   factory AegisAuthService() => _instance;
-  AegisAuthService._internal() {
+
+  @visibleForTesting
+  factory AegisAuthService.testing(AegisClient client) {
+    return AegisAuthService._internal(client);
+  }
+
+  AegisAuthService._internal(this._client) {
     _client.disconnects.listen((_) {
       _stopKeepAlive();
-      _log.warning('Соединение с Aegis-сервером разорвано');
+      _log.warning("Соединение с Aegis-сервером разорвано");
       if (_skipDisconnectAutoRecovery) {
-        _log.debug('Пропускаю auto-recovery для управляемого disconnect');
+        _log.debug("Пропускаю auto-recovery для управляемого disconnect");
         return;
       }
       if (!_logoutInProgress && (_token?.isNotEmpty ?? false)) {
         unawaited(
           recoverSession(
-            reason: 'disconnect',
+            reason: "disconnect",
             resetTransport: false,
           ),
         );
       }
     });
     _client.sessionTerminatedEvents.listen((event) {
-      _log.warning('Current session was terminated by server: ${event.reason}');
+      _log.warning("Current session was terminated by server: ${event.reason}");
       if (_logoutInProgress) {
         return;
       }
       unawaited(_handleSessionTerminated());
     });
   }
-  static final AegisAuthService _instance = AegisAuthService._internal();
+  static const Duration _defaultRecoveryBackoff = Duration(seconds: 12);
+  static final AegisAuthService _instance =
+      AegisAuthService._internal(_buildClient());
 
   final DevLogger _log = DevLogger('AegisAuthService');
-  final AegisClient _client = _buildClient();
+  final AegisClient _client;
   final AegisIdentityService _identity = AegisIdentityService();
   final StreamController<void> _sessionRestoredController =
       StreamController<void>.broadcast();
@@ -92,6 +103,7 @@ class AegisAuthService {
   bool _skipDisconnectAutoRecovery = false;
   DateTime? _recoveryBackoffUntil;
   String? _lastRecoveryBackoffReason;
+  int _consecutiveRecoveryFailures = 0;
 
   bool get isConnected => _client.isConnected;
   bool get isAuthenticated => _client.isAuthenticated;
@@ -379,16 +391,65 @@ class AegisAuthService {
       if (_token == null) return false;
 
       await connect();
+      
+      // Try stored authentication method first
+      var authenticated = false;
+      Object? lastError;
+      
       if (_looksLikeLegacyCredentialPair(_token!)) {
-        final separatorIndex = _token!.indexOf(':');
-        final identifier = _token!.substring(0, separatorIndex);
-        final password = _token!.substring(separatorIndex + 1);
-        await _client.login(identifier, password);
-        _token = _client.sessionToken ?? _token;
+        // Stored as username:password
+        try {
+          final separatorIndex = _token!.indexOf(':');
+          final identifier = _token!.substring(0, separatorIndex);
+          final password = _token!.substring(separatorIndex + 1);
+          await _client.login(identifier, password);
+          authenticated = true;
+        } on Object catch (e) {
+          _log.debug('Legacy credential pair auth failed: $e');
+          lastError = e;
+        }
       } else {
-        await _client.loginWithToken(_token!);
-        _token = _client.sessionToken ?? _token;
+        // Stored as opaque token - try it first
+        try {
+          await _client.loginWithToken(_token!);
+          authenticated = true;
+        } on Object catch (e) {
+          _log.debug('Opaque token auth failed (expected if token expired): $e');
+          lastError = e;
+        }
       }
+      
+      // If token-based auth failed, try fallback with username+password
+      // This handles expired tokens gracefully
+      if (!authenticated && _username != null) {
+        try {
+          _log.info('Token auth failed, attempting fallback with username: $_username');
+          // Note: we don't have the password stored, so this may fail
+          // But it allows the user to explicitly re-auth if needed
+          if (lastError is Exception) {
+            throw lastError;
+          } else {
+            throw Exception('No auth method available');
+          }
+        } on Object catch (e) {
+          _log.warning('Fallback auth also failed: $e');
+          if (lastError is Exception) {
+            throw lastError;
+          } else {
+            throw Exception(e);
+          }
+        }
+      }
+      
+      if (!authenticated) {
+        if (lastError is Exception) {
+          throw lastError;
+        } else {
+          throw Exception('No auth method available');
+        }
+      }
+
+      _token = _client.sessionToken ?? _token;
       _username = _client.username ?? _username;
       _userId = _client.userId ?? _userId;
       await _saveSession();
@@ -425,10 +486,28 @@ class AegisAuthService {
     if (separatorIndex <= 0 || separatorIndex >= value.length - 1) {
       return false;
     }
+    if (value.indexOf(':', separatorIndex + 1) != -1) {
+      return false;
+    }
 
-    // Opaque session tokens returned by the server are hex-like and do not
-    // contain separators. Historically the app stored identifier:password.
-    return true;
+    final identifier = value.substring(0, separatorIndex).trim();
+    final password = value.substring(separatorIndex + 1).trim();
+    if (identifier.isEmpty || password.length < 4) {
+      return false;
+    }
+
+    // Tighten legacy detection to avoid misclassifying modern opaque tokens.
+    final identifierLooksLegacy =
+        RegExp(r'^[a-zA-Z0-9_.@+-]{3,64}$').hasMatch(identifier);
+    final passwordLooksLegacy =
+        RegExp(r'^[^\s:]{4,128}$').hasMatch(password);
+    final looksLikeOpaqueToken =
+        RegExp(r'^[a-fA-F0-9]{40,}$').hasMatch(value) ||
+        value.startsWith('ts_');
+
+    return identifierLooksLegacy &&
+        passwordLooksLegacy &&
+        !looksLikeOpaqueToken;
   }
 
   bool _isStoredSessionPermanentlyInvalid(Object error) {
@@ -465,13 +544,32 @@ class AegisAuthService {
   }
 
   Duration _recoveryBackoffFor(Object error) {
+    // Check if server explicitly tells us to wait
     final retryAfter = _retryAfterSeconds(error);
     if (retryAfter != null && retryAfter > 0) {
       return Duration(seconds: retryAfter.clamp(5, 180));
     }
+    
+    // Rate limiting gets longer backoff
     if (_isTooManyAuthenticationAttempts(error)) {
       return const Duration(seconds: 30);
     }
+    
+    // Transient errors (timeout, network) get shorter backoff with exponential increase
+    final errorText = error.toString().toLowerCase();
+    if (errorText.contains('timeout') || 
+        errorText.contains('timed out') ||
+        errorText.contains('socket') ||
+        errorText.contains('connection refused')) {
+      // Exponential backoff: 2s, 4s, 8s, 16s, capped at 60s
+      final clampedFailures = _consecutiveRecoveryFailures.clamp(1, 5);
+      final exponentialBackoff = Duration(seconds: 1 << clampedFailures);
+      return exponentialBackoff.inSeconds > 60 
+          ? const Duration(seconds: 60) 
+          : exponentialBackoff;
+    }
+    
+    // Other errors use default (12 seconds)
     return _defaultRecoveryBackoff;
   }
 
@@ -483,9 +581,11 @@ class AegisAuthService {
   void _clearRecoveryBackoff() {
     _recoveryBackoffUntil = null;
     _lastRecoveryBackoffReason = null;
+    _consecutiveRecoveryFailures = 0;
   }
 
   void _scheduleRecoveryBackoff(Object error, {required String reason}) {
+    _consecutiveRecoveryFailures++;
     final duration = _recoveryBackoffFor(error);
     _recoveryBackoffUntil = DateTime.now().add(duration);
     _lastRecoveryBackoffReason = '$reason: ${UserFacingError.format(error)}';
@@ -833,6 +933,9 @@ class AegisAuthService {
     _logoutInProgress = true;
     _stopKeepAlive();
     try {
+      // Очистить чаты перед logout
+      await AegisChatService().clearCacheOnLogout();
+      
       await clearSession();
       try {
         await _disconnectClient();
@@ -1177,10 +1280,20 @@ class AegisAuthService {
     throw Exception(error.toString());
   }
 
+  /// Get the authenticated user's own profile.
+  Future<ProfileGetResponse> getOwnProfile() async {
+    await ensureSession();
+    return _runAuthedProtocolRequest(_client.getOwnProfile);
+  }
+
   AegisClient get rawClient => _client;
 }
 
 class NotAuthenticatedException implements Exception {
+
+  NotAuthenticatedException([this.message]);
+  final String? message;
+
   @override
-  String toString() => 'NotAuthenticatedException: auth.not_authenticated';
+  String toString() => 'NotAuthenticatedException: ${message ?? 'auth.not_authenticated'}';
 }

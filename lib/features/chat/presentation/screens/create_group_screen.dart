@@ -1,7 +1,7 @@
-import 'package:share_plus/share_plus.dart' as share;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart' as share;
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';

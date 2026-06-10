@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
+import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
-// import 'dart:async';
-// import 'package:webview_flutter/webview_flutter.dart';
-// import 'package:two_space_app/core/config/environment.dart';
-// import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 
 class SsoWebviewScreen extends StatefulWidget {
-  // e.g. 'google' or 'yandex'
   const SsoWebviewScreen({required this.idpId, super.key});
   final String idpId;
 
@@ -17,7 +12,6 @@ class SsoWebviewScreen extends StatefulWidget {
 }
 
 class _SsoWebviewScreenState extends State<SsoWebviewScreen> {
-  // WebViewController not available, using placeholder
 
   @override
   Widget build(BuildContext context) {
@@ -26,19 +20,10 @@ class _SsoWebviewScreenState extends State<SsoWebviewScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.ssoLoginVia(widget.idpId))),
       body: ScreenBackground(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.web, size: 64, color: Colors.grey),
-              const SizedBox(height: UITokens.spaceMd),
-              Text(l10n.ssoLoginVia(widget.idpId)),
-              const SizedBox(height: UITokens.spaceXLg),
-              const CircularProgressIndicator(),
-              const SizedBox(height: UITokens.spaceMd),
-              Text(l10n.ssoFeatureRequired),
-            ],
-          ),
+        child: AppEmptyState(
+          icon: Icons.web,
+          title: l10n.ssoLoginVia(widget.idpId),
+          message: l10n.ssoFeatureRequired,
         ),
       ),
     );

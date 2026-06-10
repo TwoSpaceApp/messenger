@@ -1,17 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/dev_log_export_service.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 import 'package:two_space_app/core/services/dev_network_logger.dart';
 import 'package:two_space_app/core/services/media_file_service.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
-import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class _FeedbackCategoryOption {
@@ -237,6 +237,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: version load result handled within the method
+    // ignore: discarded_futures
     _loadVersion();
   }
 

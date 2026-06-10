@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_constants.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/app_logo.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 
 class SplashScreen extends StatefulWidget {
-  final String? currentStep;
-  final double? progress;
 
   const SplashScreen({
     super.key,
     this.currentStep,
     this.progress,
   });
+  final String? currentStep;
+  final double? progress;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -26,6 +26,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: version label load result handled within the method
+    // ignore: discarded_futures
     _loadVersionLabel();
   }
 

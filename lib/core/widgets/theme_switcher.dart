@@ -57,6 +57,8 @@ class ThemeSwitcherButton extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
+    // Fire-and-forget; sheet result handled via callbacks
+    // ignore: discarded_futures
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -93,6 +95,8 @@ class ThemeSwitcherButton extends StatelessWidget {
                 icon: Icons.brightness_auto,
                 isSelected: currentMode == ThemeMode.system,
                 onTap: () {
+                  // Fire-and-forget; theme change handled reactively
+                  // ignore: discarded_futures
                   SettingsService.setThemeMode(ThemeMode.system);
                   Navigator.pop(context);
                 },
@@ -103,6 +107,8 @@ class ThemeSwitcherButton extends StatelessWidget {
                 icon: Icons.light_mode,
                 isSelected: currentMode == ThemeMode.light,
                 onTap: () {
+                  // Fire-and-forget; theme change handled reactively
+                  // ignore: discarded_futures
                   SettingsService.setThemeMode(ThemeMode.light);
                   Navigator.pop(context);
                 },
@@ -113,6 +119,8 @@ class ThemeSwitcherButton extends StatelessWidget {
                 icon: Icons.dark_mode,
                 isSelected: currentMode == ThemeMode.dark,
                 onTap: () {
+                  // Fire-and-forget; theme change handled reactively
+                  // ignore: discarded_futures
                   SettingsService.setThemeMode(ThemeMode.dark);
                   Navigator.pop(context);
                 },
@@ -126,11 +134,6 @@ class ThemeSwitcherButton extends StatelessWidget {
 }
 
 class _ThemeOption extends StatelessWidget {
-  final ThemeMode mode;
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
 
   const _ThemeOption({
     required this.mode,
@@ -139,6 +142,11 @@ class _ThemeOption extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
   });
+  final ThemeMode mode;
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {

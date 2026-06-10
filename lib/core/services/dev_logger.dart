@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/services/dev_sensitive_data_policy.dart';
 
 /// Уровни логирования
@@ -9,15 +10,15 @@ enum LogLevel {
   warning('⚠️'),
   error('🔴');
 
-  final String emoji;
   const LogLevel(this.emoji);
+  final String emoji;
 }
 
 /// Журнал для разработчиков с поддержкой уровней логирования
 class DevLogger {
+  DevLogger(this._tag);
   static const int _maxEntries = 400;
   static const int _maxLineLength = 12000;
-  DevLogger(this._tag);
   static final List<String> _logs = [];
   static final StreamController<List<String>> _ctrl =
       StreamController.broadcast();
@@ -56,6 +57,24 @@ class DevLogger {
   void exception(String msg, Object exception, StackTrace? stackTrace) {
     error('$msg: $exception');
     if (stackTrace != null) {
+      error('StackTrace: $stackTrace');
+    }
+  }
+
+  /// Логировать структурированную ошибку с полным контекстом
+  void structuredException(
+    String msg,
+    Object exception,
+    StackTrace? stackTrace, {
+    String? category,
+    String? code,
+    String? details,
+  }) {
+    final categoryStr = category != null ? '[$category]' : '';
+    final codeStr = code != null ? ' {$code}' : '';
+    final detailsStr = details != null ? ' - $details' : '';
+    error('$msg$categoryStr$codeStr: $exception$detailsStr');
+    if (stackTrace != null && kDebugMode) {
       error('StackTrace: $stackTrace');
     }
   }

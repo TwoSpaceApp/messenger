@@ -17,8 +17,8 @@ void main() {
     }
   });
 
-  group('AegisChatLocalStore', () {
-    test('persists delivery and read status fields for room messages', () async {
+  group("AegisChatLocalStore", () {
+    test("persists delivery and read status fields for room messages", () async {
       final database = AegisChatDatabase.forExecutor(NativeDatabase.memory());
       final store = AegisChatLocalStore(database: database);
       final deliveredAt = DateTime.utc(2026, 3, 31, 12);
@@ -28,19 +28,19 @@ void main() {
         conversationsJson: const [],
         profilesJsonByUserId: const {},
         upsertMessagesJsonByRoomId: {
-          'room-1': [
+          "room-1": [
             {
-              'id': 'message-1',
-              'senderId': '42',
-              'content': 'hello',
-              'time': DateTime.utc(2026, 3, 31, 11, 59).toIso8601String(),
-              'type': 'm.text',
-              'mediaId': null,
-              'replyToMessageId': 7,
-              'isDelivered': true,
-              'isRead': true,
-              'deliveredAt': deliveredAt.toIso8601String(),
-              'readAt': readAt.toIso8601String(),
+              "id": "message-1",
+              "senderId": "42",
+              "content": "hello",
+              "time": DateTime.utc(2026, 3, 31, 11, 59).toIso8601String(),
+              "type": "m.text",
+              "mediaId": null,
+              "replyToMessageId": 7,
+              "isDelivered": true,
+              "isRead": true,
+              "deliveredAt": deliveredAt.toIso8601String(),
+              "readAt": readAt.toIso8601String(),
             },
           ],
         },
@@ -50,14 +50,14 @@ void main() {
         writeProfiles: false,
       );
 
-      final messages = await store.loadRoomMessagesJson('room-1');
+      final messages = await store.loadRoomMessagesJson("room-1");
 
       expect(messages, hasLength(1));
-      expect(messages.first['isDelivered'], isTrue);
-      expect(messages.first['isRead'], isTrue);
-      expect(messages.first['replyToMessageId'], 7);
-      expect(messages.first['deliveredAt'], deliveredAt.toIso8601String());
-      expect(messages.first['readAt'], readAt.toIso8601String());
+      expect(messages.first["isDelivered"], isTrue);
+      expect(messages.first["isRead"], isTrue);
+      expect(messages.first["replyToMessageId"], 7);
+      expect(messages.first["deliveredAt"], deliveredAt.toIso8601String());
+      expect(messages.first["readAt"], readAt.toIso8601String());
 
       await store.close();
     });

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// ignore: implementation_imports -- Needed for FutureProvider.family access pattern
 import 'package:riverpod/src/providers/future_provider.dart';
 import 'package:two_space_app/features/people/data/models/person_entry.dart';
 

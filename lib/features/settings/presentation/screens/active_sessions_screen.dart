@@ -32,6 +32,8 @@ class _ActiveSessionsScreenState extends State<ActiveSessionsScreen> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: session load result handled within the method
+    // ignore: discarded_futures
     _loadSessions();
   }
 

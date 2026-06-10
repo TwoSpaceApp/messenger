@@ -1,5 +1,5 @@
-import 'package:riverpod/riverpod.dart';
 import 'package:riverpod/misc.dart';
+import 'package:riverpod/riverpod.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 

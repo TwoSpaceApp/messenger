@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:go_router/go_router.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/theme_builder.dart';
 import 'package:two_space_app/core/config/theme_options.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
-import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
 
@@ -111,14 +111,14 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     _ThemePreset(
       id: 'editorial',
       color: 0xFF5C6B73,
-      themeMode: ThemeMode.light,
+      themeMode: ThemeMode.dark,
       fontFamily: 'OpenSans',
       fontWeight: 400,
       enableFloatingCircles: true,
       backgroundMotionMode: BackgroundMotionMode.waves,
       enableParallax: false,
-      floatingCirclesSpeed: 0.6,
-      floatingCirclesOpacity: 0.24,
+      floatingCirclesSpeed: 1.3,
+      floatingCirclesOpacity: 0.80,
       compactMode: false,
       dynamicBubbles: false,
       bubbleRounding: 14,
@@ -145,14 +145,14 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     _ThemePreset(
       id: 'retroPulse',
       color: 0xFFE2558F,
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       fontFamily: 'Handjet',
       fontWeight: 700,
       enableFloatingCircles: true,
-      backgroundMotionMode: BackgroundMotionMode.circles,
+      backgroundMotionMode: BackgroundMotionMode.waves,
       enableParallax: false,
-      floatingCirclesSpeed: 1.1,
-      floatingCirclesOpacity: 0.42,
+      floatingCirclesSpeed: 0.3,
+      floatingCirclesOpacity: 1,
       compactMode: true,
       dynamicBubbles: false,
       bubbleRounding: 10,
@@ -422,43 +422,39 @@ class _CustomizationScreenState extends State<CustomizationScreen> {
     }
   }
 
-  String _previewSurfaceLabel(AppLocalizations l10n, _PreviewSurface surface) {
-    switch (surface) {
-      case _PreviewSurface.rooms:
-        return l10n.previewRoomsLabel;
-      case _PreviewSurface.conversation:
-        return l10n.previewConversationLabel;
-      case _PreviewSurface.settings:
-        return l10n.previewSettingsLabel;
-    }
-  }
-
   Widget _buildPreviewSelector(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Row(
-      children: _PreviewSurface.values.map((surface) {
-        final selected = _previewSurface == surface;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(
-              right: surface == _PreviewSurface.settings ? 0 : 8,
-            ),
-            child: _SegmentChoiceCard(
-              label: _previewSurfaceLabel(l10n, surface),
-              icon: switch (surface) {
-                _PreviewSurface.rooms => Icons.view_list_rounded,
-                _PreviewSurface.conversation => Icons.chat_bubble_rounded,
-                _PreviewSurface.settings => Icons.tune_rounded,
-              },
-              selected: selected,
-              onTap: () {
-                setState(() => _previewSurface = surface);
-              },
-            ),
-          ),
-        );
-      }).toList(),
+    return SegmentedButton<_PreviewSurface>(
+      segments: <ButtonSegment<_PreviewSurface>>[
+        ButtonSegment<_PreviewSurface>(
+          value: _PreviewSurface.rooms,
+          icon: const Icon(Icons.view_list_rounded),
+          label: MediaQuery.of(context).size.width > 500
+              ? Text(l10n.previewRoomsLabel)
+              : null,
+        ),
+        ButtonSegment<_PreviewSurface>(
+          value: _PreviewSurface.conversation,
+          icon: const Icon(Icons.chat_bubble_rounded),
+          label: MediaQuery.of(context).size.width > 500
+              ? Text(l10n.previewConversationLabel)
+              : null,
+        ),
+        ButtonSegment<_PreviewSurface>(
+          value: _PreviewSurface.settings,
+          icon: const Icon(Icons.tune_rounded),
+          label: MediaQuery.of(context).size.width > 500
+              ? Text(l10n.previewSettingsLabel)
+              : null,
+        ),
+      ],
+      selected: <_PreviewSurface>{_previewSurface},
+      onSelectionChanged: (newSelection) {
+        if (newSelection.isNotEmpty) {
+          setState(() => _previewSurface = newSelection.first);
+        }
+      },
     );
   }
 

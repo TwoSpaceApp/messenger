@@ -466,6 +466,14 @@
   "currentPrefix": "Текущий: ",
   "newEmailLabel": "Новый email",
   "changeEmailButton": "Изменить email",
+  "emailRequired": "Email необходимо заполнить",
+  "emailInvalid": "Некорректный адрес email",
+  "passwordRequired": "Пароль необходимо заполнить",
+  "emailUnchanged": "Новый email совпадает с текущим",
+  "changeEmailNotYetSupported": "Изменение email ещё не поддерживается",
+  "changeEmailNotAvailable": "Изменение email ещё недоступно. Свяжитесь с поддержкой.",
+  "changeEmailRequiresServerSupport": "Эта функция требует поддержку на сервере. Клиент готов, но ожидает обновления протокола.",
+  "emailHintExample": "пример@example.com",
   "changeEmailError": "Не удалось изменить email: {error}",
   "changePhoneTitle": "Изменить номер телефона",
   "changePhoneDescription": "Введите новый номер телефона и текущий пароль.",
@@ -3428,5 +3436,69 @@
   "devMenuNewestFirst": "Сначала новые",
   "devMenuOldestFirst": "Сначала старые",
   "feedbackAttachLogsLabel": "Приложить логи?",
-  "feedbackAttachLogsSubtitle": "Добавить диагностический файл с данными устройства, логами приложения и логами сети."
+  "feedbackAttachLogsSubtitle": "Добавить диагностический файл с данными устройства, логами приложения и логами сети.",
+  "notificationsForegroundServiceTitle": "Фоновый сервис",
+  "@notificationsForegroundServiceTitle": {
+    "description": "Background service section title in notifications screen"
+  },
+  "notificationsForegroundServiceSubtitle": "Приложение работает в фоне",
+  "@notificationsForegroundServiceSubtitle": {
+    "description": "Background service section subtitle"
+  },
+  "notificationsForegroundServiceEnabled": "Включить фоновый сервис",
+  "@notificationsForegroundServiceEnabled": {
+    "description": "Background service toggle title"
+  },
+  "notificationsForegroundServiceDescription": "Постоянно слушать входящие сообщения с постоянным уведомлением",
+  "@notificationsForegroundServiceDescription": {
+    "description": "Background service toggle description"
+  },
+  "notificationsTypesSection": "Типы уведомлений",
+  "@notificationsTypesSection": {
+    "description": "Notification types section title"
+  },
+  "notificationsTypesSectionSubtitle": "Выберите события, о которых вас уведомлять",
+  "@notificationsTypesSectionSubtitle": {
+    "description": "Notification types section subtitle"
+  },
+  "notificationsMessagesTitle": "Сообщения",
+  "@notificationsMessagesTitle": {
+    "description": "Messages notification toggle title"
+  },
+  "notificationsMessagesDescription": "Новые сообщения в чатах",
+  "@notificationsMessagesDescription": {
+    "description": "Messages notification toggle description"
+  },
+  "notificationsChatTitle": "Чаты и группы",
+  "@notificationsChatTitle": {
+    "description": "Chats and groups notification toggle title"
+  },
+  "notificationsChatDescription": "Новые чаты и приглашения в группы",
+  "@notificationsChatDescription": {
+    "description": "Chats and groups notification toggle description"
+  },
+  "notificationsPostTitle": "Посты",
+  "@notificationsPostTitle": {
+    "description": "Posts notification toggle title"
+  },
+  "notificationsPostDescription": "Новые посты в каналах",
+  "@notificationsPostDescription": {
+    "description": "Posts notification toggle description"
+  },
+  "notificationsReactionTitle": "Реакции",
+  "@notificationsReactionTitle": {
+    "description": "Reactions notification toggle title"
+  },
+  "notificationsReactionDescription": "Реакции на ваши сообщения",
+  "@notificationsReactionDescription": {
+    "description": "Reactions notification toggle description"
+  },
+  "imageTooLarge": "Изображение слишком большое",
+  "@imageTooLarge": {
+    "description": "Error message when image file is too large for upload"
+  },
+  "imageCompressed": "Изображение сжато для совместимости с протоколом",
+  "@imageCompressed": {
+    "description": "Info message when image is automatically compressed"
+  }
 }

@@ -3,14 +3,13 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/sound/audio_player_service.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
-import 'package:two_space_app/core/widgets/inline_notice_card.dart';
-import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
 import 'package:two_space_app/features/settings/presentation/widgets/settings_showcase.dart';
 
@@ -109,37 +108,108 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           const SizedBox(height: UITokens.space),
         ],
+        // Master toggle for notifications
         ValueListenableBuilder<bool>(
           valueListenable: SettingsService.notificationsEnabledNotifier,
           builder: (context, enabled, _) {
-            return SettingsHeroCard(
+            return _NotificationToggle(
               icon: enabled
                   ? Icons.notifications_active_rounded
                   : Icons.notifications_off_rounded,
               title: l10n.settingsNotificationNew,
               subtitle: l10n.notificationsHeroSubtitle,
-              badges: [
-                _StatusBadge(
-                  label: l10n.notificationsLabel,
-                  active: enabled,
-                ),
-              ],
+              value: enabled,
+              onChanged: SettingsService.setNotificationsEnabled,
             );
           },
         ),
-        const SizedBox(height: UITokens.spaceMd),
-        GlassCard(
-          child: Padding(
-            padding: const EdgeInsets.all(UITokens.spaceMd),
-            child: InlineNoticeCard(
-              icon: Icons.upcoming_rounded,
-              badge: l10n.featureInDevelopmentLabel,
-              title: l10n.settingsNotificationNew,
-              message: l10n.notificationsInDevelopmentSubtitle,
-            ),
-          ),
+        const SizedBox(height: UITokens.spaceXLg),
+
+        // Foreground service toggle
+        SettingsSectionHeader(
+          title: l10n.notificationsForegroundServiceTitle,
+          subtitle: l10n.notificationsForegroundServiceSubtitle,
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        ValueListenableBuilder<bool>(
+          valueListenable:
+              SettingsService.foregroundServiceEnabledNotifier,
+          builder: (context, enabled, _) {
+            return _NotificationToggle(
+              icon: Icons.cloud_done_rounded,
+              title: l10n.notificationsForegroundServiceEnabled,
+              subtitle: l10n.notificationsForegroundServiceDescription,
+              value: enabled,
+              onChanged: SettingsService.setForegroundServiceEnabled,
+            );
+          },
         ),
         const SizedBox(height: UITokens.spaceXLg),
+
+        // Notification types section
+        SettingsSectionHeader(
+          title: l10n.notificationsTypesSection,
+          subtitle: l10n.notificationsTypesSectionSubtitle,
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        ValueListenableBuilder<bool>(
+          valueListenable:
+              SettingsService.notificationsMessageEnabledNotifier,
+          builder: (context, enabled, _) {
+            return _NotificationToggle(
+              icon: Icons.mail_rounded,
+              title: l10n.notificationsMessagesTitle,
+              subtitle: l10n.notificationsMessagesDescription,
+              value: enabled,
+              onChanged: SettingsService.setNotificationsMessageEnabled,
+            );
+          },
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        ValueListenableBuilder<bool>(
+          valueListenable:
+              SettingsService.notificationsChatEnabledNotifier,
+          builder: (context, enabled, _) {
+            return _NotificationToggle(
+              icon: Icons.chat_rounded,
+              title: l10n.notificationsChatTitle,
+              subtitle: l10n.notificationsChatDescription,
+              value: enabled,
+              onChanged: SettingsService.setNotificationsChatEnabled,
+            );
+          },
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        ValueListenableBuilder<bool>(
+          valueListenable:
+              SettingsService.notificationsPostEnabledNotifier,
+          builder: (context, enabled, _) {
+            return _NotificationToggle(
+              icon: Icons.article_rounded,
+              title: l10n.notificationsPostTitle,
+              subtitle: l10n.notificationsPostDescription,
+              value: enabled,
+              onChanged: SettingsService.setNotificationsPostEnabled,
+            );
+          },
+        ),
+        const SizedBox(height: UITokens.spaceMdSm),
+        ValueListenableBuilder<bool>(
+          valueListenable:
+              SettingsService.notificationsReactionEnabledNotifier,
+          builder: (context, enabled, _) {
+            return _NotificationToggle(
+              icon: Icons.emoji_emotions_rounded,
+              title: l10n.notificationsReactionTitle,
+              subtitle: l10n.notificationsReactionDescription,
+              value: enabled,
+              onChanged: SettingsService.setNotificationsReactionEnabled,
+            );
+          },
+        ),
+        const SizedBox(height: UITokens.spaceXLg),
+
+        // Sound section
         SettingsSectionHeader(
           title: l10n.soundLabel,
           subtitle: l10n.settingsSoundOptions,
@@ -365,34 +435,70 @@ class _SoundCard extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.label, required this.active});
+class _NotificationToggle extends StatelessWidget {
+  const _NotificationToggle({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
 
-  final String label;
-  final bool active;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: UITokens.spaceSmMd,
-        vertical: UITokens.spaceXSm,
-      ),
-      decoration: BoxDecoration(
-        color: active
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.72)
-            : theme.colorScheme.surface.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(UITokens.cornerPill),
-      ),
-      child: Text(
-        label,
-        style: theme.textTheme.labelLarge?.copyWith(
-          color: active
-              ? theme.colorScheme.primary
-              : AppColors.subtitleText(context),
-          fontWeight: FontWeight.w700,
+    return GlassCard(
+      child: Padding(
+        padding: const EdgeInsets.all(UITokens.spaceMd),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.56,
+                ),
+                borderRadius: BorderRadius.circular(UITokens.cornerLg),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, color: theme.colorScheme.primary),
+            ),
+            const SizedBox(width: UITokens.spaceMd),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: UITokens.spaceXS),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.subtitleText(context),
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: UITokens.spaceMd),
+            Switch(
+              value: value,
+              onChanged: onChanged,
+            ),
+          ],
         ),
       ),
     );

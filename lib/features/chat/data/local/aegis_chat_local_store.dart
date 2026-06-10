@@ -1,3 +1,5 @@
+// ignore_for_file: document_ignores
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -167,6 +169,15 @@ class AegisChatLocalStore {
 
   Future<void> close() => _database.close();
 
+  /// Удалить все чаты и сообщения из локального хранилища.
+  /// Используется при logout для очистки кэша.
+  Future<void> clearAllChats() async {
+    await _database.transaction(() async {
+      await _database.delete(_database.aegisMessages).go();
+      await _database.delete(_database.aegisConversations).go();
+    });
+  }
+
   Future<void> _prepareLegacyPaths() async {
     final documentsDir = await getApplicationDocumentsDirectory();
     _legacyStoreFile = File(p.join(documentsDir.path, 'aegis_chat_store.json'));
@@ -313,12 +324,16 @@ class AegisChatLocalStore {
   }
 
   Future<_LegacyChatStoreDump?> _loadLegacyDump() async {
+    // ignore: avoid_slow_async_io
     if (await _legacyStoreFile.exists()) {
       return _readLegacySingleFileStore();
     }
 
+    // ignore: avoid_slow_async_io
     final hasSplitStore = await _legacyConversationsFile.exists() ||
+        // ignore: avoid_slow_async_io
         await _legacyProfilesFile.exists() ||
+        // ignore: avoid_slow_async_io
         await _legacyMessagesDir.exists();
     if (!hasSplitStore) {
       return null;
@@ -381,6 +396,7 @@ class AegisChatLocalStore {
   }
 
   Future<List<Map<String, dynamic>>> _readLegacyConversations() async {
+    // ignore: avoid_slow_async_io
     if (!await _legacyConversationsFile.exists()) {
       return const <Map<String, dynamic>>[];
     }
@@ -397,6 +413,7 @@ class AegisChatLocalStore {
   }
 
   Future<Map<int, Map<String, dynamic>>> _readLegacyProfiles() async {
+    // ignore: avoid_slow_async_io
     if (!await _legacyProfilesFile.exists()) {
       return const <int, Map<String, dynamic>>{};
     }
@@ -419,6 +436,7 @@ class AegisChatLocalStore {
   }
 
   Future<Map<String, List<Map<String, dynamic>>>> _readLegacyMessages() async {
+    // ignore: avoid_slow_async_io
     if (!await _legacyMessagesDir.exists()) {
       return const <String, List<Map<String, dynamic>>>{};
     }

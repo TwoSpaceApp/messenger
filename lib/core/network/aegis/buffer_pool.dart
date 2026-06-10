@@ -14,11 +14,11 @@ import 'dart:typed_data';
 /// pool.release(buf);
 /// ```
 class BufferPool {
-  final int _maxPoolSize;
-  final List<Uint8List> _pool = [];
 
   /// Create a pool that retains at most [maxPoolSize] buffers.
   BufferPool({int maxPoolSize = 32}) : _maxPoolSize = maxPoolSize;
+  final int _maxPoolSize;
+  final List<Uint8List> _pool = [];
 
   /// Acquire a buffer of at least [minSize] bytes.
   ///
@@ -26,8 +26,8 @@ class BufferPool {
   /// otherwise allocates a new buffer rounded up to the next power of 2.
   Uint8List acquire(int minSize) {
     // Search for the smallest buffer that fits
-    int bestIdx = -1;
-    int bestLen = 0x7FFFFFFF; // max int
+    var bestIdx = -1;
+    var bestLen = 0x7FFFFFFF; // max int
     for (var i = _pool.length - 1; i >= 0; i--) {
       final len = _pool[i].length;
       if (len >= minSize && len < bestLen) {
@@ -67,13 +67,14 @@ class BufferPool {
   int get pooledCount => _pool.length;
 
   static int _nextPowerOf2(int v) {
-    v--;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    v++;
-    return v;
+    var n = v;
+    n--;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    n++;
+    return n;
   }
 }

@@ -1,5 +1,8 @@
 plugins {
     id("com.android.application")
+    // START: FlutterFire Configuration
+    id("com.google.gms.google-services")
+    // END: FlutterFire Configuration
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
@@ -13,6 +16,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -30,6 +34,10 @@ android {
         
         // Vector drawable support for older devices
         vectorDrawables.useSupportLibrary = true
+        
+        // Core library desugaring to support Java 8+ features on older Android versions
+        // Required by flutter_local_notifications and other modern dependencies
+        multiDexEnabled = true
 
         externalNativeBuild {
             cmake {
@@ -72,6 +80,17 @@ android {
             pickFirsts += "META-INF/com/android/build/gradle/app-metadata.properties"
         }
     }
+}
+
+dependencies {
+    // Required for core library desugaring support on minSdk < 30
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    // Import the Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
+
+    // Firebase Cloud Messaging
+    implementation("com.google.firebase:firebase-messaging")
 }
 
 flutter {

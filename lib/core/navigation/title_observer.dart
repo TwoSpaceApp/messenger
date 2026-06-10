@@ -38,6 +38,8 @@ class TitleObserver extends NavigatorObserver {
 
     final newTitle = suffix.isNotEmpty ? 'TwoSpace - $suffix' : 'TwoSpace';
 
+    // Fire-and-forget; system UI update not awaited
+    // ignore: discarded_futures
     SystemChrome.setApplicationSwitcherDescription(
       ApplicationSwitcherDescription(
         label: newTitle,

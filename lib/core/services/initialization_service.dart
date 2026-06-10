@@ -1,19 +1,25 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:two_space_app/core/config/environment.dart';
 import 'package:two_space_app/core/config/environment_validator.dart';
+import 'package:two_space_app/core/services/notification_service.dart';
+import 'package:two_space_app/core/services/time_out_exception.dart';
 import 'package:two_space_app/features/settings/data/services/settings_service.dart';
+import 'package:two_space_app/firebase_options.dart';
 
 /// Result of an initialization step
 class InitStepResult {
   InitStepResult({
     required this.stepName,
     required this.success,
+    required this.critical,
     required this.duration,
     this.error,
     this.stackTrace,
   });
   final String stepName;
   final bool success;
+  final bool critical;
   final dynamic error;
   final StackTrace? stackTrace;
   final Duration duration;
@@ -45,6 +51,7 @@ class InitializationResult {
             (s) => {
               'name': s.stepName,
               'success': s.success,
+              'critical': s.critical,
               'duration': s.duration.inMilliseconds,
               'error': s.error?.toString(),
             },
@@ -72,6 +79,9 @@ class InitializationService {
   static Future<void>? _deferredStartupFuture;
 
   static final List<List<InitializationStep>> _stepPhases = [
+    <InitializationStep>[
+      _FirebaseStep(),
+    ],
     <InitializationStep>[
       _EnvironmentStep(),
     ],
@@ -197,6 +207,19 @@ class InitializationService {
         _executeStep(_EnvironmentValidationStep()),
       ]);
       await SettingsService.loadDeferredSettings();
+      // Initialize notification service after main initialization.
+      try {
+        await NotificationService().initialize();
+      } on Object catch (error, stackTrace) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'InitializationService',
+            context: ErrorDescription('while initializing NotificationService'),
+          ),
+        );
+      }
     }();
   }
 
@@ -227,6 +250,7 @@ class InitializationService {
       return InitStepResult(
         stepName: step.name,
         success: true,
+        critical: step.critical,
         duration: duration,
       );
     } on Object catch (e, stackTrace) {
@@ -239,6 +263,7 @@ class InitializationService {
       return InitStepResult(
         stepName: step.name,
         success: false,
+        critical: step.critical,
         error: e,
         stackTrace: stackTrace,
         duration: duration,
@@ -316,7 +341,7 @@ class _SettingsStep implements InitializationStep {
   String get name => 'Settings Service';
 
   @override
-  bool get critical => false;
+  bool get critical => true;
 
   @override
   Duration get timeout => const Duration(seconds: 15);
@@ -327,10 +352,25 @@ class _SettingsStep implements InitializationStep {
   }
 }
 
-class TimeoutException implements Exception {
-  TimeoutException(this.message);
-  final String message;
+class _FirebaseStep implements InitializationStep {
+  @override
+  String get name => 'Firebase Initialization';
 
   @override
-  String toString() => 'TimeoutException: $message';
+  bool get critical => false; // App can work without Firebase
+
+  @override
+  Duration get timeout => const Duration(seconds: 10);
+
+  @override
+  Future<void> execute() async {
+    FirebaseOptions? options;
+    try {
+      options = DefaultFirebaseOptions.currentPlatform;
+    } catch (_) {
+      // Firebase is not configured for this platform — non-critical.
+      return;
+    }
+    await Firebase.initializeApp(options: options);
+  }
 }

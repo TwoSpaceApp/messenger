@@ -112,11 +112,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev mesa-utils
+
       - name: Regenerate localizations
         run: flutter gen-l10n
-
-      - name: Regenerate code
-        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Prepare build env from GitHub secrets
         shell: bash
@@ -157,8 +160,7 @@ jobs:
       - name: Force regenerate code for build env
         run: |
           flutter gen-l10n
-          dart run build_runner clean
-          dart run build_runner build --delete-conflicting-outputs
+          flutter pub run build_runner build --force-jit
 
       - name: Verify build env values are embedded
         shell: bash

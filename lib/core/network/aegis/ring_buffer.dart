@@ -12,13 +12,13 @@ import 'package:two_space_app/core/network/aegis/transport.dart'
 /// Used by [AegisTransport] to accumulate TCP chunks and extract complete
 /// protocol frames without per-chunk allocations.
 class RingBuffer {
-  Uint8List _buffer;
-  int _readPos = 0;
-  int _writePos = 0;
 
   /// Create a ring buffer with [initialCapacity] bytes.
   RingBuffer({int initialCapacity = 8192})
     : _buffer = Uint8List(initialCapacity);
+  Uint8List _buffer;
+  int _readPos = 0;
+  int _writePos = 0;
 
   /// Number of readable (unconsumed) bytes.
   int get length => _writePos - _readPos;

@@ -39,6 +39,8 @@ class _MediaPreviewState extends State<MediaPreview> {
       // trigger a background download (ignore errors, show a tiny progress)
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
+          // Fire-and-forget download is intentional
+          // ignore: discarded_futures
           _download();
         }
       });
@@ -54,7 +56,9 @@ class _MediaPreviewState extends State<MediaPreview> {
     try {
       if (_resolvedPath != null) return;
       final cachedPath = _pathCache[widget.mediaId];
-      if (cachedPath != null && await File(cachedPath).exists()) {
+    // File existence check is intentional
+    // ignore: avoid_slow_async_io
+    if (cachedPath != null && await File(cachedPath).exists()) {
         if (mounted) {
           setState(() {
             _resolvedPath = cachedPath;
@@ -64,6 +68,8 @@ class _MediaPreviewState extends State<MediaPreview> {
       }
 
       final file = File(widget.mediaId);
+      // File existence check is intentional
+      // ignore: avoid_slow_async_io
       if (await file.exists()) {
         _pathCache[widget.mediaId] = file.path;
         if (mounted) {
@@ -79,11 +85,15 @@ class _MediaPreviewState extends State<MediaPreview> {
 
   Future<String> _ensureResolvedPath() async {
     final currentPath = _resolvedPath;
+    // File existence check is intentional
+    // ignore: avoid_slow_async_io
     if (currentPath != null && await File(currentPath).exists()) {
       return currentPath;
     }
 
     final cachedPath = _pathCache[widget.mediaId];
+    // File existence check is intentional
+    // ignore: avoid_slow_async_io
     if (cachedPath != null && await File(cachedPath).exists()) {
       if (mounted) {
         setState(() {

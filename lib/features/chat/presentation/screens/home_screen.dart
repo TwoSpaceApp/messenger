@@ -1,12 +1,14 @@
+// ignore_for_file: document_ignores
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
@@ -15,9 +17,10 @@ import 'package:two_space_app/core/widgets/inline_notice_card.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
 import 'package:two_space_app/core/widgets/unread_badge.dart';
+import 'package:two_space_app/features/auth/data/services/aegis_auth_service.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
-import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_channel_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_group_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/join_room_screen.dart';
 import 'package:two_space_app/features/profile/presentation/widgets/user_avatar.dart';
@@ -33,11 +36,17 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final AegisChatService _chat = AegisChatService();
+  final AegisAuthService _auth = AegisAuthService();
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
   String? _errorMessage;
   StreamSubscription<List<Chat>>? _roomsSub;
+  StreamSubscription<void>? _sessionRestoredSub;
   Future<void>? _roomRefreshInFlight;
+  Timer? _authErrorRecoveryTimer;
+  int _authErrorRetryCount = 0;
+  static const int _maxAuthErrorRetries = 3;
+  static const Duration _authErrorRetryDelay = Duration(seconds: 3);
 
   final String _searchQuery = '';
 
@@ -53,12 +62,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _subscribeToRooms();
+    _subscribeToSessionRestored();
     unawaited(_loadUserAndRooms());
+  }
+
+  void _subscribeToSessionRestored() {
+    // ignore: discarded_futures
+    _sessionRestoredSub?.cancel();
+    _sessionRestoredSub = _auth.sessionRestored.listen(
+      (_) {
+        if (mounted) {
+          // Session was restored - refresh chat list immediately
+          unawaited(_loadUserAndRooms(forceRefresh: true));
+        }
+      },
+      onError: (Object error) {
+        // Log but don't crash on session restoration issues
+        debugPrint('Session restored event error: $error');
+      },
+    );
   }
 
   @override
   void dispose() {
+    // ignore: discarded_futures
     _roomsSub?.cancel();
+    // ignore: discarded_futures
+    _sessionRestoredSub?.cancel();
+    _authErrorRecoveryTimer?.cancel();
     super.dispose();
   }
 
@@ -154,6 +185,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _subscribeToRooms() {
+    // ignore: discarded_futures
     _roomsSub?.cancel();
     _roomsSub = _chat.watchChats().listen(
       (chats) {
@@ -168,14 +200,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _rooms = nextRooms;
           _loading = false;
           _errorMessage = null;
+          _authErrorRetryCount = 0; // Reset retry counter on success
+          _authErrorRecoveryTimer?.cancel();
+          _authErrorRecoveryTimer = null;
         });
       },
       onError: (Object error) {
         if (!mounted) return;
+        
+        final errorText = error.toString().toLowerCase();
+        final isAuthError = errorText.contains('notauthenticatedException') ||
+            errorText.contains('auth.not_authenticated') ||
+            errorText.contains('authenticated');
+        
         setState(() {
           _errorMessage = error.toString();
           _loading = false;
         });
+
+        // Auto-retry on auth errors after delay
+        if (isAuthError && _authErrorRetryCount < _maxAuthErrorRetries) {
+          _authErrorRecoveryTimer?.cancel();
+          _authErrorRetryCount++;
+          _authErrorRecoveryTimer = Timer(_authErrorRetryDelay, () {
+            if (mounted && _errorMessage != null) {
+              unawaited(_loadUserAndRooms(forceRefresh: true));
+            }
+          });
+        }
       },
     );
   }
@@ -915,6 +967,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       (e) => e['id'] == id,
       orElse: () => {'id': id, 'name': id},
     );
+    // ignore: discarded_futures
     context.push(
       '${AppStrings.routeChat}/${Uri.encodeComponent(id)}',
       extra: Chat(

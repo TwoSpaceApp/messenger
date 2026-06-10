@@ -1,14 +1,14 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use // Needed for deprecated member usage in older API calls
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/app_colors.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
 import 'package:two_space_app/core/widgets/loading_skeletons.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
@@ -56,7 +56,10 @@ class _PeopleScreenState extends State<PeopleScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = PeopleController()..load();
+    _controller = PeopleController()
+      // Fire-and-forget: load result handled within controller
+      // ignore: discarded_futures
+      ..load();
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
   }
@@ -97,11 +100,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
         value: PeopleSegment.phonebook,
         label: l10n.peopleSegmentPhonebook,
         icon: Icons.contact_phone_outlined,
-      ),
-      (
-        value: PeopleSegment.recent,
-        label: l10n.peopleSegmentRecent,
-        icon: Icons.schedule_rounded,
       ),
     ];
     const pad = EdgeInsets.symmetric(horizontal: 16);
@@ -177,7 +175,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                 ),
                                 if (widget.showCallsShortcut)
                                   _HeaderIcon(
-                                    icon: Icons.history_rounded,
+                                    icon: Icons.phone_rounded,
                                     tooltip: l10n.callsTitle,
                                     onTap: _openCallsHistory,
                                   ),
@@ -193,6 +191,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                               onChanged: _controller.updateQuery,
                               onClear: () {
                                 _searchController.clear();
+                                // Fire-and-forget: clear search results
+                                // ignore: discarded_futures
                                 _controller.clearSearch();
                               },
                             ),
@@ -207,12 +207,15 @@ class _PeopleScreenState extends State<PeopleScreen> {
                                   return ChoiceChip(
                                     selected: selected,
                                     showCheckmark: false,
-                                    avatar: Icon(
-                                      segment.icon,
-                                      size: 18,
-                                      color: selected
-                                          ? theme.colorScheme.onPrimaryContainer
-                                          : theme.colorScheme.onSurfaceVariant,
+                                    avatar: Transform.translate(
+                                      offset: const Offset(0, -1),
+                                      child: Icon(
+                                        segment.icon,
+                                        size: 18,
+                                        color: selected
+                                            ? theme.colorScheme.onPrimaryContainer
+                                            : theme.colorScheme.onSurfaceVariant,
+                                      ),
                                     ),
                                     label: Text(segment.label),
                                     selectedColor: theme.colorScheme.primaryContainer
@@ -382,8 +385,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
         );
       case PeopleSegment.phonebook:
         w.addAll(_phonebookContent(d, l10n));
-      case PeopleSegment.recent:
-        section(l10n.peopleRecentTitle, d.recentPeople);
     }
     return w;
   }
@@ -578,8 +579,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
         return people.where((p) => p.isTwoSpaceUser).toList();
       case PeopleSegment.phonebook:
         return people.where((p) => p.isDeviceContact).toList();
-      case PeopleSegment.recent:
-        return people.where((p) => p.lastInteractionAt != null).toList();
     }
   }
 
@@ -867,6 +866,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(l10n.peopleViewProfileAction),
                           onTap: () {
                             Navigator.pop(ctx);
+                            // Fire-and-forget: profile navigation
+                            // ignore: discarded_futures
                             _openProfile(person);
                           },
                         ),
@@ -877,6 +878,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(l10n.writeMessageAction),
                           onTap: () {
                             Navigator.pop(ctx);
+                            // Fire-and-forget: chat navigation
+                            // ignore: discarded_futures
                             _openChat(person);
                           },
                         ),
@@ -885,6 +888,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(l10n.voiceCallLabel),
                           onTap: () {
                             Navigator.pop(ctx);
+                            // Fire-and-forget: voice call
+                            // ignore: discarded_futures
                             _startCall(person, false);
                           },
                         ),
@@ -893,6 +898,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(l10n.videoCallLabel),
                           onTap: () {
                             Navigator.pop(ctx);
+                            // Fire-and-forget: video call
+                            // ignore: discarded_futures
                             _startCall(person, true);
                           },
                         ),
@@ -903,6 +910,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                           title: Text(l10n.inviteAction),
                           onTap: () {
                             Navigator.pop(ctx);
+                            // Fire-and-forget: invite action
+                            // ignore: discarded_futures
                             _invitePerson(person);
                           },
                         ),
@@ -922,6 +931,8 @@ class _PeopleScreenState extends State<PeopleScreen> {
                         ),
                         onTap: () {
                           Navigator.pop(ctx);
+                          // Fire-and-forget: favorite toggle
+                          // ignore: discarded_futures
                           _controller.toggleFavorite(person);
                         },
                       ),

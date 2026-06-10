@@ -1,18 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:two_space_app/core/network/aegis/exceptions.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
 import 'package:two_space_app/core/network/aegis/message_encoder.dart';
-import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
 import 'package:two_space_app/core/network/aegis/ring_buffer.dart';
+import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
 import 'package:two_space_app/core/network/aegis/security_utils.dart';
 import 'package:two_space_app/core/network/aegis/session_crypto.dart';
+import 'package:two_space_app/core/network/aegis/transport/_shared.dart'
+    show AegisConnection, createConnection;
 
 /// TCP transport layer for Aegis client communication.
 ///
@@ -20,8 +21,14 @@ import 'package:two_space_app/core/network/aegis/session_crypto.dart';
 /// optional XOR transport masking, backpressure, and periodic health checks.
 ///
 /// See: `src/Aegis.Transport/TcpServer.cs` (server counterpart).
+/// 
+/// Supports both native TCP sockets and WebSocket on web platforms.
 class AegisTransport {
-  late Socket _socket;
+
+  /// Create a transport with optional [maxBufferSize] for backpressure.
+  AegisTransport({int maxBufferSize = 4 * 1024 * 1024})
+    : _maxBufferSize = maxBufferSize;
+  late AegisConnection _connection;
   bool _isConnected = false;
   int _nextSequenceId = 1;
   Future<void> _receivePipeline = Future<void>.value();
@@ -59,10 +66,6 @@ class AegisTransport {
   /// Whether the transport is connected.
   bool get isConnected => _isConnected;
 
-  /// Create a transport with optional [maxBufferSize] for backpressure.
-  AegisTransport({int maxBufferSize = 4 * 1024 * 1024})
-    : _maxBufferSize = maxBufferSize;
-
   // ── Connection ──────────────────────────────────────────────────────
 
   /// Connect to the Aegis server at [host]:[port].
@@ -86,20 +89,15 @@ class AegisTransport {
     AegisLogger.info('Connecting to $host:$port');
 
     try {
+      _connection = createConnection();
+      
       final connectTimeout = timeout ?? const Duration(seconds: 10);
-      if (useTls) {
-        _socket = await SecureSocket.connect(
-          host,
-          port,
-          timeout: connectTimeout,
-        ).timeout(connectTimeout);
-      } else {
-        _socket = await Socket.connect(
-          host,
-          port,
-          timeout: connectTimeout,
-        ).timeout(connectTimeout);
-      }
+      await _connection.connect(
+        host,
+        port,
+        timeout: connectTimeout,
+        useTls: useTls,
+      ).timeout(connectTimeout);
 
       _isConnected = true;
       _nextSequenceId = 1;
@@ -145,7 +143,7 @@ class AegisTransport {
     try {
       await _socketSubscription?.cancel();
       _socketSubscription = null;
-      await _socket.close();
+      await _connection.close();
     } on Object catch (_) {
       // Best-effort close — ignore errors.
     }
@@ -194,8 +192,8 @@ class AegisTransport {
       final wireMessage = await _prepareOutboundMessage(message);
       final data = MessageEncoder.encode(wireMessage);
       final outgoing = _applyOutboundMask(data);
-      _socket.add(outgoing);
-      await _socket.flush();
+      await _connection.send(outgoing);
+      await _connection.flush();
 
       AegisLogger.debug('Message sent successfully');
     } on Object catch (e) {
@@ -211,23 +209,37 @@ class AegisTransport {
   // ── Receiving ───────────────────────────────────────────────────────
 
   void _listenForMessages() {
-    _socketSubscription = _socket.listen(
+    _socketSubscription = _connection.onData.listen(
       (data) {
         _receivePipeline = _receivePipeline.then(
           (_) => _handleIncomingData(data),
         );
       },
       onError: (error) {
-        AegisLogger.error('Socket error', error);
+        AegisLogger.error('Connection error', error);
         _isConnected = false;
         if (!_disconnectController.isClosed) _disconnectController.add(null);
       },
       onDone: () {
-        AegisLogger.info('Socket closed by remote peer');
+        AegisLogger.info('Connection closed by remote peer');
         _isConnected = false;
         if (!_disconnectController.isClosed) _disconnectController.add(null);
       },
     );
+    
+    // Listen for errors on the connection
+    _connection.onError.listen((error) {
+      AegisLogger.error('Connection error', error);
+      _isConnected = false;
+      if (!_disconnectController.isClosed) _disconnectController.add(null);
+    });
+    
+    // Listen for close events
+    _connection.onClose.listen((_) {
+      AegisLogger.info('Connection closed');
+      _isConnected = false;
+      if (!_disconnectController.isClosed) _disconnectController.add(null);
+    });
   }
 
   /// Accumulate [data] into the ring buffer and extract complete frames.
@@ -237,9 +249,9 @@ class AegisTransport {
     final incoming = _applyInboundMask(data);
     _pendingBuffer.write(incoming);
 
-    // ── Backpressure: pause socket if buffer grows too large ──────
+    // ── Backpressure: pause connection if buffer grows too large ──────
     if (!_isPaused && _pendingBuffer.length > _maxBufferSize) {
-      _socketSubscription?.pause();
+      _connection.pause();
       _isPaused = true;
       AegisLogger.warning(
         'Backpressure: pausing socket read '
@@ -249,9 +261,9 @@ class AegisTransport {
 
     await _extractFrames();
 
-    // ── Resume socket once buffer drains below half-mark ─────────
+    // ── Resume connection once buffer drains below half-mark ─────────
     if (_isPaused && _pendingBuffer.length < _maxBufferSize ~/ 2) {
-      _socketSubscription?.resume();
+      _connection.resume();
       _isPaused = false;
       AegisLogger.debug('Backpressure: resumed socket read');
     }
@@ -376,8 +388,8 @@ class AegisTransport {
     if (_isConnected) {
       disconnect().ignore();
     }
-    if (!_messageController.isClosed) _messageController.close();
-    if (!_disconnectController.isClosed) _disconnectController.close();
+    unawaited(_messageController.close());
+    unawaited(_disconnectController.close());
   }
 
   Future<Message> _prepareOutboundMessage(Message message) async {

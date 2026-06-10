@@ -3,10 +3,10 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/models/chat.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/features/chat/data/services/aegis_chat_service.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';

@@ -1,15 +1,14 @@
-import 'package:flutter/services.dart';
-
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/app_state_views.dart';
-import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
 import 'package:two_space_app/core/widgets/section_card.dart';
+import 'package:two_space_app/core/widgets/section_page_header.dart';
 import 'package:two_space_app/features/auth/data/services/auth_service.dart';
 
 class TfaSetupScreen extends StatefulWidget {
@@ -44,6 +43,8 @@ class _TfaSetupScreenState extends State<TfaSetupScreen> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: TFA setup load result handled within the method
+    // ignore: discarded_futures
     _fetchTfaSetup();
   }
 

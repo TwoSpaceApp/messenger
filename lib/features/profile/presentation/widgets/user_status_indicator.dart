@@ -98,6 +98,8 @@ class __TypingDotsState extends State<_TypingDots>
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
+    // Fire-and-forget: typing dots animation runs indefinitely
+    // ignore: discarded_futures
     )..repeat();
   }
 

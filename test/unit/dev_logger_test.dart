@@ -2,95 +2,95 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:two_space_app/core/services/dev_logger.dart';
 
 void main() {
-  group('DevLogger', () {
+  group("DevLogger", () {
     setUp(DevLogger.clear);
 
-    test('создаёт экземпляр с тегом', () {
-      final logger = DevLogger('TestTag');
+    test("создаёт экземпляр с тегом", () {
+      final logger = DevLogger("TestTag");
       expect(logger, isNotNull);
     });
 
-    test('логирует отладочные сообщения', () {
-      final logger = DevLogger('Debug');
-      logger.debug('тестовое сообщение');
+    test("логирует отладочные сообщения", () {
+      final logger = DevLogger("Debug");
+      logger.debug("тестовое сообщение");
       final logs = DevLogger.all;
       expect(logs.isNotEmpty, true);
-      expect(logs.first.contains('🔵'), true);
-      expect(logs.first.contains('тестовое сообщение'), true);
+      expect(logs.first.contains("🔵"), true);
+      expect(logs.first.contains("тестовое сообщение"), true);
     });
 
-    test('логирует информационные сообщения', () {
-      final logger = DevLogger('Info');
-      logger.info('информация');
+    test("логирует информационные сообщения", () {
+      final logger = DevLogger("Info");
+      logger.info("информация");
       final logs = DevLogger.all;
-      expect(logs.first.contains('ℹ️'), true);
-      expect(logs.first.contains('информация'), true);
+      expect(logs.first.contains("ℹ️"), true);
+      expect(logs.first.contains("информация"), true);
     });
 
-    test('логирует предупреждения', () {
-      final logger = DevLogger('Warning');
-      logger.warning('предупреждение');
+    test("логирует предупреждения", () {
+      final logger = DevLogger("Warning");
+      logger.warning("предупреждение");
       final logs = DevLogger.all;
-      expect(logs.first.contains('⚠️'), true);
-      expect(logs.first.contains('предупреждение'), true);
+      expect(logs.first.contains("⚠️"), true);
+      expect(logs.first.contains("предупреждение"), true);
     });
 
-    test('логирует ошибки', () {
-      final logger = DevLogger('Error');
-      logger.error('ошибка');
+    test("логирует ошибки", () {
+      final logger = DevLogger("Error");
+      logger.error("ошибка");
       final logs = DevLogger.all;
-      expect(logs.first.contains('🔴'), true);
-      expect(logs.first.contains('ошибка'), true);
+      expect(logs.first.contains("🔴"), true);
+      expect(logs.first.contains("ошибка"), true);
     });
 
-    test('логирует исключения', () {
-      final logger = DevLogger('Exception');
+    test("логирует исключения", () {
+      final logger = DevLogger("Exception");
       try {
-        throw Exception('тестовое исключение');
+        throw Exception("тестовое исключение");
       } on Object catch (e, st) {
-        logger.exception('поймали исключение', e, st);
+        logger.exception("поймали исключение", e, st);
       }
       final logs = DevLogger.all;
       expect(logs.length >= 2, true); // ошибка + stacktrace
     });
 
-    test('сохраняет последние 400 логов', () {
-      final logger = DevLogger('Buffer');
+    test("сохраняет последние 400 логов", () {
+      final logger = DevLogger("Buffer");
       for (var i = 0; i < 450; i++) {
-        logger.info('сообщение $i');
+        logger.info("сообщение $i");
       }
       final logs = DevLogger.all;
       expect(logs.length <= 400, true);
       expect(logs.length, 400); // максимум 400
-      expect(logs.first.contains('сообщение 449'), true);
-      expect(logs.last.contains('сообщение 50'), true);
+      expect(logs.first.contains("сообщение 449"), true);
+      expect(logs.last.contains("сообщение 50"), true);
     });
 
-    test('включает тег в логи', () {
-      final logger = DevLogger('MyTag');
-      logger.info('тест');
+    test("включает тег в логи", () {
+      final logger = DevLogger("MyTag");
+      logger.info("тест");
       final logs = DevLogger.all;
-      expect(logs.first.contains('MyTag'), true);
+      expect(logs.first.contains("MyTag"), true);
     });
 
-    test('включает временную метку в логи', () {
-      final logger = DevLogger('TimeTest');
-      logger.info('тест');
+    test("включает временную метку в логи", () {
+      final logger = DevLogger("TimeTest");
+      logger.info("тест");
       final logs = DevLogger.all;
-      expect(logs.first.contains('202'), true); // год в ISO формате
+      expect(logs.first.contains("202"), true); // год в ISO формате
     });
 
-    test('stream отправляет обновления', () async {
-      final logger = DevLogger('Stream');
+    test("stream отправляет обновления", () async {
+      final logger = DevLogger("Stream");
       final streamFuture = DevLogger.stream.first;
-      logger.info('тест потока');
+      logger.info("тест потока");
       final logs = await streamFuture;
       expect(logs.isNotEmpty, true);
     });
 
-    test('clear удаляет все логи', () {
-      final logger = DevLogger('Clear');
-      logger.info('тест');
+    test("clear удаляет все логи", () {
+      final logger = DevLogger("Clear");
+      logger.info("тест");
       DevLogger.clear();
       expect(DevLogger.all.isEmpty, true);
     });

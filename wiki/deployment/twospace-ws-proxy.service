@@ -1,0 +1,33 @@
+[Unit]
+Description=TwoSpace WebSocket to TCP Bridge for Aegis Protocol
+Documentation=https://github.com/twospace/messenger
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/websocket-proxy
+ExecStart=/usr/bin/node websocket-proxy.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=twospace-ws-proxy
+
+# Environment variables for the proxy
+# Use port 9999 for WebSocket (nginx will proxy /ws to here)
+Environment="WS_PORT=9999"
+Environment="TCP_HOST=localhost"
+Environment="TCP_PORT=8888"
+Environment="USE_SSL=false"
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Security
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

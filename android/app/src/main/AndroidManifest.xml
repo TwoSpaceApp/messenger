@@ -4,6 +4,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <!-- Foreground service permission for background notification listener (Android 12+) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Storage permissions for saving media files to gallery -->
     <!-- For Android 12 and below -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
@@ -58,6 +61,12 @@
             android:value="2" />
         
         <!-- Allow querying package installer is declared at manifest root -->
+        
+        <!-- Foreground service for background message listening -->
+        <service
+            android:name=".NotificationForegroundService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

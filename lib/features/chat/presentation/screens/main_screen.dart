@@ -1,9 +1,11 @@
+// ignore_for_file: document_ignores
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
+import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/services/biometric_service.dart';
 import 'package:two_space_app/core/widgets/app_shell_frame.dart';
@@ -18,8 +20,8 @@ import 'package:two_space_app/features/settings/data/services/settings_service.d
 import 'package:two_space_app/features/settings/presentation/screens/settings_screen.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
-  static const routeName = '/main';
   const MainScreen({super.key, this.initialIndex = 0});
+  static const routeName = '/main';
 
   final int initialIndex;
 
@@ -53,6 +55,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
     _currentIndex = widget.initialIndex;
     _initializedTabs = <int>{widget.initialIndex};
     WidgetsBinding.instance.addObserver(this);
+    // ignore: discarded_futures
     _checkBiometrics();
     _unreadSub = AegisChatService().watchUnreadChatsCount().listen((total) {
       if (total != _totalUnread && mounted) {
@@ -63,6 +66,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   @override
   void dispose() {
+    // ignore: discarded_futures
     _unreadSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -81,6 +85,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      // ignore: discarded_futures
       _checkBiometrics();
       return;
     }
@@ -88,6 +93,7 @@ class _MainScreenState extends ConsumerState<MainScreen>
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached ||
         state == AppLifecycleState.inactive) {
+      // ignore: discarded_futures
       AegisChatService().flushNow();
     }
   }

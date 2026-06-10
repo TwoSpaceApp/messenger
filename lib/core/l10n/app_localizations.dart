@@ -2892,6 +2892,54 @@ abstract class AppLocalizations {
   /// **'Change email'**
   String get changeEmailButton;
 
+  /// Email required validation message
+  ///
+  /// In en, this message translates to:
+  /// **'Email is required'**
+  String get emailRequired;
+
+  /// Invalid email validation message
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email address'**
+  String get emailInvalid;
+
+  /// Password required validation message
+  ///
+  /// In en, this message translates to:
+  /// **'Password is required'**
+  String get passwordRequired;
+
+  /// Email unchanged validation message
+  ///
+  /// In en, this message translates to:
+  /// **'New email is the same as current'**
+  String get emailUnchanged;
+
+  /// Email change not supported error
+  ///
+  /// In en, this message translates to:
+  /// **'Email change is not yet supported'**
+  String get changeEmailNotYetSupported;
+
+  /// Email change not available message
+  ///
+  /// In en, this message translates to:
+  /// **'Email change is not yet available. Please contact support.'**
+  String get changeEmailNotAvailable;
+
+  /// Email change feature status message
+  ///
+  /// In en, this message translates to:
+  /// **'This feature requires server-side support. The client is prepared but awaits protocol updates.'**
+  String get changeEmailRequiresServerSupport;
+
+  /// Email input hint example
+  ///
+  /// In en, this message translates to:
+  /// **'user@example.com'**
+  String get emailHintExample;
+
   /// Change email error
   ///
   /// In en, this message translates to:
@@ -5783,6 +5831,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a diagnostic file with device info, application logs, and network logs.'**
   String get feedbackAttachLogsSubtitle;
+
+  /// Background service section title in notifications screen
+  ///
+  /// In en, this message translates to:
+  /// **'Background Service'**
+  String get notificationsForegroundServiceTitle;
+
+  /// Background service section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Keep app running in the background'**
+  String get notificationsForegroundServiceSubtitle;
+
+  /// Background service toggle title
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Background Service'**
+  String get notificationsForegroundServiceEnabled;
+
+  /// Background service toggle description
+  ///
+  /// In en, this message translates to:
+  /// **'Continuously listen for messages with persistent notification'**
+  String get notificationsForegroundServiceDescription;
+
+  /// Notification types section title
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Types'**
+  String get notificationsTypesSection;
+
+  /// Notification types section subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which events notify you'**
+  String get notificationsTypesSectionSubtitle;
+
+  /// Messages notification toggle title
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get notificationsMessagesTitle;
+
+  /// Messages notification toggle description
+  ///
+  /// In en, this message translates to:
+  /// **'New messages in chats'**
+  String get notificationsMessagesDescription;
+
+  /// Chats and groups notification toggle title
+  ///
+  /// In en, this message translates to:
+  /// **'Chats & Groups'**
+  String get notificationsChatTitle;
+
+  /// Chats and groups notification toggle description
+  ///
+  /// In en, this message translates to:
+  /// **'New chats and group invitations'**
+  String get notificationsChatDescription;
+
+  /// Posts notification toggle title
+  ///
+  /// In en, this message translates to:
+  /// **'Posts'**
+  String get notificationsPostTitle;
+
+  /// Posts notification toggle description
+  ///
+  /// In en, this message translates to:
+  /// **'New posts in channels'**
+  String get notificationsPostDescription;
+
+  /// Reactions notification toggle title
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions'**
+  String get notificationsReactionTitle;
+
+  /// Reactions notification toggle description
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions to your messages'**
+  String get notificationsReactionDescription;
+
+  /// Error message when image file is too large for upload
+  ///
+  /// In en, this message translates to:
+  /// **'Image too large'**
+  String get imageTooLarge;
+
+  /// Info message when image is automatically compressed
+  ///
+  /// In en, this message translates to:
+  /// **'Image was compressed to fit protocol limits'**
+  String get imageCompressed;
 }
 
 class _AppLocalizationsDelegate

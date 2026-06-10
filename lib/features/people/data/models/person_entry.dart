@@ -20,6 +20,27 @@ class PersonEntry {
     this.note,
   });
 
+  factory PersonEntry.fromJson(Map<String, dynamic> json) {
+    return PersonEntry(
+      id: json["id"]?.toString() ?? "",
+      displayName: json["displayName"]?.toString() ?? "",
+      username: json["username"]?.toString(),
+      avatarUrl: json["avatarUrl"]?.toString(),
+      phones: (json["phones"] as List<dynamic>? ?? const <dynamic>[])
+          .map((value) => value.toString())
+          .toList(),
+      remoteUserId: json["remoteUserId"]?.toString(),
+      isTwoSpaceUser: json["isTwoSpaceUser"] == true,
+      isDeviceContact: json["isDeviceContact"] == true,
+      isFavorite: json["isFavorite"] == true,
+      isOnline: json["isOnline"] == true,
+      presenceStatus: json["presenceStatus"]?.toString(),
+      lastSeenAt: _dateTimeFromJson(json["lastSeenAt"]),
+      lastInteractionAt: _dateTimeFromJson(json["lastInteractionAt"]),
+      note: json["note"]?.toString(),
+    );
+  }
+
   final String id;
   final String displayName;
   final String? username;
@@ -73,27 +94,6 @@ class PersonEntry {
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       lastInteractionAt: lastInteractionAt ?? this.lastInteractionAt,
       note: note ?? this.note,
-    );
-  }
-
-  factory PersonEntry.fromJson(Map<String, dynamic> json) {
-    return PersonEntry(
-      id: json['id']?.toString() ?? '',
-      displayName: json['displayName']?.toString() ?? '',
-      username: json['username']?.toString(),
-      avatarUrl: json['avatarUrl']?.toString(),
-      phones: (json['phones'] as List<dynamic>? ?? const <dynamic>[])
-          .map((value) => value.toString())
-          .toList(),
-      remoteUserId: json['remoteUserId']?.toString(),
-      isTwoSpaceUser: json['isTwoSpaceUser'] == true,
-      isDeviceContact: json['isDeviceContact'] == true,
-      isFavorite: json['isFavorite'] == true,
-      isOnline: json['isOnline'] == true,
-      presenceStatus: json['presenceStatus']?.toString(),
-      lastSeenAt: _dateTimeFromJson(json['lastSeenAt']),
-      lastInteractionAt: _dateTimeFromJson(json['lastInteractionAt']),
-      note: json['note']?.toString(),
     );
   }
 

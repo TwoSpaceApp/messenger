@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
 import 'package:two_space_app/core/utils/user_facing_error.dart';
@@ -151,6 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     String password, {
     bool invalidCode = false,
   }) async {
+    var invalidCodeLocal = invalidCode;
     final l10n = AppLocalizations.of(context)!;
     while (mounted) {
       if (_loginProtection.isCoolingDown) {
@@ -164,7 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
 
       final credentials = await _promptForTwoFactorCredentials(
-        invalidCode: invalidCode,
+        invalidCode: invalidCodeLocal,
       );
       if (!mounted || credentials == null) {
         return;
@@ -189,7 +190,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (_loginProtection.isCoolingDown) {
           return;
         }
-        invalidCode = true;
+        invalidCodeLocal = true;
         continue;
       } catch (e) {
         if (!mounted) {

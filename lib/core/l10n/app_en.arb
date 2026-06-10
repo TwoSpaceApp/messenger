@@ -1981,6 +1981,38 @@
   "@changeEmailButton": {
     "description": "Change email button"
   },
+  "emailRequired": "Email is required",
+  "@emailRequired": {
+    "description": "Email required validation message"
+  },
+  "emailInvalid": "Invalid email address",
+  "@emailInvalid": {
+    "description": "Invalid email validation message"
+  },
+  "passwordRequired": "Password is required",
+  "@passwordRequired": {
+    "description": "Password required validation message"
+  },
+  "emailUnchanged": "New email is the same as current",
+  "@emailUnchanged": {
+    "description": "Email unchanged validation message"
+  },
+  "changeEmailNotYetSupported": "Email change is not yet supported",
+  "@changeEmailNotYetSupported": {
+    "description": "Email change not supported error"
+  },
+  "changeEmailNotAvailable": "Email change is not yet available. Please contact support.",
+  "@changeEmailNotAvailable": {
+    "description": "Email change not available message"
+  },
+  "changeEmailRequiresServerSupport": "This feature requires server-side support. The client is prepared but awaits protocol updates.",
+  "@changeEmailRequiresServerSupport": {
+    "description": "Email change feature status message"
+  },
+  "emailHintExample": "user@example.com",
+  "@emailHintExample": {
+    "description": "Email input hint example"
+  },
   "changeEmailError": "Could not change email: {error}",
   "@changeEmailError": {
     "description": "Change email error",
@@ -3606,5 +3638,69 @@
   "devMenuNewestFirst": "Newest first",
   "devMenuOldestFirst": "Oldest first",
   "feedbackAttachLogsLabel": "Attach logs?",
-  "feedbackAttachLogsSubtitle": "Add a diagnostic file with device info, application logs, and network logs."
+  "feedbackAttachLogsSubtitle": "Add a diagnostic file with device info, application logs, and network logs.",
+  "notificationsForegroundServiceTitle": "Background Service",
+  "@notificationsForegroundServiceTitle": {
+    "description": "Background service section title in notifications screen"
+  },
+  "notificationsForegroundServiceSubtitle": "Keep app running in the background",
+  "@notificationsForegroundServiceSubtitle": {
+    "description": "Background service section subtitle"
+  },
+  "notificationsForegroundServiceEnabled": "Enable Background Service",
+  "@notificationsForegroundServiceEnabled": {
+    "description": "Background service toggle title"
+  },
+  "notificationsForegroundServiceDescription": "Continuously listen for messages with persistent notification",
+  "@notificationsForegroundServiceDescription": {
+    "description": "Background service toggle description"
+  },
+  "notificationsTypesSection": "Notification Types",
+  "@notificationsTypesSection": {
+    "description": "Notification types section title"
+  },
+  "notificationsTypesSectionSubtitle": "Choose which events notify you",
+  "@notificationsTypesSectionSubtitle": {
+    "description": "Notification types section subtitle"
+  },
+  "notificationsMessagesTitle": "Messages",
+  "@notificationsMessagesTitle": {
+    "description": "Messages notification toggle title"
+  },
+  "notificationsMessagesDescription": "New messages in chats",
+  "@notificationsMessagesDescription": {
+    "description": "Messages notification toggle description"
+  },
+  "notificationsChatTitle": "Chats & Groups",
+  "@notificationsChatTitle": {
+    "description": "Chats and groups notification toggle title"
+  },
+  "notificationsChatDescription": "New chats and group invitations",
+  "@notificationsChatDescription": {
+    "description": "Chats and groups notification toggle description"
+  },
+  "notificationsPostTitle": "Posts",
+  "@notificationsPostTitle": {
+    "description": "Posts notification toggle title"
+  },
+  "notificationsPostDescription": "New posts in channels",
+  "@notificationsPostDescription": {
+    "description": "Posts notification toggle description"
+  },
+  "notificationsReactionTitle": "Reactions",
+  "@notificationsReactionTitle": {
+    "description": "Reactions notification toggle title"
+  },
+  "notificationsReactionDescription": "Reactions to your messages",
+  "@notificationsReactionDescription": {
+    "description": "Reactions notification toggle description"
+  },
+  "imageTooLarge": "Image too large",
+  "@imageTooLarge": {
+    "description": "Error message when image file is too large for upload"
+  },
+  "imageCompressed": "Image was compressed to fit protocol limits",
+  "@imageCompressed": {
+    "description": "Info message when image is automatically compressed"
+  }
 }

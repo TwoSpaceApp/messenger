@@ -10,7 +10,7 @@ import 'package:two_space_app/features/people/data/models/person_entry.dart';
 import 'package:two_space_app/features/people/data/services/call_history_service.dart';
 import 'package:two_space_app/features/people/data/services/people_local_store.dart';
 
-enum PeopleSegment { all, twospace, phonebook, recent }
+enum PeopleSegment { all, twospace, phonebook }
 
 enum DeviceContactsPermission { granted, denied, permanentlyDenied }
 

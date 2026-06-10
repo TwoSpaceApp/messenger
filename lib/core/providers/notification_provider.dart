@@ -13,6 +13,8 @@ class NotificationsEnabledNotifier extends Notifier<bool> {
   }
 
   void setEnabled(bool v) {
+    // Fire-and-forget; result not needed in notifier
+    // ignore: discarded_futures
     SettingsService.setNotificationsEnabled(v);
   }
 }
@@ -29,6 +31,8 @@ class SoundNotificationsNotifier extends Notifier<bool> {
   }
 
   void setEnabled(bool v) {
+    // Fire-and-forget; result not needed in notifier
+    // ignore: discarded_futures
     SettingsService.setSoundEnabled(v);
   }
 }

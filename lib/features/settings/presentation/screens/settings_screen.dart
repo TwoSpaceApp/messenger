@@ -6,8 +6,8 @@ import 'package:two_space_app/core/config/app_colors.dart';
 import 'package:two_space_app/core/config/ui_tokens.dart';
 import 'package:two_space_app/core/constants/app_strings.dart';
 import 'package:two_space_app/core/l10n/app_localizations.dart';
-import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/utils/message_time_formatter.dart';
+import 'package:two_space_app/core/utils/user_facing_error.dart';
 import 'package:two_space_app/core/widgets/glass_card.dart';
 import 'package:two_space_app/core/widgets/language_switcher.dart';
 import 'package:two_space_app/core/widgets/screen_background.dart';
@@ -31,6 +31,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget: app version load result handled within the method
+    // ignore: discarded_futures
     _loadAppVersion();
   }
 
@@ -406,6 +408,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 final auth = AuthService();
                                 final userId = await auth.getCurrentUserId();
                                 if (userId != null && context.mounted) {
+                                  // Fire-and-forget: navigation after userId resolve
+                                  // ignore: unawaited_futures
                                   context.push(AppStrings.routeAccountProfile);
                                 }
                               },

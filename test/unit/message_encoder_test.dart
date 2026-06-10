@@ -21,8 +21,8 @@ bool _supportsBrotliCompression() {
 }
 
 void main() {
-  group('MessageEncoder', () {
-    test('encodes and decodes a round-trip message', () {
+  group("MessageEncoder", () {
+    test("encodes and decodes a round-trip message", () {
       final message = Message.withType(
         MessageType.privateChatMessage,
         Uint8List.fromList(<int>[1, 2, 3, 4]),
@@ -44,7 +44,7 @@ void main() {
       );
     });
 
-    test('throws on invalid magic', () {
+    test("throws on invalid magic", () {
       final message = Message.withType(MessageType.ping, <int>[9, 9]);
       final encoded = MessageEncoder.encode(message);
       encoded[0] = 0;
@@ -55,7 +55,7 @@ void main() {
       );
     });
 
-    test('throws on incomplete frame', () {
+    test("throws on incomplete frame", () {
       final message = Message.withType(MessageType.ack, <int>[7, 8, 9]);
       final encoded = MessageEncoder.encode(message);
       final truncated = encoded.sublist(0, encoded.length - 1);
@@ -67,7 +67,7 @@ void main() {
     });
 
     test(
-      'compresses payloads above threshold and restores them on decode',
+      "compresses payloads above threshold and restores them on decode",
       () {
         final payload = Uint8List.fromList(
           List<int>.filled(ProtocolConstants.compressionThreshold + 128, 65),

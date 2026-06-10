@@ -25,6 +25,8 @@ class _NetworkQualityIndicatorState extends State<NetworkQualityIndicator> {
   @override
   void initState() {
     super.initState();
+    // Fire-and-forget; initial probe result handled in setState
+    // ignore: discarded_futures
     _check();
     _timer = Timer.periodic(_probeInterval, (_) => _check());
   }

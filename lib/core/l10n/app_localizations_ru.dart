@@ -1515,6 +1515,33 @@ class AppLocalizationsRu extends AppLocalizations {
   String get changeEmailButton => 'Изменить email';
 
   @override
+  String get emailRequired => 'Email необходимо заполнить';
+
+  @override
+  String get emailInvalid => 'Некорректный адрес email';
+
+  @override
+  String get passwordRequired => 'Пароль необходимо заполнить';
+
+  @override
+  String get emailUnchanged => 'Новый email совпадает с текущим';
+
+  @override
+  String get changeEmailNotYetSupported =>
+      'Изменение email ещё не поддерживается';
+
+  @override
+  String get changeEmailNotAvailable =>
+      'Изменение email ещё недоступно. Свяжитесь с поддержкой.';
+
+  @override
+  String get changeEmailRequiresServerSupport =>
+      'Эта функция требует поддержку на сервере. Клиент готов, но ожидает обновления протокола.';
+
+  @override
+  String get emailHintExample => 'пример@example.com';
+
+  @override
   String changeEmailError(String error) {
     return 'Не удалось изменить email: $error';
   }
@@ -3157,4 +3184,57 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get feedbackAttachLogsSubtitle =>
       'Добавить диагностический файл с данными устройства, логами приложения и логами сети.';
+
+  @override
+  String get notificationsForegroundServiceTitle => 'Фоновый сервис';
+
+  @override
+  String get notificationsForegroundServiceSubtitle =>
+      'Приложение работает в фоне';
+
+  @override
+  String get notificationsForegroundServiceEnabled => 'Включить фоновый сервис';
+
+  @override
+  String get notificationsForegroundServiceDescription =>
+      'Постоянно слушать входящие сообщения с постоянным уведомлением';
+
+  @override
+  String get notificationsTypesSection => 'Типы уведомлений';
+
+  @override
+  String get notificationsTypesSectionSubtitle =>
+      'Выберите события, о которых вас уведомлять';
+
+  @override
+  String get notificationsMessagesTitle => 'Сообщения';
+
+  @override
+  String get notificationsMessagesDescription => 'Новые сообщения в чатах';
+
+  @override
+  String get notificationsChatTitle => 'Чаты и группы';
+
+  @override
+  String get notificationsChatDescription =>
+      'Новые чаты и приглашения в группы';
+
+  @override
+  String get notificationsPostTitle => 'Посты';
+
+  @override
+  String get notificationsPostDescription => 'Новые посты в каналах';
+
+  @override
+  String get notificationsReactionTitle => 'Реакции';
+
+  @override
+  String get notificationsReactionDescription => 'Реакции на ваши сообщения';
+
+  @override
+  String get imageTooLarge => 'Изображение слишком большое';
+
+  @override
+  String get imageCompressed =>
+      'Изображение сжато для совместимости с протоколом';
 }

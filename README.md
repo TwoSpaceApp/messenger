@@ -48,7 +48,7 @@ TwoSpace использует **Aegis** — собственный бинарн�
 
 Все строки находятся в `lib/core/l10n/app_*.arb`.
 
-Сменить язык можно на экране **Настройки** или прямо на экранах **Вход / Регистрация** через кнопку с флагом в правом верхнем углу. Выбор сохраняется в локальном хранилище и применяется при каждом запуске.
+Сменить язык можно на экране **Настройки** или прямо на экранах **Вход / Регистрация** через кнопку с флагом в правом верхнем углу.
 ---
 
 ## 🚀 Быстрый запуск в виде проекта
@@ -56,25 +56,19 @@ TwoSpace использует **Aegis** — собственный бинарн�
 Коротко:
 
 1) `cp .env.example .env`
-2) `dart run build_runner build -d`
+2) `dart build -d`
 3) `flutter pub get`
 4) `flutter run`
 
 Минимальный набор Aegis-переменных для клиента:
 
 - `AEGIS_HOST` - адрес вашего Aegis-сервера;
-- `AEGIS_PORT` - порт сервера, по умолчанию `8888`;
 
-Остальные Aegis-переменные опциональны и нужны только если конкретный стенд этого требует:
-
-- `AEGIS_CONNECT_TIMEOUT_SECONDS` - таймаут подключения;
-- `AEGIS_TRANSPORT_MASKING_KEY` - задавайте только если сервер явно включает `Server:EnableTransportMasking`;
-- `AEGIS_USE_TLS=true` - включайте, если стенд принимает TLS-соединения;
-- `AEGIS_BOT_API_BASE_URL` - укажите явно, если Bot API не на стандартном `:5000` рядом с TCP-сервером.
+Остальные Aegis-переменные опциональны и нужны только если конкретный стенд этого требует.
 
 По умолчанию клиент передаёт встроенные app credentials. Для приватного/кастомного стенда можно переопределить их через `AEGIS_APP_ID` и `AEGIS_APP_HASH`.
 
-Полный гайд для разработки (зависимости для Linux/Windows, команды сборки, pre-commit checks) — в [CONTRIBUTING.md](CONTRIBUTING.md).
+Полный гайд для разработки ищите в [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -84,16 +78,12 @@ TwoSpace использует **Aegis** — собственный бинарн�
 
 ### Android (workflow: Build Android)
 
-- Debug (PR): `app-debug.apk`
-- Release: split APKs: `app-*-release.apk` (несколько файлов по ABI) + `app-release.aab`
-
-Установка:
-- Скачайте ZIP-архив из GitHub Releases или GitHub Actions → Artifacts
+- Скачайте ZIP-архив или APK-файл из GitHub Releases или GitHub Actions → Artifacts
 - Распакуйте вложенный APK для вашей архитектуры на телефон и установите (может потребоваться разрешить установку из неизвестных источников)
 
 ### Windows (workflow: Build Desktop)
 
-- Скачайте ZIP-архив из GitHub Releases или GitHub Actions → Artifacts
+- Скачайте ZIP-архив или EXE-установщик из GitHub Releases или GitHub Actions → Artifacts
 - Распакуйте и запустите `two_space_app.exe`
 
 ### Linux (workflow: Build Desktop)
@@ -119,6 +109,8 @@ sudo apt-get install -y --no-install-recommends \
 
 Официальный сайт с подробностями:
 🔗 [**Сайт TwoSpace**](https://twospace.ru) (на данный момент в разработке)
+
+Отправляйте коммиты и issues в репозиторий, а также делитесь отзывами в Telegram-канале. Ваше мнение важно для нас!
 
 ---
 

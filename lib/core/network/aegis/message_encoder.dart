@@ -6,9 +6,10 @@ import 'package:two_space_app/core/network/aegis/crc32.dart';
 import 'package:two_space_app/core/network/aegis/errors.dart';
 import 'package:two_space_app/core/network/aegis/logger.dart';
 import 'package:two_space_app/core/network/aegis/message.dart';
-import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
 import 'package:two_space_app/core/network/aegis/message_type.dart';
 import 'package:two_space_app/core/network/aegis/protocol_constants.dart';
+import 'package:two_space_app/core/network/aegis/safe_brotli.dart';
+import 'package:two_space_app/core/network/aegis/typed_data_compat.dart';
 
 // Re-export error types so callers that import only this file still see them.
 export 'errors.dart'
@@ -51,8 +52,8 @@ class MessageEncoder {
     _validateForEncode(message);
 
     // Brotli-compress when payload exceeds threshold (per server spec).
-    Uint8List payload = message.payload;
-    int flags = message.flags;
+    var payload = message.payload;
+    var flags = message.flags;
     final isEncrypted = (flags & ProtocolConstants.flagEncrypted) != 0;
     final isCompressed = (flags & ProtocolConstants.flagCompressed) != 0;
     if (!isEncrypted &&
@@ -81,7 +82,7 @@ class MessageEncoder {
     buffer[5] = message.versionMinor;
     buffer[6] = flags;
     bd.setUint16(7, message.type.value);
-    bd.setUint64(9, message.sequenceId);
+    bd.setUint64Compat(9, message.sequenceId);
     bd.setUint32(17, payload.length);
 
     if (payload.isNotEmpty) {
@@ -163,7 +164,7 @@ class MessageEncoder {
     }
 
     // ── Sequence ID ────────────────────────────────────────────────
-    message.sequenceId = bd.getUint64(9);
+    message.sequenceId = bd.getUint64Compat(9);
 
     // ── Payload length (validated BEFORE allocation) ───────────────
     final payloadLength = bd.getUint32(17);

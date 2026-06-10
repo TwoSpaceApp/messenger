@@ -17,8 +17,8 @@ import 'package:two_space_app/features/chat/presentation/screens/call_screen.dar
 import 'package:two_space_app/features/chat/presentation/screens/calls_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/chat_settings_screen.dart';
-import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_channel_screen.dart';
+import 'package:two_space_app/features/chat/presentation/screens/create_chat_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/create_group_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/group_settings_screen.dart';
 import 'package:two_space_app/features/chat/presentation/screens/home_screen.dart';

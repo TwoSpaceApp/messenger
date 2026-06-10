@@ -1496,6 +1496,32 @@ class AppLocalizationsJa extends AppLocalizations {
   String get changeEmailButton => 'メールを変更';
 
   @override
+  String get emailRequired => 'Email is required';
+
+  @override
+  String get emailInvalid => 'Invalid email address';
+
+  @override
+  String get passwordRequired => 'Password is required';
+
+  @override
+  String get emailUnchanged => 'New email is the same as current';
+
+  @override
+  String get changeEmailNotYetSupported => 'Email change is not yet supported';
+
+  @override
+  String get changeEmailNotAvailable =>
+      'Email change is not yet available. Please contact support.';
+
+  @override
+  String get changeEmailRequiresServerSupport =>
+      'This feature requires server-side support. The client is prepared but awaits protocol updates.';
+
+  @override
+  String get emailHintExample => 'user@example.com';
+
+  @override
   String changeEmailError(String error) {
     return 'メールを変更できませんでした: $error';
   }
@@ -3087,4 +3113,53 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get feedbackAttachLogsSubtitle =>
       '端末情報、アプリログ、ネットワークログを含む診断ファイルを添付します。';
+
+  @override
+  String get notificationsForegroundServiceTitle => 'バックグラウンドサービス';
+
+  @override
+  String get notificationsForegroundServiceSubtitle => 'アプリをバックグラウンドで実行し続ける';
+
+  @override
+  String get notificationsForegroundServiceEnabled => 'バックグラウンドサービスを有効にする';
+
+  @override
+  String get notificationsForegroundServiceDescription =>
+      '永続的な通知でメッセージを継続的にリッスンする';
+
+  @override
+  String get notificationsTypesSection => '通知タイプ';
+
+  @override
+  String get notificationsTypesSectionSubtitle => 'どのイベントについて通知を受けるかを選択してください';
+
+  @override
+  String get notificationsMessagesTitle => 'メッセージ';
+
+  @override
+  String get notificationsMessagesDescription => 'チャットの新しいメッセージ';
+
+  @override
+  String get notificationsChatTitle => 'チャット＆グループ';
+
+  @override
+  String get notificationsChatDescription => '新しいチャットとグループ招待';
+
+  @override
+  String get notificationsPostTitle => '投稿';
+
+  @override
+  String get notificationsPostDescription => 'チャネルの新しい投稿';
+
+  @override
+  String get notificationsReactionTitle => 'リアクション';
+
+  @override
+  String get notificationsReactionDescription => 'あなたのメッセージへのリアクション';
+
+  @override
+  String get imageTooLarge => 'Image too large';
+
+  @override
+  String get imageCompressed => 'Image was compressed to fit protocol limits';
 }

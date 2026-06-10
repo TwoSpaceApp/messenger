@@ -52,6 +52,8 @@ class ConnectivityService {
 
   /// Cleanup
   void dispose() {
+    // Fire-and-forget; cleanup during dispose
+    // ignore: discarded_futures
     _subscription.cancel();
   }
 }

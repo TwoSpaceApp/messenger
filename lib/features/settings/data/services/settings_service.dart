@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:two_space_app/core/services/notification_service.dart';
 import 'package:two_space_app/core/utils/secure_store.dart';
 
 enum MessageTimestampPrecision { minutes, seconds, milliseconds }
@@ -94,22 +95,9 @@ extension MessageTimestampPrecisionX on MessageTimestampPrecision {
 
 /// Data class for theme settings
 class ThemeSettings {
-  final String fontFamily;
-  final int primaryColorValue;
-  final int fontWeight;
-  final double bubbleRounding;
-  final bool dynamicBubbles;
-  final bool compactMode;
-  final int navBarHideTimeoutSeconds;
-  final bool enableParallax;
-  final bool enableFloatingCircles;
-  final BackgroundMotionMode backgroundMotionMode;
-  final double floatingCirclesSpeed;
-  final double floatingCirclesOpacity;
-  final ShapeVariant shapeVariant;
 
   const ThemeSettings({
-    this.fontFamily = 'Inter',
+    this.fontFamily = "Inter",
     this.primaryColorValue = 0xFF6200EE,
     this.fontWeight = 400,
     this.bubbleRounding = 16.0,
@@ -123,6 +111,19 @@ class ThemeSettings {
     this.floatingCirclesOpacity = 0.5,
     this.shapeVariant = ShapeVariant.rounded,
   });
+  final String fontFamily;
+  final int primaryColorValue;
+  final int fontWeight;
+  final double bubbleRounding;
+  final bool dynamicBubbles;
+  final bool compactMode;
+  final int navBarHideTimeoutSeconds;
+  final bool enableParallax;
+  final bool enableFloatingCircles;
+  final BackgroundMotionMode backgroundMotionMode;
+  final double floatingCirclesSpeed;
+  final double floatingCirclesOpacity;
+  final ShapeVariant shapeVariant;
 
   ThemeSettings copyWith({
     String? fontFamily,
@@ -230,6 +231,11 @@ class SettingsService {
   static const _ringtonePathKey = 'notifications_ringtone_path';
   static const _ringtoneNameKey = 'notifications_ringtone_name';
   static const _biometricsKey = 'biometric_enabled';
+  static const _foregroundServiceEnabledKey = 'notifications_foreground_service_enabled';
+  static const _notificationsMessageEnabledKey = 'notifications_message_enabled';
+  static const _notificationsChatEnabledKey = 'notifications_chat_enabled';
+  static const _notificationsReactionEnabledKey = 'notifications_reaction_enabled';
+  static const _notificationsPostEnabledKey = 'notifications_post_enabled';
   static final Set<String> _coreKeys = <String>{
     _fontKey,
     _colorKey,
@@ -264,10 +270,16 @@ class SettingsService {
     _ringtonePathKey,
     _ringtoneNameKey,
     _biometricsKey,
+    _foregroundServiceEnabledKey,
+    _notificationsMessageEnabledKey,
+    _notificationsChatEnabledKey,
+    _notificationsReactionEnabledKey,
+    _notificationsPostEnabledKey,
   };
   static Future<void>? _loadSettingsFuture;
   static Future<void>? _loadDeferredSettingsFuture;
   static bool _deferredSettingsLoaded = false;
+  static final Set<String> _deferredLocallyModifiedKeys = <String>{};
 
   // Theme Notifier
   static final ValueNotifier<ThemeSettings> themeNotifier = ValueNotifier(
@@ -310,6 +322,16 @@ class SettingsService {
   static final ValueNotifier<String?> ringtoneNameNotifier = ValueNotifier(
     null,
   );
+  static final ValueNotifier<bool> foregroundServiceEnabledNotifier =
+      ValueNotifier(true);
+  static final ValueNotifier<bool> notificationsMessageEnabledNotifier =
+      ValueNotifier(true);
+  static final ValueNotifier<bool> notificationsChatEnabledNotifier =
+      ValueNotifier(true);
+  static final ValueNotifier<bool> notificationsReactionEnabledNotifier =
+      ValueNotifier(false);
+  static final ValueNotifier<bool> notificationsPostEnabledNotifier =
+      ValueNotifier(true);
 
   static Future<void> loadSettings() async {
     final inFlight = _loadSettingsFuture;
@@ -388,29 +410,83 @@ class SettingsService {
       final stored = await SecureStore.readMany(_deferredKeys);
 
       String? valueOf(String key) => stored[key];
+      bool canHydrate(String key) => !_deferredLocallyModifiedKeys.contains(key);
 
-      sessionTimeoutDaysNotifier.value =
-          int.tryParse(valueOf(_sessionTimeoutKey) ?? '') ?? 30;
-      showEmailNotifier.value = valueOf(_showEmailKey) == 'true';
-      showPhoneNotifier.value = valueOf(_showPhoneKey) == 'true';
-      autoDownloadMediaNotifier.value = valueOf(_autoDownloadKey) != 'false';
-      sendByEnterNotifier.value = valueOf(_sendByEnterKey) != 'false';
-      messageTimestampPrecisionNotifier.value =
-          MessageTimestampPrecisionX.fromStorage(
-            valueOf(_messageTimestampPrecisionKey),
-          );
+      if (canHydrate(_sessionTimeoutKey)) {
+        sessionTimeoutDaysNotifier.value =
+            int.tryParse(valueOf(_sessionTimeoutKey) ?? '') ?? 30;
+      }
+      if (canHydrate(_showEmailKey)) {
+        showEmailNotifier.value = valueOf(_showEmailKey) == 'true';
+      }
+      if (canHydrate(_showPhoneKey)) {
+        showPhoneNotifier.value = valueOf(_showPhoneKey) == 'true';
+      }
+      if (canHydrate(_autoDownloadKey)) {
+        autoDownloadMediaNotifier.value = valueOf(_autoDownloadKey) != 'false';
+      }
+      if (canHydrate(_sendByEnterKey)) {
+        sendByEnterNotifier.value = valueOf(_sendByEnterKey) != 'false';
+      }
+      if (canHydrate(_messageTimestampPrecisionKey)) {
+        messageTimestampPrecisionNotifier.value =
+            MessageTimestampPrecisionX.fromStorage(
+              valueOf(_messageTimestampPrecisionKey),
+            );
+      }
 
       final bioStr = valueOf(_biometricsKey);
-      biometricsNotifier.value = bioStr == 'true';
-      notificationsEnabledNotifier.value =
-          valueOf(_notificationsEnabledKey) != 'false';
-      soundEnabledNotifier.value = valueOf(_soundEnabledKey) != 'false';
-      doNotDisturbNotifier.value = valueOf(_doNotDisturbKey) == 'true';
-      notificationTonePathNotifier.value = valueOf(_notificationTonePathKey);
-      notificationToneNameNotifier.value = valueOf(_notificationToneNameKey);
-      ringtonePathNotifier.value = valueOf(_ringtonePathKey);
-      ringtoneNameNotifier.value = valueOf(_ringtoneNameKey);
+      if (canHydrate(_biometricsKey)) {
+        biometricsNotifier.value = bioStr == 'true';
+      }
+      if (canHydrate(_notificationsEnabledKey)) {
+        notificationsEnabledNotifier.value =
+            valueOf(_notificationsEnabledKey) != 'false';
+      }
+      if (canHydrate(_soundEnabledKey)) {
+        soundEnabledNotifier.value = valueOf(_soundEnabledKey) != 'false';
+      }
+      if (canHydrate(_doNotDisturbKey)) {
+        doNotDisturbNotifier.value = valueOf(_doNotDisturbKey) == 'true';
+      }
+      if (canHydrate(_notificationTonePathKey)) {
+        notificationTonePathNotifier.value = valueOf(_notificationTonePathKey);
+      }
+      if (canHydrate(_notificationToneNameKey)) {
+        notificationToneNameNotifier.value = valueOf(_notificationToneNameKey);
+      }
+      if (canHydrate(_ringtonePathKey)) {
+        ringtonePathNotifier.value = valueOf(_ringtonePathKey);
+      }
+      if (canHydrate(_ringtoneNameKey)) {
+        ringtoneNameNotifier.value = valueOf(_ringtoneNameKey);
+      }
+      if (canHydrate(_foregroundServiceEnabledKey)) {
+        foregroundServiceEnabledNotifier.value =
+            valueOf(_foregroundServiceEnabledKey) != 'false';
+      }
+      if (canHydrate(_notificationsMessageEnabledKey)) {
+        notificationsMessageEnabledNotifier.value =
+            valueOf(_notificationsMessageEnabledKey) != 'false';
+      }
+      if (canHydrate(_notificationsChatEnabledKey)) {
+        notificationsChatEnabledNotifier.value =
+            valueOf(_notificationsChatEnabledKey) != 'false';
+      }
+      if (canHydrate(_notificationsReactionEnabledKey)) {
+        notificationsReactionEnabledNotifier.value =
+            valueOf(_notificationsReactionEnabledKey) == 'true';
+      }
+      if (canHydrate(_notificationsPostEnabledKey)) {
+        notificationsPostEnabledNotifier.value =
+            valueOf(_notificationsPostEnabledKey) != 'false';
+      }
       _deferredSettingsLoaded = true;
+      
+      // Start foreground service if enabled
+      if (foregroundServiceEnabledNotifier.value) {
+        unawaited(NotificationService().startForegroundService());
+      }
     }();
 
     _loadDeferredSettingsFuture = future;
@@ -443,6 +519,7 @@ class SettingsService {
   static void resetDeferredSettingsCache() {
     _deferredSettingsLoaded = false;
     _loadDeferredSettingsFuture = null;
+    _deferredLocallyModifiedKeys.clear();
   }
 
   static Future<void> refreshAllSettingsFromStorage() async {
@@ -450,6 +527,7 @@ class SettingsService {
     _deferredSettingsLoaded = false;
     _loadSettingsFuture = null;
     _loadDeferredSettingsFuture = null;
+    _deferredLocallyModifiedKeys.clear();
     await loadSettings();
   }
 
@@ -468,15 +546,22 @@ class SettingsService {
     notificationToneNameNotifier.value = null;
     ringtonePathNotifier.value = null;
     ringtoneNameNotifier.value = null;
+    foregroundServiceEnabledNotifier.value = true;
+    notificationsMessageEnabledNotifier.value = true;
+    notificationsChatEnabledNotifier.value = true;
+    notificationsReactionEnabledNotifier.value = false;
+    notificationsPostEnabledNotifier.value = true;
   }
 
   static Future<void> setBiometricsEnabled(bool value) async {
+    _deferredLocallyModifiedKeys.add(_biometricsKey);
     await SecureStore.write(_biometricsKey, value.toString());
     await SecureStore.write('biometrics_enabled', value.toString());
     biometricsNotifier.value = value;
   }
 
   static Future<void> setNotificationsEnabled(bool value) async {
+    _deferredLocallyModifiedKeys.add(_notificationsEnabledKey);
     notificationsEnabledNotifier.value = value;
     await SecureStore.write(_notificationsEnabledKey, value.toString());
     if (!value && soundEnabledNotifier.value) {
@@ -485,6 +570,7 @@ class SettingsService {
   }
 
   static Future<void> setSoundEnabled(bool value) async {
+    _deferredLocallyModifiedKeys.add(_soundEnabledKey);
     soundEnabledNotifier.value = value;
     await SecureStore.write(_soundEnabledKey, value.toString());
     if (value && !notificationsEnabledNotifier.value) {
@@ -493,6 +579,7 @@ class SettingsService {
   }
 
   static Future<void> setDoNotDisturb(bool value) async {
+    _deferredLocallyModifiedKeys.add(_doNotDisturbKey);
     doNotDisturbNotifier.value = value;
     await SecureStore.write(_doNotDisturbKey, value.toString());
   }
@@ -501,6 +588,9 @@ class SettingsService {
     required String? path,
     required String? displayName,
   }) async {
+    _deferredLocallyModifiedKeys
+      ..add(_notificationTonePathKey)
+      ..add(_notificationToneNameKey);
     notificationTonePathNotifier.value = path;
     notificationToneNameNotifier.value = displayName;
     if (path == null || path.isEmpty) {
@@ -520,6 +610,9 @@ class SettingsService {
     required String? path,
     required String? displayName,
   }) async {
+    _deferredLocallyModifiedKeys
+      ..add(_ringtonePathKey)
+      ..add(_ringtoneNameKey);
     ringtonePathNotifier.value = path;
     ringtoneNameNotifier.value = displayName;
     if (path == null || path.isEmpty) {
@@ -533,6 +626,43 @@ class SettingsService {
     } else {
       await SecureStore.delete(_ringtoneNameKey);
     }
+  }
+
+  static Future<void> setForegroundServiceEnabled(bool value) async {
+    _deferredLocallyModifiedKeys.add(_foregroundServiceEnabledKey);
+    foregroundServiceEnabledNotifier.value = value;
+    await SecureStore.write(_foregroundServiceEnabledKey, value.toString());
+    
+    // Start or stop the foreground service
+    if (value) {
+      await NotificationService().startForegroundService();
+    } else {
+      await NotificationService().stopForegroundService();
+    }
+  }
+
+  static Future<void> setNotificationsMessageEnabled(bool value) async {
+    _deferredLocallyModifiedKeys.add(_notificationsMessageEnabledKey);
+    notificationsMessageEnabledNotifier.value = value;
+    await SecureStore.write(_notificationsMessageEnabledKey, value.toString());
+  }
+
+  static Future<void> setNotificationsChatEnabled(bool value) async {
+    _deferredLocallyModifiedKeys.add(_notificationsChatEnabledKey);
+    notificationsChatEnabledNotifier.value = value;
+    await SecureStore.write(_notificationsChatEnabledKey, value.toString());
+  }
+
+  static Future<void> setNotificationsReactionEnabled(bool value) async {
+    _deferredLocallyModifiedKeys.add(_notificationsReactionEnabledKey);
+    notificationsReactionEnabledNotifier.value = value;
+    await SecureStore.write(_notificationsReactionEnabledKey, value.toString());
+  }
+
+  static Future<void> setNotificationsPostEnabled(bool value) async {
+    _deferredLocallyModifiedKeys.add(_notificationsPostEnabledKey);
+    notificationsPostEnabledNotifier.value = value;
+    await SecureStore.write(_notificationsPostEnabledKey, value.toString());
   }
 
   static ThemeMode _themeModeFromString(String? v) {
@@ -679,16 +809,19 @@ class SettingsService {
   }
 
   static Future<void> setSessionTimeoutDays(int days) async {
+    _deferredLocallyModifiedKeys.add(_sessionTimeoutKey);
     sessionTimeoutDaysNotifier.value = days;
     await SecureStore.write(_sessionTimeoutKey, days.toString());
   }
 
   static Future<void> setShowEmail(bool val) async {
+    _deferredLocallyModifiedKeys.add(_showEmailKey);
     showEmailNotifier.value = val;
     await SecureStore.write(_showEmailKey, val.toString());
   }
 
   static Future<void> setShowPhone(bool val) async {
+    _deferredLocallyModifiedKeys.add(_showPhoneKey);
     showPhoneNotifier.value = val;
     await SecureStore.write(_showPhoneKey, val.toString());
   }
@@ -708,11 +841,13 @@ class SettingsService {
   }
 
   static Future<void> setAutoDownloadMedia(bool val) async {
+    _deferredLocallyModifiedKeys.add(_autoDownloadKey);
     autoDownloadMediaNotifier.value = val;
     await SecureStore.write(_autoDownloadKey, val.toString());
   }
 
   static Future<void> setSendByEnter(bool val) async {
+    _deferredLocallyModifiedKeys.add(_sendByEnterKey);
     sendByEnterNotifier.value = val;
     await SecureStore.write(_sendByEnterKey, val.toString());
   }
@@ -720,6 +855,7 @@ class SettingsService {
   static Future<void> setMessageTimestampPrecision(
     MessageTimestampPrecision precision,
   ) async {
+    _deferredLocallyModifiedKeys.add(_messageTimestampPrecisionKey);
     messageTimestampPrecisionNotifier.value = precision;
     await SecureStore.write(
       _messageTimestampPrecisionKey,

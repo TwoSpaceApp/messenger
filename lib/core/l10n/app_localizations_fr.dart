@@ -1524,6 +1524,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get changeEmailButton => 'Changer l\'e-mail';
 
   @override
+  String get emailRequired => 'Email is required';
+
+  @override
+  String get emailInvalid => 'Invalid email address';
+
+  @override
+  String get passwordRequired => 'Password is required';
+
+  @override
+  String get emailUnchanged => 'New email is the same as current';
+
+  @override
+  String get changeEmailNotYetSupported => 'Email change is not yet supported';
+
+  @override
+  String get changeEmailNotAvailable =>
+      'Email change is not yet available. Please contact support.';
+
+  @override
+  String get changeEmailRequiresServerSupport =>
+      'This feature requires server-side support. The client is prepared but awaits protocol updates.';
+
+  @override
+  String get emailHintExample => 'user@example.com';
+
+  @override
   String changeEmailError(String error) {
     return 'Impossible de changer l\'e-mail : $error';
   }
@@ -3173,4 +3199,59 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get feedbackAttachLogsSubtitle =>
       'Ajoute un fichier de diagnostic avec les informations de l\'appareil, les logs de l\'application et les logs réseau.';
+
+  @override
+  String get notificationsForegroundServiceTitle => 'Service en Arrière-Plan';
+
+  @override
+  String get notificationsForegroundServiceSubtitle =>
+      'Garder l\'application s\'exécutant en arrière-plan';
+
+  @override
+  String get notificationsForegroundServiceEnabled =>
+      'Activer le Service en Arrière-Plan';
+
+  @override
+  String get notificationsForegroundServiceDescription =>
+      'Écoutez continuellement les messages avec notification persistante';
+
+  @override
+  String get notificationsTypesSection => 'Types de Notification';
+
+  @override
+  String get notificationsTypesSectionSubtitle =>
+      'Choisissez quels événements vous notifient';
+
+  @override
+  String get notificationsMessagesTitle => 'Messages';
+
+  @override
+  String get notificationsMessagesDescription =>
+      'Nouveaux messages dans les conversations';
+
+  @override
+  String get notificationsChatTitle => 'Conversations et Groupes';
+
+  @override
+  String get notificationsChatDescription =>
+      'Nouvelles conversations et invitations de groupe';
+
+  @override
+  String get notificationsPostTitle => 'Publications';
+
+  @override
+  String get notificationsPostDescription =>
+      'Nouvelles publications dans les canaux';
+
+  @override
+  String get notificationsReactionTitle => 'Réactions';
+
+  @override
+  String get notificationsReactionDescription => 'Réactions à vos messages';
+
+  @override
+  String get imageTooLarge => 'Image too large';
+
+  @override
+  String get imageCompressed => 'Image was compressed to fit protocol limits';
 }

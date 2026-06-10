@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 class AppSecureStorage {
   static const AndroidOptions _androidOptions = AndroidOptions(
-    sharedPreferencesName: 'two_space_secure_storage',
+    storageNamespace: 'two_space_secure_storage',
     preferencesKeyPrefix: 'two_space_',
   );
 
@@ -35,6 +35,19 @@ class SecureStore {
   static bool _allKeysCached = false;
   static bool _preferFallback = false;
   static Future<File>? _fallbackFileFuture;
+  static const List<String> _sensitiveKeyMarkers = <String>[
+    'token',
+    'password',
+    'secret',
+    'credential',
+    'session',
+    'auth',
+  ];
+
+  static bool _isSensitiveKey(String key) {
+    final normalized = key.trim().toLowerCase();
+    return _sensitiveKeyMarkers.any(normalized.contains);
+  }
 
   static bool _shouldFallbackFor(Object error) {
     if (kIsWeb) {
@@ -56,8 +69,12 @@ class SecureStore {
   static Future<T> _runWithFallback<T>(
     Future<T> Function() primary,
     Future<T> Function() fallback,
+    String? key,
   ) async {
     if (_preferFallback) {
+      if (key != null && _isSensitiveKey(key)) {
+        return primary();
+      }
       return fallback();
     }
 
@@ -65,6 +82,9 @@ class SecureStore {
       return await primary();
     } on Object catch (error) {
       if (!_shouldFallbackFor(error)) {
+        rethrow;
+      }
+      if (key != null && _isSensitiveKey(key)) {
         rethrow;
       }
       _preferFallback = true;
@@ -81,10 +101,14 @@ class SecureStore {
     final future = () async {
       final baseDir = await getApplicationSupportDirectory();
       final dir = Directory('${baseDir.path}/secure_store');
+      // File IO is intentional in storage fallback
+      // ignore: avoid_slow_async_io
       if (!await dir.exists()) {
         await dir.create(recursive: true);
       }
       final file = File('${dir.path}/fallback_store.json');
+      // File IO is intentional in storage fallback
+      // ignore: avoid_slow_async_io
       if (!await file.exists()) {
         await file.writeAsString('{}', flush: true);
       }
@@ -127,6 +151,7 @@ class SecureStore {
         values[key] = value;
         await _writeFallbackMap(values);
       },
+      key,
     );
     _cache[key] = value;
   }
@@ -142,6 +167,7 @@ class SecureStore {
         final values = await _readFallbackMap();
         return values[key];
       },
+      key,
     );
     _cache[key] = value;
     return value;
@@ -154,6 +180,7 @@ class SecureStore {
         .toList(growable: false);
 
     if (missingKeys.isNotEmpty) {
+      final hasSensitiveKey = missingKeys.any(_isSensitiveKey);
       final values = await _runWithFallback<Map<String, String?>>(
         () async {
           final all = await _storage.readAll();
@@ -169,6 +196,7 @@ class SecureStore {
             for (final key in missingKeys) key: all[key],
           };
         },
+        hasSensitiveKey ? missingKeys.join(',') : null,
       );
       for (final entry in values.entries) {
         _cache[entry.key] = entry.value;
@@ -192,6 +220,7 @@ class SecureStore {
     final values = await _runWithFallback<Map<String, String>>(
       () => _storage.readAll(),
       _readFallbackMap,
+      null,
     );
     _cache
       ..clear()
@@ -208,6 +237,7 @@ class SecureStore {
         values.remove(key);
         await _writeFallbackMap(values);
       },
+      key,
     );
     _cache.remove(key);
   }
@@ -216,6 +246,7 @@ class SecureStore {
     await _runWithFallback<void>(
       _storage.deleteAll,
       () => _writeFallbackMap(<String, String>{}),
+      null,
     );
     clearMemoryCache();
   }

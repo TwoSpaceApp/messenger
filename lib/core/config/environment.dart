@@ -26,6 +26,8 @@ class Environment {
     if (kIsWeb) return;
     try {
       final file = File('.env');
+      // File existence check during env loading is intentional
+      // ignore: avoid_slow_async_io
       if (!await file.exists()) return;
 
       final lines = await file.readAsLines();
@@ -97,8 +99,7 @@ class Environment {
       return null;
     }
 
-    _cachedAegisAppId ??= int.tryParse(raw);
-    return _cachedAegisAppId;
+    return _cachedAegisAppId ??= int.tryParse(raw);
   }
 
   static String? get aegisAppHash {
